@@ -39,13 +39,20 @@ export default defineComponent({
             gradients.forEach((value: Gradient, key: string, map: Map<string, Gradient>) => {
 
                 let childs: VNodeArrayChildren = [];
-                if (value.gradientType == GradientType.Type0) { // todo linear?
-                    var stops = value.stops;
+                if (value.gradientType == GradientType.Linear) {
+                    let stops = value.stops;
                     childs = stops.map(renderStop);
+                    let n = h("linearGradient", { id: key }, childs);
+                    defsChilds.push(n);
+                }
+                else if (value.gradientType == GradientType.Radial) {
+                    let stops = value.stops;
+                    childs = stops.map(renderStop);
+                    let n = h("radialGradient", { id: key }, childs);
+                    defsChilds.push(n);
                 }
 
-                let n = h("linearGradient", { id: key }, childs);
-                defsChilds.push(n);
+                
             })
 
             return [h('defs', {}, defsChilds)];

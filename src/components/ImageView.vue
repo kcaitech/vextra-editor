@@ -5,14 +5,14 @@
 </template> -->
 
 <script lang="ts">
-import { Shape } from '@/data/shape';
+import { ImageShape } from '@/data/shape';
 import {h, defineComponent} from 'vue';
 export default defineComponent({
 
   name: 'ImageView',
   props: {
     data: {
-        type: Shape,
+        type: ImageShape,
         required: true,
     },
     // url: {

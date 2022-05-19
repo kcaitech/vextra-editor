@@ -1,6 +1,6 @@
 
 <script lang="ts">
-import { Shape } from '@/data/shape';
+import { PathShape } from '@/data/shape';
 import {h, defineComponent} from 'vue';
 
 
@@ -229,7 +229,7 @@ export default defineComponent({
   name: 'ShapePathView',
   props: {
     data: {
-        type:Shape,
+        type:PathShape,
         required: true,
     }
   },

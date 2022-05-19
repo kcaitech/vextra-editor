@@ -1,0 +1,47 @@
+{
+    "_class": "document",
+    "do_objectID": "D31EE6F4-446F-4CC3-A902-A1A52A377D7A",
+    "colorSpace": 0,
+    "currentPageIndex": 1,
+    "assets": {
+        "_class": "assetCollection",
+        "do_objectID": "6D08349A-61D6-43D2-9516-D40E847E534E",
+        "images": [],
+        "colorAssets": [],
+        "exportPresets": [],
+        "gradientAssets": [],
+        "imageCollection": {
+            "_class": "imageCollection",
+            "images": {}
+        },
+        "colors": [],
+        "gradients": []
+    },
+    "foreignLayerStyles": [],
+    "foreignSymbols": [],
+    "foreignTextStyles": [],
+    "layerStyles": {
+        "_class": "sharedStyleContainer",
+        "objects": []
+    },
+    "layerSymbols": {
+        "_class": "symbolContainer",
+        "objects": []
+    },
+    "layerTextStyles": {
+        "_class": "sharedTextStyleContainer",
+        "objects": []
+    },
+    "pages": [
+        {
+            "_class": "MSJSONFileReference",
+            "_ref_class": "MSImmutablePage",
+            "_ref": "pages/1C91F63E-3934-499E-AFD9-4506F235AE66"
+        },
+        {
+            "_class": "MSJSONFileReference",
+            "_ref_class": "MSImmutablePage",
+            "_ref": "pages/865281BB-184C-413C-BB2B-E215B302216C"
+        }
+    ]
+}
