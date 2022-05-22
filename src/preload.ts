@@ -22,7 +22,7 @@ window.addEventListener('DOMContentLoaded', () => {
 preload.on('load', () => {
 
   ipcRenderer.invoke('getOpenFilePath').then((filePath) => {
-    console.log('preload filePath:', filePath);
+    // console.log('preload filePath:', filePath);
   
     if (!filePath) {
       return;

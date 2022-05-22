@@ -6,7 +6,7 @@ import { importDocument } from "./io/sketch/documentio";
 import { preload } from "./preload";
 import Navigation from "./components/Navigation.vue";
 import PageView from "./components/PageView.vue"
-// import App from "./App.vue";
+import App from "./App.vue";
 
 preload.on('ready', (lzData: LzData) => {
 
@@ -14,7 +14,7 @@ preload.on('ready', (lzData: LzData) => {
         
         const selectPage = (index: number) => {
             core.getPageByIndex(index).then((page: Page) => {
-                createApp(PageView, {data: page}).mount("#container");
+                createApp(PageView, {data: page}).mount("#content");
             })
         }
         createApp(Navigation, {data: core, select: selectPage}).mount("#navigation");
@@ -24,6 +24,5 @@ preload.on('ready', (lzData: LzData) => {
     })
 });
 
+createApp(App, {}).mount("#app");
 preload.emit('load');
-
-// createApp(App, {}).mount("#container");

@@ -40,19 +40,94 @@ export default defineComponent({
 
                 let childs: VNodeArrayChildren = [];
                 if (value.gradientType == GradientType.Linear) {
-                    let stops = value.stops;
-                    childs = stops.map(renderStop);
-                    let n = h("linearGradient", { id: key }, childs);
+                    let stopSCount = value.stopsCount;
+                    let childs = [];
+                    for (let i = 0; i < stopSCount; i++) {
+                        let s = value.getStopByIndex(i);
+                        childs.push(renderStop(s));
+                    }
+                    let n = h("linearGradient", { id: key, 
+                        x1: value.from.x, 
+                        y1: value.from.y,
+                        x2: value.to.x,
+                        y2: value.to.y,
+                    }, childs);
                     defsChilds.push(n);
                 }
                 else if (value.gradientType == GradientType.Radial) {
-                    let stops = value.stops;
-                    childs = stops.map(renderStop);
-                    let n = h("radialGradient", { id: key }, childs);
+                    let stopSCount = value.stopsCount;
+                    let childs = [];
+                    for (let i = 0; i < stopSCount; i++) {
+                        let s = value.getStopByIndex(i);
+                        childs.push(renderStop(s));
+                    }
+                    let n = h("radialGradient", { id: key,
+                        cx: value.from.x,
+                        cy: value.from.y,
+                        r: Math.sqrt((value.to.y - value.from.y)**2 + (value.to.x - value.from.x)**2),
+                        fx: value.from.x,
+                        fy: value.from.y,
+                        gradientTransform:"translate(" + value.from.x + "," + value.from.y + ")," +
+                            "scale(0.955224, 1.0)," +
+                            "rotate(" + Math.atan((value.to.y - value.from.y) / (value.to.x - value.from.x)) / Math.PI * 180 + ")," +
+                            "scale(1.0," + value.elipseLength +")," +
+                            "translate(" + (-value.from.x) + "," + (-value.from.y) + ")",
+                            }, 
+                        childs);
                     defsChilds.push(n);
                 }
+                else if (value.gradientType == GradientType.Angular) {
+                    let gradient = "";
+                    let sc = value.stopsCount;
+                    if (sc > 0) {
+                        let firstStop = value.getStopByIndex(0);
+                        let lastStop = value.getStopByIndex(sc - 1);
+                        if (firstStop.position > 0) {
+                            let lastDistance = 1 - lastStop.position;
+                            let firstDistance = firstStop.position;
+                            let fColor = firstStop.color;
+                            let lColor = lastStop.color;
+                            let ratio = 1 / (firstDistance + lastDistance);
+                            let r = (fColor.red * lastDistance * ratio + lColor.red* firstDistance * ratio);
+                            let g = (fColor.green * lastDistance * ratio + lColor.green* firstDistance * ratio);
+                            let b = (fColor.blue * lastDistance * ratio + lColor.blue* firstDistance * ratio);
+                            gradient = "rgb(" + r + "," + g + "," + b + ")" + " 0deg";
+                        }
+                    }
 
-                
+                    for (let i = 0; i < sc; i++) {
+                        let stop = value.getStopByIndex(i);
+                        let color = stop.color;
+                        let rgbColor = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
+                        let deg = Math.round(stop.position * 360)// % 360;
+                        gradient.length > 0 && (gradient = gradient + ",")
+                        gradient = gradient + rgbColor + " " + deg + "deg";
+                    }
+
+                    if (sc > 0) {
+                        let firstStop = value.getStopByIndex(0);
+                        let lastStop = value.getStopByIndex(sc - 1);
+                        if (lastStop.position < 1) {
+                            let lastDistance = 1 - lastStop.position;
+                            let firstDistance = firstStop.position;
+                            let fColor = firstStop.color;
+                            let lColor = lastStop.color;
+                            let ratio = 1 / (firstDistance + lastDistance);
+                            let r = (fColor.red * lastDistance * ratio + lColor.red* firstDistance * ratio);
+                            let g = (fColor.green * lastDistance * ratio + lColor.green* firstDistance * ratio);
+                            let b = (fColor.blue * lastDistance * ratio + lColor.blue* firstDistance * ratio);
+                            gradient = gradient + "," + "rgb(" + r + "," + g + "," + b + ")" + " 360deg";
+                        }
+                    }
+
+                    let n = h("style", {}, "." + key + "{" + 
+                        "background: conic-gradient("+gradient+");" + 
+                        "height:-webkit-fill-available;" + 
+                        "width:-webkit-fill-available;" + 
+                        "transform: rotate(90deg);" +
+                        "}");
+                    defsChilds.push(n);
+                }
             })
 
             return [h('defs', {}, defsChilds)];

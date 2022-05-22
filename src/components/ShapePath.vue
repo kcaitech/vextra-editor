@@ -1,6 +1,7 @@
 
 <script lang="ts">
-import { PathShape } from '@/data/shape';
+import { CurveMode, PathShape, Point } from '@/data/shape';
+import { PassThrough } from 'stream';
 import {h, defineComponent} from 'vue';
 
 
@@ -235,26 +236,118 @@ export default defineComponent({
   },
 
   render() {
-    var frame = this.data.frame;
+    let frame = this.data.frame;
     let pc = this.data.pointsCount;
     // var points = this.data.getPoints();
     
     parser.clear();
 
-    parser.moveTo(frame.x, frame.y);
-    for (var i = 0; i < pc; i++) {
-        var p = this.data.getPointByIndex(i);
-        var pt;
-        if (p.hasCurveFrom || p.hasCurveTo) {
-            var from = p.curveFrom;
-            var to = p.curveTo;
-            pt = p.point;
-            parser.bezierCurveTo(frame.x + from.x * frame.width, frame.y + from.y * frame.height, 
-                frame.x + to.x * frame.width, frame.y + to.y * frame.height, 
-                frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
-        } else {
-            pt = p.point;
+    // debug
+    // (() => {
+    //     console.log("--------------point start--------------")
+    //     for (let i = 0; i < pc; i++) {
+    //         let p = this.data.getPointByIndex(i);
+    //         (i > 0) && console.log("----------------------------")
+    //         console.log("curveMode:" + p.curveMode);
+    //         console.log("hasCurveFrom:" + p.hasCurveFrom);
+    //         console.log("hasCurveTo:" + p.hasCurveTo);
+    //         console.log("from:" + p.curveFrom.x * frame.width + ", " +  p.curveFrom.y * frame.height);
+    //         console.log("to:" + p.curveTo.x * frame.width + ", " +  p.curveTo.y * frame.height);
+    //         console.log("point:" + p.point.x * frame.width + ", " +  p.point.y * frame.height);
+
+    //     }
+    //         console.log("--------------point end--------------")
+    // })();
+
+    //parser.moveTo(frame.x, frame.y);
+    if (pc > 0) {
+        let p = this.data.getPointByIndex(0);
+        let pt = p.point;
+        parser.moveTo(frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
+    }
+
+    let curv2Point = (p: Point, nextP: Point, isClose?: boolean) => {
+        if (p.hasCurveFrom && nextP.hasCurveTo) {
+            let adjFrom = p.curveFrom;
+            let adjTo = nextP.curveTo;
+            let pt = nextP.point;
+            parser.bezierCurveTo(frame.x + adjFrom.x * frame.width, frame.y + adjFrom.y * frame.height, 
+                    frame.x + adjTo.x * frame.width, frame.y + adjTo.y * frame.height, 
+                    frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
+        }
+        else if (p.hasCurveFrom && !nextP.hasCurveTo) {
+            let adjFrom = p.curveFrom;
+            let adjTo = nextP.point;
+            let pt = nextP.point;
+            parser.bezierCurveTo(frame.x + adjFrom.x * frame.width, frame.y + adjFrom.y * frame.height, 
+                    frame.x + adjTo.x * frame.width, frame.y + adjTo.y * frame.height, 
+                    frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
+        }
+        else if (!p.hasCurveFrom && nextP.hasCurveTo) {
+            let adjFrom = p.point;
+            let adjTo = nextP.curveTo;
+            let pt = nextP.point;
+            parser.bezierCurveTo(frame.x + adjFrom.x * frame.width, frame.y + adjFrom.y * frame.height, 
+                    frame.x + adjTo.x * frame.width, frame.y + adjTo.y * frame.height, 
+                    frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
+        }
+        else if (!isClose) {
+            let pt = nextP.point;
             parser.lineTo(frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
+        }
+        else {
+            parser.closePath();
+        }
+    }
+
+    for (let i = 0; i < pc - 1; i++) {
+        let p = this.data.getPointByIndex(i);
+        let nextP = this.data.getPointByIndex(i + 1);
+        curv2Point(p, nextP);
+
+        // let p = this.data.getPointByIndex(i);
+        //     let pt;
+        // switch(p.curveMode) {
+        //     case CurveMode.Mode1: {
+        //         if (i == 0) continue;
+        //         pt = p.point;
+        //         parser.lineTo(frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
+        //         break;
+        //     }
+        //     case CurveMode.Mode2: {
+        //         let nexP = this.data.getPointByIndex(i == pc - 1 ? 0 : i + 1);
+        //         let from = p.curveFrom;
+        //         let to = nexP.curveTo;
+        //         // let cpt = p.point;
+        //         pt = nexP.point;
+        //         parser.bezierCurveTo(frame.x + from.x * frame.width, frame.y + from.y * frame.height, 
+        //             frame.x + to.x * frame.width, frame.y + to.y * frame.height, 
+        //             frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
+        //         break;
+        //     }
+        //     case CurveMode.Mode3:
+        //     case CurveMode.Mode4: {
+        //         if (i == 0) continue;
+
+        //         let preP = this.data.getPointByIndex(i - 1) || p;
+        //         let from = preP.curveFrom;
+        //         let to = p.curveTo;
+        //         pt = p.point;
+        //         parser.bezierCurveTo(frame.x + from.x * frame.width, frame.y + from.y * frame.height, 
+        //         frame.x + to.x * frame.width, frame.y + to.y * frame.height, 
+        //         frame.x + pt.x * frame.width, frame.y + pt.y * frame.height);
+        //         break;
+        //     }
+        // }
+    }
+
+    if (this.data.isClosed) {
+        if (pc > 1) {
+            let firstP = this.data.getPointByIndex(0);
+            let lastP = this.data.getPointByIndex(pc - 1);
+            curv2Point(lastP, firstP, true);
+        } else {
+            parser.closePath();
         }
     }
 

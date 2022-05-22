@@ -1,27 +1,68 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+    <div id="top"></div>
+    <div id="center">
+        <div id="navigation"></div>
+        <div id="content"></div>
+        <div id="attributes"></div>
+    </div>
+    <div id="bottom"></div>
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import HelloWorld from './components/HelloWorld.vue';
+import PageView from './components/PageView.vue';
 
-@Options({
-  components: {
-    HelloWorld,
-  },
-})
-export default class App extends Vue {}
+// @Options({
+//     components: {
+//         PageView,
+//     },
+// })
+export default class App extends Vue {
+    
+}
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+<style scoped>
+    #app {
+        display: flex;
+        flex-flow:column nowrap;
+        width:100%;
+        height:auto;
+    }
+    #top {
+        flex-flow:row nowrap;
+        width:100%;
+        height:50px;
+    }
+    #center {
+        display: flex;
+        flex-flow:row nowrap;
+        flex: 1 1 auto;
+        width:100%;
+        height:auto;
+    }
+    #bottom {
+        flex-flow:row nowrap;
+        width:100%;
+        height:30px;
+        align-self:flex-end;
+        visibility: hidden;
+    }
+    #navigation {
+        display: flex;
+        flex-flow:column nowrap;
+        width:100px;
+        height:auto;
+    }
+    #content {
+        flex: 1 1 auto;
+        width:auto;
+        height:auto;
+        overflow: auto;
+    }
+    #attributes {
+        flex-flow:column nowrap;
+        width:100px;
+        height:auto;
+    }
 </style>

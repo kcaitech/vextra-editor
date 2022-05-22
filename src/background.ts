@@ -16,6 +16,9 @@ async function createWindow() {
   const win = new BrowserWindow({
     width: 800,
     height: 600,
+    show: false,
+    // frame:false,
+    useContentSize:false,
     webPreferences: {
       
       // Use pluginOptions.nodeIntegration, leave this alone
@@ -25,6 +28,11 @@ async function createWindow() {
       //preload: path.join(__dirname, 'preload.js'),
     }
   })
+  win.once('ready-to-show', () => {
+    win.show()
+  })
+
+//   win.setMenu(null);
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -33,8 +41,15 @@ async function createWindow() {
   } else {
     createProtocol('app')
     // Load the index.html when not in development
-    win.loadURL('app://./index.html')
+    await win.loadURL('app://./index.html')
   }
+//   setTimeout(() => {
+      
+    //   win.show();
+//   }, 5);
+//   win.once('ready-to-show', () => {
+//     win.show();
+//   });
 }
 
 // Quit when all windows are closed.
@@ -68,12 +83,12 @@ app.on('ready', async () => {
 
   ipcMain.handle('getOpenFilePath', async () => {
 
-    console.log('receive getOpenFilePath');
+    // console.log('receive getOpenFilePath');
      const result = await dialog.showOpenDialog({
         
     });
 
-    console.log(result);
+    // console.log(result);
     if (result.filePaths.length > 0) {
       return result.filePaths[0];
     } else {
