@@ -4,10 +4,14 @@
 </template> -->
 
 <script lang="ts">
-import { Vue } from 'vue-class-component';
+// import { Vue } from 'vue-class-component';
 import { h, defineComponent } from 'vue';
 import comsMap from './comsmap'
 import { Shape, ShapeType } from "../data/shape";
+import Rectangle from "./Rectangle.vue";
+import ShapePath from "./ShapePath.vue"
+import ImageView from "./ImageView.vue"
+import TextView from "./TextView.vue";
 
 export default defineComponent({
     name: "ShapeGroup",
@@ -16,6 +20,14 @@ export default defineComponent({
             type: Shape,
             required: true,
         }
+    },
+
+    components: {
+        Rectangle,
+        // ShapeGroup,
+        ShapePath,
+        ImageView,
+        TextView,
     },
     
     render() {

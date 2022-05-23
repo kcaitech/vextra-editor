@@ -1,6 +1,3 @@
-<!-- <template>
-    <rect fill={{fill}} stroke={{stroke}} x={{x}} y={{y}} width={{width}} height={{height}}></rect>
-</template> -->
 
 <script lang="ts">
 import { Shape } from '@/data/shape';
@@ -36,30 +33,23 @@ export default defineComponent({
                     if (gType == GradientType.Angular) {
                         _class = "" + gid;
                     } else {
-                    fillStr = "url(#" + gid + ")";
+                        fillStr = "url(#" + gid + ")";
                     }
                 }
                 break;
             }
-            case FillType.Pattern:
+            case FillType.Pattern: // todo
                 break;
         }
 
-if (_class) {
-    return h("foreignObject", {width: frame.width, height: frame.height, x:frame.x, y: frame.y},
-        h("div", {width:"100%", height:"100%", "class": _class}));
-}
-else {
-        //console.log("receive", url);
-        return h('rect', { "class": _class, fill: fillStr, "fill-opacity": color ? color.alpha : 1, stroke: 'rgb(0,0,0)', 'stroke-width': 1, x: frame.x, y: frame.y, width: frame.width, height: frame.height });
-}
+        if (_class) {
+            return h("foreignObject", {width: frame.width, height: frame.height, x:frame.x, y: frame.y},
+                h("div", {width:"100%", height:"100%", "class": _class}));
+        }
+        else {
+            return h('rect', { "class": _class, fill: fillStr, "fill-opacity": color ? color.alpha : 1, stroke: 'rgb(0,0,0)', 'stroke-width': 1, x: frame.x, y: frame.y, width: frame.width, height: frame.height });
+        }
     },
-
-    // data() {
-    //     // return {
-    //     //     componentKey: 0,
-    //     // };
-    // },
 
     methods: {
         // forceRerender() {
