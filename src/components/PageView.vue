@@ -4,7 +4,12 @@ import { Gradient, GradientType, Stop } from '../data/style';
 import { defineComponent, h, VNodeArrayChildren } from 'vue';
 import comsMap from './comsmap'
 import { Page } from '../data/page';
-import { ShapeType } from "../data/shape";
+import { ShapeType } from "@/data/shape";
+import Rectangle from "./Rectangle.vue";
+import ShapeGroup from "./ShapeGroup.vue"
+import ShapePath from "./ShapePath.vue"
+import ImageView from "./ImageView.vue"
+import TextView from "./TextView.vue";
 
 export default defineComponent({
     name: 'PageView',
@@ -13,6 +18,14 @@ export default defineComponent({
             type: Page,
             required:true,
         }
+    },
+
+    components: {
+        Rectangle,
+        ShapeGroup,
+        ShapePath,
+        ImageView,
+        TextView,
     },
 
     methods: {
@@ -36,9 +49,8 @@ export default defineComponent({
                 return n;
             }
 
+            let stylesArr:string[] = [];
             gradients.forEach((value: Gradient, key: string, map: Map<string, Gradient>) => {
-
-                let childs: VNodeArrayChildren = [];
                 if (value.gradientType == GradientType.Linear) {
                     let stopSCount = value.stopsCount;
                     let childs = [];
@@ -68,7 +80,7 @@ export default defineComponent({
                         fx: value.from.x,
                         fy: value.from.y,
                         gradientTransform:"translate(" + value.from.x + "," + value.from.y + ")," +
-                            "scale(0.955224, 1.0)," +
+                            // "scale(0.955224, 1.0)," + // todo
                             "rotate(" + Math.atan((value.to.y - value.from.y) / (value.to.x - value.from.x)) / Math.PI * 180 + ")," +
                             "scale(1.0," + value.elipseLength +")," +
                             "translate(" + (-value.from.x) + "," + (-value.from.y) + ")",
@@ -79,22 +91,25 @@ export default defineComponent({
                 else if (value.gradientType == GradientType.Angular) {
                     let gradient = "";
                     let sc = value.stopsCount;
-                    if (sc > 0) {
+                    let calcSmoothColor = () => {
                         let firstStop = value.getStopByIndex(0);
                         let lastStop = value.getStopByIndex(sc - 1);
-                        if (firstStop.position > 0) {
-                            let lastDistance = 1 - lastStop.position;
-                            let firstDistance = firstStop.position;
-                            let fColor = firstStop.color;
-                            let lColor = lastStop.color;
-                            let ratio = 1 / (firstDistance + lastDistance);
-                            let r = (fColor.red * lastDistance * ratio + lColor.red* firstDistance * ratio);
-                            let g = (fColor.green * lastDistance * ratio + lColor.green* firstDistance * ratio);
-                            let b = (fColor.blue * lastDistance * ratio + lColor.blue* firstDistance * ratio);
-                            gradient = "rgb(" + r + "," + g + "," + b + ")" + " 0deg";
-                        }
+                        let lastDistance = 1 - lastStop.position;
+                        let firstDistance = firstStop.position;
+                        let fColor = firstStop.color;
+                        let lColor = lastStop.color;
+                        let ratio = 1 / (firstDistance + lastDistance);
+                        let fRatio = lastDistance * ratio;
+                        let lRatio = firstDistance * ratio;
+                        let r = (fColor.red * fRatio + lColor.red * lRatio);
+                        let g = (fColor.green * fRatio + lColor.green * lRatio);
+                        let b = (fColor.blue * fRatio + lColor.blue * lRatio);
+                        return {r, g, b};
                     }
-
+                    if (sc > 0 && value.getStopByIndex(0).position > 0) {
+                        let {r, g, b} = calcSmoothColor();
+                        gradient = "rgb(" + r + "," + g + "," + b + ")" + " 0deg";
+                    }
                     for (let i = 0; i < sc; i++) {
                         let stop = value.getStopByIndex(i);
                         let color = stop.color;
@@ -103,32 +118,26 @@ export default defineComponent({
                         gradient.length > 0 && (gradient = gradient + ",")
                         gradient = gradient + rgbColor + " " + deg + "deg";
                     }
-
-                    if (sc > 0) {
-                        let firstStop = value.getStopByIndex(0);
-                        let lastStop = value.getStopByIndex(sc - 1);
-                        if (lastStop.position < 1) {
-                            let lastDistance = 1 - lastStop.position;
-                            let firstDistance = firstStop.position;
-                            let fColor = firstStop.color;
-                            let lColor = lastStop.color;
-                            let ratio = 1 / (firstDistance + lastDistance);
-                            let r = (fColor.red * lastDistance * ratio + lColor.red* firstDistance * ratio);
-                            let g = (fColor.green * lastDistance * ratio + lColor.green* firstDistance * ratio);
-                            let b = (fColor.blue * lastDistance * ratio + lColor.blue* firstDistance * ratio);
-                            gradient = gradient + "," + "rgb(" + r + "," + g + "," + b + ")" + " 360deg";
-                        }
+                    if (sc > 0 && value.getStopByIndex(sc - 1).position < 1) {
+                        let {r, g, b} = calcSmoothColor();
+                        gradient = gradient + "," + "rgb(" + r + "," + g + "," + b + ")" + " 360deg";
                     }
-
-                    let n = h("style", {}, "." + key + "{" + 
+                    stylesArr.push("." + key + "{" + 
                         "background: conic-gradient("+gradient+");" + 
                         "height:-webkit-fill-available;" + 
                         "width:-webkit-fill-available;" + 
                         "transform: rotate(90deg);" +
                         "}");
-                    defsChilds.push(n);
                 }
             })
+
+            if (stylesArr.length > 0) {
+                let styles = stylesArr.reduce((pre, cur, curIdx, arr) => {
+                    return pre ? (pre + "\n" + cur) : cur;
+                })
+                let n = h("style", {}, styles);   
+                defsChilds.push(n);
+            }
 
             return [h('defs', {}, defsChilds)];
         }
