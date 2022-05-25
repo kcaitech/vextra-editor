@@ -40,7 +40,7 @@ export default defineComponent({
             let renderStop = (d: Stop) => {
                 var position = d.position;
                 var color = d.color;
-                var rgbColor = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
+                var rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue +  "," + color.alpha + ")";
                 let n = h("stop", {
                     offset: "" + (position * 100) + "%",
                     "stop-color": rgbColor,
@@ -104,29 +104,37 @@ export default defineComponent({
                         let r = (fColor.red * fRatio + lColor.red * lRatio);
                         let g = (fColor.green * fRatio + lColor.green * lRatio);
                         let b = (fColor.blue * fRatio + lColor.blue * lRatio);
-                        return {r, g, b};
+                        let a = (fColor.alpha * fRatio + lColor.alpha * lRatio);
+                        r = Math.min(Math.max(Math.round(r), 0), 255);
+                        g = Math.min(Math.max(Math.round(g), 0), 255);
+                        b = Math.min(Math.max(Math.round(b), 0), 255);
+                        a = Math.min(Math.max(a, 0), 1);
+                        return {r, g, b, a};
                     }
                     if (sc > 0 && value.getStopByIndex(0).position > 0) {
-                        let {r, g, b} = calcSmoothColor();
-                        gradient = "rgb(" + r + "," + g + "," + b + ")" + " 0deg";
+                        let {r, g, b, a} = calcSmoothColor();
+                        gradient = "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 0deg";
                     }
                     for (let i = 0; i < sc; i++) {
                         let stop = value.getStopByIndex(i);
                         let color = stop.color;
-                        let rgbColor = "rgb(" + color.red + "," + color.green + "," + color.blue + ")";
+                        let rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
                         let deg = Math.round(stop.position * 360)// % 360;
                         gradient.length > 0 && (gradient = gradient + ",")
                         gradient = gradient + rgbColor + " " + deg + "deg";
                     }
                     if (sc > 0 && value.getStopByIndex(sc - 1).position < 1) {
-                        let {r, g, b} = calcSmoothColor();
-                        gradient = gradient + "," + "rgb(" + r + "," + g + "," + b + ")" + " 360deg";
+                        let {r, g, b, a} = calcSmoothColor();
+                        gradient = gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
                     }
                     stylesArr.push("." + key + "{" + 
                         "background: conic-gradient("+gradient+");" + 
                         "height:-webkit-fill-available;" + 
                         "width:-webkit-fill-available;" + 
-                        "transform: rotate(90deg);" +
+                        // "transform: rotate(90deg);" +
+                        // "transform-origin: left top;" +
+                        // "rotation:90deg" +
+                        // "rotation-point:0% 0%;" +
                         "}");
                 }
             })
