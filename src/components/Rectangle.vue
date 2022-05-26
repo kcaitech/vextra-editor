@@ -18,38 +18,27 @@ export default defineComponent({
         let style = this.data.style;
         let fillsCount = style.fillsCount;
 
-        let parseFill = function(fill:Fill | Border) {
+        const parseFill = function(fill:Fill | Border) {
             let color = fill.color;
             let fillStr = "none";
             let _class = undefined;
-            switch (fill && fill.fillType || FillType.SolidColor) {
-                case FillType.SolidColor:
-                    if (color) {
-                        fillStr = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
-                    }
-                    break;
-                case FillType.Gradient: {
-                    let gid = fill && fill.gradientId;
-                    let gType = fill && fill.gradientType;
-                    if (gid && gid.length > 0) {
-                        if (gType == GradientType.Angular) {
-                            _class = "" + gid;
-                        } else {
-                            fillStr = "url(#" + gid + ")";
-                        }
-                    }
-                    break;
-                }
-                case FillType.Pattern: // todo
-                    break;
-            }
+            let fillType = fill.fillType;
+            fillType == FillType.SolidColor && 
+                (fillStr = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")") ||
+            fillType == FillType.Gradient && (() => {
+                let gid = fill.gradientId;
+                let gType = fill.gradientType;
+                gid && gid.length > 0 && 
+                    (gType == GradientType.Angular && (_class = "" + gid) ||
+                    (fillStr = "url(#" + gid + ")"))
+                return true;
+            })() ||
+            fillType == FillType.Pattern && (() => {
+                return true;
+            });
             return {fill: fillStr, "class": _class};
         }
-        // let mergeObject = function(lhs:any, rhs: any) {
-        //     Object.keys(rhs).forEach((key) => {
-        //         lhs[key] = rhs[key];
-        //     })
-        // }
+
         let childs = [];
         for (let i = 0; i < fillsCount; i++) {
             let fill = style.getFillByIndex(i);
@@ -58,26 +47,14 @@ export default defineComponent({
             }
             let color = fill.color;
             let fillR = parseFill(fill);
-            // if (childs.length == 0) {
-            //     //parse border?
-                
-            //     if (fillR["class"]) {
-            //         childs.push(h("foreignObject", {width: frame.width, height: frame.height, x:frame.x, y: frame.y},
-            //             h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
-            //     }
-            //     else {
-            //         childs.push(h('rect', { fill: fillR.fill, "fill-opacity": color ? color.alpha : 1, stroke: 'rgb(0,0,0)', 'stroke-width': 1, x: frame.x, y: frame.y, width: frame.width, height: frame.height }));
-            //     }
-            // }
-            // else {
-                if (fillR["class"]) {
-                    childs.push(h("foreignObject", {width: frame.width, height: frame.height, x:frame.x, y: frame.y},
-                        h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
-                }
-                else {
-                    childs.push(h('rect', { fill: fillR.fill, "fill-opacity": color ? color.alpha : 1, stroke: 'none', 'stroke-width': 0, x: frame.x, y: frame.y, width: frame.width, height: frame.height }));
-                }
-            // }
+
+            if (fillR["class"]) {
+                childs.push(h("foreignObject", {width: frame.width, height: frame.height, x:frame.x, y: frame.y},
+                    h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
+            }
+            else {
+                childs.push(h('rect', { fill: fillR.fill, "fill-opacity": color ? color.alpha : 1, stroke: 'none', 'stroke-width': 0, x: frame.x, y: frame.y, width: frame.width, height: frame.height }));
+            }
         }
 
         // border
@@ -94,83 +71,92 @@ export default defineComponent({
             
             const stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
             let fillR = parseFill(border);
-            if (fillR["class"]) {
-                let x = frame.x;
-                let y = frame.y;
-                let width = frame.width;
-                let height = frame.height;
-                switch(position) {
-                    // 需要+0.25个像素左右，消去path间空白间隙
 
-                    case BorderPosition.Inner:
-                        childs.push(h("clipPath", {id: "border" + objectId(border) + "-clippath" + "-" + i}, h("path", {
-                            d:"M " + 0 + " " + 0 + " h " + width + " v " + height + " h " + (-width) + " Z " +
-                            " L " + (thickness) + " " + (thickness) + " v " + (height - 2*thickness) + " h " + (width - 2*thickness) +
-                            " v " + (-height + 2*thickness) + " L " + (thickness) + " " + (thickness)
-                        })));
-                        childs.push(h("foreignObject", {width: frame.width, height: frame.height, x:frame.x, y: frame.y,
-                            "clip-path": "url(#" + "border" + objectId(border) + "-clippath" + "-" + i + ")"},
-                            h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
-                        break;
-                    case BorderPosition.Center:
-                        childs.push(h("clipPath", {id: "border" + objectId(border) + "-clippath" + "-" + i}, h("path", {
-                            d:"M " + 0 + " " + 0 + " h " + (width + thickness) + " v " + (height + thickness) + " h " + (-width - thickness) + " Z " +
-                            " L " + (thickness) + " " + (thickness) + " v " + (height - thickness) + " h " + (width - thickness) +
-                            " v " + (-height + thickness) + " L " + (thickness) + " " + (thickness)
-                        })));
-                        childs.push(h("foreignObject", {width: frame.width + thickness, height: frame.height + thickness, x:frame.x - thickness / 2, y: frame.y - thickness / 2,
-                            "clip-path": "url(#" + "border" + objectId(border) + "-clippath" + "-" + i + ")"},
-                            h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
-                        break;
-                    case BorderPosition.Outer:
-                        childs.push(h("clipPath", {id: "border" + objectId(border) + "-clippath" + "-" + i}, h("path", {
-                            d:"M " + 0 + " " + 0 + " h " + (width + 2*thickness) + " v " + (height + 2*thickness) + " h " + (-width-2*thickness) + " Z " +
-                            " L " + (thickness) + " " + (thickness) + " v " + (height) + " h " + (width) +
-                            " v " + (-height) + " L " + (thickness) + " " + (thickness)
-                        })));
-                        childs.push(h("foreignObject", {width: frame.width + 2*thickness, height: frame.height + 2 * thickness, x:frame.x - thickness, y: frame.y - thickness,
-                            "clip-path": "url(#" + "border" + objectId(border) + "-clippath" + "-" + i + ")"},
-                            h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
-                        break;
-                }
+            const getClipPath = (width: number, height: number, borderId: number) => {
+                const id = "border" + borderId + "-clippath" + "-" + i;
+                const path = "M " + 0 + " " + 0 + " h " + width + " v " + height + " h " + (-width) + " Z " +
+                    " L " + (thickness) + " " + (thickness) + " v " + (height - 2*thickness) + " h " + (width - 2*thickness) +
+                    " v " + (-height + 2*thickness) + " L " + (thickness) + " " + (thickness);
+                let n = h("clipPath", {id}, h("path", {
+                    d: path
+                }));
+                return {id, n};
             }
-            else {
-                // todo thickness 为奇数的情况
+
+            fillR["class"] && (
+            position == BorderPosition.Inner && (() => {
+                let {id, n} = getClipPath(frame.width, frame.height, objectId(border));
+                childs.push(n);
+                childs.push(h("foreignObject", {width: frame.width, 
+                    height: frame.height, 
+                    x:frame.x, 
+                    y: frame.y,
+                    "clip-path": "url(#" + id + ")"},
+                    h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
+                return true;
+            })() ||
+            position == BorderPosition.Center && (() => {
+                let width = frame.width + thickness;
+                let height = frame.height + thickness;
+                let {id, n} = getClipPath(width, height, objectId(border));
+                childs.push(n);
+                childs.push(h("foreignObject", {width, 
+                    height, 
+                    x:frame.x - thickness / 2, 
+                    y: frame.y - thickness / 2,
+                    "clip-path": "url(#" + id + ")"},
+                    h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
+                return true;
+            })() ||
+            position == BorderPosition.Outer && (() => {
+                let width = frame.width + 2*thickness;
+                let height = frame.height + 2*thickness;
+                let {id, n} = getClipPath(width, height, objectId(border));
+                childs.push(n);
+                childs.push(h("foreignObject", {width, 
+                    height, 
+                    x:frame.x - thickness, 
+                    y: frame.y - thickness,
+                    "clip-path": "url(#" + id + ")"},
+                    h("div", {width:"100%", height:"100%", "class": fillR["class"]})));
+                return true;
+            })()) ||
+
+            ( //
+            position == BorderPosition.Inner && (() => {
                 let x = frame.x;
                 let y = frame.y;
                 let width = frame.width;
                 let height = frame.height;
-                switch(position) {
-                    case BorderPosition.Inner:
-                        // 双倍宽度+clipPath
-                        x = x + thickness;
-                        y = y + thickness;
-                        width = width - 2 * thickness;
-                        height = height - 2 * thickness;
-                        break;
-                    case BorderPosition.Center:
-                        // clipPath
-                        // 不处理
-
-                        // x = x + thickness / 2;
-                        // y = y + thickness / 2;
-                        // width = width - thickness;
-                        // height = height - thickness;
-                        break;
-                    case BorderPosition.Outer:
-                        // 双倍宽度+mask
-                        x = x - thickness;
-                        y = y - thickness;
-                        width = width + 2 * thickness;
-                        height = height + 2 * thickness;
-                        break;
-                }
+                x = x + thickness;
+                y = y + thickness;
+                width = width - 2 * thickness;
+                height = height - 2 * thickness;
                 childs.push(h('rect', { fill: "none", stroke, 'stroke-width': thickness, x, y, width, height }));
-            }
-
+                return true;
+            })() ||
+            position == BorderPosition.Center && (() => {
+                let x = frame.x;
+                let y = frame.y;
+                let width = frame.width;
+                let height = frame.height;
+                childs.push(h('rect', { fill: "none", stroke, 'stroke-width': thickness, x, y, width, height }));
+                return true;
+            })() ||
+            position == BorderPosition.Outer && (() => {
+                let x = frame.x;
+                let y = frame.y;
+                let width = frame.width;
+                let height = frame.height;
+                x = x - thickness;
+                y = y - thickness;
+                width = width + 2 * thickness;
+                height = height + 2 * thickness;
+                childs.push(h('rect', { fill: "none", stroke, 'stroke-width': thickness, x, y, width, height }));
+                return true;
+            })())
         }
-
-
+        
         if (childs.length == 0) {
             // todo
             return h('rect', { "fill-opacity": 1, stroke: 'none', 'stroke-width': 0, x: frame.x, y: frame.y, width: frame.width, height: frame.height });
