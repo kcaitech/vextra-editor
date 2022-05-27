@@ -35,119 +35,6 @@ export default defineComponent({
     render() {
         const renderDefs = () => {
             let defsChilds: VNodeArrayChildren = [];
-            const gradients: Map<string, Gradient> = this.data.gradients || new Map();
-
-            let renderStop = (d: Stop) => {
-                var position = d.position;
-                var color = d.color;
-                var rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue +  "," + color.alpha + ")";
-                let n = h("stop", {
-                    offset: "" + (position * 100) + "%",
-                    "stop-color": rgbColor,
-                    "stop-opacity": color.alpha
-                });
-                return n;
-            }
-
-            let stylesArr:string[] = [];
-            gradients.forEach((value: Gradient, key: string, map: Map<string, Gradient>) => {
-                if (value.gradientType == GradientType.Linear) {
-                    let stopSCount = value.stopsCount;
-                    let childs = [];
-                    for (let i = 0; i < stopSCount; i++) {
-                        let s = value.getStopByIndex(i);
-                        childs.push(renderStop(s));
-                    }
-                    let n = h("linearGradient", { id: key, 
-                        x1: value.from.x, 
-                        y1: value.from.y,
-                        x2: value.to.x,
-                        y2: value.to.y,
-                    }, childs);
-                    defsChilds.push(n);
-                }
-                else if (value.gradientType == GradientType.Radial) {
-                    let stopSCount = value.stopsCount;
-                    let childs = [];
-                    for (let i = 0; i < stopSCount; i++) {
-                        let s = value.getStopByIndex(i);
-                        childs.push(renderStop(s));
-                    }
-                    // let scaleX = form
-                    let n = h("radialGradient", { id: key,
-                        cx: value.from.x,
-                        cy: value.from.y,
-                        r: Math.sqrt((value.to.y - value.from.y)**2 + (value.to.x - value.from.x)**2),
-                        fx: value.from.x,
-                        fy: value.from.y,
-                        gradientTransform:"translate(" + value.from.x + "," + value.from.y + ")," +
-                            // "scale(0.955224, 1.0)," + // todo
-                            "rotate(" + Math.atan((value.to.y - value.from.y) / (value.to.x - value.from.x)) / Math.PI * 180 + ")," +
-                            // "scale(" +  + value.elipseLength +")," +
-                            "translate(" + (-value.from.x) + "," + (-value.from.y) + ")",
-                            }, 
-                        childs);
-                    defsChilds.push(n);
-                }
-                else if (value.gradientType == GradientType.Angular) {
-                    let gradient = "";
-                    let sc = value.stopsCount;
-                    let calcSmoothColor = () => {
-                        let firstStop = value.getStopByIndex(0);
-                        let lastStop = value.getStopByIndex(sc - 1);
-                        let lastDistance = 1 - lastStop.position;
-                        let firstDistance = firstStop.position;
-                        let fColor = firstStop.color;
-                        let lColor = lastStop.color;
-                        let ratio = 1 / (firstDistance + lastDistance);
-                        let fRatio = lastDistance * ratio;
-                        let lRatio = firstDistance * ratio;
-                        let r = (fColor.red * fRatio + lColor.red * lRatio);
-                        let g = (fColor.green * fRatio + lColor.green * lRatio);
-                        let b = (fColor.blue * fRatio + lColor.blue * lRatio);
-                        let a = (fColor.alpha * fRatio + lColor.alpha * lRatio);
-                        r = Math.min(Math.max(Math.round(r), 0), 255);
-                        g = Math.min(Math.max(Math.round(g), 0), 255);
-                        b = Math.min(Math.max(Math.round(b), 0), 255);
-                        a = Math.min(Math.max(a, 0), 1);
-                        return {r, g, b, a};
-                    }
-                    if (sc > 0 && value.getStopByIndex(0).position > 0) {
-                        let {r, g, b, a} = calcSmoothColor();
-                        gradient = "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 0deg";
-                    }
-                    for (let i = 0; i < sc; i++) {
-                        let stop = value.getStopByIndex(i);
-                        let color = stop.color;
-                        let rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
-                        let deg = Math.round(stop.position * 360)// % 360;
-                        gradient.length > 0 && (gradient = gradient + ",")
-                        gradient = gradient + rgbColor + " " + deg + "deg";
-                    }
-                    if (sc > 0 && value.getStopByIndex(sc - 1).position < 1) {
-                        let {r, g, b, a} = calcSmoothColor();
-                        gradient = gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
-                    }
-                    stylesArr.push("." + key + "{" + 
-                        "background: conic-gradient("+gradient+");" + 
-                        "height:-webkit-fill-available;" + 
-                        "width:-webkit-fill-available;" + 
-                        // "transform: rotate(90deg);" +
-                        // "transform-origin: left top;" +
-                        // "rotation:90deg" +
-                        // "rotation-point:0% 0%;" +
-                        "}");
-                }
-            })
-
-            if (stylesArr.length > 0) {
-                let styles = stylesArr.reduce((pre, cur, curIdx, arr) => {
-                    return pre ? (pre + "\n" + cur) : cur;
-                })
-                let n = h("style", {}, styles);   
-                defsChilds.push(n);
-            }
-
             return [h('defs', {}, defsChilds)];
         }
 
@@ -181,6 +68,7 @@ export default defineComponent({
             version: "1.1",
             xmlns: "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
+            "xmlns:xhtml":"http://www.w3.org/1999/xhtml",
             viewBox: "" + left + " " + top + " " + (right - left) + " " + (bottom - top),
             width: Math.min(1000, right - left),
             height: Math.min(800, bottom - top)

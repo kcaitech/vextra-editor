@@ -1,3 +1,4 @@
+import { PathShape, Point } from "@/data/shape";
 
 function format(str: string, args: any) {
     const keys = Object.keys(args);
@@ -12,7 +13,7 @@ function normalize(vector: number[]) {
     return [vector[0] / len, vector[1] / len];
 }
 
-export default class PathParser {
+export class PathParser {
     private d: string;
     private __currentPosition!: { x: number; y: number; };
 
@@ -216,4 +217,65 @@ export default class PathParser {
 
         this.__currentPosition = { x: endX, y: endY };
     }
+}
+
+const parser = new PathParser();
+
+export function parsePath(data: PathShape, offsetX: number, offsetY: number, width: number, height: number): string {
+
+    const pc = data.pointsCount;
+    parser.clear();
+    if (pc > 0) {
+        const p = data.getPointByIndex(0);
+        const pt = p.point;
+        parser.moveTo(offsetX + pt.x * width, offsetY + pt.y * height);
+    }
+    const curv2Point = (p: Point, nextP: Point, isClose?: boolean) => {
+        if (p.hasCurveFrom && nextP.hasCurveTo) {
+            const adjFrom = p.curveFrom;
+            const adjTo = nextP.curveTo;
+            const pt = nextP.point;
+            parser.bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
+                offsetX + adjTo.x * width, offsetY + adjTo.y * height,
+                offsetX + pt.x * width, offsetY + pt.y * height);
+        }
+        else if (p.hasCurveFrom && !nextP.hasCurveTo) {
+            const adjFrom = p.curveFrom;
+            const adjTo = nextP.point;
+            const pt = nextP.point;
+            parser.bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
+                offsetX + adjTo.x * width, offsetY + adjTo.y * height,
+                offsetX + pt.x * width, offsetY + pt.y * height);
+        }
+        else if (!p.hasCurveFrom && nextP.hasCurveTo) {
+            const adjFrom = p.point;
+            const adjTo = nextP.curveTo;
+            const pt = nextP.point;
+            parser.bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
+                offsetX + adjTo.x * width, offsetY + adjTo.y * height,
+                offsetX + pt.x * width, offsetY + pt.y * height);
+        }
+        else if (!isClose) {
+            const pt = nextP.point;
+            parser.lineTo(offsetX + pt.x * width, offsetY + pt.y * height);
+        }
+        else {
+            parser.closePath();
+        }
+    }
+    for (let i = 0; i < pc - 1; i++) {
+        const p = data.getPointByIndex(i);
+        const nextP = data.getPointByIndex(i + 1);
+        curv2Point(p, nextP);
+    }
+    if (data.isClosed) {
+        if (pc > 1) {
+            const firstP = data.getPointByIndex(0);
+            const lastP = data.getPointByIndex(pc - 1);
+            curv2Point(lastP, firstP, true);
+        } else {
+            parser.closePath();
+        }
+    }
+    return parser.getD();
 }

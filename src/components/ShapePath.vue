@@ -1,71 +1,11 @@
 
 <script lang="ts">
 import { objectId } from '@/basic/objectid';
-import { PathShape, Point } from '@/data/shape';
-import { Border, BorderPosition, Fill, FillType, GradientType } from '@/data/style';
-import { h, defineComponent } from 'vue';
-import PathParser from './pathparser';
-
-const parser = new PathParser();
-
-function parsePath(data: PathShape, offsetX: number, offsetY: number, width: number, height: number): string {
-
-    let pc = data.pointsCount;
-    parser.clear();
-    if (pc > 0) {
-        let p = data.getPointByIndex(0);
-        let pt = p.point;
-        parser.moveTo(offsetX + pt.x * width, offsetY + pt.y * height);
-    }
-    let curv2Point = (p: Point, nextP: Point, isClose?: boolean) => {
-        if (p.hasCurveFrom && nextP.hasCurveTo) {
-            let adjFrom = p.curveFrom;
-            let adjTo = nextP.curveTo;
-            let pt = nextP.point;
-            parser.bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
-                offsetX + adjTo.x * width, offsetY + adjTo.y * height,
-                offsetX + pt.x * width, offsetY + pt.y * height);
-        }
-        else if (p.hasCurveFrom && !nextP.hasCurveTo) {
-            let adjFrom = p.curveFrom;
-            let adjTo = nextP.point;
-            let pt = nextP.point;
-            parser.bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
-                offsetX + adjTo.x * width, offsetY + adjTo.y * height,
-                offsetX + pt.x * width, offsetY + pt.y * height);
-        }
-        else if (!p.hasCurveFrom && nextP.hasCurveTo) {
-            let adjFrom = p.point;
-            let adjTo = nextP.curveTo;
-            let pt = nextP.point;
-            parser.bezierCurveTo(offsetX + adjFrom.x * width, offsetY + adjFrom.y * height,
-                offsetX + adjTo.x * width, offsetY + adjTo.y * height,
-                offsetX + pt.x * width, offsetY + pt.y * height);
-        }
-        else if (!isClose) {
-            let pt = nextP.point;
-            parser.lineTo(offsetX + pt.x * width, offsetY + pt.y * height);
-        }
-        else {
-            parser.closePath();
-        }
-    }
-    for (let i = 0; i < pc - 1; i++) {
-        let p = data.getPointByIndex(i);
-        let nextP = data.getPointByIndex(i + 1);
-        curv2Point(p, nextP);
-    }
-    if (data.isClosed) {
-        if (pc > 1) {
-            let firstP = data.getPointByIndex(0);
-            let lastP = data.getPointByIndex(pc - 1);
-            curv2Point(lastP, firstP, true);
-        } else {
-            parser.closePath();
-        }
-    }
-    return parser.getD();
-}
+import { PathShape, Point, ShapeFrame } from '@/data/shape';
+import { Border, BorderPosition, Fill, FillType, Gradient, GradientType, Stop } from '@/data/style';
+import { h, defineComponent, VNodeArrayChildren } from 'vue';
+import parseGradient from './gradientparser';
+import { parsePath } from './pathparser';
 
 export default defineComponent({
     name: 'ShapePathView',
@@ -89,51 +29,83 @@ export default defineComponent({
         // return h('path', {d:pathD, fill:'none', stroke: 'rgb(0,0,0)', 'stroke-width':1});
         let style = this.data.style;
         let fillsCount = style.fillsCount;
+        let childs:VNodeArrayChildren = [];
 
-        const parseFill = function (fill: Fill | Border) {
-            let color = fill.color;
-            let fillStr = "none";
-            let _class = undefined;
-            let fillType = fill.fillType;
-            fillType == FillType.SolidColor &&
-                (fillStr = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")") ||
-                fillType == FillType.Gradient && (() => {
-                    let gid = fill.gradientId;
-                    let gType = fill.gradientType;
-                    gid && gid.length > 0 &&
-                        (gType == GradientType.Angular && (_class = "" + gid) ||
-                            (fillStr = "url(#" + gid + ")"))
-                    return true;
-                })() ||
-                fillType == FillType.Pattern && (() => {
-                    return true;
-                });
-            return { fill: fillStr, "class": _class };
-        }
+        // const parseFill = (fill: Fill | Border) => {
+        //     let color = fill.color;
+        //     let fillStr = "none";
+        //     let _class = undefined;
+        //     let fillType = fill.fillType;
+        //     fillType == FillType.SolidColor &&
+        //         (fillStr = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")") ||
+        //         fillType == FillType.Gradient && (() => {
+        //             let g_ = parseGradient(fill.gradient as Gradient, frame, childs);
+        //             let gid = g_.id;
+        //             let gStyle = g_.style;
 
-        let childs = [];
+        //             gid && gid.length > 0 &&
+        //                 (gType == GradientType.Angular && (_class = "" + gid) ||
+        //                     (fillStr = "url(#" + gid + ")"))
+        //             return true;
+        //         })() ||
+        //         fillType == FillType.Pattern && (() => {
+        //             return true;
+        //         });
+        //     return { fill: fillStr, "class": _class };
+        // }
+
+
         for (let i = 0; i < fillsCount; i++) {
             let fill = style.getFillByIndex(i);
             if (!fill.isEnabled) {
                 continue;
             }
             let color = fill.color;
-            let fillR = parseFill(fill);
-
-            if (fillR["class"]) {
-                let id = "fill" + objectId(fill) + "-clippath-" + i;
-                childs.push(h("clipPath", { id }, h("path", {
-                    d: pathD
-                })));
-                childs.push(h("foreignObject", {
-                    width: frame.width, height: frame.height, x: frame.x, y: frame.y,
-                    "clip-path": "url(#" + id + ")"
-                },
-                    h("div", { width: "100%", height: "100%", "class": fillR["class"] })));
-            }
-            else {
-                childs.push(h('path', { d: pathD, fill: fillR.fill, "fill-opacity": color ? color.alpha : 1, stroke: 'none', 'stroke-width': 0, transform: "translate(" + frame.x + " " + frame.y + ")", width: frame.width, height: frame.height }));
-            }
+            let fillType = fill.fillType;
+            fillType == FillType.SolidColor && (() => {
+                childs.push(h('path', { d: pathD, 
+                    fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")", 
+                    "fill-opacity": color ? color.alpha : 1, 
+                    stroke: 'none', 
+                    'stroke-width': 0, 
+                    transform: "translate(" + frame.x + " " + frame.y + ")", 
+                    width: frame.width, 
+                    height: frame.height 
+                }));
+                return true;
+            })() ||
+            fillType == FillType.Gradient && (() => {
+                let g_ = parseGradient(fill.gradient as Gradient, frame);
+                if (g_.node) {
+                    childs.push(g_.node);
+                }
+                let gid = g_.id;
+                let gStyle = g_.style;
+                // let gType = fill.gradient?.gradientType;
+                if (gStyle) {
+                    let id = "fill" + objectId(fill) + "-clippath-" + i;
+                    childs.push(h("clipPath", { id }, h("path", {
+                        d: pathD
+                    })));
+                    childs.push(h("foreignObject", {
+                        width: frame.width, height: frame.height, x: frame.x, y: frame.y,
+                        "clip-path": "url(#" + id + ")"
+                    },
+                        h("div", { width: "100%", height: "100%", style: gStyle })));
+                }
+                else {
+                    childs.push(h('path', { d: pathD, 
+                        fill: "url(#" + gid + ")", 
+                        "fill-opacity": color ? color.alpha : 1, 
+                        stroke: 'none', 
+                        'stroke-width': 0, 
+                        transform: "translate(" + frame.x + " " + frame.y + ")", 
+                        width: frame.width, 
+                        height: frame.height 
+                    }));
+                }
+                return true;
+            })()
         }
 
         // ----------------------------------------------------------
@@ -146,7 +118,7 @@ export default defineComponent({
             }
             const thickness = border.thickness;
             const position = border.position;
-            const fillR = parseFill(border);
+            // const fillR = parseFill(border);
 
             // border svg支持的效果
             // outer 双倍+mask
@@ -155,7 +127,14 @@ export default defineComponent({
             // 需要css支持的效果
             // 上面的线条纯黑做mask
 
-            fillR["class"] && (
+            let fillType = border.fillType;
+            let gradientType = border.gradient && border.gradient.gradientType;
+
+            fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
+                let g_ = parseGradient(border.gradient as Gradient, frame);
+                if (g_.node) {
+                    childs.push(g_.node);
+                }
                 position == BorderPosition.Inner && (() => {
                     let clipId = "border" + objectId(border) + "-clippath-" + i;
                     let id = "border" + objectId(border) + "-mask1-" + i;
@@ -211,7 +190,7 @@ export default defineComponent({
                             height,
                             mask: "url(#" + id + ")"
                         },
-                            h("div", { width: "100%", height: "100%", "class": fillR["class"] }))
+                            h("div", { width: "100%", height: "100%", style:g_.style }))
                     ]));
 
                     return true;
@@ -245,7 +224,7 @@ export default defineComponent({
                         y,
                         mask: "url(#" + id + ")"
                     },
-                        h("div", { width: "100%", height: "100%", "class": fillR["class"] })));
+                        h("div", { width: "100%", height: "100%", style:g_.style })));
                     return true;
                 })() ||
                 position == BorderPosition.Outer && (() => {
@@ -286,11 +265,25 @@ export default defineComponent({
                         y,
                         mask: "url(#" + mask2Id + ")"
                     },
-                        h("div", { width: "100%", height: "100%", "class": fillR["class"] })));
+                        h("div", { width: "100%", height: "100%", style:g_.style })));
                     return true;
-                })()) ||
+                })()
+             })() ||
 
-                ( //
+                (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
+                 //
+                    let stroke;
+                    let color = border.color;
+                    if (fillType == FillType.SolidColor) {
+                        stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+                    } else {
+                        let g_ = parseGradient(border.gradient as Gradient, frame);
+                        if (g_.node) {
+                            childs.push(g_.node);
+                        }
+                        stroke = "url(#" + g_.id + ")";
+                    }
+
                     position == BorderPosition.Inner && (() => {
                         let x = frame.x;
                         let y = frame.y;
@@ -303,7 +296,7 @@ export default defineComponent({
                         childs.push(h('path', {
                             d: pathD,
                             fill: "none",
-                            stroke: fillR.fill,
+                            stroke,
                             'stroke-width': 2 * thickness,
                             transform: "translate(" + x + " " + y + ")",
                             "clip-path": "url(#" + id + ")"
@@ -317,7 +310,7 @@ export default defineComponent({
                         childs.push(h('path', {
                             d: pathD,
                             fill: "none",
-                            stroke: fillR.fill,
+                            stroke,
                             'stroke-width': thickness,
                             transform: "translate(" + x + " " + y + ")"
                         }));
@@ -338,13 +331,17 @@ export default defineComponent({
                         childs.push(h('path', {
                             d: pathD,
                             fill: "none",
-                            stroke: fillR.fill,
+                            stroke,
                             'stroke-width': 2 * thickness,
                             transform: "translate(" + frame.x + " " + frame.y + ")",
                             mask: "url(#" + id + ")"
                         }));
                         return true;
-                    })())
+                    })()
+                 })() ||
+                    fillType == FillType.Pattern && (() => {
+                        return true; // todo
+                    })
         }
         // ----------------------------------------------------------
         // shadows todo
