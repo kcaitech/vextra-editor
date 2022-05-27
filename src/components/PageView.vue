@@ -73,6 +73,7 @@ export default defineComponent({
                         let s = value.getStopByIndex(i);
                         childs.push(renderStop(s));
                     }
+                    // let scaleX = form
                     let n = h("radialGradient", { id: key,
                         cx: value.from.x,
                         cy: value.from.y,
@@ -82,7 +83,7 @@ export default defineComponent({
                         gradientTransform:"translate(" + value.from.x + "," + value.from.y + ")," +
                             // "scale(0.955224, 1.0)," + // todo
                             "rotate(" + Math.atan((value.to.y - value.from.y) / (value.to.x - value.from.x)) / Math.PI * 180 + ")," +
-                            "scale(1.0," + value.elipseLength +")," +
+                            // "scale(" +  + value.elipseLength +")," +
                             "translate(" + (-value.from.x) + "," + (-value.from.y) + ")",
                             }, 
                         childs);

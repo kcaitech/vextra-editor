@@ -132,7 +132,7 @@ export default defineComponent({
                 y = y + thickness;
                 width = width - 2 * thickness;
                 height = height - 2 * thickness;
-                childs.push(h('rect', { fill: "none", stroke, 'stroke-width': thickness, x, y, width, height }));
+                childs.push(h('rect', { fill: "none", stroke: fillR.fill, 'stroke-width': thickness, x, y, width, height }));
                 return true;
             })() ||
             position == BorderPosition.Center && (() => {
@@ -140,7 +140,7 @@ export default defineComponent({
                 let y = frame.y;
                 let width = frame.width;
                 let height = frame.height;
-                childs.push(h('rect', { fill: "none", stroke, 'stroke-width': thickness, x, y, width, height }));
+                childs.push(h('rect', { fill: "none", stroke: fillR.fill, 'stroke-width': thickness, x, y, width, height }));
                 return true;
             })() ||
             position == BorderPosition.Outer && (() => {
@@ -152,7 +152,7 @@ export default defineComponent({
                 y = y - thickness;
                 width = width + 2 * thickness;
                 height = height + 2 * thickness;
-                childs.push(h('rect', { fill: "none", stroke, 'stroke-width': thickness, x, y, width, height }));
+                childs.push(h('rect', { fill: "none", stroke: fillR.fill, 'stroke-width': thickness, x, y, width, height }));
                 return true;
             })())
         }
