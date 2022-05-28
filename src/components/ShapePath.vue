@@ -288,20 +288,18 @@ export default defineComponent({
                         let x = frame.x;
                         let y = frame.y;
                         let id = "border" + objectId(border) + "-clippath-" + i;
-                        let n = h("clipPath", { id }, h("path", {
-                            d: pathD
-                        }));
-                        childs.push(n);
-
-                        childs.push(h('path', {
-                            d: pathD,
-                            fill: "none",
-                            stroke,
-                            'stroke-width': 2 * thickness,
-                            transform: "translate(" + x + " " + y + ")",
-                            "clip-path": "url(#" + id + ")"
-                        }));
-
+                        childs.push(h("g", {transform: "translate(" + x + " " + y + ")"}, [
+                            h("clipPath", { id }, h("path", {
+                                d: pathD
+                            })),
+                            h('path', {
+                                d: pathD,
+                                fill: "none",
+                                stroke,
+                                'stroke-width': 2 * thickness,
+                                "clip-path": "url(#" + id + ")"
+                            })
+                        ]));
                         return true;
                     })() ||
                     position == BorderPosition.Center && (() => {
@@ -322,20 +320,19 @@ export default defineComponent({
                         // let x = frame.x - thickness;
                         // let y = frame.y - thickness;
                         let id = "border" + objectId(border) + "-mask-" + i;
-
-                        childs.push(h("mask", { id }, [
-                            h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
-                            h("path", { d: pathD, fill: "black" })
+                        childs.push(h("g", {transform: "translate(" + frame.x + " " + frame.y + ")"}, [
+                            h("mask", { id }, [
+                                h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
+                                h("path", { d: pathD, fill: "black" })
+                            ]),
+                            h('path', {
+                                d: pathD,
+                                fill: "none",
+                                stroke,
+                                'stroke-width': 2 * thickness,
+                                mask: "url(#" + id + ")"
+                            })
                         ]));
-
-                        childs.push(h('path', {
-                            d: pathD,
-                            fill: "none",
-                            stroke,
-                            'stroke-width': 2 * thickness,
-                            transform: "translate(" + frame.x + " " + frame.y + ")",
-                            mask: "url(#" + id + ")"
-                        }));
                         return true;
                     })()
                  })() ||
