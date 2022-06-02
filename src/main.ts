@@ -11,7 +11,7 @@ import App from "./App.vue";
 // import R = require('raphael');
 // import * as Raphael from "raphael"
 // require("amd-loader");
-import Raphael from "./raphael";
+import Raphael from "./vendor/raphael";
 
 preload.on('ready', (lzData: LzData) => {
 
@@ -32,11 +32,32 @@ preload.on('ready', (lzData: LzData) => {
 createApp(App, {}).mount("#app");
 preload.emit('load');
 
-console.log("amd", Raphael);
-const paper = new Raphael("canvas", 250, 250);
+console.log(Raphael);
+
+
+const paper = new Raphael(document.createElement("div"), 500, 500);
 
 const path = paper.path("M 43,53 183,85 C 194,113 179,136 167,161 122,159 98,195 70,188 z");
 path.attr({fill: "#a00", stroke: "none"});
 
 const ellipse = paper.ellipse(170, 160, 40, 35);
 ellipse.attr({fill: "#0a0", stroke: "none"});
+
+const rect = paper.rect(0, 0, 100, 100);
+const circle = paper.circle(0, 0, 50);
+
+const unionPath = paper.union(path, ellipse);
+const diffPath = paper.difference(path, ellipse);
+const exclPath = paper.exclusion(path, ellipse);
+const intersectPath = paper.intersection(path, ellipse);
+
+
+//draw a new path element using that string
+paper.path(unionPath).attr({fill: "#666"});
+paper.path(diffPath).attr({fill: "#666", transform:"translate(100 0)"});
+paper.path(exclPath).attr({fill: "#666", x: 0, y: 100});
+paper.path(intersectPath).attr({fill: "#666", x: 100, y: 100});
+
+// as they aren't needed anymore remove the other elements
+path.remove();
+ellipse.remove();

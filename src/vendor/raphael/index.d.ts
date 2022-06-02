@@ -2126,6 +2126,46 @@ export interface RaphaelPaper<
     ellipse(x: number, y: number, radiusX: number, radiusY: number): RaphaelElement<TTechnology, RaphaelElementImplementationMap["ellipse"][TTechnology]>;
 
     /**
+     * boolean operation
+     * @param el1 
+     * @param el2 
+     */
+    union(el1: RaphaelElement<TTechnology>, el2: RaphaelElement<TTechnology>): string;
+    /**
+     * boolean operation
+     * @param el1 
+     * @param el2 
+     */
+    difference(el1: RaphaelElement<TTechnology>, el2: RaphaelElement<TTechnology>): string;
+    /**
+     * boolean operation
+     * @param el1 
+     * @param el2 
+     */
+    intersection(el1: RaphaelElement<TTechnology>, el2: RaphaelElement<TTechnology>): string;
+    /**
+     * boolean operation
+     * @param el1 
+     * @param el2 
+     */
+    exclusion(el1: RaphaelElement<TTechnology>, el2: RaphaelElement<TTechnology>): string;
+    /**
+	 * convert a non-path RaphaelJS-Object (rect, circle, ellipse) into a path
+	 *
+	 * @param element
+	 *
+	 * @returns string (path string)
+	 */
+    toPath(element: RaphaelElement<TTechnology>): string;
+
+    /**
+     * return intersection of the two given paths
+     * @param el1 
+     * @param el2 
+     */
+    getPathInters(el1: RaphaelElement<TTechnology>, el2: RaphaelElement<TTechnology>): number[][];
+
+    /**
      * Executes given function for each element on the paper
      *
      * If callback function returns `false` it will stop the loop running.

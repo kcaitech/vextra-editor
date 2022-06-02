@@ -3567,31 +3567,31 @@ define(["eve"], function(eve) {
      > Usage
      | paper.getElementByPoint(mouseX, mouseY).attr({stroke: "#f00"});
     \*/
-    paperproto.getElementByPoint = function (x, y) {
-        var paper = this,
-            svg = paper.canvas,
-            target = g.doc.elementFromPoint(x, y);
-        if (g.win.opera && target.tagName == "svg") {
-            var so = getOffset(svg),
-                sr = svg.createSVGRect();
-            sr.x = x - so.x;
-            sr.y = y - so.y;
-            sr.width = sr.height = 1;
-            var hits = svg.getIntersectionList(sr, null);
-            if (hits.length) {
-                target = hits[hits.length - 1];
-            }
-        }
-        if (!target) {
-            return null;
-        }
-        while (target.parentNode && target != svg.parentNode && !target.raphael) {
-            target = target.parentNode;
-        }
-        target == paper.canvas.parentNode && (target = svg);
-        target = target && target.raphael ? paper.getById(target.raphaelid) : null;
-        return target;
-    };
+    // paperproto.getElementByPoint = function (x, y) {
+    //     var paper = this,
+    //         svg = paper.canvas,
+    //         target = g.doc.elementFromPoint(x, y);
+    //     if (g.win.opera && target.tagName == "svg") {
+    //         var so = getOffset(svg),
+    //             sr = svg.createSVGRect();
+    //         sr.x = x - so.x;
+    //         sr.y = y - so.y;
+    //         sr.width = sr.height = 1;
+    //         var hits = svg.getIntersectionList(sr, null);
+    //         if (hits.length) {
+    //             target = hits[hits.length - 1];
+    //         }
+    //     }
+    //     if (!target) {
+    //         return null;
+    //     }
+    //     while (target.parentNode && target != svg.parentNode && !target.raphael) {
+    //         target = target.parentNode;
+    //     }
+    //     target == paper.canvas.parentNode && (target = svg);
+    //     target = target && target.raphael ? paper.getById(target.raphaelid) : null;
+    //     return target;
+    // };
 
     /*\
      * Paper.getElementsByBBox

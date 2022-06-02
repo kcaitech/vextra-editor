@@ -799,7 +799,7 @@ define(["./raphael.core"], function(Raphael) {
 	 * @returns array pathInters (list of point coordinates)
 	 */
 	var getPathInters = function(el1, el2) {
-		var path1Segs = JSON.parse(JSON.stringify(prepare(el1)));
+		var path1Segs = JSON.parse(JSON.stringify(prepare(el1))); // deep clone
 		var path2Segs = JSON.parse(JSON.stringify(prepare(el2)));
 
 		var ret = [];
