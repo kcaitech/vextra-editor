@@ -17,7 +17,8 @@ var configureWebpack = (config) => {
         },
         extensions: ['.tsx', '.ts', '.js'],
         alias: {
-            '@': path.resolve(__dirname, 'src/')
+            '@': path.resolve(__dirname, 'src/'),
+            // "raphael": path.resolve(__dirname, 'src/raphael/raphael.amd.d.ts')
         },
     }
 }
