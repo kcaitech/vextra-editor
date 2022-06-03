@@ -1,6 +1,6 @@
-File->IO(transform)->Core->PreRender(layout & prepare render)->VUE(render)->UIL(user interactive logic)->Edit->Core->IO(transform)->File
+File->IO(transform)->Core->Render(layout & prepare render)->VUE(render)->UIL(user interactive logic)->Edit->Core->IO(transform)->File
 																					|
-loop Edit->Core->PreRender->VUE(render)->UIL(user interactive logic)
+loop Edit->Core->Render->VUE(render)->UIL(user interactive logic)
 
 
 MVVM模型
@@ -8,7 +8,7 @@ https://docs.microsoft.com/en-us/xamarin/xamarin-forms/enterprise-application-pa
 https://pediaa.com/what-is-the-difference-between-mvc-and-mvvm/
 
 Core: Module
-PreRender: Module
+Render: Module
 UIL: helper for ViewModule
 Edit: helper for ViewModule
 VUE: ViewModule+View

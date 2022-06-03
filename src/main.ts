@@ -61,3 +61,4 @@ paper.path(intersectPath).attr({fill: "#666", x: 100, y: 100});
 // as they aren't needed anymore remove the other elements
 path.remove();
 ellipse.remove();
+paper.clear();
