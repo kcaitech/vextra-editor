@@ -709,7 +709,8 @@ define(["./raphael.core"], function(Raphael) {
 
 		//for difference operation correct path direction (by inverting sub-paths) where necessary
 		if (type == "difference") {
-			for (var i = 0; i < dirCheck.length; i++) {
+			var dcLen = dirCheck && dirCheck.length || 0;
+			for (var i = 0; i < dcLen; i++) {
 				//inside which subpath is the subpath that has to be checked
 				for (var o = 0; o < newPath.length; o++) {
 					if (dirCheck[i] == o) {

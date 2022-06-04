@@ -15,6 +15,10 @@ export default defineComponent({
         type: ImageShape,
         required: true,
     },
+    boolop: {
+            type: Number,
+            required: true,
+        },
     // url: {
     //     type: String,
     //     default: '',

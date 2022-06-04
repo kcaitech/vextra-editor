@@ -11,18 +11,25 @@ export default defineComponent({
         data: {
             type: Shape,
             required: true,
-        }
+        },
+        boolop: {
+            type: Number,
+            required: true,
+        },
     },
 
     render() {
-        let frame = this.data.frame;
-        let style = this.data.style;
 
+        // if (this.data.booleanOperation != BooleanOperation.None) {
+        //     // todo 只画selection
+        //     return;
+        // }
+
+        let frame = this.data.frame;
         let childs = [];
         let path = this.data.getPath(true);
         // fill
         childs.push(...fillR(this.data, path));
-
         // border
         childs.push(...borderR(this.data, path));
         

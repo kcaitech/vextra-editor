@@ -9,7 +9,11 @@ export default defineComponent({
         data: {
             type: TextShape,
             required: true,
-        }
+        },
+        boolop: {
+            type: Number,
+            required: true,
+        },
     },
 
     render() {

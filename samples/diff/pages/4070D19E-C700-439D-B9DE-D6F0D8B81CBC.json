@@ -1,6 +1,6 @@
 {
     "_class": "page",
-    "do_objectID": "A72E99DF-BD11-4D61-9BAD-AC565081D618",
+    "do_objectID": "4070D19E-C700-439D-B9DE-D6F0D8B81CBC",
     "booleanOperation": -1,
     "isFixedToViewport": false,
     "isFlippedHorizontal": false,
@@ -34,7 +34,7 @@
     "hasClippingMask": false,
     "style": {
         "_class": "style",
-        "do_objectID": "FFC30D78-FDDD-4535-A51A-2D532F0A7891",
+        "do_objectID": "1487DF6D-270F-49AA-A327-4E95C9DE571A",
         "endMarkerType": 0,
         "miterLimit": 10,
         "startMarkerType": 0,
@@ -80,8 +80,8 @@
     "layers": [
         {
             "_class": "shapeGroup",
-            "do_objectID": "5F223B81-C625-4FCA-8ADB-8292A266DEF7",
-            "booleanOperation": 0,
+            "do_objectID": "0F3E206F-402E-48C9-BEB9-B348C4EB124C",
+            "booleanOperation": -1,
             "isFixedToViewport": false,
             "isFlippedHorizontal": false,
             "isFlippedVertical": false,
@@ -89,8 +89,8 @@
             "isVisible": true,
             "layerListExpandedType": 2,
             "maintainScrollPosition": false,
-            "name": "Ant-Design",
-            "nameIsFixed": true,
+            "name": "Combined Shape",
+            "nameIsFixed": false,
             "resizingConstraint": 63,
             "resizingType": 0,
             "rotation": 0,
@@ -124,7 +124,7 @@
             "hasClippingMask": false,
             "style": {
                 "_class": "style",
-                "do_objectID": "F37576CF-43DA-49AC-9919-A33A8A80063A",
+                "do_objectID": "FE18E5B4-5A92-4D3F-91DB-E4C03EA4C2D3",
                 "endMarkerType": 0,
                 "miterLimit": 10,
                 "startMarkerType": 0,
@@ -223,8 +223,8 @@
             "layers": [
                 {
                     "_class": "shapePath",
-                    "do_objectID": "0584C701-BCF6-42C9-B0C1-1CE96DA1BBDB",
-                    "booleanOperation": -1,
+                    "do_objectID": "890EA465-92C6-4127-B35A-D1F0678590F8",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -257,7 +257,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "86C103D4-A8DD-44CA-8BCF-00A8BA949CBC",
+                        "do_objectID": "8940E6BA-F22D-40F9-8911-CADC9024DEF0",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -437,8 +437,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "E4CD53C2-FAAB-4868-BF50-315BB5B5FC07",
-                    "booleanOperation": -1,
+                    "do_objectID": "F8EC6C6A-57A4-45A7-8032-24B4A71C7FAD",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -464,14 +464,14 @@
                         "constrainProportions": false,
                         "height": 13.88897231336405,
                         "width": 9.729060168943942,
-                        "x": 9.951459300868343,
+                        "x": 9.951459300868345,
                         "y": 8.49558208294931
                     },
                     "clippingMaskMode": 0,
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "0B3619CC-B38C-43B3-8BA9-3ACAFECD932C",
+                        "do_objectID": "AD34069A-5023-4ECE-90B0-2041F631EC16",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -601,8 +601,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "3809239A-1F32-4C49-AC4F-D3E59E3A2EF7",
-                    "booleanOperation": -1,
+                    "do_objectID": "0D279B0E-98A7-47B8-80F1-DC6B92D60E3E",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -628,14 +628,14 @@
                         "constrainProportions": false,
                         "height": 26.02694333640554,
                         "width": 21.00623528520082,
-                        "x": 33.97698943314266,
+                        "x": 33.97698943314267,
                         "y": 10.14336140092166
                     },
                     "clippingMaskMode": 0,
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "4AC55968-8C3F-4196-B209-71755E75A829",
+                        "do_objectID": "622BD62A-3275-4781-BBCB-239780FE29F1",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -855,8 +855,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "3A8AEB47-DD0E-4F6A-9C1E-5B49046F71A3",
-                    "booleanOperation": -1,
+                    "do_objectID": "720DEAAA-0FA3-48A9-85FC-9EF271EEB336",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -883,13 +883,13 @@
                         "height": 32.20517257142858,
                         "width": 14.21889775120072,
                         "x": 59.05102611587977,
-                        "y": 4.149556940092169
+                        "y": 4.149556940092168
                     },
                     "clippingMaskMode": 0,
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "5773132A-1D96-4EA3-A81A-CE10DA3ED8B4",
+                        "do_objectID": "192074F4-01F5-43CC-8F03-D22A62363FD1",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -1169,8 +1169,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "BA2CCAAA-84D2-44ED-8466-1D2D020BFBCA",
-                    "booleanOperation": -1,
+                    "do_objectID": "ADDD27F8-C83D-4672-9BA2-32C5CD128C40",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -1203,7 +1203,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "9ADCE010-900B-44B8-837F-7CDC6D2FFB93",
+                        "do_objectID": "238A4B9D-8681-4DC3-AAE6-3CC52AE83A92",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -1353,8 +1353,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "CD9C532F-1922-44F7-BCFC-F62BC98D5D12",
-                    "booleanOperation": -1,
+                    "do_objectID": "0AE5D6EB-C480-45EE-BAFD-01B622878F92",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -1381,13 +1381,13 @@
                         "height": 25.0587133640553,
                         "width": 17.94618177059432,
                         "x": 97.05091450200617,
-                        "y": 6.639291133640547
+                        "y": 6.639291133640548
                     },
                     "clippingMaskMode": 0,
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "00E1359F-2258-4600-AF40-AB3CF70E4388",
+                        "do_objectID": "06D4F82B-E50D-473B-B72D-2EF45EBCCDD8",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -1537,8 +1537,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "A6AD29F5-3B49-4037-A4A4-5967C7E5450C",
-                    "booleanOperation": -1,
+                    "do_objectID": "CB3B898D-4218-4C64-A968-C74AF5678C0F",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -1571,7 +1571,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "AA388039-3234-467F-8217-C77BB2A3FE84",
+                        "do_objectID": "1982CD77-BEDC-44A1-B568-F4975ECCA3E7",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -1701,8 +1701,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "2EC54CD6-DB29-42CE-91C6-3CE82D6A1F01",
-                    "booleanOperation": -1,
+                    "do_objectID": "0E2274E9-56FC-4F7C-944F-DF231E7E3598",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -1735,7 +1735,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "192EDCCE-7EF6-4F14-B0FD-CABB3AC741C9",
+                        "do_objectID": "FAC7BC0D-E4C6-4801-9B33-6D2F43581718",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -1945,8 +1945,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "E91BA0D3-7401-4509-A726-752819C4633C",
-                    "booleanOperation": -1,
+                    "do_objectID": "B3E38734-C64B-484E-A455-0D27B3D7D5DC",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -1979,7 +1979,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "338E9B9A-1A5D-43C6-8B7F-CED35A828E2E",
+                        "do_objectID": "2A8032C3-E833-45DC-A46B-6EBC6B95BD10",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -2279,8 +2279,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "282824F9-580E-433E-9097-327E89A52489",
-                    "booleanOperation": -1,
+                    "do_objectID": "DDC42F34-39E2-42E8-A5DF-0762A30CD893",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -2313,7 +2313,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "E3784F40-7F77-4F4B-B782-01D1CA379BDD",
+                        "do_objectID": "4FF2AFFD-E140-4D77-A341-F75487FC5A78",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -2453,8 +2453,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "0386EE4F-274D-4C8A-8558-20FAC2D2E128",
-                    "booleanOperation": -1,
+                    "do_objectID": "4D81C297-7ABE-4FCF-9E81-B87592BCD97F",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -2481,13 +2481,13 @@
                         "height": 6.270441585253455,
                         "width": 6.258156165999424,
                         "x": 176.552498494954,
-                        "y": 0
+                        "y": 1.332267629550188e-15
                     },
                     "clippingMaskMode": 0,
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "2E88FE84-FCEF-4902-94E1-9CA3B4173A96",
+                        "do_objectID": "B604ED9E-2E4F-4475-9DBB-03B834CEEC13",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -2627,8 +2627,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "739380FA-A3EA-42B0-8355-67F05ADFEA94",
-                    "booleanOperation": -1,
+                    "do_objectID": "12219CBD-1B09-4D05-8FEE-5BACBB862DCF",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -2661,7 +2661,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "6B40FD35-C38B-4D07-AA1D-D96F23A19CEB",
+                        "do_objectID": "5027AB4F-AAFF-4B12-AE1A-C7205E55C9B7",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -2801,8 +2801,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "467914A9-5E3E-438B-953A-FA22C273CCF3",
-                    "booleanOperation": -1,
+                    "do_objectID": "98DF94B2-CB45-4CE9-9234-92940DC0D737",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -2835,7 +2835,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "4CD51699-8263-48CD-B9A4-A5B61690E483",
+                        "do_objectID": "C76F2A72-67BE-421C-B7D6-38104D05821C",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,
@@ -3085,8 +3085,8 @@
                 },
                 {
                     "_class": "shapePath",
-                    "do_objectID": "1BD7BD68-62E9-44AD-B7D5-B7FE2A918446",
-                    "booleanOperation": -1,
+                    "do_objectID": "0F1DEE65-FEBC-4274-82BC-DAA45FDCED70",
+                    "booleanOperation": 3,
                     "isFixedToViewport": false,
                     "isFlippedHorizontal": false,
                     "isFlippedVertical": false,
@@ -3119,7 +3119,7 @@
                     "hasClippingMask": false,
                     "style": {
                         "_class": "style",
-                        "do_objectID": "9543E9F9-2018-443F-AD3F-ED6EC18A751D",
+                        "do_objectID": "2F3BE80F-4DD5-494D-B4DD-86A0532A9401",
                         "endMarkerType": 0,
                         "miterLimit": 10,
                         "startMarkerType": 0,

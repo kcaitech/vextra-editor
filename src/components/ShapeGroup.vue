@@ -7,11 +7,12 @@
 // import { Vue } from 'vue-class-component';
 import { h, defineComponent } from 'vue';
 import comsMap from './comsmap'
-import { Shape, ShapeType } from "../data/shape";
+import { BoolOp, Shape, ShapeType } from "../data/shape";
 import Rectangle from "./Rectangle.vue";
 import ShapePath from "./ShapePath.vue"
 import ImageView from "./ImageView.vue"
 import TextView from "./TextView.vue";
+import { render as gR } from "@/render/group";
 
 export default defineComponent({
     name: "ShapeGroup",
@@ -19,7 +20,11 @@ export default defineComponent({
         data: {
             type: Shape,
             required: true,
-        }
+        },
+        boolop: {
+            type: Number,
+            required: true,
+        },
     },
 
     components: {
@@ -31,16 +36,7 @@ export default defineComponent({
     },
     
     render() {
-        var childs = [];
-        var cc = this.data.childsCount;
-        for (var i = 0; i < cc; i++) {
-            var child = this.data.getChildByIndex(i);
-            let com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-            let node = h(com, {data:child});
-            childs.push(node);
-        }
-        var frame = this.data.frame;
-        return h('g', {transform:'translate('+frame.x+','+frame.y+')'}, childs);
+        return gR(this.data, this.boolop, comsMap);
     }
 })
 </script>

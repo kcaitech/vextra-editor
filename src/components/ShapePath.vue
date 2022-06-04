@@ -1,6 +1,6 @@
 
 <script lang="ts">
-import { PathShape } from '@/data/shape';
+import { BoolOp, PathShape } from '@/data/shape';
 import { h, defineComponent, VNodeArrayChildren } from 'vue';
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
@@ -11,19 +11,21 @@ export default defineComponent({
         data: {
             type: PathShape,
             required: true,
-        }
+        },
+        boolop: {
+            type: Number,
+            required: true,
+        },
     },
 
     render() {
+        // if (this.data.boolOp != BoolOp.None) {
+        //     // todo 只画selection
+        //     return;
+        // }
+        
         let frame = this.data.frame;
-        // let pc = this.data.pointsCount;
-
-        // ----------------------------------------------------------
-        // 拆出到render/layout
         let path = this.data.getPath(true);
-
-        let style = this.data.style;
-        let fillsCount = style.fillsCount;
         let childs:VNodeArrayChildren = [];
 
         // fill

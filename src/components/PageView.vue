@@ -60,7 +60,7 @@ export default defineComponent({
             top = Math.min(top, cf.y);
 
             let com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-            let node = h(com, { data: child });
+            let node = h(com, { data: child, boolop: this.data.boolOp });
             childs.push(node);
         }
 
