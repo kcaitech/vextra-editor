@@ -100,7 +100,7 @@ function curveDim(p1x: number, p1y: number, c1x: number, c1y: number, c2x: numbe
     };
 }
 
-interface BBox {
+export interface BBox {
     x: number,
     y: number,
     x2: number,
@@ -135,7 +135,7 @@ function bezierBBox(...args: any[]): BBox {
     };
 }
 
-function isPointInsideBBox(bbox: BBox, x: number, y: number) {
+export function isPointInsideBBox(bbox: BBox, x: number, y: number) {
     return x >= bbox.x && x <= bbox.x2 && y >= bbox.y && y <= bbox.y2;
 }
 
@@ -193,9 +193,9 @@ function bezlen(...args: any[]): number {
     return z2 * sum;
 }
 
-function findDotsAtSegment(arr: number[]): any;
-function findDotsAtSegment(p1x: number, p1y: number, c1x: number, c1y: number, c2x: number, c2y: number, p2x: number, p2y: number, t: number): any;
-function findDotsAtSegment(...args: any[]) {
+export function findDotsAtSegment(arr: number[]): any;
+export function findDotsAtSegment(p1x: number, p1y: number, c1x: number, c1y: number, c2x: number, c2y: number, p2x: number, p2y: number, t: number): any;
+export function findDotsAtSegment(...args: any[]) {
     const arr = args.length == 1 ? args[0] : args;
     const p1x = arr[0], p1y = arr[1], c1x = arr[2], c1y = arr[3], c2x = arr[4], c2y = arr[5], p2x = arr[6], p2y = arr[7], t = arr[8];
     const t1 = 1 - t,
@@ -240,6 +240,7 @@ function interHelper(bez1: number[], bez2: number[], justCount: boolean): number
         dots2 = [],
         xy: any = {},
         res: number | { x: number, y: number, t1: number, t2: number }[] = justCount ? 0 : [];
+	// 线段化
     for (let i = 0; i < n1 + 1; i++) {
         const p = findDotsAtSegment(bez1.concat(i / n1));
         dots1.push({ x: p.x, y: p.y, t: i / n1 });
@@ -339,4 +340,54 @@ export function pathIntersection(path1: (string | number)[][], path2: (string | 
         }
     }
     return res;
+}
+
+
+export function pathBBox(path: (number | string)[][]) {
+    // var pth = paths(path);
+    // if (pth.bbox) {
+    //     return clone(pth.bbox);
+    // }
+    // if (!path) {
+    //     return {x: 0, y: 0, width: 0, height: 0, x2: 0, y2: 0};
+    // }
+    // path = path2curve(path);
+    let x = 0,
+        y = 0,
+        X: number[] = [],
+        Y: number[] = [],
+        p;
+    for (let i = 0, ii = path.length; i < ii; i++) {
+        p = path[i];
+        if (p[0] == "M") {
+            x = <number>p[1];
+            y = <number>p[2];
+            X.push(x);
+            Y.push(y);
+        } else {
+            const dim = curveDim(x, y, <number>p[1], <number>p[2], <number>p[3], <number>p[4], <number>p[5], <number>p[6]);
+            X = X.concat(dim.min.x, dim.max.x);
+            Y = Y.concat(dim.min.y, dim.max.y);
+            x = <number>p[5];
+            y = <number>p[6];
+        }
+    }
+    const xmin = X.reduce((p, c) => Math.min(p, c)),
+        ymin = Y.reduce((p, c) => Math.min(p, c)),
+        xmax = X.reduce((p, c) => Math.max(p, c)),
+        ymax = Y.reduce((p, c) => Math.max(p, c)),
+        width = xmax - xmin,
+        height = ymax - ymin,
+            bb = {
+            x: xmin,
+            y: ymin,
+            x2: xmax,
+            y2: ymax,
+            width: width,
+            height: height,
+            cx: xmin + width / 2,
+            cy: ymin + height / 2
+        };
+    // pth.bbox = clone(bb);
+    return bb;
 }
