@@ -6,7 +6,7 @@
 
 \*********************************************************************************************/
 
-import { findDotsAtSegment, isPointInsideBBox, pathBBox, pathIntersection } from "./intersect";
+import { findDotsAtSegment, isBBoxIntersect, isPointInsideBBox, pathBBox, pathIntersection } from "./intersect";
 
 /*********************************************************************************************\
 
@@ -32,7 +32,7 @@ import { findDotsAtSegment, isPointInsideBBox, pathBBox, pathIntersection } from
  *
  * @returns string
  */
-function pathArrToStr(pathArr: (string | number)[][]): string {
+export function pathArrToStr(pathArr: (string | number)[][]): string {
     return pathArr.join(",").replace(/,?([achlmqrstvxz]),?/gi, "$1");
 }
 
@@ -41,7 +41,7 @@ function pathArrToStr(pathArr: (string | number)[][]): string {
  *
  * @returns string (path string)
  */
-export function pathSegsToStr(pathSegs: (string | number)[][]): string {
+export function pathSegsToStr(pathSegs: (string|number)[][]): string {
     return pathArrToStr(pathSegsToArr(pathSegs));
 }
 
@@ -52,18 +52,18 @@ export function pathSegsToStr(pathSegs: (string | number)[][]): string {
  *
  * @returns array pathSegs (path as a collection of segments)
  */
-function pathArrToSegs(pathArr: (string | number)[][]): (string | number)[][] {
-    const pathSegs = [];
+function pathArrToSegs(pathArr: (string | number)[][]): (number)[][] {
+    const pathSegs:(number)[][] = [];
 
     for (let i = 0; i < pathArr.length; i++) {
         //if command is a moveto create new sub-path
-        const seg = [];
+        const seg: number[] = [];
         if (pathArr[i][0] != "M") {
 
-            seg.push(pathArr[i - 1][pathArr[i - 1].length - 2], pathArr[i - 1][pathArr[i - 1].length - 1]);
+            seg.push(<number>pathArr[i - 1][pathArr[i - 1].length - 2],<number> pathArr[i - 1][pathArr[i - 1].length - 1]);
 
             for (let j = 1; j < pathArr[i].length; j++) {
-                seg.push(pathArr[i][j]);
+                seg.push(<number>pathArr[i][j]);
             }
         }
         //add empty segments for "moveto", because Raphael counts it when calculating interceptions
@@ -83,7 +83,7 @@ function pathArrToSegs(pathArr: (string | number)[][]): (string | number)[][] {
  *
  * @returns array pathArr (RaphaelJS path array)
  */
-function pathSegsToArr(pathSegs: (string | number)[][]): (string | number)[][] {
+function pathSegsToArr(pathSegs: (string|number)[][]): (string | number)[][] {
     const pathArr = [];
 
     for (let i = 0; i < pathSegs.length; i++) {
@@ -117,7 +117,7 @@ function pathSegsToArr(pathSegs: (string | number)[][]): (string | number)[][] {
  *
  * @returns void
  */
-function markSubpathEndings(...args: (string | number)[][][]) {
+function markSubpathEndings(...args: (number)[][][]) {
     let currentId, //id of the current path's starting point
         markedCount = 0;
     const markedPoints:any = {};
@@ -162,11 +162,6 @@ function markSubpathEndings(...args: (string | number)[][][]) {
     }
 }
 
-// interface Segment extends Array<number> {
-//     startPoint?: string,
-//     endPoint?: string,
-// }
-
 /**
  * splits a segment of given path into two by using de Casteljau's algorithm (http://en.wikipedia.org/wiki/De_Casteljau%27s_algorithm - Geometric interpretation)
  *
@@ -176,7 +171,7 @@ function markSubpathEndings(...args: (string | number)[][][]) {
  * @returns void
  */
 function splitSegment(pathSegs: any, segNr: number, t: number, newPoint: number[], intersId: number) {
-    const oldSeg = pathSegs[segNr - 1];
+    const oldSeg = pathSegs[segNr];
 
     //new anchor for start point of segment / bezier curve
     const newA1_1 = [oldSeg[0] + t * (oldSeg[2] - oldSeg[0]), oldSeg[1] + t * (oldSeg[3] - oldSeg[1])];
@@ -204,7 +199,7 @@ function splitSegment(pathSegs: any, segNr: number, t: number, newPoint: number[
     }
 
     //insert new segments and replace the old one
-    pathSegs.splice(segNr - 1, 1, newSeg1, newSeg2);
+    pathSegs.splice(segNr, 1, newSeg1, newSeg2);
 }
 
 /**
@@ -261,7 +256,7 @@ function insertIntersectionPoints(pathSegs: any, pathNr: number, inters: any) {
  *
  * @returns bool
  */
-function isSegInsidePath(seg: any, path: (string|number)[][]) {
+function isSegInsidePath(seg: any, path: (number)[][]) {
     //get point on segment (t = 0.5)
     const point = findDotsAtSegment(seg[0], seg[1], seg[2], seg[3], seg[4], seg[5], seg[6], seg[7], 0.5);
 
@@ -270,26 +265,8 @@ function isSegInsidePath(seg: any, path: (string|number)[][]) {
     const dx = bbox.width * 1.1;
     const dy = bbox.height * Math.random() / 100;
     return isPointInsideBBox(bbox, point.x, point.y) &&
-        (<number>pathIntersection(path, [["M", point.x, point.y], ["l", dx, dy]], true) % 2) == 1;
+        (<number>pathIntersection(path, [[point.x, point.y,point.x, point.y,point.x+dx, point.y+dy,point.x+dx, point.y+dy]], true) % 2) == 1;
 }
-
-/**
- * find the two segments that touch the given intersection
- *
- * @param int intersId (id of the intersection returned by Raphael.pathIntersection)
- * @param array pathSegArr (segment representation of a path)
- *
- * @returns array (contains ids of the segments)
- */
-// function findSegmentsByIntersId(intersId, pathSegArr) {
-//     for (let i = 0; i < pathSegArr.length; i++) {
-//         if (typeof pathSegArr[i].endPoint != "undefined" && pathSegArr[i].endPoint == intersId) {
-//             break;
-//         }
-//     }
-
-//     return [i, i + 1];
-// }
 
 /**
  * invert the coordinates of given segment array
@@ -308,9 +285,6 @@ function invertSeg(segCoords: number[]) {
     segCoords[5] = tmp[3];
     segCoords[6] = tmp[0];
     segCoords[7] = tmp[1];
-
-    //return [segCoords[6], segCoords[7], segCoords[4], segCoords[5], segCoords[2], segCoords[3], segCoords[0], segCoords[1]];
-    //return segCoords;
 }
 
 /**
@@ -347,7 +321,7 @@ function invertPart(part: any) {
  *
  * @returns int dir (1: clockwise, -1: counter clockwise)
  */
-function getPathDirection(pathSegArr: (number | string)[][]) {
+function getPathDirection(pathSegArr: (number)[][]) {
     let dir = -1;
     let minT, maxT;
 
@@ -361,8 +335,8 @@ function getPathDirection(pathSegArr: (number | string)[][]) {
     //"draw" a horizontal line from left to right at half height of path's bbox,
     //with some jitter to avoid intersecting at exact vertices.
     const lineY = box.y + box.height / 2;
-    const line = [["M", box.x ,  (lineY - box.height * Math.random() / 100)],
-        ["L", box.x2 ,  (lineY + box.height * Math.random() / 100)]];
+    const line = [[box.x ,  (lineY - box.height * Math.random() / 100),box.x ,  (lineY - box.height * Math.random() / 100),
+        box.x2 ,  (lineY + box.height * Math.random() / 100), box.x2 ,  (lineY + box.height * Math.random() / 100)]];
 
     //get intersections of line and path
     const inters = <any[]>pathIntersection(line, pathSegArr);
@@ -399,9 +373,13 @@ function getPathDirection(pathSegArr: (number | string)[][]) {
  *
  * @returns array validInters (filtered path intersections calculated by Raphael.pathIntersections())
  */
-function getIntersections(path1: (string|number)[][], path2: (string|number)[][]) {
+function getIntersections(path1: (number)[][], path2: (number)[][]) {
     const box1 = pathBBox(path1);
     const box2 = pathBBox(path2);
+    if (!isBBoxIntersect(box1, box2)) {
+        return [];
+    }
+
     //min. deviation to assume point as different from another
     const d = Math.max(box1.width, box1.height, box2.width, box2.height) / 1000;
     const inters = <any[]>pathIntersection(path1, path2);
@@ -439,7 +417,7 @@ function getIntersections(path1: (string|number)[][], path2: (string|number)[][]
  *
  * @returns array newParts (array of arrays holding segments)
  */
-function buildNewPathParts(type:string, path1Segs:(string|number)[][], path2Segs:(string|number)[][]) {
+function buildNewPathParts(type:string, path1Segs:(number)[][], path2Segs:(number)[][]) {
     let IOSituationChecked = false;
     let insideOtherPath; //temporary flag
     let partNeeded = false;
@@ -571,7 +549,7 @@ function buildPartIndexes(parts:any[]) {
  * @returns array resultPath (segment representation of the operation's resulting path)
  */
 function buildNewPath(type: string, parts:any[], inversions:any[], startIndex: any) {
-    const newPath:(string|number)[][][] = [];
+    const newPath:(number)[][][] = [];
 
     //for union operation correct path directions where necessary
     if (type == "union") {
@@ -593,7 +571,7 @@ function buildNewPath(type: string, parts:any[], inversions:any[], startIndex: a
         let subPath:number[][] = [];
         dirCheck = []; //starting position of subpaths marked for a direction check
 
-        while (partsAdded < parts.length) {
+        while (partsAdded < parts.length && curPart) {
             //for difference operation prepare correction of path directions where necessary
             if (type == "difference") {
                 //if part was belonging to path 2 and starting point = ending point (means part was a subpath of path2 and completely inside path1)
@@ -646,7 +624,7 @@ function buildNewPath(type: string, parts:any[], inversions:any[], startIndex: a
     }
 
     //flatten new path
-    let resultPath:(string|number)[][] = [];
+    let resultPath:(number)[][] = [];
     for (let i = 0; i < newPath.length; i++) {
         resultPath = resultPath.concat(newPath[i]);
     }
@@ -663,9 +641,9 @@ function buildNewPath(type: string, parts:any[], inversions:any[], startIndex: a
  *
  * @return array newPath (segment representation of the resulting path)
  */
-function execBO(type: string, path1Segs:(string | number)[][], path2Segs:(string | number)[][]) {
-    path1Segs = JSON.parse(JSON.stringify(path1Segs)); // deep clone
-    path2Segs = JSON.parse(JSON.stringify(path2Segs));
+function execBO(type: string, path1Segs:(number)[][], path2Segs:(number)[][]) {
+    // path1Segs = JSON.parse(JSON.stringify(path1Segs)); // deep clone
+    // path2Segs = JSON.parse(JSON.stringify(path2Segs));
 
     //mark the starting and ending points of the subpaths
     markSubpathEndings(path1Segs, path2Segs);
@@ -693,39 +671,9 @@ function execBO(type: string, path1Segs:(string | number)[][], path2Segs:(string
  *
  * @returns array pathSegs (given element in path segment representation)
  */
-function prepare(pathArr: (string | number)[][]):(string | number)[][] {
-    //get path array (convert element to path)
-    // let pathArr = (el.type == "path") ? el.attr("path") : toPath(el);
-
-    //get rid of transformations
-    // pathArr = Raphael.transformPath(pathArr, el.matrix.toTransformString());
-
-    //convert to curves
-    // pathArr = Raphael.path2curve(pathArr);
-
-    //convert RaphaelJS' internal path representation to segment representation (of bezier curves) for better handling
+function prepare(pathArr: (string | number)[][]):(number)[][] {
     return pathArrToSegs(pathArr);
 }
-
-/**
- * return intersection of the two given paths
- *
- * @param object el1 (RaphaelJS element)
- * @param object el2 (RaphaelJS element)
- *
- * @returns array pathInters (list of point coordinates)
- */
-// function getPathInters(el1:(string | number)[][], el2:(string | number)[][]) {
-//     let path1Segs = JSON.parse(JSON.stringify(prepare(el1))); // deep clone
-//     let path2Segs = JSON.parse(JSON.stringify(prepare(el2)));
-
-//     let ret = [];
-//     let inters = getIntersections(pathSegsToStr(path1Segs), pathSegsToStr(path2Segs));
-//     for (let i = 0; i < inters.length; ++i) {
-//         ret.push([inters[i].x, inters[i].y]);
-//     }
-//     return ret;
-// }
 
 /**
  * perform a union of the two given paths
@@ -780,6 +728,9 @@ export function intersection(el1: (string | number)[][], el2: (string | number)[
 export function exclusion(el1: (string | number)[][], el2: (string | number)[][]):(string | number)[][] {
     const pathA = prepare(el1),
         pathB = prepare(el2);
-    return (execBO("difference", pathA, pathB)).concat(execBO("difference", pathB, pathA));
+    return (execBO("difference", 
+        JSON.parse(JSON.stringify(pathA)), 
+        JSON.parse(JSON.stringify(pathB))))
+        .concat(execBO("difference", pathB, pathA));
 }
 

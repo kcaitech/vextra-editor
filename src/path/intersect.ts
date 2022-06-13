@@ -139,7 +139,7 @@ export function isPointInsideBBox(bbox: BBox, x: number, y: number) {
     return x >= bbox.x && x <= bbox.x2 && y >= bbox.y && y <= bbox.y2;
 }
 
-function isBBoxIntersect(bbox1: BBox, bbox2: BBox) {
+export function isBBoxIntersect(bbox1: BBox, bbox2: BBox) {
     const i = isPointInsideBBox;
     return i(bbox2, bbox1.x, bbox1.y)
         || i(bbox2, bbox1.x2, bbox1.y)
@@ -238,9 +238,10 @@ function interHelper(bez1: number[], bez2: number[], justCount: boolean): number
         n2 = Math.max(~~(l2 / 5), 1),
         dots1 = [],
         dots2 = [],
-        xy: any = {},
-        res: number | { x: number, y: number, t1: number, t2: number }[] = justCount ? 0 : [];
-	// 线段化
+        xy: any = {};
+    const res: number | { x: number, y: number, t1: number, t2: number }[] = justCount ? 0 : [];
+    let count = 0;
+    // 线段化
     for (let i = 0; i < n1 + 1; i++) {
         const p = findDotsAtSegment(bez1.concat(i / n1));
         dots1.push({ x: p.x, y: p.y, t: i / n1 });
@@ -267,7 +268,7 @@ function interHelper(bez1: number[], bez2: number[], justCount: boolean): number
                     t2 = dj.t + Math.abs((is[cj] - dj[cj]) / (dj1[cj] - dj[cj])) * (dj1.t - dj.t);
                 if (t1 >= 0 && t1 <= 1.001 && t2 >= 0 && t2 <= 1.001) {
                     if (justCount) {
-                        (res as number)++;
+                        count++;
                     } else {
                         (res as { x: number, y: number, t1: number, t2: number }[]).push({
                             x: is.x,
@@ -280,62 +281,32 @@ function interHelper(bez1: number[], bez2: number[], justCount: boolean): number
             }
         }
     }
-    return res;
+    return justCount ? count : res;
 }
 
-export function pathIntersection(path1: (string | number)[][], path2: (string | number)[][], justCount?: boolean) {
+export function pathIntersection(path1: (string|number)[][], path2: (string|number)[][], justCount?: boolean) {
     // path1 = R._path2curve(path1);
     // path2 = R._path2curve(path2);
-    let x1: number = 0, y1: number = 0,
-        x2: number = 0, y2: number = 0,
-        x1m: number = 0, y1m: number = 0,
-        x2m: number = 0, y2m: number = 0,
-        bez1: number[], bez2: number[];
+    let bez1: number[], bez2: number[];
     let res: number | any[] = justCount ? 0 : [];
     for (let i = 0, ii = path1.length; i < ii; i++) {
         const pi = path1[i];
-        if (pi[0] == "M") {
-            x1 = x1m = pi[1] as number;
-            y1 = y1m = pi[2] as number;
-        } else {
-            if (pi[0] == "C") {
-                bez1 = [x1, y1].concat(pi.slice(1) as number[]);
-                x1 = bez1[6];
-                y1 = bez1[7];
+        bez1 = <number[]>pi;
+        for (let j = 0, jj = path2.length; j < jj; j++) {
+            const pj = path2[j];
+            bez2 = <number[]>pj;
+            const intr = interHelper(bez1, bez2, justCount || false);
+            if (justCount) {
+                (res as number) += intr as number;
             } else {
-                bez1 = [x1, y1, x1, y1, x1m, y1m, x1m, y1m];
-                x1 = x1m;
-                y1 = y1m;
-            }
-            for (let j = 0, jj = path2.length; j < jj; j++) {
-                const pj = path2[j];
-                if (pj[0] == "M") {
-                    x2 = x2m = pj[1] as number;
-                    y2 = y2m = pj[2] as number;
-                } else {
-                    if (pj[0] == "C") {
-                        bez2 = [x2, y2].concat(pj.slice(1) as number[]);
-                        x2 = bez2[6];
-                        y2 = bez2[7];
-                    } else {
-                        bez2 = [x2, y2, x2, y2, x2m, y2m, x2m, y2m];
-                        x2 = x2m;
-                        y2 = y2m;
-                    }
-                    const intr = interHelper(bez1, bez2, justCount || false);
-                    if (justCount) {
-                        (res as number) += intr as number;
-                    } else {
-                        const arr = intr as any[];
-                        for (let k = 0, kk = arr.length; k < kk; k++) {
-                            arr[k].segment1 = i;
-                            arr[k].segment2 = j;
-                            arr[k].bez1 = bez1;
-                            arr[k].bez2 = bez2;
-                        }
-                        res = (res as any[]).concat(arr);
-                    }
+                const arr = intr as any[];
+                for (let k = 0, kk = arr.length; k < kk; k++) {
+                    arr[k].segment1 = i;
+                    arr[k].segment2 = j;
+                    arr[k].bez1 = bez1;
+                    arr[k].bez2 = bez2;
                 }
+                res = (res as any[]).concat(arr);
             }
         }
     }
@@ -343,7 +314,7 @@ export function pathIntersection(path1: (string | number)[][], path2: (string | 
 }
 
 
-export function pathBBox(path: (number | string)[][]) {
+export function pathBBox(path: (number)[][]) {
     // var pth = paths(path);
     // if (pth.bbox) {
     //     return clone(pth.bbox);
@@ -352,33 +323,21 @@ export function pathBBox(path: (number | string)[][]) {
     //     return {x: 0, y: 0, width: 0, height: 0, x2: 0, y2: 0};
     // }
     // path = path2curve(path);
-    let x = 0,
-        y = 0,
-        X: number[] = [],
-        Y: number[] = [],
-        p;
+    let X: number[] = [],
+        Y: number[] = [];
     for (let i = 0, ii = path.length; i < ii; i++) {
-        p = path[i];
-        if (p[0] == "M") {
-            x = <number>p[1];
-            y = <number>p[2];
-            X.push(x);
-            Y.push(y);
-        } else {
-            const dim = curveDim(x, y, <number>p[1], <number>p[2], <number>p[3], <number>p[4], <number>p[5], <number>p[6]);
-            X = X.concat(dim.min.x, dim.max.x);
-            Y = Y.concat(dim.min.y, dim.max.y);
-            x = <number>p[5];
-            y = <number>p[6];
-        }
+        const p = path[i];
+        const dim = curveDim(<number>p[0], <number>p[1], <number>p[2], <number>p[3], <number>p[4], <number>p[5], <number>p[6], <number>p[7]);
+        X = X.concat(dim.min.x, dim.max.x);
+        Y = Y.concat(dim.min.y, dim.max.y);
     }
-    const xmin = X.reduce((p, c) => Math.min(p, c)),
-        ymin = Y.reduce((p, c) => Math.min(p, c)),
-        xmax = X.reduce((p, c) => Math.max(p, c)),
-        ymax = Y.reduce((p, c) => Math.max(p, c)),
+    const xmin = X.reduce((p, c) => Math.min(p, c), 0),
+        ymin = Y.reduce((p, c) => Math.min(p, c), 0),
+        xmax = X.reduce((p, c) => Math.max(p, c), 0),
+        ymax = Y.reduce((p, c) => Math.max(p, c), 0),
         width = xmax - xmin,
         height = ymax - ymin,
-            bb = {
+        bb = {
             x: xmin,
             y: ymin,
             x2: xmax,

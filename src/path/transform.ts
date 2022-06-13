@@ -7,7 +7,7 @@ const pathCommand = /([achlmrqstvz])[\x09\x0a\x0b\x0c\x0d\x20\xa0\u1680\u180e\u2
 const pathValues = /(-?\d*\.?\d*(?:e[\-+]?\d+)?)[\x09\x0a\x0b\x0c\x0d\x20\xa0\u1680\u180e\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\u2028\u2029]*,?[\x09\x0a\x0b\x0c\x0d\x20\xa0\u1680\u180e\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\u2028\u2029]*/ig;
 
 export function parsePathString(pathString: string): (string | number)[][] {
-    if (!pathString) {
+    if (!pathString || pathString.length == 0) {
         return [];
     }
     // const pth = paths(pathString);
@@ -88,7 +88,7 @@ function catmullRom2bezier(crp: number[], z: boolean): (string | number)[][] {
     return d;
 }
 
-export function pathToAbsolute(pathArray: (string | number)[][]) {
+export function pathToAbsolute(pathArray: (string | number)[][]):(string | number)[][] {
     // let pth = paths(pathArray);
     // if (pth.abs) {
     //     return pathClone(pth.abs);
@@ -96,9 +96,9 @@ export function pathToAbsolute(pathArray: (string | number)[][]) {
     // if (!R.is(pathArray, array) || !R.is(pathArray && pathArray[0], array)) { // rough assumption
     //     pathArray = R.parsePathString(pathArray);
     // }
-    // if (!pathArray || !pathArray.length) {
-    //     return [["M", 0, 0]];
-    // }
+    if (pathArray.length == 0) {
+        return [["M", 0, 0]];
+    }
 
     let res = [],
         x = 0,
