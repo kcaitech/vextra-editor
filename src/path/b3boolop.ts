@@ -8,8 +8,8 @@ boolean op -> rebuild path [+非闭合?]-> ant curve -> path:string
 */
 
 import { B3Curve } from "./b3curve";
-import { B3Path, B3PathSegments, InnerSide } from "./b3path";
-import { Line, Point } from "./basic";
+import { B3Path, B3PathSegments, InnerSide, Segment } from "./b3path";
+import { accuracy, Line, Point } from "./basic";
 import { parsePathString, path2curve, pathToAbsolute } from "./transform";
 
 interface B3Pos {
@@ -75,15 +75,26 @@ function splitAtInters(_this: B3Path, inters: B3PathInters[]) {
         }
     }
     let offset = 0;
-    indexs.sort((a, b) => { return a.i - b.i; });
-    for (let i = 0; i < indexs.length; i++) {
+    indexs.sort((a, b) => { return a.i - b.i || a.t - b.t });
+    for (let i = 0, len = indexs.length; i < len; i++) {
         const ii = indexs[i];
         const idx = ii.i + offset;
         const t = ii.t;
+        if (Math.abs(t) < accuracy || Math.abs(1-t) < accuracy) { // 端点
+            continue;
+        }
         const c = _this[idx];
         const s = c.split(t);
         _this.splice(idx, 1, ...s);
         offset++;
+        // todo 同一个curve多次split
+        for (let j = i + 1; j < len; j++) {
+            const ji = indexs[j];
+            if (ji.i !== ii.i) {
+                break;
+            }
+            ji.t = (ji.t - t) / (1-t);
+        }
     }
 }
 
@@ -283,22 +294,24 @@ function toPath(segments: B3PathSegments) {
 }
 
 function sortSegments(segments: B3PathSegments, firstPath: B3Path) {
+    let firstSeg:Segment | undefined;
     const newsegments = B3PathSegments.make();
     for (let i = 0, len = segments.length; i < len; i++) {
         const seg = segments[i];
         if (seg.origin === firstPath) {
             seg.used = true;
             newsegments.push(seg);
+            firstSeg = seg;
             break;
         }
     }
-    while (newsegments.length < segments.length) {
+    while (firstSeg && newsegments.length < segments.length) {
         const last = newsegments[newsegments.length - 1];
         let nexts = segments.getStartSegments(last.segment[last.segment.length - 1].end);
         let find = false;
         for (let i = 0, len = nexts && nexts.length || 0; i < len; i++) {
             if (!nexts[i].used) {
-                if (last.inside === nexts[i].inside) {
+                if (firstSeg.inside === nexts[i].inside) {
                     nexts[i].used = true;
                     newsegments.push(nexts[i]);
                     find = true;
@@ -312,9 +325,16 @@ function sortSegments(segments: B3PathSegments, firstPath: B3Path) {
         nexts = segments.getEndSegments(last.segment[last.segment.length - 1].end);
         for (let i = 0, len = nexts && nexts.length || 0; i < len; i++) {
             if (!nexts[i].used) {
-                if (last.inside !== nexts[i].inside) {
+                if (firstSeg.inside !== nexts[i].inside) {
                     nexts[i].used = true;
                     nexts[i].segment.reverse();
+                    nexts[i].inside = ((inside)=>{
+                        switch(inside) {
+                            case InnerSide.Left: return InnerSide.Right;
+                            case InnerSide.Right: return InnerSide.Left;
+                            default: return inside;
+                        }
+                    })(nexts[i].inside);
                     newsegments.push(nexts[i]);
                     find = true;
                     break;
@@ -325,10 +345,27 @@ function sortSegments(segments: B3PathSegments, firstPath: B3Path) {
             continue;
         }
         else {
+            if (firstSeg !== last && (firstSeg).segment[0].start.extremeClose(last.segment[last.segment.length - 1].end)) { // closed
+                for (let i = 0, len = segments.length; i < len; i++) {
+                    const seg = segments[i];
+                    if (seg.origin === firstPath && !seg.used) {
+                        seg.used = true;
+                        newsegments.push(seg);
+                        firstSeg = seg;
+                        find = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (find) {
+            continue;
+        } else {
             // error?
             throw new Error("wrong path?");
             // break;
         }
+        // 
     }
     return newsegments;
 }
@@ -404,22 +441,25 @@ function _subtract(path0: B3Path, path1: B3Path): B3Path {
     toSegments(p1, path1, segments);
     markInnerSide(segments);
     // sort
+    let firstSeg:Segment | undefined;
     const newsegments = B3PathSegments.make();
     for (let i = 0, len = segments.length; i < len; i++) {
         const seg = segments[i];
         if (seg.origin === path0) {
             seg.used = true;
             newsegments.push(seg);
+            firstSeg = seg;
             break;
         }
     }
-    while (newsegments.length < segments.length) {
+    while (firstSeg && newsegments.length < segments.length) {
         const last = newsegments[newsegments.length - 1];
         let nexts = segments.getStartSegments(last.segment[last.segment.length - 1].end);
         let find = false;
         for (let i = 0, len = nexts && nexts.length || 0; i < len; i++) {
             if (!nexts[i].used) {
-                if (last.inside !== nexts[i].inside) {
+                if (firstSeg.origin === nexts[i].origin && firstSeg.inside === nexts[i].inside ||
+                    firstSeg.origin !== nexts[i].origin && firstSeg.inside !== nexts[i].inside) {
                     nexts[i].used = true;
                     newsegments.push(nexts[i]);
                     find = true;
@@ -433,9 +473,17 @@ function _subtract(path0: B3Path, path1: B3Path): B3Path {
         nexts = segments.getEndSegments(last.segment[last.segment.length - 1].end);
         for (let i = 0, len = nexts && nexts.length || 0; i < len; i++) {
             if (!nexts[i].used) {
-                if (last.inside === nexts[i].inside) {
+                if (firstSeg.origin !== nexts[i].origin && firstSeg.inside === nexts[i].inside ||
+                    firstSeg.origin === nexts[i].origin && firstSeg.inside !== nexts[i].inside) {
                     nexts[i].used = true;
                     nexts[i].segment.reverse();
+                    nexts[i].inside = ((inside)=>{
+                            switch(inside) {
+                                case InnerSide.Left: return InnerSide.Right;
+                                case InnerSide.Right: return InnerSide.Left;
+                                default: return inside;
+                            }
+                        })(nexts[i].inside);
                     newsegments.push(nexts[i]);
                     find = true;
                     break;
@@ -446,6 +494,22 @@ function _subtract(path0: B3Path, path1: B3Path): B3Path {
             continue;
         }
         else {
+            if (firstSeg !== last && firstSeg.segment[0].start.extremeClose(last.segment[last.segment.length - 1].end)) { // closed
+                for (let i = 0, len = segments.length; i < len; i++) {
+                    const seg = segments[i];
+                    if (seg.origin === path0 && !seg.used) {
+                        seg.used = true;
+                        newsegments.push(seg);
+                        firstSeg = seg;
+                        find = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (find) {
+            continue;
+        } else {
             // error?
             throw new Error("wrong path?");
             // break;
@@ -456,7 +520,7 @@ function _subtract(path0: B3Path, path1: B3Path): B3Path {
 
 function _xor(path0: B3Path, path1: B3Path): B3Path {
     const p: B3Path = _subtract(path0, path1);
-    p.concat(_subtract(path1, path0));
+    p.push(..._subtract(path1, path0));
     return p;
 }
 

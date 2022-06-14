@@ -30,7 +30,9 @@ export class Point {
             this.y < b.bottom && this.y > b.top;
     }
     toString() {
-        return "[" + this.x.toFixed(fix_float) + "," + this.y.toFixed(fix_float) + "]";
+        const xstr = this.x.toFixed(6);
+        const ystr = this.y.toFixed(6);
+        return "[" + xstr.substring(0,xstr.lastIndexOf('.')+4) + "," + ystr.substring(0,ystr.lastIndexOf('.')+4) + "]";
     }
     clone() {
         return Point.make(this.x, this.y);
@@ -170,9 +172,17 @@ export function linePointAt(p0: Point, p1: Point, t: number) {
     return Point.make(x, y);
 }
 
+function splitLine(start: Point, end: Point, t: number): Line[] {
+    const pAtT = Point.make(start.x + (end.x - start.x) * t, start.y + (end.y - start.y) * t);
+    return [Line.make(start, pAtT), Line.make(pAtT, end)];
+}
+
 export class Line {
     private m_start: Point;
     private m_end: Point;
+    private m_midSplit?: Line[];
+    private m_parent?: Line;
+    private m_bbox?: Box;
     constructor(start: Point, end: Point) {
         this.m_start = start;
         this.m_end = end;
@@ -187,7 +197,7 @@ export class Line {
         return this.m_end;
     }
     get bbox() {
-        return Box.make(this.m_start, this.m_end);
+        return this.m_bbox || (this.m_bbox = Box.make(this.m_start, this.m_end));
     }
     getIntersectPoint(l: Line): Point | undefined {
         return intersectPoint(this.start.x,
@@ -207,5 +217,37 @@ export class Line {
     }
     clone() {
         return Line.make(this.start.clone(), this.end.clone());
+    }
+    splitAtMid(): Line[] {
+        return this.m_midSplit ||
+        (this.m_midSplit = splitLine(this.m_start,
+            this.m_end, 0.5).map((c) => {
+                c.m_parent = this;
+                return c;
+            }));
+    }
+    getTRefTo(p: Line): number {
+        let c: Line | undefined = this;
+        let arr = [];
+        while (c) {
+            if (c == p) {
+                break;
+            }
+            arr.push(c);
+            c = c.m_parent;
+        }
+        if (c == undefined) {
+            return -1;
+        }
+        arr = arr.reverse();
+        let t = 0;
+        for (let i = 0, len = arr.length; i < len; i++) {
+            const c = arr[i];
+            const p = c.m_parent as Line;
+            if (c == (p?.m_midSplit as Array<Line>)[1]) {
+                t = t + (1 / 2) ** (i + 1);
+            }
+        }
+        return t;
     }
 }

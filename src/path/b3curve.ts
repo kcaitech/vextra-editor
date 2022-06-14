@@ -221,33 +221,53 @@ function intersections2(curve0: B3Curve, curve1: B3Curve | Line): { x: number, y
     if (!curve0.bbox.intersect(curve1.bbox)) {
         return [];
     }
-    if (curve1 instanceof Line) { // todo
-        curve1 = B3Curve.make(curve1.start, curve1.start, curve1.end, curve1.end);
-    }
+    // if (curve1 instanceof Line) { // todo
+    //     curve1 = B3Curve.make(curve1.start, curve1.start, curve1.end, curve1.end);
+    // }
 
     const ret:{ x: number, y: number, t0: number, t1: number }[] = [];
-    const pending = [curve0, curve1];
+    const pending:(B3Curve|Line)[] = [curve0, curve1];
     while (pending.length > 0) {
-        const c1 = pending.pop() as B3Curve;
-        const c0 = pending.pop() as B3Curve;
+        const c1 = <B3Curve|Line>pending.pop();
+        const c0 = <B3Curve|Line>pending.pop();
         if (c0.bbox.extremeSmall() && c1.bbox.extremeSmall()) {
                 console.log("intersections2", c0, c1);
-                ret.push({x: c0.start.x, y: c0.start.y, t0: c0.getTRefTo(curve0), t1:c1.getTRefTo(curve1)});
+                ret.push({x: c0.start.x, y: c0.start.y, t0: c0.getTRefTo(<any>curve0), t1:c1.getTRefTo(<any>curve1)});
                 continue;
         }
-        const a0 = c0.bbox.extremeSmall() ? [c0, c0] : c0?.splitAtMid() as B3Curve[];
-        const a1 = c1.bbox.extremeSmall() ? [c1, c1] : c1?.splitAtMid() as B3Curve[];
-        if (a0[0].bbox.intersect(a1[0].bbox)) {
-            pending.push(a0[0], a1[0]);
+        if (c0.bbox.extremeSmall()) {
+            const a1 = c1?.splitAtMid();
+            if (c0.bbox.intersect(a1[0].bbox)) {
+                pending.push(c0, a1[0]);
+            }
+            if (c0.bbox.intersect(a1[1].bbox)) {
+                pending.push(c0, a1[1]);
+            }
         }
-        if (a0[0].bbox.intersect(a1[1].bbox)) {
-            pending.push(a0[0], a1[1]);
+        else if (c1.bbox.extremeSmall()) {
+            const a0 = c0?.splitAtMid();
+            if (a0[0].bbox.intersect(c1.bbox)) {
+                pending.push(a0[0], c1);
+            }
+            if (a0[0].bbox.intersect(c1.bbox)) {
+                pending.push(a0[0], c1);
+            }
         }
-        if (a0[1].bbox.intersect(a1[0].bbox)) {
-            pending.push(a0[1], a1[0]);
-        }
-        if (a0[1].bbox.intersect(a1[1].bbox)) {
-            pending.push(a0[1], a1[1]);
+        else {
+            const a0 = c0?.splitAtMid();
+            const a1 = c1?.splitAtMid();
+            if (a0[0].bbox.intersect(a1[0].bbox)) {
+                pending.push(a0[0], a1[0]);
+            }
+            if (a0[0].bbox.intersect(a1[1].bbox)) {
+                pending.push(a0[0], a1[1]);
+            }
+            if (a0[1].bbox.intersect(a1[0].bbox)) {
+                pending.push(a0[1], a1[0]);
+            }
+            if (a0[1].bbox.intersect(a1[1].bbox)) {
+                pending.push(a0[1], a1[1]);
+            }
         }
     }
     return ret;
@@ -365,7 +385,7 @@ export class B3Curve {
         this.m_end = p;
         p = this.m_c0;
         this.m_c0 = this.m_c1;
-        this.m_c1 = this.m_c0;
+        this.m_c1 = p;
         if (this.m_discretePoints) {
             this.m_discretePoints.forEach((v) => { v.t = 1 - v.t })
         }
