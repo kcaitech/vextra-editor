@@ -1,5 +1,5 @@
 import { B3Curve } from "./b3curve";
-import { Box, Point } from "./basic";
+import { Box, Line, Point } from "./basic";
 
 export class B3Path extends Array<B3Curve> {
     private m_bbox?: Box;
@@ -30,6 +30,12 @@ export class B3Path extends Array<B3Curve> {
     }
     innerRevert() {
         this.forEach((v) => v.invert());
+    }
+    nonezeroCount(l: Line, exclude?: B3Curve):number {
+        return this.reduce<number>((count, curve) => {
+            if (exclude && exclude.isSameCurve(curve)) return count;
+            return count + curve.nonezeroCount(l);
+        }, 0);
     }
 }
 

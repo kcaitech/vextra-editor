@@ -1,4 +1,4 @@
-import { Box, intersectPoint, Line, lineLength, linePointAt, Point } from "./basic";
+import { accuracy, Box, intersectPoint, Line, lineLength, linePointAt, Point } from "./basic";
 
 function extreme(p0: number, p1: number, p2: number, p3: number): number[] {
     const _a = p3 - p2;
@@ -231,7 +231,7 @@ function intersections2(curve0: B3Curve, curve1: B3Curve | Line): { x: number, y
         const c1 = <B3Curve|Line>pending.pop();
         const c0 = <B3Curve|Line>pending.pop();
         if (c0.bbox.extremeSmall() && c1.bbox.extremeSmall()) {
-                console.log("intersections2", c0, c1);
+                // console.log("intersections2", c0, c1);
                 ret.push({x: c0.start.x, y: c0.start.y, t0: c0.getTRefTo(<any>curve0), t1:c1.getTRefTo(<any>curve1)});
                 continue;
         }
@@ -286,6 +286,8 @@ export class B3Curve {
     private m_selfInters?: { x: number, y: number, t0: number, t1: number }[];
     private m_midSplit?: B3Curve[];
     private m_parent?: B3Curve;
+    private m_extreme?: number[];
+    private m_extremeSplit?: B3Curve[];
     constructor(start: Point, c0: Point, c1: Point, end: Point) {
         this.m_start = start;
         this.m_c0 = c0;
@@ -301,6 +303,44 @@ export class B3Curve {
             this.m_c1.extremeClose(curve.m_c1) &&
             this.m_end.extremeClose(curve.m_end);
     }
+    private get extremes() {
+        if (this.m_extreme) return this.m_extreme;
+        const ex = extreme(this.m_start.x, this.m_c0.x, this.m_c1.x, this.m_end.x);
+        const ey = extreme(this.m_start.y, this.m_c0.y, this.m_c1.y, this.m_end.y);
+        this.m_extreme = ([...ex, ...ey].sort()).reduce<number[]>((arr, cur) => {
+            if (Math.abs(cur) > accuracy && Math.abs(1-cur) > accuracy) {
+                if (arr.length === 0) {
+                    arr.push(cur);
+                    return arr;
+                }
+                const last = arr[arr.length - 1];
+                if (Math.abs(last - cur) > accuracy) {
+                    arr.push(cur);
+                    return arr;
+                }
+            }
+            return arr;
+        }, []);
+        return this.m_extreme;
+    }
+    get extremeSplits():B3Curve[] {
+        if (this.m_extremeSplit) return this.m_extremeSplit;
+        const ex = this.extremes;
+        const ret:B3Curve[] = [];
+        let lastCurve:B3Curve = this;
+        for (let i = 0, len = ex.length, pre = 0; i < len; i++) {
+            const e = (ex[i] - pre) / (1 - pre);
+            pre = ex[i];
+            const splits = lastCurve.split(e);
+            ret.push(splits[0]);
+            lastCurve = splits[1];
+        }
+        if (lastCurve !== this) {
+            ret.push(lastCurve);
+        }
+        this.m_extremeSplit = ret;
+        return ret;
+    }
     get start() {
         return this.m_start;
     }
@@ -314,7 +354,23 @@ export class B3Curve {
         return this.m_c1;
     }
     get bbox(): Box {
-        return this.m_bbox || (this.m_bbox = boundingBox(this.m_start, this.m_c0, this.m_c1, this.m_end));
+        if (this.m_bbox) return this.m_bbox;
+        const exsplits = this.extremeSplits;
+        if (exsplits.length > 0) {
+            const ret = exsplits.reduce((pre, c) => {
+                pre.left = Math.min(pre.left, Math.min(c.start.x, c.end.x));
+                pre.top = Math.min(pre.top, Math.min(c.start.y, c.end.y));
+                pre.right = Math.max(pre.right, Math.max(c.start.x, c.end.x));
+                pre.bottom = Math.max(pre.bottom, Math.max(c.start.y, c.end.y));
+                return pre;
+            }, 
+            {left: this.start.x, top: this.start.y, right: this.start.x, bottom: this.start.y});
+            this.m_bbox = Box.make(ret.left, ret.top, ret.right, ret.bottom);
+        }
+        else {
+            this.m_bbox = Box.make(this.m_start, this.m_end);
+        }
+        return this.m_bbox;
     }
     get isLine(): boolean {
         if (this.m_isLine !== undefined) return this.m_isLine;
@@ -400,6 +456,10 @@ export class B3Curve {
                 this.m_c1,
                 this.m_end, 0.5).map((c) => {
                     c.m_parent = this;
+                    if (this.extremeSplits.length === 0) {
+                        c.m_extremeSplit = [];
+                        c.m_extreme = [];
+                    }
                     return c;
                 }));
     }
@@ -426,5 +486,33 @@ export class B3Curve {
             }
         }
         return t;
+    }
+    nonezeroCount(l: Line):number {
+        const ex = this.extremeSplits;
+        const nz: number = ((ex.length > 0 ? ex : [this]).reduce<number>((pre, c) => {
+
+            if (intersectPoint(c.start.x,
+                c.start.y,
+                c.end.x,
+                c.end.y,
+                l.start.x,
+                l.start.y,
+                l.end.x,
+                l.end.y)) {
+
+                    const a = { x: c.end.x - c.start.x, y: c.end.y - c.start.y };
+                    const b = { x: l.start.x - c.start.x, y: l.start.y - c.start.y };
+                    const d = a.x * b.y - a.y * b.x;
+                    if (d > 0) { // point at curve's left side, so nonezero direction is counertclockwise
+                        pre--;
+                    }
+                    else if (d < 0) { // right side, clockwise
+                        pre++;
+                    }
+            }
+            return pre;
+
+        }, 0))
+        return nz;
     }
 }

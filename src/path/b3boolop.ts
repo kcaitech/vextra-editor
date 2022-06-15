@@ -177,23 +177,26 @@ function isCurveInsidePath(curve: B3Curve, path: B3Path): boolean {
     const dx = bbox.width * 1.1;
     const dy = bbox.height * Math.random() / 100;
     const line = Line.make(point.clone(), Point.make(point.x + dx, point.y + dy));
+    // return path.nonezeroCount(line) !== 0;
 
-    const inters = intersections(path, line);
-    let nonezero = 0;
-    // https://zhuanlan.zhihu.com/p/148148902
-    inters.forEach((v) => {
-        const curve = <B3Curve>v.pos0.curve;
-        const a = { x: curve.end.x - curve.start.x, y: curve.end.y - curve.start.y };
-        const b = { x: point.x - curve.start.x, y: point.y - curve.start.y };
-        const d = a.x * b.y - a.y * b.x;
-        if (d > 0) { // point at curve's left side, so nonezero direction is counertclockwise
-            nonezero--;
-        }
-        else if (d < 0) { // right side, clockwise
-            nonezero++;
-        }
-    });
-    return nonezero !== 0;
+    // const inters = intersections(path, line);
+    // let nonezero = 0;
+    // // https://zhuanlan.zhihu.com/p/148148902
+    // inters.forEach((v) => {
+    //     const curve = <B3Curve>v.pos0.curve;
+    //     const a = { x: curve.end.x - curve.start.x, y: curve.end.y - curve.start.y };
+    //     const b = { x: point.x - curve.start.x, y: point.y - curve.start.y };
+    //     const d = a.x * b.y - a.y * b.x;
+    //     if (d > 0) { // point at curve's left side, so nonezero direction is counertclockwise
+    //         nonezero--;
+    //     }
+    //     else if (d < 0) { // right side, clockwise
+    //         nonezero++;
+    //     }
+    // });
+    // return nonezero !== 0;
+
+    return path.nonezeroCount(line) !== 0;
 }
 
 // function nonezero(point: Point, path: B3Path) {
@@ -227,25 +230,34 @@ function nonezero(curve: B3Curve, path: B3Path, leftSide?: boolean) {
 
     // 右射线
     const line = Line.make(point.clone(), Point.make(x, y));
-    const inters = intersections(path, line);
-    let nonezero = 0;
-    // https://zhuanlan.zhihu.com/p/148148902
-    inters.forEach((v) => {
-        const c = <B3Curve>v.pos0.curve;
-        if (!c.isSameCurve(curve)) {
-            const a = { x: c.end.x - c.start.x, y: c.end.y - c.start.y };
-            const b = { x: point.x - c.start.x, y: point.y - c.start.y };
-            const d = a.x * b.y - a.y * b.x;
-            if (d > 0) { // point at curve's left side, so nonezero direction is counertclockwise
-                nonezero--;
-            }
-            else if (d < 0) { // right side, clockwise
-                nonezero++;
-            }
-        }
-    });
-    // return nonezero !== 0 ? InnerSide.Right : InnerSide.Left;
-    return nonezero;
+
+
+    // const inters = intersections(path, line);
+    // let nonezero = 0;
+    // // https://zhuanlan.zhihu.com/p/148148902
+    // inters.forEach((v) => {
+    //     const c = <B3Curve>v.pos0.curve;
+    //     if (!c.isSameCurve(curve)) {
+    //         const a = { x: c.end.x - c.start.x, y: c.end.y - c.start.y };
+    //         const b = { x: point.x - c.start.x, y: point.y - c.start.y };
+    //         const d = a.x * b.y - a.y * b.x;
+    //         if (d > 0) { // point at curve's left side, so nonezero direction is counertclockwise
+    //             nonezero--;
+    //         }
+    //         else if (d < 0) { // right side, clockwise
+    //             nonezero++;
+    //         }
+    //     }
+    // });
+    // // return nonezero !== 0 ? InnerSide.Right : InnerSide.Left;
+
+    // const qnz = path.nonezeroCount(line, curve);
+    // if (qnz !== nonezero) {
+    //     console.log("nonezero", qnz, nonezero);
+    // }
+    // return nonezero;
+
+    return path.nonezeroCount(line, curve);
 }
 
 function markInnerSide(segments: B3PathSegments) {
