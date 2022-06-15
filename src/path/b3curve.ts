@@ -249,8 +249,8 @@ function intersections2(curve0: B3Curve, curve1: B3Curve | Line): { x: number, y
             if (a0[0].bbox.intersect(c1.bbox)) {
                 pending.push(a0[0], c1);
             }
-            if (a0[0].bbox.intersect(c1.bbox)) {
-                pending.push(a0[0], c1);
+            if (a0[1].bbox.intersect(c1.bbox)) {
+                pending.push(a0[1], c1);
             }
         }
         else {

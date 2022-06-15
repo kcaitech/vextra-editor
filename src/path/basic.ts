@@ -30,9 +30,7 @@ export class Point {
             this.y < b.bottom && this.y > b.top;
     }
     toString() {
-        const xstr = this.x.toFixed(6);
-        const ystr = this.y.toFixed(6);
-        return "[" + xstr.substring(0,xstr.lastIndexOf('.')+4) + "," + ystr.substring(0,ystr.lastIndexOf('.')+4) + "]";
+        return "[" + this.x.toFixed(3) + "," + this.y.toFixed(3) + "]";
     }
     clone() {
         return Point.make(this.x, this.y);
