@@ -661,7 +661,7 @@ function execBO(type: string, path1Segs:(number)[][], path2Segs:(number)[][]) {
 
     const indexes = buildPartIndexes(newParts);
 
-    return buildNewPath(type, newParts, indexes.inversions, indexes.startIndex);
+    return pathSegsToArr(buildNewPath(type, newParts, indexes.inversions, indexes.startIndex));
 }
 
 /**
