@@ -13,7 +13,7 @@
  * @returns 
  */
 function intersect(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): { x: number, y: number } | undefined {
-    if (
+    if ( // 区间相交
         Math.max(x1, x2) < Math.min(x3, x4) ||
         Math.min(x1, x2) > Math.max(x3, x4) ||
         Math.max(y1, y2) < Math.min(y3, y4) ||
@@ -21,13 +21,14 @@ function intersect(x1: number, y1: number, x2: number, y2: number, x3: number, y
     ) {
         return;
     }
-    const nx = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4),
-        ny = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4),
-        denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    const denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
 
     if (!denominator) {
         return;
     }
+    const nx = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4),
+        ny = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4);
+
     const px = nx / denominator,
         py = ny / denominator,
         px2 = +px.toFixed(2),

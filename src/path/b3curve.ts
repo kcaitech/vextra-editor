@@ -1,4 +1,4 @@
-import { accuracy, Box, intersectPoint, Line, lineLength, linePointAt, Point } from "./basic";
+import { float_accuracy, Box, ISegment, Line, solveLineLength, getLinePointAt, Point, solveBezierLength, solveLineCrossPoint, solvePointSideOfLine } from "./basic";
 
 function extreme(p0: number, p1: number, p2: number, p3: number): number[] {
     const _a = p3 - p2;
@@ -43,24 +43,6 @@ function bpointAt(p0: Point, p1: Point, p2: Point, p3: Point, t: number): Point 
     return Point.make(x, y);
 }
 
-function boundingBox(p0: Point, p1: Point, p2: Point, p3: Point): Box {
-    const ex = extreme(p0.x, p1.x, p2.x, p3.x);
-    const ey = extreme(p0.y, p1.y, p2.y, p3.y);
-    const boundingPoints: Point[] = [...ex, ...ey, 1].map((t) => {
-        if (t == 0) return p0;
-        if (t == 1) return p3;
-        return bpointAt(p0, p1, p2, p3, t)
-    });
-    let left = p0.x, top = p0.y, right = p0.x, bottom = p0.y;
-    boundingPoints.forEach((p) => {
-        left = Math.min(left, p.x);
-        top = Math.min(top, p.y);
-        right = Math.max(right, p.x);
-        bottom = Math.max(bottom, p.y);
-    })
-    return Box.make(left, top, right, bottom);
-}
-
 function splitCurve(p0: Point, p1: Point, p2: Point, p3: Point, t: number): B3Curve[] {
     const p10: Point = Point.make(p0.x + t * (p1.x - p0.x), p0.y + t * (p1.y - p0.y))
     const p11: Point = Point.make(p1.x + t * (p2.x - p1.x), p1.y + t * (p2.y - p1.y))
@@ -71,46 +53,6 @@ function splitCurve(p0: Point, p1: Point, p2: Point, p3: Point, t: number): B3Cu
     const curve0: B3Curve = B3Curve.make(p0, p10, p20, p30);
     const curve1: B3Curve = B3Curve.make(p30, p21, p12, p3);
     return [curve0, curve1];
-}
-
-function base3(t: number, p1: number, p2: number, p3: number, p4: number): number {
-    const t1 = -3 * p1 + 9 * p2 - 9 * p3 + 3 * p4,
-        t2 = t * t1 + 6 * p1 - 12 * p2 + 6 * p3;
-    return t * t2 - 3 * p1 + 3 * p2;
-}
-
-function bezlen(arr: number[]): number
-function bezlen(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number, z?: number): number;
-function bezlen(...args: any[]): number {
-    const arr: number[] = args.length == 1 ? args[0] : args;
-    const x1 = arr[0];
-    const y1 = arr[1];
-    const x2 = arr[2];
-    const y2 = arr[3];
-    const x3 = arr[4];
-    const y3 = arr[5];
-    const x4 = arr[6];
-    const y4 = arr[7];
-    let z = arr[8];
-
-    if (z == undefined) {
-        z = 1;
-    }
-    z = z > 1 ? 1 : z < 0 ? 0 : z;
-    const z2 = z / 2,
-        n = 12,
-        Tvalues = [-0.1252, 0.1252, -0.3678, 0.3678, -0.5873, 0.5873, -0.7699, 0.7699, -0.9041, 0.9041, -0.9816, 0.9816],
-        Cvalues = [0.2491, 0.2491, 0.2335, 0.2335, 0.2032, 0.2032, 0.1601, 0.1601, 0.1069, 0.1069, 0.0472, 0.0472];
-
-    let sum = 0;
-    for (let i = 0; i < n; i++) {
-        const ct = z2 * Tvalues[i] + z2,
-            xbase = base3(ct, x1, x2, x3, x4),
-            ybase = base3(ct, y1, y2, y3, y4),
-            comb = xbase * xbase + ybase * ybase;
-        sum += Cvalues[i] * Math.sqrt(comb);
-    }
-    return z2 * sum;
 }
 
 function selfIntersections(bez: B3Curve): { x: number, y: number, t0: number, t1: number }[] {
@@ -138,14 +80,10 @@ function selfIntersections(bez: B3Curve): { x: number, y: number, t0: number, t1
                 dj1: { p: Point, t: number } = dots[j + 1],
                 ci: boolean = Math.abs(di1.p.x - di.p.x) < .001,// ? "y" : "x",
                 cj: boolean = Math.abs(dj1.p.x - dj.p.x) < .001,// ? "y" : "x",
-                is: Point | undefined = intersectPoint(di.p.x,
-                    di.p.y,
-                    di1.p.x,
-                    di1.p.y,
-                    dj.p.x,
-                    dj.p.y,
-                    dj1.p.x,
-                    dj1.p.y);
+                is: Point | undefined = solveLineCrossPoint(di.p,
+                    di1.p,
+                    dj.p,
+                    dj1.p)[0];
             if (is) {
                 if (xy[is.x.toFixed(4)] == is.y.toFixed(4)) {
                     continue;
@@ -188,14 +126,10 @@ function intersections(bez1: B3Curve, bez2: B3Curve | Line): { x: number, y: num
                 dj1: { p: Point, t: number } = dots2[j + 1],
                 // ci: boolean = Math.abs(di1.p.x - di.p.x) < .001,// ? "y" : "x",
                 // cj: boolean = Math.abs(dj1.p.x - dj.p.x) < .001,// ? "y" : "x",
-                is: Point | undefined = intersectPoint(di.p.x,
-                    di.p.y,
-                    di1.p.x,
-                    di1.p.y,
-                    dj.p.x,
-                    dj.p.y,
-                    dj1.p.x,
-                    dj1.p.y);
+                is: Point | undefined = solveLineCrossPoint(di.p,
+                    di1.p,
+                    dj.p,
+                    dj1.p)[0];
             if (is) {
                 // if (xy[is.x.toFixed(4)] == is.y.toFixed(4)) { // 重复的点
                 //     continue;
@@ -230,12 +164,12 @@ function intersections2(curve0: B3Curve, curve1: B3Curve | Line): { x: number, y
     while (pending.length > 0) {
         const c1 = <B3Curve|Line>pending.pop();
         const c0 = <B3Curve|Line>pending.pop();
-        if (c0.bbox.extremeSmall() && c1.bbox.extremeSmall()) {
+        if (c0.bbox.isPoint() && c1.bbox.isPoint()) {
                 // console.log("intersections2", c0, c1);
                 ret.push({x: c0.start.x, y: c0.start.y, t0: c0.getTRefTo(<any>curve0), t1:c1.getTRefTo(<any>curve1)});
                 continue;
         }
-        if (c0.bbox.extremeSmall()) {
+        if (c0.bbox.isPoint()) {
             const a1 = c1?.splitAtMid();
             if (c0.bbox.intersect(a1[0].bbox)) {
                 pending.push(c0, a1[0]);
@@ -244,7 +178,7 @@ function intersections2(curve0: B3Curve, curve1: B3Curve | Line): { x: number, y
                 pending.push(c0, a1[1]);
             }
         }
-        else if (c1.bbox.extremeSmall()) {
+        else if (c1.bbox.isPoint()) {
             const a0 = c0?.splitAtMid();
             if (a0[0].bbox.intersect(c1.bbox)) {
                 pending.push(a0[0], c1);
@@ -273,7 +207,7 @@ function intersections2(curve0: B3Curve, curve1: B3Curve | Line): { x: number, y
     return ret;
 }
 
-export class B3Curve {
+export class B3Curve implements ISegment {
     private m_start: Point;
     private m_c0: Point;
     private m_c1: Point;
@@ -288,6 +222,8 @@ export class B3Curve {
     private m_parent?: B3Curve;
     private m_extreme?: number[];
     private m_extremeSplit?: B3Curve[];
+    private m_startPointId?: string;
+    private m_endPointId?: string;
     constructor(start: Point, c0: Point, c1: Point, end: Point) {
         this.m_start = start;
         this.m_c0 = c0;
@@ -297,24 +233,30 @@ export class B3Curve {
     static make(start: Point, c0: Point, c1: Point, end: Point): B3Curve {
         return new B3Curve(start, c0, c1, end);
     }
-    isSameCurve(curve:B3Curve):boolean {
-        return this.m_start.extremeClose(curve.m_start) &&
-            this.m_c0.extremeClose(curve.m_c0) &&
-            this.m_c1.extremeClose(curve.m_c1) &&
-            this.m_end.extremeClose(curve.m_end);
+    get startPointId(): string | undefined {
+        return this.m_startPointId;
+    }
+    get endPointId(): string | undefined {
+        return this.m_endPointId;
+    }
+    equals(curve:B3Curve):boolean {
+        return this.m_start.equals(curve.m_start) &&
+            this.m_c0.equals(curve.m_c0) &&
+            this.m_c1.equals(curve.m_c1) &&
+            this.m_end.equals(curve.m_end);
     }
     private get extremes() {
         if (this.m_extreme) return this.m_extreme;
         const ex = extreme(this.m_start.x, this.m_c0.x, this.m_c1.x, this.m_end.x);
         const ey = extreme(this.m_start.y, this.m_c0.y, this.m_c1.y, this.m_end.y);
         this.m_extreme = ([...ex, ...ey].sort()).reduce<number[]>((arr, cur) => {
-            if (Math.abs(cur) > accuracy && Math.abs(1-cur) > accuracy) {
+            if (Math.abs(cur) > float_accuracy && Math.abs(1-cur) > float_accuracy) {
                 if (arr.length === 0) {
                     arr.push(cur);
                     return arr;
                 }
                 const last = arr[arr.length - 1];
-                if (Math.abs(last - cur) > accuracy) {
+                if (Math.abs(last - cur) > float_accuracy) {
                     arr.push(cur);
                     return arr;
                 }
@@ -374,7 +316,7 @@ export class B3Curve {
     }
     get isLine(): boolean {
         if (this.m_isLine !== undefined) return this.m_isLine;
-        this.m_isLine = this.m_start.extremeClose(this.m_c0) && this.m_end.extremeClose(this.m_c1);
+        this.m_isLine = this.m_start.equals(this.m_c0) && this.m_end.equals(this.m_c1);
         return this.m_isLine;
     }
     split(t: number): B3Curve[] {
@@ -382,18 +324,14 @@ export class B3Curve {
     }
     get curveLen(): number {
         if (this.m_len) return this.m_len;
-        this.m_len = this.isLine ? lineLength(this.m_start, this.m_end) : bezlen(this.m_start.x,
-            this.m_start.y,
-            this.m_c0.x,
-            this.m_c0.y,
-            this.m_c1.x,
-            this.m_c1.y,
-            this.m_end.x,
-            this.m_end.y);
+        this.m_len = this.isLine ? solveLineLength(this.m_start, this.m_end) : solveBezierLength(this.m_start,
+            this.m_c0,
+            this.m_c1,
+            this.m_end);
         return this.m_len;
     }
     getPointAt(t: number): Point {
-        return this.isLine ? linePointAt(this.m_start, this.m_end, t) : bpointAt(this.m_start, this.m_c0, this.m_c1, this.m_end, t);
+        return this.isLine ? getLinePointAt(this.m_start, this.m_end, t) : bpointAt(this.m_start, this.m_c0, this.m_c1, this.m_end, t);
     }
     get discretePoints() {
         if (this.m_discretePoints) return this.m_discretePoints;
@@ -490,25 +428,18 @@ export class B3Curve {
     nonezeroCount(l: Line):number {
         const ex = this.extremeSplits;
         const nz: number = ((ex.length > 0 ? ex : [this]).reduce<number>((pre, c) => {
-
-            if (intersectPoint(c.start.x,
-                c.start.y,
-                c.end.x,
-                c.end.y,
-                l.start.x,
-                l.start.y,
-                l.end.x,
-                l.end.y)) {
-
-                    const a = { x: c.end.x - c.start.x, y: c.end.y - c.start.y };
-                    const b = { x: l.start.x - c.start.x, y: l.start.y - c.start.y };
-                    const d = a.x * b.y - a.y * b.x;
-                    if (d > 0) { // point at curve's left side, so nonezero direction is counertclockwise
-                        pre--;
-                    }
-                    else if (d < 0) { // right side, clockwise
-                        pre++;
-                    }
+            const crossPoint = solveLineCrossPoint(c.start,
+                c.end,
+                l.start,
+                l.end);
+            if (crossPoint.length > 0) {
+                const d = solvePointSideOfLine(l.start, c.start, c.end);
+                if (d > 0) { // point at curve's left side, so nonezero direction is counertclockwise
+                    pre--;
+                }
+                else if (d < 0) { // right side, clockwise
+                    pre++;
+                }
             }
             return pre;
 

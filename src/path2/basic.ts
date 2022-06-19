@@ -1,7 +1,7 @@
-import { B3Curve } from "./b3curve";
 
 export const float_accuracy = 1e-6;
 export const result_accuracy = 1e-4;
+const result_accuracy_count = 4;
 
 // 解方程：ax + b = 0
 function solveLine(a: number, b: number): number[] {
@@ -78,7 +78,7 @@ function solveQubic(a: number, b: number, c: number, d: number): number[] {
     return []
 }
 
-function solveQubicIn01(a: number, b: number, c: number, d: number): number[] {
+export function solveQubicIn01(a: number, b: number, c: number, d: number): number[] {
     return solveQubic(a, b, c, d).sort().reduce<number[]>((pre, cur) => {
         let t = -1;
         if (cur >= 0 && cur <= 1) {
@@ -110,7 +110,7 @@ function solveBezierT(p0: number, p1: number, p2: number, p3: number, p: number)
     return solveQubicIn01(a, b, c, d);
 }
 
-function solveBezierTAtPoint(p0: Point, p1: Point, p2: Point, p3: Point, p: Point): number[] {
+export function solveBezierTAtPoint(p0: Point, p1: Point, p2: Point, p3: Point, p: Point): number[] {
     // bounding box check first
     const sx = solveBezierT(p0.x, p1.x, p2.x, p3.x, p.x);
     if (sx.length === 0) return [];
@@ -122,6 +122,20 @@ function solveBezierTAtPoint(p0: Point, p1: Point, p2: Point, p3: Point, p: Poin
         }
         return pre;
     }, []);
+}
+
+export function solvePointTAtLine(l: Line, p: Point): number[] {
+    const d = (p.y - l.start.y)*(l.end.x - l.start.x) - (p.x - l.start.x)*(l.end.y - l.start.y);
+    if (Math.abs(d) > float_accuracy) {
+        return [];
+    }
+    let t = solvePointTOfLine(p, l.start, l.end);
+    if (Math.abs(t) < float_accuracy) t = 0;
+    else if (Math.abs(1-t) < float_accuracy) t = 1;
+    if (t >= 0 && t <= 1) {
+        return [t]
+    }
+    return [];
 }
 
 /**
@@ -198,41 +212,28 @@ export function solveBezierExtreme(p0: number, p1: number, p2: number, p3: numbe
 
 // 将bezier在凸点进行分裂，直到接近一样直线
 // 在极值点分割后，获取bezier的凸点
-function solveBezierConvex(p0: Point, p1: Point, p2: Point, p3: Point): number {
-    // 必需没有极值点
-    // 必须不是直线
-
-    const r = Math.sqrt((p3.x - p0.x) ** 2 + (p3.y - p0.y) ** 2);
+export function solveBezierConvex(p0: Point, p1: Point, p2: Point, p3: Point): number {
+    const x3 = p3.x - p0.x;
+    const y3 = p3.y - p0.y;
+    const r = Math.sqrt(x3 ** 2 + y3 ** 2);
     const x1 = p1.x - p0.x;
     const y1 = p1.y - p0.y;
     const x2 = p2.x - p0.x;
     const y2 = p2.y - p0.y;
     
-    const sin = (p3.y - p0.y) / r;
-    const cos = (p3.x - p0.x) / r;
-    const y11 = -sin * x1 + cos * y1;
-    const y21 = -sin * x2 + cos * y2;
+    // const sin = (p3.y - p0.y) / r;
+    // const cos = (p3.x - p0.x) / r;
+    // const y11 = -sin * x1 + cos * y1;
+    // const y21 = -sin * x2 + cos * y2;
 
-    if (Math.abs(y11 - y21) < float_accuracy) {
-        return 0.5; // 可以转换成二次贝塞尔曲线
-    }
+    const y11 = (x3 * y1 - y3 * x1) / r;
+    const y21 = (x3 * y2 - y3 * x2) / r;
 
-    const d = y11 ** 2 + y21 ** 2 - y11 * y21;
-    if (d < 0) {
-        // 这是要直线？
-        throw new Error("这是要直线？");
+    const ret = solveBezierExtreme(0, y11, y21, 0);
+    if (ret.length !== 1) {
+        return 0.5 //throw new Error("??");
     }
-    const d_sqrt = Math.sqrt(d);
-    const arr = [2 / 3 + (y21 + d_sqrt) / (y11 - y21) / 3,
-    2 / 3 + (y21 + d_sqrt) / (y11 - y21) / 3]
-        .reduce<number[]>((arr, t) => {
-            if (t > 0 && t < 1) arr.push(t);
-            return arr;
-        }, []);
-    if (arr.length !== 1) {
-        throw new Error("至少有一个才对");
-    }
-    return arr[0];
+    return ret[0];
 }
 
 export function solveBezierLength(p0: Point, p1: Point, p2: Point, p3: Point): number {
@@ -266,89 +267,20 @@ export function solveBezierLength(p0: Point, p1: Point, p2: Point, p3: Point): n
 // class intersection
 // interface SegNode
 export interface ISegment {
-    startPointId?:string;
-    endPointId?: string;
-}
-
-export class SegmentCross {
-    private m_point: Point;
-    private m_s0: ISegment;
-    private m_s1: ISegment;
-    private m_t0: number;
-    private m_t1: number;
-    constructor(p: Point, s0: ISegment, t0: number, s1: ISegment, t1: number) {
-        this.m_point = p;
-        this.m_s0 = s0;
-        this.m_t0 = t0;
-        this.m_s1 = s1;
-        this.m_t1 = t1;
-    }
-    static make(p: Point, s0: ISegment, t0: number, s1: ISegment, t1: number) {
-        return new SegmentCross(p, s0, t0, s1, t1);
-    }
-    get point() {
-        return this.m_point;
-    }
-    get s0() {
-        return this.m_s0;
-    }
-    get t0() {
-        return this.m_t0;
-    }
-    get s1() {
-        return this.m_s1;
-    }
-    get t1() {
-        return this.m_t1;
-    }
-    improveAccuracy() {
-        if (this.m_s0 instanceof B3Curve && this.m_s1 instanceof B3Curve) {
-            const {t0, t1} = accurateBezierCrossPoint(this.m_s0, this.m_t0, this.m_s1, this.m_t1);
-            this.m_t0 = t0;
-            this.m_t1 = t1;
-            this.m_point = this.m_s0.getPointAt(t0);
-        }
-    }
-}
-
-export function solveBezierLineCrossPoint(l: Line, c: B3Curve): SegmentCross[] {
-    if (l.isVerticalLine) {
-        const a = -c.start.x + 3*c.c0.x - 3* c.c1.x + c.end.x;
-        const b = 3*(c.start.x - 2*c.c0.x + c.c1.x);
-        const _c = -3 * (c.start.x - c.c0.x);
-        const d = c.start.x - l.start.x;
-        return solveQubicIn01(a, b, _c, d).reduce<SegmentCross[]>((arr, t) => {
-            const p = c.getPointAt(t);
-            if (Math.abs(p.x - l.start.x) < (result_accuracy)) {
-                // arr.push(t);
-                arr.push(SegmentCross.make(p, c, t, l, solvePointTOfLine(p, l.start, l.end)));
-            }
-            return arr;
-        }, []);
-    }
-    else {
-        const k = l.k;
-        const h = (l.end.x * l.start.y - l.start.x * l.end.y) / (l.end.x - l.start.x);
-        const a = k * (-c.start.x + 3*c.c0.x - 3* c.c1.x + c.end.x) - (-c.start.y + 3*c.c0.y - 3* c.c1.y + c.end.y);
-        const b = k * (3*(c.start.x - 2*c.c0.x + c.c1.x)) - (3*(c.start.y - 2*c.c0.y + c.c1.y));
-        const _c = k* (-3 * (c.start.x - c.c0.x)) - (-3 * (c.start.y - c.c0.y));
-        const d = k * c.start.x - c.start.y + h;
-        return solveQubicIn01(a, b, _c, d).reduce<SegmentCross[]>((arr, t) => {
-            const p = c.getPointAt(t);
-            if (Math.abs(p.y - (k * p.x + h)) < (result_accuracy)) {
-                // arr.push(t);
-                arr.push(SegmentCross.make(p, c, t, l, solvePointTOfLine(p, l.start, l.end)))
-            }
-            return arr;
-        }, []);
-    }
-}
-
-// Improve accuracy
-function accurateBezierCrossPoint(c0: B3Curve, t0: number, c1: B3Curve, t1: number): {t0: number, t1: number} {
-    // 梯度下降法提升交点的精度
-    
-    return {t0, t1};
+    // startPointId?:string;
+    // endPointId?: string;
+    start: Point;
+    end: Point;
+    bbox: Box;
+    clone(): ISegment;
+    invert(): void;
+    equals(v: ISegment): boolean;
+    nonezeroCount(l: Line): number;
+    split(t: number, p?: Point): ISegment[];
+    discretize: ISegment[];
+    offsetT: number;
+    offsetTLen: number;
+    getPointAt(t: number): Point;
 }
 
 export class Point {
@@ -380,7 +312,7 @@ export class Point {
             this.y < b.bottom && this.y > b.top;
     }
     toString() {
-        return "[" + this.x.toFixed(3) + "," + this.y.toFixed(3) + "]";
+        return "[" + this.x.toFixed(result_accuracy_count) + "," + this.y.toFixed(result_accuracy_count) + "]";
     }
     clone() {
         return Point.make(this.x, this.y);
@@ -475,7 +407,7 @@ export class Box {
 // 如果d>0，点在直线左边
 // 如果d<0，点在直线右边
 // 如果d=0, 点在直线上
-function solvePoint2LineDistance(p: Point, lstart: Point, lend: Point): number {
+export function solvePoint2LineDistance(p: Point, lstart: Point, lend: Point): number {
     const x1 = lend.x - lstart.x;
     const y1 = lend.y - lstart.y;
     const x2 = p.x - lstart.x;
@@ -513,7 +445,10 @@ export function solvePointTOfLine(p: Point, lstart: Point, lend: Point): number 
     return Math.abs(w) >= Math.abs(h) ? (p.x - lstart.x) / w : (p.y - lstart.y) / h;
 }
 
-function splitLine(start: Point, end: Point, t: number): Line[] {
+function splitLine(start: Point, end: Point, t: number, p?: Point): Line[] {
+    if (p) {
+        return [Line.make(start, p), Line.make(p, end)]; // 保证最后可以查到
+    }
     const pAtT = Point.make(start.x + (end.x - start.x) * t, start.y + (end.y - start.y) * t);
     return [Line.make(start, pAtT), Line.make(pAtT, end)];
 }
@@ -521,11 +456,9 @@ function splitLine(start: Point, end: Point, t: number): Line[] {
 export class Line implements ISegment {
     private m_start: Point;
     private m_end: Point;
-    private m_midSplit?: Line[];
-    private m_parent?: Line;
     private m_bbox?: Box;
-    private m_startPointId?: string;
-    private m_endPointId?: string;
+    // private m_startPointId?: string;
+    // private m_endPointId?: string;
     constructor(start: Point, end: Point) {
         this.m_start = start;
         this.m_end = end;
@@ -533,15 +466,37 @@ export class Line implements ISegment {
     static make(start: Point, end: Point): Line {
         return new Line(start, end);
     }
-    equals(l: Line) {
-        return this.m_start.equals(l.start) && this.m_end.equals(l.end);
+    equals(l: ISegment): boolean {
+        return l instanceof Line && this.m_start.equals(l.start) && this.m_end.equals(l.end);
     }
-    get startPointId(): string | undefined {
-        return this.m_startPointId;
+    invert() {
+        const p = this.m_start;
+        this.m_start = this.m_end;
+        this.m_end = p;
+        // if (this.m_startPointId) {
+        //     const id = this.m_startPointId;
+        //     this.m_startPointId = this.m_endPointId;
+        //     this.m_endPointId = id;
+        // } else if (this.m_endPointId) {
+        //     const id = this.m_endPointId;
+        //     this.m_endPointId = this.m_startPointId;
+        //     this.m_startPointId = id;
+        // }
     }
-    get endPointId(): string | undefined {
-        return this.m_endPointId;
+    nonezeroCount(l: Line): number {
+        const crossPoint = solveLineCrossPoint(this.start, this.end, l.start, l.end);
+        if (crossPoint.length > 0) {
+            const d = solvePointSideOfLine(l.start, this.start, this.end);
+            return d > 0 ?  - 1 : (d < 0 ?   1 : 0);
+        }
+        return 0;
     }
+    // get startPointId(): string | undefined {
+    //     return this.m_startPointId;
+    // }
+    // get endPointId(): string | undefined {
+    //     return this.m_endPointId;
+    // }
     get isVerticalLine() {
         return Math.abs(this.end.x - this.start.x) < float_accuracy;
     }
@@ -557,7 +512,7 @@ export class Line implements ISegment {
     get bbox() {
         return this.m_bbox || (this.m_bbox = Box.make(this.m_start, this.m_end));
     }
-    getIntersectPoint(l: Line): Point | undefined {
+    getCrossPoint(l: Line): Point | undefined {
         return solveLineCrossPoint(this.start,
             this.end,
             l.start,
@@ -569,39 +524,22 @@ export class Line implements ISegment {
     getPointAt(t: number): Point {
         return getLinePointAt(this.m_start, this.m_end, t);
     }
-    clone() {
+    clone(): Line {
         return Line.make(this.start.clone(), this.end.clone());
     }
-    splitAtMid(): Line[] {
-        return this.m_midSplit ||
-            (this.m_midSplit = splitLine(this.m_start,
-                this.m_end, 0.5).map((c) => {
-                    c.m_parent = this;
-                    return c;
-                }));
+    split(t: number, p?: Point): Line[] {
+        if (Math.abs(t) < float_accuracy || Math.abs(1-t) < float_accuracy) { // 端点
+            return [this];
+        }
+        return splitLine(this.m_start, this.m_end, t, p);
     }
-    getTRefTo(p: Line): number {
-        let c: Line | undefined = this;
-        let arr = [];
-        while (c) {
-            if (c == p) {
-                break;
-            }
-            arr.push(c);
-            c = c.m_parent;
-        }
-        if (c == undefined) {
-            return -1;
-        }
-        arr = arr.reverse();
-        let t = 0;
-        for (let i = 0, len = arr.length; i < len; i++) {
-            const c = arr[i];
-            const p = c.m_parent as Line;
-            if (c == (p?.m_midSplit as Array<Line>)[1]) {
-                t = t + (1 / 2) ** (i + 1);
-            }
-        }
-        return t;
+    get discretize(): Line[] {
+        return [this];
+    }
+    get offsetT(): number {
+        return 0;
+    }
+    get offsetTLen(): number {
+        return 1;
     }
 }

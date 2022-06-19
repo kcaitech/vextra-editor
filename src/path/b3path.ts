@@ -33,7 +33,7 @@ export class B3Path extends Array<B3Curve> {
     }
     nonezeroCount(l: Line, exclude?: B3Curve):number {
         return this.reduce<number>((count, curve) => {
-            if (exclude && exclude.isSameCurve(curve)) return count;
+            if (exclude && exclude.equals(curve)) return count;
             return count + curve.nonezeroCount(l);
         }, 0);
     }
@@ -45,7 +45,7 @@ export enum InnerSide {
     Bouth,
 }
 
-export interface Segment {
+export interface PathSegment {
     segment:B3Path, 
     origin:B3Path,
     inside?:InnerSide, 
@@ -57,10 +57,10 @@ export interface Segment {
  * inside: 曲线前进方向的左边还是右边是在曲线内部（有填充）
  * origin: 曲线片段的原始路径
  */
-export class B3PathSegments extends Array<Segment> {
+export class B3PathSegments extends Array<PathSegment> {
 
-    private m_endpoints:{[key:string]: [Segment]} = {};
-    private m_startpoints:{[key:string]: [Segment]} = {};
+    private m_endpoints:{[key:string]: [PathSegment]} = {};
+    private m_startpoints:{[key:string]: [PathSegment]} = {};
     static make() {
         return new B3PathSegments();
     }
@@ -73,10 +73,10 @@ export class B3PathSegments extends Array<Segment> {
             || (this.m_endpoints[end.toString()] = [val]);
         return super.push(val);
     }
-    getStartSegments(startPoint: Point): Segment[] {
+    getStartSegments(startPoint: Point): PathSegment[] {
         return this.m_startpoints[startPoint.toString()];
     }
-    getEndSegments(endPoint: Point): Segment[] {
+    getEndSegments(endPoint: Point): PathSegment[] {
         return this.m_endpoints[endPoint.toString()];
     }
 }

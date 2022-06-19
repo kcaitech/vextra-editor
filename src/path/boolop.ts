@@ -322,6 +322,7 @@ function invertPart(part: any) {
  * @returns int dir (1: clockwise, -1: counter clockwise)
  */
 function getPathDirection(pathSegArr: (number)[][]) {
+    // 这是个evenodd方案？
     let dir = -1;
     let minT, maxT;
 
@@ -335,6 +336,7 @@ function getPathDirection(pathSegArr: (number)[][]) {
     //"draw" a horizontal line from left to right at half height of path's bbox,
     //with some jitter to avoid intersecting at exact vertices.
     const lineY = box.y + box.height / 2;
+    // 从左到右一根直线
     const line = [[box.x ,  (lineY - box.height * Math.random() / 100),box.x ,  (lineY - box.height * Math.random() / 100),
         box.x2 ,  (lineY + box.height * Math.random() / 100), box.x2 ,  (lineY + box.height * Math.random() / 100)]];
 
