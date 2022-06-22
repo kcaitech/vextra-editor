@@ -60,3 +60,7 @@ preload.emit('load');
 // console.log("exclusion", e);
 // const i = intersection(curve0, curve1);
 // console.log("intersection", i);
+
+import { LessOp, Tree } from '@/basic/rbts/tree';
+const rbt = new Tree();
+console.log(rbt)
