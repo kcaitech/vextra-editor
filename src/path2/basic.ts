@@ -129,7 +129,7 @@ export function solvePointTAtLine(l: Line, p: Point): number[] {
     if (Math.abs(d) > float_accuracy) {
         return [];
     }
-    let t = solvePointTOfLine(p, l.start, l.end);
+    let t = solvePointTOfLine(p, l);
     if (Math.abs(t) < float_accuracy) t = 0;
     else if (Math.abs(1-t) < float_accuracy) t = 1;
     if (t >= 0 && t <= 1) {
@@ -274,7 +274,7 @@ export interface ISegment {
     bbox: Box;
     clone(): ISegment;
     invert(): void;
-    equals(v: ISegment): boolean;
+    equals(v: ISegment, includeRevert?:boolean): boolean;
     nonezeroCount(l: Line): number;
     split(t: number, p?: Point): ISegment[];
     discretize: ISegment[];
@@ -300,8 +300,8 @@ export class Point {
         return this.m_y;
     }
     equals(p1: Point) {
-        return Math.abs(this.x - p1.x) < float_accuracy &&
-            Math.abs(this.y - p1.y) < float_accuracy;
+        return Math.abs(this.x - p1.x) < result_accuracy &&
+            Math.abs(this.y - p1.y) < result_accuracy;
     }
     isInside(b: Box) {
         return this.x <= b.right && this.x >= b.left &&
@@ -439,10 +439,25 @@ export function getLinePointAt(p0: Point, p1: Point, t: number) {
     return Point.make(x, y);
 }
 
-export function solvePointTOfLine(p: Point, lstart: Point, lend: Point): number {
-    const w = lend.x - lstart.x;
-    const h = lend.y - lstart.y;
-    return Math.abs(w) >= Math.abs(h) ? (p.x - lstart.x) / w : (p.y - lstart.y) / h;
+interface ILine {
+    start: Point,
+    end: Point
+}
+
+export function solvePointTOfLine(p: Point, l: ILine): number {
+    const w = l.end.x - l.start.x;
+    const h = l.end.y - l.start.y;
+    const t = Math.abs(w) >= Math.abs(h) ? (p.x - l.start.x) / w : (p.y - l.start.y) / h;
+    if (Math.abs(t) < float_accuracy) {
+        return 0;
+    }
+    if (Math.abs(1-t) < float_accuracy) {
+        return 1;
+    }
+    if (t >= 0 && t <= 1) {
+        return t;
+    }
+    return -1;
 }
 
 function splitLine(start: Point, end: Point, t: number, p?: Point): Line[] {
@@ -466,8 +481,13 @@ export class Line implements ISegment {
     static make(start: Point, end: Point): Line {
         return new Line(start, end);
     }
-    equals(l: ISegment): boolean {
-        return l instanceof Line && this.m_start.equals(l.start) && this.m_end.equals(l.end);
+    equals(l: ISegment, includeRevert?:boolean): boolean {
+        return l instanceof Line && 
+        (this.m_start.equals(l.start) && 
+        this.m_end.equals(l.end) ||
+        includeRevert === true &&
+        this.m_start.equals(l.end) && 
+        this.m_end.equals(l.start));
     }
     invert() {
         const p = this.m_start;

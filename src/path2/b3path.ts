@@ -1,5 +1,5 @@
 import { accurateBezierCrossPoint, B3Curve, ICrossPoint, solveBezierLineCrossPoint } from "./b3curve";
-import { Box, float_accuracy, ISegment, Line, Point, solveLineCrossPoint, solvePointTOfLine } from "./basic";
+import { Box, float_accuracy, ISegment, Line, Point, solveBezierTAtPoint, solveLineCrossPoint, solvePointTOfLine } from "./basic";
 
 export class B3Path extends Array<ISegment> {
     private m_bbox?: Box;
@@ -178,8 +178,8 @@ export function intersections(_this: B3Path, p: B3Path): PathCrossPoint[] {
         c0d.forEach((d0) => c1d.forEach((d1) => {
             const crossPoint = solveLineCrossPoint(d0.start, d0.end, d1.start, d1.end)[0];
             if (crossPoint) {
-                const t0 = solvePointTOfLine(crossPoint, d0.start, d0.end) * d0.offsetTLen + d0.offsetT;
-                const t1 = solvePointTOfLine(crossPoint, d1.start, d1.end) * d1.offsetTLen + d1.offsetT;
+                const t0 = solvePointTOfLine(crossPoint, d0) * d0.offsetTLen + d0.offsetT;
+                const t1 = solvePointTOfLine(crossPoint, d1) * d1.offsetTLen + d1.offsetT;
                 ret.push(PathCrossPoint.make({point:crossPoint, c0, t0, c1, t1}, _this, i, p, j));
             }
         }))
@@ -212,8 +212,8 @@ export function selfIntersections(_this: B3Path): PathCrossPoint[] {
             c0d.forEach((d0) => c1d.forEach((d1) => {
                 const crossPoint = solveLineCrossPoint(d0.start, d0.end, d1.start, d1.end)[0];
                 if (crossPoint) {
-                    const t0 = solvePointTOfLine(crossPoint, d0.start, d0.end) * d0.offsetTLen + d0.offsetT;
-                    const t1 = solvePointTOfLine(crossPoint, d1.start, d1.end) * d1.offsetTLen + d1.offsetT;
+                    const t0 = solvePointTOfLine(crossPoint, d0) * d0.offsetTLen + d0.offsetT;
+                    const t1 = solvePointTOfLine(crossPoint, d1) * d1.offsetTLen + d1.offsetT;
                     ret.push(PathCrossPoint.make({point:crossPoint, c0, t0, c1, t1}, _this, i, _this, j));
                 }
             }))
@@ -264,11 +264,19 @@ function spliceAtSelfInters(_this: B3Path, inters: PathCrossPoint[]): B3Path[] {
     return [];
 }
 
-export class PathCoincident {
-
+export interface PathCoincident {
+    s0: ISegment,
+    t00: number, 
+    t01: number, 
+    s1: ISegment,
+    t10: number, 
+    t11: number,
+    i0?: number,
+    i1?: number
 }
 
-export function coincidents(path0: B3Path, path1: B3Path): PathCoincident {
+function b3curveCoincide(_this: B3Curve, other: B3Curve): PathCoincident | undefined {
+    // 曲线必须没有自己相交
     /*
     case 1
     this ---------------------
@@ -287,9 +295,289 @@ export function coincidents(path0: B3Path, path1: B3Path): PathCoincident {
     other ---------------------------
     */
 
+    if (!_this.bbox.intersect(other.bbox)) {
+        return;
+    }
+    if (_this.bbox.contains(other.bbox)) {
+        if (_this.equals(other, true)) {
+            if (_this.start.equals(other.start)) {
+                return {s0: _this, t00: 0, t01: 1, s1: other, t10: 0, t11: 1};
+            }
+            else {
+                return {s0: _this, t00: 0, t01: 1, s1: other, t10: 1, t11: 0}
+            }
+        }
+
+        // case 3
+        const o0inT = solveBezierTAtPoint(_this.start, _this.c0, _this.c1, _this.end, other.start); // 1
+        if (o0inT.length === 0) {
+            return;
+        }
+        const o3inT = solveBezierTAtPoint(_this.start, _this.c0, _this.c1, _this.end, other.end); // 2
+        if (o3inT.length === 0) {
+            return;
+        }
+        /*
+        case 3
+        this --------------------------
+        other       -----------
+        */
+        let _s = _this;
+        const t0 = o0inT[0] > o3inT[0] ? o3inT[0] : o0inT[0];
+        let t1 = o0inT[0] > o3inT[0] ? o0inT[0] : o3inT[0];
+        t1 = (t1 - t0) / (1 - t0);
+        if (Math.abs(t0) > float_accuracy || Math.abs(t0 - 1) > float_accuracy) {
+            _s = _s.split(t0)[1];
+        }
+        if (Math.abs(t1) > float_accuracy || Math.abs(t1 - 1) > float_accuracy) {
+            _s = _s.split(t1)[0]
+        }
+        if (_s.equals(other, true)) {
+            return {s0: _this, t00: o0inT[0], t01: o3inT[0], s1: other, t10: 0, t11: 1}
+        }
+        return;
+    }
+    else if (other.bbox.contains(_this.bbox)) {
+        // case 4
+        const t0inO = solveBezierTAtPoint(other.start, other.c0, other.c1, other.end, _this.start);
+        if (t0inO.length === 0) {
+            return;// 不可能
+        }
+        const t3inO = solveBezierTAtPoint(other.start, other.c0, other.c1, other.end, _this.end);
+        if (t3inO.length === 0) {
+            return;
+        }
+        let _s = other;
+        const t0 = t0inO[0] > t3inO[0] ? t3inO[0] : t0inO[0];
+        let t1 = t0inO[0] > t3inO[0] ? t0inO[0] : t3inO[0];
+        t1 = (t1 - t0) / (1 - t0);
+        if (Math.abs(t0) > float_accuracy || Math.abs(t0 - 1) > float_accuracy) {
+            _s = _s.split(t0)[1];
+        }
+        if (Math.abs(t1) > float_accuracy || Math.abs(t1 - 1) > float_accuracy) {
+            _s = _s.split(t1)[0]
+        }
+        if (_s.equals(_this, true)) {
+            return {s0: _this, t00: 0, t01: 1, s1: other, t10: t0inO[0], t11: t3inO[0]}
+        }
+        return;
+    }
+    else {
+        const o0inT = solveBezierTAtPoint(_this.start, _this.c0, _this.c1, _this.end, other.start);
+        if (o0inT.length !== 0) {
+            // case 1
+            // const o0inT = this.getTAtPoint(other.m_p0); // 1
+            // if (o0inT < 0) {
+            //     return false;
+            // }
+            const t3inO = solveBezierTAtPoint(other.start, other.c0, other.c1, other.end, _this.end); // 2
+            if (t3inO.length === 0) {
+                return;
+            }
+            // case 1
+            /**
+                this ---------------------
+                other           ------------------
+
+             */
+            // o0inT~1 之间再取this一个值判断other
+            // 或者0~t3inO 之间取other一个值判断this
+            const _t = _this.split(o0inT[0])[1];
+            const _o = other.split(t3inO[0])[0];
+            if (_t.equals(_o, true)) {
+                return {s0: _this, t00: o0inT[0], t01: 1, s1: other, t10: 0, t11: t3inO[0]}
+            }
+            return;
+        }
+        else {
+            // maybe case 2
+            /**
+                case 2
+                this           -------------
+                other ----------------
+             */
+            const o3inT = solveBezierTAtPoint(_this.start, _this.c0, _this.c1, _this.end, other.end); // 1
+            if (o3inT.length === 0) {
+                return;
+            }
+            const t0inO = solveBezierTAtPoint(other.start, other.c0, other.c1, other.end, _this.start); // 2
+            if (t0inO.length === 0) {
+                return;
+            }
+
+            const _t = _this.split(t0inO[0])[0];
+            const _o = other.split(o3inT[0])[1];
+            if (_t.equals(_o, true)) {
+                return {s0: _this, t00: 0, t01: o3inT[0], s1: other, t10: t0inO[0], t11: 1}
+            }
+            return;
+        }
+    }
+}
+
+function lineCoincide(l0: Line, l1: Line): PathCoincident | undefined {
+    if (l0.bbox.intersect(l1.bbox)) {
+        return;
+    }
+    if (l0.equals(l1, true)) {
+        if (l0.start.equals(l1.start)) {
+            return {s0: l0, t00: 0, t01: 1, s1: l1, t10: 0, t11: 1};
+        }
+        else {
+            return {s0: l0, t00: 0, t01: 1, s1: l1, t10: 1, t11: 0}
+        }
+    }
+    const d0 = (l1.start.y - l0.start.y)*(l0.end.x - l0.start.x) - (l1.start.x - l0.start.x)*(l0.end.y - l0.start.y);
+    if (Math.abs(d0) > float_accuracy) {
+        return;
+    }
+    const d1 = (l1.end.y - l0.start.y)*(l0.end.x - l0.start.x) - (l1.end.x - l0.start.x)*(l0.end.y - l0.start.y);
+    if (Math.abs(d1) > float_accuracy) {
+        return;
+    }
+    // 同一条直线
+    /*
+    case 1
+    this ---------------------
+    other           ------------------
+
+    case 2
+    this           -------------
+    other ----------------
+
+    case 3
+    this --------------------------
+    other       -----------
+
+    case 4
+    this        ---------
+    other ---------------------------
+    */
+    if (l0.bbox.contains(l1.bbox)) {
+        // case 3
+        /*
+        case 3
+        this --------------------------
+        other       -----------
+        */
+        const t0 = solvePointTOfLine(l1.start, l0);
+        if (t0 < 0) {
+            return;
+        }
+        const t1 = solvePointTOfLine(l1.end, l0);
+        if (t1 < 0) {
+            return;
+        }
+        return {s0: l0, t00: t0, t01: t1, s1: l1, t10: 0, t11: 1};
+    }
+    else if (l1.bbox.contains(l0.bbox)) {
+        // case 4
+        const t0 = solvePointTOfLine(l0.start, l1);
+        if (t0 < 0) {
+            return;
+        }
+        const t1 = solvePointTOfLine(l0.end, l1);
+        if (t1 < 0) {
+            return;
+        }
+        return {s0: l0, t00: 0, t01: 1, s1: l1, t10: t0, t11: t1};
+    }
+    else {
+        const o0inT = solvePointTOfLine(l1.start, l0);
+        if (o0inT >= 0) {
+            
+            // case 1
+            /**
+                this ---------------------
+                other           ------------------
+
+             */
+            const t0 = o0inT;
+            const t1 = solvePointTOfLine(l0.end, l1);
+            if (t1 < 0) {
+                return;
+            }
+            return {s0: l0, t00: t0, t01: 1, s1: l1, t10: 0, t11: t1};
+        }
+        else {
+            // maybe case 2
+            /**
+                case 2
+                this           -------------
+                other ----------------
+             */
+            const t0 = solvePointTOfLine(l0.start, l1);
+            if (t0 < 0) {
+                return;
+            }
+            const t1 = solvePointTOfLine(l1.end, l0);
+            if (t1 < 0) {
+                return;
+            }
+            return {s0: l0, t00: 0, t01: t0, s1: l1, t10: t1, t11: 1};
+        }
+    }
+}
+
+
+export function coincidents(path0: B3Path, path1: B3Path): PathCoincident[] {
+    /*
+    case 1
+    this ---------------------
+    other           ------------------
+
+    case 2
+    this           -------------
+    other ----------------
+
+    case 3
+    this --------------------------
+    other       -----------
+
+    case 4
+    this        ---------
+    other ---------------------------
+    */
+    const ret: PathCoincident[] = [];
     path0.forEach((c0, i) => path1.forEach((c1, j) => {
-
+        if (c0 instanceof B3Curve && c1 instanceof B3Curve) {
+            const c = b3curveCoincide(c0, c1);
+            if (c) {
+                c.i0 = i;
+                c.i1 = j;
+                ret.push(c);
+            }
+        }
+        else if (c0 instanceof Line && c1 instanceof Line) {
+            const c = lineCoincide(c0, c1);
+            if (c) {
+                c.i0 = i;
+                c.i1 = j;
+                ret.push(c);
+            }
+        }
+        else if (c0 instanceof Line && c1 instanceof B3Curve || c0 instanceof B3Curve && c1 instanceof Line) {
+            const c:B3Curve = <B3Curve>(c0 instanceof Line ? c1 : c0);
+            if (c.isLine) {
+                const l0:Line = <Line>(c0 instanceof Line ? c0 : c1);
+                const l1 = Line.make(c.start, c.end);
+                const _c = lineCoincide(l0, l1);
+                if (_c) {
+                    if (l0 === c0) {
+                        const c: PathCoincident = {s0: c0, t00: _c.t00, t01: _c.t01, s1: c1, t10: _c.t10, t11: _c.t11}
+                        c.i0 = i;
+                        c.i1 = j;
+                        ret.push(c);
+                    }
+                    else {
+                        const c: PathCoincident = {s0: c1, t00: _c.t10, t01: _c.t11, s1: c0, t10: _c.t00, t11: _c.t01}
+                        c.i0 = i;
+                        c.i1 = j;
+                        ret.push(c);
+                    }
+                }
+            }
+        }
     }))
-
-    return {};
+    return ret;
 }

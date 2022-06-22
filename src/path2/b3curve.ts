@@ -51,9 +51,9 @@ function splitCurve(p0: Point, p1: Point, p2: Point, p3: Point, t: number, p?: P
     const p21: Point = Point.make(p11.x + t * (p12.x - p11.x), p11.y + t * (p12.y - p11.y))
     const p30: Point = p ? p : Point.make(p20.x + t * (p21.x - p20.x), p20.y + t * (p21.y - p20.y))
 
-    if (p) {
-        console.log("split", p, Point.make(p20.x + t * (p21.x - p20.x), p20.y + t * (p21.y - p20.y)));
-    }
+    // if (p) {
+    //     console.log("split", p, Point.make(p20.x + t * (p21.x - p20.x), p20.y + t * (p21.y - p20.y)));
+    // }
     const curve0: B3Curve = B3Curve.make(p0, p10, p20, p30);
     const curve1: B3Curve = B3Curve.make(p30, p21, p12, p3);
     return [curve0, curve1];
@@ -88,12 +88,17 @@ export class B3Curve implements ISegment {
     // get endPointId(): string | undefined {
     //     return this.m_endPointId;
     // }
-    equals(curve: ISegment): boolean {
-        return curve instanceof B3Curve &&
+    equals(curve: ISegment, includeRevert?:boolean): boolean {
+        return curve instanceof B3Curve && (
             this.m_start.equals(curve.m_start) &&
             this.m_c0.equals(curve.m_c0) &&
             this.m_c1.equals(curve.m_c1) &&
-            this.m_end.equals(curve.m_end);
+            this.m_end.equals(curve.m_end) || 
+            includeRevert === true && 
+            this.m_start.equals(curve.m_end) &&
+            this.m_end.equals(curve.m_start) &&
+            this.m_c0.equals(curve.m_c1) &&
+            this.m_c1.equals(curve.m_c0));
     }
     get rawDiscretize(): B3Curve[] {
         if (this.m_rawdiscretize) return this.m_rawdiscretize;
@@ -293,7 +298,7 @@ export function solveBezierLineCrossPoint(l: Line, c: B3Curve): ICrossPoint[] {
         return solveQubicIn01(a, b, _c, d).reduce<ICrossPoint[]>((arr, t) => {
             const p = c.getPointAt(t);
             if (Math.abs(p.x - l.start.x) < (result_accuracy)) {
-                arr.push({ point: p, c0: c, t0: t, c1: l, t1: solvePointTOfLine(p, l.start, l.end) });
+                arr.push({ point: p, c0: c, t0: t, c1: l, t1: solvePointTOfLine(p, l) });
             }
             return arr;
         }, []);
@@ -308,7 +313,7 @@ export function solveBezierLineCrossPoint(l: Line, c: B3Curve): ICrossPoint[] {
         return solveQubicIn01(a, b, _c, d).reduce<ICrossPoint[]>((arr, t) => {
             const p = c.getPointAt(t);
             if (Math.abs(p.y - (k * p.x + h)) < (result_accuracy)) {
-                arr.push({ point: p, c0: c, t0: t, c1: l, t1: solvePointTOfLine(p, l.start, l.end) });
+                arr.push({ point: p, c0: c, t0: t, c1: l, t1: solvePointTOfLine(p, l) });
             }
             return arr;
         }, []);

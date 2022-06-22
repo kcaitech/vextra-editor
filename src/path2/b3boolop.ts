@@ -7,7 +7,7 @@ boolean op -> rebuild path [+非闭合?]-> ant curve -> path:string
 
 */
 
-import { B3Path, B3PathSegments, InnerSide, intersections, PathSegment, splitAtInters } from "./b3path";
+import { B3Path, B3PathSegments, coincidents, InnerSide, intersections, PathSegment, splitAtInters } from "./b3path";
 import { ISegment, Line, Point } from "./basic";
 
 function isCurveInsidePath(curve: ISegment, path: B3Path): boolean {
@@ -170,11 +170,29 @@ function sortSegments(segments: B3PathSegments, firstPath: B3Path) {
 function _union(path0: B3Path, path1: B3Path): B3Path {
     const p0 = path0.clone();
     const p1 = path1.clone();
+    const co:ISegment[] = [];
+    p0.forEach((c0) => {
+        for (let i = 0, len = p1.length; i < len; i++) {
+            const c1 = p1[i];
+            if (c0.equals(c1, true)) {
+                co.push(...p1.splice(i, 1));
+                i--;
+                len--;
+            }
+        }
+    })
     for (let i = 0; i < p0.length; i++) {
         const c = p0[i];
         if (isCurveInsidePath(c, path1)) {
-            p0.splice(i, 1);
-            i--;
+            const ret = co.find((v) => {
+                if (v.equals(c, true)) {
+                    return v;
+                }
+            })
+            if (!ret) {
+                p0.splice(i, 1);
+                i--;
+            }
         }
     }
     for (let i = 0; i < p1.length; i++) {
@@ -401,7 +419,8 @@ export function union(b3path0: B3Path, b3path1: B3Path): B3Path {
     // 闭合非闭合拆分
 
     // 重合拆分
-
+    const co = coincidents(b3path0, b3path1);
+    // console.log(co);
     // 相交拆分
     const inters = intersections(b3path0, b3path1);
     splitAtInters(b3path0, inters);
