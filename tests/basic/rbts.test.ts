@@ -1,7 +1,7 @@
 import * as chai from 'chai'
 import { debug } from 'debug'
-import { Node } from '@/basic/rbts/node'
-import { LessOp, Tree } from '@/basic/rbts/tree'
+import { Node } from '@/basic/rbtree/node'
+import { LessOp, Tree } from '@/basic/rbtree/tree'
 
 const {
   equal, strictEqual, deepEqual, throws,
@@ -19,32 +19,32 @@ function invariantViolated(tree: Tree<any, any>): string | false {
   let node = tree.minNode
   while (node.ok) {
     const d = depth(node) // see comment below at walkup!
-    if (node._left.nil || node._right.nil) {
+    if (node.left.nil || node.right.nil) {
       if (d > maxDepth) maxDepth = d
       if (d < minDepth) minDepth = d
     }
 
-    const p = node._parent, r = node._right, l = node._left
+    const p = node.parent, r = node.right, l = node.left
     const key = node.key.toString().substr(0, 20)
     const s = ` (at key ${key}, depth ${d})`
     const notChild = 'not parent\'s child' + s
     if (d < 0 || walked.has(node)) return `cycle` + s
-    if (node._red) {
-      if (l._red) return 'left of red not black' + s
-      if (r._red) return 'right of red not black' + s
+    if (node.red) {
+      if (l.red) return 'left of red not black' + s
+      if (r.red) return 'right of red not black' + s
     }
-    if (p.ok && node !== p._left && node !== p._right) return notChild
-    if (r.ok && node !== r._parent) return 'not left\'s child' + s
-    if (l.ok && node !== l._parent) return 'not right\'s child' + s
+    if (p.ok && node !== p.left && node !== p.right) return notChild
+    if (r.ok && node !== r.parent) return 'not left\'s child' + s
+    if (l.ok && node !== l.parent) return 'not right\'s child' + s
     if (r.ok && tree._less(r.key, node)) return 'right is greater' + s
     if (l.ok && tree._less(node.key, l)) return 'left is smaller' + s
 
     // Check whether the number of black nodes in all paths is same
     let blackDepth = null
-    if (node._left.nil && node._right.nil) {
-      let walkup = node, blackDepth2 = +node._black
+    if (node.left.nil && node.right.nil) {
+      let walkup = node, blackDepth2 = +node.black
       // we already walked up in depth(node), no need to check for cycles
-      while ((walkup = walkup._parent).ok) blackDepth2 += +node._black
+      while ((walkup = walkup.parent).ok) blackDepth2 += +node.black
 
       const bad = `black depth ${blackDepth2}, expected ${blackDepth}` + s
       if (null === blackDepth) blackDepth = blackDepth2
@@ -75,12 +75,12 @@ function dump(
   if (node.nil) return '·'
 
   const key = node.key.toString().substr(0, 10)
-  const o = node._black ? '(' : '<'
-  const c = node._black ? ')' : '>'
+  const o = node.black ? '(' : '<'
+  const c = node.black ? ')' : '>'
   if (check.has(node)) return '@' + o + node.key + c
   check.add(node)
-  const left = node._left.nil ? '' : dump(node._left, check)
-  const right = node._right.nil ? '' : dump(node._right, check)
+  const left = node.left.nil ? '' : dump(node.left, check)
+  const right = node.right.nil ? '' : dump(node.right, check)
 
   return o + left + key + right + c
 }
@@ -94,7 +94,7 @@ function depth(node: Node<any, any>): number {
     if (walked.has(node)) return Infinity // cycle detected
     walked.add(node)
     d++
-    node = node._parent
+    node = node.parent
   }
   return d
 }
@@ -121,11 +121,11 @@ test('nil node', () => {
   const nil = Node.nilNode, laxNil: any = nil
   strictEqual(nil.key as any, Node.nilNode.key)
   strictEqual(nil.value as any, Node.nilNode.value)
-  strictEqual(nil._parent, nil)
-  strictEqual(nil._left, nil)
-  strictEqual(nil._right, nil)
-  isTrue(nil._black)
-  isFalse(nil._red)
+  strictEqual(nil.parent, nil)
+  strictEqual(nil.left, nil)
+  strictEqual(nil.right, nil)
+  isTrue(nil.black)
+  isFalse(nil.red)
   isTrue(nil.nil)
   isFalse(nil.ok)
 
@@ -135,16 +135,16 @@ test('nil node', () => {
 
   throws(() => laxNil.key = 'key')  // Node.key is readonly
   throws(() => laxNil.value = 'value')
-  throws(() => laxNil._parent = nil)
-  throws(() => laxNil._left = nil)
-  throws(() => laxNil._right = nil)
+  throws(() => laxNil.parent = nil)
+  throws(() => laxNil.left = nil)
+  throws(() => laxNil.right = nil)
 
-  nil._black = false
-  isTrue(nil._black)
-  isFalse(nil._red)
-  nil._red = false
-  isTrue(nil._black)
-  isFalse(nil._red)
+  nil.black = false
+  isTrue(nil.black)
+  isFalse(nil.red)
+  nil.red = false
+  isTrue(nil.black)
+  isFalse(nil.red)
 })
 
 
@@ -211,11 +211,11 @@ test('properties of tree with one node', () => {
   strictEqual(rbt.getNode('a'), rbt._root)
   isTrue(rbt.has('a'))
   isTrue(rbt._nextNode(rbt._root).nil)
-  isTrue(rbt._root._parent.nil)
-  isTrue(rbt._root._left.nil)
-  isTrue(rbt._root._right.nil)
-  isTrue(rbt._root._black)
-  isFalse(rbt._root._red)
+  isTrue(rbt._root.parent.nil)
+  isTrue(rbt._root.left.nil)
+  isTrue(rbt._root.right.nil)
+  isTrue(rbt._root.black)
+  isFalse(rbt._root.red)
   strictEqual(rbt._root.toString(), '[a:alpha]')
   strictEqual(rbt._root._details(), '(· a:alpha ·)')
 
@@ -253,9 +253,9 @@ test('after one deletion', () => {
   isTrue(rbt.minNode.nil)
   isTrue(rbt.maxNode.nil)
 
-  isTrue(root._parent.nil)
-  isTrue(root._left.nil)
-  isTrue(root._right.nil)
+  isTrue(root.parent.nil)
+  isTrue(root.left.nil)
+  isTrue(root.right.nil)
 })
 
 
@@ -366,9 +366,9 @@ test('single', () => {
   isTrue(rbt.delete('b'))
   isTrue(rbt.getNode('b').nil)
   isFalse(rbt.delete('b'))
-  isTrue(node._parent.nil)
-  isTrue(node._left.nil)
-  isTrue(node._right.nil)
+  isTrue(node.parent.nil)
+  isTrue(node.left.nil)
+  isTrue(node.right.nil)
   isFalse(invariantViolated(rbt), 'invariant violated')
 })
 
@@ -431,12 +431,12 @@ test('insert nil', () => {
 
 test('display red node', () => {
   const node = new Node('a', 'alpha')
-  node._red = true
+  node.red = true
   strictEqual(node.toString(), '[a:alpha]')
   strictEqual(node._details(), '<· a:alpha ·>')
 
-  node._left = node  // create a cycle!
-  node._right = node // create a cycle!
+  node.left = node  // create a cycle!
+  node.right = node // create a cycle!
   strictEqual(node.toString(), '[a:alpha]')
   strictEqual(node._details(), '<a a:alpha a>')
 })
