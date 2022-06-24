@@ -420,7 +420,7 @@ export function union(b3path0: B3Path, b3path1: B3Path): B3Path {
 
     // 重合拆分
     const co = coincidents(b3path0, b3path1);
-    // console.log(co);
+    console.log(co);
     // 相交拆分
     const inters = intersections(b3path0, b3path1);
     splitAtInters(b3path0, inters);
@@ -435,6 +435,8 @@ export function subtract(b3path0: B3Path, b3path1: B3Path): B3Path {
     // 闭合非闭合拆分
 
     // 重合拆分
+    const co = coincidents(b3path0, b3path1);
+    console.log(co);
 
     // 相交拆分
     const inters = intersections(b3path0, b3path1);
@@ -451,6 +453,8 @@ export function intersect(b3path0: B3Path, b3path1: B3Path): B3Path {
     // 闭合非闭合拆分
 
     // 重合拆分
+    const co = coincidents(b3path0, b3path1);
+    console.log(co);
 
     // 相交拆分
     const inters = intersections(b3path0, b3path1);
@@ -467,6 +471,8 @@ export function xor(b3path0: B3Path, b3path1: B3Path): B3Path {
     // 闭合非闭合拆分
 
     // 重合拆分
+    const co = coincidents(b3path0, b3path1);
+    console.log(co);
 
     // 相交拆分
     const inters = intersections(b3path0, b3path1);

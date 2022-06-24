@@ -363,6 +363,12 @@ function b3curveCoincide(_this: B3Curve, other: B3Curve): PathCoincident | undef
         return;
     }
     else {
+        // 首尾相連接
+        if (_this.end.equals(other.start) ||
+            other.end.equals(_this.start)) {
+                // 這種情況下，只能是包含關係的重合
+                return;
+        }
         const o0inT = solveBezierTAtPoint(_this.start, _this.c0, _this.c1, _this.end, other.start);
         if (o0inT.length !== 0) {
             // case 1
@@ -373,6 +379,9 @@ function b3curveCoincide(_this: B3Curve, other: B3Curve): PathCoincident | undef
             const t3inO = solveBezierTAtPoint(other.start, other.c0, other.c1, other.end, _this.end); // 2
             if (t3inO.length === 0) {
                 return;
+            }
+            if (o0inT.length > 1 || t3inO.length > 1) {
+                throw new Error("??");
             }
             // case 1
             /**
@@ -483,6 +492,12 @@ function lineCoincide(l0: Line, l1: Line): PathCoincident | undefined {
         return {s0: l0, t00: 0, t01: 1, s1: l1, t10: t0, t11: t1};
     }
     else {
+        // 首尾相連接
+        if (l0.end.equals(l1.start) ||
+            l1.end.equals(l0.start)) {
+                // 這種情況下，只能是包含關係的重合
+                return;
+        }
         const o0inT = solvePointTOfLine(l1.start, l0);
         if (o0inT >= 0) {
             
@@ -518,7 +533,6 @@ function lineCoincide(l0: Line, l1: Line): PathCoincident | undefined {
         }
     }
 }
-
 
 export function coincidents(path0: B3Path, path1: B3Path): PathCoincident[] {
     /*
