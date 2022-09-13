@@ -9,6 +9,7 @@ import { h, defineComponent, VNodeArrayChildren } from 'vue';
 import { Shape } from "../data/shape";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
+import { transform } from '@/render/basic';
 
 export default defineComponent({
     name: "ShapeBool",
@@ -34,7 +35,7 @@ export default defineComponent({
         
         // let frame = this.data.frame;
         let path = this.path;
-        let childs:VNodeArrayChildren = [];
+        let childs = [];
 
         // fill
         childs.push(...fillR(this.data, path));
@@ -56,10 +57,10 @@ export default defineComponent({
             });
         }
         else if (childs.length == 1) {
-            return childs[0];
+            return transform(childs[0], h);
         }
         else {
-            return h("g", childs);
+            return h("g", transform(childs, h));
         }
     }
 })

@@ -425,7 +425,7 @@ function b3curveCoincide(_this: B3Curve, other: B3Curve): PathCoincident | undef
 }
 
 function lineCoincide(l0: Line, l1: Line): PathCoincident | undefined {
-    if (l0.bbox.intersect(l1.bbox)) {
+    if (!l0.bbox.intersect(l1.bbox)) {
         return;
     }
     if (l0.equals(l1, true)) {
@@ -481,6 +481,10 @@ function lineCoincide(l0: Line, l1: Line): PathCoincident | undefined {
     }
     else if (l1.bbox.contains(l0.bbox)) {
         // case 4
+        /*
+        this        ---------
+        other ---------------------------
+        */
         const t0 = solvePointTOfLine(l0.start, l1);
         if (t0 < 0) {
             return;
@@ -521,11 +525,11 @@ function lineCoincide(l0: Line, l1: Line): PathCoincident | undefined {
                 this           -------------
                 other ----------------
              */
-            const t0 = solvePointTOfLine(l0.start, l1);
+            const t0 = solvePointTOfLine(l1.end, l0);
             if (t0 < 0) {
                 return;
             }
-            const t1 = solvePointTOfLine(l1.end, l0);
+            const t1 = solvePointTOfLine(l0.start, l1);
             if (t1 < 0) {
                 return;
             }

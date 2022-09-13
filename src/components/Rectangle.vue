@@ -4,6 +4,7 @@ import { Shape } from '@/data/shape';
 import { h, defineComponent } from 'vue';
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
+import { transform } from '@/render/basic';
 
 export default defineComponent({
     name: 'RectangleView',
@@ -38,10 +39,10 @@ export default defineComponent({
             return h('rect', { "fill-opacity": 1, stroke: 'none', 'stroke-width': 0, x: frame.x, y: frame.y, width: frame.width, height: frame.height });
         }
         else if (childs.length == 1) {
-            return childs[0];
+            return transform(childs[0], h);
         }
         else {
-            return h("g", childs);
+            return h("g", transform(childs, h));
         }
     },
 

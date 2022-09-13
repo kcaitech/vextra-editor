@@ -1,7 +1,5 @@
 <script lang="ts">
 import { TextShape } from '@/data/shape';
-import { FillType } from '@/data/style';
-import { Para } from '@/data/text';
 import { h, defineComponent } from 'vue';
 export default defineComponent({
     name: 'TextView',

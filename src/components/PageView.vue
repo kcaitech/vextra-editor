@@ -1,6 +1,5 @@
 
 <script lang="ts">
-import { Gradient, GradientType, Stop } from '../data/style';
 import { defineComponent, h, VNodeArrayChildren } from 'vue';
 import comsMap from './comsmap'
 import { Page } from '../data/page';

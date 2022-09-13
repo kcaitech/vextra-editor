@@ -8,7 +8,7 @@ boolean op -> rebuild path [+非闭合?]-> ant curve -> path:string
 */
 
 import { B3Path, B3PathSegments, coincidents, InnerSide, intersections, PathSegment, splitAtInters } from "./b3path";
-import { ISegment, Line, Point } from "./basic";
+import { float_accuracy, ISegment, Line, Point } from "./basic";
 
 function isCurveInsidePath(curve: ISegment, path: B3Path): boolean {
     // 射线法
@@ -413,6 +413,30 @@ function _xor(path0: B3Path, path1: B3Path): B3Path {
     return p;
 }
 
+function splitAtCoincidents(path: B3Path, indexs: {i: number, t: number}[]) {
+    let offset = 0;
+    indexs.sort((a, b) => { return a.i - b.i || a.t - b.t });
+    for (let i = 0, len = indexs.length; i < len; i++) {
+        const ii = indexs[i];
+        const idx = ii.i + offset;
+        const t0 = ii.t;
+        if (Math.abs(t0) < float_accuracy || Math.abs(1-t0) < float_accuracy) { // 端点
+            continue;
+        }
+        const c = path[idx];
+        const s = c.split(t0);
+        path.splice(idx, 1, ...s);
+        offset++;
+        for (let j = i + 1; j < len; j++) {
+            const ji = indexs[j];
+            if (ji.i !== ii.i) {
+                break;
+            }
+            ji.t = (ji.t - t0) / (1-t0);
+        }
+    }
+}
+
 export function union(b3path0: B3Path, b3path1: B3Path): B3Path {
     // 自相交拆分
 
@@ -421,6 +445,15 @@ export function union(b3path0: B3Path, b3path1: B3Path): B3Path {
     // 重合拆分
     const co = coincidents(b3path0, b3path1);
     console.log(co);
+    splitAtCoincidents(b3path0, co.reduce<{i: number, t: number}[]>((pre, v) => {
+        pre.push({i: <number>v.i0, t: v.t00}, {i: <number>v.i0, t: v.t01})
+        return pre;
+    }, []));
+    splitAtCoincidents(b3path1, co.reduce<{i: number, t: number}[]>((pre, v) => {
+        pre.push({i: <number>v.i1, t: v.t10}, {i: <number>v.i1, t: v.t11})
+        return pre;
+    }, []));
+
     // 相交拆分
     const inters = intersections(b3path0, b3path1);
     splitAtInters(b3path0, inters);

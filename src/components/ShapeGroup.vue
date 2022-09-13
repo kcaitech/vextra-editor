@@ -7,18 +7,19 @@
 // import { Vue } from 'vue-class-component';
 import { h, defineComponent } from 'vue';
 import comsMap from './comsmap'
-import { BoolOp, Shape, ShapeType } from "../data/shape";
+import { GroupShape } from "../data/shape";
 import Rectangle from "./Rectangle.vue";
 import ShapePath from "./ShapePath.vue"
 import ImageView from "./ImageView.vue"
 import TextView from "./TextView.vue";
 import { render as gR } from "@/render/group";
+import { transform } from '@/render/basic';
 
 export default defineComponent({
     name: "ShapeGroup",
     props: {
         data: {
-            type: Shape,
+            type: GroupShape,
             required: true,
         },
         boolop: {
@@ -36,7 +37,7 @@ export default defineComponent({
     },
     
     render() {
-        return gR(this.data, this.boolop, comsMap);
+        return transform(gR(this.data, this.boolop, comsMap), h);
     }
 })
 </script>
