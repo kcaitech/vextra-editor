@@ -2,24 +2,16 @@
     <div id="top"></div>
     <div id="center">
         <div id="navigation"></div>
-        <div id="content"></div>
+        <ContentView id="content"></ContentView>
         <div id="attributes"></div>
     </div>
     <div id="bottom"></div>
 </template>
 
-<script lang="ts">
-import { Options, Vue } from 'vue-class-component';
-import PageView from './components/PageView.vue';
+<script setup lang="ts">
+import ContentView from './components/ContentView.vue';
 
-// @Options({
-//     components: {
-//         PageView,
-//     },
-// })
-export default class App extends Vue {
-    
-}
+
 </script>
 
 <style scoped>
@@ -58,7 +50,7 @@ export default class App extends Vue {
         flex: 1 1 auto;
         width:auto;
         height:auto;
-        overflow: auto;
+        overflow: hidden;
     }
     #attributes {
         flex-flow:column nowrap;

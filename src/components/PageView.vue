@@ -1,83 +1,104 @@
+<script setup lang="ts">
+import { objectId } from '@/basic/objectid';
+import { Page } from '@/data/page';
+import { Shape } from '@/data/shape';
+import { onBeforeMount, onMounted, onUnmounted, reactive, defineProps, ref } from 'vue';
+import comsMap from './comsmap';
 
-<script lang="ts">
-import { defineComponent, h, VNodeArrayChildren } from 'vue';
-import comsMap from './comsmap'
-import { Page } from '../data/page';
-import { ShapeType } from "@/data/shape";
-import Rectangle from "./Rectangle.vue";
-import ShapeGroup from "./ShapeGroup.vue"
-import ShapePath from "./ShapePath.vue"
-import ImageView from "./ImageView.vue"
-import TextView from "./TextView.vue";
+const props = defineProps<{ data: Page }>();
+const childs = reactive(new Array<{ data: Shape, id: number }>());
+const viewBox = reactive({ x: 0, y: 0, w: 0, h: 0 });
 
-export default defineComponent({
-    name: 'PageView',
-    props: {
-        data: {
-            type: Page,
-            required:true,
-        }
-    },
+const updater = () => {
+    const cc = props.data.childsCount || 0;
+    const frame = props.data.frame;
+    let right = frame.width || 800;
+    let bottom = frame.height || 600;
+    let left = 0;
+    let top = 0;
 
-    components: {
-        Rectangle,
-        ShapeGroup,
-        ShapePath,
-        ImageView,
-        TextView,
-    },
-
-    methods: {
-        
-    },
-
-    render() {
-        const renderDefs = () => {
-            let defsChilds: VNodeArrayChildren = [];
-            return [h('defs', {}, defsChilds)];
-        }
-
-        let childs: VNodeArrayChildren = renderDefs();
-
-        // var childsCache = this.m_childsCache// || (this._childsCache = new WeakMap());
-        var cc = this.data.childsCount || 0;
-
-        var frame = this.data.frame;
-        var right = frame.width || 800;
-        var bottom = frame.height || 600;
-        var left = 0;
-        var top = 0;
-
-        // todo reuse childs
-        for (var i = 0; i < cc; i++) {
-            var child = this.data.getChildByIndex(i);
-
-            var cf = child.frame;
-            right = Math.max(right, cf.x + cf.width + 1);
-            bottom = Math.max(bottom, cf.y + cf.height + 1);
-            left = Math.min(left, cf.x);
-            top = Math.min(top, cf.y);
-
-            let com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
-            let node = h(com, { data: child, boolop: this.data.boolOp });
-            childs.push(node);
-        }
-
-        return h('svg', {
-            version: "1.1",
-            xmlns: "http://www.w3.org/2000/svg",
-            "xmlns:xlink": "http://www.w3.org/1999/xlink",
-            "xmlns:xhtml":"http://www.w3.org/1999/xhtml",
-            viewBox: "" + left + " " + top + " " + (right - left) + " " + (bottom - top),
-            width: Math.min(1000, right - left),
-            height: Math.min(800, bottom - top)
-        },
-            childs);
+    for (let i = 0; i < cc; i++) {
+        const child = props.data.getChildByIndex(i);
+        const cf = child.frame;
+        right = Math.max(right, cf.x + cf.width + 1);
+        bottom = Math.max(bottom, cf.y + cf.height + 1);
+        left = Math.min(left, cf.x);
+        top = Math.min(top, cf.y);
+        childs.push({ data: child, id: objectId(child) });
     }
 
+    viewBox.x = left;
+    viewBox.y = top;
+    viewBox.w = right - left;
+    viewBox.h = bottom - top;
+}
+
+onBeforeMount(() => {
+    updater();
 })
+
+onMounted(() => {
+    props.data.watch(updater);
+})
+
+onUnmounted(() => {
+    props.data.unwatch(updater);
+})
+
+const viewBox2Str = () => {
+    return "" + viewBox.x + " " + viewBox.y + " " + viewBox.w + " " + viewBox.h;
+}
+
+const matrix = ref([1, 0, 0, 1, 0, 0]);
+const matrix_multi = (m: number[]) => {
+    const m0 = matrix.value;
+    const m1 = [
+        m[0] * m0[0] + m[1] * m0[2], m[0] * m0[1] + m[1] * m0[3],
+        m[2] * m0[0] + m[3] * m0[2], m[2] * m0[1] + m[3] * m0[3],
+        m[0] * m0[4] + m[1] * m0[5] + m[4], m[2] * m0[4] + m[3] * m0[5] + m[5]
+    ]
+    matrix.value = m1;
+}
+const matrix_trans = (x: number, y: number) => {
+    matrix_multi([1, 0, 0, 1, x, y]);
+}
+const matrix_scale = (s: number) => {
+    matrix_multi([s, 0, 0, s, 0, 0]);
+}
+
+
+function onMouseWheel(e: WheelEvent) {
+    console.log(e);
+    
+    const offsetX = e.offsetX;
+    const offsetY = e.offsetY;
+    matrix_trans(-offsetX, -offsetY);
+    const scale_delta = 0.05;
+    matrix_scale(1 - Math.sign(e.deltaY) * scale_delta);
+    matrix_trans(offsetX, offsetY);
+}
+
+function onClick(e: MouseEvent) {
+    console.log(e);
+}
 
 </script>
 
+<template>
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="Math.min(1000, viewBox.w)"
+        :height="Math.min(800, viewBox.h)" @wheel.passive="onMouseWheel" @click="onClick"
+        :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
+
+        <component v-for="c in childs" :key="c.id" :is="comsMap.get(c.data.type)" :data="c.data"
+            :boolop="props.data.boolOp">
+        </component>
+
+    </svg>
+</template>
+
 <style scoped>
+svg {
+    transform-origin: top left;
+}
 </style>
