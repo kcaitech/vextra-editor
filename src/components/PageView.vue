@@ -2,7 +2,7 @@
 import { objectId } from '@/basic/objectid';
 import { Page } from '@/data/page';
 import { Shape } from '@/data/shape';
-import { onBeforeMount, onMounted, onUnmounted, reactive, defineProps, ref } from 'vue';
+import { onBeforeMount, onMounted, onUnmounted, reactive, defineProps, ref, getCurrentInstance, ComponentInternalInstance } from 'vue';
 import comsMap from './comsmap';
 
 const props = defineProps<{ data: Page }>();
@@ -65,21 +65,28 @@ const matrix_trans = (x: number, y: number) => {
 const matrix_scale = (s: number) => {
     matrix_multi([s, 0, 0, s, 0, 0]);
 }
-
+function compute_matrix_coordX(x: number, y: number) {
+    const m = matrix.value;
+    return { x: m[0]*x + m[1]*y + m[4], y: m[2]*x + m[3]*y + m[5] };
+}
 
 function onMouseWheel(e: WheelEvent) {
-    console.log(e);
-    
+    // console.log(e);
     const offsetX = e.offsetX;
     const offsetY = e.offsetY;
-    matrix_trans(-offsetX, -offsetY);
-    const scale_delta = 0.05;
-    matrix_scale(1 - Math.sign(e.deltaY) * scale_delta);
-    matrix_trans(offsetX, offsetY);
+    const { x, y } = compute_matrix_coordX(offsetX, offsetY);
+    matrix_trans(-x, -y);
+    const scale_delta = 1.05;
+    const scale_delta_ = 1 / scale_delta;
+    matrix_scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
+    matrix_trans(x, y);
 }
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 function onClick(e: MouseEvent) {
     console.log(e);
+    console.log(proxy?.$el);
+    // console.log(getCurrentInstance());
 }
 
 </script>
