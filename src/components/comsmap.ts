@@ -1,10 +1,11 @@
+import { ShapeType } from "../data/shape";
 import Rectangle from "./Rectangle.vue";
 import ShapeGroup from "./ShapeGroup.vue"
 import ShapePath from "./ShapePath.vue"
 import ImageView from "./ImageView.vue"
-import { ShapeType } from "../data/shape";
 import TextView from "./TextView.vue";
 import ShapeBool from "./ShapeBool.vue";
+import SymbolRef from "./SymbolRef.vue";
 
 const comsMap: Map<ShapeType, any> = new Map();
 
@@ -18,5 +19,6 @@ comsMap.set(ShapeType.Rectangle, Rectangle);
 comsMap.set(ShapeType.Text, TextView);
 comsMap.set(ShapeType.Boolean, ShapeBool);
 comsMap.set(ShapeType.Symbol, ShapeGroup);
+comsMap.set(ShapeType.SymbolRef, SymbolRef);
 
 export default comsMap;

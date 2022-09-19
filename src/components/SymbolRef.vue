@@ -1,22 +1,13 @@
-<!-- <template>
-<g transform="translate(100,231)">
-</g>
-</template> -->
-
 <script lang="ts">
-// import { Vue } from 'vue-class-component';
-import { h, defineComponent } from 'vue';
+import { h, defineComponent, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap'
-import { GroupShape, SymbolRef } from "../data/shape";
-import Rectangle from "./Rectangle.vue";
-import ShapePath from "./ShapePath.vue"
-import ImageView from "./ImageView.vue"
-import TextView from "./TextView.vue";
+import { BoolOp, SymbolRef } from "../data/shape";
 import { render as gR } from "@/render/group";
+import { render as fillR } from "@/render/fill";
+import { render as borderR } from "@/render/border"
 import { transform } from '@/render/basic';
 
 export default defineComponent({
-    name: "SymbolRef",
     props: {
         data: {
             type: SymbolRef,
@@ -27,9 +18,60 @@ export default defineComponent({
             required: true,
         },
     },
-    
-    render() {
-        // return transform(gR(this.data, this.boolop, comsMap), h);
+
+    setup(props) {
+
+
+        const reflush = ref(0);
+
+        function updater() {
+            reflush.value++;
+        }
+
+        onMounted(() => {
+            props.data.loadSymbol();
+            props.data.watch(updater);
+        })
+
+        onUnmounted(() => {
+            props.data.unwatch(updater);
+        })
+
+        return () => {
+            const sym = props.data.peekSymbol();
+            if (!sym) {
+                return;
+            }
+            let frame = props.data.frame;
+            let childs = [];
+            let path = props.data.getPath(true);
+            // fill
+            childs.push(...fillR(props.data, path));
+            // border
+            childs.push(...borderR(props.data, path));
+
+            // symbol
+            childs.push(gR(sym, BoolOp.None, comsMap));
+
+            if (childs.length == 0) {
+                // todo
+                return h('rect', {
+                    "fill-opacity": 1,
+                    stroke: 'none',
+                    'stroke-width': 0,
+                    x: frame.x,
+                    y: frame.y,
+                    width: frame.width,
+                    height: frame.height
+                });
+            }
+            else if (childs.length == 1) {
+                return transform(childs[0], h);
+            }
+            else {
+                return h("g", transform(childs, h));
+            }
+        }
     }
 })
 </script>

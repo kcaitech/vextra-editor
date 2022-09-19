@@ -1,11 +1,5 @@
-<!-- <template>
-<g transform="translate(100,231)">
-</g>
-</template> -->
-
 <script lang="ts">
-// import { Vue } from 'vue-class-component';
-import { h, defineComponent, VNodeArrayChildren } from 'vue';
+import { h, defineComponent } from 'vue';
 import { Shape } from "../data/shape";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
