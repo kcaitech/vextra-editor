@@ -1,59 +1,43 @@
-// Navigation
-
-<!-- <template>
-
-<div v-for="info in infos">
-    <button @click="select(info)">{{info.name}}</button>
-</div>
-
-</template> -->
-
-<script lang="ts">
+<script setup lang="ts">
 import { Document } from '@/data/document';
 import { Page } from '@/data/page';
-import { defineComponent, h } from 'vue';
+import { defineProps, onMounted, onUnmounted, ref } from 'vue';
 
-export default defineComponent({
-    name: 'NavigationView',
-    props: {
-        data: {
-            type: Document,
-            required: true,
-        },
-        select: {
-            type: Function,
-            required: true
-        },
-    },
-
-    // data() {
-    // },
-
-    methods: {
-        // bubbleEvent(event, args, forceAsync) {
-		//     return this.$parent && this.$parent.bubbleEvent(event, args, forceAsync);
-	    // }
-    },
-
-    render() {
-        var childs = [];
-        var pc = this.data.pageCount;
-        for (var i = 0; i < pc; i++) {
-            var page:Page = this.data.peekPageByIndex(i);
-            var name = page ? page.name : "" + i;
-            var info = {name, index:i};
-            var onclick = (function(info, _this) {
-                return function() {
-                    _this.select(info.index);
-                }
-            })(info, this);
-            childs.push(h("button", {onclick}, name));
-        }
-        return h("div", {}, childs);
+const props = defineProps<{ data: Document, select: Function }>();
+const list = ref({ val: new Array<{ name: string, i: number }>() });
+const updater = () => {
+    const pc = props.data.pageCount;
+    const l = [];
+    for (let i = 0; i < pc; i++) {
+        const page: Page = props.data.peekPageByIndex(i);
+        const name = page ? page.name : "";
+        l.push({ name, i });
     }
+    list.value.val = l;
+}
+
+onMounted(() => {
+    props.data.watch(updater);
+    updater();
 })
 
+onUnmounted(() => {
+    props.data.unwatch(updater);
+})
+
+function onClick(idx: number) {
+    props.select(idx);
+}
+
 </script>
+
+<template>
+
+    <div>
+        <button v-for="item in list.val" v-on:click="onClick(item.i)" :key="item.i">{{ item.name }}</button>
+    </div>
+
+</template>
 
 <style scoped>
 button {
