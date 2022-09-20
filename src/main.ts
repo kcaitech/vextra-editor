@@ -12,7 +12,8 @@ preload.on('ready', (lzData: LzData) => {
     importDocument(lzData).then((core: Document) => {
         let preApp: any | undefined;
         const selectPage = (index: number) => {
-            core.getPageByIndex(index).then((page: Page) => {
+            const pagesMgr = core.pagesMgr;
+            pagesMgr.getPageByIndex(index).then((page: Page) => {
                 if (preApp) preApp.unmount();
                 preApp = createApp(PageView, {data: page});
                 preApp.mount("#content");

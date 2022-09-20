@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { Document } from '@/data/document';
-import { Page } from '@/data/page';
 import { defineProps, onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps<{ data: Document, select: Function }>();
 const list = ref({ val: new Array<{ name: string, i: number }>() });
 const updater = () => {
-    const pc = props.data.pageCount;
+    const pagesMgr = props.data.pagesMgr;
+    const pc = pagesMgr.pageCount;
     const l = [];
     for (let i = 0; i < pc; i++) {
-        const page: Page = props.data.peekPageByIndex(i);
-        const name = page ? page.name : "";
+        const id = pagesMgr.getPageIdByIndex(i);
+        const name = pagesMgr.getPageNameById(id);
         l.push({ name, i });
     }
     list.value.val = l;
