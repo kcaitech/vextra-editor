@@ -6,10 +6,11 @@ import ImageView from "./ImageView.vue"
 import TextView from "./TextView.vue";
 import ShapeBool from "./ShapeBool.vue";
 import SymbolRef from "./SymbolRef.vue";
+import ArtboardView from "./ArtboardView.vue"
 
 const comsMap: Map<ShapeType, any> = new Map();
 
-comsMap.set(ShapeType.Artboard, ShapeGroup);
+comsMap.set(ShapeType.Artboard, ArtboardView);
 comsMap.set(ShapeType.Group, ShapeGroup);
 comsMap.set(ShapeType.ShapeGroup, ShapeGroup);
 comsMap.set(ShapeType.Image, ImageView);
