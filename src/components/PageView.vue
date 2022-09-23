@@ -27,8 +27,8 @@ const updater = () => {
         childs.push({ data: child, id: objectId(child) });
     }
 
-    viewBox.x = left;
-    viewBox.y = top;
+    viewBox.x = left - 20;
+    viewBox.y = top - 20;
     viewBox.w = right - left;
     viewBox.h = bottom - top;
 }
