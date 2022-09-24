@@ -81,23 +81,24 @@ app.on('ready', async () => {
   }
   createWindow()
 
-  ipcMain.handle('getOpenFilePath', async () => {
-
-    // console.log('receive getOpenFilePath');
-     const result = await dialog.showOpenDialog({
-        
-    });
-
-    // console.log(result);
-    if (result.filePaths.length > 0) {
-      return result.filePaths[0];
-    } else {
-      return null;
-    }
-  });
 })
 
-// Exit cleanly on request from parent process in development mode.
+ipcMain.handle('getOpenFilePath', async () => {
+
+  // console.log('receive getOpenFilePath');
+   const result = await dialog.showOpenDialog({
+      
+  });
+
+  // console.log(result);
+  if (result.filePaths.length > 0) {
+    return result.filePaths[0];
+  } else {
+    return null;
+  }
+});
+
+  // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
   if (process.platform === 'win32') {
     process.on('message', (data) => {
