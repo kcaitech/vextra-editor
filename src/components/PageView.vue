@@ -68,7 +68,7 @@ const matrix_scale = (s: number) => {
 }
 function compute_matrix_coordX(x: number, y: number) {
     const m = matrix.value;
-    return { x: m[0]*x + m[1]*y + m[4], y: m[2]*x + m[3]*y + m[5] };
+    return { x: m[0] * x + m[1] * y + m[4], y: m[2] * x + m[3] * y + m[5] };
 }
 
 function onMouseWheel(e: WheelEvent) {
@@ -102,8 +102,12 @@ function onClick(e: MouseEvent) {
 
         <defs>
             <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">
-                <feOffset result="offOut" in="SourceAlpha" dx="0" dy="0" />
-                <feGaussianBlur result="blurOut" in="offOut" stdDeviation="3" />
+                <feColorMatrix result="colOut" in="SourceAlpha" type="matrix" 
+                    values="1 0 0 0 0 
+                            0 1 0 0 0 
+                            0 0 1 0 0 
+                            0 0 0 0.5 0" /> // rgba, 50% alpha
+                <feGaussianBlur result="blurOut" in="colOut" stdDeviation="3" />
                 <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
             </filter>
         </defs>
