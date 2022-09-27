@@ -27,10 +27,11 @@ const updater = () => {
         childs.push({ data: child, id: objectId(child) });
     }
 
-    viewBox.x = left - 20;
-    viewBox.y = top - 20;
-    viewBox.w = right - left;
-    viewBox.h = bottom - top;
+    const expandBox = 20;
+    viewBox.x = left - expandBox;
+    viewBox.y = top - expandBox;
+    viewBox.w = right - viewBox.x + expandBox;
+    viewBox.h = bottom - viewBox.y + expandBox;
 }
 
 onBeforeMount(() => {
@@ -71,7 +72,7 @@ function compute_matrix_coordX(x: number, y: number) {
 }
 
 function onMouseWheel(e: WheelEvent) {
-    // console.log(e);
+    console.log(e);
     const offsetX = e.offsetX;
     const offsetY = e.offsetY;
     const { x, y } = compute_matrix_coordX(offsetX, offsetY);
@@ -80,6 +81,8 @@ function onMouseWheel(e: WheelEvent) {
     const scale_delta_ = 1 / scale_delta;
     matrix_scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
     matrix_trans(x, y);
+    // e.stopPropagation();
+    // e.preventDefault();
 }
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
@@ -94,8 +97,16 @@ function onClick(e: MouseEvent) {
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="Math.min(1000, viewBox.w)"
-        :height="Math.min(800, viewBox.h)" @wheel.passive="onMouseWheel" @click="onClick"
+        :height="Math.min(800, viewBox.h)" @wheel.prevent="onMouseWheel" @click="onClick"
         :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
+
+        <defs>
+            <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">
+                <feOffset result="offOut" in="SourceAlpha" dx="0" dy="0" />
+                <feGaussianBlur result="blurOut" in="offOut" stdDeviation="3" />
+                <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+            </filter>
+        </defs>
 
         <component v-for="c in childs" :key="c.id" :is="comsMap.get(c.data.type)" :data="c.data"
             :boolop="props.data.boolOp">
@@ -107,5 +118,6 @@ function onClick(e: MouseEvent) {
 <style scoped>
 svg {
     transform-origin: top left;
+    background-color: var(--theme-content-colorbg);
 }
 </style>

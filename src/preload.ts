@@ -35,3 +35,14 @@ preload.on('load', () => {
   });
   
 });
+
+// preload.on("minimize", () => {
+//     ipcRenderer.send("minimize");
+// })
+// preload.on("toggle-maximize", () => {
+//     console.log("toggle-maximize")
+//     ipcRenderer.send("toggle-maximize");
+// })
+// preload.on("close-win", () => {
+//     ipcRenderer.send("close-win");
+// })
