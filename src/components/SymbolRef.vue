@@ -2,7 +2,7 @@
 import { h, defineComponent, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap'
 import { BoolOp, SymbolRef } from "../data/shape";
-import { render as gR } from "@/render/group";
+import { renderGroupChilds as gR } from "@/render/group";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 import { transform } from '@/render/basic';
@@ -51,7 +51,7 @@ export default defineComponent({
             childs.push(...borderR(props.data, path));
 
             // symbol
-            childs.push(gR(sym, BoolOp.None, comsMap));
+            childs.push(...gR(sym, BoolOp.None, comsMap));
 
             if (childs.length == 0) {
                 // todo
@@ -65,11 +65,11 @@ export default defineComponent({
                     height: frame.height
                 });
             }
-            else if (childs.length == 1) {
-                return transform(childs[0], h);
-            }
+            // else if (childs.length == 1) {
+            //     return transform(childs[0], h);
+            // }
             else {
-                return h("g", transform(childs, h));
+                return h("g", { transform: 'translate(' + frame.x + ',' + frame.y + ')' }, transform(childs, h));
             }
         }
     }

@@ -3,3 +3,5 @@ dist_electron
 deprecated
 package-lock.json
 .VSCodeCounter
+.DS_Store
+yarn.lock

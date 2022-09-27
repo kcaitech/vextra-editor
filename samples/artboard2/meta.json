@@ -1,0 +1,141 @@
+{
+    "commit": "1899e24f63af087a9dd3c66f73b492b72c27c2c8",
+    "pagesAndArtboards": {
+        "528B5B86-0DCE-404B-9D2A-CDF722BE1065": {
+            "name": "页面 1",
+            "artboards": {
+                "2BCBBF69-8004-41A6-98D5-40249A713049": {
+                    "name": "Genera通用组件-按钮"
+                }
+            }
+        },
+        "77094D44-96CE-4307-A576-EE828C9A6E60": {
+            "name": "控件",
+            "artboards": {
+                "15397876-A25E-4425-A74D-D726C313A0CB": {
+                    "name": "1.通用\/1.Buttons按钮\/次按钮\/亮色\/小"
+                },
+                "5377B861-A96D-48DA-937C-39E933EE55BE": {
+                    "name": "1.通用\/1.Buttons按钮\/带图标的按钮\/亮色\/主按钮-大"
+                },
+                "3FF840BF-C05F-4CB1-BB8F-060CA1EB83AB": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/次按钮-大"
+                },
+                "D8DE052E-453B-47D1-80AD-F3BEF3828D3B": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/主按钮-小"
+                },
+                "5153BD4A-69ED-474F-9BD2-DB0A156132C3": {
+                    "name": "1.通用\/1.Buttons按钮\/幽灵按钮\/亮色\/默认"
+                },
+                "5BB8EB92-DFC7-4D21-82AA-22215C3ACCC6": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/文字按钮-小"
+                },
+                "10534B00-F974-4CC9-A82F-242A791CBDD1": {
+                    "name": "1.通用\/1.Buttons按钮\/主按钮\/亮色\/大"
+                },
+                "25A069CE-3460-45D4-B8DF-5CAAA86758A8": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/主按钮-大"
+                },
+                "C2026CFE-51BB-47B5-8A4A-11646D7870CC": {
+                    "name": "1.通用\/1.Buttons按钮\/不可用按钮\/亮色\/大"
+                },
+                "DB1B00F0-A9F3-4F14-8DF9-41101582B1D6": {
+                    "name": "1.通用\/1.Buttons按钮\/幽灵按钮\/亮色\/大"
+                },
+                "548D9C9B-B9E3-40D8-B59F-4182EE338A80": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/文字按钮-默认"
+                },
+                "8E3B1633-BCBB-4824-BABE-3E0A2E4798DF": {
+                    "name": "1.通用\/1.Buttons按钮\/文字按钮\/亮色\/默认"
+                },
+                "FE761876-A9CC-48F7-97F5-8643FC19644A": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/文字按钮-大"
+                },
+                "848E8DF6-3608-496E-8E32-1B677ACA13A4": {
+                    "name": "1.通用\/1.Buttons按钮\/文字按钮\/亮色\/小"
+                },
+                "76CB02D8-9037-40ED-83C9-05E76EE1FA19": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/次按钮-默认"
+                },
+                "7FD0925A-011A-4E73-9857-6024D92C5465": {
+                    "name": "1.通用\/1.Buttons按钮\/带图标的按钮\/亮色\/次按钮-大"
+                },
+                "A61ABCB7-26B1-4153-A7B5-9E8961BFE16D": {
+                    "name": "1.通用\/2.Icon图标\/Line\/Save"
+                },
+                "BDC3DA58-85EB-4919-8254-B993EA00BE3D": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/主按钮-默认"
+                },
+                "2EC412C2-C480-45CA-B715-11F5022CDC86": {
+                    "name": "1.通用\/1.Buttons按钮\/虚线按钮\/亮色\/小"
+                },
+                "F2DAF1ED-C11B-492B-9514-0BD471D2BE91": {
+                    "name": "1.通用\/1.Buttons按钮\/不可用按钮\/亮色\/默认"
+                },
+                "2E020556-ACD8-478C-9731-0C35AEEA137C": {
+                    "name": "1.通用\/1.Buttons按钮\/带图标的按钮\/亮色\/次按钮-默认"
+                },
+                "D38B1698-49D1-415D-BC87-25A36E0D834C": {
+                    "name": "1.通用\/1.Buttons按钮\/带图标的按钮\/亮色\/主按钮-默认"
+                },
+                "E05F44D5-165E-4E4C-970D-D3573E7A7CA8": {
+                    "name": "1.通用\/1.Buttons按钮\/文字按钮\/亮色\/大"
+                },
+                "9A0C6682-76F9-4EC8-AA1C-D29DF25CA957": {
+                    "name": "1.通用\/1.Buttons按钮\/不可用按钮\/亮色\/小"
+                },
+                "A6EC1C09-F659-4D9A-A7E7-6D2D3FD1F607": {
+                    "name": "1.通用\/1.Buttons按钮\/次按钮\/亮色\/大"
+                },
+                "408EEF32-29C5-407D-85E2-331878206686": {
+                    "name": "1.通用\/1.Buttons按钮\/带图标的按钮\/亮色\/主按钮-小"
+                },
+                "D8A6CFE8-B07A-4581-8D5F-0CD931CFA626": {
+                    "name": "1.通用\/1.Buttons按钮\/主按钮\/亮色\/默认"
+                },
+                "C8F22B27-E364-4F78-9FE3-325E09AF8BD1": {
+                    "name": "1.通用\/1.Buttons按钮\/危险按钮\/亮色\/次按钮-小"
+                },
+                "C465ABC1-4056-4806-A49B-F867907BBF6E": {
+                    "name": "1.通用\/1.Buttons按钮\/幽灵按钮\/亮色\/小"
+                },
+                "6725ABF0-6DE6-4D3C-B5F2-AE3DDE611C9A": {
+                    "name": "1.通用\/1.Buttons按钮\/带图标的按钮\/亮色\/次按钮-小"
+                },
+                "B791871D-3457-43C1-93E7-507F7B58CF9D": {
+                    "name": "1.通用\/1.Buttons按钮\/次按钮\/亮色\/默认"
+                },
+                "BB2EBB62-5C67-49EB-B4A9-D7DB20E02B01": {
+                    "name": "1.通用\/1.Buttons按钮\/虚线按钮\/亮色\/默认"
+                },
+                "7E5B9C94-B6CD-45A4-B0BE-2C41E412D8DF": {
+                    "name": "1.通用\/1.Buttons按钮\/主按钮\/亮色\/小"
+                },
+                "CF6B28DC-01A4-473D-8244-030E3395476B": {
+                    "name": "1.通用\/1.Buttons按钮\/虚线按钮\/亮色\/大"
+                }
+            }
+        }
+    },
+    "version": 144,
+    "compatibilityVersion": 99,
+    "app": "com.bohemiancoding.sketch3",
+    "autosaved": 0,
+    "variant": "NONAPPSTORE",
+    "coeditCompatibilityVersion": 143,
+    "created": {
+        "commit": "1899e24f63af087a9dd3c66f73b492b72c27c2c8",
+        "appVersion": "93",
+        "build": 155335,
+        "app": "com.bohemiancoding.sketch3",
+        "coeditCompatibilityVersion": 143,
+        "compatibilityVersion": 99,
+        "version": 144,
+        "variant": "NONAPPSTORE"
+    },
+    "saveHistory": [
+        "NONAPPSTORE.155335"
+    ],
+    "appVersion": "93",
+    "build": 155335
+}
