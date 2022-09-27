@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ComponentInternalInstance, getCurrentInstance, ref } from 'vue';
 
 
 
 const scale = ref(0);
 const transX = ref(0);
 const transY = ref(0);
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 function onMouseWheel(e: MouseEvent) {
     // console.log(e);
     // e.preventDefault();
     // e.stopPropagation();
     // return true;
+
+    // console.log("contentview",proxy)s
 }
 
 </script>
@@ -25,5 +28,7 @@ function onMouseWheel(e: MouseEvent) {
 </template>
 
 <style scoped>
-
+div {
+    background-color: var(--theme-content-colorbg);
+}
 </style>

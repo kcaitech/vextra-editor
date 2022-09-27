@@ -23,5 +23,5 @@ preload.on('ready', (lzData: LzData) => {
         selectPage(0);
     })
 });
-createApp(App, {}).mount("#app");
+createApp(App, {preload}).mount("#app");
 preload.emit('load');
