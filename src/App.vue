@@ -45,16 +45,22 @@ function topDblClick() {
         /* button toolbar */
 
     }
+    html {
+        width: 100%;
+        height: 100%;
+    }
     body {
         font-family: BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,PingFang SC,Microsoft Yahei,Hiragino Sans GB,sans-serif,apple color emoji,Noto Color Emoji,segoe ui emoji,segoe ui symbol;
         overflow: hidden;
         margin: 0px;
+        width: 100%;
+        height: 100%;
     }
-    #app {
+    body #app {
         display: flex;
         flex-flow:column nowrap;
         width:100%;
-        height:auto;
+        height:100%;
     }
 </style>
 
@@ -78,7 +84,7 @@ function topDblClick() {
         width:100%;
         height:30px;
         align-self:flex-end;
-        visibility: hidden;
+        /* visibility: hidden; */
         background-color: var(--theme-color);
         z-index: 1;
     }

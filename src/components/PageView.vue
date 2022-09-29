@@ -96,8 +96,8 @@ function onClick(e: MouseEvent) {
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="Math.min(1000, viewBox.w)"
-        :height="Math.min(800, viewBox.h)" @wheel.prevent="onMouseWheel" @click="onClick"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="800"
+        :height="600" @wheel.prevent="onMouseWheel" @click="onClick"
         :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
 
         <defs>

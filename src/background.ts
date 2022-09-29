@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, screen, protocol, BrowserWindow, ipcMain, dialog } from 'electron'
 const path = require('path')
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
@@ -12,13 +12,21 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 async function createWindow() {
+    let size = screen.getPrimaryDisplay().workAreaSize
+    let sWidth=size.width;
+    let sHeight=size.height;
+    
     // Create the browser window.
     const win = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: sWidth,
+        height: sHeight,
         show: false,
-        // frame: false,
+        resizable: true,
         useContentSize: false,
+        minHeight: 800,
+        minWidth: 1000,
+        // frame: false,
+        // movable: true,
         webPreferences: {
 
             // Use pluginOptions.nodeIntegration, leave this alone
