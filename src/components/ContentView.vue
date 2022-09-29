@@ -29,6 +29,6 @@ function onMouseWheel(e: MouseEvent) {
 
 <style scoped>
 div {
-    background-color: var(--theme-content-colorbg);
+    background-color: var(--center-content-bg-color);
 }
 </style>

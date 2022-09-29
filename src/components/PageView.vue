@@ -72,7 +72,7 @@ function compute_matrix_coordX(x: number, y: number) {
 }
 
 function onMouseWheel(e: WheelEvent) {
-    console.log(e);
+    // console.log(e);
     const offsetX = e.offsetX;
     const offsetY = e.offsetY;
     const { x, y } = compute_matrix_coordX(offsetX, offsetY);
@@ -103,10 +103,7 @@ function onClick(e: MouseEvent) {
         <defs>
             <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">
                 <feColorMatrix result="colOut" in="SourceAlpha" type="matrix" 
-                    values="1 0 0 0 0 
-                            0 1 0 0 0 
-                            0 0 1 0 0 
-                            0 0 0 0.5 0" /> // rgba, 50% alpha
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0" /> // rgba, 30% alpha
                 <feGaussianBlur result="blurOut" in="colOut" stdDeviation="3" />
                 <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
             </filter>
@@ -122,6 +119,6 @@ function onClick(e: MouseEvent) {
 <style scoped>
 svg {
     transform-origin: top left;
-    background-color: var(--theme-content-colorbg);
+    background-color: var(--center-content-bg-color);
 }
 </style>
