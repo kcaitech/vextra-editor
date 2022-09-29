@@ -22,11 +22,12 @@ async function createWindow() {
         height: sHeight,
         show: false,
         resizable: true,
-        useContentSize: false,
-        minHeight: 800,
+        useContentSize: true,
+        minHeight: 690,
         minWidth: 1000,
         // frame: false,
         // movable: true,
+        backgroundColor: "#2c2c2c",
         webPreferences: {
 
             // Use pluginOptions.nodeIntegration, leave this alone
