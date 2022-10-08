@@ -1,1 +1,2223 @@
-{"_class":"page","do_objectID":"7E2ACD66-2574-4191-BC49-A089F67BDBDE","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"alignment","nameIsFixed":true,"resizingConstraint":63,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":0,"width":0,"x":0,"y":0},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"B9C4A4D0-A422-46F6-9D1F-66ECC97653BD","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[]},"hasClickThrough":true,"groupLayout":{"_class":"MSImmutableFreeformGroupLayout"},"layers":[{"_class":"text","do_objectID":"BCAEBBD8-021B-431F-8F8A-45F76A0D5202","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"box-left-top","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":219,"width":768,"x":10,"y":538},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"64F2AC23-14EA-48CF-BC78-06C94C58E754","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":0}},"attributedString":{"_class":"attributedString","string":"box-left-top","attributes":[{"_class":"stringAttribute","location":0,"length":12,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 18}, {502, 97}}","lineSpacingBehaviour":2,"textBehaviour":2},{"_class":"text","do_objectID":"A3E3164A-7DAA-4F90-AA6F-09604E7BBB55","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"box-left-center","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":219,"width":768,"x":10,"y":978},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"803F98A9-343B-4AB1-B1CD-7EACF97C9EEB","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":1}},"attributedString":{"_class":"attributedString","string":"box-left-center","attributes":[{"_class":"stringAttribute","location":0,"length":15,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 18}, {650, 78}}","lineSpacingBehaviour":2,"textBehaviour":2},{"_class":"text","do_objectID":"6D2299E0-2E8F-496E-9F2A-2459352373D7","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"box-left-bottom","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":219,"width":768,"x":10,"y":1525},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"B1CB9751-6FA3-4462-9F23-E929336418B4","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"box-left-bottom","attributes":[{"_class":"stringAttribute","location":0,"length":15,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 18}, {670, 78}}","lineSpacingBehaviour":2,"textBehaviour":2},{"_class":"text","do_objectID":"F4D9493F-5FF7-4585-9EDA-CB0A36E22D51","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"box-center-top","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":219,"width":768,"x":778,"y":554},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"FAE9FFDD-50B3-4BC2-9B9D-4294A22B6650","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":2,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":0}},"attributedString":{"_class":"attributedString","string":"box-center-top","attributes":[{"_class":"stringAttribute","location":0,"length":14,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":2,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{61, 19}, {650, 96}}","lineSpacingBehaviour":2,"textBehaviour":2},{"_class":"text","do_objectID":"040F0E9D-DCE5-4F78-8C7C-A5F647E58D2A","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"box-right-top","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":219,"width":768,"x":1641,"y":538},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"0B089E34-1A88-4343-8C5A-FABC7D20C292","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":1,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":0}},"attributedString":{"_class":"attributedString","string":"box-right-top","attributes":[{"_class":"stringAttribute","location":0,"length":13,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":1,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{201, 19}, {564, 97}}","lineSpacingBehaviour":2,"textBehaviour":2},{"_class":"text","do_objectID":"CF063EB6-2B08-43F4-A51E-E9290C828340","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"box-bouth-top","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":219,"width":768,"x":2574,"y":554},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"3846A484-2658-49CF-8D20-0B32C421660B","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":3,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":0}},"attributedString":{"_class":"attributedString","string":"box-bouth-top","attributes":[{"_class":"stringAttribute","location":0,"length":13,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":3,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 19}, {623, 96}}","lineSpacingBehaviour":2,"textBehaviour":2},{"_class":"text","do_objectID":"987BF852-633D-4C08-89C8-B7F02467684A","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"verticalfit","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":785,"x":28,"y":311},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"90315757-A375-4144-B876-E15459F9A162","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"verticalfit","attributes":[{"_class":"stringAttribute","location":0,"length":11,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{1, 18}, {401, 78}}","lineSpacingBehaviour":2,"textBehaviour":1},{"_class":"text","do_objectID":"416965DF-8BCC-4A30-A820-D9E1CF0C0179","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"verticalfit-center","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":785,"x":1457,"y":311},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"C8F91F33-4F5A-435D-9598-68BF2F237BFC","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":2,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"verticalfit-center","attributes":[{"_class":"stringAttribute","location":0,"length":18,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":2,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{33, 18}, {722, 78}}","lineSpacingBehaviour":2,"textBehaviour":1},{"_class":"text","do_objectID":"5B50BB39-B591-4519-9630-BECC03758308","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"verticalfit-right","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":785,"x":2501,"y":311},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"EC8FA525-537E-436A-BD55-EFAC334D9BFA","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":1,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"verticalfit-right","attributes":[{"_class":"stringAttribute","location":0,"length":17,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":1,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{152, 18}, {634, 98}}","lineSpacingBehaviour":2,"textBehaviour":1},{"_class":"text","do_objectID":"E14D5B76-3C43-44DC-90E0-42A37354D97A","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"verticalfit-bouth","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":785,"x":3545,"y":311},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"EC40CC1D-F453-4A9C-911F-79DA8F7C76ED","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":3,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"verticalfit-bouth","attributes":[{"_class":"stringAttribute","location":0,"length":17,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":3,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{1, 18}, {685, 78}}","lineSpacingBehaviour":2,"textBehaviour":1},{"_class":"text","do_objectID":"9298A06E-D0A2-4F18-9720-0FFDC6079D9C","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"horizontalfit","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":522,"x":28,"y":40},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"03CCF2C9-384B-416F-BDD8-F95552CBC824","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"horizontalfit","attributes":[{"_class":"stringAttribute","location":0,"length":13,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 18}, {516, 78}}","lineSpacingBehaviour":2,"textBehaviour":0},{"_class":"text","do_objectID":"C7ABC0FC-47A3-4E0B-8019-6D42B51B539A","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"horizontalfit-left","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":692,"x":706,"y":40},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"8D3AD915-A2B6-4539-978E-A6BA22813108","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"horizontalfit-left","attributes":[{"_class":"stringAttribute","location":0,"length":18,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":0,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 18}, {686, 78}}","lineSpacingBehaviour":2,"textBehaviour":0},{"_class":"text","do_objectID":"CA4F76EE-B618-4798-B318-DB0C31E84F83","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"horizontalfit-center","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":840,"x":1457,"y":40},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"101CB82F-B109-4A2B-9605-100E51E14E76","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":2,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"horizontalfit-center","attributes":[{"_class":"stringAttribute","location":0,"length":20,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":2,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 18}, {836, 78}}","lineSpacingBehaviour":2,"textBehaviour":0},{"_class":"text","do_objectID":"024D64E7-0DD0-4E6A-98CB-E3BCF2560631","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"horizontalfit-right","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":754,"x":2477,"y":40},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"D7903523-3961-4FB2-8EFB-78DF2545D7B9","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":1,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"horizontalfit-right","attributes":[{"_class":"stringAttribute","location":0,"length":19,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":1,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 18}, {748, 98}}","lineSpacingBehaviour":2,"textBehaviour":0},{"_class":"text","do_objectID":"EF593453-9C1E-44F8-8D7F-893FADABC2A9","booleanOperation":-1,"isFixedToViewport":false,"isFlippedHorizontal":false,"isFlippedVertical":false,"isLocked":false,"isVisible":true,"layerListExpandedType":0,"maintainScrollPosition":false,"name":"horizontalfit-bouth","nameIsFixed":false,"resizingConstraint":47,"resizingType":0,"rotation":0,"shouldBreakMaskChain":false,"exportOptions":{"_class":"exportOptions","includedLayerIds":[],"layerOptions":0,"shouldTrim":false,"exportFormats":[]},"frame":{"_class":"rect","constrainProportions":false,"height":116,"width":812,"x":3286,"y":40},"clippingMaskMode":0,"hasClippingMask":false,"style":{"_class":"style","do_objectID":"F7E198B9-A6EE-4B98-BC60-10AB26D52925","endMarkerType":0,"miterLimit":10,"startMarkerType":0,"windingRule":1,"blur":{"_class":"blur","isEnabled":false,"center":"{0.5, 0.5}","motionAngle":0,"radius":10,"saturation":1,"type":0},"borderOptions":{"_class":"borderOptions","isEnabled":true,"dashPattern":[],"lineCapStyle":0,"lineJoinStyle":0},"borders":[],"colorControls":{"_class":"colorControls","isEnabled":false,"brightness":0,"contrast":1,"hue":0,"saturation":1},"contextSettings":{"_class":"graphicsContextSettings","blendMode":0,"opacity":1},"fills":[],"innerShadows":[],"shadows":[],"textStyle":{"_class":"textStyle","encodedAttributes":{"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"textStyleVerticalAlignmentKey":2,"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"paragraphStyle":{"_class":"paragraphStyle","alignment":3,"allowsDefaultTighteningForTruncation":0},"kerning":-0.7878788},"verticalAlignment":2}},"attributedString":{"_class":"attributedString","string":"horizontalfit-bouth","attributes":[{"_class":"stringAttribute","location":0,"length":19,"attributes":{"MSAttributedStringFontAttribute":{"_class":"fontDescriptor","attributes":{"name":"ArialMT","size":104}},"MSAttributedStringColorAttribute":{"_class":"color","alpha":1,"blue":0.2115752551020408,"green":0.06713574027503995,"red":0.1831681630215947},"kerning":-0.7878788,"textStyleVerticalAlignmentKey":2,"paragraphStyle":{"_class":"paragraphStyle","alignment":3,"allowsDefaultTighteningForTruncation":0}}}]},"automaticallyDrawOnUnderlyingPath":false,"dontSynchroniseWithSymbol":false,"glyphBounds":"{{6, 18}, {800, 78}}","lineSpacingBehaviour":2,"textBehaviour":0}],"includeInCloudUpload":true,"horizontalRulerData":{"_class":"rulerData","base":0,"guides":[]},"verticalRulerData":{"_class":"rulerData","base":0,"guides":[]}}
+{
+    "_class": "page",
+    "do_objectID": "7E2ACD66-2574-4191-BC49-A089F67BDBDE",
+    "booleanOperation": -1,
+    "isFixedToViewport": false,
+    "isFlippedHorizontal": false,
+    "isFlippedVertical": false,
+    "isLocked": false,
+    "isVisible": true,
+    "layerListExpandedType": 0,
+    "maintainScrollPosition": false,
+    "name": "alignment",
+    "nameIsFixed": true,
+    "resizingConstraint": 63,
+    "resizingType": 0,
+    "rotation": 0,
+    "shouldBreakMaskChain": false,
+    "exportOptions": {
+        "_class": "exportOptions",
+        "includedLayerIds": [],
+        "layerOptions": 0,
+        "shouldTrim": false,
+        "exportFormats": []
+    },
+    "frame": {
+        "_class": "rect",
+        "constrainProportions": false,
+        "height": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+    },
+    "clippingMaskMode": 0,
+    "hasClippingMask": false,
+    "style": {
+        "_class": "style",
+        "do_objectID": "B9C4A4D0-A422-46F6-9D1F-66ECC97653BD",
+        "endMarkerType": 0,
+        "miterLimit": 10,
+        "startMarkerType": 0,
+        "windingRule": 1,
+        "blur": {
+            "_class": "blur",
+            "isEnabled": false,
+            "center": "{0.5, 0.5}",
+            "motionAngle": 0,
+            "radius": 10,
+            "saturation": 1,
+            "type": 0
+        },
+        "borderOptions": {
+            "_class": "borderOptions",
+            "isEnabled": true,
+            "dashPattern": [],
+            "lineCapStyle": 0,
+            "lineJoinStyle": 0
+        },
+        "borders": [],
+        "colorControls": {
+            "_class": "colorControls",
+            "isEnabled": false,
+            "brightness": 0,
+            "contrast": 1,
+            "hue": 0,
+            "saturation": 1
+        },
+        "contextSettings": {
+            "_class": "graphicsContextSettings",
+            "blendMode": 0,
+            "opacity": 1
+        },
+        "fills": [],
+        "innerShadows": [],
+        "shadows": []
+    },
+    "hasClickThrough": true,
+    "groupLayout": {
+        "_class": "MSImmutableFreeformGroupLayout"
+    },
+    "layers": [
+        {
+            "_class": "text",
+            "do_objectID": "BCAEBBD8-021B-431F-8F8A-45F76A0D5202",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "box-left-top",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 219,
+                "width": 768,
+                "x": 10,
+                "y": 538
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "64F2AC23-14EA-48CF-BC78-06C94C58E754",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 0,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 0
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "box-left-top",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 12,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 0,
+                                "allowsDefaultTighteningForTruncation": 0
+                            },
+                            "kerning": -0.7878788
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 18}, {502, 97}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 2
+        },
+        {
+            "_class": "text",
+            "do_objectID": "A3E3164A-7DAA-4F90-AA6F-09604E7BBB55",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "box-left-center",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 219,
+                "width": 768,
+                "x": 10,
+                "y": 978
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "803F98A9-343B-4AB1-B1CD-7EACF97C9EEB",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 0,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 1
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "box-left-center",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 15,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 0,
+                                "allowsDefaultTighteningForTruncation": 0
+                            },
+                            "kerning": -0.7878788
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 18}, {650, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 2
+        },
+        {
+            "_class": "text",
+            "do_objectID": "6D2299E0-2E8F-496E-9F2A-2459352373D7",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "box-left-bottom",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 219,
+                "width": 768,
+                "x": 10,
+                "y": 1525
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "B1CB9751-6FA3-4462-9F23-E929336418B4",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 0,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "box-left-bottom",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 15,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 0,
+                                "allowsDefaultTighteningForTruncation": 0
+                            },
+                            "kerning": -0.7878788
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 18}, {670, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 2
+        },
+        {
+            "_class": "text",
+            "do_objectID": "F4D9493F-5FF7-4585-9EDA-CB0A36E22D51",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "box-center-top",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 219,
+                "width": 768,
+                "x": 778,
+                "y": 554
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "FAE9FFDD-50B3-4BC2-9B9D-4294A22B6650",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 2,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 0
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "box-center-top",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 14,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 2,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{61, 19}, {650, 96}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 2
+        },
+        {
+            "_class": "text",
+            "do_objectID": "040F0E9D-DCE5-4F78-8C7C-A5F647E58D2A",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "box-right-top",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 219,
+                "width": 768,
+                "x": 1641,
+                "y": 538
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "0B089E34-1A88-4343-8C5A-FABC7D20C292",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 1,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 0
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "box-right-top",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 13,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 1,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{201, 19}, {564, 97}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 2
+        },
+        {
+            "_class": "text",
+            "do_objectID": "CF063EB6-2B08-43F4-A51E-E9290C828340",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "box-bouth-top",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 219,
+                "width": 768,
+                "x": 2574,
+                "y": 554
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "3846A484-2658-49CF-8D20-0B32C421660B",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 3,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 0
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "box-bouth-top",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 13,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 3,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 19}, {623, 96}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 2
+        },
+        {
+            "_class": "text",
+            "do_objectID": "987BF852-633D-4C08-89C8-B7F02467684A",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "verticalfit",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 785,
+                "x": 28,
+                "y": 311
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "90315757-A375-4144-B876-E15459F9A162",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 0,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "verticalfit",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 11,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 0,
+                                "allowsDefaultTighteningForTruncation": 0
+                            },
+                            "kerning": -0.7878788
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{1, 18}, {401, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 1
+        },
+        {
+            "_class": "text",
+            "do_objectID": "416965DF-8BCC-4A30-A820-D9E1CF0C0179",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "verticalfit-center",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 785,
+                "x": 1457,
+                "y": 311
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "C8F91F33-4F5A-435D-9598-68BF2F237BFC",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 2,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "verticalfit-center",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 18,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 2,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{33, 18}, {722, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 1
+        },
+        {
+            "_class": "text",
+            "do_objectID": "5B50BB39-B591-4519-9630-BECC03758308",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "verticalfit-right",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 785,
+                "x": 2501,
+                "y": 311
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "EC8FA525-537E-436A-BD55-EFAC334D9BFA",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 1,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "verticalfit-right",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 17,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 1,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{152, 18}, {634, 98}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 1
+        },
+        {
+            "_class": "text",
+            "do_objectID": "E14D5B76-3C43-44DC-90E0-42A37354D97A",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "verticalfit-bouth",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 785,
+                "x": 3545,
+                "y": 311
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "EC40CC1D-F453-4A9C-911F-79DA8F7C76ED",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 3,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "verticalfit-bouth",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 17,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 3,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{1, 18}, {685, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 1
+        },
+        {
+            "_class": "text",
+            "do_objectID": "9298A06E-D0A2-4F18-9720-0FFDC6079D9C",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "horizontalfit",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 522,
+                "x": 28,
+                "y": 40
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "03CCF2C9-384B-416F-BDD8-F95552CBC824",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 0,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "horizontalfit",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 13,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 0,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 18}, {516, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 0
+        },
+        {
+            "_class": "text",
+            "do_objectID": "C7ABC0FC-47A3-4E0B-8019-6D42B51B539A",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "horizontalfit-left",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 692,
+                "x": 706,
+                "y": 40
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "8D3AD915-A2B6-4539-978E-A6BA22813108",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 0,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "horizontalfit-left",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 18,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 0,
+                                "allowsDefaultTighteningForTruncation": 0
+                            },
+                            "kerning": -0.7878788
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 18}, {686, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 0
+        },
+        {
+            "_class": "text",
+            "do_objectID": "CA4F76EE-B618-4798-B318-DB0C31E84F83",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "horizontalfit-center",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 840,
+                "x": 1457,
+                "y": 40
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "101CB82F-B109-4A2B-9605-100E51E14E76",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 2,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "horizontalfit-center",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 20,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 2,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 18}, {836, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 0
+        },
+        {
+            "_class": "text",
+            "do_objectID": "024D64E7-0DD0-4E6A-98CB-E3BCF2560631",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "horizontalfit-right",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 754,
+                "x": 2477,
+                "y": 40
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "D7903523-3961-4FB2-8EFB-78DF2545D7B9",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 1,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "horizontalfit-right",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 19,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 1,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 18}, {748, 98}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 0
+        },
+        {
+            "_class": "text",
+            "do_objectID": "EF593453-9C1E-44F8-8D7F-893FADABC2A9",
+            "booleanOperation": -1,
+            "isFixedToViewport": false,
+            "isFlippedHorizontal": false,
+            "isFlippedVertical": false,
+            "isLocked": false,
+            "isVisible": true,
+            "layerListExpandedType": 0,
+            "maintainScrollPosition": false,
+            "name": "horizontalfit-bouth",
+            "nameIsFixed": false,
+            "resizingConstraint": 47,
+            "resizingType": 0,
+            "rotation": 0,
+            "shouldBreakMaskChain": false,
+            "exportOptions": {
+                "_class": "exportOptions",
+                "includedLayerIds": [],
+                "layerOptions": 0,
+                "shouldTrim": false,
+                "exportFormats": []
+            },
+            "frame": {
+                "_class": "rect",
+                "constrainProportions": false,
+                "height": 116,
+                "width": 812,
+                "x": 3286,
+                "y": 40
+            },
+            "clippingMaskMode": 0,
+            "hasClippingMask": false,
+            "style": {
+                "_class": "style",
+                "do_objectID": "F7E198B9-A6EE-4B98-BC60-10AB26D52925",
+                "endMarkerType": 0,
+                "miterLimit": 10,
+                "startMarkerType": 0,
+                "windingRule": 1,
+                "blur": {
+                    "_class": "blur",
+                    "isEnabled": false,
+                    "center": "{0.5, 0.5}",
+                    "motionAngle": 0,
+                    "radius": 10,
+                    "saturation": 1,
+                    "type": 0
+                },
+                "borderOptions": {
+                    "_class": "borderOptions",
+                    "isEnabled": true,
+                    "dashPattern": [],
+                    "lineCapStyle": 0,
+                    "lineJoinStyle": 0
+                },
+                "borders": [],
+                "colorControls": {
+                    "_class": "colorControls",
+                    "isEnabled": false,
+                    "brightness": 0,
+                    "contrast": 1,
+                    "hue": 0,
+                    "saturation": 1
+                },
+                "contextSettings": {
+                    "_class": "graphicsContextSettings",
+                    "blendMode": 0,
+                    "opacity": 1
+                },
+                "fills": [],
+                "innerShadows": [],
+                "shadows": [],
+                "textStyle": {
+                    "_class": "textStyle",
+                    "encodedAttributes": {
+                        "MSAttributedStringColorAttribute": {
+                            "_class": "color",
+                            "alpha": 1,
+                            "blue": 0.2115752551020408,
+                            "green": 0.06713574027503995,
+                            "red": 0.1831681630215947
+                        },
+                        "textStyleVerticalAlignmentKey": 2,
+                        "MSAttributedStringFontAttribute": {
+                            "_class": "fontDescriptor",
+                            "attributes": {
+                                "name": "ArialMT",
+                                "size": 104
+                            }
+                        },
+                        "paragraphStyle": {
+                            "_class": "paragraphStyle",
+                            "alignment": 3,
+                            "allowsDefaultTighteningForTruncation": 0
+                        },
+                        "kerning": -0.7878788
+                    },
+                    "verticalAlignment": 2
+                }
+            },
+            "attributedString": {
+                "_class": "attributedString",
+                "string": "horizontalfit-bouth",
+                "attributes": [
+                    {
+                        "_class": "stringAttribute",
+                        "location": 0,
+                        "length": 19,
+                        "attributes": {
+                            "MSAttributedStringFontAttribute": {
+                                "_class": "fontDescriptor",
+                                "attributes": {
+                                    "name": "ArialMT",
+                                    "size": 104
+                                }
+                            },
+                            "MSAttributedStringColorAttribute": {
+                                "_class": "color",
+                                "alpha": 1,
+                                "blue": 0.2115752551020408,
+                                "green": 0.06713574027503995,
+                                "red": 0.1831681630215947
+                            },
+                            "kerning": -0.7878788,
+                            "textStyleVerticalAlignmentKey": 2,
+                            "paragraphStyle": {
+                                "_class": "paragraphStyle",
+                                "alignment": 3,
+                                "allowsDefaultTighteningForTruncation": 0
+                            }
+                        }
+                    }
+                ]
+            },
+            "automaticallyDrawOnUnderlyingPath": false,
+            "dontSynchroniseWithSymbol": false,
+            "glyphBounds": "{{6, 18}, {800, 78}}",
+            "lineSpacingBehaviour": 2,
+            "textBehaviour": 0
+        }
+    ],
+    "includeInCloudUpload": true,
+    "horizontalRulerData": {
+        "_class": "rulerData",
+        "base": 0,
+        "guides": []
+    },
+    "verticalRulerData": {
+        "_class": "rulerData",
+        "base": 0,
+        "guides": []
+    }
+}

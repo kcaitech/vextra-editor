@@ -1,7 +1,7 @@
 
 <script lang="ts">
-import { BoolOp, PathShape } from '@/data/shape';
-import { h, defineComponent, VNodeArrayChildren } from 'vue';
+import { PathShape } from '@/data/shape';
+import { h, defineComponent } from 'vue';
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 import { transform } from '@/render/basic';

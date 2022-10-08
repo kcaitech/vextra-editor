@@ -4,9 +4,8 @@ import { Shape } from "@/data/shape";
 
 export class Selection extends Watchable {
 
-    static CHANGE_PAGE = 0;
-    static CHANGE_SHAPE = 1;
-
+    static CHANGE_PAGE = Watchable.genWId();
+    static CHANGE_SHAPE = Watchable.genWId();
 
     private m_selectPage?: Page;
     private m_selectShape?: Shape;
@@ -40,6 +39,9 @@ export class Selection extends Watchable {
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
         this.notify(Selection.CHANGE_SHAPE);
+        if (shape !== undefined) {
+            shape.notify(Selection.CHANGE_SHAPE);
+        }
     }
 
     get selectedShape() {

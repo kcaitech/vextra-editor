@@ -1,73 +1,129 @@
 <script setup lang="ts">
 import { Document } from "@/data/document";
+import { Shape } from "@/data/shape";
 import { Selection } from "@/edit/selection"
-import { defineProps, onMounted, onUnmounted, ref } from "vue";
+import { defineProps, onMounted, onUnmounted } from "vue";
+import ListView, { IDataSource } from "./ListView.vue";
+import NaviShapeItem from "./NaviShapeItem.vue";
+import NaviPageItem from "./NaviPageItem.vue";
 
 const props = defineProps<{ data: Document, selection: Selection, select: Function }>();
-const list = ref({ val: new Array<{ name: string; id: string, selected: boolean }>() });
+// const list = ref({ val: new Array<{ name: string; id: string, selected: boolean }>() });
 
-const updater = () => {
-    const pagesMgr = props.data.pagesMgr;
-    const pc = pagesMgr.pageCount;
-    const l = [];
-    for (let i = 0; i < pc; i++) {
-        const page = pagesMgr.peekPageByIndex(i);
-        const id = pagesMgr.getPageIdByIndex(i);
-        const name = pagesMgr.getPageNameById(id);
-        const selected = page !== undefined && page === props.selection.selectedPage;
-        // console.log(i, selected);
-        l.push({ name, id, selected});
-    }
-    list.value.val = l;
-};
+// const updater = () => {
+//     const pagesMgr = props.data.pagesMgr;
+//     const pc = pagesMgr.pageCount;
+//     const l = [];
+//     for (let i = 0; i < pc; i++) {
+//         const page = pagesMgr.peekPageByIndex(i);
+//         const id = pagesMgr.getPageIdByIndex(i);
+//         const name = pagesMgr.getPageNameById(id);
+//         const selected = page !== undefined && page === props.selection.selectedPage;
+//         // console.log(i, selected);
+//         l.push({ name, id, selected });
+//     }
+//     list.value.val = l;
+// };
 
 const selectionChange = (t: number) => {
     if (t !== Selection.CHANGE_PAGE) {
         return;
     }
-    updater();
+    // updater();
+    pageSource.notify(0, Number.MAX_VALUE, 0);
+    shapeSource.notify(0, Number.MAX_VALUE, 0);
 }
 
 onMounted(() => {
-    props.data.watch(updater);
+    // props.data.watch(updater); todo
     props.selection.watch(selectionChange);
-    updater();
+    // updater();
 });
 
 onUnmounted(() => {
-    props.data.unwatch(updater);
+    // props.data.unwatch(updater);
     props.selection.unwatch(selectionChange);
 });
 
-function onClick(id: string) {
-    props.select(id);
-    // const page = props.data.pagesMgr.getPageById(id);
-    // props.selection.selectPage(page);
-    // updater();
+// function onClick(id: string) {
+//     props.select(id);
+// }
+
+const pageSource = new class implements IDataSource<{ name: string; id: string }> {
+
+    private m_onchange?: (startIdx: number, endIdx: number, offset: number) => void;
+    length(): number {
+        return props.data.pagesMgr.pageCount;
+    }
+    at(index: number): { name: string; id: string } {
+        const pagesMgr = props.data.pagesMgr;
+        const id = pagesMgr.getPageIdByIndex(index);
+        const name = pagesMgr.getPageNameById(id);
+        return { name, id };
+    }
+    onChange(l: (startIdx: number, endIdx: number, offset: number) => void): void {
+        this.m_onchange = l;
+    }
+    measure(data: { name: string; id: string }): { width: number; height: number; } {
+        throw new Error("Method not implemented.");
+    }
+    select(data: { name: string; id: string; }, shift: boolean, ctrl: boolean): void {
+        props.select(data.id);
+    }
+    isSelected(data: { name: string; id: string; }): boolean {
+        const pagesMgr = props.data.pagesMgr;
+        const page = pagesMgr.getPageById(data.id);
+        return page !== undefined && page === props.selection.selectedPage;
+    }
+    notify(startIdx: number, endIdx: number, offset: number) {
+        this.m_onchange && this.m_onchange(startIdx, endIdx, offset);
+    }
 }
+
+const shapeSource = new class implements IDataSource<Shape | undefined> {
+    private m_onchange?: (startIdx: number, endIdx: number, offset: number) => void;
+    length(): number {
+        const page = props.selection.selectedPage;
+        return page ? page.childsCount : 0;
+    }
+    at(index: number): Shape | undefined {
+        const page = props.selection.selectedPage;
+        return page ? page.getChildByIndex(index) : undefined;
+    }
+    onChange(l: (startIdx: number, endIdx: number, offset: number) => void): void {
+        // throw new Error("Method not implemented.");
+        this.m_onchange = l;
+    }
+    measure(data: Shape | undefined): { width: number; height: number; } {
+        throw new Error("Method not implemented.");
+    }
+    select(data: Shape | undefined, shift: boolean, ctrl: boolean): void {
+        // throw new Error("Method not implemented.");
+    }
+    isSelected(data: Shape | undefined): boolean {
+        // throw new Error("Method not implemented.");
+        return false;
+    }
+
+    notify(startIdx: number, endIdx: number, offset: number) {
+        this.m_onchange && this.m_onchange(startIdx, endIdx, offset);
+    }
+}
+
 </script>
 
 <template>
-    <div v-for="item in list.val" v-on:click="onClick(item.id)" :key="item.id" :class="{selected: item.selected}">
-        {{ item.name }}
-    </div>
+    <ListView :source="pageSource" :item-view="NaviPageItem" :height="0" :width="0" :scroll-x="0" :scroll-y="0"
+        orientation="vertical"></ListView>
+    <hr />
+    <ListView :source="shapeSource" :item-view="NaviShapeItem" :height="0" :width="0" :scroll-x="0" :scroll-y="0"
+        orientation="vertical" z-index="-1"></ListView>
 </template>
 
 <style scoped>
-div {
-    width: 100px;
-    height: 30px;
-    line-height: 30px;
-    color: var(--left-navi-font-color);
-    background-color: var(--left-navi-bg-color);
-    font-size: 10px;
-    text-align: center;
+
+hr {
+    width: 100%;
 }
-div:hover {
-    cursor: default;
-    background-color: var(--left-navi-button-hover-color);
-}
-div .selected {
-    background-color: var(--left-navi-button-hover-color);
-}
+
 </style>
