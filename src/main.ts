@@ -7,11 +7,12 @@ import { preload } from "./preload";
 import Navigation from "./components/Navigation.vue";
 import PageView from "./components/PageView.vue"
 import App from "./App.vue";
-import { Selection } from "./edit/selection";
+import { Context } from "./context";
 
 preload.on('ready', (lzData: LzData) => {
     importDocument(lzData).then((core: Document) => {
-        const selection = new Selection();
+        const context = new Context(core);
+        const selection = context.selection;
 
         let preApp: any | undefined;
         const pagesMgr = core.pagesMgr;
@@ -19,7 +20,7 @@ preload.on('ready', (lzData: LzData) => {
             const index = pagesMgr.getPageIndexById(id);
             pagesMgr.getPageByIndex(index).then((page: Page) => {
                 if (preApp) preApp.unmount();
-                preApp = createApp(PageView, {data: page});
+                preApp = createApp(PageView, {context, data: page});
                 preApp.mount("#content");
                 selection.selectPage(page);
             })

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Document } from "@/data/document";
 import { Shape } from "@/data/shape";
-import { Selection } from "@/edit/selection"
+import { Selection } from "@/context/selection"
 import { defineProps, onMounted, onUnmounted } from "vue";
 import ListView, { IDataSource } from "./ListView.vue";
 import NaviShapeItem from "./NaviShapeItem.vue";
@@ -10,11 +10,15 @@ import NaviPageItem from "./NaviPageItem.vue";
 const props = defineProps<{ data: Document, selection: Selection, select: Function }>();
 
 const selectionChange = (t: number) => {
-    if (t !== Selection.CHANGE_PAGE) {
+    if (t === Selection.CHANGE_PAGE) {
+        pageSource.notify(0, Number.MAX_VALUE, 0);
+        shapeSource.notify(0, Number.MAX_VALUE, 0);
         return;
     }
-    pageSource.notify(0, Number.MAX_VALUE, 0);
-    shapeSource.notify(0, Number.MAX_VALUE, 0);
+    if (t === Selection.CHANGE_SHAPE) {
+        shapeSource.notify(0, Number.MAX_VALUE, 0);
+        return;
+    }
 }
 
 onMounted(() => {
@@ -78,10 +82,11 @@ const shapeSource = new class implements IDataSource<Shape | undefined> {
     }
     select(data: Shape | undefined, shift: boolean, ctrl: boolean): void {
         // throw new Error("Method not implemented.");
+        // todo
+        data && props.selection.selectShape(data);
     }
     isSelected(data: Shape | undefined): boolean {
-        // throw new Error("Method not implemented.");
-        return false;
+        return data !== undefined && props.selection.isSelectedShape(data);
     }
 
     notify(startIdx: number, endIdx: number, offset: number) {

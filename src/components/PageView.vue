@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { objectId } from '@/basic/objectid';
+import { Context } from '@/context';
 import { Page } from '@/data/page';
 import { Shape } from '@/data/shape';
 import { onBeforeMount, onMounted, onUnmounted, reactive, defineProps, ref, getCurrentInstance, ComponentInternalInstance } from 'vue';
 import comsMap from './comsmap';
 
-const props = defineProps<{ data: Page }>();
+const props = defineProps<{ context: Context, data: Page }>();
 const childs = reactive(new Array<{ data: Shape, id: number }>());
 const viewBox = reactive({ x: 0, y: 0, w: 0, h: 0 });
 
