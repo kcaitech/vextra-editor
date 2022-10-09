@@ -2,7 +2,9 @@
     <div id="top" @dblclick="topDblClick"></div>
     <div id="center">
         <div id="navigation"></div>
+        <div class="vertical-line" />
         <ContentView id="content"></ContentView>
+        <div class="vertical-line" />
         <div id="attributes"></div>
     </div>
     <div id="bottom"></div>
@@ -29,6 +31,7 @@ function topDblClick() {
         --theme-color: #2c2c2c;
         --theme-color-anti: white;
         --theme-color2: #f5f5f5;
+        --theme-color-line: #f0f0f0;
         
         /* top toolbar */
         --top-toolbar-bg-color: var(--theme-color);
@@ -68,8 +71,8 @@ function topDblClick() {
     #top {
         flex-flow:row nowrap;
         width:100%;
-        height:50px;
-        min-height: 50px;
+        height:40px;
+        min-height: 40px;
         background-color: var(--top-toolbar-bg-color);
         z-index: 1;
     }
@@ -103,6 +106,7 @@ function topDblClick() {
         flex: 1 1 auto;
         width:auto;
         height:auto;
+        overflow: hidden;
     }
     #attributes {
         flex-flow:column nowrap;
@@ -110,5 +114,11 @@ function topDblClick() {
         height:auto;
         background-color: var(--right-attr-bg-color);
         z-index: 1;
+    }
+    div.vertical-line {
+        width: 1px;
+        height: 100%;
+        background-color: var(--theme-color-line);
+        flex: 0 0 auto;
     }
 </style>

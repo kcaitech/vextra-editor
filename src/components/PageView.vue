@@ -95,28 +95,34 @@ function onClick(e: MouseEvent) {
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="800"
-        :height="600" @wheel.prevent="onMouseWheel" @click="onClick"
-        :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
+    <div class="container" @wheel.prevent="onMouseWheel">
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="800" :height="600"
+            @click="onClick" :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
 
-        <defs>
-            <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">
-                <feColorMatrix result="colOut" in="SourceAlpha" type="matrix" 
-                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0" /> // rgba, 30% alpha
-                <feGaussianBlur result="blurOut" in="colOut" stdDeviation="3" />
-                <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
-            </filter>
-        </defs>
+            <defs>
+                <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">
+                    <feColorMatrix result="colOut" in="SourceAlpha" type="matrix"
+                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0" /> // rgba, 30% alpha
+                    <feGaussianBlur result="blurOut" in="colOut" stdDeviation="3" />
+                    <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+                </filter>
+            </defs>
 
-        <component v-for="c in childs" :key="c.id" :is="comsMap.get(c.data.type)" :data="c.data"
-            :boolop="props.data.boolOp">
-        </component>
+            <component v-for="c in childs" :key="c.id" :is="comsMap.get(c.data.type)" :data="c.data"
+                :boolop="props.data.boolOp">
+            </component>
 
-    </svg>
+        </svg>
+    </div>
 </template>
 
 <style scoped>
+div.container {
+    width: 100%;
+    height: 100%;
+}
+
 svg {
     transform-origin: top left;
     background-color: var(--center-content-bg-color);

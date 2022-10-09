@@ -8,28 +8,11 @@ import NaviShapeItem from "./NaviShapeItem.vue";
 import NaviPageItem from "./NaviPageItem.vue";
 
 const props = defineProps<{ data: Document, selection: Selection, select: Function }>();
-// const list = ref({ val: new Array<{ name: string; id: string, selected: boolean }>() });
-
-// const updater = () => {
-//     const pagesMgr = props.data.pagesMgr;
-//     const pc = pagesMgr.pageCount;
-//     const l = [];
-//     for (let i = 0; i < pc; i++) {
-//         const page = pagesMgr.peekPageByIndex(i);
-//         const id = pagesMgr.getPageIdByIndex(i);
-//         const name = pagesMgr.getPageNameById(id);
-//         const selected = page !== undefined && page === props.selection.selectedPage;
-//         // console.log(i, selected);
-//         l.push({ name, id, selected });
-//     }
-//     list.value.val = l;
-// };
 
 const selectionChange = (t: number) => {
     if (t !== Selection.CHANGE_PAGE) {
         return;
     }
-    // updater();
     pageSource.notify(0, Number.MAX_VALUE, 0);
     shapeSource.notify(0, Number.MAX_VALUE, 0);
 }
@@ -44,10 +27,6 @@ onUnmounted(() => {
     // props.data.unwatch(updater);
     props.selection.unwatch(selectionChange);
 });
-
-// function onClick(id: string) {
-//     props.select(id);
-// }
 
 const pageSource = new class implements IDataSource<{ name: string; id: string }> {
 
@@ -135,7 +114,7 @@ const shapeSource = new class implements IDataSource<Shape | undefined> {
 div.line {
     width: 100%;
     height: 1px;
-    background-color: var(--theme-color);
+    background-color: var(--theme-color-line);
     flex: 0 0 auto;
 }
 </style>
