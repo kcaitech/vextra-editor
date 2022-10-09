@@ -113,17 +113,29 @@ const shapeSource = new class implements IDataSource<Shape | undefined> {
 </script>
 
 <template>
-    <ListView :source="pageSource" :item-view="NaviPageItem" :height="0" :width="0" :scroll-x="0" :scroll-y="0"
-        orientation="vertical"></ListView>
-    <hr />
-    <ListView :source="shapeSource" :item-view="NaviShapeItem" :height="0" :width="0" :scroll-x="0" :scroll-y="0"
-        orientation="vertical" z-index="-1"></ListView>
+    <ListView class="page-navi" :source="pageSource" :item-view="NaviPageItem" :height="0" :width="0" :scroll-x="0"
+        :scroll-y="0" orientation="vertical"></ListView>
+    <div class="line" />
+    <ListView class="shape-navi" :source="shapeSource" :item-view="NaviShapeItem" :height="0" :width="0" :scroll-x="0"
+        :scroll-y="0" orientation="vertical"></ListView>
 </template>
 
 <style scoped>
 
-hr {
-    width: 100%;
+.page-navi {
+    flex: 0 0 auto;
 }
 
+.shape-navi {
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+}
+
+div.line {
+    width: 100%;
+    height: 1px;
+    background-color: var(--theme-color);
+    flex: 0 0 auto;
+}
 </style>

@@ -69,6 +69,7 @@ function topDblClick() {
         flex-flow:row nowrap;
         width:100%;
         height:50px;
+        min-height: 50px;
         background-color: var(--top-toolbar-bg-color);
         z-index: 1;
     }
@@ -78,11 +79,13 @@ function topDblClick() {
         flex: 1 1 auto;
         width:100%;
         height:auto;
+        overflow: hidden;
     }
     #bottom {
         flex-flow:row nowrap;
         width:100%;
         height:30px;
+        min-height: 30px;
         align-self:flex-end;
         /* visibility: hidden; */
         background-color: var(--theme-color);

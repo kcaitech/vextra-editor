@@ -114,14 +114,19 @@ function onItemClick(data: any) {
 </script>
 
 <template>
-    <div :class="props.orientation" @wheel.prevent="onMouseWheel"
-        :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
-        <component :is="props.itemView" v-for="c in prepareDatas.val" :key="c.id" :data="c.data"
-            v-on:click="onItemClick(c.data)" :selected="props.source.isSelected(c.data)" />
+    <div class="container" @wheel.prevent="onMouseWheel">
+        <div :class="props.orientation" :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
+            <component :is="props.itemView" v-for="c in prepareDatas.val" :key="c.id" :data="c.data"
+                v-on:click="onItemClick(c.data)" :selected="props.source.isSelected(c.data)" />
+        </div>
     </div>
 </template>
 
 <style scoped>
+div .container {
+    overflow: hidden;
+}
+
 div .horizontal {
     display: flex;
     flex-flow: row nowrap;
