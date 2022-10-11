@@ -1,4 +1,5 @@
 import { Watchable } from "@/data/basic";
+import { Document } from "@/data/document";
 import { Page } from "@/data/page";
 import { Shape } from "@/data/shape";
 
@@ -6,6 +7,8 @@ export class Selection extends Watchable {
 
     static CHANGE_PAGE = Watchable.genWId();
     static CHANGE_SHAPE = Watchable.genWId();
+
+    private m_document: Document;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -15,6 +18,11 @@ export class Selection extends Watchable {
     // todo
     private m_cursorStart: number = -1;
     private m_cursorEnd: number = -1;
+
+    constructor(document: Document) {
+        super();
+        this.m_document = document;
+    }
 
     selectPage(p: Page | undefined) {
         if (this.m_selectPage === p) {
@@ -43,6 +51,17 @@ export class Selection extends Watchable {
         this.notify(Selection.CHANGE_SHAPE);
         shape.notify(Selection.CHANGE_SHAPE);
     }
+
+    unselectShape(shape: Shape) {
+        // todo
+    }
+
+    // selectRangeShape(start: Shape, end: Shape) {
+    //     // todo
+    // }
+    // selectRangeShapeByIndex(start: number, end: number) {
+    //     // todo
+    // }
 
     resetSelectShapes() {
         this.m_selectShapes.length = 0;
