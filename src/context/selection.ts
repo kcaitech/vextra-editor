@@ -3,10 +3,18 @@ import { Document } from "@/data/document";
 import { Page } from "@/data/page";
 import { Shape } from "@/data/shape";
 
+interface Saved {
+    page: Page | undefined,
+    shapes: Shape[],
+    cursorStart: number,
+    cursorEnd: number
+}
+
 export class Selection extends Watchable {
 
     static CHANGE_PAGE = Watchable.genWId();
     static CHANGE_SHAPE = Watchable.genWId();
+    static CHANGE_SHAPE_HOVER = Watchable.genWId();
 
     private m_document: Document;
 
@@ -78,5 +86,62 @@ export class Selection extends Watchable {
 
     get selectedShapes() {
         return this.m_selectShapes;
+    }
+
+    get hoveredShape() {
+        return this.m_hoverShape;
+    }
+
+    hoverShape(shape: Shape | undefined) {
+        this.m_hoverShape = shape;
+    }
+
+    save(): Saved {
+        return {
+            page: this.m_selectPage,
+            shapes: this.m_selectShapes.slice(0),
+            cursorStart: this.m_cursorStart,
+            cursorEnd: this.m_cursorEnd
+        }
+    }
+    restore(saved: Saved) {
+        if (this.m_selectPage !== saved.page) {
+            this.m_selectPage = saved.page;
+            this.m_selectShapes = saved.shapes;
+            this.m_cursorStart = saved.cursorStart;
+            this.m_cursorEnd = saved.cursorEnd;
+            // todo
+            this.notify(Selection.CHANGE_PAGE);
+            this.notify(Selection.CHANGE_SHAPE);
+        }
+        else {
+            const diff = (lhs: Shape[], rhs: Shape[]): boolean => {
+                if (lhs.length !== rhs.length) {
+                    return true;
+                }
+                for (let i = 0, len = lhs.length; i < len; i++) {
+                    if (lhs[i] !== rhs[i]) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (diff(this.m_selectShapes, saved.shapes)) {
+                this.m_selectShapes = saved.shapes;
+                this.m_cursorStart = saved.cursorStart;
+                this.m_cursorEnd = saved.cursorEnd;
+                this.notify(Selection.CHANGE_SHAPE);
+            }
+            else if (this.m_cursorStart !== saved.cursorStart ||
+                this.m_cursorEnd !== saved.cursorEnd) {
+                this.m_cursorStart = saved.cursorStart;
+                this.m_cursorEnd = saved.cursorEnd;
+                // todo notify
+            }
+        }
+        if (this.m_hoverShape !== undefined) {
+            this.m_hoverShape = undefined;
+            this.notify(Selection.CHANGE_SHAPE_HOVER);
+        }
     }
 }

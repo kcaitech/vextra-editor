@@ -3,14 +3,17 @@ import { objectId } from '@/basic/objectid';
 import { Context } from '@/context';
 import { Page } from '@/data/page';
 import { Shape } from '@/data/shape';
-import { onBeforeMount, onMounted, onUnmounted, reactive, defineProps, ref, getCurrentInstance, ComponentInternalInstance } from 'vue';
+import { onBeforeMount, defineProps, getCurrentInstance, ComponentInternalInstance, onBeforeUpdate } from 'vue';
 import comsMap from './comsmap';
 
-const props = defineProps<{ context: Context, data: Page }>();
-const childs = reactive(new Array<{ data: Shape, id: number }>());
-const viewBox = reactive({ x: 0, y: 0, w: 0, h: 0 });
+const props = defineProps<{ context: Context, data: Page, matrix: string }>();
+const childs = new Array<{ data: Shape, id: number }>();
+const viewBox = { x: 0, y: 0, w: 0, h: 0 };
 
 const updater = () => {
+    childs.length = 0;
+    viewBox.x = viewBox.y = viewBox.w = viewBox.h = 0;
+
     const cc = props.data.childsCount || 0;
     const frame = props.data.frame;
     let right = frame.width || 800;
@@ -39,52 +42,18 @@ onBeforeMount(() => {
     updater();
 })
 
-onMounted(() => {
-    props.data.watch(updater);
-})
+// onMounted(() => {
+//     props.data.watch(updater);
+// })
 
-onUnmounted(() => {
-    props.data.unwatch(updater);
-})
+// onUnmounted(() => {
+//     props.data.unwatch(updater);
+// })
 
 const viewBox2Str = () => {
     return "" + viewBox.x + " " + viewBox.y + " " + viewBox.w + " " + viewBox.h;
 }
 
-const matrix = ref([1, 0, 0, 1, 0, 0]);
-const matrix_multi = (m: number[]) => {
-    const m0 = matrix.value;
-    const m1 = [
-        m[0] * m0[0] + m[1] * m0[2], m[0] * m0[1] + m[1] * m0[3],
-        m[2] * m0[0] + m[3] * m0[2], m[2] * m0[1] + m[3] * m0[3],
-        m[0] * m0[4] + m[1] * m0[5] + m[4], m[2] * m0[4] + m[3] * m0[5] + m[5]
-    ]
-    matrix.value = m1;
-}
-const matrix_trans = (x: number, y: number) => {
-    matrix_multi([1, 0, 0, 1, x, y]);
-}
-const matrix_scale = (s: number) => {
-    matrix_multi([s, 0, 0, s, 0, 0]);
-}
-function compute_matrix_coordX(x: number, y: number) {
-    const m = matrix.value;
-    return { x: m[0] * x + m[1] * y + m[4], y: m[2] * x + m[3] * y + m[5] };
-}
-
-function onMouseWheel(e: WheelEvent) {
-    // console.log(e);
-    const offsetX = e.offsetX;
-    const offsetY = e.offsetY;
-    const { x, y } = compute_matrix_coordX(offsetX, offsetY);
-    matrix_trans(-x, -y);
-    const scale_delta = 1.05;
-    const scale_delta_ = 1 / scale_delta;
-    matrix_scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
-    matrix_trans(x, y);
-    // e.stopPropagation();
-    // e.preventDefault();
-}
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 function onClick(e: MouseEvent) {
@@ -93,13 +62,17 @@ function onClick(e: MouseEvent) {
     // console.log(getCurrentInstance());
 }
 
+onBeforeUpdate(() => {
+    // console.log("page",props.data.id)
+    updater();
+})
+
 </script>
 
 <template>
-    <div class="container" @wheel.prevent="onMouseWheel">
         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
             xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="800" :height="600"
-            @click="onClick" :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
+            @click="onClick" :style="{ transform: matrix }">
 
             <defs>
                 <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">
@@ -115,14 +88,9 @@ function onClick(e: MouseEvent) {
             </component>
 
         </svg>
-    </div>
 </template>
 
 <style scoped>
-div.container {
-    width: 100%;
-    height: 100%;
-}
 
 svg {
     transform-origin: top left;

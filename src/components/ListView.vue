@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, defineProps } from "vue";
+import { Matrix } from "@/basic/matrix";
+import { onMounted, ref, defineProps, reactive } from "vue";
 
 export interface IDataSource<T> {
     length(): number;
@@ -53,7 +54,7 @@ function prepare() {
         val.push({ data, id: data ? data.id : "" });
     }
     prepareDatas.value.val = val;
-    matrix_reset();
+    matrix.reset();
 }
 
 // todo
@@ -83,28 +84,13 @@ props.source.onChange((startIdx: number, endIdx: number, offset: number): void =
 //     prepare();
 // }
 
-const matrix = ref([1, 0, 0, 1, 0, 0]);
-const matrix_multi = (m: number[]) => {
-    const m0 = matrix.value;
-    const m1 = [
-        m[0] * m0[0] + m[1] * m0[2], m[0] * m0[1] + m[1] * m0[3],
-        m[2] * m0[0] + m[3] * m0[2], m[2] * m0[1] + m[3] * m0[3],
-        m[0] * m0[4] + m[1] * m0[5] + m[4], m[2] * m0[4] + m[3] * m0[5] + m[5]
-    ]
-    matrix.value = m1;
-}
-const matrix_reset = () => {
-    matrix.value = [1, 0, 0, 1, 0, 0];
-}
-const matrix_trans = (x: number, y: number) => {
-    matrix_multi([1, 0, 0, 1, x, y]);
-}
+const matrix = reactive(new Matrix());
 
 function onMouseWheel(e: WheelEvent) {
     console.log(e);
     const deltaX = e.deltaX;
     const deltaY = e.deltaY;
-    matrix_trans(-deltaX, -deltaY);
+    matrix.trans(-deltaX, -deltaY);
 }
 
 function onItemClick(data: any) {
@@ -115,7 +101,7 @@ function onItemClick(data: any) {
 
 <template>
     <div class="container" @wheel.prevent="onMouseWheel">
-        <div :class="props.orientation" :style="{ transform: 'matrix(' + matrix.join(',') + ')' }">
+        <div :class="props.orientation" :style="{ transform: matrix.toString() }">
             <component :is="props.itemView" v-for="c in prepareDatas.val" :key="c.id" :data="c.data"
                 v-on:click="onItemClick(c.data)" :selected="props.source.isSelected(c.data)" />
         </div>

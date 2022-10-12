@@ -1,29 +1,65 @@
-<template>
-    <div id="top" @dblclick="topDblClick"></div>
-    <div id="center">
-        <div id="navigation"></div>
-        <div class="vertical-line" />
-        <ContentView id="content"></ContentView>
-        <div class="vertical-line" />
-        <div id="attributes"></div>
-    </div>
-    <div id="bottom"></div>
-</template>
-
 <script setup lang="ts">
 import { EventEmitter } from './basic/event';
-import { defineProps } from 'vue';
+import { defineProps, onMounted, ref } from 'vue';
 import ContentView from './components/ContentView.vue';
+import { Context } from './context';
+import { LzData } from './data/lzdata';
+import { Repository } from './data/transact';
+import { importDocument } from './io/sketch/documentio';
+import { Document } from "./data/document";
+import Navigation from './components/Navigation.vue';
+import { Page } from './data/page';
 
 const props = defineProps<{preload:EventEmitter}>();
+// const dataReady = ref<boolean>(false);
+const curPage = ref<Page | undefined>(undefined);
+const context = ref<Context | undefined>(undefined);
+
+function importData(lzData: LzData) {
+    importDocument(lzData).then((core: Document) => {
+        const repo = new Repository();
+        core = repo.proxy(core); // 这个可以延迟，prepare for edit
+        context.value = new Context(core, repo);
+        // for debugger
+        (window as any).__document = core;
+        (window as any).__context = context.value;
+        switchPage(core.pagesMgr.getPageIdByIndex(0));
+    })
+}
+
+onMounted(() => {
+    props.preload.on('ready', importData);
+    props.preload.emit('load');
+})
 
 function topDblClick() {
     // console.log("dblclick")
     // props.preload.emit("toggle-maximize");
 }
 
+function switchPage(id: string) {
+    const ctx: Context = context.value as Context;
+    const pagesMgr = ctx.data.pagesMgr;
+    const index = pagesMgr.getPageIndexById(id);
+    pagesMgr.getPageByIndex(index).then((page: Page) => {
+        curPage.value = page;
+        ctx.selection.selectPage(page);
+    })
+}
+
 </script>
 
+<template>
+    <div id="top" @dblclick="topDblClick"></div>
+    <div id="center" v-if="context !== undefined">
+        <Navigation id="navigation" :context="(context as Context)" @switchpage="switchPage"></Navigation>
+        <div class="vertical-line" />
+        <ContentView v-if="curPage !== undefined" id="content" :context="(context as Context)" :page="(curPage as Page)"></ContentView>
+        <div class="vertical-line" />
+        <div id="attributes"></div>
+    </div>
+    <div id="bottom"></div>
+</template>
 
 <style>
     :root {

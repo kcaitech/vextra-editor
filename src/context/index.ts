@@ -1,3 +1,4 @@
+import { Matrix } from "@/basic/matrix";
 import { Document } from "@/data/document";
 import { Repository } from "@/data/transact";
 import { Selection } from "./selection";
@@ -22,4 +23,5 @@ export class Context {
     get selection() {
         return this.m_selection;
     }
+
 }
