@@ -73,8 +73,8 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
 
     data.x = xy0.x - halfBorderWidth;
     data.y = xy0.y - halfBorderWidth;
-    data.width = xy1.x - xy0.x;
-    data.height = xy1.y - xy0.y;
+    data.width = xy1.x - xy0.x - borderWidth;
+    data.height = xy1.y - xy0.y - borderWidth;
 
     return data;
 }
@@ -117,9 +117,12 @@ onBeforeUpdate(() => {
 
 <template>
 
-    <div v-for="s in data.shapes" :class="{selectrect: data.isSelect, hoverrect: data.isHover}"
-        :style="{left: ''+s.x+'px', top: ''+s.y+'px', width: ''+s.width+'px', height: ''+s.height+'px'}" :key="s.id">
-
+    <div v-for="s in data.shapes" :class="{selectrect: data.isSelect, hoverrect: data.isHover}" :style="{
+    left: '' + s.x + 'px', 
+    top: '' + s.y + 'px', 
+    width: '' + s.width + 'px', 
+    height: '' + s.height + 'px', 
+    borderWidth: '' + borderWidth +'px'}" :key="s.id">
     </div>
 
 </template>
@@ -147,7 +150,6 @@ onBeforeUpdate(() => {
     border-radius: 5px;
     border-style: solid;
     border-color: blue;
-    border-width: 2px;
     position: absolute;
 }
 
@@ -156,7 +158,6 @@ onBeforeUpdate(() => {
     border-radius: 5px;
     border-style: solid;
     border-color: blue;
-    border-width: 2px;
     position: absolute;
 }
 </style>
