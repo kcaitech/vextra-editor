@@ -24,7 +24,7 @@ export default defineComponent({
 
         const childs: VNodeArrayChildren = [];
 
-        childs.push(h("text", {y: -5}, this.data.name));
+        // childs.push(h("text", {y: -5}, this.data.name));
         const frame = this.data.frame;
 
         // background
