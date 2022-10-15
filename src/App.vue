@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { EventEmitter } from './basic/event';
-import { defineProps, onMounted, ref } from 'vue';
+import { defineProps, onMounted, onUnmounted, ref } from 'vue';
 import ContentView from './components/ContentView.vue';
 import { Context } from './context';
 import { LzData } from './data/lzdata';
 import { Repository } from './data/transact';
 import { importDocument } from './io/sketch/documentio';
 import { Document } from "./data/document";
-import Navigation from './components/Navigation.vue';
+import Navigation from './components/Navigation/index.vue';
 import { Page } from './data/page';
+import { Selection } from './context/selection'
 
 const props = defineProps<{preload:EventEmitter}>();
 // const dataReady = ref<boolean>(false);
@@ -21,8 +22,10 @@ function importData(lzData: LzData) {
         core = repo.proxy(core); // 这个可以延迟，prepare for edit
         context.value = new Context(core, repo);
         // for debugger
-        (window as any).__document = core;
+        // (window as any).__document = core;
         (window as any).__context = context.value;
+
+        context.value.selection.watch(selectionWatcher);
         switchPage(core.pagesMgr.getPageIdByIndex(0));
     })
 }
@@ -42,10 +45,23 @@ function switchPage(id: string) {
     const pagesMgr = ctx.data.pagesMgr;
     const index = pagesMgr.getPageIndexById(id);
     pagesMgr.getPageByIndex(index).then((page: Page) => {
-        curPage.value = page;
+        // curPage.value = page;
         ctx.selection.selectPage(page);
     })
 }
+
+function selectionWatcher(t: number) {
+    if (t === Selection.CHANGE_PAGE) {
+        const ctx: Context = context.value as Context;
+        curPage.value = ctx.selection.selectedPage
+    }
+}
+
+onUnmounted(() => {
+    if (context.value !== undefined) {
+        context.value.selection.unwatch(selectionWatcher);
+    }
+})
 
 </script>
 
