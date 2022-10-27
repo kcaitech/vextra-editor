@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection"
 import { ComponentInternalInstance, defineProps, getCurrentInstance, onMounted, onUnmounted } from "vue";
-import ListView, { IDataSource } from "@/components/ListView.vue";
-import PageItem from "./PageItem.vue";
+import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
+import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
+import { PagesMgr } from "@/data/document";
 
 const props = defineProps<{ context: Context }>();
 
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
-        pageSource.notify(0, Number.MAX_VALUE, 0);
+        // console.log("page selection")
+        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
 
@@ -23,41 +25,80 @@ onUnmounted(() => {
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
-const pageSource = new class implements IDataSource<{ name: string; id: string }> {
+class Iter implements IDataIter<ItemData> {
+    private __pagesMgr: PagesMgr;
+    private __selection: Selection;
+    private __index: number;
+    constructor(context: Context, index: number) {
+        this.__pagesMgr = context.data.pagesMgr;
+        this.__selection = context.selection;
+        this.__index = index;
+    }
+    hasNext(): boolean {
+        return this.__index < this.__pagesMgr.pageCount;
+    }
+    next(): ItemData {
+        const id = this.__pagesMgr.getPageIdByIndex(this.__index);
+        const name = this.__pagesMgr.getPageNameById(id);
+        this.__index++;
+        const slectedPage = this.__selection.selectedPage;
+        return {
+            name,
+            id, 
+            selected: slectedPage !== undefined && slectedPage.id == id
+        }
+    }
+    // hasPrev(): boolean {
+    //     return this.__index > 0;
+    // }
+    // prev(): ItemData {
+    //     this.__index--;
+    //     const id = this.__pagesMgr.getPageIdByIndex(this.__index);
+    //     const name = this.__pagesMgr.getPageNameById(id);
+    //     const slectedPage = this.__selection.selectedPage;
+    //     return {
+    //         name,
+    //         id, 
+    //         selected: slectedPage !== undefined && slectedPage.id == id
+    //     }
+    // }
+}
 
-    private m_onchange?: (startIdx: number, endIdx: number, offset: number) => void;
+const pageSource = new class implements IDataSource<ItemData> {
+
+    private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
     length(): number {
-        return props.context.data.pagesMgr.pageCount;
+        const len = props.context.data.pagesMgr.pageCount;
+        console.log('len', len);
+        return len;
     }
-    at(index: number): { name: string; id: string } {
-        const pagesMgr = props.context.data.pagesMgr;
-        const id = pagesMgr.getPageIdByIndex(index);
-        const name = pagesMgr.getPageNameById(id);
-        return { name, id };
+    iterAt(index: number): IDataIter<ItemData> {
+        return new Iter(props.context, index);
     }
-    onChange(l: (startIdx: number, endIdx: number, offset: number) => void): void {
+    onChange(l: (index: number, del: number, insert: number, modify: number) => void): void {
         this.m_onchange = l;
     }
-    measure(data: { name: string; id: string }): { width: number; height: number; } {
-        throw new Error("Method not implemented.");
+    measure(data: ItemData, vw: number, vh: number): { width: number; height: number; } {
+        // return PageItem.measure(data);
+        return {width: 100, height: 30};
     }
-    select(data: { name: string; id: string; }, shift: boolean, ctrl: boolean): void {
+    onClick(data: ItemData, shift: boolean, ctrl: boolean): void {
         // props.select(data.id);
         proxy?.$emit("switchpage", data.id);
     }
-    isSelected(data: { name: string; id: string; }): boolean {
-        const slectedPage = props.context.selection.selectedPage;
-        return slectedPage !== undefined && slectedPage.id == data.id;
+    onHover(data: ItemData, shift: boolean, ctrl: boolean): void {
+        
     }
-    notify(startIdx: number, endIdx: number, offset: number) {
-        this.m_onchange && this.m_onchange(startIdx, endIdx, offset);
+
+    notify(index: number, del: number, insert: number, modify: number) {
+        this.m_onchange && this.m_onchange(index, del, insert, modify);
     }
 }
 
 </script>
     
 <template>
-    <ListView :source="pageSource" :item-view="PageItem" :height="0" :width="0" :scroll-x="0" :scroll-y="0"
+    <ListView :source="pageSource" :item-view="PageItem" :item-width="0" :item-height="30" :first-index="0"
         orientation="vertical"></ListView>
 
 </template>

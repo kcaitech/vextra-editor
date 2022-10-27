@@ -1,17 +1,68 @@
-import { Matrix } from "@/basic/matrix";
 import { Document } from "@/data/document";
+import { IDocEdit } from "@/data/iedit";
+import { Page } from "@/data/page";
+import { ShapeNaviShadow } from "@/data/shadow";
 import { Repository } from "@/data/transact";
 import { Selection } from "./selection";
+
+class ShapeNaviShadowMgr implements IDocEdit {
+    private __map: Map<string, ShapeNaviShadow> = new Map();
+
+    delete(page: Page): boolean {
+        // throw new Error("Method not implemented.");
+        this.__map.delete(page.id);
+        return true;
+    }
+    insert(index: number, page: Page): boolean {
+        // throw new Error("Method not implemented.");
+        return true;
+    }
+    modify(page: Page, attribute: string, value: any): boolean {
+        // throw new Error("Method not implemented.");
+        return true;
+    }
+    move(page: Page, index: number): boolean {
+        // throw new Error("Method not implemented.");
+        return true;
+    }
+    get(page: Page): ShapeNaviShadow {
+        let shadow = this.__map.get(page.id);
+        if (!shadow) {
+            shadow = new ShapeNaviShadow(page);
+            page.addShadow(shadow);
+            this.__map.set(page.id, shadow);
+        }
+        return shadow;
+    }
+}
 
 export class Context {
     private m_data: Document;
     private m_selection: Selection;
-    private m_repo: Repository;
+    private m_repo: Repository | undefined;
+    private m_shadows: ShapeNaviShadowMgr | undefined;
 
-    constructor(data: Document, repo: Repository) {
+    constructor(data: Document) {
         this.m_data = data;
-        this.m_repo = repo;
         this.m_selection = new Selection(data);
+    }
+    
+    get shadows(): ShapeNaviShadowMgr {
+        if (!this.m_shadows) {
+            this.m_shadows = new ShapeNaviShadowMgr();
+            this.m_data.addShadow(this.m_shadows);
+        }
+        return this.m_shadows;
+    }
+
+    canEdit() {
+        return this.m_repo !== undefined;
+    }
+    preEdit() {
+        if (!this.canEdit()) {
+            this.m_repo = new Repository();
+            this.m_data = this.m_repo.proxy(this.m_data);
+        }
     }
 
     get data() {

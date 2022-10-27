@@ -1,35 +1,118 @@
 <script setup lang="ts">
-import { defineProps } from "vue";
-import { Shape } from '@/data/shape';
+import { ComponentInternalInstance, defineProps, getCurrentInstance, onBeforeMount, onBeforeUpdate, ref, defineExpose } from "vue";
+import { Shape, GroupShape } from '@/data/shape';
 
-const props = defineProps<{ data: Shape, selected: boolean }>();
+export interface ItemData {
+    id: string,
+    shape: Shape
+    selected: boolean
+    expand: boolean
+    level: number
+}
+
+function measure(data: ItemData) {
+    return {width: 100, height: 30}
+}
+
+defineExpose({
+    measure
+})
+
+const props = defineProps<{ data: ItemData }>();
+let showTriangle = ref<boolean>(false);
+function updater() {
+    let shape = props.data.shape;
+    showTriangle.value = shape instanceof GroupShape && shape.childsCount > 0;
+
+}
+
+onBeforeMount(() => {
+    updater();
+})
+onBeforeUpdate(() => {
+    updater();
+})
+
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
 
 </script>
 
 <template>
-    <div :class="{selected: props.selected}">{{props.data.name}}</div>
+    <div :class="{ container: true, selected: props.data.selected }">
+        <div :class="{ triangle: showTriangle, slot: !showTriangle }">
+            <div v-if="showTriangle"
+                :class="{'triangle-right': !props.data.expand, 'triangle-down': props.data.expand}"></div>
+        </div>
+        <div class="text">{{props.data.shape.name}}</div>
+    </div>
 </template>
 
 <style scoped>
-div {
+div.container {
+    display: flex;
+    flex-flow: row;
     width: 100px;
     height: 30px;
-    line-height: 30px;
     color: var(--left-navi-font-color);
     background-color: var(--left-navi-bg-color);
+}
+
+div.container:hover {
+    cursor: default;
+    background-color: var(--left-navi-button-hover-color);
+}
+
+div.container.selected {
+    background-color: var(--left-navi-button-hover-color);
+}
+
+div.triangle {
+    width: 8px;
+    height: 100%;
+    padding-right: 3px;
+}
+
+div.slot {
+    width: 8px;
+    height: 100%;
+    padding-right: 3px;
+}
+
+div.triangle:hover {
+    cursor: default;
+    background-color: var(--theme-color);
+}
+
+div.triangle-right {
+    width: 0;
+    height: 0;
+    border-left: 5px solid gray;
+    border-top: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+    position: relative;
+    left: 2px;
+    top: 12px;
+}
+
+div.triangle-down {
+    width: 0;
+    height: 0;
+    border-top: 5px solid gray;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    position: relative;
+    left: 2px;
+    top: 12px;
+}
+
+div.text {
+    line-height: 30px;
     font-size: 10px;
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-}
-
-div:hover {
-    cursor: default;
-    background-color: var(--left-navi-button-hover-color);
-}
-
-div.selected {
-    background-color: var(--left-navi-button-hover-color);
+    padding-left: 2px;
 }
 </style>

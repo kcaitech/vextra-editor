@@ -4,7 +4,6 @@ import { defineProps, onMounted, onUnmounted, ref } from 'vue';
 import ContentView from './components/ContentView.vue';
 import { Context } from './context';
 import { LzData } from './data/lzdata';
-import { Repository } from './data/transact';
 import { importDocument } from './io/sketch/documentio';
 import { Document } from "./data/document";
 import Navigation from './components/Navigation/index.vue';
@@ -18,9 +17,9 @@ const context = ref<Context | undefined>(undefined);
 
 function importData(lzData: LzData) {
     importDocument(lzData).then((core: Document) => {
-        const repo = new Repository();
-        core = repo.proxy(core); // 这个可以延迟，prepare for edit
-        context.value = new Context(core, repo);
+        // const repo = new Repository();
+        // core = repo.proxy(core); // 这个可以延迟，prepare for edit
+        context.value = new Context(core);
         // for debugger
         // (window as any).__document = core;
         (window as any).__context = context.value;
