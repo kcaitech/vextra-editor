@@ -7,14 +7,6 @@ export interface ItemData {
     selected: boolean
 }
 
-function measure(data: ItemData) {
-    return {width: 100, height: 30}
-}
-
-defineExpose({
-    measure
-})
-
 const props = defineProps<{ data: ItemData }>();
 
 </script>

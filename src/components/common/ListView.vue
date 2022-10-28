@@ -4,8 +4,6 @@ import { onMounted, defineProps, reactive, ComponentInternalInstance, getCurrent
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
     next(): T;
-    // hasPrev(): boolean;
-    // prev(): T;
 }
 
 export interface IDataSource<T extends { id: string }> {
@@ -51,7 +49,6 @@ relayout[Orientation.V] = () => {
         const data = iter.next();
         const y = i * props.itemHeight;
         i++;
-        // console.log(y);
         layoutResult.push({ x: 0, y, id: data.id, data });
         if (y + props.itemHeight - y0 > visibleHeight) {
             break;
@@ -86,17 +83,11 @@ layoutUp[Orientation.V] = () => {
     }
     const si = Math.floor(-scroll.y / props.itemHeight);
     if (si - layoutIndex < prepareCount / 2) {
-        // todo 去尾
-
+        // 去尾
         {
             const ei = Math.floor((-scroll.y + visibleHeight) / props.itemHeight);
             if (layoutIndex + layoutResult.length - ei > prepareCount + prepareCount / 2) {
                 const del = layoutIndex + layoutResult.length - (ei + prepareCount)
-                // layoutResult.splice(layoutResult.length - del, del);
-                // console.log('del', del, layoutResult.length)
-                // if (del > layoutResult.length) {
-                //     console.log(si, ei, layoutIndex, visibleHeight)
-                // }
                 layoutResult.length = Math.max(0, layoutResult.length - del);
             }
         }
@@ -122,14 +113,12 @@ layoutUp[Orientation.H] = () => {
     }
     const si = Math.floor(-scroll.x / props.itemWidth);
     if (si - layoutIndex < prepareCount / 2) {
-        // todo 去尾
-
+        // 去尾
         {
             const ei = Math.floor((-scroll.x + visibleWidth) / props.itemWidth);
             if (layoutIndex + layoutResult.length - ei > prepareCount + prepareCount / 2) {
                 const del = layoutIndex + layoutResult.length - (ei + prepareCount)
-                // layoutResult.splice(layoutResult.length - del, del);
-                layoutResult.length -= del;
+                layoutResult.length = Math.max(0, layoutResult.length - del);
             }
         }
 
@@ -156,8 +145,7 @@ layoutDown[Orientation.V] = () => {
     }
     const si = (-scroll.y + visibleHeight) / props.itemHeight;
     if (layoutIndex + layoutResult.length - si < prepareCount / 2) {
-        // todo 掐头
-
+        // 掐头
         {
             const vi = Math.floor(-scroll.y / props.itemHeight);
             if (vi - layoutIndex > prepareCount + prepareCount / 2) {
@@ -186,7 +174,7 @@ layoutDown[Orientation.H] = () => {
     }
     const si = (-scroll.x + visibleWidth) / props.itemWidth;
     if (layoutIndex + layoutResult.length - si < prepareCount / 2) {
-        // todo 掐头
+        // 掐头
         {
             const vi = Math.floor(-scroll.x / props.itemWidth);
             if (vi - layoutIndex > prepareCount + prepareCount / 2) {
@@ -210,7 +198,6 @@ layoutDown[Orientation.H] = () => {
 }
 
 onMounted(() => {
-    // console.log(props)
     observer.observe(proxy?.$el);
     if (props.orientation == Orientation.V) {
         measureHeight.value = props.source.length() * props.itemHeight;
@@ -220,7 +207,7 @@ onMounted(() => {
         measureHeight.value = props.itemHeight;
         measureWidth.value = props.source.length() * props.itemWidth;
     }
-    console.log("mount measure", measureWidth, measureHeight)
+    console.log("mount measure", measureWidth.value, measureHeight.value)
     relayout[props.orientation]();
 })
 
@@ -236,7 +223,6 @@ onMounted(() => {
 // let offset = 0;
 
 props.source.onChange((index: number, del: number, insert: number, modify: number): void => {
-    // prepare();
     if (props.orientation == Orientation.V) {
         measureHeight.value = props.source.length() * props.itemHeight;
         measureWidth.value = props.itemWidth;
@@ -245,17 +231,13 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
         measureHeight.value = props.itemHeight;
         measureWidth.value = props.source.length() * props.itemWidth;
     }
-    console.log("change measure", measureWidth, measureHeight)
+    console.log("change measure", measureWidth.value, measureHeight.value)
 
-    // if (index < 0) {
-    //     return; // 
-    // }
     let needRelayout = false;
     let needLayoutDown = false;
     let needLayoutUp = false;
 
     if (del > 0 && layoutResult.length > 0) {
-        // offset += del * (props.orientation == Orientation.V ? props.itemHeight : props.itemWidth)
         // 是否与现在排版的相交
         const ds = index;
         const de = index + del; // 开
@@ -342,6 +324,7 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
 
     if (modify > 0) {
         needRelayout = true;
+        clampScroll(scroll.x, scroll.y);
     }
 
     if (needRelayout || needLayoutDown && needLayoutUp) {
@@ -383,11 +366,8 @@ function clampScroll(transx: number, transy: number) {
 }
 
 function onMouseWheel(e: WheelEvent) {
-    // console.log(e);
     const deltaX = e.deltaX;
     const deltaY = e.deltaY;
-    // matrix.trans(-deltaX, -deltaY);
-    // console.log(deltaX, deltaY, trans);
     const transx = scroll.x - deltaX;
     const transy = scroll.y - deltaY;
 
@@ -413,7 +393,7 @@ const observer = new ResizeObserver((entries, ob) => {
     if (el) {
         visibleHeight = el.clientHeight;
         visibleWidth = el.clientWidth;
-        console.log(visibleWidth, visibleHeight)
+        console.log("visible", visibleWidth, visibleHeight)
         layoutDown[props.orientation]();
     }
 })

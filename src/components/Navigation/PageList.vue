@@ -10,7 +10,6 @@ const props = defineProps<{ context: Context }>();
 
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
-        // console.log("page selection")
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
@@ -48,29 +47,13 @@ class Iter implements IDataIter<ItemData> {
             selected: slectedPage !== undefined && slectedPage.id == id
         }
     }
-    // hasPrev(): boolean {
-    //     return this.__index > 0;
-    // }
-    // prev(): ItemData {
-    //     this.__index--;
-    //     const id = this.__pagesMgr.getPageIdByIndex(this.__index);
-    //     const name = this.__pagesMgr.getPageNameById(id);
-    //     const slectedPage = this.__selection.selectedPage;
-    //     return {
-    //         name,
-    //         id, 
-    //         selected: slectedPage !== undefined && slectedPage.id == id
-    //     }
-    // }
 }
 
 const pageSource = new class implements IDataSource<ItemData> {
 
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
     length(): number {
-        const len = props.context.data.pagesMgr.pageCount;
-        console.log('len', len);
-        return len;
+        return props.context.data.pagesMgr.pageCount;
     }
     iterAt(index: number): IDataIter<ItemData> {
         return new Iter(props.context, index);
@@ -79,11 +62,9 @@ const pageSource = new class implements IDataSource<ItemData> {
         this.m_onchange = l;
     }
     measure(data: ItemData, vw: number, vh: number): { width: number; height: number; } {
-        // return PageItem.measure(data);
         return {width: 100, height: 30};
     }
     onClick(data: ItemData, shift: boolean, ctrl: boolean): void {
-        // props.select(data.id);
         proxy?.$emit("switchpage", data.id);
     }
     onHover(data: ItemData, shift: boolean, ctrl: boolean): void {

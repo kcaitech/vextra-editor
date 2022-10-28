@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ComponentInternalInstance, defineProps, getCurrentInstance, onBeforeMount, onBeforeUpdate, ref, defineExpose } from "vue";
+import { defineProps, onBeforeMount, onBeforeUpdate, ref } from "vue";
 import { Shape, GroupShape } from '@/data/shape';
 
 export interface ItemData {
@@ -9,14 +9,6 @@ export interface ItemData {
     expand: boolean
     level: number
 }
-
-function measure(data: ItemData) {
-    return {width: 100, height: 30}
-}
-
-defineExpose({
-    measure
-})
 
 const props = defineProps<{ data: ItemData }>();
 let showTriangle = ref<boolean>(false);
@@ -32,9 +24,6 @@ onBeforeMount(() => {
 onBeforeUpdate(() => {
     updater();
 })
-
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-
 
 </script>
 
