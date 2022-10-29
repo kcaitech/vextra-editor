@@ -6,12 +6,32 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@/data/page";
 import { ShapeNaviIter } from "@/data/shadow";
+import { Shape } from "@/data/shape";
 
 const props = defineProps<{ context: Context }>();
 
+const shadowChange = () => {
+    shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
+}
+
+let savePage: Page | undefined;
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
+
         shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
+
+        if (savePage) {
+            const sd = props.context.shadows.get(savePage);
+            sd.unwatch(shadowChange);
+            savePage = undefined;
+        }
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const sd = props.context.shadows.get(page);
+            sd.watch(shadowChange);
+            savePage = page;
+        }
+
         return;
     }
     if (t === Selection.CHANGE_SHAPE) {
@@ -37,7 +57,8 @@ class Iter implements IDataIter<ItemData> {
         return this.__it != undefined && this.__it.hasNext();
     }
     next(): ItemData {
-        const shape = (this.__it as ShapeNaviIter).next();
+        const data = (this.__it as ShapeNaviIter).next();
+        const shape = data.shape;
         let level = 0; // todo
         let p = shape.parent;
         while (p) {
@@ -48,7 +69,7 @@ class Iter implements IDataIter<ItemData> {
             id: shape.id,
             shape,
             selected: props.context.selection.isSelectedShape(shape),
-            expand: false,
+            expand: data.expand,
             level
         }
     }
@@ -79,25 +100,31 @@ const shapeSource = new class implements IDataSource<ItemData> {
     onChange(l: (index: number, del: number, insert: number, modify: number) => void): void {
         this.m_onchange = l;
     }
-    measure(data: ItemData, vw: number, vh: number): { width: number; height: number; } {
-        return {width: 100, height: 30}
-    }
-    onClick(data: ItemData, shift: boolean, ctrl: boolean): void {
-        data && props.context.selection.selectShape(data.shape);
-    }
-    onHover(data: ItemData, shift: boolean, ctrl: boolean): void {
-        
-    }
 
     notify(index: number, del: number, insert: number, modify: number) {
         this.m_onchange && this.m_onchange(index, del, insert, modify);
     }
 }
 
+function toggleExpand(shape: Shape) {
+    const page = props.context.selection.selectedPage;
+    if (page == undefined) {
+        return 0;
+    }
+    const shadows = props.context.shadows;
+    const sd = shadows.get(page);
+    sd.toggleExpand(shape);
+}
+
+function selectShape(shape: Shape) {
+    props.context.selection.selectShape(shape);
+}
+
 </script>
 
 <template>
-    <ListView :source="shapeSource" :item-view="ShapeItem" :item-height="30" :item-width="0" :first-index="0"
+    <ListView :source="shapeSource" :item-view="ShapeItem" :item-height="30" :item-width="0" :first-index="0" @toggleexpand="toggleExpand"
+    @selectshape="selectShape"
         orientation="vertical"></ListView>
 </template>
 

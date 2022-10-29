@@ -10,9 +10,6 @@ export interface IDataSource<T extends { id: string }> {
     length(): number;
     iterAt(index: number): IDataIter<T>;
     onChange(l: (index: number, del: number, insert: number, modify: number) => void): void;
-    measure(data: T, vw: number, vh: number): { width: number, height: number };
-    onClick(data: T, shift: boolean, ctrl: boolean): void;
-    onHover(data: T, shift: boolean, ctrl: boolean): void;
 }
 
 enum Orientation {
@@ -41,16 +38,15 @@ const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {
     console.log("re - v")
     layoutResult.length = 0;
-    layoutIndex = Math.max(0, Math.floor(-scroll.y / props.itemHeight - 1));
+    layoutIndex = Math.max(0, Math.floor(-scroll.y / props.itemHeight));
     const iter = props.source.iterAt(layoutIndex);
     let i = layoutIndex;
-    const y0 = i * props.itemHeight;
     while (iter.hasNext()) {
         const data = iter.next();
         const y = i * props.itemHeight;
         i++;
         layoutResult.push({ x: 0, y, id: data.id, data });
-        if (y + props.itemHeight - y0 > visibleHeight) {
+        if (y + props.itemHeight + scroll.y > visibleHeight) {
             break;
         }
     }
@@ -58,16 +54,15 @@ relayout[Orientation.V] = () => {
 relayout[Orientation.H] = () => {
     console.log("re - h")
     layoutResult.length = 0;
-    layoutIndex = Math.max(0, Math.floor(-scroll.x / props.itemWidth - 1));
+    layoutIndex = Math.max(0, Math.floor(-scroll.x / props.itemWidth));
     const iter = props.source.iterAt(layoutIndex);
     let i = layoutIndex;
-    const x0 = i * props.itemWidth;
     while (iter.hasNext()) {
         const data = iter.next();
         const x = i * props.itemWidth;
         i++;
         layoutResult.push({ x, y: 0, id: data.id, data });
-        if (x + props.itemWidth - x0 > visibleWidth) {
+        if (x + props.itemWidth + scroll.x > visibleWidth) {
             break;
         }
     }
@@ -382,9 +377,9 @@ function onMouseWheel(e: WheelEvent) {
     }
 }
 
-function onItemClick(data: any) {
-    props.source.onClick(data, false, false);
-}
+// function onItemClick(data: any) {
+//     props.source.onClick(data, false, false);
+// }
 
 const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
@@ -406,7 +401,7 @@ const observer = new ResizeObserver((entries, ob) => {
             :style="{ transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)', width: measureWidth + 'px', height: measureHeight + 'px' }"
             ref="contents">
             <component class="listitem" :is="props.itemView" v-for="c in layoutResult" :key="c.id" :data="c.data"
-                v-bind="$attrs" :style="{left: c.x + 'px', top: c.y + 'px'}" v-on:click="onItemClick(c.data)" />
+                v-bind="$attrs" :style="{left: c.x + 'px', top: c.y + 'px'}" />
         </div>
     </div>
 </template>

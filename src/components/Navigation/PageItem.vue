@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, defineExpose } from "vue";
+import { defineProps, ComponentInternalInstance, getCurrentInstance } from "vue";
 
 export interface ItemData {
     name: string
@@ -8,11 +8,16 @@ export interface ItemData {
 }
 
 const props = defineProps<{ data: ItemData }>();
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+function onClick(e: Event) {
+    e.stopPropagation();
+    proxy?.$emit("switchpage", props.data.id);
+}
 
 </script>
 
 <template>
-    <div :class="{selected: props.data.selected}">{{props.data.name}}</div>
+    <div :class="{selected: props.data.selected}" v-on:click="onClick">{{props.data.name}}</div>
 </template>
 
 <style scoped>

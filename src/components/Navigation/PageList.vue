@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection"
-import { ComponentInternalInstance, defineProps, getCurrentInstance, onMounted, onUnmounted } from "vue";
+import { defineProps, onMounted, onUnmounted } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -21,8 +21,6 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selectionChange);
 });
-
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 
 class Iter implements IDataIter<ItemData> {
     private __pagesMgr: PagesMgr;
@@ -61,15 +59,6 @@ const pageSource = new class implements IDataSource<ItemData> {
     onChange(l: (index: number, del: number, insert: number, modify: number) => void): void {
         this.m_onchange = l;
     }
-    measure(data: ItemData, vw: number, vh: number): { width: number; height: number; } {
-        return {width: 100, height: 30};
-    }
-    onClick(data: ItemData, shift: boolean, ctrl: boolean): void {
-        proxy?.$emit("switchpage", data.id);
-    }
-    onHover(data: ItemData, shift: boolean, ctrl: boolean): void {
-        
-    }
 
     notify(index: number, del: number, insert: number, modify: number) {
         this.m_onchange && this.m_onchange(index, del, insert, modify);
@@ -79,7 +68,7 @@ const pageSource = new class implements IDataSource<ItemData> {
 </script>
     
 <template>
-    <ListView :source="pageSource" :item-view="PageItem" :item-width="0" :item-height="30" :first-index="0"
+    <ListView :source="pageSource" :item-view="PageItem" :item-width="0" :item-height="30" :first-index="0" v-bind="$attrs"
         orientation="vertical"></ListView>
 
 </template>

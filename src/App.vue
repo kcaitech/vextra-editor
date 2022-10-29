@@ -82,6 +82,7 @@ onUnmounted(() => {
         --theme-color: #2c2c2c;
         --theme-color-anti: white;
         --theme-color2: #f5f5f5;
+        --theme-color3: #e0e0e0;
         --theme-color-line: #f0f0f0;
         
         /* top toolbar */

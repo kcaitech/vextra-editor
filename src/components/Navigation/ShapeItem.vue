@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onBeforeMount, onBeforeUpdate, ref } from "vue";
+import { ComponentInternalInstance, defineProps, getCurrentInstance, onBeforeMount, onBeforeUpdate, ref } from "vue";
 import { Shape, GroupShape } from '@/data/shape';
 
 export interface ItemData {
@@ -15,7 +15,20 @@ let showTriangle = ref<boolean>(false);
 function updater() {
     let shape = props.data.shape;
     showTriangle.value = shape instanceof GroupShape && shape.childsCount > 0;
+}
 
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+function toggleExpand(e: Event) {
+    if (!showTriangle.value) {
+        return;
+    }
+    e.stopPropagation();
+    proxy?.$emit("toggleexpand", props.data.shape);
+}
+
+function selectShape(e: Event) {
+    e.stopPropagation();
+    proxy?.$emit("selectshape", props.data.shape);
 }
 
 onBeforeMount(() => {
@@ -28,8 +41,9 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div :class="{ container: true, selected: props.data.selected }">
-        <div :class="{ triangle: showTriangle, slot: !showTriangle }">
+    <div :class="{ container: true, selected: props.data.selected }" :style="{'padding-left': '' + ((props.data.level - 1)*6) + 'px'}"
+    v-on:click="selectShape">
+        <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
             <div v-if="showTriangle"
                 :class="{'triangle-right': !props.data.expand, 'triangle-down': props.data.expand}"></div>
         </div>
@@ -70,7 +84,7 @@ div.slot {
 
 div.triangle:hover {
     cursor: default;
-    background-color: var(--theme-color);
+    background-color: var(--theme-color3);
 }
 
 div.triangle-right {
