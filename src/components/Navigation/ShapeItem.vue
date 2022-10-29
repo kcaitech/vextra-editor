@@ -72,14 +72,16 @@ div.container.selected {
 
 div.triangle {
     width: 8px;
+    min-width: 8px;
     height: 100%;
-    padding-right: 3px;
+    padding-right: 2px;
 }
 
 div.slot {
     width: 8px;
+    min-width: 8px;
     height: 100%;
-    padding-right: 3px;
+    padding-right: 2px;
 }
 
 div.triangle:hover {
@@ -105,8 +107,8 @@ div.triangle-down {
     border-left: 3px solid transparent;
     border-right: 3px solid transparent;
     position: relative;
-    left: 2px;
-    top: 12px;
+    left: 1px;
+    top: 13px;
 }
 
 div.text {
