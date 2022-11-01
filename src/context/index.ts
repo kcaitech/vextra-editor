@@ -1,11 +1,11 @@
 import { Document } from "@/data/document";
-import { IDocEdit } from "@/data/iedit";
+import { IDocEditor } from "@/data/ieditor";
 import { Page } from "@/data/page";
 import { ShapeNaviShadow } from "@/data/shadow";
 import { Repository } from "@/data/transact";
 import { Selection } from "./selection";
 
-class ShapeNaviShadowMgr implements IDocEdit {
+class ShapeNaviShadowMgr implements IDocEditor {
     private __map: Map<string, ShapeNaviShadow> = new Map();
 
     delete(page: Page): boolean {
@@ -60,7 +60,7 @@ export class Context {
     }
     preEdit() {
         if (!this.canEdit()) {
-            this.m_repo = new Repository();
+            this.m_repo = new Repository(this.m_selection);
             this.m_data = this.m_repo.proxy(this.m_data);
         }
     }

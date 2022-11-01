@@ -1,0 +1,50 @@
+<script setup lang="ts">
+import { defineProps } from "vue";
+const props = defineProps<{icon?: any, ticon?: string, text: string | number}>();
+
+</script>
+
+<template>
+<label class="icontext" >
+    <img class="icon" v-if="props.icon" :src="props.icon" />
+    <span class="icon" v-if="!props.icon && props.ticon" >{{props.ticon}}</span>
+    <input :value="props.text"/>
+</label>
+</template>
+
+<style scoped>
+.icontext {
+    display: flex;
+    flex-flow: row;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.icon {
+    width: 12px;
+    max-width: 12px;
+    min-width: 12px;
+    align-content: center;
+    margin-left: 1px;
+    margin-right: 2px;
+    color: var(--theme-color);
+    font-size: 10px;
+    text-align: center;
+    padding-top: 1px;
+}
+input {
+    width: 100%;
+    flex: 1 1 auto;
+    align-content: center;
+    margin-left: 2px;
+    color: var(--theme-color);
+    border: none;
+    outline: none;
+    font-family: var(--font-family);
+    font-size: 10px;
+    text-overflow: ellipsis;
+}
+input:focus {
+    border: none;
+    outline: none;
+}
+</style>

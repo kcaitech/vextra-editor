@@ -272,7 +272,7 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
             }
         }
         else if (de < ls) {
-            // 需要调整每个item的位置，这里简单直接重排
+            // 需要调整每个item的位置，这里简单直接重排 todo,增加offset,减少不必要的更新
             layoutResult.length = 0;
             needRelayout = true;
             layoutIndex = index;

@@ -2,6 +2,7 @@ import { Watchable } from "@/data/basic";
 import { Document } from "@/data/document";
 import { Page } from "@/data/page";
 import { Shape } from "@/data/shape";
+import { ISave4Restore } from "@/data/transact";
 
 interface Saved {
     page: Page | undefined,
@@ -10,7 +11,7 @@ interface Saved {
     cursorEnd: number
 }
 
-export class Selection extends Watchable {
+export class Selection extends Watchable implements ISave4Restore {
 
     static CHANGE_PAGE = Watchable.genWId();
     static CHANGE_SHAPE = Watchable.genWId();
@@ -53,11 +54,24 @@ export class Selection extends Watchable {
         if (this.isSelectedShape(shape)) {
             return;
         }
+        this.m_selectShapes.length = 0;
         this.m_selectShapes.push(shape);
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
         this.notify(Selection.CHANGE_SHAPE);
-        shape.notify(Selection.CHANGE_SHAPE);
+        // shape.notify(Selection.CHANGE_SHAPE);
+    }
+
+    addSelectShape(shape: Shape) {
+        // check?
+        if (this.isSelectedShape(shape)) {
+            return;
+        }
+        this.m_selectShapes.push(shape);
+        this.m_cursorStart = -1;
+        this.m_cursorEnd = -1;
+        this.notify(Selection.CHANGE_SHAPE);
+        // shape.notify(Selection.CHANGE_SHAPE);
     }
 
     unselectShape(shape: Shape) {
@@ -84,7 +98,7 @@ export class Selection extends Watchable {
         return this.m_selectShapes.indexOf(shape) >= 0;
     }
 
-    get selectedShapes() {
+    get selectedShapes(): Shape[] {
         return this.m_selectShapes;
     }
 
@@ -97,12 +111,13 @@ export class Selection extends Watchable {
     }
 
     save(): Saved {
-        return {
+        const saved = {
             page: this.m_selectPage,
             shapes: this.m_selectShapes.slice(0),
             cursorStart: this.m_cursorStart,
-            cursorEnd: this.m_cursorEnd
+            cursorEnd: this.m_cursorEnd,
         }
+        return saved;
     }
     restore(saved: Saved) {
         if (this.m_selectPage !== saved.page) {

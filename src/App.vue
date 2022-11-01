@@ -9,6 +9,7 @@ import { Document } from "./data/document";
 import Navigation from './components/Navigation/index.vue';
 import { Page } from './data/page';
 import { Selection } from './context/selection'
+import Attribute from './components/Attribute/index.vue';
 
 const props = defineProps<{preload:EventEmitter}>();
 // const dataReady = ref<boolean>(false);
@@ -67,11 +68,11 @@ onUnmounted(() => {
 <template>
     <div id="top" @dblclick="topDblClick"></div>
     <div id="center" v-if="context !== undefined">
-        <Navigation id="navigation" :context="(context as Context)" @switchpage="switchPage"></Navigation>
+        <Navigation id="navigation" :context="context as Context" @switchpage="switchPage"></Navigation>
         <div class="vertical-line" />
-        <ContentView v-if="curPage !== undefined" id="content" :context="(context as Context)" :page="(curPage as Page)"></ContentView>
+        <ContentView v-if="curPage !== undefined" id="content" :context="context as Context" :page="(curPage as Page)"></ContentView>
         <div class="vertical-line" />
-        <div id="attributes"></div>
+        <Attribute id="attributes" :context="context as Context"></Attribute>
     </div>
     <div id="bottom"></div>
 </template>
@@ -84,6 +85,7 @@ onUnmounted(() => {
         --theme-color2: #f5f5f5;
         --theme-color3: #e0e0e0;
         --theme-color-line: #f0f0f0;
+        --font-family: BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,PingFang SC,Microsoft Yahei,Hiragino Sans GB,sans-serif,apple color emoji,Noto Color Emoji,segoe ui emoji,segoe ui symbol;
         
         /* top toolbar */
         --top-toolbar-bg-color: var(--theme-color);
@@ -105,7 +107,7 @@ onUnmounted(() => {
         height: 100%;
     }
     body {
-        font-family: BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,PingFang SC,Microsoft Yahei,Hiragino Sans GB,sans-serif,apple color emoji,Noto Color Emoji,segoe ui emoji,segoe ui symbol;
+        font-family: var(--font-family);
         overflow: hidden;
         margin: 0px;
         width: 100%;
@@ -162,7 +164,7 @@ onUnmounted(() => {
     }
     #attributes {
         flex-flow:column nowrap;
-        width:100px;
+        width:150px;
         height:auto;
         background-color: var(--right-attr-bg-color);
         z-index: 1;

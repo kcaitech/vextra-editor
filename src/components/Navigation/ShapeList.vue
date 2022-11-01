@@ -11,32 +11,31 @@ import { Shape } from "@/data/shape";
 const props = defineProps<{ context: Context }>();
 
 const shadowChange = () => {
+    // todo
     shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 let savePage: Page | undefined;
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
-
         shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
 
         if (savePage) {
             const sd = props.context.shadows.get(savePage);
+            console.log("unwatch shadow")
             sd.unwatch(shadowChange);
             savePage = undefined;
         }
         const page = props.context.selection.selectedPage;
         if (page) {
             const sd = props.context.shadows.get(page);
+            console.log("watch shadow")
             sd.watch(shadowChange);
             savePage = page;
         }
-
-        return;
     }
-    if (t === Selection.CHANGE_SHAPE) {
+    else if (t === Selection.CHANGE_SHAPE) {
         shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
-        return;
     }
 }
 
@@ -46,6 +45,12 @@ onMounted(() => {
 
 onUnmounted(() => {
     props.context.selection.unwatch(selectionChange);
+    if (savePage) {
+        console.log("unwatch shadow 1")
+        const sd = props.context.shadows.get(savePage);
+        sd.unwatch(shadowChange);
+        savePage = undefined;
+    }
 });
 
 class Iter implements IDataIter<ItemData> {
