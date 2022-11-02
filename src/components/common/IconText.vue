@@ -18,6 +18,11 @@ const props = defineProps<{icon?: any, ticon?: string, text: string | number}>()
     flex-flow: row;
     white-space: nowrap;
     overflow: hidden;
+    padding: 1px;
+}
+.icontext:focus-within {
+    border: 1px solid var(--theme-color-line);
+    padding: 0;
 }
 .icon {
     width: 12px;
