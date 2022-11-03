@@ -95,6 +95,7 @@ function updater(_: number) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
         })
+        shapes.length = 0;
         data.shapes.length = 0;
     }
     else if (data.isHover) {
