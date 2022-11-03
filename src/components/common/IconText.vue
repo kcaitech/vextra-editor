@@ -1,14 +1,20 @@
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { ComponentInternalInstance, defineProps, getCurrentInstance } from "vue";
 const props = defineProps<{icon?: any, ticon?: string, text: string | number}>();
 
+const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+
+function onChange(e: Event) {
+    const value = (e.currentTarget as any)['value']
+    proxy?.$emit("onchange", value);
+}
 </script>
 
 <template>
 <label class="icontext" >
     <img class="icon" v-if="props.icon" :src="props.icon" />
     <span class="icon" v-if="!props.icon && props.ticon" >{{props.ticon}}</span>
-    <input :value="props.text"/>
+    <input :value="props.text" v-on:change="onChange"/>
 </label>
 </template>
 

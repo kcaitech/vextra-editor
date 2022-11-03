@@ -3,6 +3,7 @@ import { IDocEditor } from "@/data/ieditor";
 import { Page } from "@/data/page";
 import { ShapeNaviShadow } from "@/data/shadow";
 import { Repository } from "@/data/transact";
+import { DocEditor, PageEditor } from "@/editor";
 import { Selection } from "./selection";
 
 class ShapeNaviShadowMgr implements IDocEditor {
@@ -41,10 +42,35 @@ export class Context {
     private m_selection: Selection;
     private m_repo: Repository | undefined;
     private m_shadows: ShapeNaviShadowMgr | undefined;
+    private m_docEditor: DocEditor | undefined;
+    private m_pageEditors: Map<string, PageEditor> = new Map();
 
     constructor(data: Document) {
         this.m_data = data;
         this.m_selection = new Selection(data);
+    }
+
+    get docEditor(): DocEditor {
+        if (!this.canEdit()) {
+            this.preEdit();
+        }
+        if (this.m_docEditor === undefined) {
+            this.m_docEditor = new DocEditor(this.m_repo as Repository, this.m_data.shadows)
+        }
+        return this.m_docEditor;
+    }
+
+    getPageEditor(page: Page): PageEditor {
+        let e = this.m_pageEditors.get(page.id);
+        if (e) {
+            return e;
+        }
+        if (!this.canEdit()) {
+            this.preEdit();
+        }
+        e = new PageEditor(this.m_repo as Repository, page.shadows);
+        this.m_pageEditors.set(page.id, e);
+        return e;
     }
     
     get shadows(): ShapeNaviShadowMgr {

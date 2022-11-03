@@ -1,24 +1,18 @@
-<script lang="ts">
-import { h, defineComponent } from 'vue';
+<script setup lang="ts">
+import { h, defineProps } from 'vue';
 import comsMap from './comsmap'
 import { GroupShape } from "../data/shape";
 import { render as gR } from "@/render/group";
 import { transform } from '@/render/basic';
 
-export default defineComponent({
-    props: {
-        data: {
-            type: GroupShape,
-            required: true,
-        },
-        boolop: {
-            type: Number,
-            required: true,
-        },
-    },
+const props = defineProps<{ data: GroupShape, boolop: number }>();
 
-    render() {
-        return transform(gR(this.data, this.boolop, comsMap), h);
-    }
-})
+function render() {
+    return transform(gR(props.data, props.boolop, comsMap), h);
+}
+
 </script>
+
+<template>
+    <render />
+</template>

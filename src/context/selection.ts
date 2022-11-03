@@ -95,7 +95,10 @@ export class Selection extends Watchable implements ISave4Restore {
     }
 
     isSelectedShape(shape: Shape) {
-        return this.m_selectShapes.indexOf(shape) >= 0;
+        const ret = this.m_selectShapes.find((value) => {
+            return shape.id == value.id;
+        })
+        return ret !== undefined;
     }
 
     get selectedShapes(): Shape[] {

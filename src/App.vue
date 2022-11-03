@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { EventEmitter } from './basic/event';
-import { defineProps, onMounted, onUnmounted, ref } from 'vue';
+import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
 import ContentView from './components/ContentView.vue';
 import { Context } from './context';
 import { LzData } from './data/lzdata';
@@ -13,8 +13,8 @@ import Attribute from './components/Attribute/index.vue';
 
 const props = defineProps<{preload:EventEmitter}>();
 // const dataReady = ref<boolean>(false);
-const curPage = ref<Page | undefined>(undefined);
-const context = ref<Context | undefined>(undefined);
+const curPage = shallowRef<Page | undefined>(undefined);
+const context = shallowRef<Context | undefined>(undefined);
 
 function importData(lzData: LzData) {
     importDocument(lzData).then((core: Document) => {

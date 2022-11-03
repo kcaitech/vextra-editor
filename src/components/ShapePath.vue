@@ -1,78 +1,51 @@
 
-<script lang="ts">
+<script setup lang="ts">
 import { PathShape } from '@/data/shape';
-import { h, defineComponent } from 'vue';
+import { h, defineProps } from 'vue';
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 import { transform } from '@/render/basic';
 
-export default defineComponent({
-    name: 'ShapePathView',
-    props: {
-        data: {
-            type: PathShape,
-            required: true,
-        },
-        boolop: {
-            type: Number,
-            required: true,
-        },
-    },
+const props = defineProps<{ data: PathShape, boolop: number }>();
 
-    render() {
-        // if (this.data.boolOp != BoolOp.None) {
-        //     // todo 只画selection
-        //     return;
-        // }
-        
-        let frame = this.data.frame;
-        let path = this.data.getPath(true);
-        let childs = [];
+function render() {
+    // if (this.data.boolOp != BoolOp.None) {
+    //     // todo 只画selection
+    //     return;
+    // }
 
-        // fill
-        childs.push(...fillR(this.data, path));
+    let frame = props.data.frame;
+    let path = props.data.getPath(true);
+    let childs = [];
 
-        // border
-        childs.push(...borderR(this.data, path));
-        
-        // ----------------------------------------------------------
-        // shadows todo
+    // fill
+    childs.push(...fillR(props.data, path));
 
-        if (childs.length == 0) {
-            return h('path', {
-                d: path,
-                "fill-opacity": 1,
-                fill: 'none',
-                stroke: 'none',
-                'stroke-width': 0,
-                transform: "translate(" + frame.x + " " + frame.y + ")",
-            });
-        }
-        else if (childs.length == 1) {
-            return transform(childs[0], h);
-        }
-        else {
-            return h("g", transform(childs, h));
-        }
-    },
+    // border
+    childs.push(...borderR(props.data, path));
 
-    data() {
-        return {
-            //   componentKey: 0,
-        };
-    },
+    // ----------------------------------------------------------
+    // shadows todo
 
-    methods: {
-        // forceRerender() {
-        //   this.componentKey += 1;  
-        // },
-        // bubbleEvent(event, args, forceAsync) {
-        // 	return this.$parent && this.$parent.bubbleEvent(event, args, forceAsync);
-        // }
-    },
-
-    created() {
-        // this.data.onChange(this.forceRerender.bind(this));
-    },
-})
+    if (childs.length == 0) {
+        return h('path', {
+            d: path,
+            "fill-opacity": 1,
+            fill: 'none',
+            stroke: 'none',
+            'stroke-width': 0,
+            transform: "translate(" + frame.x + " " + frame.y + ")",
+        });
+    }
+    else if (childs.length == 1) {
+        return transform(childs[0], h);
+    }
+    else {
+        return h("g", transform(childs, h));
+    }
+}
 </script>
+
+<template>
+    <render />
+</template>
