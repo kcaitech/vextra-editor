@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { h, defineProps } from 'vue';
+import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
 import { Shape } from "../data/shape";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 import { transform } from '@/render/basic';
 
 const props = defineProps<{ data: Shape, boolop: number, path: string }>();
+const reflush = ref(0);
+const watcher = () => {
+    reflush.value++;
+}
+onMounted(() => {
+    props.data.watch(watcher);
+})
+onUnmounted(() => {
+    props.data.unwatch(watcher);
+})
 function render() {
 
     // let frame = this.data.frame;
@@ -28,14 +38,15 @@ function render() {
             fill: 'none',
             stroke: 'none',
             'stroke-width': 0,
+            reflush: reflush.value
             // transform: "translate(" + frame.x + " " + frame.y + ")",
         });
     }
-    else if (childs.length == 1) {
-        return transform(childs[0], h);
-    }
+    // else if (childs.length == 1) {
+    //     return transform(childs[0], h);
+    // }
     else {
-        return h("g", transform(childs, h));
+        return h("g", {reflush: reflush.value}, transform(childs, h));
     }
 }
 

@@ -10,18 +10,15 @@ import { transform } from '@/render/basic';
 const props = defineProps<{ data: SymbolRef, boolop: number }>();
 
 const reflush = ref(0);
-
-function updater() {
+function watcher() {
     reflush.value++;
 }
-
 onMounted(() => {
     props.data.loadSymbol();
-    props.data.watch(updater);
+    props.data.watch(watcher);
 })
-
 onUnmounted(() => {
-    props.data.unwatch(updater);
+    props.data.unwatch(watcher);
 })
 
 function render() {
@@ -43,6 +40,7 @@ function render() {
     if (childs.length == 0) {
         // todo
         return h('rect', {
+            reflush: reflush.value,
             "fill-opacity": 1,
             stroke: 'none',
             'stroke-width': 0,
@@ -56,7 +54,7 @@ function render() {
     //     return transform(childs[0], h);
     // }
     else {
-        return h("g", { transform: 'translate(' + frame.x + ',' + frame.y + ')' }, transform(childs, h));
+        return h("g", { transform: 'translate(' + frame.x + ',' + frame.y + ')', reflush: reflush.value }, transform(childs, h));
     }
 }
 

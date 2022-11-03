@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { h, defineProps, VNodeArrayChildren } from 'vue';
+import { h, ref, defineProps, VNodeArrayChildren, onMounted, onUnmounted } from 'vue';
 import comsMap from './comsmap'
 import { renderGroupChilds as gR } from "@/render/group";
 import { transform } from '@/render/basic';
 import { Artboard } from '@/data/artboard';
 
 const props = defineProps<{ data: Artboard, boolop: number }>();
+const reflush = ref(0);
+const watcher = () => {
+    reflush.value++;
+}
+onMounted(() => {
+    props.data.watch(watcher);
+})
+onUnmounted(() => {
+    props.data.unwatch(watcher);
+})
 
 function render() {
     // name
@@ -28,7 +38,7 @@ function render() {
         childs.push(h("rect", { x: 0, y: 0, width: frame.width, height: frame.height, filter: "url(#artboard-shadow)" }))
     }
     childs.push(...transform(gR(props.data, props.boolop, comsMap), h) as VNodeArrayChildren);
-    return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')', class: "artboard" }, childs);
+    return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')', class: "artboard", reflush: reflush.value }, childs);
 }
 
 </script>

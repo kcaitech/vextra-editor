@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Page } from '@/data/page';
 import { Shape } from '@/data/shape';
-import { onBeforeMount, defineProps, onBeforeUpdate } from 'vue';
+import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap';
 
 const props = defineProps<{
@@ -59,13 +59,25 @@ onBeforeUpdate(() => {
     updater();
 })
 
+const reflush = ref(0);
+const watcher = () => {
+    reflush.value++;
+}
+onMounted(() => {
+    props.data.watch(watcher);
+})
+onUnmounted(() => {
+    props.data.unwatch(watcher);
+})
+
 </script>
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="props.width" :height="props.height" @click="onClick"
         preserveAspectRatio="xMinYMin meet"
-        :style="{ transform: matrix }">
+        :style="{ transform: matrix }"
+        :reflush="reflush">
 
         <defs>
             <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">
