@@ -10,6 +10,7 @@ import Navigation from './components/Navigation/index.vue';
 import { Page } from './data/page';
 import { Selection } from './context/selection'
 import Attribute from './components/Attribute/index.vue';
+import Toolbar from './components/Toolbar/index.vue'
 
 const props = defineProps<{preload:EventEmitter}>();
 // const dataReady = ref<boolean>(false);
@@ -66,13 +67,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div id="top" @dblclick="topDblClick"></div>
+    <div id="top" @dblclick="topDblClick">
+        <Toolbar v-if="context !== undefined" :context="context" />
+    </div>
     <div id="center" v-if="context !== undefined">
-        <Navigation id="navigation" :context="context as Context" @switchpage="switchPage"></Navigation>
+        <Navigation id="navigation" :context="context" @switchpage="switchPage"></Navigation>
         <div class="vertical-line" />
-        <ContentView v-if="curPage !== undefined" id="content" :context="context as Context" :page="(curPage as Page)"></ContentView>
+        <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)"></ContentView>
         <div class="vertical-line" />
-        <Attribute id="attributes" :context="context as Context"></Attribute>
+        <Attribute id="attributes" :context="context"></Attribute>
     </div>
     <div id="bottom"></div>
 </template>

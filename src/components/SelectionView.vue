@@ -150,6 +150,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
+    shapes.length = 0;
 })
 
 onBeforeUpdate(() => {

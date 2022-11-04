@@ -1,10 +1,39 @@
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
 import { Shape } from '@/data/shape';
 import IconText from '../common/IconText.vue';
 import { Context } from '@/context';
 const props = defineProps<{ context: Context, shape: Shape }>();
-
+let shape: Shape | undefined;
+const reflush = ref(0);
+const watcher = () => {
+    reflush.value++;
+}
+function setupWatcher() {
+    if (!shape) {
+        shape = props.shape;
+        shape.watch(watcher);
+    }
+    else if (shape.id != props.shape.id) {
+        shape.unwatch(watcher);
+        shape = props.shape;
+        shape.watch(watcher);
+    }
+}
+onMounted(() => {
+    // props.shape.watch(watcher);
+    setupWatcher();
+})
+onUnmounted(() => {
+    // props.shape.unwatch(watcher);
+    if (shape) {
+        shape.unwatch(watcher);
+        shape = undefined;
+    }
+})
+onBeforeUpdate(() => {
+    setupWatcher();
+})
 const fix = 2;
 
 function onChangeX(value: string) {
@@ -47,7 +76,7 @@ function onChangeH(value: string) {
 </script>
 
 <template>
-    <div class="table">
+    <div class="table" :reflush="reflush">
         <div class="tr">
             <IconText class="td" ticon="X" :text="props.shape.frame.x.toFixed(fix)" @onchange="onChangeX"/>
             <IconText class="td" ticon="Y" :text="props.shape.frame.y.toFixed(fix)" @onchange="onChangeY"/>

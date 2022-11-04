@@ -1,3 +1,4 @@
+import { Watchable } from "@/data/basic";
 import { Document } from "@/data/document";
 import { IDocEditor } from "@/data/ieditor";
 import { Page } from "@/data/page";
@@ -37,7 +38,7 @@ class ShapeNaviShadowMgr implements IDocEditor {
     }
 }
 
-export class Context {
+export class Context extends Watchable {
     private m_data: Document;
     private m_selection: Selection;
     private m_repo: Repository | undefined;
@@ -46,6 +47,7 @@ export class Context {
     private m_pageEditors: Map<string, PageEditor> = new Map();
 
     constructor(data: Document) {
+        super();
         this.m_data = data;
         this.m_selection = new Selection(data);
     }
@@ -88,6 +90,7 @@ export class Context {
         if (!this.canEdit()) {
             this.m_repo = new Repository(this.m_selection);
             this.m_data = this.m_repo.proxy(this.m_data);
+            this.notify();
         }
     }
 
