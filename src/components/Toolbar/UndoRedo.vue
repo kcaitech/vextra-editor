@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { Repository } from "@/data/transact";
-import { computed, ref } from "@vue/reactivity";
-import { defineProps, onBeforeUpdate, onMounted, onUnmounted } from "vue"
+import { ref } from "@vue/reactivity";
+import { defineProps, onBeforeUpdate, onUnmounted } from "vue"
 import Icon from "../common/Icon.vue";
+const redosvg = require("../../assets/redo.svg")
+const undosvg = require("../../assets/undo.svg")
 const props = defineProps<{ repo?: Repository }>();
 let watcher: ((...args: any[]) => void) | undefined;
 // function watcher() {
@@ -54,8 +56,8 @@ function redoClick() {
 
 <template>
     <div class="undoredo" :reflush="reflush">
-        <Icon maskclass="icon-undomask" :onclick="undoClick" :valid="undoValid()" :selected="false"></Icon>
-        <Icon maskclass="icon-redomask" :onclick="redoClick" :valid="redoValid()" :selected="false"></Icon>
+        <Icon :onclick="undoClick" :valid="undoValid()" :selected="false" :icon="undosvg"></Icon>
+        <Icon :onclick="redoClick" :valid="redoValid()" :selected="false" :icon="redosvg"></Icon>
     </div>
 </template>
 
@@ -65,15 +67,5 @@ div.undoredo {
     flex-direction: row;
     align-items: center;
     height: 100%;
-}
-</style>
-
-<style>
-.icon-redomask {
-    mask: url("@/assets/redo.svg") no-repeat center / 100%;
-}
-
-.icon-undomask {
-    mask: url("@/assets/undo.svg") no-repeat center / 100%;
 }
 </style>
