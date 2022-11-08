@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap'
-import { BoolOp, SymbolRef } from "../data/shape";
+import { BoolOp, SymbolRef } from "@/data/shape";
 import { renderGroupChilds as gR } from "@/render/group";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"

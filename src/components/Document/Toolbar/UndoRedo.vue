@@ -2,9 +2,9 @@
 import { Repository } from "@/data/transact";
 import { ref } from "@vue/reactivity";
 import { defineProps, onBeforeUpdate, onUnmounted } from "vue"
-import Icon from "../common/Icon.vue";
-const redosvg = require("../../assets/redo.svg")
-const undosvg = require("../../assets/undo.svg")
+import Icon from "@/components/common/Icon.vue";
+const redosvg = require("@/assets/redo.svg")
+const undosvg = require("@/assets/undo.svg")
 const props = defineProps<{ repo?: Repository }>();
 let watcher: ((...args: any[]) => void) | undefined;
 // function watcher() {

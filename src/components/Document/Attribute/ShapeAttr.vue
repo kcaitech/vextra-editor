@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
 import { Shape } from '@/data/shape';
-import IconText from '../common/IconText.vue';
+import IconText from '@/components/common/IconText.vue';
 import { Context } from '@/context';
 const props = defineProps<{ context: Context, shape: Shape }>();
 let shape: Shape | undefined;
