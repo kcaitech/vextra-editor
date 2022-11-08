@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { EventEmitter } from './basic/event';
 import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
 import { LzData } from './data/lzdata';
 import { importDocument } from './io/sketch/documentio';
 import { Document } from "./data/document";
 import DocumentVue from "@/components/Document/index.vue"
+import HomeVue from "@/components/Home/index.vue"
 
-const props = defineProps<{ preload:EventEmitter }>();
+const props = defineProps<{ openLocalFile: (onReady: (data: LzData) => void) => void }>();
 // const dataReady = ref<boolean>(false);
 const curDoc = shallowRef<Document | undefined>(undefined);
 
@@ -16,9 +16,12 @@ function importData(lzData: LzData) {
     })
 }
 
+function openLocalFile() {
+    props.openLocalFile(importData);
+}
+
 onMounted(() => {
-    props.preload.on('ready', importData);
-    props.preload.emit('load');
+    // props.openLocalFile(importData);
 })
 
 onUnmounted(() => {
@@ -28,6 +31,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" />
     <DocumentVue v-if="curDoc != undefined" :data="curDoc" />
 </template>
 
