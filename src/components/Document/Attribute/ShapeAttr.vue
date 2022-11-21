@@ -3,11 +3,29 @@ import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
 import { Shape } from '@/data/shape';
 import IconText from '@/components/common/IconText.vue';
 import { Context } from '@/context';
+import { computed } from '@vue/reactivity';
 const props = defineProps<{ context: Context, shape: Shape }>();
+const editor = computed(() => {
+    if (props.context.selection.selectedPage == undefined) {
+        throw new Error("No Selected Page?");
+    }
+    const pe = props.context.getPageEditor(props.context.selection.selectedPage);
+    return pe.editorFor(props.shape);
+})
 let shape: Shape | undefined;
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
+}
+let x = ref(0), y = ref(0);
+let w = ref(0), h = ref(0);
+function calcFrame() {
+    const xy = props.shape.realXY();
+    x.value = xy.x;
+    y.value = xy.y;
+    const frame = props.shape.frame;
+    w.value = frame.width;
+    h.value = frame.height;
 }
 function setupWatcher() {
     if (!shape) {
@@ -21,11 +39,10 @@ function setupWatcher() {
     }
 }
 onMounted(() => {
-    // props.shape.watch(watcher);
     setupWatcher();
+    calcFrame();
 })
 onUnmounted(() => {
-    // props.shape.unwatch(watcher);
     if (shape) {
         shape.unwatch(watcher);
         shape = undefined;
@@ -33,43 +50,42 @@ onUnmounted(() => {
 })
 onBeforeUpdate(() => {
     setupWatcher();
+    calcFrame();
 })
 const fix = 2;
 
 function onChangeX(value: string) {
     // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    const x: number = Number.parseFloat(value);
+    let x: number = Number.parseFloat(value);
     if (props.shape.frame.x.toFixed(fix) != value && props.context.selection.selectedPage) {
-        const editor = props.context.getPageEditor(props.context.selection.selectedPage)
-        editor.modify(props.shape, 'x', x);
+        const xy = props.shape.realXY();
+        editor.value.translateTo(x, xy.y);
     }
 }
 function onChangeY(value: string) {
     // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    const x: number = Number.parseFloat(value);
+    let y: number = Number.parseFloat(value);
     if (props.shape.frame.y.toFixed(fix) != value && props.context.selection.selectedPage) {
-        const editor = props.context.getPageEditor(props.context.selection.selectedPage)
-        editor.modify(props.shape, 'y', x);
+        const xy = props.shape.realXY();
+        editor.value.translateTo(xy.x, y);
     }
 }
 function onChangeW(value: string) {
     // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    const x: number = Number.parseFloat(value);
+    const w: number = Number.parseFloat(value);
     if (props.shape.frame.width.toFixed(fix) != value && props.context.selection.selectedPage) {
-        const editor = props.context.getPageEditor(props.context.selection.selectedPage)
-        editor.modify(props.shape, 'w', x);
+        editor.value.expandTo(w, props.shape.frame.height);
     }
 }
 function onChangeH(value: string) {
     // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    const x: number = Number.parseFloat(value);
+    const h: number = Number.parseFloat(value);
     if (props.shape.frame.height.toFixed(fix) != value && props.context.selection.selectedPage) {
-        const editor = props.context.getPageEditor(props.context.selection.selectedPage)
-        editor.modify(props.shape, 'h', x);
+        editor.value.expandTo(props.shape.frame.width, h);
     }
 }
 
@@ -78,12 +94,12 @@ function onChangeH(value: string) {
 <template>
     <div class="table" :reflush="reflush">
         <div class="tr">
-            <IconText class="td" ticon="X" :text="props.shape.frame.x.toFixed(fix)" @onchange="onChangeX"/>
-            <IconText class="td" ticon="Y" :text="props.shape.frame.y.toFixed(fix)" @onchange="onChangeY"/>
+            <IconText class="td" ticon="X" :text="x.toFixed(fix)" @onchange="onChangeX"/>
+            <IconText class="td" ticon="Y" :text="y.toFixed(fix)" @onchange="onChangeY"/>
         </div>
         <div class="tr">
-            <IconText class="td" ticon="W" :text="props.shape.frame.width.toFixed(fix)" @onchange="onChangeW"/>
-            <IconText class="td" ticon="H" :text="props.shape.frame.height.toFixed(fix)" @onchange="onChangeH"/>
+            <IconText class="td" ticon="W" :text="w.toFixed(fix)" @onchange="onChangeW"/>
+            <IconText class="td" ticon="H" :text="h.toFixed(fix)" @onchange="onChangeH"/>
         </div>
     </div>
 </template>

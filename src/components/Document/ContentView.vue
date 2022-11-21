@@ -2,7 +2,8 @@
 import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@/data/page';
-import { reactive, defineProps, onBeforeUpdate, onBeforeMount, ComponentInternalInstance, getCurrentInstance } from 'vue';
+import { computed, ref } from '@vue/reactivity';
+import { reactive, defineProps, onBeforeUpdate, onBeforeMount, ComponentInternalInstance, getCurrentInstance, onMounted, onUnmounted } from 'vue';
 import PageView from './PageView.vue';
 import SelectionView from './SelectionView.vue';
 
@@ -37,49 +38,33 @@ function onMouseWheel(e: WheelEvent) {
     matrix.trans(offsetX, offsetY);
 }
 
-const viewBox = { x: 0, y: 0, width: 0, height: 0 };
-const updateViewBox = () => {
-    viewBox.x = viewBox.y = viewBox.width = viewBox.height = 0;
-
-    const cc = props.page.childsCount || 0;
+const viewBox = () => {
     const frame = props.page.frame;
-    let right = frame.width || 800;
-    let bottom = frame.height || 600;
-    let left = 0;
-    let top = 0;
-
-    for (let i = 0; i < cc; i++) {
-        const child = props.page.getChildByIndex(i);
-        const cf = child.frame;
-        right = Math.max(right, cf.x + cf.width + 1);
-        bottom = Math.max(bottom, cf.y + cf.height + 1);
-        left = Math.min(left, cf.x);
-        top = Math.min(top, cf.y);
-    }
-
     const expandBox = 20;
-    viewBox.x = left - expandBox;
-    viewBox.y = top - expandBox;
-    viewBox.width = right - viewBox.x + expandBox;
-    viewBox.height = bottom - viewBox.y + expandBox;
+    const x = frame.x - expandBox;
+    const y = frame.y - expandBox;
+    const width = frame.width + 2*expandBox;
+    const height = frame.height + 2*expandBox;
+    return { x, y, width: Math.max(800, width), height: Math.max(600, height) };
 }
-
-onBeforeMount(() => {
-    updateViewBox();
+const reflush = ref(0);
+const watcher = () => {
+    reflush.value++;
+}
+onMounted(() => {
+    props.page.watch(watcher);
 })
-
-onBeforeUpdate(() => {
-    updateViewBox();
-    // console.log(viewBox);
-});
+onUnmounted(() => {
+    props.page.unwatch(watcher);
+})
 
 </script>
 
 <template>
-    <div @wheel.passive="onMouseWheel">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox"
+    <div @wheel.passive="onMouseWheel" :reflush="reflush">
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>
-        <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox" :width="width"
+        <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"
             :height="height"></SelectionView>
     </div>
 </template>

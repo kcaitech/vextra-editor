@@ -55,19 +55,12 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
     };
     data.id = shape.id;
 
-    let frame = shape.frame;
-    let width = frame.width;
-    let height = frame.height;
-    let x = frame.x;
-    let y = frame.y;
-
-    let p = shape.parent;
-    while (p != undefined) {
-        frame = p.frame;
-        x = x + frame.x;
-        y = y + frame.y;
-        p = p.parent;
-    }
+    const frame = shape.frame;
+    const width = frame.width;
+    const height = frame.height;
+    const rXY = shape.realXY();
+    let x = rXY.x;
+    let y = rXY.y;
 
     // view box
     const scale = Math.min(props.width / props.viewbox.width, props.height / props.viewbox.height);

@@ -2,6 +2,7 @@
 import { Context } from '@/context';
 import { Page } from '@/data/page';
 import { Shape } from '@/data/shape';
+import { computed } from '@vue/reactivity';
 import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap';
 
@@ -19,6 +20,7 @@ const props = defineProps<{
     height: number
 }>();
 const childs = new Array<Shape>();
+const trans = {x: 0, y: 0};
 const updater = () => {
     const cc = props.data.childsCount || 0;
     if (childs.length !== cc) childs.length = cc;
@@ -28,6 +30,8 @@ const updater = () => {
             childs[i] = child;
         }
     }
+    trans.x = props.data.frame.x;
+    trans.y = props.data.frame.y;
 }
 
 onBeforeMount(() => {
@@ -88,9 +92,13 @@ onUnmounted(() => {
             </filter>
         </defs>
 
-        <component v-for="c in childs" :key="c.id" :is="comsMap.get(c.type)" :data="c"
-            :boolop="props.data.boolOp">
-        </component>
+        <g :transform="'translate(' + trans.x + ',' + trans.y + ')'">
+
+            <component v-for="c in childs" :key="c.id" :is="comsMap.get(c.type)" :data="c"
+                :boolop="props.data.boolOp">
+            </component>
+
+        </g>
 
     </svg>
 </template>

@@ -1,3 +1,4 @@
+// https://juejin.cn/post/7029609093539037197
 import { createI18n } from 'vue-i18n'
 const i18n = createI18n({
     locale: localStorage.getItem('locale') || 'zh',

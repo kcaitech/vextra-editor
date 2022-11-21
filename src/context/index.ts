@@ -1,13 +1,13 @@
 import { Watchable } from "@/data/basic";
 import { Document } from "@/data/document";
-import { IDocEditor } from "@/data/ieditor";
+import { IDocShadow } from "@/data/ishadow";
 import { Page } from "@/data/page";
 import { ShapeNaviShadow } from "@/data/shadow";
 import { Repository } from "@/data/transact";
 import { DocEditor, PageEditor } from "@/editor";
 import { Selection } from "./selection";
 
-class ShapeNaviShadowMgr implements IDocEditor {
+class ShapeNaviShadowMgr implements IDocShadow {
     private __map: Map<string, ShapeNaviShadow> = new Map();
 
     delete(page: Page): boolean {
@@ -89,7 +89,7 @@ export class Context extends Watchable {
     preEdit() {
         if (!this.canEdit()) {
             this.m_repo = new Repository(this.m_selection);
-            this.m_data = this.m_repo.proxy(this.m_data);
+            this.m_data = this.m_repo.makeProxy(this.m_data);
             this.notify();
         }
     }
