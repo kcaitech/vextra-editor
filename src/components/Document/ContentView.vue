@@ -2,9 +2,9 @@
 import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@/data/page';
-import { computed, ref } from '@vue/reactivity';
-import { reactive, defineProps, onBeforeUpdate, onBeforeMount, ComponentInternalInstance, getCurrentInstance, onMounted, onUnmounted } from 'vue';
-import PageView from './PageView.vue';
+import { ref } from '@vue/reactivity';
+import { reactive, defineProps, ComponentInternalInstance, getCurrentInstance, onMounted, onUnmounted } from 'vue';
+import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
 
 const props = defineProps<{ context: Context, page: Page }>();

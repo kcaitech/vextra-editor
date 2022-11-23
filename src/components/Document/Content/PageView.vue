@@ -2,7 +2,6 @@
 import { Context } from '@/context';
 import { Page } from '@/data/page';
 import { Shape } from '@/data/shape';
-import { computed } from '@vue/reactivity';
 import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap';
 

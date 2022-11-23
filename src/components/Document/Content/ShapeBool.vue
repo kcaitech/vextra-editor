@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
-import { Shape } from "../data/shape";
+import { Shape } from "@/data/shape";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 import { transform } from '@/render/basic';
