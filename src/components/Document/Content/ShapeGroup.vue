@@ -2,8 +2,7 @@
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap'
 import { Shape, GroupShape } from "@/data/shape";
-import { render as gR } from "@/render/group";
-import { transform } from '@/render/basic';
+import { render as r } from "@/render/group";
 
 const props = defineProps<{ data: GroupShape, boolop: number }>();
 const reflush = ref(0);
@@ -24,7 +23,7 @@ onUnmounted(() => {
 })
 function render() {
     const consumed0: Array<Shape> = [];
-    const ret = transform(gR(props.data, props.boolop, comsMap, reflush.value, consumed0), h);
+    const ret = r(h, props.data, props.boolop, comsMap, reflush.value, consumed0);
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
             consumed[i].unwatch(watcher);

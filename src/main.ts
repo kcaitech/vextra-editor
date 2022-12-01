@@ -3,7 +3,7 @@ import App from "./App.vue";
 import i18n from "./i18n";
 import { ipcRenderer } from 'electron';
 import { LzData } from "./data/lzdata";
-import { LzDataLocal } from './io/lzdatalocal';
+import { LzDataLocal } from '@/io/import/lzdatalocal';
 
 export function openLocalFile(onReady: (data: LzData) => void) {
     ipcRenderer.invoke('getOpenFilePath').then((filePath) => {

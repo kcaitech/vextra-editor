@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { ImageShape } from '@/data/shape';
-import { computed } from '@vue/reactivity';
-import { defineProps, ref, onMounted, onUnmounted } from 'vue';
+import { defineProps, ref, onMounted, onUnmounted, h } from 'vue';
+import { render as r } from "@/render/image"
 
 const props = defineProps<{ data: ImageShape, boolop: number }>();
 const url = ref('');
-const frame = computed(() => {
-    return props.data.frame;
-})
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -21,9 +18,12 @@ onMounted(() => {
 onUnmounted(() => {
     props.data.unwatch(watcher);
 })
+const render = () => {
+    return r(h, props.data, url.value, reflush.value);
+}
 
 </script>
 
 <template>
-    <image :xlink:href="url" :x="frame.x" :y="frame.y" :width="frame.width" :height="frame.height" :reflush="reflush" />
+    <render></render>
 </template>
