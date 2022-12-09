@@ -36,6 +36,9 @@ class ShapeNaviShadowMgr implements IDocShadow {
         }
         return shadow;
     }
+    clear() {
+        this.__map.clear();
+    }
 }
 
 export class Context extends Watchable {

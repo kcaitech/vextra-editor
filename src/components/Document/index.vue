@@ -80,6 +80,7 @@ onUnmounted(() => {
 
 <style scoped>
     #top {
+        display: flex;
         flex-flow:row nowrap;
         width:100%;
         height:40px;
