@@ -21,16 +21,21 @@ const NOGROUP = 0;
 const GROUP = 1;
 const UNGROUP = 2;
 const state = ref(0);
+const preState = ref(2);
+function setState(s: number) {
+    if (state.value !== NOGROUP) preState.value = state.value;
+    state.value = s;
+}
 const updater = () => {
     const len = props.selection.selectedShapes.length;
     if (len === 0) {
-        state.value = NOGROUP;
+        setState(NOGROUP);
     } else if (len === 1) {
         const shape = props.selection.selectedShapes[0];
         if (shape instanceof GroupShape && !(shape instanceof Artboard || shape instanceof Page)) {
-            state.value = UNGROUP;
+            setState(UNGROUP);
         } else {
-            state.value = NOGROUP;
+            setState(NOGROUP);
         }
     } else {
         let val = GROUP;
@@ -41,7 +46,7 @@ const updater = () => {
                 break;
             }
         }
-        state.value = val;
+        setState(val);
     }
 }
 onMounted(() => {
@@ -76,7 +81,7 @@ const nogroupClick = () => {
     <div class="group">
         <Icon :onclick="groupClick" :valid="true" :selected="false" :icon="groupsvg" v-if="state === GROUP"></Icon>
         <Icon :onclick="ungroupClick" :valid="true" :selected="false" :icon="ungroupsvg" v-if="state === UNGROUP"></Icon>
-        <Icon :onclick="nogroupClick" :valid="false" :selected="false" :icon="groupsvg" v-if="state === NOGROUP"></Icon>
+        <Icon :onclick="nogroupClick" :valid="false" :selected="false" :icon="preState === GROUP ? groupsvg : ungroupsvg" v-if="state === NOGROUP"></Icon>
     </div>
 </template>
 
