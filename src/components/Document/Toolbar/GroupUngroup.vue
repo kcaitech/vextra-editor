@@ -14,7 +14,7 @@ const editor = computed(() => {
     if (props.selection.selectedPage == undefined) {
         throw new Error("No Selected Page?");
     }
-    return props.context.getPageEditor(props.selection.selectedPage);
+    return props.context.editor4Page(props.selection.selectedPage);
 })
 
 const NOGROUP = 0;

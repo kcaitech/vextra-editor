@@ -4,7 +4,7 @@ import { IDocShadow } from "@/data/ishadow";
 import { Page } from "@/data/page";
 import { ShapeNaviShadow } from "@/data/shadow";
 import { Repository } from "@/data/transact";
-import { DocEditor, PageEditor } from "@/editor";
+import { DocEditor, Editor, PageEditor } from "@/editor";
 import { Selection } from "./selection";
 
 class ShapeNaviShadowMgr implements IDocShadow {
@@ -44,10 +44,8 @@ class ShapeNaviShadowMgr implements IDocShadow {
 export class Context extends Watchable {
     private m_data: Document;
     private m_selection: Selection;
-    private m_repo: Repository | undefined;
     private m_shadows: ShapeNaviShadowMgr | undefined;
-    private m_docEditor: DocEditor | undefined;
-    private m_pageEditors: Map<string, PageEditor> = new Map();
+    private m_editor?: Editor;
 
     constructor(data: Document) {
         super();
@@ -55,27 +53,20 @@ export class Context extends Watchable {
         this.m_selection = new Selection(data);
     }
 
-    get docEditor(): DocEditor {
-        if (!this.canEdit()) {
-            this.preEdit();
+    editor4Doc(): DocEditor {
+        if (this.m_editor === undefined) {
+            this.m_editor = new Editor(this.m_data, this.m_selection);
+            this.notify();
         }
-        if (this.m_docEditor === undefined) {
-            this.m_docEditor = new DocEditor(this.m_repo as Repository, this.m_data.shadows)
-        }
-        return this.m_docEditor;
+        return this.m_editor.editor4Doc();
     }
 
-    getPageEditor(page: Page): PageEditor {
-        let e = this.m_pageEditors.get(page.id);
-        if (e) {
-            return e;
+    editor4Page(page: Page): PageEditor {
+        if (this.m_editor === undefined) {
+            this.m_editor = new Editor(this.m_data, this.m_selection);
+            this.notify();
         }
-        if (!this.canEdit()) {
-            this.preEdit();
-        }
-        e = new PageEditor(this.m_repo as Repository, page.shadows);
-        this.m_pageEditors.set(page.id, e);
-        return e;
+        return this.m_editor.editor4Page(page);
     }
     
     get shadows(): ShapeNaviShadowMgr {
@@ -86,22 +77,11 @@ export class Context extends Watchable {
         return this.m_shadows;
     }
 
-    canEdit() {
-        return this.m_repo !== undefined;
-    }
-    preEdit() {
-        if (!this.canEdit()) {
-            this.m_repo = new Repository(this.m_selection);
-            this.m_data = this.m_repo.makeProxy(this.m_data);
-            this.notify();
-        }
-    }
-
     get data() {
         return this.m_data;
     }
-    get repo() {
-        return this.m_repo;
+    get repo(): Repository | undefined {
+        return this.m_editor ? this.m_editor.repo : undefined;
     }
     get selection() {
         return this.m_selection;

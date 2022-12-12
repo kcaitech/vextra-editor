@@ -9,8 +9,8 @@ const editor = computed(() => {
     if (props.context.selection.selectedPage == undefined) {
         throw new Error("No Selected Page?");
     }
-    const pe = props.context.getPageEditor(props.context.selection.selectedPage);
-    return pe.editorFor(props.shape);
+    const pe = props.context.editor4Page(props.context.selection.selectedPage);
+    return pe.editor4Shape(props.shape);
 })
 let shape: Shape | undefined;
 const reflush = ref(0);
