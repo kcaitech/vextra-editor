@@ -6,7 +6,7 @@ import { LzData } from "./data/lzdata";
 import { LzDataLocal } from '@/io/import/lzdatalocal';
 
 export function openLocalFile(onReady: (data: LzData) => void) {
-    ipcRenderer.invoke('getOpenFilePath').then((filePath) => {
+    ipcRenderer.invoke('getOpenFilePath').then((filePath: string) => {
         if (filePath) onReady(new LzDataLocal(filePath));
     });
 }

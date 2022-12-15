@@ -1,8 +1,9 @@
 const path = require('path');
 
 module.exports = {
-    mode: 'production', // development
+    mode: 'development', // production, development
     entry: './src/server.main.ts',
+    target: 'node',
     output: {
         filename: 'main.js',
         path: path.resolve(__dirname, 'dist_server'),
@@ -16,12 +17,17 @@ module.exports = {
             },
         ],
     },
+    // node: {
+    //     net: "empty"
+    // },
     resolve: {
         fallback: {
             // "path": false,
             // "zlib": require.resolve('browserify-zlib'),
             // "stream": require.resolve("stream-browserify"),
             // "fs": false,
+            // "http": require.resolve("stream-http"),
+            // "crypto": require.resolve("crypto-browserify")
         },
         extensions: ['.tsx', '.ts', '.js'],
         alias: {
@@ -30,10 +36,15 @@ module.exports = {
             // zlib: require.resolve('browserify-zlib')
         },
     },
-    externals: {
-        'fs': 'require("fs")',
-        'path': 'require("path")',
-        'stream': 'require("stream")',
-        'zlib': 'require("zlib")'
-    }
+    // externals: {
+    //     'fs': 'require("fs")',
+    //     'path': 'require("path")',
+    //     'stream': 'require("stream")',
+    //     'zlib': 'require("zlib")',
+    //     'http': 'require("http")',
+    //     'crypto': 'require("crypto")',
+    //     'net': 'require("net")',
+    //     'async_hooks': 'require("async_hooks")'
+    // }
+
 };
