@@ -1,8 +1,8 @@
 node_modules
-dist_electron
+dist
+dist_*
 deprecated
 package-lock.json
 .VSCodeCounter
 .DS_Store
 yarn.lock
-dist
