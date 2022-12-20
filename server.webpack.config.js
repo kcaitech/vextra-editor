@@ -1,4 +1,5 @@
 const path = require('path');
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
     mode: 'development', // production, development
@@ -46,5 +47,5 @@ module.exports = {
     //     'net': 'require("net")',
     //     'async_hooks': 'require("async_hooks")'
     // }
-
+    externals: [nodeExternals()]
 };

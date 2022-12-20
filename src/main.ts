@@ -5,11 +5,13 @@ import { ipcRenderer } from 'electron';
 import { LzData } from "./data/lzdata";
 import { LzDataLocal } from '@/io/import/lzdatalocal';
 
-export function openLocalFile(onReady: (data: LzData) => void) {
+function openLocalFile(onReady: (data: LzData) => void) {
     ipcRenderer.invoke('getOpenFilePath').then((filePath: string) => {
         if (filePath) onReady(new LzDataLocal(filePath));
     });
 }
+
+
 
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
@@ -27,3 +29,10 @@ const app = createApp(App, { openLocalFile })
 app.use(i18n);
 app.mount("#app");
 
+
+import { Link } from "./link";
+
+const l = new Link("ws://localhost:8000")
+setTimeout(() => {
+    l.close();
+}, 2000);
