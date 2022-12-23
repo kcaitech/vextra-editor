@@ -7,11 +7,16 @@ function onClick(e: Event) {
     e.stopPropagation();
     proxy?.$emit("openlocalfile");
 }
+function onClickRemote(e: Event) {
+    e.stopPropagation();
+    proxy?.$emit("openremotefile");
+}
 </script>
 
 <template>
     <div>
         <button v-on:click="onClick">{{ $t("home.open_local_file") }}</button>
+        <button v-on:click="onClickRemote">{{ $t("home.open_remote_file") }}</button>
     </div>
 </template>
 
@@ -19,15 +24,12 @@ function onClick(e: Event) {
 div {
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: row;
 }
 
 button {
     width: 200px;
     height: 100px;
-    position: relative;
-    left: 50%;
-    top: 50%;
-    margin-left: -100px;
-    margin-top: -50px;
 }
 </style>

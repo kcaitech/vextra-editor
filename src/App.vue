@@ -6,7 +6,7 @@ import { Document } from "./data/document";
 import DocumentVue from "@/components/Document/index.vue"
 import HomeVue from "@/components/Home/index.vue"
 
-const props = defineProps<{ openLocalFile: (onReady: (data: LzData) => void) => void }>();
+const props = defineProps<{ openLocalFile: (onReady: (data: LzData) => void) => void, openRemoteFile: (onReady: (data: Document) => void) => void }>();
 // const dataReady = ref<boolean>(false);
 const curDoc = shallowRef<Document | undefined>(undefined);
 
@@ -20,6 +20,12 @@ function openLocalFile() {
     props.openLocalFile(importData);
 }
 
+function openRemoteFile() {
+    props.openRemoteFile((doc: Document) => {
+        curDoc.value = doc;
+    });
+}
+
 onMounted(() => {
     // props.openLocalFile(importData);
 })
@@ -31,7 +37,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" />
+    <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" @openremotefile="openRemoteFile"/>
     <DocumentVue v-if="curDoc != undefined" :data="curDoc" />
 </template>
 
