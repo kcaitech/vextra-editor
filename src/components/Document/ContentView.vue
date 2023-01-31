@@ -3,7 +3,7 @@ import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@/data/page';
 import { ref } from '@vue/reactivity';
-import { reactive, defineProps, ComponentInternalInstance, getCurrentInstance, onMounted, onUnmounted } from 'vue';
+import { reactive, defineProps, onMounted, onUnmounted } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
 
@@ -15,16 +15,17 @@ const height = 600;
 const scale_delta = 1.05;
 const scale_delta_ = 1 / scale_delta;
 
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const root = ref<HTMLDivElement>();
 function offset2Root() {
-    let el = proxy?.$el
+    let el = root.value as HTMLElement;
     let x = el.offsetLeft
     let y = el.offsetTop
-    el = el.offsetParent
+    el = el.offsetParent as HTMLElement;
     while (el) {
         x += el.offsetLeft
         y += el.offsetTop
-        el = el.offsetParent
+        el = el.offsetParent as HTMLElement;
     }
     return {x, y}
 }
@@ -61,7 +62,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div @wheel.passive="onMouseWheel" :reflush="reflush">
+    <div @wheel.passive="onMouseWheel" :reflush="reflush" ref="root">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"

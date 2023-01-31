@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ComponentInternalInstance, getCurrentInstance } from "vue";
+import { defineProps, defineEmits } from "vue";
 
 export interface ItemData {
     name: string
@@ -8,10 +8,13 @@ export interface ItemData {
 }
 
 const props = defineProps<{ data: ItemData }>();
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const emit = defineEmits<{
+    (e: "switchpage", id: string): void;
+}>();
+// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 function onClick(e: Event) {
     e.stopPropagation();
-    proxy?.$emit("switchpage", props.data.id);
+    emit("switchpage", props.data.id);
 }
 
 </script>

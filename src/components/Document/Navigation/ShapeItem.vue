@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ComponentInternalInstance, defineProps, getCurrentInstance, onBeforeMount, onBeforeUpdate, ref } from "vue";
+import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref } from "vue";
 import { Shape, GroupShape } from '@/data/shape';
 
 export interface ItemData {
@@ -11,24 +11,28 @@ export interface ItemData {
 }
 
 const props = defineProps<{ data: ItemData }>();
+const emit = defineEmits<{
+    (e: "toggleexpand", shape: Shape): void;
+    (e: "selectshape", shape: Shape): void;
+}>();
 let showTriangle = ref<boolean>(false);
 function updater() {
     let shape = props.data.shape;
     showTriangle.value = shape instanceof GroupShape && shape.childsCount > 0;
 }
 
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 function toggleExpand(e: Event) {
     if (!showTriangle.value) {
         return;
     }
     e.stopPropagation();
-    proxy?.$emit("toggleexpand", props.data.shape);
+    emit("toggleexpand", props.data.shape);
 }
 
 function selectShape(e: Event) {
     e.stopPropagation();
-    proxy?.$emit("selectshape", props.data.shape);
+    emit("selectshape", props.data.shape);
 }
 
 onBeforeMount(() => {

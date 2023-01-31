@@ -1,7 +1,9 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 import i18n from "./i18n";
-import { ipcRenderer } from 'electron';
+// import './assets/icons/loadall'
+import SvgIcon from '@/components/common/SvgIcon.vue'
+// import { ipcRenderer } from 'electron';
 import { IJSON, LzData } from "./data/lzdata";
 import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
 import { Link } from "./basic/link";
@@ -9,12 +11,14 @@ import { importDocument } from "./io/import/exform/document";
 import { LzDataRemote } from "./io/import/exform/lzdataremote";
 import { Document } from "./data/document";
 
-
-
-function openLocalFile(onReady: (data: LzData) => void) {
-    ipcRenderer.invoke('getOpenFilePath').then((filePath: string) => {
-        if (filePath) onReady(new LzDataLocal(filePath));
-    });
+function openLocalFile(onReady: (data: LzData) => void, file?: File) {
+    if (file) {
+        onReady(new LzDataLocal(file.path));
+        return;
+    }
+    // ipcRenderer.invoke('getOpenFilePath').then((filePath: string) => {
+    //     if (filePath) onReady(new LzDataLocal(filePath));
+    // });
 }
 
 let link: Link | undefined;
@@ -53,6 +57,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 const app = createApp(App, { openLocalFile, openRemoteFile })
 app.use(i18n);
+app.component('svg-icon', SvgIcon);
 app.mount("#app");
 
 

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ComponentInternalInstance, defineProps, getCurrentInstance } from "vue";
+import { defineProps, defineEmits } from "vue";
 const props = defineProps<{icon?: any, ticon?: string, text: string | number}>();
-
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const emit = defineEmits<{
+    (e: "onchange", value: string): void;
+}>();
 
 function onChange(e: Event) {
     const value = (e.currentTarget as any)['value']
-    proxy?.$emit("onchange", value);
+    emit("onchange", value);
 }
 </script>
 

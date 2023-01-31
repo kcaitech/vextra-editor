@@ -4,10 +4,11 @@ import { Artboard } from '@/data/artboard';
 import { Page } from '@/data/page';
 import { GroupShape } from '@/data/shape';
 import { defineProps, computed, onMounted, onUnmounted, ref } from 'vue';
-import Icon from "@/components/common/Icon.vue";
+// import Icon from "@/components/common/Icon.vue";
 import { Context } from '@/context';
-const groupsvg = require("@/assets/group.svg")
-const ungroupsvg = require("@/assets/ungroup.svg")
+import ToolButton from "./ToolButton.vue"
+import "@/assets/icons/svg/group.svg"
+import "@/assets/icons/svg/ungroup.svg"
 
 const props = defineProps<{ context: Context, selection: Selection }>();
 const editor = computed(() => {
@@ -79,9 +80,15 @@ const nogroupClick = () => {
 
 <template>
     <div class="group">
-        <Icon :onclick="groupClick" :valid="true" :selected="false" :icon="groupsvg" v-if="state === GROUP"></Icon>
-        <Icon :onclick="ungroupClick" :valid="true" :selected="false" :icon="ungroupsvg" v-if="state === UNGROUP"></Icon>
-        <Icon :onclick="nogroupClick" :valid="false" :selected="false" :icon="preState === GROUP ? groupsvg : ungroupsvg" v-if="state === NOGROUP"></Icon>
+        <ToolButton :onclick="groupClick" :valid="true" :selected="false" v-if="state === GROUP">
+            <svg-icon  icon-class="group"></svg-icon>
+        </ToolButton>
+        <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" v-if="state === UNGROUP">
+            <svg-icon  icon-class="ungroup"></svg-icon>
+        </ToolButton>
+        <ToolButton :onclick="nogroupClick" :valid="false" :selected="false" v-if="state === NOGROUP">
+            <svg-icon  :icon-class="preState === GROUP ? 'group' : 'ungroup'"></svg-icon>
+        </ToolButton>
     </div>
 </template>
 

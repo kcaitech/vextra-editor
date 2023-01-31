@@ -109,20 +109,17 @@ app.on('ready', async () => {
 
 })
 
-ipcMain.handle('getOpenFilePath', async () => {
-
-    // console.log('receive getOpenFilePath');
-    const result = await dialog.showOpenDialog({
-
-    });
-
-    // console.log(result);
-    if (result.filePaths.length > 0) {
-        return result.filePaths[0];
-    } else {
-        return null;
-    }
-});
+// ipcMain.handle('getOpenFilePath', async () => {
+//     // console.log('receive getOpenFilePath');
+//     const result = await dialog.showOpenDialog({
+//     });
+//     // console.log(result);
+//     if (result.filePaths.length > 0) {
+//         return result.filePaths[0];
+//     } else {
+//         return null;
+//     }
+// });
 
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {

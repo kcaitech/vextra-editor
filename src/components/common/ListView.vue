@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineProps, reactive, ComponentInternalInstance, getCurrentInstance, ref } from "vue";
+import { onMounted, defineProps, reactive, ref } from "vue";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -193,7 +193,7 @@ layoutDown[Orientation.H] = () => {
 }
 
 onMounted(() => {
-    observer.observe(proxy?.$el);
+    if (container.value) observer.observe(container.value);
     if (props.orientation == Orientation.V) {
         measureHeight.value = props.source.length() * props.itemHeight;
         measureWidth.value = props.itemWidth;
@@ -381,10 +381,12 @@ function onMouseWheel(e: WheelEvent) {
 //     props.source.onClick(data, false, false);
 // }
 
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const contents = ref<HTMLDivElement>();
+const container = ref<HTMLDivElement>();
 
 const observer = new ResizeObserver((entries, ob) => {
-    const el = proxy?.$refs.container as HTMLElement;
+    const el = container.value;
     if (el) {
         visibleHeight = el.clientHeight;
         visibleWidth = el.clientWidth;

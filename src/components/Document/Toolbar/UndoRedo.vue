@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Repository } from "@/data/transact";
 import { ref } from "@vue/reactivity";
-import { defineProps, onBeforeUpdate, onUnmounted } from "vue"
-import Icon from "@/components/common/Icon.vue";
-const redosvg = require("@/assets/redo.svg")
-const undosvg = require("@/assets/undo.svg")
+import { defineProps, onBeforeUpdate, onMounted, onUnmounted } from "vue"
+// import Icon from "@/components/common/Icon.vue";
+import ToolButton from "./ToolButton.vue"
+import "@/assets/icons/svg/redo.svg"
+import "@/assets/icons/svg/undo.svg"
 const props = defineProps<{ repo?: Repository }>();
 let watcher: ((...args: any[]) => void) | undefined;
 // function watcher() {
@@ -56,8 +57,12 @@ function redoClick() {
 
 <template>
     <div class="undoredo" :reflush="reflush">
-        <Icon :onclick="undoClick" :valid="undoValid()" :selected="false" :icon="undosvg"></Icon>
-        <Icon :onclick="redoClick" :valid="redoValid()" :selected="false" :icon="redosvg"></Icon>
+        <ToolButton :onclick="undoClick" :valid="undoValid()" :selected="false">
+            <svg-icon icon-class="undo"></svg-icon>
+        </ToolButton>
+        <ToolButton :onclick="redoClick" :valid="redoValid()" :selected="false">
+            <svg-icon icon-class="redo"></svg-icon>
+        </ToolButton>
     </div>
 </template>
 

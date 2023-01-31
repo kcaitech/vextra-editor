@@ -1,23 +1,32 @@
 <script setup lang="ts">
-import { getCurrentInstance, ComponentInternalInstance } from 'vue';
+import { defineEmits } from 'vue';
 import { useI18n } from 'vue-i18n';
+import DropFile from './DropFile.vue';
+import Examples from './Examples.vue'
 const { t } = useI18n();
-const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+const emit = defineEmits<{
+    (e: "openlocalfile", file?: File): void;
+    (e: "openremotefile"): void;
+}>();
+
 function onClick(e: Event) {
     e.stopPropagation();
-    proxy?.$emit("openlocalfile");
+    emit("openlocalfile");
 }
 function onClickRemote(e: Event) {
     e.stopPropagation();
-    proxy?.$emit("openremotefile");
+    emit("openremotefile");
+}
+function onFilePick(f: File) {
+    // console.log('filepick', f)
+    emit("openlocalfile", f);
 }
 </script>
 
 <template>
-    <div>
-        <button v-on:click="onClick">{{ $t("home.open_local_file") }}</button>
-        <button v-on:click="onClickRemote">{{ $t("home.open_remote_file") }}</button>
-    </div>
+    <DropFile v-on:pick="onFilePick">
+        <!-- <Examples :examples="[{name: 'aaa', url: ''}]"/> -->
+    </DropFile>
 </template>
 
 <style scoped>
