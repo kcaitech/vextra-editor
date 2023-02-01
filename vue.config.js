@@ -7,9 +7,8 @@ var configureWebpack = (config) => {
     // } else {
     //   // 为开发环境修改配置...
     // }
-    // config.module.rules.delete("svg"); //重点:删除默认配置中处理svg,
+
     const iconspath = path.resolve('src/assets/icons');
-    const svgrules = [];
     config.module.rules.forEach(element => {
         if (!'.svg'.match(element.test)) {
             //
@@ -31,6 +30,9 @@ var configureWebpack = (config) => {
         "stream": false, //require.resolve("stream-browserify")
         "fs": false,
     }
+
+    config.resolve.alias[`palzip$`] = path.resolve(__dirname, 'src/PAL/zip/browser.ts')
+
     config.module.rules.push(
         {
             test: /\.svg?$/,
@@ -56,33 +58,7 @@ var configureWebpack = (config) => {
             include: [iconspath],
             exclude: /node_modules/,
         },
-        // {
-        //     test: /\.si?$/,
-        //     use: [
-        //         'vue-loader',
-        //         path.resolve('./build/comp-svg-loader.js'),
-        //         {
-        //             loader: 'svg-sprite-loader', 
-        //             options: {
-        //                 symbolId: "icon-[name]",
-        //             },
-        //         },
-        //         {
-        //             loader: 'svgo-loader',
-        //             options: {
-        //                 plugins: [
-        //                 {
-        //                     name: 'convertColors',
-        //                     params: { currentColor: true },
-        //                 },
-        //                 ],
-        //             },
-        //         }
-        //     ],
-        //     include: [iconspath],
-        //     exclude: /node_modules/,
-        // }
-        )
+    )
 }
 
 var exports = defineConfig({

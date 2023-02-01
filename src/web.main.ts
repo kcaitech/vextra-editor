@@ -11,7 +11,7 @@ import { Document } from "./data/document";
 
 function openLocalFile(onReady: (data: LzData) => void, file?: File) {
     if (file) {
-        onReady(new LzDataLocal(file.path));
+        onReady(new LzDataLocal(file));
     }
 }
 

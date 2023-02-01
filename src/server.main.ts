@@ -23,7 +23,7 @@ if (filePath === undefined) {
     console.log("start load file:" + filePath);
 }
 
-const lzData = new LzDataLocal(filePath);
+const lzData = new LzDataLocal(new File([], filePath));
 let doc: Document | undefined;
 const emitter = new class extends EventEmitter {
     on(name: string, cb: Function) {
