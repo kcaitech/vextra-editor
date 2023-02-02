@@ -8,10 +8,11 @@ import { Link } from "./basic/link";
 import { importDocument } from "./io/import/exform/document";
 import { LzDataRemote } from "./io/import/exform/lzdataremote";
 import { Document } from "./data/document";
+import { Zip } from "@pal/zip";
 
 function openLocalFile(onReady: (data: LzData) => void, file?: File) {
     if (file) {
-        onReady(new LzDataLocal(file));
+        onReady(new LzDataLocal(new Zip(file)));
     }
 }
 

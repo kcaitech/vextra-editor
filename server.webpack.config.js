@@ -35,7 +35,7 @@ module.exports = {
             '@': path.resolve(__dirname, 'src/'),
             // "raphael": path.resolve(__dirname, 'src/raphael/raphael.amd.d.ts')
             // zlib: require.resolve('browserify-zlib')
-            'palzip$': path.resolve(__dirname, 'src/PAL/zip/browser.ts')
+            '@pal': path.resolve(__dirname, 'src/PAL/nodejs')
         },
     },
     // externals: {

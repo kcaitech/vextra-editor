@@ -6,6 +6,7 @@ import { EventEmitter } from "./basic/event";
 import { Page } from "./data/page";
 import { exportPage } from "./io/export/exform/page";
 import { ExfContext } from "./io/export/exform/context";
+import { Zip } from "@pal/zip";
 
 function getArg(key: string): string | undefined {
     for (let i = 0, len = process.argv.length; i < len; i++) {
@@ -23,7 +24,7 @@ if (filePath === undefined) {
     console.log("start load file:" + filePath);
 }
 
-const lzData = new LzDataLocal(new File([], filePath));
+const lzData = new LzDataLocal(new Zip(filePath));
 let doc: Document | undefined;
 const emitter = new class extends EventEmitter {
     on(name: string, cb: Function) {

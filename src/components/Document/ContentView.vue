@@ -6,9 +6,14 @@ import { ref } from '@vue/reactivity';
 import { reactive, defineProps, onMounted, onUnmounted } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
+import { init as renderinit } from '@/render'
 
 const props = defineProps<{ context: Context, page: Page }>();
 const matrix = reactive(new Matrix());
+const inited = ref(false);
+renderinit().then(() => {
+    inited.value = true;
+})
 
 const width = 800;
 const height = 600;
@@ -62,7 +67,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div @wheel.passive="onMouseWheel" :reflush="reflush" ref="root">
+    <div @wheel.passive="onMouseWheel" :reflush="reflush" ref="root" v-if="inited">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"
