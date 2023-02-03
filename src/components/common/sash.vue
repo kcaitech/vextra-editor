@@ -1,15 +1,13 @@
 <template>
-  <div ref="sashEl" :style="style" :class="{ sash: true, draging: draging }" 
-        @mousedown="onMouseDown" 
-        ></div>
+    <div ref="sashEl" :style="style" :class="{ sash: true, draging: draging }" @mousedown="onMouseDown"></div>
 </template>
 <!-- 需要 parent relative/absolute 定位。 然后再指定 sash 的位置-->
 <script setup lang="ts">
 import { ref, defineEmits, defineProps } from 'vue';
 
 const emit = defineEmits<{
-  (e: 'dragStart'): void;
-  (e: 'offset', offset: number): void;
+    (e: 'dragStart'): void;
+    (e: 'offset', offset: number): void;
 }>();
 
 const props = defineProps<{ side: 'right' | 'bottom' | 'top' | 'left' }>();
@@ -17,7 +15,7 @@ const props = defineProps<{ side: 'right' | 'bottom' | 'top' | 'left' }>();
 const draging = ref(false);
 // 拖动 3px 后开始触发移动
 const dragActiveDis = 3;
-const downPt: {x: number, y: number} = {x: 0, y: 0};
+const downPt: { x: number, y: number } = { x: 0, y: 0 };
 let isDown = false;
 
 function onMouseDown(event: MouseEvent) {
@@ -63,12 +61,12 @@ function emitOffset(event: MouseEvent) {
 const _isHor = props.side === 'bottom' || props.side === 'top';
 
 const style = {
-  width: _isHor ? '100%' : '6px',
-  height: _isHor ? '6px' : '100%',
-  cursor: _isHor ? 'ns-resize' : 'ew-resize',
-  top: _isHor ? undefined : '0px',
-  left: _isHor ? '0px' : undefined,
-  [props.side]: '-3px',
+    width: _isHor ? '100%' : '6px',
+    height: _isHor ? '6px' : '100%',
+    cursor: _isHor ? 'ns-resize' : 'ew-resize',
+    top: _isHor ? undefined : '0px',
+    left: _isHor ? '0px' : undefined,
+    [props.side]: '-3px',
 };
 
 const sashEl = ref<HTMLElement>();
@@ -76,9 +74,10 @@ const sashEl = ref<HTMLElement>();
 </script>
 <style scoped>
 .sash {
-  position: absolute;
-  /* background-color: red; */
+    position: absolute;
+    /* background-color: red; */
 }
+
 .draging {
     background-color: gray;
 }

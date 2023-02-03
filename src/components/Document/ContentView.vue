@@ -3,13 +3,31 @@ import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@/data/page';
 import { ref } from '@vue/reactivity';
-import { reactive, defineProps, onMounted, onUnmounted } from 'vue';
+import { reactive, defineProps, onMounted, onUnmounted, watchEffect } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
 import { init as renderinit } from '@/render'
 
 const props = defineProps<{ context: Context, page: Page }>();
 const matrix = reactive(new Matrix());
+
+const matrixMap = new Map<string, Matrix>();
+let savePageId: string = "";
+watchEffect(() => {
+    const id = props.page.id;
+    if (savePageId.length > 0 && id != savePageId) {
+        let m = matrixMap.get(savePageId);
+        if (m) m.reset(matrix.toArray());
+    }
+    savePageId = id;
+    let m = matrixMap.get(id);
+    if (!m) {
+        m = new Matrix();
+        matrixMap.set(id, m);
+    }
+    matrix.reset(m);
+})
+
 const inited = ref(false);
 renderinit().then(() => {
     inited.value = true;

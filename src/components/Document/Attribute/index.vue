@@ -4,7 +4,7 @@ import { Selection } from '@/context/selection';
 import { Shape } from '@/data/shape';
 import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ShapeAttr from './ShapeAttr.vue';
-import Sash from "@/components/common/sash.vue"
+import Sash from "@/components/common/Sash.vue"
 const props = defineProps<{ context: Context }>();
 
 const shape = shallowRef<Shape>();

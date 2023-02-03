@@ -3,7 +3,7 @@ import { defineProps, ref } from "vue";
 import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue"
-import Sash from "@/components/common/sash.vue"
+import Sash from "@/components/common/Sash.vue"
 const props = defineProps<{ context: Context }>();
 const width = ref(100);
 let saveWidth = 0;
