@@ -12,7 +12,7 @@ function onDragStart() {
     saveWidth = width.value;
 }
 function onDragOffset(offset: number) {
-    console.log('offset', offset)
+    // console.log('offset', offset)
     width.value = saveWidth + offset;
 }
 </script>
@@ -22,7 +22,7 @@ function onDragOffset(offset: number) {
         <PageList class="page-navi" :context="props.context" v-bind="$attrs"></PageList>
         <div class="line" />
         <ShapeList class="shape-navi" :context="props.context"></ShapeList>
-        <Sash :side="'right'" @dragStart="onDragStart" @offset="onDragOffset" />
+        <Sash side="right" @dragStart="onDragStart" @offset="onDragOffset" />
     </section>
 </template>
 

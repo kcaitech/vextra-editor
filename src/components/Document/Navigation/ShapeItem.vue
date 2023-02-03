@@ -59,7 +59,7 @@ onBeforeUpdate(() => {
 div.container {
     display: flex;
     flex-flow: row;
-    width: 100px;
+    width: 100%;
     height: 30px;
     color: var(--left-navi-font-color);
     background-color: var(--left-navi-bg-color);

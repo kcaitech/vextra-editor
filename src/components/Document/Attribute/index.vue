@@ -2,8 +2,9 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape } from '@/data/shape';
-import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
+import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ShapeAttr from './ShapeAttr.vue';
+import Sash from "@/components/common/sash.vue"
 const props = defineProps<{ context: Context }>();
 
 const shape = shallowRef<Shape>();
@@ -30,16 +31,27 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selectionChange);
 })
+const width = ref(100);
+let saveWidth = 0;
 
+function onDragStart() {
+    saveWidth = width.value;
+}
+function onDragOffset(offset: number) {
+    // console.log('offset', offset)
+    width.value = saveWidth - offset;
+}
 </script>
 
 <template>
-<div>
-    <ShapeAttr v-if="shape" :shape="shape"
-    :context="props.context"></ShapeAttr>
-</div>
+<section :style="`width: ${width}px;`">
+    <ShapeAttr v-if="shape" :shape="shape" :context="props.context"></ShapeAttr>
+    <Sash side="left" @dragStart="onDragStart" @offset="onDragOffset" />
+</section>
 </template>
 
 <style scoped>
-
+section {
+    position: relative;
+}
 </style>

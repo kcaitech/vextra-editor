@@ -20,12 +20,15 @@ function onClick(e: Event) {
 </script>
 
 <template>
-    <div :class="{selected: props.data.selected}" v-on:click="onClick">{{props.data.name}}</div>
+    <div :class="{ container: true, selected: props.data.selected }" v-on:click="onClick">
+        <div class="ph"></div>
+        <div class="item">{{props.data.name}}</div>
+    </div>
 </template>
 
 <style scoped>
-div {
-    width: 100px;
+.container {
+    width: 100%;
     height: 30px;
     line-height: 30px;
     color: var(--left-navi-font-color);
@@ -35,15 +38,31 @@ div {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding-left: 13px;
+    display: flex;
+    flex-direction: row;
 }
 
-div:hover {
+.container:hover {
     cursor: default;
     background-color: var(--left-navi-button-hover-color);
 }
 
-div.selected {
+.selected {
     background-color: var(--left-navi-button-hover-color);
+}
+
+.ph {
+    width: 13px;
+    min-width: 13px;
+    height: 100%;
+}
+
+.item {
+    line-height: 30px;
+    font-size: 10px;
+    /* text-align: center; */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 </style>

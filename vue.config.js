@@ -14,7 +14,7 @@ var configureWebpack = (config) => {
         config.entry.app = [ './src/web.main.ts' ]
         config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
     } else {
-        config.entry.app = [ './src/main.ts' ]
+        config.entry.app = [ './src/electron.main.ts' ]
         config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/nodejs')
     }
 

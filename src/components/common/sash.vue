@@ -1,5 +1,5 @@
 <template>
-  <div ref="sashEl" :style="style" class="sash" 
+  <div ref="sashEl" :style="style" :class="{ sash: true, draging: draging }" 
         @mousedown="onMouseDown" 
         ></div>
 </template>
@@ -14,16 +14,15 @@ const emit = defineEmits<{
 
 const props = defineProps<{ side: 'right' | 'bottom' | 'top' | 'left' }>();
 
-let draging = false;
+const draging = ref(false);
 // 拖动 3px 后开始触发移动
 const dragActiveDis = 3;
-let isDown = false;
 const downPt: {x: number, y: number} = {x: 0, y: 0};
+let isDown = false;
 
 function onMouseDown(event: MouseEvent) {
-    console.log('mouse down')
     isDown = true;
-    draging = false;
+    draging.value = false;
     downPt.x = event.screenX;
     downPt.y = event.screenY;
     event.preventDefault();
@@ -31,17 +30,16 @@ function onMouseDown(event: MouseEvent) {
     document.addEventListener('mouseup', onMouseUp)
 }
 function onMouseUp(event: MouseEvent) {
-    console.log('mouse up')
-    draging = false;
+    draging.value = false;
     isDown = false;
     event.preventDefault();
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 }
 function onMouseMove(event: MouseEvent) {
-    console.log('mouse move', 'isDown:' + isDown, 'draging:' + draging)
+    // console.log('mouse move', 'isDown:' + isDown, 'draging:' + draging)
     event.preventDefault();
-    if (draging && isDown) {
+    if (draging.value && isDown) {
         emitOffset(event);
     }
     else if (isDown) {
@@ -49,7 +47,7 @@ function onMouseMove(event: MouseEvent) {
         const dy = event.screenY - downPt.y;
         const diff = Math.hypot(dx, dy);
         if (diff > dragActiveDis) {
-            draging = true;
+            draging.value = true;
             emit('dragStart');
             emitOffset(event);
         }
@@ -80,5 +78,8 @@ const sashEl = ref<HTMLElement>();
 .sash {
   position: absolute;
   /* background-color: red; */
+}
+.draging {
+    background-color: gray;
 }
 </style>
