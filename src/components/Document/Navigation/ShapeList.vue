@@ -22,14 +22,14 @@ const selectionChange = (t: number) => {
 
         if (savePage) {
             const sd = props.context.shadows.get(savePage);
-            console.log("unwatch shadow")
+            // console.log("unwatch shadow")
             sd.unwatch(shadowChange);
             savePage = undefined;
         }
         const page = props.context.selection.selectedPage;
         if (page) {
             const sd = props.context.shadows.get(page);
-            console.log("watch shadow")
+            // console.log("watch shadow")
             sd.watch(shadowChange);
             savePage = page;
         }
@@ -46,7 +46,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selectionChange);
     if (savePage) {
-        console.log("unwatch shadow 1")
+        // console.log("unwatch shadow 1")
         const sd = props.context.shadows.get(savePage);
         sd.unwatch(shadowChange);
         savePage = undefined;

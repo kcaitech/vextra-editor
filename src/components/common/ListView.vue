@@ -36,7 +36,7 @@ const measureHeight = ref(0);
 
 const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {
-    console.log("re - v")
+    // console.log("re - v")
     layoutResult.length = 0;
     layoutIndex = Math.max(0, Math.floor(-scroll.y / props.itemHeight));
     const iter = props.source.iterAt(layoutIndex);
@@ -52,7 +52,7 @@ relayout[Orientation.V] = () => {
     }
 }
 relayout[Orientation.H] = () => {
-    console.log("re - h")
+    // console.log("re - h")
     layoutResult.length = 0;
     layoutIndex = Math.max(0, Math.floor(-scroll.x / props.itemWidth));
     const iter = props.source.iterAt(layoutIndex);
@@ -72,7 +72,7 @@ const prepareCount = 10; //  多准备的
 
 const layoutUp: { [key: string]: Function } = {};
 layoutUp[Orientation.V] = () => {
-    console.log("up - v")
+    // console.log("up - v")
     if (layoutIndex <= 0) {
         return;
     }
@@ -102,7 +102,7 @@ layoutUp[Orientation.V] = () => {
     }
 }
 layoutUp[Orientation.H] = () => {
-    console.log("up - h")
+    // console.log("up - h")
     if (layoutIndex <= 0) {
         return;
     }
@@ -134,7 +134,7 @@ layoutUp[Orientation.H] = () => {
 
 const layoutDown: { [key: string]: Function } = {};
 layoutDown[Orientation.V] = () => {
-    console.log("down - v")
+    // console.log("down - v")
     if (layoutIndex + layoutResult.length >= props.source.length()) {
         return;
     }
@@ -163,7 +163,7 @@ layoutDown[Orientation.V] = () => {
     }
 }
 layoutDown[Orientation.H] = () => {
-    console.log("down - h")
+    // console.log("down - h")
     if (layoutIndex + layoutResult.length >= props.source.length()) {
         return;
     }
@@ -202,7 +202,7 @@ onMounted(() => {
         measureHeight.value = props.itemHeight;
         measureWidth.value = props.source.length() * props.itemWidth;
     }
-    console.log("mount measure", measureWidth.value, measureHeight.value)
+    // console.log("mount measure", measureWidth.value, measureHeight.value)
     relayout[props.orientation]();
 })
 
@@ -226,7 +226,7 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
         measureHeight.value = props.itemHeight;
         measureWidth.value = props.source.length() * props.itemWidth;
     }
-    console.log("change measure", measureWidth.value, measureHeight.value)
+    // console.log("change measure", measureWidth.value, measureHeight.value)
 
     let needRelayout = false;
     let needLayoutDown = false;
@@ -390,7 +390,7 @@ const observer = new ResizeObserver((entries, ob) => {
     if (el) {
         visibleHeight = el.clientHeight;
         visibleWidth = el.clientWidth;
-        console.log("visible", visibleWidth, visibleHeight)
+        // console.log("visible", visibleWidth, visibleHeight)
         layoutDown[props.orientation]();
     }
 })
