@@ -44,7 +44,7 @@ function onDragOffset(offset: number) {
 </script>
 
 <template>
-<section :style="`width: ${width}px;`">
+<section :style="`width:${width}px; minWidth:${width}px`">
     <ShapeAttr v-if="shape" :shape="shape" :context="props.context"></ShapeAttr>
     <Sash side="left" @dragStart="onDragStart" @offset="onDragOffset" />
 </section>

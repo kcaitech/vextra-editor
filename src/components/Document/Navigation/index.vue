@@ -18,7 +18,7 @@ function onDragOffset(offset: number) {
 </script>
 
 <template>
-    <section :style="`width: ${width}px;`">
+    <section :style="`width:${width}px; minWidth:${width}px`">
         <PageList class="page-navi" :context="props.context" v-bind="$attrs"></PageList>
         <div class="line" />
         <ShapeList class="shape-navi" :context="props.context"></ShapeList>
