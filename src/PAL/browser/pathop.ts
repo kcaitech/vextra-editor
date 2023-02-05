@@ -14,8 +14,12 @@ export function difference(path0: string, path1: string): string {
     const p1: Path | null = _ck.Path.MakeFromSVGString(path1);
     if (p0 && p1) {
         p0.op(p1, _ck.PathOp.XOR)
-        return p0.toSVGString();
+        const path = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        return path;
     }
+    console.log("difference op failed")
     return "";
 }
 export function intersection(path0: string, path1: string): string {
@@ -24,8 +28,12 @@ export function intersection(path0: string, path1: string): string {
     const p1: Path | null = _ck.Path.MakeFromSVGString(path1);
     if (p0 && p1) {
         p0.op(p1, _ck.PathOp.Intersect)
-        return p0.toSVGString();
+        const path = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        return path;
     }
+    console.log("intersect op failed")
     return "";
 }
 export function subtract(path0: string, path1: string): string {
@@ -34,8 +42,12 @@ export function subtract(path0: string, path1: string): string {
     const p1: Path | null = _ck.Path.MakeFromSVGString(path1);
     if (p0 && p1) {
         p0.op(p1, _ck.PathOp.Difference)
-        return p0.toSVGString();
+        const path = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        return path;
     }
+    console.log("subtract op failed")
     return "";
 }
 export function union(path0: string, path1: string): string {
@@ -44,7 +56,11 @@ export function union(path0: string, path1: string): string {
     const p1: Path | null = _ck.Path.MakeFromSVGString(path1);
     if (p0 && p1) {
         p0.op(p1, _ck.PathOp.Union)
-        return p0.toSVGString();
+        const path = p0.toSVGString();
+        p0.delete();
+        p1.delete();
+        return path;
     }
+    console.log("union op failed")
     return "";
 }

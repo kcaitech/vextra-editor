@@ -1,6 +1,6 @@
 // cubic bezier curve
 
-import { XY } from "@/data/style";
+import { XY } from "@/data/types";
 
 // 极值点
 function extreme(p0: number, p1: number, p2: number, p3: number): number[] {
