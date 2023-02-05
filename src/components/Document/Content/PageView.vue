@@ -80,7 +80,7 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="props.width" :height="props.height" @click="onClick"
         preserveAspectRatio="xMinYMin meet"
         :style="{ transform: matrix }"
-        :reflush="reflush">
+        :reflush="reflush !== 0 ? reflush : undefined">
 
         <defs>
             <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">
@@ -92,11 +92,7 @@ onUnmounted(() => {
         </defs>
 
         <g :transform="'translate(' + trans.x + ',' + trans.y + ')'">
-
-            <component v-for="c in childs" :key="c.id" :is="comsMap.get(c.type)" :data="c"
-                :boolop="props.data.boolOp">
-            </component>
-
+            <component v-for="c in childs" :key="c.id" :is="comsMap.get(c.type)" :data="c" />
         </g>
 
     </svg>

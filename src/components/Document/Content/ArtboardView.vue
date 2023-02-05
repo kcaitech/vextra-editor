@@ -4,7 +4,7 @@ import comsMap from './comsmap'
 import { Artboard } from '@/data/artboard';
 import { render as r } from "@/render/artboard"
 
-const props = defineProps<{ data: Artboard, boolop: number }>();
+const props = defineProps<{ data: Artboard }>();
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -16,7 +16,7 @@ onUnmounted(() => {
     props.data.unwatch(watcher);
 })
 const render = () => {
-    return r(h, props.data, props.boolop, comsMap, reflush.value)
+    return r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined)
 }
 
 </script>

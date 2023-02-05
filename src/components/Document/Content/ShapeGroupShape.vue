@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
-import comsMap from './comsmap'
 import { Shape, GroupShape } from "@/data/shape";
 import { render as r } from "@/render/shapegroup";
-import { difference } from '@/render/boolop';
-import { diff } from 'jest-diff';
 
-const props = defineProps<{ data: GroupShape, boolop: number }>();
+const props = defineProps<{ data: GroupShape }>();
 const reflush = ref(0);
 const consumed: Array<Shape> = [];
 
@@ -25,7 +22,7 @@ onUnmounted(() => {
 })
 function render() {
     const consumed0: Array<Shape> = [];
-    const ret = r(h, props.data, props.boolop, comsMap, reflush.value, consumed0);
+    const ret = r(h, props.data, reflush.value !== 0 ? reflush.value : undefined, consumed0);
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
             consumed[i].unwatch(watcher);
