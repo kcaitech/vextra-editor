@@ -19,16 +19,27 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <UndoRedo :repo="repo" />
-    <div class="vertical-line" />
-    <GroupUngroup :context="context" :selection="selection" />
+    <div class="toolbar">
+        <UndoRedo :repo="repo" />
+        <div class="vertical-line" />
+        <GroupUngroup :context="context" :selection="selection" />
+    </div>
 </template>
 
 <style scoped>
-div.vertical-line {
-    width: 1px;
+.toolbar {
+    align-items: center;
+    width: 100%;
     height: 100%;
+    display: flex;
+    flex-flow:row nowrap;
+}
+.vertical-line {
+    width: 1px;
+    height: 50%;
     background-color: gray;
     flex: 0 0 auto;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 </style>

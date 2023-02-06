@@ -2,10 +2,13 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape } from '@/data/shape';
-import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
+import { defineProps, onMounted, onUnmounted, shallowRef, ref, computed, defineEmits } from 'vue';
 import ShapeAttr from './ShapeAttr.vue';
 import Sash from "@/components/common/Sash.vue"
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, width: number, minWidth: number, maxWidth: number }>();
+const emit = defineEmits<{
+    (e: 'dragWidth', width: number): void;
+}>();
 
 const shape = shallowRef<Shape>();
 
@@ -31,20 +34,31 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selectionChange);
 })
-const width = ref(100);
-let saveWidth = 0;
+const userOffset = ref(0);
+// const minWidth = 80;
+let curOffset = 0;
 
 function onDragStart() {
-    saveWidth = width.value;
+    const w = userOffset.value + props.width;
+    const wFix =  Math.min(Math.max(w, props.minWidth), props.maxWidth);
+    curOffset = wFix - props.width;
 }
 function onDragOffset(offset: number) {
     // console.log('offset', offset)
-    width.value = saveWidth - offset;
+    const w = curOffset + props.width - offset;
+    const wFix = Math.min(Math.max(w, props.minWidth), props.maxWidth);
+    emit("dragWidth", wFix);
+    userOffset.value = wFix - props.width;
 }
+
+const fixedWidth = computed(() => {
+    const w = userOffset.value + props.width;
+    return Math.min(Math.max(w, props.minWidth), props.maxWidth);
+})
 </script>
 
 <template>
-<section :style="`width:${width}px; minWidth:${width}px`">
+<section :style="`width:${fixedWidth}px; minWidth:${fixedWidth}px`">
     <ShapeAttr v-if="shape" :shape="shape" :context="props.context"></ShapeAttr>
     <Sash side="left" @dragStart="onDragStart" @offset="onDragOffset" />
 </section>

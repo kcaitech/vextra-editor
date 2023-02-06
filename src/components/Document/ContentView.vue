@@ -85,7 +85,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div @wheel.passive="onMouseWheel" :reflush="reflush" ref="root" v-if="inited">
+    <div @wheel.passive="onMouseWheel" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"

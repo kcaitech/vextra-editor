@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref } from "vue";
+import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed } from "vue";
 import { Shape, GroupShape } from '@/data/shape';
 
 export interface ItemData {
@@ -11,6 +11,9 @@ export interface ItemData {
 }
 
 const props = defineProps<{ data: ItemData }>();
+const phWidth = computed(() => {
+    return (props.data.level - 1) * 6;
+})
 const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
     (e: "selectshape", shape: Shape): void;
@@ -45,8 +48,8 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div :class="{ container: true, selected: props.data.selected }" :style="{'padding-left': '' + ((props.data.level - 1)*6) + 'px'}"
-    v-on:click="selectShape">
+    <div :class="{ container: true, selected: props.data.selected }" v-on:click="selectShape">
+        <div class="ph" :style="{ width:`${phWidth}px`, height:'100%', minWidth:`${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
             <div v-if="showTriangle"
                 :class="{'triangle-right': !props.data.expand, 'triangle-down': props.data.expand}"></div>
