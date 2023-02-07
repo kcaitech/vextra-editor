@@ -77,15 +77,69 @@ const watcher = () => {
 }
 onMounted(() => {
     props.page.watch(watcher);
+    document.addEventListener("keydown", onKeyDown)
+    document.addEventListener("keyup", onKeyUp)
 })
 onUnmounted(() => {
     props.page.unwatch(watcher);
+    document.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("keyup", onKeyUp)
 })
+
+let spacePressed = false;
+const STATE_NONE = 0;
+const STATE_CHECKMOVE = 1;
+const STATE_MOVEING = 2;
+let state = STATE_NONE;
+// 拖动 3px 后开始触发移动
+const dragActiveDis = 3;
+const prePt: { x: number, y: number } = { x: 0, y: 0 };
+
+function onKeyDown(e: KeyboardEvent) {
+    spacePressed = e.code == 'Space';
+}
+function onKeyUp(e: KeyboardEvent) {
+    if (spacePressed && e.code == 'Space') spacePressed = false;
+}
+function onMouseDown(e: MouseEvent) {
+    if (spacePressed) {
+        e.preventDefault();
+        state = STATE_CHECKMOVE;
+        document.addEventListener("mousemove", onMouseMove)
+        document.addEventListener("mouseup", onMouseUp)
+        prePt.x = e.screenX;
+        prePt.y = e.screenY;
+    }
+}
+function onMouseMove(e: MouseEvent) {
+    e.preventDefault();
+    const dx = e.screenX - prePt.x;
+    const dy = e.screenY - prePt.y;
+    if (state === STATE_MOVEING) {
+        matrix.trans(dx, dy);
+        prePt.x = e.screenX;
+        prePt.y = e.screenY;
+    } else {
+        const diff = Math.hypot(dx, dy);
+        if (diff > dragActiveDis) {
+            state = STATE_MOVEING;
+            matrix.trans(dx, dy);
+            prePt.x = e.screenX;
+            prePt.y = e.screenY;
+        }
+    }
+}
+function onMouseUp(e: MouseEvent) {
+    e.preventDefault();
+    state = STATE_NONE;
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+}
 
 </script>
 
 <template>
-    <div @wheel.passive="onMouseWheel" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited">
+    <div @wheel.passive="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"
