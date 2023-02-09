@@ -1,0 +1,173 @@
+import { TextShape } from "@/data/shape";
+import { Para, SpanAttr, TextHorizontalAlignment, TextVerticalAlignment } from "@/data/text";
+import { measure } from "./measure";
+
+export interface IGraphy {
+    char: string,
+    metrics: TextMetrics | undefined,
+    cw: number,
+    index: number,
+    x: number
+}
+
+export class GraphArray extends Array<IGraphy> {
+    public attr: SpanAttr | undefined;
+}
+export class Line extends Array<GraphArray> {
+    public maxFontSize: number = 0;
+}
+export type LineArray = Array<Line>
+
+export function adjustLines(lineArray: LineArray, align: TextHorizontalAlignment) {
+    // TODO
+}
+
+export function adjustLinesVertical(lines: LineArray, align: TextVerticalAlignment) {
+
+}
+
+export function layoutPara(para: Para, shape: TextShape, width: number): LineArray {
+    const spansCount = para.spansCount;
+    if (spansCount === 0) {
+        return [];
+    }
+    // const frame = shape.frame;
+    // const width = frame.width;
+    const charSpace = para.attr?.kerning ?? 0;
+
+    const text = para.text;
+    let textIdx = 0
+    const textLen = text.length
+
+    let spanIdx = 0, spanOffset = 0
+    let span = para.getSpanByIndex(spanIdx);
+    let font = "normal " + span.fontSize + "px " + span.fontName;
+
+    const startX = 0, endX = startX + width;
+    let curX = 0
+
+    let graphArray: GraphArray = new GraphArray();
+    let line: Line = new Line();
+    line.maxFontSize = span.fontSize ?? 0;
+    const lineArray: LineArray = []
+
+    let preSpanIdx = spanIdx;
+
+    for (; textIdx < textLen && spanIdx < spansCount;) {
+
+        if (preSpanIdx !== spanIdx) {
+            span = para.getSpanByIndex(spanIdx);
+            font = "normal " + span.fontSize + "px " + span.fontName;
+        }
+
+        const c = text.charCodeAt(textIdx);
+        if (c === 0x0A) {
+            // '\n'
+            textIdx++;
+            spanOffset++;
+            if (spanOffset >= span.length) {
+                spanOffset = 0;
+                spanIdx++;
+                if (graphArray.length > 0) {
+                    line.push(graphArray);
+                    graphArray = new GraphArray();
+                }
+            }
+            if (preSpanIdx !== spanIdx) {
+                line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
+            }
+            preSpanIdx = spanIdx;
+            continue;
+        }
+        const m = measure(c, font);
+        const cw = m?.width ?? 0;
+        
+        if (cw + curX + charSpace <= endX) {
+            graphArray.push({
+                char: text.at(textIdx) as string,
+                metrics: m,
+                cw,
+                index: textIdx,
+                x: curX
+            });
+            graphArray.attr = span;
+
+            curX += cw + charSpace;
+            textIdx++;
+            spanOffset++;
+            if (spanOffset >= span.length) {
+                spanOffset = 0;
+                spanIdx++;
+                line.push(graphArray);
+                graphArray = new GraphArray();
+            }
+            if (preSpanIdx !== spanIdx) {
+                line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
+            }
+        }
+        else if (line.length === 0 && graphArray.length === 0) {
+            graphArray.push({
+                char: text.at(textIdx) as string,
+                metrics: m,
+                cw,
+                index: textIdx,
+                x: curX
+            });
+            graphArray.attr = span;
+
+            line.maxFontSize = span.fontSize ?? 0;
+            line.push(graphArray);
+            graphArray = new GraphArray();
+            lineArray.push(line);
+            line = new Line();
+
+            curX = startX;
+            textIdx++;
+            spanOffset++;
+            if (spanOffset >= span.length) {
+                spanOffset = 0;
+                spanIdx++;
+            }
+            else {
+                line.maxFontSize = span.fontSize ?? 0;
+            }
+        }
+        else {
+            line.push(graphArray);
+            graphArray = new GraphArray();
+            lineArray.push(line);
+            line = new Line();
+            line.maxFontSize = span.fontSize ?? 0;
+
+            curX = startX;
+            graphArray.push({
+                char: text.at(textIdx) as string,
+                metrics: m,
+                cw,
+                index: textIdx,
+                x: curX
+            });
+            graphArray.attr = span;
+
+            curX += cw + charSpace;
+            textIdx++;
+            spanOffset++;
+            if (spanOffset >= span.length) {
+                spanOffset = 0;
+                spanIdx++;
+                line.push(graphArray);
+                graphArray = new GraphArray();
+            }
+        }
+        preSpanIdx = spanIdx;
+    }
+
+    if (graphArray.length > 0) {
+        line.push(graphArray);
+    }
+    if (line.length > 0) {
+        lineArray.push(line);
+    }
+
+    return lineArray;
+}
