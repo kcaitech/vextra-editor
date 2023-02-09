@@ -1,4 +1,3 @@
-import { TextShape } from "@/data/shape";
 import { Para, SpanAttr, TextHorizontalAlignment, TextVerticalAlignment } from "@/data/text";
 import { measure } from "./measure";
 
@@ -26,7 +25,7 @@ export function adjustLinesVertical(lines: LineArray, align: TextVerticalAlignme
 
 }
 
-export function layoutPara(para: Para, shape: TextShape, width: number): LineArray {
+export function layoutPara(para: Para, width: number): LineArray {
     const spansCount = para.spansCount;
     if (spansCount === 0) {
         return [];

@@ -4,10 +4,7 @@ import { number } from "@intlify/core-base";
 const canvas2D = (() => {
     let canvas: CanvasRenderingContext2D | null;
     return () => {
-        if (!canvas) {
-            canvas = document.createElement("canvas").getContext("2d");
-        }
-        return canvas;
+        return canvas || (canvas = document.createElement("canvas").getContext("2d"));
     }
 })();
 
@@ -31,7 +28,7 @@ function isEqualWidthCode(code: number): boolean {
 }
 
 function isAsciiCode(code: number) {
-    return code <= 0xff;
+    return code <= 0xff && code >= 0;
 }
 
 // measure equal width code cache
