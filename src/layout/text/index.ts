@@ -45,7 +45,7 @@ export function layoutPara(para: Para, width: number): LineArray {
     const startX = 0, endX = startX + width;
     let curX = 0
 
-    let graphArray: GraphArray = new GraphArray();
+    let graphArray: GraphArray | undefined;
     let line: Line = new Line();
     line.maxFontSize = span.fontSize ?? 0;
     const lineArray: LineArray = []
@@ -67,9 +67,9 @@ export function layoutPara(para: Para, width: number): LineArray {
             if (spanOffset >= span.length) {
                 spanOffset = 0;
                 spanIdx++;
-                if (graphArray.length > 0) {
+                if (graphArray && graphArray.length > 0) {
                     line.push(graphArray);
-                    graphArray = new GraphArray();
+                    graphArray = undefined; //new GraphArray();
                 }
             }
             if (preSpanIdx !== spanIdx) {
@@ -82,6 +82,10 @@ export function layoutPara(para: Para, width: number): LineArray {
         const cw = m?.width ?? 0;
         
         if (cw + curX + charSpace <= endX) {
+            if (!graphArray) {
+                graphArray = new GraphArray();
+                graphArray.attr = span;
+            }
             graphArray.push({
                 char: text.at(textIdx) as string,
                 metrics: m,
@@ -89,7 +93,6 @@ export function layoutPara(para: Para, width: number): LineArray {
                 index: textIdx,
                 x: curX
             });
-            graphArray.attr = span;
 
             curX += cw + charSpace;
             textIdx++;
@@ -98,13 +101,17 @@ export function layoutPara(para: Para, width: number): LineArray {
                 spanOffset = 0;
                 spanIdx++;
                 line.push(graphArray);
-                graphArray = new GraphArray();
+                graphArray = undefined;
             }
             if (preSpanIdx !== spanIdx) {
                 line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
             }
         }
-        else if (line.length === 0 && graphArray.length === 0) {
+        else if (line.length === 0 && (!graphArray || graphArray.length === 0)) {
+            if (!graphArray) {
+                graphArray = new GraphArray();
+                graphArray.attr = span;
+            }
             graphArray.push({
                 char: text.at(textIdx) as string,
                 metrics: m,
@@ -112,11 +119,10 @@ export function layoutPara(para: Para, width: number): LineArray {
                 index: textIdx,
                 x: curX
             });
-            graphArray.attr = span;
 
             line.maxFontSize = span.fontSize ?? 0;
             line.push(graphArray);
-            graphArray = new GraphArray();
+            graphArray = undefined;
             lineArray.push(line);
             line = new Line();
 
@@ -132,8 +138,9 @@ export function layoutPara(para: Para, width: number): LineArray {
             }
         }
         else {
-            line.push(graphArray);
+            graphArray && line.push(graphArray);
             graphArray = new GraphArray();
+            graphArray.attr = span;
             lineArray.push(line);
             line = new Line();
             line.maxFontSize = span.fontSize ?? 0;
@@ -146,7 +153,6 @@ export function layoutPara(para: Para, width: number): LineArray {
                 index: textIdx,
                 x: curX
             });
-            graphArray.attr = span;
 
             curX += cw + charSpace;
             textIdx++;
@@ -155,13 +161,13 @@ export function layoutPara(para: Para, width: number): LineArray {
                 spanOffset = 0;
                 spanIdx++;
                 line.push(graphArray);
-                graphArray = new GraphArray();
+                graphArray = undefined;
             }
         }
         preSpanIdx = spanIdx;
     }
 
-    if (graphArray.length > 0) {
+    if (graphArray && graphArray.length > 0) {
         line.push(graphArray);
     }
     if (line.length > 0) {
