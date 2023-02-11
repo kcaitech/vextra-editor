@@ -1,9 +1,9 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
 
-var run_env = 'browser'
+var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs';
 // var run_env = 'nodejs'
-
+console.log('building for: ' + run_env)
 var configureWebpack = (config) => {
     // if (process.env.NODE_ENV === 'production') {
     //   // 为生产环境修改配置...
