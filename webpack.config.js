@@ -1,8 +1,18 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 
+let mode = ''
+if (process.env.NODE_ENV === 'production') {
+    // 为生产环境修改配置...
+    mode = 'production'
+} else {
+    // 为开发环境修改配置...
+    mode = 'development'
+}
+console.log('building for: ' + mode)
+
 module.exports = {
-    mode: 'development', // production, development
+    mode,
     entry: './src/server.main.ts',
     target: 'node',
     output: {
