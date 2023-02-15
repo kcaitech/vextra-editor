@@ -16,7 +16,7 @@ npm run build:server
 
 {   # 生成精简的node_modules
     pushd .
-    cd build/server
+    cd deploy/build/server
     # 需要在server目录提前install，生成好package-lock文件
     # npm ci
     npm i
@@ -24,7 +24,7 @@ npm run build:server
     popd
 }
 
-docker build -f ./build/server/DockerFile -t sktest/server ./dist_server
+docker build -f ./deploy/build/server/DockerFile -t sktest/server ./dist_server
 
 # mv dist_server/node_modules ./
 popd
