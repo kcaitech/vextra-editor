@@ -1,5 +1,7 @@
 <template>
-    <div ref="sashEl" :style="style" :class="{ sash: true, draging: draging }" @mousedown="onMouseDown"></div>
+    <div ref="sashEl" :style="style" :class="{ sash: true }" @mousedown="onMouseDown">
+        <div class="line" :style="lineStyle"  :class="{ draging: draging }"/>
+    </div>
 </template>
 <!-- 需要 parent relative/absolute 定位。 然后再指定 sash 的位置-->
 <script setup lang="ts">
@@ -69,6 +71,14 @@ const style = {
     [props.side]: '-3px',
 };
 
+const lineStyle = {
+    width: _isHor ? '100%' : '1px',
+    height: _isHor ? '1px' : '100%',
+    top: _isHor ? undefined : '0px',
+    left: _isHor ? '0px' : undefined,
+    [props.side]: '2px',
+}
+
 const sashEl = ref<HTMLElement>();
 
 </script>
@@ -76,9 +86,15 @@ const sashEl = ref<HTMLElement>();
 .sash {
     position: absolute;
     /* background-color: red; */
+    z-index: 1;
 }
 
 .draging {
-    background-color: gray;
+    background-color: darkgrey;
+}
+.line {
+    background-color: var(--theme-color-line);
+    /* background-color: red; */
+    position: inherit;
 }
 </style>

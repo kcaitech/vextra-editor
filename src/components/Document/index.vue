@@ -8,6 +8,7 @@ import { Page } from '@/data/page';
 import { Selection } from '@/context/selection'
 import Attribute from './Attribute/index.vue';
 import Toolbar from './Toolbar/index.vue'
+import ColSplitView from './ColSplitView.vue';
 
 const props = defineProps<{data: Document}>();
 // const dataReady = ref<boolean>(false);
@@ -46,67 +47,25 @@ onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
 })
 
-const observer = new ResizeObserver(updateSize);
-const centerRef = ref<HTMLDivElement>();
-const colMinWidth = ref(80);
-const navWidth = ref(100);
-const navColMaxWidth = ref(100);
-const attWidth = ref(100);
-const attColMaxWidth = ref(100);
-
-function getWidth(): number {
-    return centerRef.value?.clientWidth || 600;
-}
-
-function updateSize() {
-    const w = getWidth();
-    // console.log('resize', w)
-    colMinWidth.value = Math.min(80, Math.round(w / 3));
-    attColMaxWidth.value = Math.round(w / 3);
-    navColMaxWidth.value = Math.round(w / 2);
-
-    if (attWidth.value < colMinWidth.value) {
-        attWidth.value = colMinWidth.value;
-    }
-    else if (attWidth.value > attColMaxWidth.value) {
-        attWidth.value = attColMaxWidth.value;
-    }
-    if (navWidth.value < colMinWidth.value) {
-        navWidth.value = colMinWidth.value;
-    }
-    else if (navWidth.value > navColMaxWidth.value) {
-        navWidth.value = navColMaxWidth.value;
-    }
-}
-onMounted(() => {
-    updateSize();
-    if (centerRef.value) observer.observe(centerRef.value);
-})
-onUnmounted(() => {
-    observer.disconnect();
-})
-
-// TODO: 两边栏应该是关联拖动大小的
-function onNavDrag(width: number) {
-
-}
-function onAttrDrag(width: number) {
-    
-}
-
 </script>
 
 <template>
     <div id="top" @dblclick="topDblClick">
         <Toolbar :context="context" />
     </div>
-    <div id="center" ref="centerRef">
-        <Navigation id="navigation" :context="context" @switchpage="switchPage" :width="navWidth" :min-width="colMinWidth" :max-width="navColMaxWidth" @drag-width="onNavDrag"></Navigation>
-        <div class="vertical-line" />
-        <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)"></ContentView>
-        <div class="vertical-line" />
-        <Attribute id="attributes" :context="context" :width="attWidth" :min-width="colMinWidth" :max-width="attColMaxWidth" @drag-width="onAttrDrag"></Attribute>
-    </div>
+    <ColSplitView id="center" :left="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}" 
+    :middle="{width: 0.6, minWidth: 0.3, maxWidth: 0.8}"
+    :right="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}" >
+        <template v-slot:slot1>
+            <Navigation id="navigation" :context="context" @switchpage="switchPage"></Navigation>
+        </template>
+        <template v-slot:slot2>
+            <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)"></ContentView>
+        </template>
+        <template v-slot:slot3>
+            <Attribute id="attributes" :context="context"></Attribute>
+        </template>
+    </ColSplitView>
     <div id="bottom"></div>
 </template>
 
@@ -158,27 +117,22 @@ function onAttrDrag(width: number) {
         display: flex;
         flex-flow:column nowrap;
         /* width:100px; */
-        height:auto;
+        height:100%;
         background-color: var(--left-navi-bg-color);
         z-index: 1;
     }
     #content {
         flex: 1 1 auto;
-        width:auto;
-        height:auto;
+        width:100%;
+        height:100%;
         overflow: hidden;
     }
     #attributes {
         flex-flow:column nowrap;
         /* width:150px; */
-        height:auto;
+        height:100%;
         background-color: var(--right-attr-bg-color);
         z-index: 1;
     }
-    div.vertical-line {
-        width: 1px;
-        height: 100%;
-        background-color: var(--theme-color-line);
-        flex: 0 0 auto;
-    }
+
 </style>

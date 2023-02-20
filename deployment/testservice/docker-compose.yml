@@ -1,0 +1,29 @@
+version: '2'
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk11
+    restart: unless-stopped
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - sktest_client:/var/sktest_client
+      - sktest_electron:/var/sktest_electron
+      - sktest_server:/var/sktest_server
+    networks:
+      - sktest
+    environment:
+      - JENKINS_OPTS="--prefix=/jenkins"
+      - TZ=Asia/Shanghai
+      - JAVA_OPTS="-Xmx2048m
+  openresty:
+    image: openresty/openresty:1.21.4.1-0-alpine
+    restart: unless-stopped
+    volumes:
+      - sktest_client:/usr/share/nginx/html
+      - ~/sktest/nginx:/etc/nginx/conf.d
+    networks:
+      - sktest
+    ports:
+      - 80:80
+networks:
+  sktest:
+    driver: bridge
