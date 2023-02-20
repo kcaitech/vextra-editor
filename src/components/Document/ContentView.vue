@@ -35,7 +35,7 @@ renderinit().then(() => {
 
 const width = 800;
 const height = 600;
-const scale_delta = 1.05;
+const scale_delta = 1.2;
 const scale_delta_ = 1 / scale_delta;
 
 // const { proxy } = getCurrentInstance() as ComponentInternalInstance;
