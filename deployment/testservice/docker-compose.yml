@@ -5,11 +5,11 @@ services:
     restart: unless-stopped
     volumes:
       - jenkins_home:/var/jenkins_home
-      - sktest_client:/var/sktest_client
-      - sktest_electron:/var/sktest_electron
-      - sktest_server:/var/sktest_server
+      - kcdesign_client:/var/kcdesign_client
+      - kcdesign_electron:/var/kcdesign_electron
+      - kcdesign_server:/var/kcdesign_server
     networks:
-      - sktest
+      - kcdesign
     environment:
       - JENKINS_OPTS="--prefix=/jenkins"
       - TZ=Asia/Shanghai
@@ -18,12 +18,12 @@ services:
     image: openresty/openresty:1.21.4.1-0-alpine
     restart: unless-stopped
     volumes:
-      - sktest_client:/usr/share/nginx/html
-      - ~/sktest/nginx:/etc/nginx/conf.d
+      - kcdesign_client:/usr/share/nginx/html
+      - ~/kcdesign/nginx:/etc/nginx/conf.d
     networks:
-      - sktest
+      - kcdesign
     ports:
       - 80:80
 networks:
-  sktest:
+  kcdesign:
     driver: bridge

@@ -43,6 +43,6 @@
             "src/main.ts"
         ],
         "out": "docs",
-        "name": "sktest"
+        "name": "kcdesign"
     }
 }

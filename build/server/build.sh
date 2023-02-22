@@ -24,7 +24,7 @@ npm run build:server
     popd
 }
 
-docker build -f ./deploy/build/server/DockerFile -t sktest/server ./dist_server
+docker build -f ./deploy/build/server/DockerFile -t kcdesign/server ./dist_server
 
 # mv dist_server/node_modules ./
 popd
