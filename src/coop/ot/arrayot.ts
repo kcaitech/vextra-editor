@@ -1,4 +1,4 @@
-export namespace arrayot {
+export namespace ArrayOt {
     enum OpType {
         array_none,
         array_insert,
@@ -8,12 +8,21 @@ export namespace arrayot {
 
     interface Op {
         get type(): OpType;
+        get range(): { start: number, length: number };
+        transBy(op: Op): Op;
+        clone(): Op;
     }
 
     export class OpArrayNone implements Op {
         private _unit_order: number;
         constructor(unitOrder: number) {
             this._unit_order = unitOrder;
+        }
+        transBy(op: Op): Op {
+            return this.clone();
+        }
+        clone(): OpArrayNone {
+            return new OpArrayNone(this.unit_order);
         }
         get type() {
             return OpType.array_none
@@ -44,8 +53,10 @@ export namespace arrayot {
         get type() {
             return OpType.array_insert
         }
-
-        _clone_this() {
+        get range() {
+            return { start: this._start, length: this._length }
+        }
+        clone(): OpArrayInsert {
             const clone = new OpArrayInsert(this.unit_order, this._start, this._length)
             // clone._unit_order = this.unit_order
             // clone._start = this._start
@@ -62,7 +73,7 @@ export namespace arrayot {
                 || op.unit_order < this.unit_order) {
                 rhs_start += op.range.length
             }
-            const t_op = this._clone_this()
+            const t_op = this.clone()
             t_op._start = rhs_start
             return t_op
         }
@@ -74,11 +85,11 @@ export namespace arrayot {
             const lhs_len = lhs_range.length
             const rhs_start = this._start
             if (rhs_start <= lhs_start) {
-                return this._clone_this()
+                return this.clone()
             }
             // 在插入之前删除
             if (rhs_start >= lhs_start + lhs_len) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._start -= lhs_len
                 return t_op
             }
@@ -90,13 +101,13 @@ export namespace arrayot {
         }
 
         _transByAttr(op: OpArrayAttr) {
-            return this._clone_this()
+            return this.clone()
         }
 
-        transBy(op: Op) {
+        transBy(op: Op): Op {
             switch (op.type) {
                 case OpType.array_none:
-                    return this._clone_this()
+                    return this.clone()
                 case OpType.array_insert:
                     return this._transByInsert(op as OpArrayInsert)
                 case OpType.array_remove:
@@ -104,7 +115,7 @@ export namespace arrayot {
                 case OpType.array_attr:
                     return this._transByAttr(op as OpArrayAttr)
             }
-            return undefined
+            // return undefined
         }
     }
 
@@ -121,8 +132,10 @@ export namespace arrayot {
         get type() {
             return OpType.array_remove
         }
-
-        _clone_this() {
+        get range() {
+            return { start: this._start, length: this._length }
+        }
+        clone(): OpArrayRemove {
             const clone = new OpArrayRemove(this.unit_order, this._start, this._length)
             // clone._unit_order = this.unit_order
             // clone._start = this._start
@@ -137,16 +150,16 @@ export namespace arrayot {
             const rhs_start = this._start
 
             if (lhs_start <= rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._start += lhs_len
                 return t_op
             }
             if (lhs_start < rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._length += lhs_len
                 return t_op
             }
-            return this._clone_this()
+            return this.clone()
         }
 
         _transByRemove(op: OpArrayRemove) {
@@ -158,12 +171,12 @@ export namespace arrayot {
 
             // 不相交
             if (lhs_start + lhs_len <= rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._start -= lhs_len
                 return t_op
             }
             if (rhs_start + rhs_len <= lhs_start) {
-                return this._clone_this()
+                return this.clone()
             }
 
             // 重合或者已经被删除
@@ -176,18 +189,18 @@ export namespace arrayot {
             }
             if (rhs_start < lhs_start
                 && rhs_start + rhs_len > lhs_start + lhs_len) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._length -= lhs_len
                 return t_op
             }
             // 相交
             if (lhs_start < rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._length = rhs_start + rhs_len - lhs_start
                 return t_op
             }
             if (lhs_start > rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._start = lhs_start + lhs_len
                 t_op._length = rhs_start + rhs_len - t_op._start
                 return t_op
@@ -196,13 +209,13 @@ export namespace arrayot {
         }
 
         _transByAttr(op: OpArrayAttr) {
-            return this._clone_this()
+            return this.clone()
         }
 
-        transBy(op: Op) {
+        transBy(op: Op): Op {
             switch (op.type) {
                 case OpType.array_none:
-                    return this._clone_this()
+                    return this.clone()
                 case OpType.array_insert:
                     return this._transByInsert(op as OpArrayInsert)
                 case OpType.array_remove:
@@ -210,7 +223,6 @@ export namespace arrayot {
                 case OpType.array_attr:
                     return this._transByAttr(op as OpArrayAttr)
             }
-            return undefined
         }
     }
 
@@ -227,8 +239,10 @@ export namespace arrayot {
         get type() {
             return OpType.array_attr
         }
-
-        _clone_this() {
+        get range() {
+            return { start: this._start, length: this._length }
+        }
+        clone(): OpArrayAttr {
             const clone = new OpArrayAttr(this.unit_order, this._start, this._length)
             // clone._unit_order = this.unit_order
             // clone._start = this._start
@@ -246,17 +260,17 @@ export namespace arrayot {
             // 插入在Attr的区间内时要变换
             if (rhs_start < lhs_start
                 && lhs_start < rhs_start + rhs_len) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._length += lhs_len
                 return t_op
             }
             // 在之前插入
             if (lhs_start <= rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._start += lhs_len
                 return t_op
             }
-            return this._clone_this()
+            return this.clone()
         }
 
         _transByRemove(op: OpArrayRemove) {
@@ -268,12 +282,12 @@ export namespace arrayot {
 
             // 不相交
             if (lhs_start + lhs_len <= rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._start -= lhs_len
                 return t_op
             }
             if (rhs_start + rhs_len <= lhs_start) {
-                return this._clone_this()
+                return this.clone()
             }
 
             // 重合或者已经被删除
@@ -286,18 +300,18 @@ export namespace arrayot {
             }
             if (rhs_start < lhs_start
                 && rhs_start + rhs_len > lhs_start + lhs_len) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._length -= lhs_len
                 return t_op
             }
             // 相交
             if (lhs_start < rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._length = rhs_start + rhs_len - lhs_start
                 return t_op
             }
             if (lhs_start > rhs_start) {
-                const t_op = this._clone_this()
+                const t_op = this.clone()
                 t_op._start = lhs_start + lhs_len
                 t_op._length = rhs_start + rhs_len - t_op._start
                 return t_op
@@ -306,13 +320,13 @@ export namespace arrayot {
         }
 
         _transByAttr(op: OpArrayAttr) {
-            return this._clone_this()
+            return this.clone()
         }
 
-        transBy(op: Op) {
+        transBy(op: Op): Op {
             switch (op.type) {
                 case OpType.array_none:
-                    return this._clone_this()
+                    return this.clone()
                 case OpType.array_insert:
                     return this._transByInsert(op as OpArrayInsert)
                 case OpType.array_remove:
@@ -320,7 +334,6 @@ export namespace arrayot {
                 case OpType.array_attr:
                     return this._transByAttr(op as OpArrayAttr)
             }
-            return undefined
         }
     }
 }
