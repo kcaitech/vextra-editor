@@ -22,9 +22,10 @@ const invalid = computed(() => {
     justify-content: center;
     min-width: 28px;
     min-height: 28px;
-    width: 28px;
+    /* width: 28px; 取消宽度限制 */
     height: 28px;
     color: white;
+    overflow: hidden;
 }
 
 .tool-button:hover,

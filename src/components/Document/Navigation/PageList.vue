@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Selection } from "@/context/selection"
+import { Selection } from "@/context/selection";
 import { defineProps, onMounted, onUnmounted } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
@@ -68,8 +68,15 @@ const pageSource = new class implements IDataSource<ItemData> {
 </script>
     
 <template>
-    <ListView :source="pageSource" :item-view="PageItem" :item-width="0" :item-height="30" :first-index="0" v-bind="$attrs"
-        orientation="vertical"></ListView>
+    <ListView
+        :source="pageSource"
+        :item-view="PageItem"
+        :item-width="0"
+        :item-height="30"
+        :first-index="0"
+        v-bind="$attrs"
+        orientation="vertical"
+    ></ListView>
 
 </template>
     

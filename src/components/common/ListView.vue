@@ -399,13 +399,24 @@ const observer = new ResizeObserver((entries, ob) => {
 
 <template>
     <div class="container" @wheel.prevent="onMouseWheel" ref="container">
-        <div :class="orientation"
-            :style="{ transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
+        <div
+            :class="orientation"
+            :style="{
+                transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
                 width: orientation === 'horizontal' ? measureWidth + 'px' : 'auto',
-                height: orientation === 'vertical' ? measureHeight + 'px' : 'auto' }"
-            ref="contents">
-            <component class="listitem" :is="props.itemView" v-for="c in layoutResult" :key="c.id" :data="c.data"
-                v-bind="$attrs" :style="{left: c.x + 'px', top: c.y + 'px'}" />
+                height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
+            }"
+            ref="contents"
+        >
+            <component
+                class="listitem"
+                :is="props.itemView"
+                v-for="c in layoutResult"
+                :key="c.id"
+                :data="c.data"
+                v-bind="$attrs"
+                :style="{left: c.x + 'px', top: c.y + 'px'}"
+            />
         </div>
     </div>
 </template>

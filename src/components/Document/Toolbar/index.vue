@@ -2,7 +2,10 @@
 import { defineProps, onMounted, onUnmounted, shallowRef } from "vue"
 import { Context } from '@/context';
 import UndoRedo from './UndoRedo.vue';
-import GroupUngroup from './GroupUngroup.vue'
+import GroupUngroup from './GroupUngroup.vue';
+import OpenFile from "./OpenFile.vue";
+import EditorTools from "./EditorTools.vue";
+import UserInfo from './UserInfo.vue'
 
 const props = defineProps<{ context: Context }>();
 const repo = shallowRef(props.context.repo);
@@ -20,9 +23,13 @@ onUnmounted(() => {
 
 <template>
     <div class="toolbar">
-        <UndoRedo :repo="repo" />
+        <OpenFile></OpenFile>
+        <EditorTools></EditorTools>
+        <UserInfo></UserInfo>
+        <!-- <UndoRedo :repo="repo" /> back/go
         <div class="vertical-line" />
-        <GroupUngroup :context="context" :selection="selection" />
+        <GroupUngroup :context="context" :selection="selection" /> ungroup -->
+
     </div>
 </template>
 
@@ -33,6 +40,7 @@ onUnmounted(() => {
     height: 100%;
     display: flex;
     flex-flow:row nowrap;
+    padding: 0px 14px;
 }
 .vertical-line {
     width: 1px;

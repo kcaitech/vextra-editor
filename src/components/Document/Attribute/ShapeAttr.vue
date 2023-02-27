@@ -93,6 +93,8 @@ function onChangeH(value: string) {
 
 <template>
     <div class="table" :reflush="reflush">
+        <h5>基础属性</h5>
+        <div class="line" />
         <div class="tr">
             <IconText class="td" ticon="X" :text="x.toFixed(fix)" @onchange="onChangeX"/>
             <IconText class="td" ticon="Y" :text="y.toFixed(fix)" @onchange="onChangeY"/>
@@ -109,8 +111,7 @@ function onChangeH(value: string) {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding-left: 2px;
-    padding-right: 1px;
+    padding: 12px 24px;
     box-sizing: border-box;
 }
 
@@ -124,5 +125,17 @@ function onChangeH(value: string) {
 
 .td {
     width: 50%;
+}
+
+div.line {
+    width: 100%;
+    height: 1px;
+    background-color: var(--theme-color-line);
+    flex: 0 0 auto;
+}
+
+h5 {
+    margin-block-start: 0.57em;
+    margin-block-end: 0.57em;
 }
 </style>
