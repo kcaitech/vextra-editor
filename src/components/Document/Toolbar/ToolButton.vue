@@ -1,3 +1,8 @@
+<!--
+ * @LastEditors: Zrx georgezrx@163.com
+ * @LastEditTime: 2023-02-28 09:58:44
+ * @FilePath: \kcdesign\src\components\Document\Toolbar\ToolButton.vue
+-->
 <template>
     <div :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!selected }">
         <slot />
@@ -14,18 +19,16 @@ const invalid = computed(() => {
 </script>
 <style scoped>
 .tool-button {
-    cursor: pointer;
-    box-sizing: border-box;
     padding: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     min-width: 28px;
     min-height: 28px;
-    /* width: 28px; 取消宽度限制 */
-    height: 28px;
-    color: white;
     overflow: hidden;
+    cursor: pointer;
+    box-sizing: border-box;
+    color: #ffffff;
 }
 
 .tool-button:hover,

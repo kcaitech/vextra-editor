@@ -1,3 +1,8 @@
+/*
+ * @LastEditors: Zrx georgezrx@163.com
+ * @LastEditTime: 2023-02-28 16:35:35
+ * @FilePath: \kcdesign\src\components\common\localstorage.ts
+ */
 import { Ref, watchEffect, ref } from 'vue';
 
 export function localStorageRef<T>(key: string, initValue: T): Ref<T> {
@@ -7,7 +12,7 @@ export function localStorageRef<T>(key: string, initValue: T): Ref<T> {
     ret.value = JSON.parse(pre);
   }
   watchEffect(() => {
-    localStorage.setItem(key, JSON.stringify(ret.value));
+    ret.value && localStorage.setItem(key, JSON.stringify(ret.value));
   });
   return ret as Ref<T>;
 }

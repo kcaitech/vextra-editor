@@ -1,13 +1,10 @@
 <!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-02-27 09:51:46
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-27 17:39:57
+ * @LastEditTime: 2023-02-28 11:13:39
  * @FilePath: \kcdesign\src\components\Document\Navigation\index.vue
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 -->
 <script setup lang="ts">
-import { defineProps, ref, computed, defineEmits } from "vue";
+import { defineProps, ref } from "vue";
 import type { TabsPaneContext } from 'element-plus';
 import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
@@ -29,7 +26,6 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {};
           <el-tab-pane label="组件" name="components"></el-tab-pane>
           <el-tab-pane label="资源库" name="template"></el-tab-pane>
         </el-tabs>
-        
     </section>
 </template>
 

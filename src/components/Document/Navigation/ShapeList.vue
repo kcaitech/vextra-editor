@@ -116,7 +116,7 @@ function toggleExpand(shape: Shape) {
     if (page == undefined) {
         return 0;
     }
-    const shadows = props.context.shadows;
+    const shadows = props.context.shadows;    
     const sd = shadows.get(page);
     sd.toggleExpand(shape);
 }
@@ -128,11 +128,26 @@ function selectShape(shape: Shape) {
 </script>
 
 <template>
-    <ListView :source="shapeSource" :item-view="ShapeItem" :item-height="30" :item-width="0" :first-index="0" @toggleexpand="toggleExpand"
-    @selectshape="selectShape"
-        orientation="vertical"></ListView>
+    <ListView
+        :source="shapeSource"
+        :item-view="ShapeItem"
+        :item-height="30"
+        :item-width="0"
+        :first-index="0"
+        @toggleexpand="toggleExpand"
+        @selectshape="selectShape"
+        orientation="vertical"
+    >
+        <template #header>
+            <div class="shape-header">
+                <span>图层</span>
+            </div>
+        </template>
+    </ListView>
 </template>
 
-<style scoped>
-
+<style scoped lang="scss">
+.shape-header {
+    padding: 4px 8px;
+}
 </style>

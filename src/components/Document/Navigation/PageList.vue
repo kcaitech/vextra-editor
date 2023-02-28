@@ -1,3 +1,8 @@
+<!--
+ * @LastEditors: Zrx georgezrx@163.com
+ * @LastEditTime: 2023-02-28 15:51:08
+ * @FilePath: \kcdesign\src\components\Document\Navigation\PageList.vue
+-->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
 import { defineProps, onMounted, onUnmounted } from "vue";
@@ -69,6 +74,7 @@ const pageSource = new class implements IDataSource<ItemData> {
     
 <template>
     <ListView
+        location="pagelist"
         :source="pageSource"
         :item-view="PageItem"
         :item-width="0"
@@ -76,11 +82,19 @@ const pageSource = new class implements IDataSource<ItemData> {
         :first-index="0"
         v-bind="$attrs"
         orientation="vertical"
-    ></ListView>
+    >
+        <template #header>
+            <div class="header-container">
+                页面
+            </div>
+        </template>
+    </ListView>
 
 </template>
     
-<style scoped>
-
+<style scoped lang="scss">
+.header-container {
+    padding: 4px 8px;
+}
 </style>
     

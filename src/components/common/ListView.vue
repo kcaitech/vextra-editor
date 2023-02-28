@@ -23,7 +23,8 @@ const props = defineProps<{
     itemWidth: number,
     itemHeight: number,
     firstIndex: number,
-    orientation: "horizontal" | "vertical"
+    orientation: "horizontal" | "vertical",
+    location?: string
 }>();
 
 const scroll = reactive({ x: 0, y: 0 });
@@ -202,16 +203,15 @@ onMounted(() => {
         measureHeight.value = props.itemHeight;
         measureWidth.value = props.source.length() * props.itemWidth;
     }
-    // console.log("mount measure", measureWidth.value, measureHeight.value)
+    // console.log("mount measure", measureWidth.value, measureHeight.value);
     relayout[props.orientation]();
+    console.log(`${props.location ? props.location : ''} layoutResult`, layoutResult);
 })
 
 // todo
-// 滚动
 // 滚动条
 // 局部更新
 // 滚动到可见
-// 点击
 // hover
 // 单选、多选
 
@@ -360,7 +360,7 @@ function clampScroll(transx: number, transy: number) {
     scroll.y = transy;
 }
 
-function onMouseWheel(e: WheelEvent) {
+function onMouseWheel(e: WheelEvent) {    
     const deltaX = e.deltaX;
     const deltaY = e.deltaY;
     const transx = scroll.x - deltaX;
@@ -394,11 +394,11 @@ const observer = new ResizeObserver((entries, ob) => {
         layoutDown[props.orientation]();
     }
 })
-
 </script>
 
 <template>
     <div class="container" @wheel.prevent="onMouseWheel" ref="container">
+        <slot name="header"></slot>
         <div
             :class="orientation"
             :style="{
