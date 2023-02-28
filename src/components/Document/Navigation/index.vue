@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-28 11:13:39
+ * @LastEditTime: 2023-02-28 18:35:03
  * @FilePath: \kcdesign\src\components\Document\Navigation\index.vue
 -->
 <script setup lang="ts">
@@ -17,7 +17,7 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {};
 
 <template>
     <section>
-        <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
+        <!-- <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
           <el-tab-pane label="图层" name="page">
             <PageList class="page-navi" :context="props.context" v-bind="$attrs"></PageList>
             <div class="line" />
@@ -25,7 +25,10 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {};
           </el-tab-pane>
           <el-tab-pane label="组件" name="components"></el-tab-pane>
           <el-tab-pane label="资源库" name="template"></el-tab-pane>
-        </el-tabs>
+        </el-tabs> -->
+        <PageList class="page-navi" :context="props.context" v-bind="$attrs"></PageList>
+        <div class="line" />
+        <ShapeList class="shape-navi" :context="props.context"></ShapeList>
     </section>
 </template>
 

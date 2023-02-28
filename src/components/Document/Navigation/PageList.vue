@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-28 15:51:08
+ * @LastEditTime: 2023-02-28 18:06:07
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageList.vue
 -->
 <script setup lang="ts">
@@ -83,11 +83,6 @@ const pageSource = new class implements IDataSource<ItemData> {
         v-bind="$attrs"
         orientation="vertical"
     >
-        <template #header>
-            <div class="header-container">
-                页面
-            </div>
-        </template>
     </ListView>
 
 </template>

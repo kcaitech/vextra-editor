@@ -129,6 +129,7 @@ function selectShape(shape: Shape) {
 
 <template>
     <ListView
+        location="shapelist"
         :source="shapeSource"
         :item-view="ShapeItem"
         :item-height="30"
@@ -138,11 +139,6 @@ function selectShape(shape: Shape) {
         @selectshape="selectShape"
         orientation="vertical"
     >
-        <template #header>
-            <div class="shape-header">
-                <span>图层</span>
-            </div>
-        </template>
     </ListView>
 </template>
 

@@ -74,7 +74,7 @@ const prepareCount = 10; //  多准备的
 const layoutUp: { [key: string]: Function } = {};
 layoutUp[Orientation.V] = () => {
     // console.log("up - v")
-    if (layoutIndex <= 0) {
+    if (layoutIndex <= 0) {        
         return;
     }
     const si = Math.floor(-scroll.y / props.itemHeight);
@@ -137,6 +137,7 @@ const layoutDown: { [key: string]: Function } = {};
 layoutDown[Orientation.V] = () => {
     // console.log("down - v")
     if (layoutIndex + layoutResult.length >= props.source.length()) {
+        console.log('---已渲染所有内容');
         return;
     }
     const si = (-scroll.y + visibleHeight) / props.itemHeight;
@@ -205,7 +206,6 @@ onMounted(() => {
     }
     // console.log("mount measure", measureWidth.value, measureHeight.value);
     relayout[props.orientation]();
-    console.log(`${props.location ? props.location : ''} layoutResult`, layoutResult);
 })
 
 // todo
@@ -368,7 +368,7 @@ function onMouseWheel(e: WheelEvent) {
 
     clampScroll(transx, transy);
 
-    const delta = props.orientation == Orientation.V ? deltaY : deltaX;
+    const delta = props.orientation == Orientation.V ? deltaY : deltaX;    
     if (delta < 0) {
         layoutUp[props.orientation]();
     }
@@ -387,10 +387,12 @@ const container = ref<HTMLDivElement>();
 
 const observer = new ResizeObserver((entries, ob) => {
     const el = container.value;
+    console.log(props.location, 'el', el);
+    
     if (el) {
         visibleHeight = el.clientHeight;
         visibleWidth = el.clientWidth;
-        // console.log("visible", visibleWidth, visibleHeight)
+        console.log("visible", visibleWidth, visibleHeight)
         layoutDown[props.orientation]();
     }
 })
