@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineProps, reactive, ref, nextTick } from "vue";
+import { onMounted, defineProps, reactive, ref } from "vue";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -27,17 +27,23 @@ const props = defineProps<{
     location?: string
 }>();
 
-const scroll = reactive({ x: 0, y: 0 }); // list[0] position
-const scrollBar = reactive({ length: 0, visible: false, x: 0, y: 0 }); // 滚动条滑块对象
-let layoutIndex = 0; // 当前Dom渲染列表中第一个Dom在整个DataSource对应的Dom列表中的index
+const scroll = reactive({ x: 0, y: 0 }); // position of list[0]
+const scrollBar = reactive({
+    length: 0,
+    mount: false, 
+    listMouseOver: false,
+    x: 0,
+    y: 0
+}); // 滚动条滑块对象
+let layoutIndex = 0; // 当前Dom渲染列表中第一个Dom在整个list对应的Dom列表中的index
 const layoutResult = reactive(new Array<{ x: number, y: number, id: string, data: any }>()); // list
 let visibleWidth = 0;
 let visibleHeight = 0;
-const measureWidth = ref(0);
-const measureHeight = ref(0);
+const measureWidth = ref(0); // width of listView
+const measureHeight = ref(0); // height of listView
 
 const relayout: { [key: string]: Function } = {};
-relayout[Orientation.V] = () => {
+relayout[Orientation.V] = () => {    
     // console.log("re - v")
     layoutResult.length = 0;
     layoutIndex = Math.max(0, Math.floor(-scroll.y / props.itemHeight));
@@ -143,7 +149,7 @@ layoutDown[Orientation.V] = () => {
     if (layoutIndex + layoutResult.length - si < prepareCount / 2) {
         // 掐头
         {
-            const vi = Math.floor(-scroll.y / props.itemHeight);
+            const vi = Math.floor(-scroll.y / props.itemHeight);            
             if (vi - layoutIndex > prepareCount + prepareCount / 2) {
                 const del = vi - prepareCount - layoutIndex;
                 layoutResult.splice(0, del);
@@ -162,8 +168,8 @@ layoutDown[Orientation.V] = () => {
             layoutResult.push({ x: 0, y, id: data.id, data });
         }
     }
-    scrollBar.length = Math.max(24, Math.ceil((visibleHeight * visibleHeight) / measureHeight.value));
-    scrollBar.length && scrollBar.length !== visibleHeight && (scrollBar.visible = true);
+    scrollBar.length = Math.ceil((visibleHeight * visibleHeight) / measureHeight.value);
+    scrollBar.length && scrollBar.length !== visibleHeight && (scrollBar.mount = true);
 }
 layoutDown[Orientation.H] = () => {
     // console.log("down - h")
@@ -194,21 +200,6 @@ layoutDown[Orientation.H] = () => {
         }
     }
 }
-
-onMounted(() => {
-    if (container.value) observer.observe(container.value);
-    if (props.orientation == Orientation.V) {
-        measureHeight.value = props.source.length() * props.itemHeight;
-        measureWidth.value = props.itemWidth;
-    }
-    else {
-        measureHeight.value = props.itemHeight;
-        measureWidth.value = props.source.length() * props.itemWidth;
-    }
-    // props.location === 'shapelist' && console.log("mount measure", measureWidth.value, measureHeight.value);
-    relayout[props.orientation]();
-})
-
 // todo
 // 滚动条
 // 局部更新 ?
@@ -217,7 +208,7 @@ onMounted(() => {
 
 // let offset = 0;
 
-props.source.onChange((index: number, del: number, insert: number, modify: number): void => {
+props.source.onChange((index: number, del: number, insert: number, modify: number): void => {    
     if (props.orientation == Orientation.V) {
         measureHeight.value = props.source.length() * props.itemHeight;
         measureWidth.value = props.itemWidth;
@@ -377,35 +368,38 @@ function onMouseWheel(e: WheelEvent) {
         layoutDown[props.orientation]();
     }
 }
-function mouseenter(e: MouseEvent) {
-    console.log('mouseenter'); 
+function mouseenter() {
+    scrollBar.listMouseOver = true;
 }
-function mouseout(e: MouseEvent) {
-    console.log('mouseout');
+function mouseleave() {
+    scrollBar.listMouseOver = false;
 }
-
 function onScrollTrackClick(e: MouseEvent) {
+    const pageHeight = visibleHeight;
     if (e.target !== scrollTrack.value) return;
     const targetOffsetY = e.offsetY;
     const down = targetOffsetY >= -scrollBar.y;
     if (down) {
-        clampScroll(0, scroll.y - 1050);
+        clampScroll(0, scroll.y - pageHeight);
         layoutDown[props.orientation]();
     } else {
-        clampScroll(0, scroll.y + 1050);
+        clampScroll(0, scroll.y + pageHeight);
         layoutUp[props.orientation]();
     }
 }
+function onScrollBarClick(e: MouseEvent) {
+}
+
 // function onItemClick(data: any) {
 //     props.source.onClick(data, false, false);
 // }
-
 // const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const contents = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();
 const scrollTrack = ref<HTMLDivElement>();
+const bar = ref<HTMLDivElement>();
 
-const observer = new ResizeObserver((entries, ob) => {
+const observer = new ResizeObserver(() => {
     const el = container.value;
     if (el) {
         visibleHeight = el.clientHeight;
@@ -413,12 +407,28 @@ const observer = new ResizeObserver((entries, ob) => {
         layoutDown[props.orientation]();
     }
 })
+
+// hooks
+onMounted(() => {
+    if (container.value) observer.observe(container.value);
+    if (props.orientation == Orientation.V) {
+        measureHeight.value = props.source.length() * props.itemHeight;
+        measureWidth.value = props.itemWidth;
+    }
+    else {
+        measureHeight.value = props.itemHeight;
+        measureWidth.value = props.source.length() * props.itemWidth;
+    }
+    relayout[props.orientation]();
+})
 </script>
 
 <template>
     <div
         class="container"
         @wheel.prevent="onMouseWheel"
+        @mouseenter="mouseenter"
+        @mouseleave="mouseleave"
         ref="container"
     >
         <!-- items container -->
@@ -444,11 +454,13 @@ const observer = new ResizeObserver((entries, ob) => {
         <!-- scroll -->
         <div
             ref="scrollTrack"
-            v-if="scrollBar.visible"
             class="scroll-track"
             @click="onScrollTrackClick"
+            :style="{ visibility:  scrollBar.mount && scrollBar.listMouseOver ? 'visible' : 'hidden'}"
         >
             <div
+                ref="bar"
+                @mousedown="onScrollBarClick"
                 class="scroll-bar"
                 :style="{
                     top: -scrollBar.y + 'px',
@@ -477,22 +489,29 @@ const observer = new ResizeObserver((entries, ob) => {
         height: auto;
     }
     .vertical + .scroll-track {
-        width: 14px;
+        width: 6px;
         height: 100%;
         position: absolute;
         top: 0;
         right: 0;
-        // background-color: #f1f1f1;
         overflow: hidden;
+        transition: 0.35s;
         > .scroll-bar {
-            position: relative;
             width: 100%;
+            position: relative;
             background-color: #dddddd;
-            border-radius: 7px;
-            transition: 0.5s;
+            border-radius: 8px;
+            transition: 0.35s;
         }
         > .scroll-bar:hover {
             background-color: #bbbbbb;
+        }
+    }
+    .vertical + .scroll-track:hover {
+        width: 16px;
+        cursor: pointer;
+        > .scroll-bar {
+            min-height: 28px;
         }
     }
 }
