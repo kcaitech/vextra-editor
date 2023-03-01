@@ -1,18 +1,18 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-28 18:35:03
+ * @LastEditTime: 2023-03-01 08:22:34
  * @FilePath: \kcdesign\src\components\Document\Navigation\index.vue
 -->
 <script setup lang="ts">
 import { defineProps, ref } from "vue";
-import type { TabsPaneContext } from 'element-plus';
+// import type { TabsPaneContext } from 'element-plus';
 import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 const props = defineProps<{ context: Context }>();
-const activeName = ref('page');
+// const activeName = ref('page');
 
-const handleClick = (tab: TabsPaneContext, event: Event) => {};
+// const handleClick = (tab: TabsPaneContext, event: Event) => {};
 </script>
 
 <template>
