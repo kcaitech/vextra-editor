@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-28 18:06:07
+ * @LastEditTime: 2023-03-01 16:17:56
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageList.vue
 -->
 <script setup lang="ts">
@@ -88,7 +88,7 @@ const pageSource = new class implements IDataSource<ItemData> {
 </template>
     
 <style scoped lang="scss">
-.header-container {
+.pagelist-header {
     padding: 4px 8px;
 }
 </style>

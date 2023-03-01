@@ -53,16 +53,28 @@ onUnmounted(() => {
     <div id="top" @dblclick="topDblClick">
         <Toolbar :context="context" />
     </div>
-    <ColSplitView id="center" :left="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}" 
-    :middle="{width: 0.6, minWidth: 0.3, maxWidth: 0.8}"
-    :right="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}" >
-        <template v-slot:slot1>
-            <Navigation id="navigation" :context="context" @switchpage="switchPage"></Navigation>
+    <ColSplitView 
+        id="center"
+        :left="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}" 
+        :middle="{width: 0.6, minWidth: 0.3, maxWidth: 0.8}"
+        :right="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}"
+    >
+        <template #slot1>
+            <Navigation
+                id="navigation"
+                :context="context"
+                @switchpage="switchPage"
+            ></Navigation>
         </template>
-        <template v-slot:slot2>
-            <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)"></ContentView>
+        <template #slot2>
+            <ContentView
+                v-if="curPage !== undefined"
+                id="content"
+                :context="context"
+                :page="(curPage as Page)"
+            ></ContentView>
         </template>
-        <template v-slot:slot3>
+        <template #slot3>
             <Attribute id="attributes" :context="context"></Attribute>
         </template>
     </ColSplitView>
@@ -88,9 +100,9 @@ onUnmounted(() => {
 <style scoped>
     #top {
         display: flex;
-        flex-flow:row nowrap;
-        width:100%;
-        height:40px;
+        flex-flow: row nowrap;
+        width: 100%;
+        height: 40px;
         min-height: 40px;
         background-color: var(--top-toolbar-bg-color);
         z-index: 1;
@@ -100,7 +112,7 @@ onUnmounted(() => {
         flex-flow:row nowrap;
         flex: 1 1 auto;
         width:100%;
-        height:auto;
+        height: auto;
         overflow: hidden;
     }
     #bottom {
@@ -115,22 +127,22 @@ onUnmounted(() => {
     }
     #navigation {
         display: flex;
-        flex-flow:column nowrap;
+        flex-flow: column nowrap;
         /* width:100px; */
-        height:100%;
+        height: 100%;
         background-color: var(--left-navi-bg-color);
         z-index: 1;
     }
     #content {
         flex: 1 1 auto;
-        width:100%;
-        height:100%;
+        width: 100%;
+        height: 100%;
         overflow: hidden;
     }
     #attributes {
-        flex-flow:column nowrap;
+        flex-flow: column nowrap;
         /* width:150px; */
-        height:100%;
+        height: 100%;
         background-color: var(--right-attr-bg-color);
         z-index: 1;
     }

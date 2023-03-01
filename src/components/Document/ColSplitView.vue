@@ -218,7 +218,7 @@ function initSizeBounds() {
 }
 
 onMounted(() => {
-    initSizeBounds();
+    initSizeBounds();    
     if (refRoot.value) observer.observe(refRoot.value);
 })
 onUnmounted(() => {
@@ -228,18 +228,21 @@ onUnmounted(() => {
 
 <template>
     <div class="columnsplit" ref="refRoot">
+        <!-- navigation -->
         <div class="column1" :style="`width:${sizeBounds.left.width}px; minWidth:${sizeBounds.left.width}px`">
-            <slot name="slot1"></slot>
-            <Sash side="right" @dragStart="leftCtx.onDragStart" @offset="leftCtx.onDragOffset">
-            </Sash>
+            <slot name="slot1" />
+            <!-- width controller on left -->
+            <Sash side="right" @dragStart="leftCtx.onDragStart" @offset="leftCtx.onDragOffset" />
         </div>
+        <!-- editor core -->
         <div class="column2" :style="`width:${sizeBounds.middle.width}px; minWidth:${sizeBounds.middle.width}px`">
-            <slot name="slot2"></slot>
+            <slot name="slot2" />
         </div>
+        <!-- element`s attributes -->
         <div class="column3" :style="`width:${sizeBounds.right.width}px; minWidth:${sizeBounds.right.width}px`">
-            <slot name="slot3"></slot>
-            <Sash side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset">
-            </Sash>
+            <slot name="slot3" />
+            <!-- width controller on right -->
+            <Sash side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" />
         </div>
     </div>
 </template>

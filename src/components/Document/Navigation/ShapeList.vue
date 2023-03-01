@@ -145,5 +145,6 @@ function selectShape(shape: Shape) {
 <style scoped lang="scss">
 .shape-header {
     padding: 4px 8px;
+    position: sticky;
 }
 </style>

@@ -29,7 +29,7 @@ function toggleExpand(e: Event) {
     if (!showTriangle.value) {
         return;
     }
-    e.stopPropagation();
+    e.stopPropagation();    
     emit("toggleexpand", props.data.shape);
 }
 
@@ -49,10 +49,15 @@ onBeforeUpdate(() => {
 
 <template>
     <div :class="{ container: true, selected: props.data.selected }" v-on:click="selectShape">
-        <div class="ph" :style="{ width:`${phWidth}px`, height:'100%', minWidth:`${phWidth}px` }"></div>
+        <div
+            class="ph"
+            :style="{ width:`${phWidth}px`, height:'100%', minWidth:`${phWidth}px` }"
+        ></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
-            <div v-if="showTriangle"
-                :class="{'triangle-right': !props.data.expand, 'triangle-down': props.data.expand}"></div>
+            <div
+                v-if="showTriangle"
+                :class="{'triangle-right': !props.data.expand, 'triangle-down': props.data.expand}"
+            ></div>
         </div>
         <div class="text">{{props.data.shape.name}}</div>
     </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineProps, reactive, ref } from "vue";
+import { onMounted, defineProps, reactive, ref, nextTick } from "vue";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -27,9 +27,10 @@ const props = defineProps<{
     location?: string
 }>();
 
-const scroll = reactive({ x: 0, y: 0 });
-let layoutIndex = 0;
-const layoutResult = reactive(new Array<{ x: number, y: number, id: string, data: any }>());
+const scroll = reactive({ x: 0, y: 0 }); // list[0] position
+const scrollBar = reactive({ length: 0, visible: false, x: 0, y: 0 }); // 滚动条滑块对象
+let layoutIndex = 0; // 当前Dom渲染列表中第一个Dom在整个DataSource对应的Dom列表中的index
+const layoutResult = reactive(new Array<{ x: number, y: number, id: string, data: any }>()); // list
 let visibleWidth = 0;
 let visibleHeight = 0;
 const measureWidth = ref(0);
@@ -135,9 +136,7 @@ layoutUp[Orientation.H] = () => {
 
 const layoutDown: { [key: string]: Function } = {};
 layoutDown[Orientation.V] = () => {
-    // console.log("down - v")
     if (layoutIndex + layoutResult.length >= props.source.length()) {
-        console.log('---已渲染所有内容');
         return;
     }
     const si = (-scroll.y + visibleHeight) / props.itemHeight;
@@ -163,6 +162,8 @@ layoutDown[Orientation.V] = () => {
             layoutResult.push({ x: 0, y, id: data.id, data });
         }
     }
+    scrollBar.length = Math.max(24, Math.ceil((visibleHeight * visibleHeight) / measureHeight.value));
+    scrollBar.length && scrollBar.length !== visibleHeight && (scrollBar.visible = true);
 }
 layoutDown[Orientation.H] = () => {
     // console.log("down - h")
@@ -204,15 +205,14 @@ onMounted(() => {
         measureHeight.value = props.itemHeight;
         measureWidth.value = props.source.length() * props.itemWidth;
     }
-    // console.log("mount measure", measureWidth.value, measureHeight.value);
+    // props.location === 'shapelist' && console.log("mount measure", measureWidth.value, measureHeight.value);
     relayout[props.orientation]();
 })
 
 // todo
 // 滚动条
-// 局部更新
+// 局部更新 ?
 // 滚动到可见
-// hover
 // 单选、多选
 
 // let offset = 0;
@@ -334,8 +334,7 @@ props.source.onChange((index: number, del: number, insert: number, modify: numbe
 })
 
 // 用绝对坐标定位
-
-function clampScroll(transx: number, transy: number) {
+function clampScroll(transx: number, transy: number) {    
     if (transx >= 0) {
         transx = 0;
     }
@@ -357,10 +356,12 @@ function clampScroll(transx: number, transy: number) {
         }
     }
     scroll.x = transx;
-    scroll.y = transy;
+    scroll.y = transy;    
+    scrollBar.y = Math.ceil((transy * visibleHeight) / measureHeight.value);
 }
 
-function onMouseWheel(e: WheelEvent) {    
+// 鼠标事件
+function onMouseWheel(e: WheelEvent) {   
     const deltaX = e.deltaX;
     const deltaY = e.deltaY;
     const transx = scroll.x - deltaX;
@@ -376,7 +377,25 @@ function onMouseWheel(e: WheelEvent) {
         layoutDown[props.orientation]();
     }
 }
+function mouseenter(e: MouseEvent) {
+    console.log('mouseenter'); 
+}
+function mouseout(e: MouseEvent) {
+    console.log('mouseout');
+}
 
+function onScrollTrackClick(e: MouseEvent) {
+    if (e.target !== scrollTrack.value) return;
+    const targetOffsetY = e.offsetY;
+    const down = targetOffsetY >= -scrollBar.y;
+    if (down) {
+        clampScroll(0, scroll.y - 1050);
+        layoutDown[props.orientation]();
+    } else {
+        clampScroll(0, scroll.y + 1050);
+        layoutUp[props.orientation]();
+    }
+}
 // function onItemClick(data: any) {
 //     props.source.onClick(data, false, false);
 // }
@@ -384,23 +403,25 @@ function onMouseWheel(e: WheelEvent) {
 // const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const contents = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();
+const scrollTrack = ref<HTMLDivElement>();
 
 const observer = new ResizeObserver((entries, ob) => {
     const el = container.value;
-    console.log(props.location, 'el', el);
-    
     if (el) {
         visibleHeight = el.clientHeight;
         visibleWidth = el.clientWidth;
-        console.log("visible", visibleWidth, visibleHeight)
         layoutDown[props.orientation]();
     }
 })
 </script>
 
 <template>
-    <div class="container" @wheel.prevent="onMouseWheel" ref="container">
-        <slot name="header"></slot>
+    <div
+        class="container"
+        @wheel.prevent="onMouseWheel"
+        ref="container"
+    >
+        <!-- items container -->
         <div
             :class="orientation"
             :style="{
@@ -420,29 +441,60 @@ const observer = new ResizeObserver((entries, ob) => {
                 :style="{left: c.x + 'px', top: c.y + 'px'}"
             />
         </div>
+        <!-- scroll -->
+        <div
+            ref="scrollTrack"
+            v-if="scrollBar.visible"
+            class="scroll-track"
+            @click="onScrollTrackClick"
+        >
+            <div
+                class="scroll-bar"
+                :style="{
+                    top: -scrollBar.y + 'px',
+                    height: scrollBar.length + 'px'
+                }"
+            ></div>
+        </div>
     </div>
 </template>
 
-<style scoped>
-div .container {
+<style scoped lang="scss">
+.container {
     overflow: hidden;
+    position: relative;
+    > .horizontal, .vertical > .listitem {
+        position: absolute;
+    }
+    .horizontal {
+        display: flex;
+        flex-flow: row nowrap;
+        width: auto;
+        height: 100%;
+    }
+    .vertical {
+        width: 100%;
+        height: auto;
+    }
+    .vertical + .scroll-track {
+        width: 14px;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        right: 0;
+        // background-color: #f1f1f1;
+        overflow: hidden;
+        > .scroll-bar {
+            position: relative;
+            width: 100%;
+            background-color: #dddddd;
+            border-radius: 7px;
+            transition: 0.5s;
+        }
+        > .scroll-bar:hover {
+            background-color: #bbbbbb;
+        }
+    }
 }
 
-div .horizontal {
-    display: flex;
-    flex-flow: row nowrap;
-    width: auto;
-    height: 100%;
-}
-
-div .vertical {
-    display: flex;
-    flex-flow: column nowrap;
-    width: 100%;
-    height: auto;
-}
-
-.listitem {
-    position: absolute;
-}
 </style>
