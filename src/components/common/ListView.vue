@@ -391,6 +391,7 @@ function onMouseWheel(e: WheelEvent) {
 }
 function mouseenter(e: MouseEvent) {
     scrollBar.listMouseOver = true;
+    container.value?.focus();
 }
 function mouseleave(e: MouseEvent) {
     scrollBar.listMouseOver = false;
