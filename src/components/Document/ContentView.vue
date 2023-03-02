@@ -53,7 +53,7 @@ function offset2Root() {
     return {x, y}
 }
 
-function onMouseWheel(e: WheelEvent) {
+function onMouseWheel(e: WheelEvent) {    
     const xy = offset2Root();
     const offsetX = e.x - xy.x;
     const offsetY = e.y - xy.y;
@@ -95,7 +95,7 @@ let state = STATE_NONE;
 const dragActiveDis = 3;
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 
-function onKeyDown(e: KeyboardEvent) {
+function onKeyDown(e: KeyboardEvent) {    
     spacePressed = e.code == 'Space';
 }
 function onKeyUp(e: KeyboardEvent) {

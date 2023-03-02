@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, defineProps, reactive, ref } from "vue";
+import { onMounted, onUnmounted, defineProps, reactive, ref } from "vue";
+import { debounce } from "lodash";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -28,19 +29,15 @@ const props = defineProps<{
 }>();
 
 const scroll = reactive({ x: 0, y: 0 }); // position of list[0]
-const scrollBar = reactive({
-    length: 0,
-    mount: false, 
-    listMouseOver: false,
-    x: 0,
-    y: 0
-}); // 滚动条滑块对象
+const scrollBar = reactive({ length: 0, mount: false, listMouseOver: false, x: 0, y: 0 }); // 滚动条滑块对象
 let layoutIndex = 0; // 当前Dom渲染列表中第一个Dom在整个list对应的Dom列表中的index
 const layoutResult = reactive(new Array<{ x: number, y: number, id: string, data: any }>()); // list
 let visibleWidth = 0;
 let visibleHeight = 0;
 const measureWidth = ref(0); // width of listView
 const measureHeight = ref(0); // height of listView
+const prepareCount = 10; //  多准备的
+let controlPress = false;
 
 const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {    
@@ -58,6 +55,8 @@ relayout[Orientation.V] = () => {
             break;
         }
     }
+    scrollBar.length = Math.ceil((visibleHeight * visibleHeight) / measureHeight.value);
+    scrollBar.mount = scrollBar.length < visibleHeight;
 }
 relayout[Orientation.H] = () => {
     // console.log("re - h")
@@ -75,8 +74,6 @@ relayout[Orientation.H] = () => {
         }
     }
 }
-
-const prepareCount = 10; //  多准备的
 
 const layoutUp: { [key: string]: Function } = {};
 layoutUp[Orientation.V] = () => {
@@ -200,6 +197,33 @@ layoutDown[Orientation.H] = () => {
         }
     }
 }
+
+// 视口高度/宽度测量
+const viewMeasure: { [key: string]: Function } = {};
+viewMeasure[Orientation.V] = () => {
+    measureHeight.value = props.source.length() * props.itemHeight;
+    measureWidth.value = props.itemWidth;
+}
+viewMeasure[Orientation.H] = () => {
+    measureHeight.value = props.itemHeight;
+    measureWidth.value = props.source.length() * props.itemWidth;
+}
+
+const changeControlPressStatus = debounce((e, down) => {
+    if (e.code === 'ControlLeft') {
+        controlPress = down
+    } 
+}, 300)
+
+function onKeyDown(e: KeyboardEvent) {
+    changeControlPressStatus(e, true);
+}
+
+
+function onKeyUp(e: KeyboardEvent) {
+    changeControlPressStatus(e, false)
+}
+
 // todo
 // 滚动条
 // 局部更新 ?
@@ -208,7 +232,7 @@ layoutDown[Orientation.H] = () => {
 
 // let offset = 0;
 
-props.source.onChange((index: number, del: number, insert: number, modify: number): void => {    
+props.source.onChange((index: number, del: number, insert: number, modify: number): void => {        
     if (props.orientation == Orientation.V) {
         measureHeight.value = props.source.length() * props.itemHeight;
         measureWidth.value = props.itemWidth;
@@ -368,10 +392,10 @@ function onMouseWheel(e: WheelEvent) {
         layoutDown[props.orientation]();
     }
 }
-function mouseenter() {
+function mouseenter(e: MouseEvent) {
     scrollBar.listMouseOver = true;
 }
-function mouseleave() {
+function mouseleave(e: MouseEvent) {
     scrollBar.listMouseOver = false;
 }
 function onScrollTrackClick(e: MouseEvent) {
@@ -387,8 +411,7 @@ function onScrollTrackClick(e: MouseEvent) {
         layoutUp[props.orientation]();
     }
 }
-function onScrollBarClick(e: MouseEvent) {
-}
+function onScrollBarClick(e: MouseEvent) {}
 
 // function onItemClick(data: any) {
 //     props.source.onClick(data, false, false);
@@ -410,17 +433,23 @@ const observer = new ResizeObserver(() => {
 
 // hooks
 onMounted(() => {
-    if (container.value) observer.observe(container.value);
-    if (props.orientation == Orientation.V) {
-        measureHeight.value = props.source.length() * props.itemHeight;
-        measureWidth.value = props.itemWidth;
-    }
-    else {
-        measureHeight.value = props.itemHeight;
-        measureWidth.value = props.source.length() * props.itemWidth;
-    }
+    if (container.value) {
+        observer.observe(container.value);
+    }  else return;
+    viewMeasure[props.orientation]();
     relayout[props.orientation]();
+    if (props.location === 'shapelist') {
+        document.addEventListener("keydown", onKeyDown);
+        document.addEventListener("keyup", onKeyUp);
+    }
 })
+onUnmounted(() => {
+    if (props.location === 'shapelist') {
+        document.removeEventListener("keydown", onKeyDown);
+        document.removeEventListener("keyup", onKeyUp);
+    }
+})
+
 </script>
 
 <template>
@@ -456,7 +485,7 @@ onMounted(() => {
             ref="scrollTrack"
             class="scroll-track"
             @click="onScrollTrackClick"
-            :style="{ visibility:  scrollBar.mount && scrollBar.listMouseOver ? 'visible' : 'hidden'}"
+            :style="{ opacity: scrollBar.mount && scrollBar.listMouseOver ? 1 : 0}"
         >
             <div
                 ref="bar"

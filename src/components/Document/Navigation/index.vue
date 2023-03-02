@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-01 08:54:20
+ * @LastEditTime: 2023-03-02 08:47:16
  * @FilePath: \kcdesign\src\components\Document\Navigation\index.vue
 -->
 <script setup lang="ts">
@@ -9,6 +9,7 @@ import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 const props = defineProps<{ context: Context }>();
+
 
 </script>
 

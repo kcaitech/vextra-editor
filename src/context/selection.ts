@@ -52,12 +52,15 @@ export class Selection extends Watchable implements ISave4Restore {
     selectShape(shape: Shape) {
         // check?
         if (this.isSelectedShape(shape)) {
+            this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1)
+            this.notify(Selection.CHANGE_SHAPE);
             return;
         }
         this.m_selectShapes.length = 0;
         this.m_selectShapes.push(shape);
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
+        this.m_hoverShape = undefined
         this.notify(Selection.CHANGE_SHAPE);
         // shape.notify(Selection.CHANGE_SHAPE);
     }
@@ -109,8 +112,19 @@ export class Selection extends Watchable implements ISave4Restore {
         return this.m_hoverShape;
     }
 
-    hoverShape(shape: Shape | undefined) {
+    hoverShape(shape: Shape) {
+        if (this.isSelectedShape(shape)) {
+            return;
+        }
         this.m_hoverShape = shape;
+        this.notify(Selection.CHANGE_SHAPE_HOVER);
+    }
+
+    unHoverShape(shape: Shape) {
+        if (shape === this.m_hoverShape) {
+            this.m_hoverShape = undefined;
+            this.notify(Selection.CHANGE_SHAPE_HOVER);
+        }
     }
 
     save(): Saved {

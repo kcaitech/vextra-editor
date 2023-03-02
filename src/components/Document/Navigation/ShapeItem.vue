@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed } from "vue";
 import { Shape, GroupShape } from '@/data/shape';
-
 export interface ItemData {
     id: string,
     shape: Shape
@@ -17,6 +16,8 @@ const phWidth = computed(() => {
 const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
     (e: "selectshape", shape: Shape): void;
+    (e: "hovershape", shape: Shape): void;
+    (e: "unhovershape", shape: Shape): void;
 }>();
 let showTriangle = ref<boolean>(false);
 function updater() {
@@ -38,6 +39,14 @@ function selectShape(e: Event) {
     emit("selectshape", props.data.shape);
 }
 
+function hoverShape(e: MouseEvent) {
+    e.stopPropagation();
+    emit("hovershape", props.data.shape);
+}
+function unHoverShape(e: MouseEvent) {
+    e.stopPropagation();
+    emit("unhovershape", props.data.shape);
+}
 onBeforeMount(() => {
     updater();
 })
@@ -48,7 +57,12 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div :class="{ container: true, selected: props.data.selected }" v-on:click="selectShape">
+    <div
+        :class="{ container: true, selected: props.data.selected }"
+        @click="selectShape"
+        @mouseover="hoverShape"
+        @mouseleave="unHoverShape"
+    >
         <div
             class="ph"
             :style="{ width:`${phWidth}px`, height:'100%', minWidth:`${phWidth}px` }"
@@ -79,7 +93,7 @@ div.container:hover {
 }
 
 div.container.selected {
-    background-color: var(--left-navi-button-hover-color);
+    background-color: var(--left-navi-button-select-color);
 }
 
 div.triangle {

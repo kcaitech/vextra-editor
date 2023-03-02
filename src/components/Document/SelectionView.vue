@@ -79,11 +79,10 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
 }
 
 function updater(_: number) {
-    matrix.reset(props.matrix);
-
+    matrix.reset(props.matrix);    
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
-    data.isSelect = !data.isHover && selection.selectedShapes.length > 0;
+    data.isSelect = !data.isHover && selection.selectedShapes.length > 0;    
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -137,6 +136,7 @@ function updater(_: number) {
     }
 }
 
+// hooks
 onMounted(() => {
     props.context.selection.watch(updater);
 })
@@ -147,21 +147,24 @@ onUnmounted(() => {
 })
 
 onBeforeUpdate(() => {
-    // console.log(props.matrix)
     updater(0);
 })
 
 </script>
 
 <template>
-
-    <div v-for="s in data.shapes" :class="{selectrect: data.isSelect, hoverrect: data.isHover}" :style="{
-    left: '' + s.x + 'px', 
-    top: '' + s.y + 'px', 
-    width: '' + s.width + 'px', 
-    height: '' + s.height + 'px', 
-    borderWidth: '' + borderWidth +'px'}" :key="s.id"
-    :reflush="reflush">
+    <div v-for="s in data.shapes"
+        :class="{selectrect: data.isSelect, hoverrect: data.isHover}" 
+        :style="{
+            left: '' + s.x + 'px', 
+            top: '' + s.y + 'px', 
+            width: '' + s.width + 'px', 
+            height: '' + s.height + 'px', 
+            borderWidth: '' + borderWidth +'px'
+        }" 
+        :key="s.id"
+        :reflush="reflush"
+    >
     </div>
 
 </template>
@@ -186,17 +189,17 @@ onBeforeUpdate(() => {
 
 .selectrect {
     background-color: none;
-    border-radius: 5px;
+    border-radius: 0px;
     border-style: solid;
-    border-color: blue;
+    border-color: #0000CD;
     position: absolute;
 }
 
 .hoverrect {
     background-color: none;
-    border-radius: 5px;
+    border-radius: 0px;
     border-style: solid;
-    border-color: blue;
+    border-color: #00BFFF;
     position: absolute;
 }
 </style>

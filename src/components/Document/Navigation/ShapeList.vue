@@ -125,6 +125,14 @@ function selectShape(shape: Shape) {
     props.context.selection.selectShape(shape);
 }
 
+function hoverShape(shape: Shape) {
+    props.context.selection.hoverShape(shape);
+}
+
+function unHovershape(shape: Shape) {
+    props.context.selection.unHoverShape(shape);
+}
+
 </script>
 
 <template>
@@ -137,6 +145,8 @@ function selectShape(shape: Shape) {
         :first-index="0"
         @toggleexpand="toggleExpand"
         @selectshape="selectShape"
+        @hovershape="hoverShape"
+        @unhovershape="unHovershape"
         orientation="vertical"
     >
     </ListView>
