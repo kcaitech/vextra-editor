@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, defineProps, reactive, ref } from "vue";
-import { debounce } from "lodash";
+import { Context } from "@/context";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -19,6 +19,7 @@ enum Orientation {
 }
 
 const props = defineProps<{
+    context?: Context,
     source: IDataSource<any>,
     itemView: any,
     itemWidth: number,
@@ -37,7 +38,6 @@ let visibleHeight = 0;
 const measureWidth = ref(0); // width of listView
 const measureHeight = ref(0); // height of listView
 const prepareCount = 10; //  多准备的
-let controlPress = false;
 
 const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {    
@@ -209,17 +209,15 @@ viewMeasure[Orientation.H] = () => {
     measureWidth.value = props.source.length() * props.itemWidth;
 }
 
-const changeControlPressStatus = debounce((e, down) => {
-    if (e.code === 'ControlLeft') {
-        controlPress = down
-    } 
-}, 300)
+const changeControlPressStatus = (e: KeyboardEvent, down: boolean) => {
+    if (e.code === 'MetaLeft') {        
+        props.context?.selection.setControlStatus(down)
+    }
+}
 
 function onKeyDown(e: KeyboardEvent) {
     changeControlPressStatus(e, true);
 }
-
-
 function onKeyUp(e: KeyboardEvent) {
     changeControlPressStatus(e, false)
 }
@@ -228,7 +226,6 @@ function onKeyUp(e: KeyboardEvent) {
 // 滚动条
 // 局部更新 ?
 // 滚动到可见
-// 单选、多选
 
 // let offset = 0;
 
@@ -439,14 +436,14 @@ onMounted(() => {
     viewMeasure[props.orientation]();
     relayout[props.orientation]();
     if (props.location === 'shapelist') {
-        document.addEventListener("keydown", onKeyDown);
-        document.addEventListener("keyup", onKeyUp);
+        container.value.addEventListener("keydown", onKeyDown);
+        container.value.addEventListener("keyup", onKeyUp);
     }
 })
 onUnmounted(() => {
-    if (props.location === 'shapelist') {
-        document.removeEventListener("keydown", onKeyDown);
-        document.removeEventListener("keyup", onKeyUp);
+    if (props.location === 'shapelist' && container.value) {
+        container.value.removeEventListener("keydown", onKeyDown);
+        container.value.removeEventListener("keyup", onKeyUp);
     }
 })
 
@@ -459,6 +456,7 @@ onUnmounted(() => {
         @mouseenter="mouseenter"
         @mouseleave="mouseleave"
         ref="container"
+        tabindex="-1"
     >
         <!-- items container -->
         <div
@@ -504,6 +502,7 @@ onUnmounted(() => {
 .container {
     overflow: hidden;
     position: relative;
+    outline: none;
     > .horizontal, .vertical > .listitem {
         position: absolute;
     }

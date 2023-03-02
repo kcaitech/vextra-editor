@@ -39,20 +39,6 @@ const selectionChange = (t: number) => {
     }
 }
 
-onMounted(() => {
-    props.context.selection.watch(selectionChange);
-});
-
-onUnmounted(() => {
-    props.context.selection.unwatch(selectionChange);
-    if (savePage) {
-        // console.log("unwatch shadow 1")
-        const sd = props.context.shadows.get(savePage);
-        sd.unwatch(shadowChange);
-        savePage = undefined;
-    }
-});
-
 class Iter implements IDataIter<ItemData> {
     private __it: ShapeNaviIter | undefined;
     constructor(it: ShapeNaviIter | undefined) {
@@ -133,6 +119,20 @@ function unHovershape(shape: Shape) {
     props.context.selection.unHoverShape(shape);
 }
 
+onMounted(() => {
+    props.context.selection.watch(selectionChange);
+});
+
+onUnmounted(() => {
+    props.context.selection.unwatch(selectionChange);
+    if (savePage) {
+        // console.log("unwatch shadow 1")
+        const sd = props.context.shadows.get(savePage);
+        sd.unwatch(shadowChange);
+        savePage = undefined;
+    }
+});
+
 </script>
 
 <template>
@@ -143,6 +143,7 @@ function unHovershape(shape: Shape) {
         :item-height="30"
         :item-width="0"
         :first-index="0"
+        :context="props.context"
         @toggleexpand="toggleExpand"
         @selectshape="selectShape"
         @hovershape="hoverShape"
@@ -153,8 +154,4 @@ function unHovershape(shape: Shape) {
 </template>
 
 <style scoped lang="scss">
-.shape-header {
-    padding: 4px 8px;
-    position: sticky;
-}
 </style>

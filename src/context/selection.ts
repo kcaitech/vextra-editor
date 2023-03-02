@@ -28,9 +28,20 @@ export class Selection extends Watchable implements ISave4Restore {
     private m_cursorStart: number = -1;
     private m_cursorEnd: number = -1;
 
+    private m_keyboard_oncontrol: boolean = false;
+    private m_keyboard_onshift: boolean = false;
+
     constructor(document: Document) {
         super();
         this.m_document = document;
+    }
+
+    setControlStatus(status: boolean) {
+        this.m_keyboard_oncontrol !== status && (this.m_keyboard_oncontrol = status);
+    }
+
+    get onControl(): Boolean {
+        return this.m_keyboard_oncontrol
     }
 
     selectPage(p: Page | undefined) {
@@ -53,6 +64,11 @@ export class Selection extends Watchable implements ISave4Restore {
         // check?
         if (this.isSelectedShape(shape)) {
             this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1)
+            this.notify(Selection.CHANGE_SHAPE);
+            return;
+        }
+        if (this.m_keyboard_oncontrol) {
+            this.addSelectShape(shape);
             this.notify(Selection.CHANGE_SHAPE);
             return;
         }

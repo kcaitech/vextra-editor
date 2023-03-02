@@ -170,15 +170,6 @@ onBeforeUpdate(() => {
 </template>
 
 <style scoped>
-/* #selection {
-    left: 0px;
-    top: 0px;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-} */
-
 .circle {
     width: 5px;
     height: 5px;
