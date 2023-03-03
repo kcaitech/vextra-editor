@@ -198,7 +198,7 @@ layoutDown[Orientation.H] = () => {
     }
 }
 
-// 视口高度/宽度测量
+// list视口高度/宽度测量
 const viewMeasure: { [key: string]: Function } = {};
 viewMeasure[Orientation.V] = () => {
     measureHeight.value = props.source.length() * props.itemHeight;
@@ -209,8 +209,8 @@ viewMeasure[Orientation.H] = () => {
     measureWidth.value = props.source.length() * props.itemWidth;
 }
 
-const changeControlPressStatus = (e: KeyboardEvent, down: boolean) => {
-    if (e.code === 'MetaLeft') {        
+const changeControlPressStatus = (e: KeyboardEvent, down: boolean) => {        
+    if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {        
         props.context?.selection.setControlStatus(down)
     }
 }
@@ -223,7 +223,6 @@ function onKeyUp(e: KeyboardEvent) {
 }
 
 // todo
-// 滚动条
 // 局部更新 ?
 // 滚动到可见
 

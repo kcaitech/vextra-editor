@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { Selection } from "@/context/selection"
-import { defineProps, onMounted, onUnmounted } from "vue";
+import { defineProps, onMounted, onUnmounted, ref } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@/data/page";
@@ -121,6 +121,7 @@ function unHovershape(shape: Shape) {
 
 onMounted(() => {
     props.context.selection.watch(selectionChange);
+
 });
 
 onUnmounted(() => {
@@ -137,6 +138,7 @@ onUnmounted(() => {
 
 <template>
     <ListView
+        ref="shapelist"
         location="shapelist"
         :source="shapeSource"
         :item-view="ShapeItem"

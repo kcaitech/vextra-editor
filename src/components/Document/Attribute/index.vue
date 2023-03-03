@@ -2,9 +2,10 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape } from '@/data/shape';
-import { defineProps, onMounted, onUnmounted, shallowRef, ref, computed, defineEmits } from 'vue';
+import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
 import ShapeAttr from './ShapeAttr.vue';
-import Sash from "@/components/common/Sash.vue"
+import Fill from './Fill.vue';
+import Border from './Border.vue';
 const props = defineProps<{ context: Context }>();
 
 const shape = shallowRef<Shape>();
@@ -36,7 +37,11 @@ onUnmounted(() => {
 
 <template>
 <section>
-    <ShapeAttr v-if="shape" :shape="shape" :context="props.context"></ShapeAttr>
+    <div v-if="shape">
+        <ShapeAttr :shape="shape" :context="props.context"></ShapeAttr>
+        <Fill></Fill>
+        <Border></Border>
+    </div>
 </section>
 </template>
 
