@@ -11,6 +11,7 @@ import { Context } from '@/context';
 import { Shape } from '@/data/shape';
 import TypeHeader from './TypeHeader.vue';
 import BorderDetail from './PopoverMenu/BorderDetail.vue';
+import ColorPicker from './PopoverMenu/ColorPicker.vue';
 import "@/assets/icons/svg/delete.svg";
 import "@/assets/icons/svg/select.svg";
 const props = defineProps<{
@@ -72,7 +73,7 @@ function setVisible(id: number): void {
                     <svg-icon v-if="f.visibility" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <div class="color-block" :style="{backgroundColor: f.color}" />
+                    <ColorPicker :color="f.color"></ColorPicker>
                     <input :value="f.color"/>
                     <input :value="f.opacity"/>
                 </div>
@@ -150,16 +151,9 @@ function setVisible(id: number): void {
                 display: flex;
                 align-items: center;
                 .color-block {
+                    position: relative;
                     width: 16px;
                     height: 16px;
-                    background-color: #cecece;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    > svg {
-                        width: 80%;
-                        height: 80%;
-                    }
                 }
                 input {
                     outline: none;
