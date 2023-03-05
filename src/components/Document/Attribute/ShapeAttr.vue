@@ -2,6 +2,7 @@
 import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
 import { Shape } from '@/data/shape';
 import IconText from '@/components/common/IconText.vue';
+import Position from './PopoverMenu/Position.vue';
 import { Context } from '@/context';
 import { computed } from '@vue/reactivity';
 import "@/assets/icons/svg/X.svg";
@@ -117,6 +118,7 @@ onBeforeUpdate(() => {
             <IconText class="td positon" svgicon="X" :text="x.toFixed(fix)" @onchange="onChangeX"/>
             <div class="space"></div>
             <IconText class="td positon" svgicon="Y" :text="y.toFixed(fix)" @onchange="onChangeY"/>
+            <Position></Position>
         </div>
         <div class="tr">
             <IconText class="td frame" svgicon="W" :text="w.toFixed(fix)" @onchange="onChangeW"/>
@@ -162,6 +164,7 @@ onBeforeUpdate(() => {
     padding: 12px 24px;
     box-sizing: border-box;
     .tr {
+        position: relative;
         width: 100%;
         align-items: center;
         display: flex;

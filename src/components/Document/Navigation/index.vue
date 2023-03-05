@@ -39,7 +39,7 @@ section {
 
 div.line {
     width: 100%;
-    height: 1px;
+    height: 3px;
     background-color: var(--theme-color-line);
     flex: 0 0 auto;
 }

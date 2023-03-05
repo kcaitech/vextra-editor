@@ -11,6 +11,7 @@ import { Context } from '@/context';
 import { Shape } from '@/data/shape';
 import TypeHeader from './TypeHeader.vue';
 import "@/assets/icons/svg/delete.svg";
+import "@/assets/icons/svg/select.svg";
 const props = defineProps<{
     context?: Context,
     shape?: Shape,
@@ -66,7 +67,9 @@ function setVisible(id: number): void {
         </TypeHeader>
         <div class="fills-container">
             <div class="fill" v-for="f in data.fills" :key="f.id">
-                <div :class="f.visibility ? 'visibility' : 'hidden'" @click="setVisible(f.id)"></div>
+                <div :class="f.visibility ? 'visibility' : 'hidden'" @click="setVisible(f.id)">
+                    <svg-icon v-if="f.visibility" icon-class="select"></svg-icon>
+                </div>
                 <div class="color">
                     <div class="color-block" :style="{backgroundColor: f.color}" />
                     <input :value="f.color"/>
@@ -99,6 +102,10 @@ function setVisible(id: number): void {
             width: 80%;
             height: 80%;
         }
+        transition: .2s;
+    }
+    .add:hover {
+        transform: scale(1.25);
     }
     .fills-container {
         .fill {
@@ -115,6 +122,14 @@ function setVisible(id: number): void {
                 border-radius: 3px;
                 border: 1px solid #d8d8d8;
                 box-sizing: border-box;
+                color: #ffffff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                > svg {
+                    width: 80%;
+                    height: 80%;
+                }
             }
             .hidden {
                 width: 16px;
@@ -158,8 +173,12 @@ function setVisible(id: number): void {
                 height: 16px;
                 > svg {
                     width: 80%;
-                height: 80%;
+                    height: 80%;
                 }
+                transition: .2s;
+            }
+            .delete:hover {
+                color: #ff5555;
             }
         }
     }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, defineProps, reactive, ref } from "vue";
+import { onMounted, defineProps, defineExpose, reactive, ref } from "vue";
 import { Context } from "@/context";
 
 export interface IDataIter<T extends { id: string }> {
@@ -29,6 +29,11 @@ const props = defineProps<{
     location?: string
 }>();
 
+const contents = ref<HTMLDivElement>();
+const container = ref<HTMLDivElement>();
+const scrollTrack = ref<HTMLDivElement>();
+const bar = ref<HTMLDivElement>();
+
 const scroll = reactive({ x: 0, y: 0 }); // position of list[0]
 const scrollBar = reactive({ length: 0, mount: false, listMouseOver: false, x: 0, y: 0 }); // 滚动条滑块对象
 let layoutIndex = 0; // 当前Dom渲染列表中第一个Dom在整个list对应的Dom列表中的index
@@ -38,6 +43,10 @@ let visibleHeight = 0;
 const measureWidth = ref(0); // width of listView
 const measureHeight = ref(0); // height of listView
 const prepareCount = 10; //  多准备的
+
+defineExpose({
+    container
+})
 
 const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {    
@@ -209,25 +218,11 @@ viewMeasure[Orientation.H] = () => {
     measureWidth.value = props.source.length() * props.itemWidth;
 }
 
-const changeControlPressStatus = (e: KeyboardEvent, down: boolean) => {        
-    if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {        
-        props.context?.selection.setControlStatus(down)
-    }
-}
-
-function onKeyDown(e: KeyboardEvent) {
-    changeControlPressStatus(e, true);
-}
-function onKeyUp(e: KeyboardEvent) {
-    changeControlPressStatus(e, false)
-}
-
 // todo
 // 局部更新 ?
 // 滚动到可见
 
 // let offset = 0;
-
 props.source.onChange((index: number, del: number, insert: number, modify: number): void => {        
     if (props.orientation == Orientation.V) {
         measureHeight.value = props.source.length() * props.itemHeight;
@@ -410,15 +405,6 @@ function onScrollTrackClick(e: MouseEvent) {
 }
 function onScrollBarClick(e: MouseEvent) {}
 
-// function onItemClick(data: any) {
-//     props.source.onClick(data, false, false);
-// }
-// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
-const contents = ref<HTMLDivElement>();
-const container = ref<HTMLDivElement>();
-const scrollTrack = ref<HTMLDivElement>();
-const bar = ref<HTMLDivElement>();
-
 const observer = new ResizeObserver(() => {
     const el = container.value;
     if (el) {
@@ -430,23 +416,10 @@ const observer = new ResizeObserver(() => {
 
 // hooks
 onMounted(() => {
-    if (container.value) {
-        observer.observe(container.value);
-    }  else return;
+    container.value && observer.observe(container.value);
     viewMeasure[props.orientation]();
     relayout[props.orientation]();
-    if (props.location === 'shapelist') {
-        container.value.addEventListener("keydown", onKeyDown);
-        container.value.addEventListener("keyup", onKeyUp);
-    }
 })
-onUnmounted(() => {
-    if (props.location === 'shapelist' && container.value) {
-        container.value.removeEventListener("keydown", onKeyDown);
-        container.value.removeEventListener("keyup", onKeyUp);
-    }
-})
-
 </script>
 
 <template>

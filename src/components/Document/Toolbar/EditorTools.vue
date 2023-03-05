@@ -6,77 +6,31 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\EditorTools.vue
 -->
 <script setup lang="ts">
-import "@/assets/icons/svg/cursor.svg";
-import "@/assets/icons/svg/frame.svg";
-import "@/assets/icons/svg/pen.svg";
 import "@/assets/icons/svg/pointer.svg";
 import "@/assets/icons/svg/rectangle.svg";
 import "@/assets/icons/svg/resource.svg";
 import "@/assets/icons/svg/text.svg";
 import "@/assets/icons/svg/ungroup.svg";
 import ToolButton from './ToolButton.vue';
+import Cursor from "./Buttons/Cursor.vue";
+import Frame from "./Buttons/Frame.vue";
+import Pen from "./Buttons/Pen.vue";
 
 </script>
 
 <template>
-    <div class="editor-tools">
+    <div class="editor-tools" @dblclick.stop>
         <!-- 选择工具 -->
-        <ToolButton>
-            <el-popover
-              placement="bottom"
-              :width="200"
-              trigger="click"
-              content="选择工具 二级菜单"
-              :show-arrow="false"
-              effect="dark"
-            >
-                <template #reference>
-                    <div class="temp" title="Cursor">
-                        <svg-icon icon-class="cursor"></svg-icon>
-                    </div>
-                </template>
-            </el-popover>
-        </ToolButton>
-        <!-- 剪裁 -->
-        <ToolButton>
-            <div class="temp" title="Frame">
-                <svg-icon icon-class="frame"></svg-icon>
-            </div>
-        </ToolButton>
+        <Cursor></Cursor>
         <!-- 形状 -->
         <ToolButton>
-            <el-popover
-              placement="bottom"
-              :width="200"
-              trigger="click"
-              content="形状 二级菜单"
-              :show-arrow="false"
-              effect="dark"
-            >
-                <template #reference>
-                    <div class="temp" title="Rectangle">
-                        <svg-icon icon-class="rectangle"></svg-icon>
-                    </div>
-                </template>
-            </el-popover>
+            <div class="temp" title="Rectangle">
+                <svg-icon icon-class="rectangle"></svg-icon>
+            </div>
         </ToolButton>
+        <Frame></Frame>
         <!-- 画笔 -->
-        <ToolButton>
-            <el-popover
-              placement="bottom"
-              :width="200"
-              trigger="click"
-              content="画笔 二级菜单"
-              :show-arrow="false"
-              effect="dark"
-            >
-                <template #reference>
-                    <div class="temp" title="Pen">
-                        <svg-icon icon-class="pen"></svg-icon>
-                    </div>
-                </template>
-            </el-popover>
-        </ToolButton>
+        <Pen></Pen>
         <!-- 插入文字 -->
         <ToolButton>
             <div class="temp" title="Text">
@@ -96,22 +50,10 @@ import ToolButton from './ToolButton.vue';
             </div>
         </ToolButton>
         <div class="vertical-line" />
-        <!-- 画笔 -->
         <ToolButton>
-            <el-popover
-              placement="bottom"
-              :width="200"
-              trigger="click"
-              content="复制 二级菜单"
-              :show-arrow="false"
-              effect="dark"
-            >
-                <template #reference>
-                    <div class="temp" title="复制">
-                        <svg-icon icon-class="ungroup"></svg-icon>
-                    </div>
-                </template>
-            </el-popover>
+            <div class="temp" title="复制">
+                <svg-icon icon-class="ungroup"></svg-icon>
+            </div>
         </ToolButton>
     </div>
     

@@ -17,13 +17,24 @@ const context = shallowRef<Context>(new Context(props.data));
 (window as any).__context = context.value;
 
 function topDblClick() {
-    // console.log("dblclick")
-    // props.preload.emit("toggle-maximize");
+    const isFullscreen = props.data.isFullscreen;
+    const element = document.documentElement;
+    if (isFullscreen) {
+        document.exitFullscreen && document.exitFullscreen()
+  	} else {
+        element.requestFullscreen && element.requestFullscreen()
+    }
+  	props.data.setScreen(!isFullscreen)
 }
 
-onMounted(() => {
+function onWindowBlur() {
+    // Window blur, Close the process that should be closed
+}
+
+onMounted(() => {    
     context.value.selection.watch(selectionWatcher);
     switchPage(props.data.pagesMgr.getPageIdByIndex(0));
+    window.addEventListener('blur', onWindowBlur)
 })
 
 function switchPage(id: string) {
@@ -45,6 +56,7 @@ function selectionWatcher(t: number) {
 
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
+    window.removeEventListener('blur', onWindowBlur);
 })
 
 </script>
@@ -57,7 +69,7 @@ onUnmounted(() => {
         id="center"
         :left="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}" 
         :middle="{width: 0.6, minWidth: 0.3, maxWidth: 0.8}"
-        :right="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}"
+        :right="{width: 0.2, minWidth: 0.2, maxWidth: 0.5}"
     >
         <template #slot1>
             <Navigation

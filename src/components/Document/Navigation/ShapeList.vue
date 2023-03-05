@@ -8,36 +8,14 @@ import { Page } from "@/data/page";
 import { ShapeNaviIter } from "@/data/shadow";
 import { Shape } from "@/data/shape";
 
+type List = InstanceType<typeof ListView>
+
 const props = defineProps<{ context: Context }>();
 
-const shadowChange = () => {
-    // todo
-    shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
-}
-
+const shapelist = ref<List>();
+let listInstance: HTMLDivElement | undefined;
 let savePage: Page | undefined;
-const selectionChange = (t: number) => {
-    if (t === Selection.CHANGE_PAGE) {
-        shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
 
-        if (savePage) {
-            const sd = props.context.shadows.get(savePage);
-            // console.log("unwatch shadow")
-            sd.unwatch(shadowChange);
-            savePage = undefined;
-        }
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const sd = props.context.shadows.get(page);
-            // console.log("watch shadow")
-            sd.watch(shadowChange);
-            savePage = page;
-        }
-    }
-    else if (t === Selection.CHANGE_SHAPE) {
-        shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
-    }
-}
 
 class Iter implements IDataIter<ItemData> {
     private __it: ShapeNaviIter | undefined;
@@ -65,7 +43,6 @@ class Iter implements IDataIter<ItemData> {
         }
     }
 }
-
 const shapeSource = new class implements IDataSource<ItemData> {
     
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
@@ -97,6 +74,31 @@ const shapeSource = new class implements IDataSource<ItemData> {
     }
 }
 
+const shadowChange = () => {
+    shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
+}
+const selectionChange = (t: number) => {
+    if (t === Selection.CHANGE_PAGE) {
+        shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
+
+        if (savePage) {
+            const sd = props.context.shadows.get(savePage);
+            // console.log("unwatch shadow")
+            sd.unwatch(shadowChange);
+            savePage = undefined;
+        }
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const sd = props.context.shadows.get(page);
+            // console.log("watch shadow")
+            sd.watch(shadowChange);
+            savePage = page;
+        }
+    }
+    else if (t === Selection.CHANGE_SHAPE) {
+        shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
+    }
+}
 function toggleExpand(shape: Shape) {
     const page = props.context.selection.selectedPage;
     if (page == undefined) {
@@ -106,31 +108,49 @@ function toggleExpand(shape: Shape) {
     const sd = shadows.get(page);
     sd.toggleExpand(shape);
 }
-
 function selectShape(shape: Shape) {
     props.context.selection.selectShape(shape);
 }
-
 function hoverShape(shape: Shape) {
     props.context.selection.hoverShape(shape);
 }
-
 function unHovershape(shape: Shape) {
     props.context.selection.unHoverShape(shape);
 }
 
+const changeControlPressStatus = (e: KeyboardEvent, down: boolean) => {        
+    if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {        
+        props.context?.selection.setControlStatus(down)
+    }
+}
+function onKeyDown(e: KeyboardEvent) {
+    changeControlPressStatus(e, true);
+}
+function onKeyUp(e: KeyboardEvent) {
+    changeControlPressStatus(e, false)
+}
+
+
 onMounted(() => {
     props.context.selection.watch(selectionChange);
-
+    listInstance = shapelist.value?.container
+    if (listInstance) {
+        listInstance.addEventListener("keydown", onKeyDown);
+        listInstance.addEventListener("keyup", onKeyUp);
+    }
+    
 });
 
 onUnmounted(() => {
     props.context.selection.unwatch(selectionChange);
     if (savePage) {
-        // console.log("unwatch shadow 1")
         const sd = props.context.shadows.get(savePage);
         sd.unwatch(shadowChange);
         savePage = undefined;
+    }
+    if (listInstance) {
+        listInstance.removeEventListener("keydown", onKeyDown);
+        listInstance.removeEventListener("keyup", onKeyUp);
     }
 });
 

@@ -10,6 +10,7 @@ import { defineProps, reactive } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@/data/shape';
 import TypeHeader from './TypeHeader.vue';
+import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import "@/assets/icons/svg/delete.svg";
 import "@/assets/icons/svg/select.svg";
 const props = defineProps<{
@@ -68,14 +69,14 @@ function setVisible(id: number): void {
         <div class="borders-container">
             <div class="border" v-for="f in data.borders" :key="f.id">
                 <div :class="f.visibility ? 'visibility' : 'hidden'" @click="setVisible(f.id)">
-                    <!-- <svg-icon icon-class="select"></svg-icon> -->
+                    <svg-icon v-if="f.visibility" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
                     <div class="color-block" :style="{backgroundColor: f.color}" />
                     <input :value="f.color"/>
                     <input :value="f.opacity"/>
                 </div>
-                <div class="space"></div>
+                <BorderDetail></BorderDetail>
                 <div class="delete" @click="deleteBorder(f.id)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
@@ -98,10 +99,14 @@ function setVisible(id: number): void {
     .add {
         width: 16px;
         height: 16px;
+        transition: .2s;
         > svg {
             width: 80%;
             height: 80%;
         }
+    }
+    .add:hover {
+        transform: scale(1.25);
     }
     .borders-container {
         .border {
@@ -118,6 +123,14 @@ function setVisible(id: number): void {
                 border-radius: 3px;
                 border: 1px solid #d8d8d8;
                 box-sizing: border-box;
+                color: #ffffff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                > svg {
+                    width: 80%;
+                    height: 80%;
+                }
             }
             .hidden {
                 width: 16px;
@@ -166,10 +179,14 @@ function setVisible(id: number): void {
                 flex-shrink: 0;
                 width: 16px;
                 height: 16px;
+                transition: 0.2s;
                 > svg {
                     width: 80%;
-                height: 80%;
+                    height: 80%;
                 }
+            }
+            .delete:hover {
+                color: #ff5555;
             }
         }
     }

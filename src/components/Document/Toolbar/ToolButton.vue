@@ -4,14 +4,20 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\ToolButton.vue
 -->
 <template>
-    <div :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!selected }">
+    <div ref="toolButtonEl" :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!selected }">
         <slot />
     </div>
 </template>
 <script setup lang="ts">
-import { computed, defineProps } from 'vue';
-
+import { computed, defineProps, ref, defineExpose, onMounted } from 'vue';
 const props = defineProps<{ valid?: boolean, selected?: boolean }>();
+
+const toolButtonEl = ref<HTMLDivElement>();
+
+defineExpose({
+    toolButtonEl
+})
+
 const invalid = computed(() => {
     return props.valid === undefined ? false : !props.valid;
 })
