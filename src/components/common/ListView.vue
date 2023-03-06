@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineProps, defineExpose, reactive, ref } from "vue";
+import { onMounted, defineProps, defineExpose, reactive, ref, watch } from "vue";
 import { Context } from "@/context";
 
 export interface IDataIter<T extends { id: string }> {
@@ -26,7 +26,8 @@ const props = defineProps<{
     itemHeight: number,
     firstIndex: number,
     orientation: "horizontal" | "vertical",
-    location?: string
+    location?: string,
+    allowDrag?: boolean
 }>();
 
 const contents = ref<HTMLDivElement>();
@@ -405,6 +406,79 @@ function onScrollTrackClick(e: MouseEvent) {
 }
 function onScrollBarClick(e: MouseEvent) {}
 
+
+// #region 列表子元素换位处理
+let currentHoverTarget = ref<HTMLDivElement | EventTarget | null>();
+let mousedown = ref<boolean>(false);
+let fromIndex = ref<number>(0);
+let toIndex = ref<number>(0);
+let offsetOverhalf: boolean = false;
+let draging = ref<boolean>(false);
+function mouseDownOnItem(index: number) {
+    // record fromIndex && pre to start
+    fromIndex.value = index;
+    mousedown.value = true;
+    document.addEventListener('mousemove', mouseMove);
+    document.addEventListener('mouseup', mouseUp);
+}
+function mouseMove(Event: MouseEvent) {
+    // computing port position
+    // let getReat = (currentHoverTarget.value as any)?.getBoundingClientRect;
+    // if (getReat) {
+    //     console.log(getReat());
+    // }
+    if (!mousedown.value) return;
+    draging.value = true
+    if ((currentHoverTarget.value as any)?.getBoundingClientRect) {
+        const { x, top, width } = (currentHoverTarget.value as any)?.getBoundingClientRect();
+        const { clientX, clientY } = Event;
+        const offset: number = clientY - top;
+        if (offset > 0 && offset <= 15) {
+            offsetOverhalf = false
+        } else if (offset > 15 && offset <= 30) {
+            offsetOverhalf = true
+        }
+    }
+}
+
+function itemOnHover(e: MouseEvent, index: number) {
+    // update currenthovertarget toIndex
+    if (!mousedown.value) return;
+    currentHoverTarget.value = e.target;
+    toIndex.value = offsetOverhalf ? index + 1 : index;
+}
+
+function descend(from: number, to: number) {
+    let temp = {x: layoutResult[to].x, y: layoutResult[to].y}
+    layoutResult[to].x = layoutResult[from].x
+    layoutResult[to].y = layoutResult[from].y
+    layoutResult[from].x = temp.x
+    layoutResult[from].y = temp.y
+    if (from < to) {
+        layoutResult.splice(to, 0, layoutResult[from]);
+        layoutResult.splice(from, 1);
+    } else if (from > to) {
+        let temp = layoutResult[from];
+        layoutResult.splice(from, 1);
+        layoutResult.splice(to, 0, temp);
+    }
+}
+function mouseUp() {
+    // close event && check descend port && descend
+    mousedown.value = false;
+    document.removeEventListener('mousemove', mouseMove);
+    document.removeEventListener('mouseup', mouseUp);
+
+    if (draging.value) {
+        descend(fromIndex.value, toIndex.value);
+        draging.value = false
+    }
+}
+// watch(layoutResult, (newValue) => {
+//     console.log('-newvalue-', newValue);
+// })
+// #region end
+
 const observer = new ResizeObserver(() => {
     const el = container.value;
     if (el) {
@@ -444,12 +518,16 @@ onMounted(() => {
             <component
                 class="listitem"
                 :is="props.itemView"
-                v-for="c in layoutResult"
+                v-for="(c, i) in layoutResult"
                 :key="c.id"
                 :data="c.data"
                 v-bind="$attrs"
+                @mousedown.stop="() => mouseDownOnItem(i)"
+                @mousemove="(e: MouseEvent) => mouseMove(e)"
+                @mouseover="(e: MouseEvent) => itemOnHover(e, i)"
                 :style="{left: c.x + 'px', top: c.y + 'px'}"
             />
+            <!-- <div class="port"></div> -->
         </div>
         <!-- scroll -->
         <div
@@ -476,8 +554,18 @@ onMounted(() => {
     overflow: hidden;
     position: relative;
     outline: none;
-    > .horizontal, .vertical > .listitem {
-        position: absolute;
+    > .horizontal, .vertical {
+        > .listitem {
+            position: absolute;
+            flex: 1;
+        }
+        > .port {
+            top: 20px;
+            position: absolute;
+            background-color: aqua;
+            width: 100%;
+            height: 3px;
+        }
     }
     .horizontal {
         display: flex;

@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-01 16:17:56
+ * @LastEditTime: 2023-03-06 17:45:18
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageList.vue
 -->
 <script setup lang="ts">
@@ -46,7 +46,7 @@ class Iter implements IDataIter<ItemData> {
         const slectedPage = this.__selection.selectedPage;
         return {
             name,
-            id, 
+            id,
             selected: slectedPage !== undefined && slectedPage.id == id
         }
     }
@@ -74,7 +74,6 @@ const pageSource = new class implements IDataSource<ItemData> {
     
 <template>
     <ListView
-        location="pagelist"
         :source="pageSource"
         :item-view="PageItem"
         :item-width="0"
@@ -82,14 +81,14 @@ const pageSource = new class implements IDataSource<ItemData> {
         :first-index="0"
         v-bind="$attrs"
         orientation="vertical"
+        :allowDrag="true"
+        location="pagelist"
     >
     </ListView>
 
 </template>
     
 <style scoped lang="scss">
-.pagelist-header {
-    padding: 4px 8px;
-}
+
 </style>
     

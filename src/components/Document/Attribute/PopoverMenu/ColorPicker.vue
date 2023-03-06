@@ -231,6 +231,7 @@ function eyedropper() {
       width: 100%;
       height: 150px;
       position: relative;
+      background-color: #ff0000;
       > .white {
         position: absolute;
         width: 100%;
@@ -305,7 +306,7 @@ function eyedropper() {
           width: 100%;
           height: 100%;
           border-radius: 2px;
-          background-color: antiquewhite;
+          background-color: #ff0000;
         }
       }
     }
