@@ -423,12 +423,12 @@ function mouseDownOnItem(index: number) {
     if (!props.allowDrag) return;
     // record fromIndex && pre to take off
     fromIndex.value = index;
+    toIndex.value = index;
     mousedown.value = true;
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
 }
 function mouseMove(Event: MouseEvent) {
-    console.log('- move -');
     draging.value = true
     if ((currentHoverTarget.value as any)?.getBoundingClientRect) {
         const { x, top, width, left } = (currentHoverTarget.value as any)?.getBoundingClientRect();
