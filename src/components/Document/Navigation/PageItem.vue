@@ -27,7 +27,7 @@ function onClick(e: MouseEvent) {
 <template>
     <div
         :class="{ container: true, selected: props.data.selected }"
-        v-on:click="onClick"
+        @click.stop="onClick"
     >
         <div class="ph"></div>
         <div class="item">

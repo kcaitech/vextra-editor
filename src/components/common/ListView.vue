@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineProps, defineExpose, reactive, ref, watch } from "vue";
+import { onMounted, defineProps, defineExpose, reactive, ref, watch, computed } from "vue";
 import { Context } from "@/context";
 
 export interface IDataIter<T extends { id: string }> {
@@ -406,78 +406,89 @@ function onScrollTrackClick(e: MouseEvent) {
 }
 function onScrollBarClick(e: MouseEvent) {}
 
-
 // #region 列表子元素换位处理
 let currentHoverTarget = ref<HTMLDivElement | EventTarget | null>();
 let mousedown = ref<boolean>(false);
 let fromIndex = ref<number>(0);
 let toIndex = ref<number>(0);
-let offsetOverhalf: boolean = false;
+let offsetOverhalf: boolean = false; // 过半，在hover节点下面插入被拖动节点，反则上面
 let draging = ref<boolean>(false);
+let destination = ref<{ x: number, y: number, length: number }>({ x: 0, y: 0, length: 20 });
+let destinationMount = ref<boolean>(false);
+
+const destinationVisible = computed(() => {
+    return draging.value && destinationMount.value && ( fromIndex.value !== toIndex.value )
+})
 function mouseDownOnItem(index: number) {
-    // record fromIndex && pre to start
+    if (!props.allowDrag) return;
+    // record fromIndex && pre to take off
     fromIndex.value = index;
     mousedown.value = true;
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
 }
 function mouseMove(Event: MouseEvent) {
-    // computing port position
-    // let getReat = (currentHoverTarget.value as any)?.getBoundingClientRect;
-    // if (getReat) {
-    //     console.log(getReat());
-    // }
-    if (!mousedown.value) return;
+    console.log('- move -');
     draging.value = true
     if ((currentHoverTarget.value as any)?.getBoundingClientRect) {
-        const { x, top, width } = (currentHoverTarget.value as any)?.getBoundingClientRect();
+        const { x, top, width, left } = (currentHoverTarget.value as any)?.getBoundingClientRect();
+        destination.value.length = width;
         const { clientX, clientY } = Event;
         const offset: number = clientY - top;
-        if (offset > 0 && offset <= 15) {
+        if (offset >= 0 && offset <= 15) {
             offsetOverhalf = false
         } else if (offset > 15 && offset <= 30) {
             offsetOverhalf = true
         }
     }
+    destination.value.y = offsetOverhalf ? (toIndex.value + 1) * props.itemHeight - 2 :  toIndex.value * props.itemHeight - 2;
 }
 
 function itemOnHover(e: MouseEvent, index: number) {
     // update currenthovertarget toIndex
-    if (!mousedown.value) return;
+    if (!props.allowDrag || !mousedown.value) return;
+    destinationMount.value = true
     currentHoverTarget.value = e.target;
-    toIndex.value = offsetOverhalf ? index + 1 : index;
+    toIndex.value = index
 }
 
 function descend(from: number, to: number) {
-    let temp = {x: layoutResult[to].x, y: layoutResult[to].y}
-    layoutResult[to].x = layoutResult[from].x
-    layoutResult[to].y = layoutResult[from].y
-    layoutResult[from].x = temp.x
-    layoutResult[from].y = temp.y
     if (from < to) {
         layoutResult.splice(to, 0, layoutResult[from]);
         layoutResult.splice(from, 1);
+        resort(layoutResult, props.orientation)
     } else if (from > to) {
         let temp = layoutResult[from];
         layoutResult.splice(from, 1);
         layoutResult.splice(to, 0, temp);
+        resort(layoutResult, props.orientation)
+    }
+    function resort(arr: { x: number, y: number, id: string, data: any }[], orientation: "horizontal" | "vertical") {
+        if (orientation === Orientation.V) {
+            arr.forEach((item, index) => {
+                item.y = index * props.itemHeight
+            })
+        } else if (orientation === Orientation.H) {
+            arr.forEach((item, index) => {
+                item.x = index * props.itemWidth
+            })
+        }
     }
 }
 function mouseUp() {
-    // close event && check descend port && descend
+    if (!props.allowDrag) return;
+    // close events && check descend port && descend
     mousedown.value = false;
+    destinationMount.value = false;
     document.removeEventListener('mousemove', mouseMove);
     document.removeEventListener('mouseup', mouseUp);
-
     if (draging.value) {
+        toIndex.value = offsetOverhalf ? toIndex.value + 1 : toIndex.value
         descend(fromIndex.value, toIndex.value);
         draging.value = false
     }
 }
-// watch(layoutResult, (newValue) => {
-//     console.log('-newvalue-', newValue);
-// })
-// #region end
+// #endregion
 
 const observer = new ResizeObserver(() => {
     const el = container.value;
@@ -523,11 +534,10 @@ onMounted(() => {
                 :data="c.data"
                 v-bind="$attrs"
                 @mousedown.stop="() => mouseDownOnItem(i)"
-                @mousemove="(e: MouseEvent) => mouseMove(e)"
                 @mouseover="(e: MouseEvent) => itemOnHover(e, i)"
                 :style="{left: c.x + 'px', top: c.y + 'px'}"
             />
-            <!-- <div class="port"></div> -->
+            <div class="port" v-if="destinationVisible" :style="{ top: destination.y + 'px' }"></div>
         </div>
         <!-- scroll -->
         <div
@@ -560,11 +570,10 @@ onMounted(() => {
             flex: 1;
         }
         > .port {
-            top: 20px;
             position: absolute;
             background-color: aqua;
             width: 100%;
-            height: 3px;
+            height: 4px;
         }
     }
     .horizontal {

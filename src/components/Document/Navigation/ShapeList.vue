@@ -7,6 +7,7 @@ import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@/data/page";
 import { ShapeNaviIter } from "@/data/shadow";
 import { Shape } from "@/data/shape";
+import { debounce }  from 'lodash';
 
 type List = InstanceType<typeof ListView>
 
@@ -114,6 +115,9 @@ function selectShape(shape: Shape) {
 function hoverShape(shape: Shape) {
     props.context.selection.hoverShape(shape);
 }
+
+const debounceEmitHoverShape = debounce(hoverShape, 200);
+
 function unHovershape(shape: Shape) {
     props.context.selection.unHoverShape(shape);
 }
@@ -130,7 +134,6 @@ function onKeyUp(e: KeyboardEvent) {
     changeControlPressStatus(e, false)
 }
 
-
 onMounted(() => {
     props.context.selection.watch(selectionChange);
     listInstance = shapelist.value?.container
@@ -138,7 +141,6 @@ onMounted(() => {
         listInstance.addEventListener("keydown", onKeyDown);
         listInstance.addEventListener("keyup", onKeyUp);
     }
-    
 });
 
 onUnmounted(() => {
@@ -168,7 +170,7 @@ onUnmounted(() => {
         :context="props.context"
         @toggleexpand="toggleExpand"
         @selectshape="selectShape"
-        @hovershape="hoverShape"
+        @hovershape="debounceEmitHoverShape"
         @unhovershape="unHovershape"
         orientation="vertical"
     >
