@@ -6,15 +6,16 @@
  * @FilePath: \kcdesign\src\components\Document\Attribute\TypeHeader.vue
 -->
 <script setup lang="ts">
-import { defineProps, reactive } from 'vue';
+import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@/data/shape';
+import { Color } from "@/data/style";
 import TypeHeader from './TypeHeader.vue';
 import "@/assets/icons/svg/delete.svg";
 import "@/assets/icons/svg/select.svg";
 const props = defineProps<{
-    context?: Context,
-    shape?: Shape,
+    context: Context,
+    shape: Shape,
 }>();
 type  Fill = {
     id: number,
@@ -23,35 +24,102 @@ type  Fill = {
     visibility: boolean
 }
 
-const data = reactive<{
-    fills: Fill[]
-}>({
-    fills: [
-        {
-            id: 100,
-            color: '#558888',
-            opacity: 1,
-            visibility: true
+const editor = computed(() => {
+    return props.context.editor4Shape(props.shape);
+})
+
+const data = reactive<Fill[]>([])
+
+function toHexRgb(r: number, g: number, b: number) {
+    const toHex = (n: number) => {
+        return n.toString(16).toUpperCase();
+    }
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+}
+
+let shapeId: string = "";
+function updateData() {
+    shapeId = props.shape.id;
+    data.length = 0;
+    const style = props.shape.style;
+    for (let i = 0, len = style.fillsCount; i < len; i++) {
+        const fill = style.getFillByIndex(i);
+        const color = fill.color;
+        const colorHex = toHexRgb(color.red, color.green, color.blue);
+        const f: Fill = {
+            id: i,
+            color: colorHex,
+            opacity: fill.color.alpha,
+            visibility: fill.isEnabled
         }
-    ]
+        data.push(f);
+    }
+}
+
+function watcher(...args: any[]) {
+    if (args.length > 0 && args[0] == 'fill') updateData();
+}
+
+let shape: Shape | undefined;
+function setupWatcher() {
+    if (!shape) {
+        shape = props.shape;
+        shape.watch(watcher);
+    }
+    else if (shape.id != props.shape.id) {
+        shape.unwatch(watcher);
+        shape = props.shape;
+        shape.watch(watcher);
+    }
+}
+
+onMounted(() => {
+    updateData();
+    // props.shape.watch(watcher)
+    setupWatcher();
+})
+
+onUnmounted(() => {
+    if (shape) {
+        shape.unwatch(watcher);
+        shape = undefined;
+    }
+})
+
+onBeforeUpdate(() => {
+    if (shapeId != props.shape.id) updateData();
+    setupWatcher();
 })
 
 function addFill(): void {
-    data.fills.push({
+    data.push({
         id: Date.now(),
         color: '#CDCDCD',
         opacity: 1,
         visibility: true
     })
 }
+
 function deleteFill(id: number): void {
-    const index = data.fills.findIndex(i => i.id === id)
-    index >= 0 && (data.fills.splice(index, 1))
+    const index = data.findIndex(i => i.id === id)
+    index >= 0 && (data.splice(index, 1))
 }
 
-function setVisible(id: number): void {
-    const setObj = data.fills.find(i => i.id === id)
-    setObj && (setObj.visibility = !setObj.visibility)
+function toggleVisible(id: number): void {
+    const isVisible: boolean = data[id]?.visibility;
+    editor.value.setFillEnable(id, !isVisible);
+}
+
+function setColor(id: number, clr: string, alpha: number) {
+    const res = clr.match(/^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/);
+    if (!res) {
+        // todo
+        return;
+    }
+    const r = Number.parseInt(res[1], 16);
+    const g = Number.parseInt(res[2], 16);
+    const b = Number.parseInt(res[3], 16);
+    editor.value.setFillColor(id, new Color(alpha, r, g, b))
 }
 
 </script>
@@ -66,8 +134,8 @@ function setVisible(id: number): void {
             </template>
         </TypeHeader>
         <div class="fills-container">
-            <div class="fill" v-for="f in data.fills" :key="f.id">
-                <div :class="f.visibility ? 'visibility' : 'hidden'" @click="setVisible(f.id)">
+            <div class="fill" v-for="f in data" :key="f.id">
+                <div :class="f.visibility ? 'visibility' : 'hidden'" @click="toggleVisible(f.id)">
                     <svg-icon v-if="f.visibility" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">

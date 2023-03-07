@@ -39,8 +39,8 @@ onUnmounted(() => {
 <section>
     <div v-if="shape">
         <ShapeAttr :shape="shape" :context="props.context"></ShapeAttr>
-        <Fill></Fill>
-        <Border></Border>
+        <Fill :shape="shape" :context="props.context"></Fill>
+        <Border :shape="shape" :context="props.context"></Border>
     </div>
 </section>
 </template>

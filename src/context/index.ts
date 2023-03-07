@@ -3,8 +3,10 @@ import { Document } from "@/data/document";
 import { IDocShadow } from "@/data/ishadow";
 import { Page } from "@/data/page";
 import { ShapeNaviShadow } from "@/data/shadow";
+import { Shape } from "@/data/shape";
 import { Repository } from "@/data/transact";
 import { DocEditor, Editor, PageEditor } from "@/editor";
+import { ShapeEditor } from "@/editor/shape";
 import { Selection } from "./selection";
 
 class ShapeNaviShadowMgr implements IDocShadow {
@@ -53,20 +55,24 @@ export class Context extends Watchable {
         this.m_selection = new Selection(data);
     }
 
-    editor4Doc(): DocEditor {
+    get editor(): Editor {
         if (this.m_editor === undefined) {
             this.m_editor = new Editor(this.m_data, this.m_selection);
             this.notify();
         }
-        return this.m_editor.editor4Doc();
+        return this.m_editor;
+    }
+
+    editor4Doc(): DocEditor {
+        return this.editor.editor4Doc();
     }
 
     editor4Page(page: Page): PageEditor {
-        if (this.m_editor === undefined) {
-            this.m_editor = new Editor(this.m_data, this.m_selection);
-            this.notify();
-        }
-        return this.m_editor.editor4Page(page);
+        return this.editor.editor4Page(page);
+    }
+
+    editor4Shape(shape: Shape): ShapeEditor {
+        return this.editor.editor4Shape(shape);
     }
     
     get shadows(): ShapeNaviShadowMgr {

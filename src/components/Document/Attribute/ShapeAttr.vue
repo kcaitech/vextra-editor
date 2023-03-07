@@ -21,11 +21,7 @@ import "@/assets/icons/svg/add.svg";
 
 const props = defineProps<{ context: Context, shape: Shape }>();
 const editor = computed(() => {
-    if (props.context.selection.selectedPage == undefined) {
-        throw new Error("No Selected Page?");
-    }
-    const pe = props.context.editor4Page(props.context.selection.selectedPage);
-    return pe.editor4Shape(props.shape);
+    return props.context.editor4Shape(props.shape);
 })
 let shape: Shape | undefined;
 const reflush = ref(0);
