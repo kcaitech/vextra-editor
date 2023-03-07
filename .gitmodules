@@ -1,0 +1,3 @@
+[submodule "src/data"]
+	path = src/data
+	url = git@codeup.aliyun.com:6393d698d690c872dceedcc0/kccode/kcdesign-data.git
