@@ -1,4 +1,4 @@
-import { objectId } from "@/basic/objectid";
+import { objectId } from "@/data/basic/objectid";
 import { ShapeFrame } from "@/data/data/shape";
 import { Gradient, GradientType, Stop } from "@/data/data/style";
 // import { EL, h } from "./basic";

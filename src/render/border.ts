@@ -3,7 +3,7 @@ import { Shape } from '@/data/data/shape';
 import { Border, BorderPosition, FillType, Gradient, GradientType } from '@/data/data/style';
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
-import { objectId } from '@/basic/objectid';
+import { objectId } from '@/data/basic/objectid';
 
 const handler: { [key: number]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
 const angularHandler: { [key: number]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};

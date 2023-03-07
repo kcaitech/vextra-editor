@@ -1,7 +1,7 @@
 import * as chai from 'chai'
 import { debug } from 'debug'
-import { Node } from '@/basic/rbtree/node'
-import { LessOp, Tree } from '@/basic/rbtree/tree'
+import { Node } from '@/data/basic/rbtree/node'
+import { LessOp, Tree } from '@/data/basic/rbtree/tree'
 
 const {
   equal, strictEqual, deepEqual, throws,

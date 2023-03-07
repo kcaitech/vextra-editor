@@ -3,7 +3,7 @@ import { Fill, FillType, Gradient } from "@/data/data/style";
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
-import { objectId } from "@/basic/objectid";
+import { objectId } from "@/data/basic/objectid";
 
 const handler: {[key: number]: (h: Function, shape: Shape, fill: Fill, path: string) => any} = {};
 handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {

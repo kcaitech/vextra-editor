@@ -3,8 +3,8 @@ import App from "./App.vue";
 import i18n from "./i18n";
 import SvgIcon from '@/components/common/SvgIcon.vue'
 import { IJSON, LzData } from "./data/data/lzdata";
-import { LzDataLocal } from '@/data/io/import/sketch/lzdatalocal';
-import { Link } from "./basic/link";
+import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
+import { Link } from "./data/basic/link";
 import { importDocument } from "./data/io/import/exform/document";
 import { LzDataRemote } from "./data/io/import/exform/lzdataremote";
 import { Document } from "./data/data/document";
