@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed } from "vue";
-import { Shape, GroupShape } from '@/data/shape';
+import { Shape, GroupShape } from '@/data/data/shape';
 export interface ItemData {
     id: string,
     shape: Shape

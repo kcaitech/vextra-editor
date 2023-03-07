@@ -1,8 +1,8 @@
-import { Watchable } from "@/data/basic";
-import { Document } from "@/data/document";
-import { Page } from "@/data/page";
-import { Shape } from "@/data/shape";
-import { ISave4Restore } from "@/data/transact";
+import { Watchable } from "@/data/data/basic";
+import { Document } from "@/data/data/document";
+import { Page } from "@/data/data/page";
+import { Shape } from "@/data/data/shape";
+import { ISave4Restore } from "@/data/data/transact";
 
 interface Saved {
     page: Page | undefined,

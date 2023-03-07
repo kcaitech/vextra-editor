@@ -4,12 +4,12 @@ import i18n from "./i18n";
 // import './assets/icons/loadall'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 // import { ipcRenderer } from 'electron';
-import { IJSON, LzData } from "./data/lzdata";
-import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
+import { IJSON, LzData } from "./data/data/lzdata";
+import { LzDataLocal } from '@/data/io/import/sketch/lzdatalocal';
 import { Link } from "./basic/link";
-import { importDocument } from "./io/import/exform/document";
-import { LzDataRemote } from "./io/import/exform/lzdataremote";
-import { Document } from "./data/document";
+import { importDocument } from "./data/io/import/exform/document";
+import { LzDataRemote } from "./data/io/import/exform/lzdataremote";
+import { Document } from "./data/data/document";
 import { Zip } from "@pal/zip";
 
 function openLocalFile(onReady: (data: LzData) => void, file?: File) {

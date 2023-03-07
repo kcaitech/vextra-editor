@@ -8,8 +8,8 @@
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@/data/shape';
-import { Color } from "@/data/style";
+import { Shape } from '@/data/data/shape';
+import { Color } from "@/data/data/style";
 import TypeHeader from './TypeHeader.vue';
 import "@/assets/icons/svg/delete.svg";
 import "@/assets/icons/svg/select.svg";

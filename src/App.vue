@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
-import { LzData } from './data/lzdata';
-import { importDocument } from '@/io/import/sketch/documentio';
-import { Document } from "./data/document";
+import { LzData } from './data/data/lzdata';
+import { importDocument } from '@/data/io/import/sketch/documentio';
+import { Document } from "./data/data/document";
 import DocumentVue from "@/components/Document/index.vue"
 import HomeVue from "@/components/Home/index.vue"
 

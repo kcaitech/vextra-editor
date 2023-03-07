@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
-import { Artboard } from '@/data/artboard';
+import { Artboard } from '@/data/data/artboard';
 import { Page } from '@/data/page';
 import { GroupShape } from '@/data/shape';
 import { defineProps, computed, onMounted, onUnmounted, ref } from 'vue';

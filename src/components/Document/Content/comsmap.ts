@@ -1,4 +1,4 @@
-import { ShapeType } from "@/data/shape";
+import { ShapeType } from "@/data/data/shape";
 import Rectangle from "./Rectangle.vue";
 import ShapeGroup from "./ShapeGroup.vue"
 import ShapePath from "./ShapePath.vue"

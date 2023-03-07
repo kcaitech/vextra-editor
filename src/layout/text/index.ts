@@ -1,4 +1,4 @@
-import { Para, SpanAttr, TextHorizontalAlignment, TextVerticalAlignment } from "@/data/text";
+import { Para, SpanAttr, TextHorizontalAlignment, TextVerticalAlignment } from "@/data/data/text";
 import { measure } from "./measure";
 
 export interface IGraphy {

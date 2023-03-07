@@ -1,12 +1,12 @@
-import { Watchable } from "@/data/basic";
-import { Document } from "@/data/document";
-import { IDocShadow } from "@/data/ishadow";
-import { Page } from "@/data/page";
-import { ShapeNaviShadow } from "@/data/shadow";
-import { Shape } from "@/data/shape";
-import { Repository } from "@/data/transact";
-import { DocEditor, Editor, PageEditor } from "@/editor";
-import { ShapeEditor } from "@/editor/shape";
+import { Watchable } from "@/data/data/basic";
+import { Document } from "@/data/data/document";
+import { IDocShadow } from "@/data/data/ishadow";
+import { Page } from "@/data/data/page";
+import { ShapeNaviShadow } from "@/data/data/shadow";
+import { Shape } from "@/data/data/shape";
+import { Repository } from "@/data/data/transact";
+import { DocEditor, Editor, PageEditor } from "@/data/editor";
+import { ShapeEditor } from "@/data/editor/shape";
 import { Selection } from "./selection";
 
 class ShapeNaviShadowMgr implements IDocShadow {

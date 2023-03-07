@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, ref, defineProps, onMounted, onUnmounted } from 'vue';
 import comsMap from './comsmap'
-import { Artboard } from '@/data/artboard';
+import { Artboard } from '@/data/data/artboard';
 import { render as r } from "@/render/artboard"
 
 const props = defineProps<{ data: Artboard }>();

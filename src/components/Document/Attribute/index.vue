@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { Shape } from '@/data/shape';
+import { Shape } from '@/data/data/shape';
 import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
 import ShapeAttr from './ShapeAttr.vue';
 import Fill from './Fill.vue';

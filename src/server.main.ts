@@ -1,11 +1,11 @@
-import { LzDataLocal } from "@/io/import/sketch/lzdatalocal";
-import { importDocument } from "@/io/import/sketch/documentio";
-import { Document } from "@/data/document";
-import { exportDocument } from "./io/export/exform/document";
+import { LzDataLocal } from "@/data/io/import/sketch/lzdatalocal";
+import { importDocument } from "@/data/io/import/sketch/documentio";
+import { Document } from "@/data/data/document";
+import { exportDocument } from "./data/io/export/exform/document";
 import { EventEmitter } from "./basic/event";
-import { Page } from "./data/page";
-import { exportPage } from "./io/export/exform/page";
-import { ExfContext } from "./io/export/exform/context";
+import { Page } from "./data/data/page";
+import { exportPage } from "./data/io/export/exform/page";
+import { ExfContext } from "./data/io/export/exform/context";
 import { Zip } from "@pal/zip";
 
 function getArg(key: string): string | undefined {

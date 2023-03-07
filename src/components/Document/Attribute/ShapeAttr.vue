@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
-import { Shape } from '@/data/shape';
+import { Shape } from '@/data/data/shape';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import { Context } from '@/context';
