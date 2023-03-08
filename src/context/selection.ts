@@ -21,15 +21,14 @@ export class Selection extends Watchable implements ISave4Restore {
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
-
     private m_hoverShape?: Shape;
 
     // todo
     private m_cursorStart: number = -1;
     private m_cursorEnd: number = -1;
 
-    private m_keyboard_oncontrol: boolean = false;
-    private m_keyboard_onshift: boolean = false;
+    private m_keyboard_oncontrol: boolean = false; // 当shapelist获得焦点时 按键control被按下
+    private m_keyboard_onshift: boolean = false; // 当shapelist获得焦点时 案件shift被按下
 
     constructor(document: Document) {
         super();
@@ -38,10 +37,18 @@ export class Selection extends Watchable implements ISave4Restore {
 
     setControlStatus(status: boolean) {
         this.m_keyboard_oncontrol !== status && (this.m_keyboard_oncontrol = status);
+        (status && this.m_keyboard_onshift) && (this.m_keyboard_onshift = false); // shift or control
+    }
+    setShiftStatus(status: boolean) {
+        this.m_keyboard_onshift !== status && (this.m_keyboard_onshift = status);
+        (status && this.m_keyboard_oncontrol) && (this.m_keyboard_oncontrol = false);
     }
 
     get onControl(): Boolean {
         return this.m_keyboard_oncontrol
+    }
+    get onShift(): Boolean {
+        return this.m_keyboard_onshift
     }
 
     selectPage(p: Page | undefined) {
@@ -60,25 +67,33 @@ export class Selection extends Watchable implements ISave4Restore {
         return this.m_selectPage;
     }
 
+    selectRangeShape(shapes: Shape[]) {
+
+    }
+
     selectShape(shape: Shape) {
-        // check?
-        if (this.isSelectedShape(shape)) {
-            this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1)
+        if (this.m_keyboard_oncontrol) {
+            if (this.isSelectedShape(shape)) {
+                this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
+            } else {
+                this.m_selectShapes.push(shape);
+            }
             this.notify(Selection.CHANGE_SHAPE);
             return;
-        }
-        if (this.m_keyboard_oncontrol) {
-            this.addSelectShape(shape);
-            this.notify(Selection.CHANGE_SHAPE);
+        } else if (this.m_keyboard_onshift) {
+
             return;
         }
         this.m_selectShapes.length = 0;
         this.m_selectShapes.push(shape);
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
-        this.m_hoverShape = undefined
+        this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
-        // shape.notify(Selection.CHANGE_SHAPE);
+    }
+
+    selectShapeIndex(): number[] {
+        return this.m_selectShapes.map((item: Shape) => item.index)
     }
 
     addSelectShape(shape: Shape) {
@@ -90,12 +105,17 @@ export class Selection extends Watchable implements ISave4Restore {
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
         this.notify(Selection.CHANGE_SHAPE);
-        // shape.notify(Selection.CHANGE_SHAPE);
     }
 
     unselectShape(shape: Shape) {
         // todo
     }
+
+    // getFirstIndex(list: Shape[]): number {
+    //     return list.reduce((pre, cur) => {
+    //         return 
+    //     }, -1)
+    // }
 
     // selectRangeShape(start: Shape, end: Shape) {
     //     // todo

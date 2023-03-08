@@ -178,6 +178,9 @@ function onSizeChange() {
     if (savedRootWidth === rootWidth) return;
     const delta = rootWidth - savedRootWidth;
 
+    const rightMinWidthInPx = 336;
+    const rigthMinWidthImportant = Number((rightMinWidthInPx / rootWidth).toFixed(2));
+
     // sizeBounds.left.width = props.left.width * rootWidth;
     sizeBounds.left.minWidth = props.left.minWidth * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
@@ -185,7 +188,7 @@ function onSizeChange() {
     sizeBounds.middle.minWidth = props.middle.minWidth * rootWidth;
     sizeBounds.middle.maxWidth = props.middle.maxWidth * rootWidth;
     // sizeBounds.right.width = props.right.width * rootWidth;
-    sizeBounds.right.minWidth = props.right.minWidth * rootWidth;
+    sizeBounds.right.minWidth = Math.max(rigthMinWidthImportant, props.right.minWidth) * rootWidth;
     sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;
 
     
@@ -206,15 +209,21 @@ function onSizeChange() {
 function initSizeBounds() {
     const rootWidth = getRootWidth();
     savedRootWidth = rootWidth;
+
+    const rightMinWidthInPx = 336;
+    const rigthMinWidthImportant = Number((rightMinWidthInPx / rootWidth).toFixed(2));    
+    
     sizeBounds.left.width = props.left.width * rootWidth;
     sizeBounds.left.minWidth = props.left.minWidth * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
+
     sizeBounds.middle.width = props.middle.width * rootWidth;
     sizeBounds.middle.minWidth = props.middle.minWidth * rootWidth;
     sizeBounds.middle.maxWidth = props.middle.maxWidth * rootWidth;
-    sizeBounds.right.width = props.right.width * rootWidth;
-    sizeBounds.right.minWidth = props.right.minWidth * rootWidth;
-    sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;
+
+    sizeBounds.right.width = Math.max(props.right.width, rigthMinWidthImportant) * rootWidth;
+    sizeBounds.right.minWidth = Math.max(props.right.minWidth, rigthMinWidthImportant) * rootWidth;
+    sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;    
 }
 
 onMounted(() => {

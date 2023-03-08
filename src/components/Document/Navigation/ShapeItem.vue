@@ -1,13 +1,16 @@
 <script setup lang="ts">
+
 import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed } from "vue";
 import { Shape, GroupShape } from '@/data/data/shape';
+
 export interface ItemData {
-    id: string,
+    id: string
     shape: Shape
     selected: boolean
     expand: boolean
     level: number
 }
+
 
 const props = defineProps<{ data: ItemData }>();
 const phWidth = computed(() => {
@@ -15,7 +18,7 @@ const phWidth = computed(() => {
 })
 const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
-    (e: "selectshape", shape: Shape): void;
+    (e: "selectshape", data: ItemData): void;
     (e: "hovershape", shape: Shape): void;
     (e: "unhovershape", shape: Shape): void;
 }>();
@@ -36,7 +39,7 @@ function toggleExpand(e: Event) {
 
 function selectShape(e: Event) {
     e.stopPropagation();
-    emit("selectshape", props.data.shape);
+    emit("selectshape", props.data);
 }
 
 function hoverShape(e: MouseEvent) {

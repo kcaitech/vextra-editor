@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-06 16:10:12
+ * @LastEditTime: 2023-03-08 09:53:56
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageItem.vue
 -->
 <script setup lang="ts">
@@ -27,7 +27,7 @@ function onClick(e: MouseEvent) {
 <template>
     <div
         :class="{ container: true, selected: props.data.selected }"
-        @click.stop="onClick"
+        @click="onClick"
     >
         <div class="ph"></div>
         <div class="item">

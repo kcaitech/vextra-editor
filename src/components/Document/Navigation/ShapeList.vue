@@ -4,12 +4,12 @@ import { Selection } from "@/context/selection"
 import { defineProps, onMounted, onUnmounted, ref } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
-import { Page } from "@/data/page";
-import { ShapeNaviIter } from "@/data/shadow";
-import { Shape } from "@/data/shape";
-import { debounce }  from 'lodash';
+import { Page } from "@/data/data/page";
+import { ShapeNaviIter } from "@/data//data/shadow";
+import { Shape } from "@/data/data/shape";
 
 type List = InstanceType<typeof ListView>
+
 
 const props = defineProps<{ context: Context }>();
 
@@ -70,6 +70,16 @@ const shapeSource = new class implements IDataSource<ItemData> {
         this.m_onchange = l;
     }
 
+    indexOf(data: ItemData): number {
+        const shadows = props.context.shadows;
+        const page = props.context.selection.selectedPage;
+        if (page == undefined) {
+            return -1;
+        }
+        const sd = shadows.get(page as Page);
+        return sd.indexOf(data.shape);
+    }
+
     notify(index: number, del: number, insert: number, modify: number) {
         this.m_onchange && this.m_onchange(index, del, insert, modify);
     }
@@ -109,34 +119,56 @@ function toggleExpand(shape: Shape) {
     const sd = shadows.get(page);
     sd.toggleExpand(shape);
 }
-function selectShape(shape: Shape) {
-    props.context.selection.selectShape(shape);
+function selectShape(data: ItemData) {
+    const index = shapeSource.indexOf(data);
+    data.shape.index = index
+    if (props.context.selection.onShift) {
+        const selectedIndex = props.context.selection.selectShapeIndex()
+        const start = selectedIndex.reduce((pre, cur) => {
+            return Math.abs(index - cur) > pre ? pre : cur
+        })
+        return;
+    }
+    props.context.selection.selectShape(data.shape);
 }
+
+// function getShapeRange(start: number, end: number): Shape[] {
+//     let shapes: Shape[] = [];
+//     return shapes
+// };
+
 function hoverShape(shape: Shape) {
     props.context.selection.hoverShape(shape);
 }
-
-const debounceEmitHoverShape = debounce(hoverShape, 200);
 
 function unHovershape(shape: Shape) {
     props.context.selection.unHoverShape(shape);
 }
 
-const changeControlPressStatus = (e: KeyboardEvent, down: boolean) => {        
-    if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {        
+function changeControlPressStatus(e: KeyboardEvent, down: boolean) {        
+    if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {  
         props.context?.selection.setControlStatus(down)
     }
 }
+function changeShiftPressStatus(e: KeyboardEvent, down: boolean) {
+    if (e.code === 'ShiftLeft') {  
+        props.context?.selection.setShiftStatus(down)
+    }
+}
+
 function onKeyDown(e: KeyboardEvent) {
     changeControlPressStatus(e, true);
+    changeShiftPressStatus(e, true);
+    
 }
 function onKeyUp(e: KeyboardEvent) {
     changeControlPressStatus(e, false)
+    changeShiftPressStatus(e, false);
 }
 
 onMounted(() => {
     props.context.selection.watch(selectionChange);
-    listInstance = shapelist.value?.container
+    listInstance = shapelist.value?.container;
     if (listInstance) {
         listInstance.addEventListener("keydown", onKeyDown);
         listInstance.addEventListener("keyup", onKeyUp);
@@ -170,7 +202,7 @@ onUnmounted(() => {
         :context="props.context"
         @toggleexpand="toggleExpand"
         @selectshape="selectShape"
-        @hovershape="debounceEmitHoverShape"
+        @hovershape="hoverShape"
         @unhovershape="unHovershape"
         orientation="vertical"
     >

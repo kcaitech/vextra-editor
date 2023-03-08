@@ -42,7 +42,7 @@ function onMenuBlur() {
   var timer = setTimeout(() => {
     popoverVisible.value = false;
     clearTimeout(timer)
-  }, 10)
+  }, 100)
 }
 </script>
 

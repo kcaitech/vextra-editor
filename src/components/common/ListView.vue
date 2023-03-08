@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineProps, defineExpose, reactive, ref, watch, computed } from "vue";
+import { onMounted, defineProps, defineExpose, defineEmits ,reactive, ref, computed } from "vue";
 import { Context } from "@/context";
 
 export interface IDataIter<T extends { id: string }> {
@@ -11,6 +11,7 @@ export interface IDataSource<T extends { id: string }> {
     length(): number;
     iterAt(index: number): IDataIter<T>;
     onChange(l: (index: number, del: number, insert: number, modify: number) => void): void;
+    indexOf(data: T): number;
 }
 
 enum Orientation {
@@ -30,13 +31,15 @@ const props = defineProps<{
     allowDrag?: boolean
 }>();
 
+const emit = defineEmits<{
+    (e: "update-after-drag", params: { newlist: any[], dragTarget: any }): void;
+}>();
+
 const contents = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();
-const scrollTrack = ref<HTMLDivElement>();
-const bar = ref<HTMLDivElement>();
 
-const scroll = reactive({ x: 0, y: 0 }); // position of list[0]
-const scrollBar = reactive({ length: 0, mount: false, listMouseOver: false, x: 0, y: 0 }); // 滚动条滑块对象
+let containerPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 });
+const scroll = reactive({ x: 0, y: 0 }); // 被滚走的内容长度，eg：'y: -100' -> '已经往上滚动100px'
 let layoutIndex = 0; // 当前Dom渲染列表中第一个Dom在整个list对应的Dom列表中的index
 const layoutResult = reactive(new Array<{ x: number, y: number, id: string, data: any }>()); // list
 let visibleWidth = 0;
@@ -44,6 +47,7 @@ let visibleHeight = 0;
 const measureWidth = ref(0); // width of listView
 const measureHeight = ref(0); // height of listView
 const prepareCount = 10; //  多准备的
+const listMouseOver = ref<boolean>(false);
 
 defineExpose({
     container
@@ -51,7 +55,6 @@ defineExpose({
 
 const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {    
-    // console.log("re - v")
     layoutResult.length = 0;
     layoutIndex = Math.max(0, Math.floor(-scroll.y / props.itemHeight));
     const iter = props.source.iterAt(layoutIndex);
@@ -83,6 +86,8 @@ relayout[Orientation.H] = () => {
             break;
         }
     }
+    scrollBar.length = Math.ceil((visibleWidth * visibleWidth) / measureHeight.value);
+    scrollBar.length && scrollBar.length !== visibleWidth && (scrollBar.mount = true);
 }
 
 const layoutUp: { [key: string]: Function } = {};
@@ -115,6 +120,9 @@ layoutUp[Orientation.V] = () => {
         layoutIndex = startIndex;
         layoutResult.splice(0, 0, ...result);
     }
+
+
+
 }
 layoutUp[Orientation.H] = () => {
     // console.log("up - h")
@@ -149,9 +157,7 @@ layoutUp[Orientation.H] = () => {
 
 const layoutDown: { [key: string]: Function } = {};
 layoutDown[Orientation.V] = () => {
-    if (layoutIndex + layoutResult.length >= props.source.length()) {
-        return;
-    }
+    if (layoutIndex + layoutResult.length >= props.source.length()) return;
     const si = (-scroll.y + visibleHeight) / props.itemHeight;
     if (layoutIndex + layoutResult.length - si < prepareCount / 2) {
         // 掐头
@@ -175,8 +181,6 @@ layoutDown[Orientation.V] = () => {
             layoutResult.push({ x: 0, y, id: data.id, data });
         }
     }
-    scrollBar.length = Math.ceil((visibleHeight * visibleHeight) / measureHeight.value);
-    scrollBar.length && scrollBar.length !== visibleHeight && (scrollBar.mount = true);
 }
 layoutDown[Orientation.H] = () => {
     // console.log("down - h")
@@ -206,6 +210,8 @@ layoutDown[Orientation.H] = () => {
             layoutResult.push({ x, y: 0, id: data.id, data });
         }
     }
+    scrollBar.length = Math.ceil((visibleHeight * visibleHeight) / measureHeight.value);
+    scrollBar.length && scrollBar.length !== visibleHeight && (scrollBar.mount = true);
 }
 
 // list视口高度/宽度测量
@@ -363,12 +369,13 @@ function clampScroll(transx: number, transy: number) {
         }
     }
     scroll.x = transx;
-    scroll.y = transy;    
-    scrollBar.y = Math.ceil((transy * visibleHeight) / measureHeight.value);
+    scroll.y = transy;
+    scrollBar.x = Math.abs(Math.ceil((transx * visibleWidth) / measureHeight.value)); 
+    scrollBar.y = Math.abs(Math.ceil((transy * visibleHeight) / measureHeight.value));   
 }
 
-// 鼠标事件
-function onMouseWheel(e: WheelEvent) {   
+// list内鼠标事件
+function onMouseWheel(e: WheelEvent) {
     const deltaX = e.deltaX;
     const deltaY = e.deltaY;
     const transx = scroll.x - deltaX;
@@ -376,7 +383,8 @@ function onMouseWheel(e: WheelEvent) {
 
     clampScroll(transx, transy);
 
-    const delta = props.orientation == Orientation.V ? deltaY : deltaX;    
+    const V = props.orientation === Orientation.V
+    const delta = V ? deltaY : deltaX;    
     if (delta < 0) {
         layoutUp[props.orientation]();
     }
@@ -384,27 +392,85 @@ function onMouseWheel(e: WheelEvent) {
         layoutDown[props.orientation]();
     }
 }
-function mouseenter(e: MouseEvent) {
-    scrollBar.listMouseOver = true;
+function mouseenter() { //鼠标进入list， list即获取页面焦点
+    listMouseOver.value = true;
     container.value?.focus();
 }
-function mouseleave(e: MouseEvent) {
-    scrollBar.listMouseOver = false;
+function mouseleave() {
+    listMouseOver.value = false;
 }
+// #region 滚动条
+const scrollBar = reactive({ length: 0, mount: false, x: 0, y: 0 }); // 滚动条滑块对象 eg: 'y: 100' -> '滚动条滑块距离起始位置的距离为100px'
+const scrollTrack = ref<HTMLDivElement>();
+const bar = ref<HTMLDivElement>();
+const mouseOffsetOfBar: { x: number, y: number } = { x: 0, y: 0 }; // 鼠标相对滚动条滑块的位置
+const scrolling = ref<boolean>(false)
+
 function onScrollTrackClick(e: MouseEvent) {
-    const pageHeight = visibleHeight;
     if (e.target !== scrollTrack.value) return;
-    const targetOffsetY = e.offsetY;
-    const down = targetOffsetY >= -scrollBar.y;
-    if (down) {
-        clampScroll(0, scroll.y - pageHeight);
+    const { offsetX, offsetY } = e;
+    const H = props.orientation ===  Orientation.H;
+
+    const pageSize = H ? visibleWidth : visibleHeight;
+
+    const deltaX = H ? offsetX - scrollBar.x : 0;
+    const deltaY = H ? 0 : offsetY - scrollBar.y;
+
+    const delta = H ? deltaX : deltaY
+
+    if (delta > 0) {
+        H ? clampScroll(scroll.x - pageSize, 0) : clampScroll(0, scroll.y - pageSize);
         layoutDown[props.orientation]();
     } else {
-        clampScroll(0, scroll.y + pageHeight);
+        H ? clampScroll(scroll.x + pageSize, 0) : clampScroll(0, scroll.y + pageSize);
         layoutUp[props.orientation]();
     }
 }
-function onScrollBarClick(e: MouseEvent) {}
+function onScrollBarMouseDown(e: MouseEvent) {
+    const { x: scrollBarX, y: scrollBarY } = scrollBar;
+    const { clientX: mouseX, clientY: mouseY } = e;
+    mouseOffsetOfBar.x = mouseX - scrollBarX;
+    mouseOffsetOfBar.y = mouseY - scrollBarY;
+    document.addEventListener('mouseup', onScrollBarMouseUp);
+    document.addEventListener('mousemove', mouseMoveAfterScrollBarMouseDown)
+}
+
+function mouseMoveAfterScrollBarMouseDown(e: MouseEvent) {
+    scrolling.value = true;
+
+    const { clientX: mouseX, clientY: mouseY } = e;
+    const { x: scrollBarX, y: scrollBarY } = scrollBar;
+    const { x: mouseOffsetOfBarX, y: mouseOffsetOfBarY } = mouseOffsetOfBar;
+
+    const deltaX = mouseX - scrollBarX - mouseOffsetOfBarX;
+    const deltaY = mouseY - scrollBarY - mouseOffsetOfBarY;
+   
+    const moveX = Math.min(Math.max(0, mouseX - mouseOffsetOfBarX), visibleWidth - scrollBar.length);
+    const moveY = Math.min(Math.max(0, mouseY - mouseOffsetOfBarY), visibleHeight - scrollBar.length);
+
+    scrollBar.y = props.orientation ===  Orientation.H ? 0 : moveY;
+    scrollBar.x = props.orientation ===  Orientation.V ? 0 : moveX;
+
+    const transy = Math.abs(Math.ceil((moveY * measureHeight.value) / visibleHeight));
+    const transx = Math.abs(Math.ceil((moveX * measureWidth.value) / visibleWidth));
+
+    const delta = props.orientation ===  Orientation.V ? deltaY : deltaX;
+
+    if (delta > 0) {
+        clampScroll(-transx, -transy);
+        layoutDown[props.orientation]();
+    } else if (delta < 0) {
+        clampScroll(-transx, -transy);
+        layoutUp[props.orientation]();
+    }
+}
+
+function onScrollBarMouseUp() {
+    scrolling.value = false
+    document.removeEventListener('mouseup', onScrollBarMouseUp);
+    document.removeEventListener('mousemove', mouseMoveAfterScrollBarMouseDown);
+}
+// #endregion
 
 // #region 列表子元素换位处理
 let currentHoverTarget = ref<HTMLDivElement | EventTarget | null>();
@@ -415,9 +481,13 @@ let offsetOverhalf: boolean = false; // 过半，在hover节点下面插入被�
 let draging = ref<boolean>(false);
 let destination = ref<{ x: number, y: number, length: number }>({ x: 0, y: 0, length: 20 });
 let destinationMount = ref<boolean>(false);
+let substitute = ref<{ x: number, y: number, context: string }>({ x: 0, y: 0, context: '' });
 
 const destinationVisible = computed(() => {
     return draging.value && destinationMount.value && ( fromIndex.value !== toIndex.value )
+})
+const substituteVisible = computed(() => {
+    return draging.value
 })
 function mouseDownOnItem(index: number) {
     if (!props.allowDrag) return;
@@ -430,22 +500,30 @@ function mouseDownOnItem(index: number) {
 }
 function mouseMove(Event: MouseEvent) {
     draging.value = true
+    const { clientX, clientY } = Event;
     if ((currentHoverTarget.value as any)?.getBoundingClientRect) {
-        const { x, top, width, left } = (currentHoverTarget.value as any)?.getBoundingClientRect();
-        destination.value.length = width;
-        const { clientX, clientY } = Event;
-        const offset: number = clientY - top;
+        const { x, y, width, } = (currentHoverTarget.value as any)?.getBoundingClientRect();
+        const offset: number = clientY - y;
         if (offset >= 0 && offset <= 15) {
-            offsetOverhalf = false
+            offsetOverhalf = false;
         } else if (offset > 15 && offset <= 30) {
-            offsetOverhalf = true
+            offsetOverhalf = true;
         }
+
+        destination.value.length = width;
+        destination.value.x = x;
+        destination.value.y = offsetOverhalf ? (toIndex.value + 1) * props.itemHeight - 1 :  toIndex.value * props.itemHeight - 1;
     }
-    destination.value.y = offsetOverhalf ? (toIndex.value + 1) * props.itemHeight - 2 :  toIndex.value * props.itemHeight - 2;
+
+    // 填充替身内容 && 计算替身位置
+    substitute.value.context = layoutResult[fromIndex.value].data.name
+    substitute.value.y = clientY - containerPosition.value.y + 14;
+    substitute.value.x = clientX - containerPosition.value.x;
+    
 }
 
 function itemOnHover(e: MouseEvent, index: number) {
-    // update currenthovertarget toIndex
+    // update currenthovertarget、toIndex
     if (!props.allowDrag || !mousedown.value) return;
     destinationMount.value = true
     currentHoverTarget.value = e.target;
@@ -486,6 +564,7 @@ function mouseUp() {
         toIndex.value = offsetOverhalf ? toIndex.value + 1 : toIndex.value
         descend(fromIndex.value, toIndex.value);
         draging.value = false
+        emit('update-after-drag', { newlist: layoutResult, dragTarget: layoutResult[fromIndex.value] })
     }
 }
 // #endregion
@@ -493,9 +572,11 @@ function mouseUp() {
 const observer = new ResizeObserver(() => {
     const el = container.value;
     if (el) {
+        containerPosition.value.x = el.getBoundingClientRect().x;
+        containerPosition.value.y = el.getBoundingClientRect().y;
         visibleHeight = el.clientHeight;
         visibleWidth = el.clientWidth;
-        layoutDown[props.orientation]();
+        relayout[props.orientation]();
     }
 })
 
@@ -537,21 +618,40 @@ onMounted(() => {
                 @mouseover="(e: MouseEvent) => itemOnHover(e, i)"
                 :style="{left: c.x + 'px', top: c.y + 'px'}"
             />
-            <div class="port" v-if="destinationVisible" :style="{ top: destination.y + 'px' }"></div>
+            <div
+                class="port"
+                v-if="destinationVisible"
+                :style="{ 
+                    top: destination.y + 'px',
+                    left: destination.x + 'px',
+                    width: destination.length + 'px'
+                }"
+            ></div>
+            <div
+                class="substitute"
+                v-if="substituteVisible"
+                :style="{
+                    top: `${substitute.y}px`,
+                    left: `${substitute.x}px`
+                }"
+            >{{ substitute.context }}</div>
         </div>
         <!-- scroll -->
         <div
             ref="scrollTrack"
             class="scroll-track"
             @click="onScrollTrackClick"
-            :style="{ opacity: scrollBar.mount && scrollBar.listMouseOver ? 1 : 0}"
+            :style="{ 
+                opacity: scrollBar.mount && (listMouseOver || scrolling) ? 1 : 0,
+            }"
         >
             <div
                 ref="bar"
-                @mousedown="onScrollBarClick"
+                @mousedown.stop="onScrollBarMouseDown"
                 class="scroll-bar"
                 :style="{
-                    top: -scrollBar.y + 'px',
+                    top: scrollBar.y + 'px',
+                    left: scrollBar.x + 'px',
                     height: scrollBar.length + 'px'
                 }"
             ></div>
@@ -571,9 +671,30 @@ onMounted(() => {
         }
         > .port {
             position: absolute;
-            background-color: aqua;
+            background-color: rgba($color: #8B7355, $alpha: 0.15);
             width: 100%;
-            height: 4px;
+            height: 2px;
+        }
+        > .port::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            border: 2px solid rgba($color: #8B7355, $alpha: 0.15);
+            border-radius: 50%;
+            position: absolute;
+            left: -12px;
+            top: -6px;
+        }
+        > .substitute {
+            position: absolute;
+            height: 32px;
+            min-width: 40px;
+            color: rgba($color: #000000, $alpha: 0.25);
+            font-size: 10px;
+            width: 100%;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
     }
     .horizontal {
@@ -587,29 +708,20 @@ onMounted(() => {
         height: auto;
     }
     .vertical + .scroll-track {
-        width: 6px;
+        width: 8px;
         height: 100%;
         position: absolute;
         top: 0;
         right: 0;
         overflow: hidden;
-        transition: 0.35s;
         > .scroll-bar {
             width: 100%;
             position: relative;
             background-color: #dddddd;
             border-radius: 8px;
-            transition: 0.35s;
         }
         > .scroll-bar:hover {
             background-color: #bbbbbb;
-        }
-    }
-    .vertical + .scroll-track:hover {
-        width: 16px;
-        cursor: pointer;
-        > .scroll-bar {
-            min-height: 28px;
         }
     }
 }

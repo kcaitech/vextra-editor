@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-06 17:45:18
+ * @LastEditTime: 2023-03-07 14:04:06
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageList.vue
 -->
 <script setup lang="ts">
@@ -9,7 +9,7 @@ import { defineProps, onMounted, onUnmounted } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
-import { PagesMgr } from "@/data/document";
+import { PagesMgr } from "@/data/data/document";
 
 const props = defineProps<{ context: Context }>();
 
@@ -53,6 +53,9 @@ class Iter implements IDataIter<ItemData> {
 }
 
 const pageSource = new class implements IDataSource<ItemData> {
+    indexOf(data: ItemData): number {
+        throw new Error("Method not implemented.");
+    }
 
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
     length(): number {
@@ -70,6 +73,8 @@ const pageSource = new class implements IDataSource<ItemData> {
     }
 }
 
+function uodateAfterDrag(params: { newlist: any[], dragTarget: any }) {}
+
 </script>
     
 <template>
@@ -83,6 +88,7 @@ const pageSource = new class implements IDataSource<ItemData> {
         orientation="vertical"
         :allowDrag="true"
         location="pagelist"
+        @update-after-drag="uodateAfterDrag"
     >
     </ListView>
 
