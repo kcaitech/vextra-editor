@@ -138,8 +138,7 @@ onUnmounted(() => {
         background-color: var(--theme-color);
         z-index: 1;
     }
-    #navigation {
-        display: flex;
+    .navigation {
         flex-flow: column nowrap;
         height: 100%;
         background-color: var(--left-navi-bg-color);

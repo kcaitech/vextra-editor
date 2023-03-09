@@ -30,19 +30,19 @@ const props = defineProps<{ context: Context }>();
     display: flex;
     flex-flow: column nowrap;
     > .page-navi {
-        flex: 0 0 auto;
-        max-height: 50%;
-    }
-    > .shape-navi {
-        width: 100%;
-        height: 100%;
-        flex: 1 1 auto;
+        height: 30%;
+        flex: 0;
     }
     > .line {
         width: 100%;
-        height: 3px;
         background-color: var(--theme-color-line);
-        flex: 0 0 auto;
+        flex: 0 0 3px;
     }
+    > .shape-navi {
+        flex: 1;
+        width: 100%;
+        height: 10%;
+    }
+    
 }
 </style>

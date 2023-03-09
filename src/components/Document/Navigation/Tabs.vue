@@ -56,12 +56,9 @@ function toggle(id: Tab) {
     position: relative;
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-flow: column nowrap;
     .tab-controller {
         height: 48px;
-        width: 360px;
-        
+        width: 100%;  
         flex: 0 0 auto;
         display: flex;
         flex-direction: row;
@@ -86,6 +83,7 @@ function toggle(id: Tab) {
         height: calc(100% - 48px);
         position: relative;
         flex: 1 1 auto;
+        box-sizing: border-box;
     }
     
 }

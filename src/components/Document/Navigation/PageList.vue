@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { defineProps, onMounted, onUnmounted } from "vue";
+import { defineProps, onMounted, onUnmounted, ref } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -15,6 +15,8 @@ import "@/assets/icons/svg/add.svg";
 import "@/assets/icons/svg/down.svg";
 
 const props = defineProps<{ context: Context }>();
+
+const fold = ref<boolean>(false)
 
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
@@ -76,6 +78,10 @@ const pageSource = new class implements IDataSource<ItemData> {
     }
 }
 
+function toggle() {
+    fold.value = !fold.value
+}
+
 function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
     console.log('newlist', params);
 }
@@ -83,88 +89,99 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
 </script>
     
 <template>
-    <div class="header">
-        <div class="title">页面</div>
-        <div class="space"></div>
-        <div class="btn">
-            <div class="add">
-                <svg-icon icon-class="add"></svg-icon>
+    <div class="pagelist-wrap">
+        <div class="header">
+            <div class="title">页面</div>
+            <div class="space"></div>
+            <div class="btn">
+                <div class="add">
+                    <svg-icon icon-class="add"></svg-icon>
+                </div>
+                <div class="file">
+                    <svg-icon icon-class="file"></svg-icon>
+                </div>
+                <div class="shrink" @click="toggle">
+                    <svg-icon icon-class="down"></svg-icon>
+                </div>
             </div>
-            <div class="file">
-                <svg-icon icon-class="file"></svg-icon>
-            </div>
-            <div class="shrink">
-                <svg-icon icon-class="down"></svg-icon>
-            </div>
+            
         </div>
-        
+        <div class="body" :style="{height: fold ? 0 : 'calc(100% - 36px)'}">
+            <ListView
+                :source="pageSource"
+                :item-view="PageItem"
+                :item-width="0"
+                :item-height="30"
+                :first-index="0"
+                v-bind="$attrs"
+                orientation="vertical"
+                :allowDrag="true"
+                location="pagelist"
+                @update-after-drag="updateAfterDrag"
+            >
+            </ListView>
+        </div>
     </div>
-    <ListView
-        :source="pageSource"
-        :item-view="PageItem"
-        :item-width="0"
-        :item-height="30"
-        :first-index="0"
-        v-bind="$attrs"
-        orientation="vertical"
-        :allowDrag="true"
-        location="pagelist"
-        @update-after-drag="updateAfterDrag"
-    >
-    </ListView>
-
 </template>
     
 <style scoped lang="scss">
-.header {
-    width: 100%;
-    height: 36px;
-    display: flex;
-    font-size: 10px;
-    padding: 0 13px;
-    box-sizing: border-box;
-    position: relative;
-    align-items: center;
-    > div:not(.space) {
-        flex-shrink: 0;
-    }
-    .title {
-        font-weight: 700;
-        line-height: 30px;
-    }
-    .btn {
-        position: absolute;
-        right: 13px;
+.pagelist-wrap {
+    .header {
+        width: 100%;
         display: flex;
-        flex-direction: row;
-        > div {
-            margin-left: 8px;
+        font-size: 10px;
+        padding: 0 13px;
+        box-sizing: border-box;
+        position: relative;
+        align-items: center;
+        > div:not(.space) {
+            flex-shrink: 0;
         }
-        .add {
-            height: 14px;
-            width: 14px;
-            > svg {
-                width: 80%;
-                height: 80%;
+        .title {
+            font-weight: 700;
+            line-height: 30px;
+        }
+        .btn {
+            position: absolute;
+            right: 13px;
+            display: flex;
+            flex-direction: row;
+            > div {
+                margin-left: 8px;
+            }
+            .add {
+                height: 14px;
+                width: 14px;
+                > svg {
+                    width: 80%;
+                    height: 80%;
+                }
+            }
+            .file {
+                height: 14px;
+                width: 14px;
+                > svg {
+                    width: 80%;
+                    height: 80%;
+                }
+            }
+            .shrink {
+                height: 14px;
+                width: 14px;
+                > svg {
+                    width: 80%;
+                    height: 80%;
+                }
             }
         }
-        .file {
-            height: 14px;
-            width: 14px;
-            > svg {
-                width: 80%;
-                height: 80%;
-            }
-        }
-        .shrink {
-            height: 14px;
-            width: 14px;
-            > svg {
-                width: 80%;
-                height: 80%;
-            }
+    }
+    .body {
+        height: calc(100% - 36px);
+        > .container {
+            height: 100%;
         }
     }
 }
+
 </style>
     

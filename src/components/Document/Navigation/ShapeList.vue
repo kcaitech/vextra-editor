@@ -196,40 +196,59 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <ListView
-        ref="shapelist"
-        location="shapelist"
-        :source="shapeSource"
-        :item-view="ShapeItem"
-        :item-height="30"
-        :item-width="0"
-        :first-index="0"
-        :context="props.context"
-        @toggleexpand="toggleExpand"
-        @selectshape="selectShape"
-        @hovershape="hoverShape"
-        @unhovershape="unHovershape"
-        orientation="vertical"
-    >
-    </ListView>
+    <div class="shapelist-wrap">
+        <div class="header">
+            <div class="title">
+                图层
+            </div>
+        </div>
+        <div class="body">
+            <ListView
+                ref="shapelist"
+                location="shapelist"
+                :source="shapeSource"
+                :item-view="ShapeItem"
+                :item-height="30"
+                :item-width="0"
+                :first-index="0"
+                :context="props.context"
+                @toggleexpand="toggleExpand"
+                @selectshape="selectShape"
+                @hovershape="hoverShape"
+                @unhovershape="unHovershape"
+                orientation="vertical"
+            >
+            </ListView>
+        </div>
+    </div>
+
 </template>
 
 <style scoped lang="scss">
-.header {
-    width: 100%;
-    height: 36px;
-    display: flex;
-    font-size: 10px;
-    padding: 0 13px;
-    box-sizing: border-box;
-    position: relative;
-    align-items: center;
-    > div:not(.space) {
-        flex-shrink: 0;
+.shapelist-wrap {
+    .header {
+        width: 100%;
+        height: 36px;
+        display: flex;
+        font-size: 10px;
+        padding: 0 13px;
+        box-sizing: border-box;
+        position: relative;
+        align-items: center;
+        > div:not(.space) {
+            flex-shrink: 0;
+        }
+        .title {
+            font-weight: 700;
+            line-height: 30px;
+        }
     }
-    .title {
-        font-weight: 700;
-        line-height: 30px;
+    .body {
+        height: calc(100% - 36px);
+        > .container {
+            height: 100%;
+        }
     }
 }
+
 </style>
