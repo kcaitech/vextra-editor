@@ -10,7 +10,6 @@ import { Shape } from "@/data/data/shape";
 
 type List = InstanceType<typeof ListView>
 
-
 const props = defineProps<{ context: Context }>();
 
 const shapelist = ref<List>();
@@ -120,22 +119,28 @@ function toggleExpand(shape: Shape) {
     sd.toggleExpand(shape);
 }
 function selectShape(data: ItemData) {
+    let start = 0;
     const index = shapeSource.indexOf(data);
     data.shape.index = index
     if (props.context.selection.onShift) {
         const selectedIndex = props.context.selection.selectShapeIndex()
-        const start = selectedIndex.reduce((pre, cur) => {
+        start = selectedIndex.reduce((pre, cur) => {
             return Math.abs(index - cur) > pre ? pre : cur
         })
+        const shapes = getShapeRange(start, index);
+        props.context.selection.rangeSelectShape(shapes)
         return;
     }
     props.context.selection.selectShape(data.shape);
 }
 
-// function getShapeRange(start: number, end: number): Shape[] {
-//     let shapes: Shape[] = [];
-//     return shapes
-// };
+function getShapeRange(start: number, end: number): Shape[] {
+    let dataRange: Shape[] = [];
+    for (let i = start; i <= end; i++) {
+        dataRange.push((shapeSource.iterAt(i) as any).__it.__node.__shape);
+    }
+    return dataRange;
+}
 
 function hoverShape(shape: Shape) {
     props.context.selection.hoverShape(shape);
@@ -210,4 +215,21 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+.header {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    font-size: 10px;
+    padding: 0 13px;
+    box-sizing: border-box;
+    position: relative;
+    align-items: center;
+    > div:not(.space) {
+        flex-shrink: 0;
+    }
+    .title {
+        font-weight: 700;
+        line-height: 30px;
+    }
+}
 </style>

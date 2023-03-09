@@ -92,6 +92,15 @@ export class Selection extends Watchable implements ISave4Restore {
         this.notify(Selection.CHANGE_SHAPE);
     }
 
+    rangeSelectShape(shapes: Shape[]) {
+        this.m_selectShapes.length = 0;
+        this.m_selectShapes.push(...shapes);
+        this.m_cursorStart = -1;
+        this.m_cursorEnd = -1;
+        this.m_hoverShape = undefined;
+        this.notify(Selection.CHANGE_SHAPE);
+    }
+
     selectShapeIndex(): number[] {
         return this.m_selectShapes.map((item: Shape) => item.index)
     }

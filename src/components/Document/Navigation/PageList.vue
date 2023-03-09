@@ -1,6 +1,6 @@
 <!--
  * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-07 14:04:06
+ * @LastEditTime: 2023-03-09 17:28:05
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageList.vue
 -->
 <script setup lang="ts">
@@ -10,6 +10,9 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
 import { PagesMgr } from "@/data/data/document";
+import "@/assets/icons/svg/file.svg";
+import "@/assets/icons/svg/add.svg";
+import "@/assets/icons/svg/down.svg";
 
 const props = defineProps<{ context: Context }>();
 
@@ -73,11 +76,29 @@ const pageSource = new class implements IDataSource<ItemData> {
     }
 }
 
-function uodateAfterDrag(params: { newlist: any[], dragTarget: any }) {}
+function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
+    console.log('newlist', params);
+}
 
 </script>
     
 <template>
+    <div class="header">
+        <div class="title">页面</div>
+        <div class="space"></div>
+        <div class="btn">
+            <div class="add">
+                <svg-icon icon-class="add"></svg-icon>
+            </div>
+            <div class="file">
+                <svg-icon icon-class="file"></svg-icon>
+            </div>
+            <div class="shrink">
+                <svg-icon icon-class="down"></svg-icon>
+            </div>
+        </div>
+        
+    </div>
     <ListView
         :source="pageSource"
         :item-view="PageItem"
@@ -88,13 +109,62 @@ function uodateAfterDrag(params: { newlist: any[], dragTarget: any }) {}
         orientation="vertical"
         :allowDrag="true"
         location="pagelist"
-        @update-after-drag="uodateAfterDrag"
+        @update-after-drag="updateAfterDrag"
     >
     </ListView>
 
 </template>
     
 <style scoped lang="scss">
-
+.header {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    font-size: 10px;
+    padding: 0 13px;
+    box-sizing: border-box;
+    position: relative;
+    align-items: center;
+    > div:not(.space) {
+        flex-shrink: 0;
+    }
+    .title {
+        font-weight: 700;
+        line-height: 30px;
+    }
+    .btn {
+        position: absolute;
+        right: 13px;
+        display: flex;
+        flex-direction: row;
+        > div {
+            margin-left: 8px;
+        }
+        .add {
+            height: 14px;
+            width: 14px;
+            > svg {
+                width: 80%;
+                height: 80%;
+            }
+        }
+        .file {
+            height: 14px;
+            width: 14px;
+            > svg {
+                width: 80%;
+                height: 80%;
+            }
+        }
+        .shrink {
+            height: 14px;
+            width: 14px;
+            > svg {
+                width: 80%;
+                height: 80%;
+            }
+        }
+    }
+}
 </style>
     

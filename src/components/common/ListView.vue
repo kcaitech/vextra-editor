@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, defineProps, defineExpose, defineEmits ,reactive, ref, computed } from "vue";
 import { Context } from "@/context";
+import { number } from "@intlify/core-base";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -32,7 +33,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: "update-after-drag", params: { newlist: any[], dragTarget: any }): void;
+    (e: "update-after-drag", params: { from: number, to: number, dragTarget: any }): void;
 }>();
 
 const contents = ref<HTMLDivElement>();
@@ -564,7 +565,7 @@ function mouseUp() {
         toIndex.value = offsetOverhalf ? toIndex.value + 1 : toIndex.value
         descend(fromIndex.value, toIndex.value);
         draging.value = false
-        emit('update-after-drag', { newlist: layoutResult, dragTarget: layoutResult[fromIndex.value] })
+        emit('update-after-drag', { from: fromIndex.value, to: toIndex.value, dragTarget: layoutResult[fromIndex.value] })
     }
 }
 // #endregion

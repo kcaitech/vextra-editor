@@ -43,13 +43,16 @@ onUnmounted(() => {
 
 <style>
     :root {
-        /*  */
         --theme-color: #2c2c2c;
         --theme-color-anti: white;
         --theme-color2: #f5f5f5;
         --theme-color3: #e0e0e0;
         --theme-color-line: #f0f0f0;
         --font-family: BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,PingFang SC,Microsoft Yahei,Hiragino Sans GB,sans-serif,apple color emoji,Noto Color Emoji,segoe ui emoji,segoe ui symbol;
+        --default-radius: 4px;
+        --default-padding: 16px;
+        --default-margin: 12px;
+        --default-fontsize: 10px;
     }
     html {
         width: 100%;

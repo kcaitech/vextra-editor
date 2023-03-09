@@ -1,0 +1,92 @@
+<!--
+ * @Author: Zrx georgezrx@163.com
+ * @Date: 2023-03-08 09:42:33
+ * @LastEditors: Zrx georgezrx@163.com
+ * @LastEditTime: 2023-03-09 16:13:35
+-->
+<script setup lang="ts">
+import { defineProps, ref } from "vue";
+import { Context } from "@/context";
+import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
+import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
+import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
+
+
+const props = defineProps<{ context: Context }>();
+
+type Tab = "Shape" | "Comps" | "Resource"
+
+const currentTab = ref<Tab>("Shape");
+
+const tabs: { title: string, id: Tab }[] = [
+    {
+        title: '图层',
+        id: 'Shape'
+    }, {
+        title: '组件',
+        id: 'Comps'
+    }, {
+        title: '资源库',
+        id: 'Resource'
+    }
+]
+
+function toggle(id: Tab) {
+    currentTab.value = id
+}
+
+</script>
+
+<template>
+    <div class="tab-container">
+        <div class="tab-controller">
+            <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index" @click="toggle(i.id)">{{ i.title }}</div>
+        </div>
+        <div class="body">
+            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs"></ShapeTab>
+            <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
+            <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
+        </div>
+        
+    </div>
+</template>
+
+<style scoped lang="scss">
+.tab-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column nowrap;
+    .tab-controller {
+        height: 48px;
+        width: 360px;
+        
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: row;
+        > .tab {
+            font-weight: 700;
+            font-size: 10px;
+            min-width: 42px;
+            margin-right: 4px;
+            margin-top: 16px;
+            padding: 4px;
+            text-align: center;
+            line-height: 28px;
+        }
+        > .active {
+            border-radius: 4px 4px 0 0;
+            background-color: var(--theme-color3);
+        }
+    }
+    .body {
+        border-top: 1px solid var(--theme-color);
+        width: 100%;
+        height: calc(100% - 48px);
+        position: relative;
+        flex: 1 1 auto;
+    }
+    
+}
+</style>

@@ -36,18 +36,20 @@ watch(popoverVisible, (val) => {
 })
 
 function onMenuBlur() {
-  if (popover.value) {
-    popover.value.removeEventListener('blur', onMenuBlur);
-  }
-  var timer = setTimeout(() => {
-    popoverVisible.value = false;
-    clearTimeout(timer)
-  }, 100)
+  // if (popover.value) {
+  //   popover.value.removeEventListener('blur', onMenuBlur);
+  // }
+  // var timer = setTimeout(() => {
+  //   popoverVisible.value = false;
+  //   clearTimeout(timer)
+  // }, 100)
 }
 </script>
 
 <template>
-  <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible"></div>
+  <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+  
+  </div>
   <ToolButton ref="button">
     <div class="svg-container" title="Cursor">
       <svg-icon icon-class="cursor"></svg-icon>
@@ -90,27 +92,10 @@ function onMenuBlur() {
 .popover {
   position: absolute;
   z-index: 999;
-  width: 360px;
-  height: 100px;
+  width: 200px;
+  height: 260px;
   background-color: var(--theme-color);
   border-radius: 4px;
   outline: none;
 }
-// @keyframes bounce {
-//   0% {
-//     transform: translateY(0);
-//   }
-//   50% {
-//     transform: translateY(6px);
-//   }
-//   100% {
-//     transform: translateY(0);
-//   }
-// }
-// .button:hover {
-//   .menu > svg {
-//     animation-duration: .5s;
-//     animation-name: bounce;
-//   }
-// }
 </style>

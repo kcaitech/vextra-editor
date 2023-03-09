@@ -50,7 +50,7 @@ function switchPage(id: string) {
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         const ctx: Context = context.value as Context;
-        curPage.value = ctx.selection.selectedPage
+        curPage.value = ctx.selection.selectedPage;
     }
 }
 
@@ -141,7 +141,6 @@ onUnmounted(() => {
     #navigation {
         display: flex;
         flex-flow: column nowrap;
-        /* width:100px; */
         height: 100%;
         background-color: var(--left-navi-bg-color);
         z-index: 1;
@@ -154,7 +153,6 @@ onUnmounted(() => {
     }
     #attributes {
         flex-flow: column nowrap;
-        /* width:150px; */
         height: 100%;
         background-color: var(--right-attr-bg-color);
         z-index: 1;
