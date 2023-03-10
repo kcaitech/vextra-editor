@@ -10,51 +10,50 @@ import "@/assets/icons/svg/pointer.svg";
 import "@/assets/icons/svg/rectangle.svg";
 import "@/assets/icons/svg/resource.svg";
 import "@/assets/icons/svg/text.svg";
-import "@/assets/icons/svg/ungroup.svg";
+import { defineProps } from "vue";
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
 import ToolButton from './ToolButton.vue';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import Pen from "./Buttons/Pen.vue";
+import GroupUngroup from "./GroupUngroup.vue";
+
+const props = defineProps<{ 
+    context: Context,
+    selection: Selection
+}>();
+
 
 </script>
 
 <template>
     <div class="editor-tools" @dblclick.stop>
-        <!-- 选择工具 -->
         <Cursor></Cursor>
-        <!-- 形状 -->
         <ToolButton>
             <div class="temp" title="Rectangle">
                 <svg-icon icon-class="rectangle"></svg-icon>
             </div>
         </ToolButton>
         <Frame></Frame>
-        <!-- 画笔 -->
         <Pen></Pen>
-        <!-- 插入文字 -->
         <ToolButton>
             <div class="temp" title="Text">
                 <svg-icon icon-class="text"></svg-icon>
             </div>
         </ToolButton>
-        <!-- 插入图片 -->
         <ToolButton>
             <div class="temp" title="Resource">
                 <svg-icon icon-class="resource"></svg-icon>
             </div>
         </ToolButton>
-        <!-- 引用 -->
         <ToolButton>
             <div class="temp" title="Pointer">
                 <svg-icon icon-class="pointer"></svg-icon>
             </div>
         </ToolButton>
         <div class="vertical-line" />
-        <ToolButton>
-            <div class="temp" title="复制">
-                <svg-icon icon-class="ungroup"></svg-icon>
-            </div>
-        </ToolButton>
+        <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     
 </template>
@@ -67,11 +66,11 @@ import Pen from "./Buttons/Pen.vue";
         position: absolute;
         left: 50%;
         transform: translateX(-50%);
+        height: 40px;
         div {
             margin: auto 4px;
         }
         .temp {
-            cursor: pointer;
             width: 28px;
             height: 28px;
             font-size: 12px;

@@ -7,6 +7,8 @@ import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@/data/data/page";
 import { ShapeNaviIter } from "@/data//data/shadow";
 import { Shape } from "@/data/data/shape";
+import "@/assets/icons/svg/search.svg";
+
 
 type List = InstanceType<typeof ListView>
 
@@ -84,6 +86,7 @@ const shapeSource = new class implements IDataSource<ItemData> {
     }
 }
 
+
 const shadowChange = () => {
     shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
@@ -109,6 +112,9 @@ const selectionChange = (t: number) => {
         shapeSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
+function search(e: Event) {
+    console.log((e.target as HTMLInputElement).value);
+}
 function toggleExpand(shape: Shape) {
     const page = props.context.selection.selectedPage;
     if (page == undefined) {
@@ -123,12 +129,11 @@ function selectShape(data: ItemData) {
     const index = shapeSource.indexOf(data);
     data.shape.index = index
     if (props.context.selection.onShift) {
-        const selectedIndex = props.context.selection.selectShapeIndex()
-        start = selectedIndex.reduce((pre, cur) => {
-            return Math.abs(index - cur) > pre ? pre : cur
-        })
+        const selectedIndex = props.context.selection.selectShapeIndex();
+        if (!selectedIndex.length) return props.context.selection.selectShape(data.shape);
+        start = selectedIndex.reduce((pre, cur) => Math.abs(index - cur) > pre ? pre : cur);
         const shapes = getShapeRange(start, index);
-        props.context.selection.rangeSelectShape(shapes)
+        props.context.selection.rangeSelectShape(shapes);
         return;
     }
     props.context.selection.selectShape(data.shape);
@@ -160,6 +165,7 @@ function changeShiftPressStatus(e: KeyboardEvent, down: boolean) {
         props.context?.selection.setShiftStatus(down)
     }
 }
+
 
 function onKeyDown(e: KeyboardEvent) {
     changeControlPressStatus(e, true);
@@ -198,8 +204,10 @@ onUnmounted(() => {
 <template>
     <div class="shapelist-wrap">
         <div class="header">
-            <div class="title">
-                图层
+            <div class="title">图层</div>
+            <div class="search">
+                <svg-icon icon-class="search"></svg-icon>
+                <input type="text" @change="e => search(e)">
             </div>
         </div>
         <div class="body">
@@ -228,23 +236,44 @@ onUnmounted(() => {
 .shapelist-wrap {
     .header {
         width: 100%;
-        height: 36px;
-        display: flex;
+        height: 64px;
         font-size: 10px;
         padding: 0 13px;
         box-sizing: border-box;
         position: relative;
-        align-items: center;
         > div:not(.space) {
             flex-shrink: 0;
         }
         .title {
             font-weight: 700;
             line-height: 30px;
+            height: 30px;
+        }
+        .search {
+            width: 100%;
+            height: 32px;
+            margin: 1px 0px;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            background-color: var(--theme-color2);
+            padding: 4px var(--default-padding);
+            border-radius: 8px;
+            > svg {
+                height: 20px;
+                flex: 0 0 20px;
+            }
+            > input {
+                flex: 1 1 auto;
+                border: none;
+                outline: none;
+                margin-left: 4px;
+                background-color: transparent;
+            }
         }
     }
     .body {
-        height: calc(100% - 36px);
+        height: calc(100% - 64px);
         > .container {
             height: 100%;
         }

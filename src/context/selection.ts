@@ -67,10 +67,6 @@ export class Selection extends Watchable implements ISave4Restore {
         return this.m_selectPage;
     }
 
-    selectRangeShape(shapes: Shape[]) {
-
-    }
-
     selectShape(shape: Shape) {
         if (this.m_keyboard_oncontrol) {
             if (this.isSelectedShape(shape)) {

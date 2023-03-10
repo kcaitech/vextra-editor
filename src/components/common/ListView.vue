@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, defineProps, defineExpose, defineEmits ,reactive, ref, computed } from "vue";
 import { Context } from "@/context";
-import { number } from "@intlify/core-base";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -474,15 +473,16 @@ function onScrollBarMouseUp() {
 // #endregion
 
 // #region 列表子元素换位处理
-let currentHoverTarget = ref<HTMLDivElement | EventTarget | null>();
-let mousedown = ref<boolean>(false);
-let fromIndex = ref<number>(0);
-let toIndex = ref<number>(0);
+const currentHoverTarget = ref<HTMLDivElement | EventTarget | null>();
+const mousedown = ref<boolean>(false);
+const fromIndex = ref<number>(0);
+const toIndex = ref<number>(0);
 let offsetOverhalf: boolean = false; // 过半，在hover节点下面插入被拖动节点，反则上面
-let draging = ref<boolean>(false);
-let destination = ref<{ x: number, y: number, length: number }>({ x: 0, y: 0, length: 20 });
-let destinationMount = ref<boolean>(false);
-let substitute = ref<{ x: number, y: number, context: string }>({ x: 0, y: 0, context: '' });
+const draging = ref<boolean>(false);
+const mouseBegin: { x: number, y: number } ={ x: 0, y: 0};
+const destination = ref<{ x: number, y: number, length: number }>({ x: 0, y: 0, length: 20 });
+const destinationMount = ref<boolean>(false);
+const substitute = ref<{ x: number, y: number, context: string }>({ x: 0, y: 0, context: '' });
 
 const destinationVisible = computed(() => {
     return draging.value && destinationMount.value && ( fromIndex.value !== toIndex.value )
@@ -490,37 +490,40 @@ const destinationVisible = computed(() => {
 const substituteVisible = computed(() => {
     return draging.value
 })
-function mouseDownOnItem(index: number) {
+function mouseDownOnItem(index: number, e: MouseEvent) {
     if (!props.allowDrag) return;
     // record fromIndex && pre to take off
     fromIndex.value = index;
     toIndex.value = index;
     mousedown.value = true;
+    mouseBegin.x = e.clientX;
+    mouseBegin.y = e.clientY;
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
 }
 function mouseMove(Event: MouseEvent) {
-    draging.value = true
     const { clientX, clientY } = Event;
-    if ((currentHoverTarget.value as any)?.getBoundingClientRect) {
-        const { x, y, width, } = (currentHoverTarget.value as any)?.getBoundingClientRect();
-        const offset: number = clientY - y;
-        if (offset >= 0 && offset <= 15) {
+    if (Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y) < 10) return;
+    draging.value = true;
+    if ((currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect) {
+        const { x, y, width, } = (currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect();
+        const offsetX: number = clientX - x;
+        const offsetY: number = clientY - y;
+        const offset = props.orientation === Orientation.H ? offsetX : offsetY;
+        const itemRange = props.orientation === Orientation.H ? props.itemWidth : props.itemHeight;
+        if ((offset >= 0) && (offset <= itemRange / 2)) {
             offsetOverhalf = false;
-        } else if (offset > 15 && offset <= 30) {
+        } else if ((offset > itemRange / 2) && (offset <= itemRange)) {
             offsetOverhalf = true;
         }
-
         destination.value.length = width;
         destination.value.x = x;
         destination.value.y = offsetOverhalf ? (toIndex.value + 1) * props.itemHeight - 1 :  toIndex.value * props.itemHeight - 1;
     }
-
     // 填充替身内容 && 计算替身位置
     substitute.value.context = layoutResult[fromIndex.value].data.name
     substitute.value.y = clientY - containerPosition.value.y + 14;
     substitute.value.x = clientX - containerPosition.value.x;
-    
 }
 
 function itemOnHover(e: MouseEvent, index: number) {
@@ -532,6 +535,7 @@ function itemOnHover(e: MouseEvent, index: number) {
 }
 
 function descend(from: number, to: number) {
+    const target = layoutResult[from]
     if (from < to) {
         layoutResult.splice(to, 0, layoutResult[from]);
         layoutResult.splice(from, 1);
@@ -553,6 +557,7 @@ function descend(from: number, to: number) {
             })
         }
     }
+    return target;
 }
 function mouseUp() {
     if (!props.allowDrag) return;
@@ -563,9 +568,9 @@ function mouseUp() {
     document.removeEventListener('mouseup', mouseUp);
     if (draging.value) {
         toIndex.value = offsetOverhalf ? toIndex.value + 1 : toIndex.value
-        descend(fromIndex.value, toIndex.value);
+        const dragTarget = descend(fromIndex.value, toIndex.value);
         draging.value = false
-        emit('update-after-drag', { from: fromIndex.value, to: toIndex.value, dragTarget: layoutResult[fromIndex.value] })
+        emit('update-after-drag', { from: fromIndex.value, to: toIndex.value, dragTarget })
     }
 }
 // #endregion
@@ -615,7 +620,7 @@ onMounted(() => {
                 :key="c.id"
                 :data="c.data"
                 v-bind="$attrs"
-                @mousedown.stop="() => mouseDownOnItem(i)"
+                @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
                 @mouseover="(e: MouseEvent) => itemOnHover(e, i)"
                 :style="{left: c.x + 'px', top: c.y + 'px'}"
             />

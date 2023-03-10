@@ -83,7 +83,8 @@ function toggle() {
 }
 
 function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
-    console.log('newlist', params);
+    const docEditor = props.context.editor4Doc();
+    docEditor.move(params.dragTarget, params.to);
 }
 
 </script>
@@ -101,7 +102,7 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
                     <svg-icon icon-class="file"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">
-                    <svg-icon icon-class="down"></svg-icon>
+                    <svg-icon icon-class="down" :style="{transform: fold ? 'rotate(90deg)' : 'rotate(0deg)'}"></svg-icon>
                 </div>
             </div>
             

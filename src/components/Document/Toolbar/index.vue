@@ -5,7 +5,7 @@ import UndoRedo from './UndoRedo.vue';
 import GroupUngroup from './GroupUngroup.vue';
 import OpenFile from "./OpenFile.vue";
 import EditorTools from "./EditorTools.vue";
-import UserInfo from './UserInfo.vue'
+import UserInfo from './UserInfo.vue';
 
 const props = defineProps<{ context: Context }>();
 const repo = shallowRef(props.context.repo);
@@ -24,11 +24,11 @@ onUnmounted(() => {
 <template>
     <div class="toolbar">
         <OpenFile></OpenFile>
-        <EditorTools></EditorTools>
+        <EditorTools :context="context" :selection="selection"></EditorTools>
         <UserInfo></UserInfo>
         <!-- <UndoRedo :repo="repo" /> back/go
-        <div class="vertical-line" />
-        <GroupUngroup :context="context" :selection="selection" /> ungroup -->
+        <div class="vertical-line" />-->
+        <!-- <GroupUngroup :context="context" :selection="selection" /> -->
 
     </div>
 </template>

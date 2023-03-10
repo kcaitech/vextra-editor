@@ -26,7 +26,6 @@ function topDblClick() {
     }
   	props.data.setScreen(!isFullscreen)
 }
-
 function onWindowBlur() {
     // Window blur, Close the process that should be closed
 }

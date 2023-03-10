@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
 import { Artboard } from '@/data/data/artboard';
-import { Page } from '@/data/page';
-import { GroupShape } from '@/data/shape';
+import { Page } from '@/data/data/page';
+import { GroupShape } from '@/data/data/shape';
 import { defineProps, computed, onMounted, onUnmounted, ref } from 'vue';
 // import Icon from "@/components/common/Icon.vue";
 import { Context } from '@/context';
@@ -92,11 +92,24 @@ const nogroupClick = () => {
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 div.group {
     display: flex;
     flex-direction: row;
     align-items: center;
     height: 100%;
+    width: 40px;
+    > div {
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #ffffff;
+        > svg {
+            height: 70%;
+            width: 70%;
+        }
+    }
+
 }
 </style>
