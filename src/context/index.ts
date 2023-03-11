@@ -7,7 +7,7 @@ import { Shape } from "@/data/data/shape";
 import { Repository } from "@/data/data/transact";
 import { DocEditor, Editor, PageEditor } from "@/data/editor";
 import { ShapeEditor } from "@/data/editor/shape";
-import { uploadExForm } from "@/data/io/export/exform";
+import { uploadExForm } from "@/data/io/exform/export";
 import { Selection } from "./selection";
 
 class ShapeNaviShadowMgr implements IDocShadow {

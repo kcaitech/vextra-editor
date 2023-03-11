@@ -4,8 +4,8 @@ import i18n from "./i18n";
 import SvgIcon from '@/components/common/SvgIcon.vue'
 import { LzData } from "./data/data/lzdata";
 import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
-import { importDocument } from "./data/io/import/exform/document";
-import { LzDataRemote } from "./data/io/import/exform/lzdataremote";
+import { importDocument } from "./data/io/exform/import/document";
+import { LzDataRemote } from "./data/io/exform/import/lzdataremote";
 import { Document } from "./data/data/document";
 import { Zip } from "@pal/zip";
 
