@@ -18,7 +18,7 @@ export async function importDocument(lzData: LzData) {
     // todo
     const meta = await importMeta(lzData, pageIds);
     const symsMgr = new SymsMgr();
-    const mediaMgr = new MediaMgr(lzData);
+    const mediaMgr = new MediaMgr((id: string) => lzData.loadRaw(id));
     const pagesMgr = new PagesMgr(meta.pagesMeta, (id: string): Promise<Page> => {
         return importPage(lzData, 'pages/'+id+'.json', symsMgr, mediaMgr, styleMgr);
     });

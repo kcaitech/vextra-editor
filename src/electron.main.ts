@@ -4,9 +4,8 @@ import i18n from "./i18n";
 // import './assets/icons/loadall'
 import SvgIcon from '@/components/common/SvgIcon.vue'
 // import { ipcRenderer } from 'electron';
-import { IJSON, LzData } from "./data/data/lzdata";
+import { LzData } from "./data/data/lzdata";
 import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
-import { Link } from "./data/basic/link";
 import { importDocument } from "./data/io/import/exform/document";
 import { LzDataRemote } from "./data/io/import/exform/lzdataremote";
 import { Document } from "./data/data/document";
@@ -22,25 +21,10 @@ function openLocalFile(onReady: (data: LzData) => void, file?: File) {
     // });
 }
 
-let link: Link | undefined;
-
 function openRemoteFile(onReady: (data: Document) => void) {
-    if (link) link.close();
-    const l = link = new Link("ws://localhost:8000")
-    const timeout = setTimeout(() => { // expired
-        if (!l.isOpen()) l.close();
-    }, 10000);
-    l.once('onopen', () => {
-        clearTimeout(timeout);
-    })
-    l.once('firstload', (data: IJSON) => {
-        const document = data['document'];
-        const page = data['page'];
-        // console.log(document, page);
-        const lzData = new LzDataRemote(l);
-        importDocument(lzData, JSON.parse(document), JSON.parse(page)).then((val: Document) => {
-            onReady(val);
-        })
+    const lzData = new LzDataRemote('128d50e9-0705-42c6-9f51-f9a049de33aa', '0');
+    importDocument(lzData).then((val: Document) => {
+        onReady(val);
     })
 }
 

@@ -2,14 +2,12 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import i18n from "./i18n";
 import SvgIcon from '@/components/common/SvgIcon.vue'
-import { IJSON, LzData } from "./data/data/lzdata";
+import { LzData } from "./data/data/lzdata";
 import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
-import { Link } from "./data/basic/link";
 import { importDocument } from "./data/io/import/exform/document";
 import { LzDataRemote } from "./data/io/import/exform/lzdataremote";
 import { Document } from "./data/data/document";
 import { Zip } from "@pal/zip";
-
 
 function openLocalFile(onReady: (data: LzData) => void, file?: File) {
     if (file) {
@@ -17,25 +15,10 @@ function openLocalFile(onReady: (data: LzData) => void, file?: File) {
     }
 }
 
-let link: Link | undefined;
-
-function openRemoteFile(onReady: (data: Document) => void) {
-    if (link) link.close();
-    const l = link = new Link("ws://localhost:8000")
-    const timeout = setTimeout(() => { // expired
-        if (!l.isOpen()) l.close();
-    }, 10000);
-    l.once('onopen', () => {
-        clearTimeout(timeout);
-    })
-    l.once('firstload', (data: IJSON) => {
-        const document = data['document'];
-        const page = data['page'];
-        // console.log(document, page);
-        const lzData = new LzDataRemote(l);
-        importDocument(lzData, JSON.parse(document), JSON.parse(page)).then((val: Document) => {
-            onReady(val);
-        })
+function openRemoteFile(fid: string, onReady: (data: Document) => void) {
+    const lzData = new LzDataRemote(fid, '0');
+    importDocument(lzData).then((val: Document) => {
+        onReady(val);
     })
 }
 
