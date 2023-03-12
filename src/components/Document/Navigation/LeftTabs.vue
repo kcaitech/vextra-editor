@@ -10,7 +10,8 @@ import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps<{ context: Context }>();
 
@@ -20,13 +21,13 @@ const currentTab = ref<Tab>("Shape");
 
 const tabs: { title: string, id: Tab }[] = [
     {
-        title: '图层',
+        title: t('navi.shape'),
         id: 'Shape'
     }, {
-        title: '组件',
+        title: t('navi.comps'),
         id: 'Comps'
     }, {
-        title: '资源库',
+        title: t('navi.resource'),
         id: 'Resource'
     }
 ]
@@ -47,7 +48,6 @@ function toggle(id: Tab) {
             <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
             <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
         </div>
-        
     </div>
 </template>
 

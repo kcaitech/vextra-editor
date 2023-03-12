@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineProps, defineExpose, defineEmits ,reactive, ref, computed } from "vue";
+import { onMounted, defineProps, defineExpose, defineEmits ,reactive, ref, computed, onUnmounted } from "vue";
 import { Context } from "@/context";
 
 export interface IDataIter<T extends { id: string }> {
@@ -120,9 +120,6 @@ layoutUp[Orientation.V] = () => {
         layoutIndex = startIndex;
         layoutResult.splice(0, 0, ...result);
     }
-
-
-
 }
 layoutUp[Orientation.H] = () => {
     // console.log("up - h")
@@ -503,7 +500,7 @@ function mouseDownOnItem(index: number, e: MouseEvent) {
 }
 function mouseMove(Event: MouseEvent) {
     const { clientX, clientY } = Event;
-    if (Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y) < 10) return;
+    if (Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y) < 10 && !draging.value) return;
     draging.value = true;
     if ((currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect) {
         const { x, y, width, } = (currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect();
@@ -535,18 +532,14 @@ function itemOnHover(e: MouseEvent, index: number) {
 }
 
 function descend(from: number, to: number) {
-    const target = layoutResult[from]
-    if (from < to) {
-        layoutResult.splice(to, 0, layoutResult[from]);
-        layoutResult.splice(from, 1);
-        resort(layoutResult, props.orientation)
-    } else if (from > to) {
-        let temp = layoutResult[from];
-        layoutResult.splice(from, 1);
-        layoutResult.splice(to, 0, temp);
-        resort(layoutResult, props.orientation)
-    }
-    function resort(arr: { x: number, y: number, id: string, data: any }[], orientation: "horizontal" | "vertical") {
+    if (from === to) return;
+    const target = layoutResult[from];
+    const descendIndex = from > to ? to : to - 1;
+    layoutResult.splice(from, 1);
+    layoutResult.splice(descendIndex, 0, target);
+    resort(layoutResult, props.orientation)
+
+    function resort(arr: { x: number, y: number, id: string, data: any }[], orientation: 'horizontal' | 'vertical') {
         if (orientation === Orientation.V) {
             arr.forEach((item, index) => {
                 item.y = index * props.itemHeight
@@ -591,6 +584,9 @@ onMounted(() => {
     container.value && observer.observe(container.value);
     viewMeasure[props.orientation]();
     relayout[props.orientation]();
+})
+onUnmounted(() => {
+    observer.disconnect();
 })
 </script>
 

@@ -5,10 +5,11 @@ import { defineProps, onMounted, onUnmounted, ref } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@/data/data/page";
-import { ShapeNaviIter } from "@/data//data/shadow";
+import { ShapeNaviIter } from "@/data/data/shadow/shapeNavi"
 import { Shape } from "@/data/data/shape";
 import "@/assets/icons/svg/search.svg";
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 type List = InstanceType<typeof ListView>
 
@@ -125,20 +126,36 @@ function toggleExpand(shape: Shape) {
     sd.toggleExpand(shape);
 }
 function selectShape(data: ItemData) {
-    let start = 0;
-    const index = shapeSource.indexOf(data);
-    data.shape.index = index
     if (props.context.selection.onShift) {
-        const selectedIndex = props.context.selection.selectShapeIndex();
-        if (!selectedIndex.length) return props.context.selection.selectShape(data.shape);
-        start = selectedIndex.reduce((pre, cur) => Math.abs(index - cur) > pre ? pre : cur);
-        const shapes = getShapeRange(start, index);
-        props.context.selection.rangeSelectShape(shapes);
+        selectShapeWhenShiftIsPressed(data);
         return;
     }
     props.context.selection.selectShape(data.shape);
 }
+function selectShapeWhenShiftIsPressed(curData: ItemData) {
+    const to = shapeSource.indexOf(curData);
+    const selectedShapes = props.context.selection.selectedShapes;
+    const selectShapesIndex = getSelectShapesIndex(selectedShapes);
+    const from = selectShapesIndex.reduce((pre, cur) => {
+        return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre
+    }, selectShapesIndex[0]);
+    // console.log('from-to:', `${from}-${to}`);
+    const shapes = getShapeRange(from, to);
+    props.context.selection.rangeSelectShape(shapes);
 
+}
+function getSelectShapesIndex(shapes: Shape[]): number[] {
+    return shapes.map(s => shapeIndexOf(s));
+}
+function shapeIndexOf(shape: Shape): number {
+    const shadows = props.context.shadows;
+    const page = props.context.selection.selectedPage;
+    if (page == undefined) {
+        return -1;
+    }
+    const sd = shadows.get(page as Page);
+    return sd.indexOf(shape);
+}
 function getShapeRange(start: number, end: number): Shape[] {
     let dataRange: Shape[] = [];
     for (let i = start; i <= end; i++) {
@@ -204,7 +221,7 @@ onUnmounted(() => {
 <template>
     <div class="shapelist-wrap">
         <div class="header">
-            <div class="title">图层</div>
+            <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
                 <input type="text" @change="e => search(e)">
@@ -234,6 +251,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .shapelist-wrap {
+    height: 100%;
     .header {
         width: 100%;
         height: 64px;

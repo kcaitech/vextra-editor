@@ -11,7 +11,6 @@ import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 
 const props = defineProps<{data: Document}>();
-// const dataReady = ref<boolean>(false);
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(props.data));
 (window as any).__context = context.value;
@@ -29,13 +28,6 @@ function topDblClick() {
 function onWindowBlur() {
     // Window blur, Close the process that should be closed
 }
-
-onMounted(() => {    
-    context.value.selection.watch(selectionWatcher);
-    switchPage(props.data.pagesMgr.getPageIdByIndex(0));
-    window.addEventListener('blur', onWindowBlur)
-})
-
 function switchPage(id: string) {
     const ctx: Context = context.value;
     const pagesMgr = ctx.data.pagesMgr;
@@ -45,7 +37,6 @@ function switchPage(id: string) {
         ctx.selection.selectPage(page);
     })
 }
-
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         const ctx: Context = context.value as Context;
@@ -53,11 +44,15 @@ function selectionWatcher(t: number) {
     }
 }
 
+onMounted(() => {    
+    context.value.selection.watch(selectionWatcher);
+    switchPage(props.data.pagesMgr.getPageIdByIndex(0));
+    window.addEventListener('blur', onWindowBlur)
+})
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
     window.removeEventListener('blur', onWindowBlur);
 })
-
 </script>
 
 <template>

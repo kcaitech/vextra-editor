@@ -77,7 +77,6 @@ export class Selection extends Watchable implements ISave4Restore {
             this.notify(Selection.CHANGE_SHAPE);
             return;
         } else if (this.m_keyboard_onshift) {
-
             return;
         }
         this.m_selectShapes.length = 0;
@@ -97,9 +96,9 @@ export class Selection extends Watchable implements ISave4Restore {
         this.notify(Selection.CHANGE_SHAPE);
     }
 
-    selectShapeIndex(): number[] {
-        return this.m_selectShapes.map((item: Shape) => item.index)
-    }
+    // selectShapeIndex(): number[] {
+    //     return this.m_selectShapes.map((item: Shape) => item.index)
+    // }
 
     addSelectShape(shape: Shape) {
         // check?
@@ -116,14 +115,13 @@ export class Selection extends Watchable implements ISave4Restore {
         // todo
     }
 
-    // getFirstIndex(list: Shape[]): number {
-    //     return list.reduce((pre, cur) => {
-    //         return 
-    //     }, -1)
-    // }
-
     // selectRangeShape(start: Shape, end: Shape) {
-    //     // todo
+    //     this.m_selectShapes.length = 0;
+    //     this.m_selectShapes.push(...shapes);
+    //     this.m_cursorStart = -1;
+    //     this.m_cursorEnd = -1;
+    //     this.m_hoverShape = undefined;
+    //     this.notify(Selection.CHANGE_SHAPE);
     // }
     // selectRangeShapeByIndex(start: number, end: number) {
     //     // todo
