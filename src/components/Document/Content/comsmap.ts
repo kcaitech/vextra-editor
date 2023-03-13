@@ -1,4 +1,4 @@
-import { ShapeType } from "@/data/data/shape";
+import { ShapeType } from "@/data/types";
 import Rectangle from "./Rectangle.vue";
 import ShapeGroup from "./ShapeGroup.vue"
 import ShapePath from "./ShapePath.vue"
@@ -13,13 +13,13 @@ const comsMap: Map<ShapeType, any> = new Map();
 
 comsMap.set(ShapeType.Artboard, ArtboardView);
 comsMap.set(ShapeType.Group, ShapeGroup);
-comsMap.set(ShapeType.ShapeGroup, ShapeGroupShape);
+comsMap.set(ShapeType.FlattenShape, ShapeGroupShape);
 comsMap.set(ShapeType.Image, ImageView);
 comsMap.set(ShapeType.Page, ShapeGroup);
 comsMap.set(ShapeType.Path, ShapePath);
 comsMap.set(ShapeType.Rectangle, Rectangle);
 comsMap.set(ShapeType.Text, TextView);
-comsMap.set(ShapeType.Boolean, ShapeBool);
+// comsMap.set(ShapeType.Boolean, ShapeBool);
 comsMap.set(ShapeType.Symbol, ShapeGroup);
 comsMap.set(ShapeType.SymbolRef, SymbolRef);
 

@@ -1,6 +1,7 @@
 import { TextShape } from "@/data/data/shape";
 import { TextBehaviour } from "@/data/data/text";
 import { layoutPara } from "@/layout/text";
+import * as types from "@/data/types"
 
 export function render(h: Function, shape: TextShape, reflush?: number) {
     const text = shape.text;
@@ -17,11 +18,11 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
     const frame = shape.frame;
     const layoutWidth = ((b: TextBehaviour) => {
         switch(b) {
-            case TextBehaviour.Flexible: return Number.MAX_VALUE;
-            case TextBehaviour.Fixed: return frame.width;
-            case TextBehaviour.FixedWidthAndHeight: return frame.width;
+            case types.TextBehaviour.Flexible: return Number.MAX_VALUE;
+            case types.TextBehaviour.Fixed: return frame.width;
+            case types.TextBehaviour.FixWidthAndHeight: return frame.width;
         }
-    })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
+    })(text.attr?.textBehaviour ?? types.TextBehaviour.Flexible)
 
     const childs = [];
     let y = 0;

@@ -1,4 +1,4 @@
-import { BoolOp, GroupShape, ImageShape, PathShape, Shape, ShapeGroupShape, ShapeType, SymbolRef, TextShape } from "@/data/data/shape";
+import { GroupShape, ImageShape, PathShape, Shape, ShapeGroupShape, SymbolRef, TextShape } from "@/data/data/shape";
 import { Artboard } from "@/data/data/artboard";
 import { render as art } from "@/render/artboard";
 import { render as group } from "@/render/group";
@@ -9,6 +9,7 @@ import { render as rect } from "@/render/rectangle";
 import { render as text } from "@/render/text";
 import { render as bool } from "@/render/boolshape";
 import { render as symref } from "@/render/symbolref";
+import { ShapeType, BoolOp } from "@/data/types";
 
 const comsMap: Map<ShapeType, any> = new Map();
 
@@ -49,7 +50,7 @@ comsMap.set(ShapeType.Artboard, (data: Shape) => {
 comsMap.set(ShapeType.Group, (data: Shape) => {
     return group(h, data as GroupShape, comsMap);
 });
-comsMap.set(ShapeType.ShapeGroup, (data: Shape) => {
+comsMap.set(ShapeType.FlattenShape, (data: Shape) => {
     return shapegroup(h, data as ShapeGroupShape);
 });
 comsMap.set(ShapeType.Image, (data: Shape) => {
@@ -69,9 +70,9 @@ comsMap.set(ShapeType.Rectangle, (data: Shape) => {
 comsMap.set(ShapeType.Text, (data: Shape) => {
     return text(h, data as TextShape);
 });
-comsMap.set(ShapeType.Boolean, (data: Shape, path: string) => { // todo
-    return bool(h, data, path);
-});
+// comsMap.set(ShapeType.Boolean, (data: Shape, path: string) => { // todo
+//     return bool(h, data, path);
+// });
 comsMap.set(ShapeType.Symbol, (data: Shape) => {
     return group(h, data as GroupShape, comsMap);
 });

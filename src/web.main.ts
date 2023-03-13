@@ -4,8 +4,8 @@ import i18n from "./i18n";
 import SvgIcon from '@/components/common/SvgIcon.vue'
 import { LzData } from "./data/data/lzdata";
 import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
-import { importDocument } from "./data/io/exform/import/document";
-import { LzDataRemote } from "./data/io/exform/import/lzdataremote";
+// import { importDocument } from "./data/io/exform/import/document";
+// import { LzDataRemote } from "./data/io/exform/import/lzdataremote";
 import { Document } from "./data/data/document";
 import { Zip } from "@pal/zip";
 
@@ -16,10 +16,10 @@ function openLocalFile(onReady: (data: LzData) => void, file?: File) {
 }
 
 function openRemoteFile(fid: string, onReady: (data: Document) => void) {
-    const lzData = new LzDataRemote(fid, '0');
-    importDocument(lzData).then((val: Document) => {
-        onReady(val);
-    })
+    // const lzData = new LzDataRemote(fid, '0');
+    // importDocument(lzData).then((val: Document) => {
+    //     onReady(val);
+    // })
 }
 
 const app = createApp(App, { openLocalFile, openRemoteFile })

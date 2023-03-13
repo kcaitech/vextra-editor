@@ -1,18 +1,19 @@
 import { IJSON } from "@/data/data/lzdata";
 import { Para, ParaAttr, Span, Text, TextAttr, TextHorizontalAlignment, TextVerticalAlignment } from "@/data/data/text";
 import { importColor } from "./styleio";
+import * as types from "@/data/types"
 
 function importHorzAlignment(align: number) {
-    return [TextHorizontalAlignment.Left, 
-        TextHorizontalAlignment.Right, 
-        TextHorizontalAlignment.Centered, 
-        TextHorizontalAlignment.Justified, 
-        TextHorizontalAlignment.Natural][align] ?? TextHorizontalAlignment.Left;
+    return [types.TextHorAlign.Left, 
+        types.TextHorAlign.Right, 
+        types.TextHorAlign.Centered, 
+        types.TextHorAlign.Justified, 
+        types.TextHorAlign.Natural][align] ?? types.TextHorAlign.Left;
 }
 function importVertAlignment(align: number) {
-    return [TextVerticalAlignment.Top, 
-        TextVerticalAlignment.Middle, 
-        TextVerticalAlignment.Bottom][align] ?? TextVerticalAlignment.Top;
+    return [types.TextVerAlign.Top, 
+        types.TextVerAlign.Middle, 
+        types.TextVerAlign.Bottom][align] ?? types.TextVerAlign.Top;
 }
 
 export function importText(data:IJSON, textStyle:IJSON): Text {

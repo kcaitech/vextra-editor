@@ -1,12 +1,13 @@
 
 import { Shape } from '@/data/data/shape';
-import { Border, BorderPosition, FillType, Gradient, GradientType } from '@/data/data/style';
+import { Border, Gradient } from '@/data/data/style';
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { objectId } from '@/data/basic/objectid';
+import { BorderPosition, FillType, GradientType } from "@/data/types"
 
-const handler: { [key: number]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
-const angularHandler: { [key: number]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
+const handler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
+const angularHandler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
 
 angularHandler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Border, path: string): any {
     const clipId = "clippath-border" + objectId(border);

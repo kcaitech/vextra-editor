@@ -7,7 +7,7 @@ import { Shape } from "@/data/data/shape";
 import { Repository } from "@/data/data/transact";
 import { DocEditor, Editor, PageEditor } from "@/data/editor";
 import { ShapeEditor } from "@/data/editor/shape";
-import { uploadExForm } from "@/data/io/exform/export";
+// import { uploadExForm } from "@/data/io/exform/export";
 import { Selection } from "./selection";
 
 class ShapeNaviShadowMgr implements IDocShadow {
@@ -94,10 +94,10 @@ export class Context extends Watchable {
         return this.m_selection;
     }
 
-    // debug
-    upload() {
-        uploadExForm(this.m_data, 'ws://localhost:8000', (successed, fid, versionId) => {
-            console.log(successed, fid, versionId);
-        })
-    }
+    // // debug
+    // upload() {
+    //     uploadExForm(this.m_data, 'ws://localhost:8000', (successed, fid, versionId) => {
+    //         console.log(successed, fid, versionId);
+    //     })
+    // }
 }

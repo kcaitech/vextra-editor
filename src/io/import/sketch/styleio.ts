@@ -1,21 +1,17 @@
-import { BlendMode, 
+import { 
     Blur, 
     Border, 
     BorderOptions, 
-    BorderPosition, 
     Color, 
     ContextSettings, 
     Fill, 
-    FillType, 
     Gradient, 
-    GradientType, 
-    MarkerType, 
     Stop, 
-    Style, 
-    WindingRule} from "@/data/data/style";
+    Style} from "@/data/data/style";
 import { Env } from "./envio";
 import { IJSON } from "@/data/data/lzdata";
 import { XY } from "@/data/data/types";
+import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition } from "@/data/types"
 
 export function importColor(data: IJSON): Color {
     // if (!data)
@@ -32,8 +28,8 @@ export function importColor(data: IJSON): Color {
 function importContextSettings(data: IJSON): ContextSettings {
     const blendMode: BlendMode = ((m) => {
         switch(m) {
-            case 0: return BlendMode.Mode0;
-            default: return BlendMode.Mode0;
+            case 0: return BlendMode.Normal;
+            default: return BlendMode.Normal;
         }
     })(data['blendMode']);
     const opacity: number = data['opacity'];
@@ -84,31 +80,41 @@ export function importStyle(env:Env, data: IJSON): Style {
 
     const endMarkerType: MarkerType = ((t: number) => {
             switch(t) {
-                case 0: return MarkerType.Type0;
-                default: return MarkerType.Type0;
+                case 0: return MarkerType.OpenArrow;
+                default: return MarkerType.OpenArrow;
             }
         })(data['endMarkerType']);
     const miterLimit: number = data['miterLimit'];
     const startMarkerType: MarkerType = ((t: number) => {
             switch(t) {
-                case 0: return MarkerType.Type0;
-                default: return MarkerType.Type0;
+                case 0: return MarkerType.OpenArrow;
+                default: return MarkerType.OpenArrow;
             }
         })(data['startMarkerType']);
     const windingRule: WindingRule = ((t: number) => {
         switch(t) {
-            case 0: return WindingRule.Rule0;
-            case 1: return WindingRule.Rule1;
-            default: return WindingRule.Rule0;
+            case 0: return WindingRule.NonZero;
+            case 1: return WindingRule.EvenOdd;
+            default: return WindingRule.NonZero;
         }
     })(data['windingRule']);
 
     const blur: Blur = ((d) => {
-            return new Blur();
+            return {
+                isEnabled: false,
+                center: {x: 0, y: 0},
+                saturation: 0,
+                type: BlurType.Gaussian
+            };
         })(data['blur']);
 
     const borderOptions: BorderOptions = ((d: IJSON) => {
-            return new BorderOptions();
+            return {
+                isEnabled: false,
+                dashPattern: [],
+                lineCapStyle: LineCapStyle.Butt,
+                lineJoinStyle: LineJoinStyle.Miter
+            }
         })(data['borderOptions']);
 
     const borders: Border[] = (data['borders'] || []).map((d: IJSON) => {
@@ -173,12 +179,12 @@ export function importStyle(env:Env, data: IJSON): Style {
         return new Fill(isEnabled, fillType, color, contextSettings, gradient);
     });
 
-    const innerShadows: object[] = (data['innerShadows'] || []).map((d: object) => {
-        return d;// todo
-    });
-    const shadows: object[] = (data['shadows'] || []).map((d: object) => {
-        return d; // todo
-    });
+    // const innerShadows: object[] = (data['innerShadows'] || []).map((d: object) => {
+    //     return d;// todo
+    // });
+    // const shadows: object[] = (data['shadows'] || []).map((d: object) => {
+    //     return d; // todo
+    // });
 
     const style: Style = new Style(//shape, 
         endMarkerType, 
@@ -190,8 +196,8 @@ export function importStyle(env:Env, data: IJSON): Style {
         borders, 
         contextSettings, 
         fills, 
-        innerShadows, 
-        shadows);
+        [], 
+        []);
 
     // return makePair(style, gradients);
     return style;

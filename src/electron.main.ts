@@ -6,8 +6,8 @@ import SvgIcon from '@/components/common/SvgIcon.vue'
 // import { ipcRenderer } from 'electron';
 import { LzData } from "./data/data/lzdata";
 import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
-import { importDocument } from "./data/io/exform/import/document";
-import { LzDataRemote } from "./data/io/exform/import/lzdataremote";
+// import { importDocument } from "./data/io/exform/import/document";
+// import { LzDataRemote } from "./data/io/exform/import/lzdataremote";
 import { Document } from "./data/data/document";
 import { Zip } from "@pal/zip";
 
@@ -22,10 +22,10 @@ function openLocalFile(onReady: (data: LzData) => void, file?: File) {
 }
 
 function openRemoteFile(onReady: (data: Document) => void) {
-    const lzData = new LzDataRemote('128d50e9-0705-42c6-9f51-f9a049de33aa', '0');
-    importDocument(lzData).then((val: Document) => {
-        onReady(val);
-    })
+    // const lzData = new LzDataRemote('128d50e9-0705-42c6-9f51-f9a049de33aa', '0');
+    // importDocument(lzData).then((val: Document) => {
+    //     onReady(val);
+    // })
 }
 
 // All of the Node.js APIs are available in the preload process.

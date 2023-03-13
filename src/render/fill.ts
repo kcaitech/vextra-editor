@@ -4,9 +4,10 @@ import { Fill, FillType, Gradient } from "@/data/data/style";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "@/data/basic/objectid";
+import * as types from "@/data/types"
 
-const handler: {[key: number]: (h: Function, shape: Shape, fill: Fill, path: string) => any} = {};
-handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
+const handler: {[key: string]: (h: Function, shape: Shape, fill: Fill, path: string) => any} = {};
+handler[types.FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
     const frame = shape.frame;
     return h("path", {
@@ -19,7 +20,7 @@ handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, 
     });
 }
 
-handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
+handler[types.FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
     const frame = shape.frame;
     const elArr = new Array();

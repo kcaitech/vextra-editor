@@ -1,16 +1,12 @@
-import { BoolOp, 
-    CurveMode, 
-    ExportOptions, 
+import {ExportOptions, 
     GroupShape, 
     ImageShape, 
     PathShape, 
-    Point, 
-    PointType, 
+    CurvePoint,
     RectShape, 
     Shape, 
     ShapeFrame, 
     ShapeGroupShape, 
-    ShapeType, 
     Symbol, 
     SymbolRef, 
     TextShape } from "@/data/data/shape";
@@ -22,11 +18,19 @@ import { Page } from "@/data/data/page";
 import { importText } from "./textio";
 import { Artboard } from "@/data/data/artboard";
 import { XY } from "@/data/data/types";
-import { TextBehaviour, Text } from "@/data/data/text";
+import { Text } from "@/data/data/text";
+import { ShapeType, TextBehaviour, BoolOp, CurveMode } from "@/data/types"
 
 function importExportOptions(data: IJSON): ExportOptions {
     return ((d) => {
-        return new ExportOptions(); // todo
+        return {
+            exportFormats: {
+
+            },
+            includedLayerIds: [],
+            layerOptions: 0,
+            shouldTrim: true
+        }
     })(data['exportOptions']);
 }
 
@@ -40,14 +44,11 @@ function importShapeFrame(data: IJSON): ShapeFrame {
 }
 
 function importBoolOp(data:IJSON, type: ShapeType): BoolOp {
-    return [BoolOp.Union, BoolOp.Sbutract, BoolOp.Intersect, BoolOp.Difference][data['booleanOperation']] ?? BoolOp.None;
+    return [BoolOp.Union, BoolOp.Subtract, BoolOp.Intersect, BoolOp.Diff][data['booleanOperation']] ?? BoolOp.None;
 }
 
-function importPoints(data:IJSON): Point[] {
+function importPoints(data:IJSON): CurvePoint[] {
     return (data['points'] || []).map((d: IJSON) => {
-        const type: PointType = ((t) => {
-            return PointType.Type0; // todo
-        })(d['_class']);
         const cornerRadius: number = d['cornerRadius'];
         const curveFrom: XY<number, number> = importXY(d['curveFrom']);
         const curveMode: CurveMode = ((t) => {
@@ -57,7 +58,7 @@ function importPoints(data:IJSON): Point[] {
         const hasCurveFrom: boolean = d['hasCurveFrom'];
         const hasCurveTo: boolean = d['hasCurveTo'];
         const point: XY<number, number> = importXY(d['point']);
-        return new Point(type, cornerRadius, curveFrom, curveMode, curveTo, hasCurveFrom, hasCurveTo, point);
+        return new CurvePoint(cornerRadius, curveFrom, curveMode, curveTo, hasCurveFrom, hasCurveTo, point);
     });
 }
 
@@ -211,7 +212,7 @@ function importPathShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     const frame = importShapeFrame(data);
     const name: string = data['name'];
     const booleanOperation = importBoolOp(data, type);
-    const points: Point[] = importPoints(data);
+    const points: CurvePoint[] = importPoints(data);
     // const image = data['image'];
     // const imageRef = image && image['_ref'];
     const style = importStyle(env, data['style']);
@@ -241,7 +242,7 @@ function importRectShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    return new RectShape(parent, type, name, id, booleanOperation, exportOptions, frame, style);
+    return new RectShape(parent, type, name, id, booleanOperation, exportOptions, frame, [], style);
 }
 
 function importTextShape(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): TextShape {
@@ -260,7 +261,7 @@ function importTextShape(env:Env, type: ShapeType, parent: Shape | undefined, lz
     }
     const textStyle = data['style'] && data['style']['textStyle'];
     const text: Text = data['attributedString'] && importText(data['attributedString'], textStyle);
-    const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixedWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
+    const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
     text.attr && (text.attr.textBehaviour = textBehaviour);
     // const isClosed = data['isClosed'];
     return new TextShape(parent, type, name, id, booleanOperation, exportOptions, frame, style, text);
@@ -322,7 +323,7 @@ export function importShape(env:Env, parent: Shape | undefined, lzData: LzData, 
         case 'rectangle': 
             return importRectShape(env, ShapeType.Rectangle, parent, lzData, data); // ShapeType.Rectangle;
         case 'shapeGroup':
-            return importShapeGroupShape(env, ShapeType.ShapeGroup, parent, lzData, data); // ShapeType.ShapeGroup;
+            return importShapeGroupShape(env, ShapeType.FlattenShape, parent, lzData, data); // ShapeType.ShapeGroup;
         case 'group': 
             return importGroupShape(env, ShapeType.Group, parent, lzData, data); // ShapeType.Group;
         case 'shapePath':

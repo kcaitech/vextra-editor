@@ -1,7 +1,7 @@
 import { objectId } from "@/data/basic/objectid";
 import { ShapeFrame } from "@/data/data/shape";
 import { Gradient, GradientType, Stop } from "@/data/data/style";
-// import { EL, h } from "./basic";
+import * as types from "@/data/types"
 
 function renderStop(h: Function, d: Stop): any {
     const position = d.position;
@@ -19,7 +19,7 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
     const id = "gradient" + objectId(value);
     let style;
     let node: any;
-    if (value.gradientType == GradientType.Linear) {
+    if (value.gradientType == types.GradientType.Linear) {
         const stopSCount = value.stopsCount;
         const childs = [];
         for (let i = 0; i < stopSCount; i++) {
@@ -34,7 +34,7 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
             y2: value.to.y,
         }, childs);
     }
-    else if (value.gradientType == GradientType.Radial) {
+    else if (value.gradientType == types.GradientType.Radial) {
         const stopSCount = value.stopsCount;
         const childs = [];
         for (let i = 0; i < stopSCount; i++) {
@@ -58,7 +58,7 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
         },
             childs);
     }
-    else if (value.gradientType == GradientType.Angular) {
+    else if (value.gradientType == types.GradientType.Angular) {
         let gradient = "";
         const sc = value.stopsCount;
         const calcSmoothColor = () => {

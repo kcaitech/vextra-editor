@@ -1,4 +1,4 @@
-import { PathShape, Point } from "@/data/data/shape";
+import { PathShape, CurvePoint } from "@/data/data/shape";
 
 function format(str: string, args: any) {
     const keys = Object.keys(args);
@@ -230,7 +230,7 @@ export function render(data: PathShape, offsetX: number, offsetY: number, width:
         const pt = p.point;
         parser.moveTo(offsetX + pt.x * width, offsetY + pt.y * height);
     }
-    const curv2Point = (p: Point, nextP: Point, isClose?: boolean) => {
+    const curv2Point = (p: CurvePoint, nextP: CurvePoint, isClose?: boolean) => {
         if (p.hasCurveFrom && nextP.hasCurveTo) {
             const adjFrom = p.curveFrom;
             const adjTo = nextP.curveTo;

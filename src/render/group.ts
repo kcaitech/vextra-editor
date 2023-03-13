@@ -1,4 +1,5 @@
-import { BoolOp, GroupShape, Shape, ShapeType } from "@/data/data/shape";
+import { GroupShape, ShapeType } from "@/data/data/shape";
+import * as types from "@/data/types"
 
 export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>): Array<any> {
     const childs: Array<any> = [];
@@ -6,7 +7,7 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
 
     for (let i = 0; i < cc; i++) {
         const child = shape.getChildByIndex(i);
-        const com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
+        const com = comsMap.get(child.type) || comsMap.get(types.ShapeType.Rectangle);
         const node = h(com, { data: child });
         childs.push(node);
     }
