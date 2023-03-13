@@ -12,13 +12,12 @@ const shape = shallowRef<Shape>();
 
 function selectionChange(t: number) {
     if (t === Selection.CHANGE_PAGE) {
-        //
         shape.value = undefined;
     }
     else if (t === Selection.CHANGE_SHAPE) {
-        //
         if (props.context.selection.selectedShapes.length === 1) {
             shape.value = props.context.selection.selectedShapes[0];
+            // console.log('-cur shape-', shape.value?.name); 
         }
         else {
             shape.value = undefined;

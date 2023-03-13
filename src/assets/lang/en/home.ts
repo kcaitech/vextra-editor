@@ -13,5 +13,8 @@ export const navi = {
 }
 
 export const attr = {
+    design: 'Design',
+    prototype: 'Prototype',
+    inspect: 'Inspect',
     constraints: 'Constraints',
 }

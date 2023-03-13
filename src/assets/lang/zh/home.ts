@@ -13,5 +13,8 @@ export const navi = {
 
 
 export const attr = {
+    design: '设计',
+    prototype: '原型',
+    inspect: '标注',
     constraints: '相对容器位置',
 }

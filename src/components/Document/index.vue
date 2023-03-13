@@ -6,7 +6,7 @@ import { Document } from "@/data/data/document";
 import Navigation from './Navigation/index.vue';
 import { Page } from '@/data/data/page';
 import { Selection } from '@/context/selection'
-import Attribute from './Attribute/index.vue';
+import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 

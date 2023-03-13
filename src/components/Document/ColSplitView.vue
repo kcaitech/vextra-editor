@@ -180,9 +180,11 @@ function onSizeChange() {
 
     const rightMinWidthInPx = 336;
     const rigthMinWidthImportant = Number((rightMinWidthInPx / rootWidth).toFixed(2));
+    const leftMinWidthInPx = 336;
+    const leftMinWidthImportant = Number((leftMinWidthInPx / rootWidth).toFixed(2));
 
     // sizeBounds.left.width = props.left.width * rootWidth;
-    sizeBounds.left.minWidth = props.left.minWidth * rootWidth;
+    sizeBounds.left.minWidth = Math.max(leftMinWidthImportant, props.left.minWidth) * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
     // sizeBounds.middle.width = props.middle.width * rootWidth;
     sizeBounds.middle.minWidth = props.middle.minWidth * rootWidth;
@@ -211,15 +213,18 @@ function initSizeBounds() {
     savedRootWidth = rootWidth;
 
     const rightMinWidthInPx = 336;
-    const rigthMinWidthImportant = Number((rightMinWidthInPx / rootWidth).toFixed(2));    
+    const rigthMinWidthImportant = Number((rightMinWidthInPx / rootWidth).toFixed(2));
+    const leftMinWidthInPx = 336;
+    const leftMinWidthImportant = Number((leftMinWidthInPx / rootWidth).toFixed(2));   
+    const middleMaxWidthImportant = 1 - (leftMinWidthImportant + rigthMinWidthImportant);
     
-    sizeBounds.left.width = props.left.width * rootWidth;
-    sizeBounds.left.minWidth = props.left.minWidth * rootWidth;
+    sizeBounds.left.width = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
+    sizeBounds.left.minWidth = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
 
-    sizeBounds.middle.width = props.middle.width * rootWidth;
+    sizeBounds.middle.width = Math.min(middleMaxWidthImportant, props.middle.width) * rootWidth;
     sizeBounds.middle.minWidth = props.middle.minWidth * rootWidth;
-    sizeBounds.middle.maxWidth = props.middle.maxWidth * rootWidth;
+    sizeBounds.middle.maxWidth = Math.min(middleMaxWidthImportant, props.middle.width) * rootWidth;
 
     sizeBounds.right.width = Math.max(props.right.width, rigthMinWidthImportant) * rootWidth;
     sizeBounds.right.minWidth = Math.max(props.right.minWidth, rigthMinWidthImportant) * rootWidth;

@@ -7,7 +7,8 @@
 <script setup lang="ts">
 import { defineProps, ref } from "vue";
 import { Context } from "@/context";
-import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
+import { Selection } from '@/context/selection';
+import Design from "@/components/Document/Attribute/Design.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
@@ -15,25 +16,31 @@ const { t } = useI18n();
 
 const props = defineProps<{ context: Context }>();
 
-type Tab = "Shape" | "Comps" | "Resource"
+type Tab = "Design" | "Prototype" | "Inspect"
 
-const currentTab = ref<Tab>("Shape");
+const currentTab = ref<Tab>("Design");
 
 const tabs: { title: string, id: Tab }[] = [
     {
-        title: t('navi.shape'),
-        id: 'Shape'
+        title: t('attr.design'),
+        id: 'Design'
     }, {
-        title: t('navi.comps'),
-        id: 'Comps'
+        title: t('attr.prototype'),
+        id: 'Prototype'
     }, {
-        title: t('navi.resource'),
-        id: 'Resource'
+        title: t('attr.inspect'),
+        id: 'Inspect'
     }
 ]
 
 function toggle(id: Tab) {
-    currentTab.value = id
+    if (id === 'Design') {
+        if (props.context.selection.selectedShapes.length === 1) {
+            props.context.selection.selectShape(props.context.selection.selectedShapes[0]);
+        }
+        
+    }
+    currentTab.value = id;
 }
 
 </script>
@@ -44,9 +51,9 @@ function toggle(id: Tab) {
             <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index" @click="toggle(i.id)">{{ i.title }}</div>
         </div>
         <div class="body">
-            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs"></ShapeTab>
-            <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
-            <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
+            <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
+            <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab>
+            <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
         </div>
     </div>
 </template>
