@@ -8,12 +8,10 @@
 <script setup lang="ts">
 import { defineProps, reactive } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@/data/shape';
+import { Shape } from '@/data/data/shape';
 import TypeHeader from './TypeHeader.vue';
 import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
-import "@/assets/icons/svg/delete.svg";
-import "@/assets/icons/svg/select.svg";
 const props = defineProps<{
     context?: Context,
     shape?: Shape,

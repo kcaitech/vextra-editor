@@ -61,9 +61,9 @@ onUnmounted(() => {
     </div>
     <ColSplitView 
         id="center"
-        :left="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}" 
-        :middle="{width: 0.6, minWidth: 0.3, maxWidth: 0.8}"
-        :right="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}"
+        :left="{width: 0.1, minWidth: 0.1, maxWidth: 0.5}" 
+        :middle="{width: 0.8, minWidth: 0.3, maxWidth: 0.8}"
+        :right="{width: 0.1, minWidth: 0.1, maxWidth: 0.5}"
     >
         <template #slot1>
             <Navigation

@@ -53,6 +53,8 @@ onUnmounted(() => {
         --default-padding: 16px;
         --default-margin: 12px;
         --default-fontsize: 10px;
+        --coco-grey: #808080;
+        --default-bold: 700
     }
     html {
         width: 100%;

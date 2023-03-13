@@ -9,5 +9,9 @@ export const navi = {
     shape: 'Shape',
     comps: 'Compnents',
     resource: 'Resource',
-    page: 'Page'
+    page: 'Page',
+}
+
+export const attr = {
+    constraints: 'Constraints',
 }

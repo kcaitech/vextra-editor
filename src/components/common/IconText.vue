@@ -9,7 +9,8 @@ const props = defineProps<{
     svgicon?: any,
     icon?: any,
     ticon?: string,
-    text: string | number
+    text: string | number,
+    frame?: { width: number, height: number, rotate?: number }
 }>();
 const emit = defineEmits<{
     (e: "onchange", value: string): void;
@@ -22,8 +23,17 @@ function onChange(e: Event) {
 </script>
 
 <template>
-<label class="icontext" >
-    <svg-icon class="icon" v-if="props.svgicon" :icon-class="props.svgicon"></svg-icon>
+<label class="icontext">
+    <svg-icon
+        class="icon"
+        v-if="props.svgicon"
+        :icon-class="props.svgicon"
+        :style="{
+            width: `${props.frame ? frame?.width : 18}px`,
+            height: `${props.frame ? frame?.height : 18}px`,
+            transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`
+        }"
+    ></svg-icon>
     <img class="icon" v-if="props.icon" :src="props.icon" />
     <span class="icon" v-if="!props.icon && props.ticon" >{{props.ticon}}</span>
     <input :value="props.text" v-on:change="onChange"/>
@@ -37,10 +47,19 @@ function onChange(e: Event) {
     white-space: nowrap;
     overflow: hidden;
     padding: 1px;
+    align-items: center;
+    padding: 0 8px;
+    box-sizing: border-box;
     > .icon {
-        color: var(--theme-color);
-        width: 32px;
+        color: grey;
+        width: 14px;
+        height: 14px;
         flex-shrink: 0;
+        cursor: ew-resize;
+        text-align: center;
+    }
+    > span {
+        line-height: 14px;
     }
     > input {
         width: 100%;
@@ -49,7 +68,6 @@ function onChange(e: Event) {
         margin-left: 2px;
         color: var(--theme-color);
         font-family: var(--font-family);
-        font-size: 14px;
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;

@@ -10,3 +10,8 @@ export const navi = {
     resource: '资源库',
     page: '页面'
 }
+
+
+export const attr = {
+    constraints: '相对容器位置',
+}

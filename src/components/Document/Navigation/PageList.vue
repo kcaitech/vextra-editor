@@ -10,9 +10,6 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
 import { PagesMgr } from "@/data/data/document";
-import "@/assets/icons/svg/file.svg";
-import "@/assets/icons/svg/add.svg";
-import "@/assets/icons/svg/down.svg";
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
@@ -146,7 +143,7 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
         }
         .title {
             height: 30px;
-            font-weight: 700;
+            font-weight: var(--default-bold);
             line-height: 36px;
         }
         .btn {

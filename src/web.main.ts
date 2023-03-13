@@ -9,7 +9,7 @@ import { importDocument } from "./data/io/import/exform/document";
 import { LzDataRemote } from "./data/io/import/exform/lzdataremote";
 import { Document } from "./data/data/document";
 import { Zip } from "@pal/zip";
-
+import "@/assets/icons/loadall"
 
 function openLocalFile(onReady: (data: LzData) => void, file?: File) {
     if (file) {

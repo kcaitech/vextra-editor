@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { defineProps, ref, nextTick, reactive } from 'vue';
-import "@/assets/icons/svg/eyedropper.svg";
 type RgbMeta = number[]
 defineProps<{
   color: string
@@ -315,8 +314,6 @@ function eyedropper() {
       width: 100%;
       height: 180px;
       position: relative;
-      background-color: #ff0000;
-      overflow: hidden;
       > .white {
         position: absolute;
         width: 100%;

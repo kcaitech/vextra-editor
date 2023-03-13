@@ -5,19 +5,6 @@ import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import { Context } from '@/context';
 import { computed } from '@vue/reactivity';
-import "@/assets/icons/svg/X.svg";
-import "@/assets/icons/svg/Y.svg";
-import "@/assets/icons/svg/W.svg";
-import "@/assets/icons/svg/H.svg";
-import "@/assets/icons/svg/gear.svg";
-import "@/assets/icons/svg/lock.svg";
-import "@/assets/icons/svg/unlock.svg";
-import "@/assets/icons/svg/fliph.svg";
-import "@/assets/icons/svg/flipv.svg";
-import "@/assets/icons/svg/radius.svg";
-import "@/assets/icons/svg/angle.svg";
-import "@/assets/icons/svg/add.svg";
-
 
 const props = defineProps<{ context: Context, shape: Shape }>();
 const editor = computed(() => {
@@ -28,9 +15,14 @@ const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
 }
-let x = ref(0), y = ref(0);
-let w = ref(0), h = ref(0);
-let isLock = true;
+const x = ref<number>(0);
+const y = ref<number>(0);
+const w = ref<number>(0);
+const h = ref<number>(0);
+const isLock = ref<boolean>(true);
+const isMoreForRadius = ref<boolean>(false);
+const fix = 2;
+
 function calcFrame() {
     const xy = props.shape.realXY();
     x.value = xy.x;
@@ -50,7 +42,6 @@ function setupWatcher() {
         shape.watch(watcher);
     }
 }
-const fix = 2;
 
 function onChangeX(value: string) {
     // console.log(value)
@@ -71,22 +62,29 @@ function onChangeY(value: string) {
     }
 }
 function onChangeW(value: string) {
-    // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    const w: number = Number.parseFloat(value);
+    const newW: number = Number.parseFloat(value);
+    const rate = newW / w.value;
     if (props.shape.frame.width.toFixed(fix) != value && props.context.selection.selectedPage) {
-        editor.value.expandTo(w, props.shape.frame.height);
+        const newH = isLock.value ? Number((rate * h.value).toFixed(fix)) : props.shape.frame.height;
+        editor.value.expandTo(newW, newH);
     }
 }
 function onChangeH(value: string) {
-    // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    const h: number = Number.parseFloat(value);
+    const newH: number = Number.parseFloat(value);
+    const rate = newH / h.value;
     if (props.shape.frame.height.toFixed(fix) != value && props.context.selection.selectedPage) {
-        editor.value.expandTo(props.shape.frame.width, h);
+        const newW = isLock.value ? Number((rate * w.value).toFixed(fix)) : props.shape.frame.width;
+        editor.value.expandTo(newW, newH);
     }
 }
-function lockClick(e: MouseEvent) {}
+function lockToggle() {
+    isLock.value = !isLock.value;
+}
+function radiusToggle() {
+    isMoreForRadius.value = !isMoreForRadius.value
+}
 
 function fliph() {}
 function flipv() {}
@@ -111,20 +109,26 @@ onBeforeUpdate(() => {
 <template>
     <div class="table" :reflush="reflush">
         <div class="tr">
-            <IconText class="td positon" svgicon="X" :text="x.toFixed(fix)" @onchange="onChangeX"/>
+            <IconText class="td positon" ticon="X" :text="x.toFixed(fix)" @onchange="onChangeX"/>
             <div class="space"></div>
-            <IconText class="td positon" svgicon="Y" :text="y.toFixed(fix)" @onchange="onChangeY"/>
+            <IconText class="td positon" ticon="Y" :text="y.toFixed(fix)" @onchange="onChangeY"/>
             <Position></Position>
         </div>
         <div class="tr">
-            <IconText class="td frame" svgicon="W" :text="w.toFixed(fix)" @onchange="onChangeW"/>
-            <div class="lock" @click="lockClick">
-                <svg-icon :icon-class="isLock ? 'lock' : 'unloack'"></svg-icon>
+            <IconText class="td frame" ticon="W" :text="w.toFixed(fix)" @onchange="onChangeW"/>
+            <div class="lock" @click="lockToggle">
+                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
-            <IconText class="td frame" svgicon="H" :text="h.toFixed(fix)" @onchange="onChangeH"/>
+            <IconText class="td frame" ticon="H" :text="h.toFixed(fix)" @onchange="onChangeH"/>
         </div>
         <div class="tr">
-            <IconText class="td angle" svgicon="angle" :text="h.toFixed(fix)" @onchange="onChangeH"/>
+            <IconText
+                class="td angle"
+                svgicon="angle"
+                :text="h.toFixed(fix)"
+                @onchange="onChangeH"
+                :frame="{ width: 14, height: 14 }"
+            />
             <div class="flip ml-24" @click="fliph">
                 <svg-icon icon-class="fliph"></svg-icon>
             </div>
@@ -133,12 +137,42 @@ onBeforeUpdate(() => {
             </div>
         </div>
         <div class="tr">
-            <IconText class="td frame" svgicon="radius" :text="w.toFixed(fix)" @onchange="onChangeW"/>
-            <IconText class="td frame ml-24" svgicon="radius" :text="w.toFixed(fix)" @onchange="onChangeW"/>
+            <IconText
+                class="td frame"
+                svgicon="radius"
+                :text="w.toFixed(fix)"
+                :frame="{ width: 12, height: 12 }"
+                @onchange="onChangeW"
+            />
+            <IconText
+                class="td frame ml-24"
+                svgicon="radius"
+                :text="w.toFixed(fix)"
+                :frame="{ width: 12, height: 12, rotate: 90 }"
+                :style="{
+                    visibility: isMoreForRadius ? 'visible' : 'hidden'
+                }"
+                @onchange="onChangeW"
+            />
+            <div class="more-for-radius" @click="radiusToggle">
+                <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
+            </div>
         </div>
-        <div class="tr">
-            <IconText class="td frame" svgicon="radius" :text="w.toFixed(fix)" @onchange="onChangeW"/>
-            <IconText class="td frame ml-24" svgicon="radius" :text="w.toFixed(fix)" @onchange="onChangeW"/>
+        <div class="tr" v-if="isMoreForRadius">
+            <IconText
+                class="td frame"
+                svgicon="radius"
+                :text="w.toFixed(fix)"
+                :frame="{ width: 12, height: 12, rotate: 270 }"
+                @onchange="onChangeW"
+            />
+            <IconText
+                class="td frame ml-24"
+                svgicon="radius"
+                :text="w.toFixed(fix)"
+                :frame="{ width: 12, height: 12, rotate: 180 }"
+                @onchange="onChangeW"
+            />
         </div>
     </div>
 </template>
@@ -150,15 +184,13 @@ onBeforeUpdate(() => {
 .ml-12 {
     margin-left: 12px;
 }
-.mt-24 {
-    margin-top: 24px;
-}
 .table {
     width: 100%;
     display: flex;
     flex-direction: column;
     padding: 12px 24px;
     box-sizing: border-box;
+    visibility: visible;
     .tr {
         position: relative;
         width: 100%;
@@ -197,6 +229,10 @@ onBeforeUpdate(() => {
             height: 32px;
             width: 110px;
             border-radius: 8px;
+            > svg {
+                width: 12px;
+                height: 12px;
+            }
         }
         .flip {
             background-color: rgba(#D8D8D8, 0.4);
@@ -207,8 +243,24 @@ onBeforeUpdate(() => {
             height: 32px;
             border-radius: 8px;
             > svg {
-                width: 80%;
-                height: 70%;
+                color: var(--coco-grey);
+                width: 40%;
+                height: 40%;
+            }
+        }
+        .more-for-radius {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            > svg {
+                transition: 0.3s;
+                width: 40%;
+                height: 40%;
+            }
+            > svg:hover {
+                transform: scale(1.25);
             }
         }
 

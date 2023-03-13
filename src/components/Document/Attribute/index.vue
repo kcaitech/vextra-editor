@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape } from '@/data/data/shape';
 import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
-import ShapeAttr from './ShapeAttr.vue';
+import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill.vue';
 import Border from './Border.vue';
 const props = defineProps<{ context: Context }>();
@@ -38,7 +38,7 @@ onUnmounted(() => {
 <template>
 <section>
     <div v-if="shape">
-        <ShapeAttr :shape="shape" :context="props.context"></ShapeAttr>
+        <ShapeBaseAttr :shape="shape" :context="props.context"></ShapeBaseAttr>
         <Fill :shape="shape" :context="props.context"></Fill>
         <Border :shape="shape" :context="props.context"></Border>
     </div>

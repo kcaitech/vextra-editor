@@ -7,13 +7,12 @@ import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@/data/data/page";
 import { ShapeNaviIter } from "@/data/data/shadow/shapeNavi"
 import { Shape } from "@/data/data/shape";
-import "@/assets/icons/svg/search.svg";
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
-
-type List = InstanceType<typeof ListView>
+type List = InstanceType<typeof ListView>;
 
 const props = defineProps<{ context: Context }>();
+
+const { t } = useI18n();
 
 const shapelist = ref<List>();
 let listInstance: HTMLDivElement | undefined;
@@ -137,9 +136,8 @@ function selectShapeWhenShiftIsPressed(curData: ItemData) {
     const selectedShapes = props.context.selection.selectedShapes;
     const selectShapesIndex = getSelectShapesIndex(selectedShapes);
     const from = selectShapesIndex.reduce((pre, cur) => {
-        return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre
+        return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
     }, selectShapesIndex[0]);
-    // console.log('from-to:', `${from}-${to}`);
     const shapes = getShapeRange(from, to);
     props.context.selection.rangeSelectShape(shapes);
 
@@ -157,9 +155,12 @@ function shapeIndexOf(shape: Shape): number {
     return sd.indexOf(shape);
 }
 function getShapeRange(start: number, end: number): Shape[] {
-    let dataRange: Shape[] = [];
-    for (let i = start; i <= end; i++) {
-        dataRange.push((shapeSource.iterAt(i) as any).__it.__node.__shape);
+    const from = Math.min(start, end);
+    const to = Math.max(start, end);
+    const dataRange: Shape[] = [];
+    const it = shapeSource.iterAt(from);
+    for (let i = from; i <= to && it.hasNext(); i++) {
+        dataRange.push(it.next().shape);
     }
     return dataRange;
 }
@@ -174,12 +175,12 @@ function unHovershape(shape: Shape) {
 
 function changeControlPressStatus(e: KeyboardEvent, down: boolean) {        
     if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {  
-        props.context?.selection.setControlStatus(down)
+        props.context?.selection.setControlStatus(down);
     }
 }
 function changeShiftPressStatus(e: KeyboardEvent, down: boolean) {
     if (e.code === 'ShiftLeft') {  
-        props.context?.selection.setShiftStatus(down)
+        props.context?.selection.setShiftStatus(down);
     }
 }
 
@@ -263,7 +264,7 @@ onUnmounted(() => {
             flex-shrink: 0;
         }
         .title {
-            font-weight: 700;
+            font-weight: var(--default-bold);
             line-height: 30px;
             height: 30px;
         }
