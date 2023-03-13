@@ -10,8 +10,7 @@ import {
     Style} from "@/data/data/style";
 import { Env } from "./envio";
 import { IJSON } from "@/data/data/lzdata";
-import { XY } from "@/data/data/types";
-import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition } from "@/data/types"
+import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "@/data/types"
 
 export function importColor(data: IJSON): Color {
     // if (!data)
@@ -36,7 +35,7 @@ function importContextSettings(data: IJSON): ContextSettings {
     return new ContextSettings(blendMode, opacity);
 }
 
-export function importXY(str: string): XY<number, number> {
+export function importXY(str: string): Point2D {
     const idx1 = str.indexOf('{');
     const idx2 = str.indexOf(',');
     const idx3 = str.lastIndexOf('}');
@@ -51,7 +50,7 @@ export function importXY(str: string): XY<number, number> {
 
 function importGradient(data: IJSON): Gradient {
     const elipseLength: number = data['elipseLength'];
-    const from: XY<number, number> = importXY(data['from']);
+    const from: Point2D = importXY(data['from']);
     const gradientType: GradientType = ((t) => {
         switch(t) {
             case 0: return GradientType.Linear;
@@ -60,7 +59,7 @@ function importGradient(data: IJSON): Gradient {
             default: return GradientType.Linear;
         }
     })(data['gradientType']);
-    const to: XY<number, number> = importXY(data['to']);
+    const to: Point2D = importXY(data['to']);
     const stops: Stop[] = (data['stops'] || []).map((d: IJSON)=> {
         let position: number = d['position'];
         if (gradientType == GradientType.Angular) {

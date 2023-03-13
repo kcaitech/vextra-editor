@@ -1,7 +1,5 @@
 // cubic bezier curve
 
-import { XY } from "@/data/data/types";
-
 // 极值点
 function extreme(p0: number, p1: number, p2: number, p3: number): number[] {
     const _a = p3 - p2;
@@ -18,7 +16,7 @@ function extreme(p0: number, p1: number, p2: number, p3: number): number[] {
     return [ (-b + e) / (2 * a), (-b - e) / (2 * a)];
 }
 
-type Point = XY<number, number>;
+type Point = {x: number, y: number};
 
 function b(p0: number, p1: number, p2: number, p3: number, t: number): number {
     const _t = 1 - t;

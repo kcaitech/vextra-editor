@@ -17,9 +17,8 @@ import { importXY, importStyle, importColor } from "./styleio";
 import { Page } from "@/data/data/page";
 import { importText } from "./textio";
 import { Artboard } from "@/data/data/artboard";
-import { XY } from "@/data/data/types";
 import { Text } from "@/data/data/text";
-import { ShapeType, TextBehaviour, BoolOp, CurveMode } from "@/data/types"
+import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D } from "@/data/types"
 
 function importExportOptions(data: IJSON): ExportOptions {
     return ((d) => {
@@ -50,14 +49,14 @@ function importBoolOp(data:IJSON, type: ShapeType): BoolOp {
 function importPoints(data:IJSON): CurvePoint[] {
     return (data['points'] || []).map((d: IJSON) => {
         const cornerRadius: number = d['cornerRadius'];
-        const curveFrom: XY<number, number> = importXY(d['curveFrom']);
+        const curveFrom: Point2D = importXY(d['curveFrom']);
         const curveMode: CurveMode = ((t) => {
             return [CurveMode.None, CurveMode.Straight, CurveMode.Mirrored, CurveMode.Asymmetric, CurveMode.Disconnected][t] ?? CurveMode.None;
         })(d['curveMode']);
-        const curveTo: XY<number, number> = importXY(d['curveTo']);
+        const curveTo: Point2D = importXY(d['curveTo']);
         const hasCurveFrom: boolean = d['hasCurveFrom'];
         const hasCurveTo: boolean = d['hasCurveTo'];
-        const point: XY<number, number> = importXY(d['point']);
+        const point: Point2D = importXY(d['point']);
         return new CurvePoint(cornerRadius, curveFrom, curveMode, curveTo, hasCurveFrom, hasCurveTo, point);
     });
 }
@@ -178,7 +177,9 @@ function importImage(env:Env, type: ShapeType, parent: Shape | undefined, lzData
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
     env.mediaMgr.addRef(imageRef);
-    return new ImageShape(parent, env.mediaMgr, type, name, id, booleanOperation, exportOptions, frame, imageRef, style);
+    const shape = new ImageShape(parent, type, name, id, booleanOperation, exportOptions, frame, imageRef, style);
+    shape.setImageMgr(env.mediaMgr);
+    return shape;
 }
 
 function importPage(env:Env, type: ShapeType, parent: Shape | undefined, lzData: LzData, data: IJSON): Page {

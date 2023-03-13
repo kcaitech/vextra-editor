@@ -49,16 +49,19 @@ export class Context extends Watchable {
     private m_selection: Selection;
     private m_shadows: ShapeNaviShadowMgr | undefined;
     private m_editor?: Editor;
+    private m_repo: Repository;
 
     constructor(data: Document) {
         super();
         this.m_data = data;
         this.m_selection = new Selection(data);
+        this.m_repo = new Repository(this.m_selection);
+        this.m_data = this.m_repo.guard(data);
     }
 
     get editor(): Editor {
         if (this.m_editor === undefined) {
-            this.m_editor = new Editor(this.m_data, this.m_selection);
+            this.m_editor = new Editor(this.m_data, this.m_repo, this.m_selection);
             this.notify();
         }
         return this.m_editor;
