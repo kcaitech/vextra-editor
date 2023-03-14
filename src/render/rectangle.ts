@@ -19,8 +19,16 @@ export function render(h: Function, shape: Shape, reflush?: number) {
 
     if (childs.length == 0) {
         // todo
-        return h('rect', { "fill-opacity": 1, stroke: 'none', 'stroke-width': 0, x: frame.x, y: frame.y, width: frame.width, height: frame.height,
-        reflush: reflush });
+        return h('rect', { 
+            fill: 'none',
+            stroke: 'none',
+            'stroke-width': 0,
+            x: frame.x,
+            y: frame.y,
+            width: frame.width,
+            height: frame.height,
+            reflush: reflush,
+        });
     }
     // else if (childs.length == 1) {
     //     return transform(childs[0], h);

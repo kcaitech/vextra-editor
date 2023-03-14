@@ -7,7 +7,6 @@
 <script setup lang="ts">
 import { defineProps, ref } from "vue";
 import { Context } from "@/context";
-import { Selection } from '@/context/selection';
 import Design from "@/components/Document/Attribute/Design.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";

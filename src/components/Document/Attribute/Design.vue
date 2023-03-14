@@ -2,13 +2,17 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape } from '@/data/data/shape';
-import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
+import { ShapeType } from "@/data/types"
+import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill.vue';
 import Border from './Border.vue';
 const props = defineProps<{ context: Context }>();
 
 const shape = shallowRef<Shape>();
+
+const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon];
+const shapeType = ref();
 
 function selectionChange(t: number) {
     if (t === Selection.CHANGE_PAGE) {
@@ -17,7 +21,8 @@ function selectionChange(t: number) {
     else if (t === Selection.CHANGE_SHAPE) {
         if (props.context.selection.selectedShapes.length === 1) {
             shape.value = props.context.selection.selectedShapes[0];
-            // console.log('-cur shape-', shape.value?.name); 
+            shapeType.value = shape.value.type
+            console.log('-shape-type-', shapeType.value);
         }
         else {
             shape.value = undefined;
@@ -38,7 +43,7 @@ onUnmounted(() => {
 <section>
     <div v-if="shape">
         <ShapeBaseAttr :shape="shape" :context="props.context"></ShapeBaseAttr>
-        <Fill :shape="shape" :context="props.context"></Fill>
+        <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shape" :context="props.context"></Fill>
         <Border :shape="shape" :context="props.context"></Border>
     </div>
 </section>

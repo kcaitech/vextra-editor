@@ -17,4 +17,6 @@ export const attr = {
     prototype: '原型',
     inspect: '标注',
     constraints: '相对容器位置',
+    border: '边框',
+    fill: '填充'
 }

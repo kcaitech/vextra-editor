@@ -12,6 +12,8 @@ import { Shape } from '@/data/data/shape';
 import TypeHeader from './TypeHeader.vue';
 import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const props = defineProps<{
     context?: Context,
     shape?: Shape,
@@ -58,7 +60,7 @@ function setVisible(id: number): void {
 
 <template>
     <div class="border-panel">
-        <TypeHeader title="边框" class="mt-24">
+        <TypeHeader :title="t('attr.border')" class="mt-24">
             <template #tool>
                 <div class="add" @click="addBorder">
                     <svg-icon icon-class="add"></svg-icon>
@@ -73,7 +75,7 @@ function setVisible(id: number): void {
                 <div class="color">
                     <ColorPicker :color="f.color"></ColorPicker>
                     <input :value="f.color"/>
-                    <input :value="f.opacity"/>
+                    <input style="text-align: center;" :value="f.opacity"/>
                 </div>
                 <BorderDetail></BorderDetail>
                 <div class="delete" @click="deleteBorder(f.id)">

@@ -57,6 +57,7 @@ export class Context extends Watchable {
         this.m_selection = new Selection(data);
         this.m_repo = new Repository(this.m_selection);
         this.m_data = this.m_repo.guard(data);
+        data.pagesMgr.setDataGurad(this.m_repo);
     }
 
     get editor(): Editor {

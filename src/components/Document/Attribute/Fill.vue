@@ -10,7 +10,11 @@ import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive
 import { Context } from '@/context';
 import { Shape } from '@/data/data/shape';
 import { Color } from "@/data/data/style";
+import { Reg_HEX } from "@/utils/RegExp"
 import TypeHeader from './TypeHeader.vue';
+import { useI18n } from 'vue-i18n';
+import ColorPicker from './PopoverMenu/ColorPicker.vue';
+const { t } = useI18n();
 const props = defineProps<{
     context: Context,
     shape: Shape,
@@ -30,7 +34,7 @@ const data = reactive<Fill[]>([])
 
 function toHexRgb(r: number, g: number, b: number) {
     const toHex = (n: number) => {
-        return n.toString(16).toUpperCase();
+        return n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     }
     return "#" + toHex(r) + toHex(g) + toHex(b);
 }
@@ -44,10 +48,11 @@ function updateData() {
         const fill = style.getFillByIndex(i);
         const color = fill.color;
         const colorHex = toHexRgb(color.red, color.green, color.blue);
+        const alpha = Number.parseFloat(fill.color.alpha.toFixed(2))
         const f: Fill = {
             id: i,
             color: colorHex,
-            opacity: fill.color.alpha,
+            opacity: alpha,
             visibility: fill.isEnabled
         }
         data.push(f);
@@ -91,16 +96,22 @@ onBeforeUpdate(() => {
 
 function addFill(): void {
     data.push({
-        id: Date.now(),
-        color: '#CDCDCD',
-        opacity: 1,
+        id: data.length,
+        color: '#000000',
+        opacity: 0.20,
         visibility: true
     })
+    const color = new Color(0, 0, 0, 0.2);
+    editor.value.setFillColor(data.length, color);
 }
 
 function deleteFill(id: number): void {
     const index = data.findIndex(i => i.id === id)
-    index >= 0 && (data.splice(index, 1))
+    if (index >= 0) {
+        data.splice(index, 1);
+        editor.value.deleteFill(index);
+    }
+   
 }
 
 function toggleVisible(id: number): void {
@@ -109,7 +120,7 @@ function toggleVisible(id: number): void {
 }
 
 function setColor(id: number, clr: string, alpha: number) {
-    const res = clr.match(/^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/);
+    const res = clr.match(Reg_HEX);
     if (!res) {
         // todo
         return;
@@ -117,14 +128,39 @@ function setColor(id: number, clr: string, alpha: number) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
-    editor.value.setFillColor(id, new Color(alpha, r, g, b))
+    editor.value.setFillColor(id, new Color(r, g, b, alpha))
+}
+
+function onColorChange(f: Fill, e: Event) {
+    let value = (e.target as HTMLInputElement)?.value;
+    if (Reg_HEX.test(value)) {
+        setColor(f.id, value, f.opacity)
+    } else {
+        console.log('-输入不合法-');
+    }
+}
+
+function onAlphaChange(f: Fill, e: Event) {
+    let value = Number(Number.parseFloat((e.target as HTMLInputElement)?.value).toFixed(2));
+    if (value >= 0 && value <= 1) {
+        setColor(f.id, f.color, value)
+    } else {
+        console.log('-输入不合法-');
+        
+    }
+}
+function getColorFromPicker(color: number[], f: Fill) {
+    console.log('-color-');
+    
+    const c = toHexRgb(color[0], color[1], color[2])
+    setColor(f.id, c, f.opacity)
 }
 
 </script>
 
 <template>
     <div class="fill-panel">
-        <TypeHeader title="填充" class="mt-24">
+        <TypeHeader :title="t('attr.fill')" class="mt-24">
             <template #tool>
                 <div class="add" @click="addFill">
                     <svg-icon icon-class="add"></svg-icon>
@@ -137,9 +173,18 @@ function setColor(id: number, clr: string, alpha: number) {
                     <svg-icon v-if="f.visibility" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <div class="color-block" :style="{backgroundColor: f.color}" />
-                    <input :value="f.color"/>
-                    <input :value="f.opacity"/>
+                    <ColorPicker :color="f.color" @choosecolor="c => getColorFromPicker(c, f)"></ColorPicker>
+                    <!-- <div class="color-block" :style="{backgroundColor: f.color, opacity: f.opacity}" /> -->
+                    <input
+                        :value="f.color"
+                        :spellcheck ="false"
+                        @change="(e) => onColorChange(f, e)"
+                    />
+                    <input
+                        style="text-align: center;"
+                        :value="f.opacity"
+                        @change="(e) => onAlphaChange(f, e)"
+                    />
                 </div>
                 <div class="space"></div>
                 <div class="delete" @click="deleteFill(f.id)">

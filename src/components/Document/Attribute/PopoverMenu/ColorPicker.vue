@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { defineProps, ref, nextTick, reactive } from 'vue';
+import { defineProps, ref, nextTick, reactive, defineEmits } from 'vue';
 type RgbMeta = number[]
 defineProps<{
   color: string
+}>();
+const emit = defineEmits<{
+  (e: 'choosecolor', color: number[]): void;
 }>();
 
 const widthSaturation = 240;
@@ -213,6 +216,8 @@ function eyedropper() {
       RGBA.R = rgb[0];
       RGBA.G = rgb[1];
       RGBA.B = rgb[2];
+
+      emit('choosecolor', rgb)
     })
     .catch(() => {
       throw new Error("failed");

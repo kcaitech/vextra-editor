@@ -17,4 +17,6 @@ export const attr = {
     prototype: 'Prototype',
     inspect: 'Inspect',
     constraints: 'Constraints',
+    border: 'Border',
+    fill: 'Fill'
 }

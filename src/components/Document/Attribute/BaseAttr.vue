@@ -19,6 +19,7 @@ const x = ref<number>(0);
 const y = ref<number>(0);
 const w = ref<number>(0);
 const h = ref<number>(0);
+const rotate = ref<number>(0);
 const isLock = ref<boolean>(true);
 const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
@@ -30,6 +31,7 @@ function calcFrame() {
     const frame = props.shape.frame;
     w.value = frame.width;
     h.value = frame.height;
+    rotate.value = props.shape.rotation;
 }
 function setupWatcher() {
     if (!shape) {
@@ -46,7 +48,8 @@ function setupWatcher() {
 function onChangeX(value: string) {
     // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    let x: number = Number.parseFloat(value);
+    const x: number = Number.parseFloat(value);
+    if (isNaN(x)) return;
     if (props.shape.frame.x.toFixed(fix) != value && props.context.selection.selectedPage) {
         const xy = props.shape.realXY();
         editor.value.translateTo(x, xy.y);
@@ -55,7 +58,8 @@ function onChangeX(value: string) {
 function onChangeY(value: string) {
     // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    let y: number = Number.parseFloat(value);
+    const y: number = Number.parseFloat(value);
+    if (isNaN(y)) return;
     if (props.shape.frame.y.toFixed(fix) != value && props.context.selection.selectedPage) {
         const xy = props.shape.realXY();
         editor.value.translateTo(xy.x, y);
@@ -64,6 +68,7 @@ function onChangeY(value: string) {
 function onChangeW(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newW: number = Number.parseFloat(value);
+    if (isNaN(newW)) return editor.value.expandTo(w.value, h.value);
     const rate = newW / w.value;
     if (props.shape.frame.width.toFixed(fix) != value && props.context.selection.selectedPage) {
         const newH = isLock.value ? Number((rate * h.value).toFixed(fix)) : props.shape.frame.height;
@@ -73,6 +78,7 @@ function onChangeW(value: string) {
 function onChangeH(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newH: number = Number.parseFloat(value);
+    if (isNaN(newH)) return editor.value.expandTo(w.value, h.value);
     const rate = newH / h.value;
     if (props.shape.frame.height.toFixed(fix) != value && props.context.selection.selectedPage) {
         const newW = isLock.value ? Number((rate * w.value).toFixed(fix)) : props.shape.frame.width;
@@ -86,8 +92,18 @@ function radiusToggle() {
     isMoreForRadius.value = !isMoreForRadius.value
 }
 
-function fliph() {}
-function flipv() {}
+function fliph() {
+    editor.value.flipH();
+}
+function flipv() {
+    editor.value.flipV();
+}
+
+function onChangeRotate(value: string) {
+    const newRotate: number = Number.parseFloat(value);
+    if (isNaN(newRotate)) return editor.value.rotate(rotate.value);
+    editor.value.rotate(newRotate);
+}
 
 // hooks
 onMounted(() => {
@@ -125,8 +141,8 @@ onBeforeUpdate(() => {
             <IconText
                 class="td angle"
                 svgicon="angle"
-                :text="h.toFixed(fix)"
-                @onchange="onChangeH"
+                :text="rotate"
+                @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }"
             />
             <div class="flip ml-24" @click="fliph">
