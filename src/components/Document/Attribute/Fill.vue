@@ -11,8 +11,6 @@ import { Context } from '@/context';
 import { Shape } from '@/data/data/shape';
 import { Color } from "@/data/data/style";
 import TypeHeader from './TypeHeader.vue';
-import "@/assets/icons/svg/delete.svg";
-import "@/assets/icons/svg/select.svg";
 const props = defineProps<{
     context: Context,
     shape: Shape,

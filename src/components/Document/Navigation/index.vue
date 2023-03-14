@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import { defineProps } from "vue";
 import { Context } from "@/context";
-import Tabs from "@/components/Document/Navigation/Tabs.vue";
+import Tabs from "@/components/Document/Navigation/LeftTabs.vue";
 
 const props = defineProps<{ context: Context }>();
 

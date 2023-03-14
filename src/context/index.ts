@@ -2,7 +2,7 @@ import { Watchable } from "@/data/data/basic";
 import { Document } from "@/data/data/document";
 import { IDocShadow } from "@/data/data/ishadow";
 import { Page } from "@/data/data/page";
-import { ShapeNaviShadow } from "@/data/data/shadow";
+import { ShapeNaviShadow } from "@/data/data/shadow/shapeNavi";
 import { Shape } from "@/data/data/shape";
 import { Repository } from "@/data/data/transact";
 import { DocEditor, Editor, PageEditor } from "@/data/editor";

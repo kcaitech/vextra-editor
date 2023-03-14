@@ -5,14 +5,14 @@ import { defineProps, onMounted, onUnmounted, ref } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@/data/data/page";
-import { ShapeNaviIter } from "@/data//data/shadow";
+import { ShapeNaviIter } from "@/data/data/shadow/shapeNavi"
 import { Shape } from "@/data/data/shape";
-import "@/assets/icons/svg/search.svg";
-
-
-type List = InstanceType<typeof ListView>
+import { useI18n } from 'vue-i18n';
+type List = InstanceType<typeof ListView>;
 
 const props = defineProps<{ context: Context }>();
+
+const { t } = useI18n();
 
 const shapelist = ref<List>();
 let listInstance: HTMLDivElement | undefined;
@@ -125,24 +125,42 @@ function toggleExpand(shape: Shape) {
     sd.toggleExpand(shape);
 }
 function selectShape(data: ItemData) {
-    // let start = 0;
-    // const index = shapeSource.indexOf(data);
-    // data.shape.index = index
-    // if (props.context.selection.onShift) {
-    //     const selectedIndex = props.context.selection.selectShapeIndex();
-    //     if (!selectedIndex.length) return props.context.selection.selectShape(data.shape);
-    //     start = selectedIndex.reduce((pre, cur) => Math.abs(index - cur) > pre ? pre : cur);
-    //     const shapes = getShapeRange(start, index);
-    //     props.context.selection.rangeSelectShape(shapes);
-    //     return;
-    // }
-    // props.context.selection.selectShape(data.shape);
+    if (props.context.selection.onShift) {
+        selectShapeWhenShiftIsPressed(data);
+        return;
+    }
+    props.context.selection.selectShape(data.shape);
 }
+function selectShapeWhenShiftIsPressed(curData: ItemData) {
+    const to = shapeSource.indexOf(curData);
+    const selectedShapes = props.context.selection.selectedShapes;
+    const selectShapesIndex = getSelectShapesIndex(selectedShapes);
+    const from = selectShapesIndex.reduce((pre, cur) => {
+        return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
+    }, selectShapesIndex[0]);
+    const shapes = getShapeRange(from, to);
+    props.context.selection.rangeSelectShape(shapes);
 
+}
+function getSelectShapesIndex(shapes: Shape[]): number[] {
+    return shapes.map(s => shapeIndexOf(s));
+}
+function shapeIndexOf(shape: Shape): number {
+    const shadows = props.context.shadows;
+    const page = props.context.selection.selectedPage;
+    if (page == undefined) {
+        return -1;
+    }
+    const sd = shadows.get(page as Page);
+    return sd.indexOf(shape);
+}
 function getShapeRange(start: number, end: number): Shape[] {
-    let dataRange: Shape[] = [];
-    for (let i = start; i <= end; i++) {
-        dataRange.push((shapeSource.iterAt(i) as any).__it.__node.__shape);
+    const from = Math.min(start, end);
+    const to = Math.max(start, end);
+    const dataRange: Shape[] = [];
+    const it = shapeSource.iterAt(from);
+    for (let i = from; i <= to && it.hasNext(); i++) {
+        dataRange.push(it.next().shape);
     }
     return dataRange;
 }
@@ -157,12 +175,12 @@ function unHovershape(shape: Shape) {
 
 function changeControlPressStatus(e: KeyboardEvent, down: boolean) {        
     if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {  
-        props.context?.selection.setControlStatus(down)
+        props.context?.selection.setControlStatus(down);
     }
 }
 function changeShiftPressStatus(e: KeyboardEvent, down: boolean) {
     if (e.code === 'ShiftLeft') {  
-        props.context?.selection.setShiftStatus(down)
+        props.context?.selection.setShiftStatus(down);
     }
 }
 
@@ -204,7 +222,7 @@ onUnmounted(() => {
 <template>
     <div class="shapelist-wrap">
         <div class="header">
-            <div class="title">图层</div>
+            <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
                 <input type="text" @change="e => search(e)">
@@ -234,6 +252,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .shapelist-wrap {
+    height: 100%;
     .header {
         width: 100%;
         height: 64px;
@@ -245,7 +264,7 @@ onUnmounted(() => {
             flex-shrink: 0;
         }
         .title {
-            font-weight: 700;
+            font-weight: var(--default-bold);
             line-height: 30px;
             height: 30px;
         }

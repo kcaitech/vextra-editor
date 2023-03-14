@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue';
-import "@/assets/icons/svg/gear.svg";
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();

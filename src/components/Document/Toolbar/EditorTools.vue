@@ -6,10 +6,6 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\EditorTools.vue
 -->
 <script setup lang="ts">
-import "@/assets/icons/svg/pointer.svg";
-import "@/assets/icons/svg/rectangle.svg";
-import "@/assets/icons/svg/resource.svg";
-import "@/assets/icons/svg/text.svg";
 import { defineProps } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';

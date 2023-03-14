@@ -4,8 +4,6 @@ import { ref } from "@vue/reactivity";
 import { defineProps, onBeforeUpdate, onMounted, onUnmounted } from "vue"
 // import Icon from "@/components/common/Icon.vue";
 import ToolButton from "./ToolButton.vue"
-import "@/assets/icons/svg/redo.svg"
-import "@/assets/icons/svg/undo.svg"
 const props = defineProps<{ repo?: Repository }>();
 let watcher: ((...args: any[]) => void) | undefined;
 // function watcher() {

@@ -14,7 +14,6 @@
 <script setup lang="ts">
 import { ref, defineEmits, onUnmounted } from 'vue';
 import { FilePicker } from '../common/filepicker';
-import '@/assets/icons/svg/drop-here.svg';
 const active = ref(false);
 
 const emit = defineEmits<{

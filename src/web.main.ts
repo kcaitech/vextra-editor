@@ -8,6 +8,7 @@ import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
 // import { LzDataRemote } from "./data/io/exform/import/lzdataremote";
 import { Document } from "./data/data/document";
 import { Zip } from "@pal/zip";
+import "@/assets/icons/loadall"
 
 function openLocalFile(onReady: (data: LzData) => void, file?: File) {
     if (file) {

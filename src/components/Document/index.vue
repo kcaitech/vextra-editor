@@ -6,12 +6,11 @@ import { Document } from "@/data/data/document";
 import Navigation from './Navigation/index.vue';
 import { Page } from '@/data/data/page';
 import { Selection } from '@/context/selection'
-import Attribute from './Attribute/index.vue';
+import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 
 const props = defineProps<{data: Document}>();
-// const dataReady = ref<boolean>(false);
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(props.data));
 (window as any).__context = context.value;
@@ -29,13 +28,6 @@ function topDblClick() {
 function onWindowBlur() {
     // Window blur, Close the process that should be closed
 }
-
-onMounted(() => {    
-    context.value.selection.watch(selectionWatcher);
-    switchPage(props.data.pagesMgr.getPageIdByIndex(0));
-    window.addEventListener('blur', onWindowBlur)
-})
-
 function switchPage(id: string) {
     const ctx: Context = context.value;
     const pagesMgr = ctx.data.pagesMgr;
@@ -45,7 +37,6 @@ function switchPage(id: string) {
         ctx.selection.selectPage(page);
     })
 }
-
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         const ctx: Context = context.value as Context;
@@ -53,11 +44,15 @@ function selectionWatcher(t: number) {
     }
 }
 
+onMounted(() => {    
+    context.value.selection.watch(selectionWatcher);
+    switchPage(props.data.pagesMgr.getPageIdByIndex(0));
+    window.addEventListener('blur', onWindowBlur)
+})
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
     window.removeEventListener('blur', onWindowBlur);
 })
-
 </script>
 
 <template>
@@ -66,9 +61,9 @@ onUnmounted(() => {
     </div>
     <ColSplitView 
         id="center"
-        :left="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}" 
-        :middle="{width: 0.6, minWidth: 0.3, maxWidth: 0.8}"
-        :right="{width: 0.2, minWidth: 0.1, maxWidth: 0.5}"
+        :left="{width: 0.1, minWidth: 0.1, maxWidth: 0.5}" 
+        :middle="{width: 0.8, minWidth: 0.3, maxWidth: 0.8}"
+        :right="{width: 0.1, minWidth: 0.1, maxWidth: 0.5}"
     >
         <template #slot1>
             <Navigation

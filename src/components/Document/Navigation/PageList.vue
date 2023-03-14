@@ -5,16 +5,18 @@
 -->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { defineProps, onMounted, onUnmounted, ref } from "vue";
+import { defineProps, defineEmits, onMounted, onUnmounted, ref } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
 import { PagesMgr } from "@/data/data/document";
-import "@/assets/icons/svg/file.svg";
-import "@/assets/icons/svg/add.svg";
-import "@/assets/icons/svg/down.svg";
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps<{ context: Context }>();
+const emit = defineEmits<{
+    (e: "fold", fold: boolean): void;
+}>();
 
 const fold = ref<boolean>(false)
 
@@ -79,7 +81,8 @@ const pageSource = new class implements IDataSource<ItemData> {
 }
 
 function toggle() {
-    fold.value = !fold.value
+    fold.value = !fold.value;
+    emit('fold', fold.value)
 }
 
 function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
@@ -92,7 +95,7 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
 <template>
     <div class="pagelist-wrap">
         <div class="header">
-            <div class="title">页面</div>
+            <div class="title">{{ t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
                 <div class="add">
@@ -105,9 +108,8 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
                     <svg-icon icon-class="down" :style="{transform: fold ? 'rotate(90deg)' : 'rotate(0deg)'}"></svg-icon>
                 </div>
             </div>
-            
         </div>
-        <div class="body" :style="{height: fold ? 0 : 'calc(100% - 36px)'}">
+        <div class="body" :style="{height: fold ? 0 : 'calc(100% - 30px)'}">
             <ListView
                 :source="pageSource"
                 :item-view="PageItem"
@@ -127,6 +129,7 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
     
 <style scoped lang="scss">
 .pagelist-wrap {
+    height: 100%;
     .header {
         width: 100%;
         display: flex;
@@ -139,8 +142,9 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
             flex-shrink: 0;
         }
         .title {
-            font-weight: 700;
-            line-height: 30px;
+            height: 30px;
+            font-weight: var(--default-bold);
+            line-height: 36px;
         }
         .btn {
             position: absolute;
@@ -177,7 +181,7 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
         }
     }
     .body {
-        height: calc(100% - 36px);
+        height: calc(100% - 30px);
         > .container {
             height: 100%;
         }

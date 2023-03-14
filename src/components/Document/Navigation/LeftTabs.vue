@@ -10,7 +10,8 @@ import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const props = defineProps<{ context: Context }>();
 
@@ -20,13 +21,13 @@ const currentTab = ref<Tab>("Shape");
 
 const tabs: { title: string, id: Tab }[] = [
     {
-        title: '图层',
+        title: t('navi.shape'),
         id: 'Shape'
     }, {
-        title: '组件',
+        title: t('navi.comps'),
         id: 'Comps'
     }, {
-        title: '资源库',
+        title: t('navi.resource'),
         id: 'Resource'
     }
 ]
@@ -47,7 +48,6 @@ function toggle(id: Tab) {
             <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
             <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
         </div>
-        
     </div>
 </template>
 
@@ -57,20 +57,21 @@ function toggle(id: Tab) {
     width: 100%;
     height: 100%;
     .tab-controller {
-        height: 48px;
+        height: 36px;
         width: 100%;  
         flex: 0 0 auto;
         display: flex;
         flex-direction: row;
+        margin-left: 13px;
         > .tab {
-            font-weight: 700;
+            font-weight: var(--default-bold);
             font-size: 10px;
             min-width: 42px;
             margin-right: 4px;
-            margin-top: 16px;
+            margin-top: 4px;
             padding: 4px;
             text-align: center;
-            line-height: 28px;
+            line-height: 24px;
         }
         > .active {
             border-radius: 4px 4px 0 0;
@@ -80,7 +81,7 @@ function toggle(id: Tab) {
     .body {
         border-top: 1px solid var(--theme-color);
         width: 100%;
-        height: calc(100% - 48px);
+        height: calc(100% - 36px);
         position: relative;
         flex: 1 1 auto;
         box-sizing: border-box;

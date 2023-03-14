@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue';
 import ToolButton from '../ToolButton.vue';
-import "@/assets/icons/svg/down.svg";
-import "@/assets/icons/svg/pen.svg";
 
 type Button = InstanceType<typeof ToolButton>
 

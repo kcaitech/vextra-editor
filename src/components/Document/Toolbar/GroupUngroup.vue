@@ -7,9 +7,6 @@ import { defineProps, computed, onMounted, onUnmounted, ref } from 'vue';
 // import Icon from "@/components/common/Icon.vue";
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
-import "@/assets/icons/svg/group.svg"
-import "@/assets/icons/svg/ungroup.svg"
-
 const props = defineProps<{ context: Context, selection: Selection }>();
 const editor = computed(() => {
     if (props.selection.selectedPage == undefined) {
