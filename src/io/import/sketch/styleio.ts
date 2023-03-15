@@ -196,7 +196,7 @@ export function importStyle(env:Env, data: IJSON): Style {
         contextSettings, 
         fills, 
         [], 
-        []);
+        []);    
 
     // return makePair(style, gradients);
     return style;

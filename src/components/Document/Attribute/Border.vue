@@ -6,45 +6,63 @@
  * @FilePath: \kcdesign\src\components\Document\Attribute\TypeHeader.vue
 -->
 <script setup lang="ts">
-import { defineProps, reactive } from 'vue';
+import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@/data/data/shape';
 import TypeHeader from './TypeHeader.vue';
 import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
-const props = defineProps<{
-    context?: Context,
-    shape?: Shape,
-}>();
-type  Border = {
+import { Color, Border, ContextSettings } from '@/data/data/style';
+import { FillType, BlendMode, BorderPosition } from '@/data/types';
+
+interface BorderItem {
     id: number,
-    color: string,
-    opacity: number,
-    visibility: boolean
+    border: Border
 }
 
-const data = reactive<{
-    borders: Border[]
-}>({
-    borders: [
-        {
-            id: 100,
-            color: '#2C2C2C',
-            opacity: 1,
-            visibility: true
+const { t } = useI18n();
+const props = defineProps<{
+    context: Context,
+    shape: Shape,
+}>();
+const data = reactive<{ borders: BorderItem[] }>({ borders: [] });
+const { borders } = data;
+const editor = computed(() => {
+    return props.context.editor4Shape(props.shape);
+});
+let shapeId: string = "";
+
+function toHexRgb(r: number, g: number, b: number) {
+    const toHex = (n: number) => {
+        return n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
+    }
+    return "#" + toHex(r) + toHex(g) + toHex(b);
+}
+
+function updateData() {
+    shapeId = props.shape.id;
+    borders.length = 0;
+    const style = props.shape.style;
+    for (let i = 0, len = style.bordersCount; i < len; i++) {
+        const border = style.getBorderByIndex(i);
+        const b: BorderItem = {
+            id: i,
+            border: border
         }
-    ]
-})
+        borders.push(b);
+    }
+}
 
 function addBorder(): void {
-    data.borders.push({
-        id: Date.now(),
-        color: '#CDCDCD',
-        opacity: 1,
-        visibility: true
-    })
+    const color = new Color(0, 0, 0, 1);
+    const contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, undefined);
+    const item: BorderItem = {
+        id: borders.length,
+        border
+    } 
+    borders.push(item);
 }
 function deleteBorder(id: number): void {
     const index = data.borders.findIndex(i => i.id === id)
@@ -53,7 +71,7 @@ function deleteBorder(id: number): void {
 
 function setVisible(id: number): void {
     const setObj = data.borders.find(i => i.id === id)
-    setObj && (setObj.visibility = !setObj.visibility)
+    // setObj && (setObj.visibility = !setObj.visibility);
 }
 
 </script>
@@ -68,7 +86,7 @@ function setVisible(id: number): void {
             </template>
         </TypeHeader>
         <div class="borders-container">
-            <div class="border" v-for="f in data.borders" :key="f.id">
+            <!-- <div class="border" v-for="f in borders" :key="f.id">
                 <div :class="f.visibility ? 'visibility' : 'hidden'" @click="setVisible(f.id)">
                     <svg-icon v-if="f.visibility" icon-class="select"></svg-icon>
                 </div>
@@ -81,7 +99,7 @@ function setVisible(id: number): void {
                 <div class="delete" @click="deleteBorder(f.id)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
-            </div>
+            </div> -->
             
         </div>
     </div>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
-import { Shape } from '@/data/data/shape';
+import { Shape, ShapeType, RectShape } from '@/data/data/shape';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
+import Scale from './PopoverMenu/Scale.vue'
+import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
 import { Context } from '@/context';
 import { computed } from '@vue/reactivity';
 
@@ -15,6 +17,7 @@ const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
 }
+const shapeType = ref<ShapeType>();
 const x = ref<number>(0);
 const y = ref<number>(0);
 const w = ref<number>(0);
@@ -23,6 +26,8 @@ const rotate = ref<number>(0);
 const isLock = ref<boolean>(true);
 const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
+const points = ref<number>(0);
+const radius = ref<number>(0);
 
 function calcFrame() {
     const xy = props.shape.realXY();
@@ -32,6 +37,14 @@ function calcFrame() {
     w.value = frame.width;
     h.value = frame.height;
     rotate.value = props.shape.rotation;
+    shapeType.value = props.shape.type;
+    if (shapeType.value === 'rectangle') {
+        getRectShapeAttr(props.shape);
+    }
+}
+function getRectShapeAttr(shape: Shape) {
+    points.value = (shape as RectShape).pointsCount;
+    radius.value = (shape as RectShape).fixedRadius;
 }
 function setupWatcher() {
     if (!shape) {
@@ -136,6 +149,7 @@ onBeforeUpdate(() => {
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
             <IconText class="td frame" ticon="H" :text="h.toFixed(fix)" @onchange="onChangeH"/>
+            <Scale></Scale>
         </div>
         <div class="tr">
             <IconText
@@ -156,14 +170,14 @@ onBeforeUpdate(() => {
             <IconText
                 class="td frame"
                 svgicon="radius"
-                :text="w.toFixed(fix)"
+                :text="radius"
                 :frame="{ width: 12, height: 12 }"
                 @onchange="onChangeW"
             />
             <IconText
                 class="td frame ml-24"
                 svgicon="radius"
-                :text="w.toFixed(fix)"
+                :text="radius"
                 :frame="{ width: 12, height: 12, rotate: 90 }"
                 :style="{
                     visibility: isMoreForRadius ? 'visible' : 'hidden'
@@ -178,15 +192,25 @@ onBeforeUpdate(() => {
             <IconText
                 class="td frame"
                 svgicon="radius"
-                :text="w.toFixed(fix)"
+                :text="radius"
                 :frame="{ width: 12, height: 12, rotate: 270 }"
                 @onchange="onChangeW"
             />
             <IconText
                 class="td frame ml-24"
                 svgicon="radius"
-                :text="w.toFixed(fix)"
+                :text="radius"
                 :frame="{ width: 12, height: 12, rotate: 180 }"
+                @onchange="onChangeW"
+            />
+            <RadiusForIos></RadiusForIos>
+        </div>
+        <div class="tr" v-if="shapeType === 'rectangle'">
+            <IconText
+                class="td frame"
+                svgicon="points"
+                :text="points"
+                :frame="{ width: 12, height: 12 }"
                 @onchange="onChangeW"
             />
         </div>

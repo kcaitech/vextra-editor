@@ -1,3 +1,7 @@
+export const system = {
+    'illegal_input': 'illegal input!'
+}
+
 export const home = {
     open_local_file: "Open file",
     open_remote_file: "Open remote file",
@@ -18,5 +22,6 @@ export const attr = {
     inspect: 'Inspect',
     constraints: 'Constraints',
     border: 'Border',
-    fill: 'Fill'
+    fill: 'Fill',
+    'follow_container_scaling': 'Follow container scaling'
 }

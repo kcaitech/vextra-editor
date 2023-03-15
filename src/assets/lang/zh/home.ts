@@ -1,3 +1,7 @@
+export const system = {
+    'illegal_input': '输入不合法！'
+}
+
 export const home = {
     open_local_file: "打开文件",
     open_remote_file: "打开远程文件",
@@ -18,5 +22,6 @@ export const attr = {
     inspect: '标注',
     constraints: '相对容器位置',
     border: '边框',
-    fill: '填充'
+    fill: '填充',
+    'follow_container_scaling': '跟随容器缩放'
 }

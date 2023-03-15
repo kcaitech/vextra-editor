@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { defineProps, ref, nextTick, reactive, defineEmits } from 'vue';
+import { Color } from '@/data/data/style';
+
 type RgbMeta = number[]
 defineProps<{
-  color: string
+  color: Color
 }>();
 const emit = defineEmits<{
   (e: 'choosecolor', color: number[]): void;
@@ -227,7 +229,7 @@ function eyedropper() {
 </script>
 
 <template>
-  <div class="color-block" :style="{backgroundColor: color}" ref="block" @click="showPopover">
+  <div class="color-block" :style="{backgroundColor: color.toRGBA()}" ref="block" @click="showPopover">
     <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible">
       <!-- 头部 -->
       <div class="header">
@@ -289,7 +291,6 @@ function eyedropper() {
   position: relative;
   width: 16px;
   height: 16px;
-  background-color: #cecece;
   .popover {
     position: absolute;
     width: 240px;

@@ -14,6 +14,7 @@ import { Reg_HEX } from "@/utils/RegExp"
 import TypeHeader from './TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
+import { message } from "@/utils/message";
 const { t } = useI18n();
 const props = defineProps<{
     context: Context,
@@ -136,7 +137,7 @@ function onColorChange(f: Fill, e: Event) {
     if (Reg_HEX.test(value)) {
         setColor(f.id, value, f.opacity)
     } else {
-        console.log('-输入不合法-');
+        message('danger', t('system.illegal_input'));
     }
 }
 
@@ -145,8 +146,7 @@ function onAlphaChange(f: Fill, e: Event) {
     if (value >= 0 && value <= 1) {
         setColor(f.id, f.color, value)
     } else {
-        console.log('-输入不合法-');
-        
+        message('danger', t('system.illegal_input'));
     }
 }
 function getColorFromPicker(color: number[], f: Fill) {
@@ -173,8 +173,8 @@ function getColorFromPicker(color: number[], f: Fill) {
                     <svg-icon v-if="f.visibility" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.color" @choosecolor="c => getColorFromPicker(c, f)"></ColorPicker>
-                    <!-- <div class="color-block" :style="{backgroundColor: f.color, opacity: f.opacity}" /> -->
+                    <!-- <ColorPicker :color="f.color" @choosecolor="c => getColorFromPicker(c, f)"></ColorPicker> -->
+                    <div class="color-block" :style="{backgroundColor: f.color, opacity: f.opacity}" />
                     <input
                         :value="f.color"
                         :spellcheck ="false"
