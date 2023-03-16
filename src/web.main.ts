@@ -8,7 +8,10 @@ import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
 // import { LzDataRemote } from "./data/io/exform/import/lzdataremote";
 import { Document } from "./data/data/document";
 import { Zip } from "@pal/zip";
-import "@/assets/icons/loadall"
+import "@/assets/icons/loadall";
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
+import '@/style/index.scss';
 
 function openLocalFile(onReady: (data: LzData) => void, file?: File) {
     if (file) {
@@ -26,4 +29,5 @@ function openRemoteFile(fid: string, onReady: (data: Document) => void) {
 const app = createApp(App, { openLocalFile, openRemoteFile })
 app.use(i18n);
 app.component('svg-icon', SvgIcon);
+app.use(ElementPlus)
 app.mount("#app");

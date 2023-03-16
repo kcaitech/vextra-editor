@@ -81,7 +81,6 @@ var exports = defineConfig({
             //contextIsolation: false
         }
     }
-
 })
 
 module.exports = exports;

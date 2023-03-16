@@ -1,13 +1,35 @@
 <script setup lang="ts">
 import { ref, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Select from '@/components/common/Select.vue'
 
 const { t } = useI18n();
 
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();
+const value = ref('')
+const options = [
+  {
+    value: 'Option1',
+    label: 'Option1',
+  },
+  {
+    value: 'Option2',
+    label: 'Option2',
+  },
+  {
+    value: 'Option3',
+    label: 'Option3',
+  },
+  {
+    value: 'Option4',
+    label: 'Option4',
+  },
+  {
+    value: 'Option5',
+    label: 'Option5',
+  },
+]
 
 function showMenu() {
   if (popoverVisible.value) return popoverVisible.value = false;
@@ -54,7 +76,14 @@ function popoverClose() {
         <div class="tr">
           <label>{{ t('attr.position') }}</label>
           <div class="item">
-            <Select></Select>
+            <el-select v-model="value" class="m-2" placeholder="Select" size="large">
+              <el-option
+                v-for="item in options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
           </div>
         </div>
       </div>
@@ -124,6 +153,9 @@ function popoverClose() {
         }
         > .item {
           flex: 1 1 auto;
+          > .el-select {
+            width: 100%;
+          }
         }
       }
       
