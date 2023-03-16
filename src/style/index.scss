@@ -1,6 +1,33 @@
 :root {
+    // position
+    --default-padding: 16px;
+    --default-padding-half: 8px;
+    --default-padding-quarter: 4px;
+    --default-margin: 16px;
+    --default-margin-half: 8px;
+    --default-margin-quarter: 4px;
+
+    // font
+    --font-family: BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,PingFang SC,Microsoft Yahei,Hiragino Sans GB,sans-serif,apple color emoji,Noto Color Emoji,segoe ui emoji,segoe ui symbol;
+    --font-default-bold: 700;
+    --font-default-fontsize: 10px;
+
+    // frame
+    --el-border-width: 1px;
+    --el-border-style: solid;
+    --el-component-size-large: 32px;
+    --el-component-size: 24px;
+    --el-component-size-small: 16px;
+
     // color
     color-scheme: light;
+
+    --grey-light: #efefef;
+    --grey-dark: #e0e0e0;
+    --theme-color-line: #f0f0f0;
+    --theme-color: #2c2c2c;
+    --theme-color-anti: #ffffff;
+
     --el-color-white: #ffffff;
     --el-color-black: #000000;
     --el-color-primary: #73767a;
@@ -81,20 +108,4 @@
     --el-border-color-hover: var(--el-text-color-disabled);
     --el-border: var(--el-border-width) var(--el-border-style) var(--el-border-color);
     --el-svg-monochrome-grey: var(--el-border-color);
-
-    --gery-light: #efefef;
-    --gery-dark: #e0e0e0;
-    --theme-color: #2c2c2c;
-    --theme-color-anti: #ffffff;
-
-    // frame
-    --el-border-width: 1px;
-    --el-border-style: solid;
-    --el-component-size-large: 32px;
-    --el-component-size: 24px;
-    --el-component-size-small: 16px;
-
-    // font
-    --font-family: BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,PingFang SC,Microsoft Yahei,Hiragino Sans GB,sans-serif,apple color emoji,Noto Color Emoji,segoe ui emoji,segoe ui symbol;
-    --font-default-bold: 700;
 }

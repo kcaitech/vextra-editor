@@ -13,22 +13,6 @@ const options = [
     value: 'Option1',
     label: 'Option1',
   },
-  {
-    value: 'Option2',
-    label: 'Option2',
-  },
-  {
-    value: 'Option3',
-    label: 'Option3',
-  },
-  {
-    value: 'Option4',
-    label: 'Option4',
-  },
-  {
-    value: 'Option5',
-    label: 'Option5',
-  },
 ]
 
 function showMenu() {
@@ -38,7 +22,7 @@ function showMenu() {
     popoverVisible.value = true;
     nextTick(() => {
       if (popover.value) {   
-        let top = Math.min(document.documentElement.clientHeight - 70 - el.offsetTop - popover.value.offsetHeight, 0)
+        const top = Math.min(document.documentElement.clientHeight - 70 - el.offsetTop - popover.value.offsetHeight, 0)
         popover.value.style.left = -(el.offsetLeft + popover.value.clientWidth + 4) + 'px';
         popover.value.style.top = top + 'px';
       } 

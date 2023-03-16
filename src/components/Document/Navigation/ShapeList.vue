@@ -275,7 +275,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             box-sizing: border-box;
-            background-color: var(--theme-color2);
+            background-color: var(--grey-light);
             padding: 4px var(--default-padding);
             border-radius: 8px;
             > svg {

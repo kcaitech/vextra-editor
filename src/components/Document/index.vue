@@ -94,13 +94,13 @@ onUnmounted(() => {
         --top-toolbar-font-color: var(--theme-color-anti);
         /* left navigation col */
         --left-navi-bg-color: var(--theme-color-anti);
-        --left-navi-button-hover-color: var(--theme-color2);
-        --left-navi-button-select-color: var(--theme-color3);
+        --left-navi-button-hover-color: var(--grey-light);
+        --left-navi-button-select-color: var(--grey-dark);
         --left-navi-font-color: var(--theme-color);
         /* right attribute col */
         --right-attr-bg-color: var(--theme-color-anti);
         /* center content area */
-        --center-content-bg-color: var(--theme-color2);
+        --center-content-bg-color: var(--grey-light);
     }
 </style>
 

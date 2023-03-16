@@ -1,5 +1,9 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
+// 按需引入element ui
+const AutoImport = require('unplugin-auto-import/webpack')
+const Components = require('unplugin-vue-components/webpack')
+const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
 
 var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs';
 // var run_env = 'nodejs'
@@ -67,6 +71,12 @@ var configureWebpack = (config) => {
             exclude: /node_modules/,
         },
     )
+
+    config.plugins = [
+        AutoImport({resolvers: [ElementPlusResolver()]}),
+        Components({resolvers: [ElementPlusResolver()]}),
+        ...config.plugins
+    ]
 }
 
 var exports = defineConfig({

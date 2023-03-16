@@ -75,7 +75,7 @@ function toggle(id: Tab) {
         }
         > .active {
             border-radius: 4px 4px 0 0;
-            background-color: var(--theme-color3);
+            background-color: var(--grey-dark);
         }
     }
     .body {

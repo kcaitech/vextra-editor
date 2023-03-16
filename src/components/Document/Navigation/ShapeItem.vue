@@ -115,7 +115,7 @@ div.slot {
 
 div.triangle:hover {
     cursor: default;
-    background-color: var(--theme-color3);
+    background-color: var(--grey-dark);
 }
 
 div.triangle-right {
