@@ -23,5 +23,7 @@ export const attr = {
     constraints: '相对容器位置',
     border: '边框',
     fill: '填充',
-    'follow_container_scaling': '跟随容器缩放'
+    'follow_container_scaling': '跟随容器缩放',
+    'advanced_stroke': '边框设置',
+    position: '位置'
 }

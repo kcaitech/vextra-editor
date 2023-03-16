@@ -10,7 +10,7 @@ import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive
 import { Context } from '@/context';
 import { Shape } from '@/data/data/shape';
 import { Color } from "@/data/data/style";
-import { Reg_HEX } from "@/utils/RegExp"
+import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from './TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
@@ -135,7 +135,7 @@ function setColor(id: number, clr: string, alpha: number) {
 function onColorChange(f: Fill, e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
     if (Reg_HEX.test(value)) {
-        setColor(f.id, value, f.opacity)
+        setColor(f.id, value, f.opacity);
     } else {
         message('danger', t('system.illegal_input'));
     }
@@ -144,7 +144,7 @@ function onColorChange(f: Fill, e: Event) {
 function onAlphaChange(f: Fill, e: Event) {
     let value = Number(Number.parseFloat((e.target as HTMLInputElement)?.value).toFixed(2));
     if (value >= 0 && value <= 1) {
-        setColor(f.id, f.color, value)
+        setColor(f.id, f.color, value);
     } else {
         message('danger', t('system.illegal_input'));
     }

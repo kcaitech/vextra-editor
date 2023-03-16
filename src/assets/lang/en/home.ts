@@ -23,5 +23,7 @@ export const attr = {
     constraints: 'Constraints',
     border: 'Border',
     fill: 'Fill',
-    'follow_container_scaling': 'Follow container scaling'
+    'follow_container_scaling': 'Follow container scaling',
+    'advanced_stroke': 'Advanced stroke',
+    position: 'Position'
 }

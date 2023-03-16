@@ -204,7 +204,7 @@ onBeforeUpdate(() => {
     background-color: none;
     border-radius: 0px;
     border-style: solid;
-    border-color: #0000CD;
+    border-color: rgb(0, 0, 205, 0.25);
     position: absolute;
 }
 
@@ -212,7 +212,7 @@ onBeforeUpdate(() => {
     background-color: none;
     border-radius: 0px;
     border-style: solid;
-    border-color: #00BFFF;
+    border-color: rgb(0, 191, 255, 0.25);
     position: absolute;
 }
 </style>

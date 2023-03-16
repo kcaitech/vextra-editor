@@ -15,6 +15,8 @@ import ColorPicker from './PopoverMenu/ColorPicker.vue';
 import { useI18n } from 'vue-i18n';
 import { Color, Border, ContextSettings } from '@/data/data/style';
 import { FillType, BlendMode, BorderPosition } from '@/data/types';
+import { Reg_HEX } from "@/utils/RegExp";
+import { message } from "@/utils/message";
 
 interface BorderItem {
     id: number,
@@ -32,12 +34,22 @@ const editor = computed(() => {
     return props.context.editor4Shape(props.shape);
 });
 let shapeId: string = "";
+let shape: Shape | undefined;
 
-function toHexRgb(r: number, g: number, b: number) {
-    const toHex = (n: number) => {
-        return n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
+function setupWatcher() {
+    if (!shape) {
+        shape = props.shape;
+        shape.watch(watcher);
     }
-    return "#" + toHex(r) + toHex(g) + toHex(b);
+    else if (shape.id != props.shape.id) {
+        shape.unwatch(watcher);
+        shape = props.shape;
+        shape.watch(watcher);
+    }
+}
+
+function watcher(...args: any[]) {
+    if (args.length > 0 && args[0] == 'border') updateData();
 }
 
 function updateData() {
@@ -61,19 +73,67 @@ function addBorder(): void {
     const item: BorderItem = {
         id: borders.length,
         border
-    } 
+    }
     borders.push(item);
 }
-function deleteBorder(id: number): void {
-    const index = data.borders.findIndex(i => i.id === id)
-    index >= 0 && (data.borders.splice(index, 1))
+function deleteBorder(idx: number): void {
+    editor.value.deleteBorder(idx)
 }
 
-function setVisible(id: number): void {
-    const setObj = data.borders.find(i => i.id === id)
-    // setObj && (setObj.visibility = !setObj.visibility);
+function toggleVisible(idx: number) {
+    const border = borders[idx].border;
+    const isEnabled = !border.isEnabled;
+    const color = border.color;
+    setBorder(idx, { isEnabled, color });
 }
 
+function onColorChange(e: Event, idx: number) {
+    const hex = (e.target as HTMLInputElement).value.match(Reg_HEX);
+    const border = borders[idx].border;
+    if (!hex) {
+        message('danger', t('system.illegal_input'));
+        return;
+    }
+    const r = Number.parseInt(hex[1], 16);
+    const g = Number.parseInt(hex[2], 16);
+    const b = Number.parseInt(hex[3], 16);
+    const alpha = border.color.alpha;
+    const color = new Color(r, g, b, alpha);
+    const isEnabled = border.isEnabled;
+    setBorder(idx, { isEnabled, color });
+}
+
+function onAlphaChange(e: Event, idx: number) {
+    const alpha = Number(Number.parseFloat((e.target as HTMLInputElement).value).toFixed(2));
+    if (isNaN(alpha) || alpha < 0 || alpha > 1) {
+        message('danger', t('system.illegal_input'));
+        return;
+    }
+    const border = borders[idx].border;
+    const color = border.color;
+    color.alpha = alpha
+    const isEnabled = border.isEnabled;
+    setBorder(idx, { isEnabled, color })
+}
+
+function setBorder(idx: number,  options: { color: Color, isEnabled: boolean }) {
+    editor.value.setBorder(idx, options);
+}
+// hooks
+onMounted(() => {
+    updateData();
+    setupWatcher();
+})
+onUnmounted(() => {
+    if (shape) {
+        shape.unwatch(watcher);
+        shape = undefined;
+    }
+})
+onBeforeUpdate(() => {
+    if (shapeId != props.shape.id) updateData();
+    setupWatcher();
+})
 </script>
 
 <template>
@@ -86,20 +146,28 @@ function setVisible(id: number): void {
             </template>
         </TypeHeader>
         <div class="borders-container">
-            <!-- <div class="border" v-for="f in borders" :key="f.id">
-                <div :class="f.visibility ? 'visibility' : 'hidden'" @click="setVisible(f.id)">
-                    <svg-icon v-if="f.visibility" icon-class="select"></svg-icon>
+            <div class="border" v-for="(b, idx) in borders" :key="b.id">
+                <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
+                    <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.color"></ColorPicker>
-                    <input :value="f.color"/>
-                    <input style="text-align: center;" :value="f.opacity"/>
+                    <ColorPicker :color="b.border.color"></ColorPicker>
+                    <input
+                        :spellcheck ="false"
+                        :value="b.border.color.toHex()"
+                        @change="e => onColorChange(e, idx)"
+                    />
+                    <input
+                        style="text-align: center;"
+                        :value="b.border.color.alpha"
+                        @change="e => onAlphaChange(e, idx)"
+                    />
                 </div>
                 <BorderDetail></BorderDetail>
-                <div class="delete" @click="deleteBorder(f.id)">
+                <div class="delete" @click="deleteBorder(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
-            </div> -->
+            </div>
             
         </div>
     </div>

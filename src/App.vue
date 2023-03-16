@@ -51,6 +51,7 @@ onUnmounted(() => {
         --font-family: BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,PingFang SC,Microsoft Yahei,Hiragino Sans GB,sans-serif,apple color emoji,Noto Color Emoji,segoe ui emoji,segoe ui symbol;
         --default-radius: 4px;
         --default-padding: 16px;
+        --default-padding-half: 8px;
         --default-margin: 12px;
         --default-fontsize: 10px;
         --coco-grey: #808080;
