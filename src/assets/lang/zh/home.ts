@@ -25,5 +25,8 @@ export const attr = {
     fill: '填充',
     'follow_container_scaling': '跟随容器缩放',
     'advanced_stroke': '边框设置',
-    position: '位置'
+    position: '位置',
+    'corner_smoothing': '平滑圆角',
+    vertical: '垂直方向',
+    horizontal:'水平方向'
 }

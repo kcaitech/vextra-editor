@@ -25,5 +25,8 @@ export const attr = {
     fill: 'Fill',
     'follow_container_scaling': 'Follow container scaling',
     'advanced_stroke': 'Advanced stroke',
-    position: 'Position'
+    position: 'Position',
+    'corner_smoothing': 'Cornor smoothing',
+    vertical: 'Vertical',
+    horizontal:'Horizontal'
 }

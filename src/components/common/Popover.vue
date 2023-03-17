@@ -4,7 +4,9 @@ import { ref, nextTick, watch, defineProps, defineExpose } from 'vue';
 const props = defineProps<{
   title?: string,
   top?: number,
-  left?: number
+  left?: number,
+  width?: number,
+  height?: number
 }>();
 defineExpose({
   show
@@ -33,7 +35,7 @@ function show() {
 }
 function onBlur() {
   popoverVisible.value = false;
-  container.value?.removeEventListener('blur', onBlur);
+  container.value?.removeEventListener('blur', onBlur);  
 }
 
 watch(popoverVisible, (val) => {
@@ -55,9 +57,17 @@ function popoverClose() {
 </script>
 
 <template>
-  <div class="popover-container__" ref="container" tabindex="-1">
+  <div class="__popover-container" ref="container" tabindex="-1">
     <slot name="trigger"></slot>
-    <div class="popover" ref="popover" v-if="popoverVisible">
+    <div
+      :style="{
+        width: `${props.width ? props.width : 360}px`,
+        height: `${props.height ? props.height : 200}px`,
+      }"
+      class="popover"
+      ref="popover"
+      v-if="popoverVisible"
+    >
       <div class="header">
         <span class="title">{{ props.title }}</span>
         <div class="close" @click="popoverClose">
@@ -72,14 +82,12 @@ function popoverClose() {
 </template>
 
 <style lang="scss">
-.popover-container__ {
+.__popover-container {
   position: relative;
   width: 32px;
   height: 32px;
   > .popover {
     position: absolute;
-    width: 360px;
-    height: 200px;
     background-color: #ffffff;
     outline: none;
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
@@ -92,7 +100,7 @@ function popoverClose() {
         font-size: var(--font-default-fontsize);
         > .title {
           line-height: 32px;
-          font-weight: var(--default-bold);
+          font-weight: var(--font-default-bold);
           margin-left: 4px;
         }
         > .close {
@@ -103,11 +111,12 @@ function popoverClose() {
           position: absolute;
           right: 4px;
           top: 4px;
-          color: grey;
+          color: var(--grey-dark);
         }
     }
     > .body {
-      font-size: 10px; 
+      font-size: 10px;
+      position: relative;
     }
   }
 }

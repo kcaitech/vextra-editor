@@ -13,7 +13,6 @@ declare module '@vue/runtime-core' {
     BaseAttr: typeof import('./src/components/Document/Attribute/BaseAttr.vue')['default']
     Border: typeof import('./src/components/Document/Attribute/Border.vue')['default']
     BorderDetail: typeof import('./src/components/Document/Attribute/PopoverMenu/BorderDetail.vue')['default']
-    Checkbox: typeof import('./src/components/common/Checkbox.vue')['default']
     ColorPicker: typeof import('./src/components/Document/Attribute/PopoverMenu/ColorPicker.vue')['default']
     ColSplitView: typeof import('./src/components/Document/ColSplitView.vue')['default']
     CompsTab: typeof import('./src/components/Document/Navigation/CompsTab.vue')['default']
