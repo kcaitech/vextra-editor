@@ -20,7 +20,7 @@ function showMenu() {
       ref="popover"
       :width="180"
       :height="72"
-      :left="-332"
+      :left="-456"
       :title="t('attr.follow_container_scaling')"
     >
       <template #trigger>

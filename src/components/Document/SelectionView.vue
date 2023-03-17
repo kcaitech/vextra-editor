@@ -113,24 +113,6 @@ function updater(_: number) {
         // for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
         //     data.shapes[i] = updateShape(data.shapes[i], selection.selectedShapes[i]);
         // }
-        // for (let i = data.shapes.length, len = shapes.length; i < len; i++) {
-        //     shapes[i].unwatch(watcher);
-        // }
-        // shapes.length = data.shapes.length;
-        // for (let i = 0, len = shapes.length; i < len; i++) {
-        //     if (!shapes[i]) {
-        //         shapes[i] = selection.selectedShapes[i];
-        //         shapes[i].watch(watcher);
-        //     }
-        //     else if (shapes[i].id != selection.selectedShapes[i].id) {
-        //         shapes[i].unwatch(watcher);
-        //         shapes[i] = selection.selectedShapes[i];
-        //         shapes[i].watch(watcher);
-        //     }
-        //     else {
-        //         // do nothing
-        //     }
-        // }
     }
     else if (data.isSelect) {
         data.shapes.length = selection.selectedShapes.length;

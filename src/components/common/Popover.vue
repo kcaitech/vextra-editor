@@ -6,7 +6,7 @@ const props = defineProps<{
   top?: number,
   left?: number,
   width?: number,
-  height?: number
+  height?: number,
 }>();
 defineExpose({
   show
@@ -21,14 +21,17 @@ function show() {
   if (container.value) {
     popoverVisible.value = true;
     nextTick(() => {
-      if (popover.value) {        
+      if (popover.value) {
+        const buffer = 10;
         const { top, left, width, height } = popover.value.getBoundingClientRect();
-        let t = Math.min(document.documentElement.clientHeight - top - height - 10, 0);
-        let l = Math.min(document.documentElement.clientWidth - left - width - 10, 0);
-        props.top && (t = t + props.top);
-        props.left && (l = l + props.left);
-        popover.value.style.left = l + 'px';
-        popover.value.style.top = t + 'px';
+        const propsLeft = (props.left || 0);
+        const propsTop = (props.top || 0);
+
+        const L = Math.min(document.documentElement.clientWidth - buffer - (left + width), 0);
+        const T = Math.min(document.documentElement.clientHeight - buffer - (top + height), 0);
+
+        popover.value.style.left = Math.min(propsLeft, L) + 'px';
+        popover.value.style.top = Math.min(propsTop, T) + 'px';
       } 
     })
   }
@@ -88,9 +91,9 @@ function popoverClose() {
   height: 32px;
   > .popover {
     position: absolute;
-    background-color: #ffffff;
     outline: none;
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+    background-color: #ffffff;
     z-index: 1;
     > .header {
         width: 100%;

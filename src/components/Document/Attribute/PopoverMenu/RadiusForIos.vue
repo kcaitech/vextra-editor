@@ -16,7 +16,7 @@ function showMenu() {
 <template>
   <div class="radius-for-ios-container">
     <Popover
-      :left="-332"
+      :left="-516"
       :width="240"
       :height="100"
       ref="popover"

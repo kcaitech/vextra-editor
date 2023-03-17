@@ -13,7 +13,7 @@ function showMenu() {
 
 <template>
   <div class="position-container">
-    <Popover ref="popover" :left="-332" :title="t('attr.constraints')">
+    <Popover ref="popover" :left="-636" :title="t('attr.constraints')">
       <template #trigger>
         <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
       </template>
