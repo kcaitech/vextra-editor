@@ -49,11 +49,11 @@ function setupWatcher() {
     }
 }
 
-function watcher(...args: any[]) {
-    if (args.length > 0 && args[0] == 'border') updateData();
+function watcher(...args: any[]) {    
+    if (args.length > 0 && args[0] == 'style') updateData();
 }
 
-function updateData() {
+function updateData() {    
     shapeId = props.shape.id;
     borders.length = 0;
     const style = props.shape.style;
@@ -78,14 +78,14 @@ function addBorder(): void {
     borders.push(item);
 }
 function deleteBorder(idx: number): void {
-    editor.value.deleteBorder(idx)
+    editor.value.deleteBorder(idx);
 }
 
 function toggleVisible(idx: number) {
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
     const color = border.color;
-    setBorder(idx, { isEnabled, color });
+    setBorder(idx, { isEnabled, color: color as Color });
 }
 
 function onColorChange(e: Event, idx: number) {
@@ -95,8 +95,7 @@ function onColorChange(e: Event, idx: number) {
         message('danger', t('system.illegal_input'));
         return;
     }
-    console.log('-border-', border);
-    
+
     const r = Number.parseInt(hex[1], 16);
     const g = Number.parseInt(hex[2], 16);
     const b = Number.parseInt(hex[3], 16);
@@ -113,7 +112,7 @@ function onAlphaChange(e: Event, idx: number) {
         return;
     }
     const border = borders[idx].border;
-    const color: Color = border.color;
+    const color = border.color as Color;
     color.alpha = alpha;
     const isEnabled = border.isEnabled;
     setBorder(idx, { isEnabled, color })
@@ -154,7 +153,7 @@ onBeforeUpdate(() => {
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="b.border.color"></ColorPicker>
+                    <ColorPicker :color="(b.border.color as Color)"/>
                     <input
                         :spellcheck ="false"
                         :value="toHex(b.border.color)"
