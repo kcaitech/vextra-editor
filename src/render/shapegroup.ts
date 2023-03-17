@@ -31,19 +31,19 @@ export function render2path(shape: Shape, offsetX?: number, offsetY?: number, co
     offsetX = offsetX || 0;
     offsetY = offsetY || 0;
 
-    if (!(shape instanceof GroupShape) || shape.childsCount === 0) {
+    if (!(shape instanceof GroupShape) || shape.childs.length === 0) {
         return shape.getPath(offsetX, offsetY);
     }
 
-    const cc = shape.childsCount;
-    const child0 = shape.getChildByIndex(0);
+    const cc = shape.childs.length;
+    const child0 = shape.childs[0];
     const frame0 = child0.frame;
     const path0 = render2path(child0, offsetX + frame0.x, offsetY + frame0.y, consumed);
     consumed?.push(child0);
 
     let joinPath = path0;
     for (let i = 1; i < cc; i++) {
-        const child1 = shape.getChildByIndex(i);
+        const child1 = shape.childs[i];
         const frame1 = child1.frame;
         const path1 = render2path(child1, offsetX + frame1.x, offsetY + frame1.y, consumed);
         const pathop = child1.boolOp;

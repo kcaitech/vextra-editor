@@ -137,7 +137,7 @@ export function importGroupShape(data: IJSON, f: ImportFun): GroupShape {
     return shape;
 }
 
-export function importShapeGroupShape(data: IJSON, f: ImportFun): GroupShape {
+export function importShapeGroupShape(data: IJSON, f: ImportFun): FlattenShape {
     // const type = importShapeType(data);
     const id: string = data['do_objectID'];
     const exportOptions = importExportOptions(data);
