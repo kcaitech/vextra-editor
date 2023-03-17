@@ -25,7 +25,7 @@ export function importColor(data: IJSON): Color {
     blue = Math.min(Math.max(Math.round(blue * 255), 0), 255);
     green = Math.min(Math.max(Math.round(green * 255), 0), 255);
     red = Math.min(Math.max(Math.round(red * 255), 0), 255);
-    return new Color(red, green, blue, alpha);
+    return new Color(alpha, red, green, blue);
 }
 
 function importContextSettings(data: IJSON): ContextSettings {

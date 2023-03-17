@@ -25,7 +25,7 @@ const emit = defineEmits<{
 let showTriangle = ref<boolean>(false);
 function updater() {
     let shape = props.data.shape;
-    showTriangle.value = shape instanceof GroupShape && shape.childsCount > 0;
+    showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0;
 }
 
 // const { proxy } = getCurrentInstance() as ComponentInternalInstance;
