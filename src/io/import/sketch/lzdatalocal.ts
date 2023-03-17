@@ -119,7 +119,11 @@ export class DataLoader {
         this.__handler['artboard'] = (data) => {
             return importArtboard(data, importer)
         }
-        this.__handler['bitmap'] = (data) => importImage(data, importer)
+        this.__handler['bitmap'] = (data) => {
+            const image = importImage(data, importer)
+            image.setImageMgr(document.mediasMgr)
+            return image;
+        }
         this.__handler['page'] = (data) => importPage(data, importer)
         this.__handler['text'] = (data) => importTextShape(data, importer)
         this.__handler['oval'] = (data) => importPathShape(data, importer)
@@ -131,7 +135,11 @@ export class DataLoader {
             symbolsSet.set(symbol.id, symbol)
             return symbol
         }
-        this.__handler['symbolInstance'] = (data) => importSymbolRef(data, importer)
+        this.__handler['symbolInstance'] = (data) => {
+            const symRef = importSymbolRef(data, importer)
+            symRef.setSymbolMgr(document.symbolsMgr);
+            return symRef;
+        }
 
         document.mediasMgr.setLoader((id) => this.loadMedia(id))
         document.pagesMgr.setLoader(async (id) => {
