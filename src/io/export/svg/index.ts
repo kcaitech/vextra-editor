@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, PathShape, Shape, ShapeGroupShape, SymbolRef, TextShape } from "@/data/data/shape";
+import { GroupShape, ImageShape, PathShape, Shape, FlattenShape, SymbolRefShape, TextShape } from "@/data/data/shape";
 import { Artboard } from "@/data/data/artboard";
 import { render as art } from "@/render/artboard";
 import { render as group } from "@/render/group";
@@ -9,7 +9,7 @@ import { render as rect } from "@/render/rectangle";
 import { render as text } from "@/render/text";
 import { render as bool } from "@/render/boolshape";
 import { render as symref } from "@/render/symbolref";
-import { ShapeType, BoolOp } from "@/data/types";
+import { ShapeType, BoolOp } from "@/data/data/classes";
 
 const comsMap: Map<ShapeType, any> = new Map();
 
@@ -51,7 +51,7 @@ comsMap.set(ShapeType.Group, (data: Shape) => {
     return group(h, data as GroupShape, comsMap);
 });
 comsMap.set(ShapeType.FlattenShape, (data: Shape) => {
-    return shapegroup(h, data as ShapeGroupShape);
+    return shapegroup(h, data as FlattenShape);
 });
 comsMap.set(ShapeType.Image, (data: Shape) => {
     const s = data as ImageShape;
@@ -77,7 +77,7 @@ comsMap.set(ShapeType.Symbol, (data: Shape) => {
     return group(h, data as GroupShape, comsMap);
 });
 comsMap.set(ShapeType.SymbolRef, (data: Shape) => {
-    return symref(h, data as SymbolRef, comsMap);
+    return symref(h, data as SymbolRefShape, comsMap);
 });
 
 export function exportSvg(shape: Shape): string {

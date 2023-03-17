@@ -44,20 +44,18 @@ class ShapeNaviShadowMgr implements IDocShadow {
     }
 }
 
-export class Context extends Watchable {
+export class Context extends Watchable(Object) {
     private m_data: Document;
     private m_selection: Selection;
     private m_shadows: ShapeNaviShadowMgr | undefined;
     private m_editor?: Editor;
     private m_repo: Repository;
 
-    constructor(data: Document) {
+    constructor(data: Document, repo: Repository) {
         super();
         this.m_data = data;
         this.m_selection = new Selection(data);
-        this.m_repo = new Repository(this.m_selection);
-        this.m_data = this.m_repo.guard(data);
-        data.pagesMgr.setDataGurad(this.m_repo);
+        this.m_repo = repo;
     }
 
     get editor(): Editor {

@@ -14,7 +14,7 @@ import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
 import { useI18n } from 'vue-i18n';
 import { Color, Border, ContextSettings } from '@/data/data/style';
-import { FillType, BlendMode, BorderPosition } from '@/data/types';
+import { FillType, BlendMode, BorderPosition } from '@/data/data/classes';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
 

@@ -1,11 +1,13 @@
 import { objectId } from "@/data/basic/objectid";
 import { ShapeFrame } from "@/data/data/shape";
-import { Gradient, GradientType, Stop } from "@/data/data/style";
-import * as types from "@/data/types"
+import { Color, Gradient, GradientType, Stop } from "@/data/data/style";
+import * as types from "@/data/data/classes"
+
+const defaultColor = new Color(0, 0, 0, 0)
 
 function renderStop(h: Function, d: Stop): any {
     const position = d.position;
-    const color = d.color;
+    const color = d.color || defaultColor;
     const rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
     const n = h("stop", {
         offset: "" + (position * 100) + "%",
@@ -20,10 +22,10 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
     let style;
     let node: any;
     if (value.gradientType == types.GradientType.Linear) {
-        const stopSCount = value.stopsCount;
+        const stopSCount = value.stops.length;
         const childs = [];
         for (let i = 0; i < stopSCount; i++) {
-            const s = value.getStopByIndex(i);
+            const s = value.stops[i];
             childs.push(renderStop(h, s));
         }
         node = h("linearGradient", {
@@ -35,10 +37,10 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
         }, childs);
     }
     else if (value.gradientType == types.GradientType.Radial) {
-        const stopSCount = value.stopsCount;
+        const stopSCount = value.stops.length;
         const childs = [];
         for (let i = 0; i < stopSCount; i++) {
-            const s = value.getStopByIndex(i);
+            const s = value.stops[i];
             childs.push(renderStop(h, s));
         }
         const scaleX = frame.width > frame.height ? frame.height / frame.width : 1.0;
@@ -60,14 +62,14 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
     }
     else if (value.gradientType == types.GradientType.Angular) {
         let gradient = "";
-        const sc = value.stopsCount;
+        const sc = value.stops.length;
         const calcSmoothColor = () => {
-            const firstStop = value.getStopByIndex(0);
-            const lastStop = value.getStopByIndex(sc - 1);
+            const firstStop = value.stops[0];
+            const lastStop = value.stops[sc - 1];
             const lastDistance = 1 - lastStop.position;
             const firstDistance = firstStop.position;
-            const fColor = firstStop.color;
-            const lColor = lastStop.color;
+            const fColor = firstStop.color || defaultColor;
+            const lColor = lastStop.color || defaultColor;
             const ratio = 1 / (firstDistance + lastDistance);
             const fRatio = lastDistance * ratio;
             const lRatio = firstDistance * ratio;
@@ -81,19 +83,19 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
             a = Math.min(Math.max(a, 0), 1);
             return { r, g, b, a };
         }
-        if (sc > 0 && value.getStopByIndex(0).position > 0) {
+        if (sc > 0 && value.stops[0].position > 0) {
             const { r, g, b, a } = calcSmoothColor();
             gradient = "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 0deg";
         }
         for (let i = 0; i < sc; i++) {
-            const stop = value.getStopByIndex(i);
-            const color = stop.color;
+            const stop = value.stops[i];
+            const color = stop.color || defaultColor;
             const rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
             const deg = Math.round(stop.position * 360)// % 360;
             gradient.length > 0 && (gradient = gradient + ",")
             gradient = gradient + rgbColor + " " + deg + "deg";
         }
-        if (sc > 0 && value.getStopByIndex(sc - 1).position < 1) {
+        if (sc > 0 && value.stops[sc - 1].position < 1) {
             const { r, g, b, a } = calcSmoothColor();
             gradient = gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
         }

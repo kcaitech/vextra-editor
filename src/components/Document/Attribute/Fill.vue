@@ -45,8 +45,8 @@ function updateData() {
     shapeId = props.shape.id;
     data.length = 0;
     const style = props.shape.style;
-    for (let i = 0, len = style.fillsCount; i < len; i++) {
-        const fill = style.getFillByIndex(i);
+    for (let i = 0, len = style.fills.length; i < len; i++) {
+        const fill = style.fills[i];
         const color = fill.color;
         const colorHex = toHexRgb(color.red, color.green, color.blue);
         const alpha = Number.parseFloat(fill.color.alpha.toFixed(2))

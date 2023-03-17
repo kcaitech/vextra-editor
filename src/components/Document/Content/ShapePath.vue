@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import { PathShape } from '@/data/shape';
+import { PathShape } from '@/data/data/shape';
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
 import { render as r } from "@/render/pathshape";
 

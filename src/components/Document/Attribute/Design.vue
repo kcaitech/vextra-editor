@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape } from '@/data/data/shape';
-import { ShapeType } from "@/data/types"
+import { ShapeType } from "@/data/data/classes"
 import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill.vue';

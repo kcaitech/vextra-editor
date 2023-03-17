@@ -1,9 +1,9 @@
-import { ShapeType, SymbolRef } from "@/data/data/shape";
+import { ShapeType, SymbolRefShape } from "@/data/data/shape";
 import { renderGroupChilds as gR } from "@/render/group";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 
-export function render(h: Function, shape: SymbolRef, comsMap: Map<ShapeType, any>, reflush?: number) {
+export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeType, any>, reflush?: number) {
     const sym = shape.peekSymbol();
     if (!sym) {
         return;

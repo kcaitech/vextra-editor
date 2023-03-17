@@ -9,8 +9,10 @@ import { defineProps, defineEmits, onMounted, onUnmounted, ref } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
-import { PagesMgr } from "@/data/data/document";
 import { useI18n } from 'vue-i18n';
+import { ResourceMgr } from "@/data/data/basic";
+import { Page } from "@/data/data/page";
+import { Document, PageListItem } from "@/data/data/document";
 const { t } = useI18n();
 
 const props = defineProps<{ context: Context }>();
@@ -35,26 +37,28 @@ onUnmounted(() => {
 });
 
 class Iter implements IDataIter<ItemData> {
-    private __pagesMgr: PagesMgr;
+    private __document: Document;
+    private __pagesMgr: ResourceMgr<Page>;
     private __selection: Selection;
     private __index: number;
     constructor(context: Context, index: number) {
+        this.__document = context.data;
         this.__pagesMgr = context.data.pagesMgr;
         this.__selection = context.selection;
         this.__index = index;
     }
     hasNext(): boolean {
-        return this.__index < this.__pagesMgr.pageCount;
+        return this.__index < this.__document.pagesList.length;
     }
     next(): ItemData {
-        const id = this.__pagesMgr.getPageIdByIndex(this.__index);
-        const name = this.__pagesMgr.getPageNameById(id);
+        const id: PageListItem = this.__document.pagesList[this.__index];
+        // const name = this.__pagesMgr.getPageNameById(id);
         this.__index++;
         const slectedPage = this.__selection.selectedPage;
         return {
-            name,
-            id,
-            selected: slectedPage !== undefined && slectedPage.id == id
+            name: id.name,
+            id: id.id,
+            selected: slectedPage !== undefined && slectedPage.id == id.id
         }
     }
 }
@@ -66,7 +70,7 @@ const pageSource = new class implements IDataSource<ItemData> {
 
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
     length(): number {
-        return props.context.data.pagesMgr.pageCount;
+        return props.context.data.pagesList.length;
     }
     iterAt(index: number): IDataIter<ItemData> {
         return new Iter(props.context, index);

@@ -1,8 +1,7 @@
-import { Watchable } from "@/data/data/basic";
+import { ISave4Restore, Watchable } from "@/data/data/basic";
 import { Document } from "@/data/data/document";
 import { Page } from "@/data/data/page";
 import { Shape } from "@/data/data/shape";
-import { ISave4Restore } from "@/data/data/transact";
 
 interface Saved {
     page: Page | undefined,
@@ -11,11 +10,11 @@ interface Saved {
     cursorEnd: number
 }
 
-export class Selection extends Watchable implements ISave4Restore {
+export class Selection extends Watchable(Object) implements ISave4Restore {
 
-    static CHANGE_PAGE = Watchable.genWId();
-    static CHANGE_SHAPE = Watchable.genWId();
-    static CHANGE_SHAPE_HOVER = Watchable.genWId();
+    static CHANGE_PAGE = 1;
+    static CHANGE_SHAPE = 2;
+    static CHANGE_SHAPE_HOVER = 3;
 
     private m_document: Document;
 

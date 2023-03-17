@@ -1,13 +1,12 @@
 import { GroupShape, ShapeType } from "@/data/data/shape";
-import * as types from "@/data/types"
 
 export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>): Array<any> {
     const childs: Array<any> = [];
-    const cc = shape.childsCount;
+    const cc = shape.childs.length;
 
     for (let i = 0; i < cc; i++) {
-        const child = shape.getChildByIndex(i);
-        const com = comsMap.get(child.type) || comsMap.get(types.ShapeType.Rectangle);
+        const child = shape.childs[i];
+        const com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle);
         const node = h(com, { data: child });
         childs.push(node);
     }

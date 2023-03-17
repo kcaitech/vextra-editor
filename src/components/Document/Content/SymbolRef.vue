@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap'
-import { SymbolRef } from "@/data/shape";
 import { render as r } from "@/render/symbolref"
+import { SymbolRefShape } from '@/data/data/shape';
 
-const props = defineProps<{ data: SymbolRef }>();
+const props = defineProps<{ data: SymbolRefShape }>();
 
 const reflush = ref(0);
 function watcher() {

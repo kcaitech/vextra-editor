@@ -1,7 +1,12 @@
-import { IJSON } from "@/data/data/lzdata";
-import { Para, ParaAttr, Span, Text, TextAttr, TextHorizontalAlignment, TextVerticalAlignment } from "@/data/data/text";
+
+import { Para, ParaAttr, Span, Text, TextAttr } from "@/data/data/text";
 import { importColor } from "./styleio";
-import * as types from "@/data/types"
+import * as types from "@/data/data/classes"
+import { BasicArray } from "@/data/data/basic";
+
+interface IJSON {
+    [key: string]: any
+}
 
 function importHorzAlignment(align: number) {
     return [types.TextHorAlign.Left, 
@@ -24,7 +29,7 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
     }
     let index = 0;
     const attributes = data["attributes"] || [];
-    const paras: Para[] = [];
+    const paras = new BasicArray<Para>();
 
     let attrIdx = 0;
 
@@ -33,7 +38,7 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
         const end = text.indexOf('\n', index) + 1;
         const ptext = text.substring(index, end);
         const paraAttr: ParaAttr = new ParaAttr(); // todo
-        const spans: Span[] = [];
+        const spans = new BasicArray<Span>();
 
         let spanIndex = index;
         while(attrIdx < attributes.length && spanIndex < end) {
@@ -50,7 +55,12 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
             if (attrIdx == attributes.length - 1) {
                 len = end - spanIndex;
             }
-            spans.push(new Span(len, font && font['name'], font && font['size'], color && importColor(color)));
+
+            const span = new Span(len);
+            span.fontName = font['name'];
+            span.fontSize = font['size'];
+            span.color = color && importColor(color)
+            spans.push(span);
 
             spanIndex = spanIndex + len;
             if (spanIndex >= location + length) {
@@ -59,9 +69,9 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
 
             const pAttr = attrAttr && attrAttr["paragraphStyle"];
             if (pAttr) {
-                paraAttr.paragraphSpacing = pAttr["paragraphSpacing"] || 0;
+                paraAttr.paraSpacing = pAttr["paragraphSpacing"] || 0;
                 paraAttr.alignment = importHorzAlignment(pAttr["alignment"]);
-                paraAttr.allowsDefaultTighteningForTruncation = pAttr["allowsDefaultTighteningForTruncation"] || 0;
+                // paraAttr.allowsDefaultTighteningForTruncation = pAttr["allowsDefaultTighteningForTruncation"] || 0;
                 paraAttr.maximumLineHeight = pAttr["maximumLineHeight"] || Number.MAX_VALUE;
                 paraAttr.minimumLineHeight = pAttr["minimumLineHeight"] || 0;
                 paraAttr.kerning = kerning || 0;
@@ -69,17 +79,19 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
         }
 
         index = end;
-        paras.push(new Para(ptext, spans, paraAttr));
+        const para = new Para(ptext, spans);
+        para.attr = paraAttr;
+        paras.push(para);
     }
 
     const textAttr: TextAttr = new TextAttr();
     if (textStyle) {
         const styAttr = textStyle['encodedAttributes'];
         const styParaAttr = styAttr['paragraphStyle'];
-        textAttr.verticalAlignment = importVertAlignment(textStyle['verticalAlignment']);
+        // textAttr.verticalAlignment = importVertAlignment(textStyle['verticalAlignment']);
         if (styParaAttr) {
             textAttr.alignment = importHorzAlignment(styParaAttr['alignment']);
-            textAttr.allowsDefaultTighteningForTruncation = styParaAttr['allowsDefaultTighteningForTruncation'];
+            // textAttr.allowsDefaultTighteningForTruncation = styParaAttr['allowsDefaultTighteningForTruncation'];
             textAttr.minimumLineHeight = styParaAttr['minimumLineHeight'];
             textAttr.maximumLineHeight = styParaAttr['maximumLineHeight'];
         }
@@ -88,5 +100,7 @@ export function importText(data:IJSON, textStyle:IJSON): Text {
         // defaultAttr.fontName = font['name'];
     }
 
-    return new Text(paras, textAttr);
+    const ret = new Text(paras);
+    ret.attr = textAttr;
+    return ret;
 }

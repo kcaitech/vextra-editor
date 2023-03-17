@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
-import { Shape, GroupShape } from "@/data/shape";
+import { Shape, GroupShape } from "@/data/data/shape";
 import { render as r } from "@/render/shapegroup";
 
 const props = defineProps<{ data: GroupShape }>();

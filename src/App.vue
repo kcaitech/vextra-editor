@@ -1,33 +1,39 @@
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
-import { LzData } from './data/data/lzdata';
 import { importDocument } from '@/io/import/sketch/documentio';
 import { Document } from "./data/data/document";
-import DocumentVue from "@/components/Document/index.vue";
-import HomeVue from "@/components/Home/index.vue";
+import DocumentVue from "@/components/Document/index.vue"
+import HomeVue from "@/components/Home/index.vue"
+import { Zip } from "@pal/zip";
+import { LzDataLocal } from './io/import/sketch/lzdatalocal'; // todo
+import { importDocument as importRemote } from './data/io/import';
+import { Repository } from './data/data/transact';
 
-const props = defineProps<{ openLocalFile: (onReady: (data: LzData) => void, file?: File) => void, openRemoteFile: (fid: string, onReady: (data: Document) => void) => void }>();
+const props = defineProps<{}>();
 // const dataReady = ref<boolean>(false);
 const curDoc = shallowRef<Document | undefined>(undefined);
+const curRepo = shallowRef<Repository | undefined>(undefined);
 
-function importData(lzData: LzData) {
-    importDocument(lzData).then((core: Document) => {
-        curDoc.value = core;
+function openLocalFile(file?: File) {
+    if (!file) return;
+    const lzdata = new LzDataLocal(new Zip(file));
+    const repo = new Repository();
+    importDocument(lzdata, repo).then((document) => {
+        curRepo.value = repo;
+        curDoc.value = document
     })
 }
 
-function openLocalFile(file?: File) {
-    props.openLocalFile(importData, file);
-}
-
 function openRemoteFile(fid: string) {
-    props.openRemoteFile(fid, (doc: Document) => {
-        curDoc.value = doc;
-    });
+    const repo = new Repository();
+    importRemote('http://localhost:8000/', fid, "", repo).then((document) => {
+        curRepo.value = repo;
+        curDoc.value = document
+    })
 }
 
 onMounted(() => {
-    // props.openLocalFile(importData);
+
 })
 
 onUnmounted(() => {
@@ -38,7 +44,7 @@ onUnmounted(() => {
 
 <template>
     <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" @openremotefile="openRemoteFile"/>
-    <DocumentVue v-if="curDoc != undefined" :data="curDoc" />
+    <DocumentVue v-if="curDoc != undefined && curRepo != undefined" :data="curDoc" :repo="curRepo" />
 </template>
 
 <style lang="scss">

@@ -3,30 +3,6 @@ import App from "./App.vue";
 import i18n from "./i18n";
 // import './assets/icons/loadall'
 import SvgIcon from '@/components/common/SvgIcon.vue'
-// import { ipcRenderer } from 'electron';
-import { LzData } from "./data/data/lzdata";
-import { LzDataLocal } from '@/io/import/sketch/lzdatalocal';
-// import { importDocument } from "./data/io/exform/import/document";
-// import { LzDataRemote } from "./data/io/exform/import/lzdataremote";
-import { Document } from "./data/data/document";
-import { Zip } from "@pal/zip";
-
-function openLocalFile(onReady: (data: LzData) => void, file?: File) {
-    if (file) {
-        onReady(new LzDataLocal(new Zip(file)));
-        return;
-    }
-    // ipcRenderer.invoke('getOpenFilePath').then((filePath: string) => {
-    //     if (filePath) onReady(new LzDataLocal(filePath));
-    // });
-}
-
-function openRemoteFile(onReady: (data: Document) => void) {
-    // const lzData = new LzDataRemote('128d50e9-0705-42c6-9f51-f9a049de33aa', '0');
-    // importDocument(lzData).then((val: Document) => {
-    //     onReady(val);
-    // })
-}
 
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
@@ -40,24 +16,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 })
 
-const app = createApp(App, { openLocalFile, openRemoteFile })
+const app = createApp(App)
 app.use(i18n);
 app.component('svg-icon', SvgIcon);
 app.mount("#app");
-
-
-//
-
-// const l = new Link("ws://localhost:8000")
-//     const timeout = setTimeout(() => { // expired
-//         if (!l.isOpen()) l.close();
-//     }, 10000);
-//     l.once('onopen', () => {
-//         clearTimeout(timeout);
-//     })
-//     l.once('firstload', (data: IJSON) => {
-//         const document = data['document'];
-//         const page = data['page'];
-//         console.log(document);
-//         console.log(page);
-//     })

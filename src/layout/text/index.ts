@@ -1,4 +1,4 @@
-import { Para, SpanAttr, TextHorizontalAlignment, TextVerticalAlignment } from "@/data/data/text";
+import { Para, SpanAttr, TextHorAlign, TextVerAlign } from "@/data/data/text";
 import { measure } from "./measure";
 
 export interface IGraphy {
@@ -17,16 +17,16 @@ export class Line extends Array<GraphArray> {
 }
 export type LineArray = Array<Line>
 
-export function adjustLines(lineArray: LineArray, align: TextHorizontalAlignment) {
+export function adjustLines(lineArray: LineArray, align: TextHorAlign) {
     // TODO
 }
 
-export function adjustLinesVertical(lines: LineArray, align: TextVerticalAlignment) {
+export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
 
 }
 
 export function layoutPara(para: Para, width: number): LineArray {
-    const spansCount = para.spansCount;
+    const spansCount = para.spans.length;
     if (spansCount === 0) {
         return [];
     }
@@ -39,7 +39,7 @@ export function layoutPara(para: Para, width: number): LineArray {
     const textLen = text.length
 
     let spanIdx = 0, spanOffset = 0
-    let span = para.getSpanByIndex(spanIdx);
+    let span = para.spans[spanIdx];
     let font = "normal " + span.fontSize + "px " + span.fontName;
 
     const startX = 0, endX = startX + width;
@@ -55,7 +55,7 @@ export function layoutPara(para: Para, width: number): LineArray {
     for (; textIdx < textLen && spanIdx < spansCount;) {
 
         if (preSpanIdx !== spanIdx) {
-            span = para.getSpanByIndex(spanIdx);
+            span = para.spans[spanIdx];
             font = "normal " + span.fontSize + "px " + span.fontName;
         }
 
