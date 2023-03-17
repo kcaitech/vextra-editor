@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineProps, ref, nextTick, reactive, defineEmits } from 'vue';
 import { Color } from '@/data/data/style';
+import { toRGBA } from '@/utils/color';
 
 type RgbMeta = number[]
 defineProps<{
@@ -229,7 +230,7 @@ function eyedropper() {
 </script>
 
 <template>
-  <div class="color-block" :style="{backgroundColor: color.toRGBA()}" ref="block" @click="showPopover">
+  <div class="color-block" :style="{backgroundColor: toRGBA(color)}" ref="block" @click="showPopover">
     <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible">
       <!-- 头部 -->
       <div class="header">

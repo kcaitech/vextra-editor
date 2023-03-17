@@ -36,7 +36,7 @@ function calcFrame() {
     const frame = props.shape.frame;
     w.value = frame.width;
     h.value = frame.height;
-    rotate.value = props.shape.rotation;
+    rotate.value = props.shape.rotation || 0;
     shapeType.value = props.shape.type;
     if (shapeType.value === 'rectangle') {
         getRectShapeAttr(props.shape);

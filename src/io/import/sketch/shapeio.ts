@@ -84,6 +84,13 @@ function importOverrides(shape: SymbolRefShape, data: IJSON[]) {
     }
 }
 
+function importShapePropertys(shape: Shape, data:IJSON) {
+    shape.isFixedToViewport = data['isFixedToViewport']
+    shape.isFlippedHorizontal = data['isFlippedHorizontal']
+    shape.isFlippedVertical = data['isFlippedVertical']
+    shape.rotation = data['rotation']
+}
+
 export function importArtboard(data: IJSON, f: ImportFun): Artboard {
     // const type = importShapeType(data);
     const id: string = data['do_objectID'];
@@ -111,7 +118,7 @@ export function importArtboard(data: IJSON, f: ImportFun): Artboard {
     shape.hasBackgroundColor = hasBackgroundColor;
     shape.includeBackgroundColorInExport = includeBackgroundColorInExport;
     if (backgroundColor) shape.backgroundColor = backgroundColor;
-
+    importShapePropertys(shape, data);
     return shape;
 }
 
@@ -133,7 +140,7 @@ export function importGroupShape(data: IJSON, f: ImportFun): GroupShape {
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(d));
     const shape = new GroupShape(id, name, ShapeType.Group, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
-
+    importShapePropertys(shape, data);
     return shape;
 }
 
@@ -155,7 +162,7 @@ export function importShapeGroupShape(data: IJSON, f: ImportFun): FlattenShape {
     // const isClosed = data['isClosed'];
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(d));
     const shape = new FlattenShape(id, name, ShapeType.FlattenShape, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
-
+    importShapePropertys(shape, data);
     return shape;
 }
 
@@ -179,6 +186,7 @@ export function importImage(data: IJSON, f: ImportFun): ImageShape {
     // env.mediaMgr.addRef(imageRef);
     const shape = new ImageShape(id, name, ShapeType.Image, frame, style, booleanOperation, imageRef);
     // shape.setImageMgr(env.mediaMgr);
+    importShapePropertys(shape, data);
     return shape;
 }
 
@@ -202,7 +210,7 @@ export function importPage(data: IJSON, f: ImportFun): Page {
     const childs: Shape[] = (data['layers'] || []).map((d: IJSON) => f(d));
     const shape = new Page(id, name, ShapeType.Page, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
     // shape.appendChilds(childs);
-
+    importShapePropertys(shape, data);
     return shape;
 }
 
@@ -225,6 +233,7 @@ export function importPathShape(data: IJSON, f: ImportFun): PathShape {
 
     const shape = new PathShape(id, name, ShapeType.Path, frame, style, booleanOperation, new BasicArray<CurvePoint>(...points));
     shape.isClosed = isClosed;
+    importShapePropertys(shape, data);
     return shape;
 }
 
@@ -246,7 +255,11 @@ export function importRectShape(data: IJSON, f: ImportFun): RectShape {
     // const text = data['attributedString'] && importText(data['attributedString']);
     // const isClosed = data['isClosed'];
 
-    return new RectShape(id, name, ShapeType.Rectangle, frame, style, booleanOperation, new BasicArray<CurvePoint>(...points), 0);
+    const shape = new RectShape(id, name, ShapeType.Rectangle, frame, style, booleanOperation, new BasicArray<CurvePoint>(...points), 0);
+    importShapePropertys(shape, data);
+    shape.fixedRadius = data['fixedRadius']
+
+    return shape;
 }
 
 export function importTextShape(data: IJSON, f: ImportFun): TextShape {
@@ -268,7 +281,9 @@ export function importTextShape(data: IJSON, f: ImportFun): TextShape {
     const textBehaviour = [TextBehaviour.Flexible, TextBehaviour.Fixed, TextBehaviour.FixWidthAndHeight][data['textBehaviour']] ?? TextBehaviour.Flexible;
     text.attr && (text.attr.textBehaviour = textBehaviour);
     // const isClosed = data['isClosed'];
-    return new TextShape(id, name, ShapeType.Text, frame, style, booleanOperation, text);
+    const shape = new TextShape(id, name, ShapeType.Text, frame, style, booleanOperation, text);
+    importShapePropertys(shape, data);
+    return shape;
 }
 
 export function importSymbol(data: IJSON, f: ImportFun): SymbolShape {
@@ -292,7 +307,7 @@ export function importSymbol(data: IJSON, f: ImportFun): SymbolShape {
     const shape = new SymbolShape(id, name, ShapeType.Symbol, frame, style, booleanOperation, new BasicArray<Shape>(...childs));
     // env.symbolManager.addSymbol(id, name, env.pageId, shape);
     // shape.appendChilds(childs);
-
+    importShapePropertys(shape, data);
     return shape;
 }
 
@@ -316,7 +331,7 @@ export function importSymbolRef(data: IJSON, f: ImportFun): SymbolRefShape {
     const shape = new SymbolRefShape(id, name, ShapeType.SymbolRef, frame, style, booleanOperation, data['symbolID']);
 
     if (data['overrideValues']) importOverrides(shape, data['overrideValues']);
-
+    importShapePropertys(shape, data);
     return shape;
 }
 

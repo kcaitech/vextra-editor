@@ -17,6 +17,7 @@ import { Color, Border, ContextSettings } from '@/data/data/style';
 import { FillType, BlendMode, BorderPosition } from '@/data/data/classes';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
+import { toHex } from "@/utils/color"
 
 interface BorderItem {
     id: number,
@@ -56,8 +57,8 @@ function updateData() {
     shapeId = props.shape.id;
     borders.length = 0;
     const style = props.shape.style;
-    for (let i = 0, len = style.bordersCount; i < len; i++) {
-        const border = style.getBorderByIndex(i);
+    for (let i = 0, len = style.borders.length; i < len; i++) {
+        const border = style.borders[i];
         const b: BorderItem = {
             id: i,
             border: border
@@ -69,7 +70,7 @@ function updateData() {
 function addBorder(): void {
     const color = new Color(0, 0, 0, 1);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, undefined);
+    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1);
     const item: BorderItem = {
         id: borders.length,
         border
@@ -94,11 +95,13 @@ function onColorChange(e: Event, idx: number) {
         message('danger', t('system.illegal_input'));
         return;
     }
+    console.log('-border-', border);
+    
     const r = Number.parseInt(hex[1], 16);
     const g = Number.parseInt(hex[2], 16);
     const b = Number.parseInt(hex[3], 16);
     const alpha = border.color.alpha;
-    const color = new Color(r, g, b, alpha);
+    const color = new Color(alpha, r, g, b);
     const isEnabled = border.isEnabled;
     setBorder(idx, { isEnabled, color });
 }
@@ -110,8 +113,8 @@ function onAlphaChange(e: Event, idx: number) {
         return;
     }
     const border = borders[idx].border;
-    const color = border.color;
-    color.alpha = alpha
+    const color: Color = border.color;
+    color.alpha = alpha;
     const isEnabled = border.isEnabled;
     setBorder(idx, { isEnabled, color })
 }
@@ -154,7 +157,7 @@ onBeforeUpdate(() => {
                     <ColorPicker :color="b.border.color"></ColorPicker>
                     <input
                         :spellcheck ="false"
-                        :value="b.border.color.toHex()"
+                        :value="toHex(b.border.color)"
                         @change="e => onColorChange(e, idx)"
                     />
                     <input

@@ -22,7 +22,6 @@ function selectionChange(t: number) {
         if (props.context.selection.selectedShapes.length === 1) {
             shape.value = props.context.selection.selectedShapes[0];
             shapeType.value = shape.value.type
-            console.log('-shape-type-', shapeType.value);
         }
         else {
             shape.value = undefined;
