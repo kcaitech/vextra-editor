@@ -4,7 +4,7 @@ import { Border, Gradient } from '@/data/data/style';
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { objectId } from '@/data/basic/objectid';
-import { BorderPosition, FillType, GradientType } from "@/data/types"
+import { BorderPosition, FillType, GradientType } from "@/data/data/classes"
 
 const handler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
 const angularHandler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
@@ -254,12 +254,12 @@ handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Bor
 
 export function render(h: Function, shape: Shape, path?:string): Array<any> {
     const style = shape.style;
-    const bc = style.bordersCount;
+    const bc = style.borders.length;
     path = path || shape.getPath(true);
 
     const elArr = new Array();
     for (let i = 0; i < bc; i++) {
-        const border: Border = style.getBorderByIndex(i);
+        const border: Border = style.borders[i];
         if (!border.isEnabled) {
             continue;
         }

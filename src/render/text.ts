@@ -1,11 +1,16 @@
 import { TextShape } from "@/data/data/shape";
 import { TextBehaviour } from "@/data/data/text";
 import { layoutPara } from "@/layout/text";
-import * as types from "@/data/types"
+import * as types from "@/data/data/classes"
+import { Color } from "@/data/data/classes";
+
+function toRGBA(color: Color): string {
+    return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+}
 
 export function render(h: Function, shape: TextShape, reflush?: number) {
     const text = shape.text;
-    const pc = text.paraCount;
+    const pc = text.paras.length;
     // const vAlign = text.attr?.verticalAlignment ?? TextVerticalAlignment.Top;
     // const baseline: string = ((align: TextVerticalAlignment) => {
     //     switch(align) {
@@ -22,13 +27,14 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
             case types.TextBehaviour.Fixed: return frame.width;
             case types.TextBehaviour.FixWidthAndHeight: return frame.width;
         }
+        return Number.MAX_VALUE
     })(text.attr?.textBehaviour ?? types.TextBehaviour.Flexible)
 
     const childs = [];
     let y = 0;
 
     for (let i = 0; i < pc; i++) {
-        const para = text.getParaByIndex(i);
+        const para = text.paras[i];
         const layouts = layoutPara(para, layoutWidth);
         const pAttr = para.attr;
 
@@ -36,7 +42,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
             const line = layouts[lineIndex];
             let lineHeight = pAttr && pAttr.minimumLineHeight || 0;
             if (pAttr && pAttr.maximumLineHeight === pAttr.minimumLineHeight) {
-                lineHeight = pAttr.minimumLineHeight;
+                lineHeight = pAttr.minimumLineHeight || 0;
             }
             else {
                 lineHeight = line.maxFontSize;
@@ -60,7 +66,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                 const span = garr.attr;
 
                 const font = "normal " + (span?.fontSize || 0) + "px " + (span?.fontName);
-                childs.push(h('text', { x: gX.join(' '), y, style: { fill: span?.color?.toRGBA(), font, 'alignment-baseline': 'middle' } }, gText.join('')));
+                childs.push(h('text', { x: gX.join(' '), y, style: { fill: span && span.color && toRGBA(span.color), font, 'alignment-baseline': 'middle' } }, gText.join('')));
             }
 
             y = y + halfLH;

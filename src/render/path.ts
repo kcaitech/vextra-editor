@@ -223,10 +223,10 @@ const parser = new PathParser();
 
 export function render(data: PathShape, offsetX: number, offsetY: number, width: number, height: number): string {
 
-    const pc = data.pointsCount;
+    const pc = data.points.length;
     parser.clear();
     if (pc > 0) {
-        const p = data.getPointByIndex(0);
+        const p = data.points[0];
         const pt = p.point;
         parser.moveTo(offsetX + pt.x * width, offsetY + pt.y * height);
     }
@@ -264,14 +264,14 @@ export function render(data: PathShape, offsetX: number, offsetY: number, width:
         }
     }
     for (let i = 0; i < pc - 1; i++) {
-        const p = data.getPointByIndex(i);
-        const nextP = data.getPointByIndex(i + 1);
+        const p = data.points[i];
+        const nextP = data.points[i + 1];
         curv2Point(p, nextP);
     }
     if (data.isClosed) {
         if (pc > 1) {
-            const firstP = data.getPointByIndex(0);
-            const lastP = data.getPointByIndex(pc - 1);
+            const firstP = data.points[0];
+            const lastP = data.points[pc - 1];
             curv2Point(lastP, firstP, true);
         } else {
             parser.closePath();

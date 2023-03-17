@@ -4,7 +4,7 @@ import { Fill, FillType, Gradient } from "@/data/data/style";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "@/data/basic/objectid";
-import * as types from "@/data/types"
+import * as types from "@/data/data/classes"
 
 const handler: {[key: string]: (h: Function, shape: Shape, fill: Fill, path: string) => any} = {};
 handler[types.FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
@@ -57,12 +57,12 @@ handler[types.FillType.Gradient] = function (h: Function, shape: Shape, fill: Fi
 
 export function render(h: Function, shape: Shape, path?: string): Array<any> {
     const style = shape.style;
-    const fillsCount = style.fillsCount;
+    const fillsCount = style.fills.length;
     const elArr = new Array();
     path = path || shape.getPath(true);
 
     for (let i = 0; i < fillsCount; i++) {
-        const fill = style.getFillByIndex(i);
+        const fill = style.fills[i];
         if (!fill.isEnabled) {
             continue;
         }

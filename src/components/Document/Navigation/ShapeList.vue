@@ -5,7 +5,7 @@ import { defineProps, onMounted, onUnmounted, ref } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@/data/data/page";
-import { ShapeNaviIter } from "@/data/data/shadow/shapeNavi"
+import { ShapeNaviIter } from "@/data/data/shadow"
 import { Shape } from "@/data/data/shape";
 import { useI18n } from 'vue-i18n';
 type List = InstanceType<typeof ListView>;

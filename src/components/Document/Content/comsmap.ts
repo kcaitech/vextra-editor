@@ -1,10 +1,9 @@
-import { ShapeType } from "@/data/types";
+import { ShapeType } from "@/data/data/classes";
 import Rectangle from "./Rectangle.vue";
 import ShapeGroup from "./ShapeGroup.vue"
 import ShapePath from "./ShapePath.vue"
 import ImageView from "./ImageView.vue"
 import TextView from "./TextView.vue";
-import ShapeBool from "./ShapeBool.vue";
 import SymbolRef from "./SymbolRef.vue";
 import ArtboardView from "./ArtboardView.vue"
 import ShapeGroupShape from "./ShapeGroupShape.vue"

@@ -2,7 +2,7 @@ import { Watchable } from "@/data/data/basic";
 import { Document } from "@/data/data/document";
 import { IDocShadow } from "@/data/data/ishadow";
 import { Page } from "@/data/data/page";
-import { ShapeNaviShadow } from "@/data/data/shadow/shapeNavi";
+import { ShapeNaviShadow } from "@/data/data/shadow";
 import { Shape } from "@/data/data/shape";
 import { Repository } from "@/data/data/transact";
 import { DocEditor, Editor, PageEditor } from "@/data/editor";
@@ -44,19 +44,18 @@ class ShapeNaviShadowMgr implements IDocShadow {
     }
 }
 
-export class Context extends Watchable {
+export class Context extends Watchable(Object) {
     private m_data: Document;
     private m_selection: Selection;
     private m_shadows: ShapeNaviShadowMgr | undefined;
     private m_editor?: Editor;
     private m_repo: Repository;
 
-    constructor(data: Document) {
+    constructor(data: Document, repo: Repository) {
         super();
         this.m_data = data;
         this.m_selection = new Selection(data);
-        this.m_repo = new Repository(this.m_selection);
-        this.m_data = this.m_repo.guard(data);
+        this.m_repo = repo;
     }
 
     get editor(): Editor {

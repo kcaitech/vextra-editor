@@ -21,10 +21,10 @@ const props = defineProps<{
 const childs = new Array<Shape>();
 const trans = {x: 0, y: 0};
 const updater = () => {
-    const cc = props.data.childsCount || 0;
+    const cc = props.data.childs.length || 0;
     if (childs.length !== cc) childs.length = cc;
     for (let i = 0; i < cc; i++) {
-        const child = props.data.getChildByIndex(i);
+        const child = props.data.childs[i];
         if (!childs[i] || childs[i].id != child.id) {
             childs[i] = child;
         }

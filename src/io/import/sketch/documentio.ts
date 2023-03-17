@@ -1,29 +1,45 @@
-import { ArtboardsMgr, Document, MediaMgr, PagesMgr, StyleMgr, SymsMgr } from "@/data/data/document";
-import { IJSON, LzData } from '@/data/data/lzdata';
-import { Page } from "@/data/data/page";
-import { importMeta } from "./metaio";
-import { importPage } from "./pageio";
 
-export async function importDocument(lzData: LzData) {
-    const data: IJSON = await lzData.load('document.json');
-    // const data: IJSON = JSON.parse(buffer.toString());
+import { BasicArray, IDataGruad } from "@/data/data/basic";
+import { Document, PageListItem } from "@/data/data/document";
+import { LzData } from "@/data/io/lzdata";
+import { DataLoader } from "./lzdatalocal";
+interface IJSON {
+    [key: string]: any
+}
+async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicArray<PageListItem> > {
+    const metaJson: IJSON = await lzData.loadJson('meta.json');
+    // const metaJson: IJSON = JSON.parse(buffer.toString());
+    const pagesAndArtboards: IJSON = metaJson['pagesAndArtboards'];
 
-    // todo
+    const meta: [string, string][] = Object.keys(pagesAndArtboards).map((key: string) => {
+        const item: IJSON = pagesAndArtboards[key];
+        const name: string = item['name'];
+        return [key, name];
+    });
+    const metaMap: Map<string, string> = new Map(meta);
+
+    const pageList = new BasicArray<PageListItem>();
+
+    for (let i = 0, len = pageIds.length; i < len; i++) {
+        const id = pageIds[i]
+        const name = metaMap.get(id) || 'Unknow'
+        pageList.push(new PageListItem(id, name))
+    }
+
+    return pageList;
+}
+
+export async function importDocument(lzData: LzData, gurad: IDataGruad) {
+    const data: IJSON = await lzData.loadJson('document.json');
     const pageIds = (data["pages"] || []).map((d: IJSON) => {
-        // return d['_ref'] + '.json';
         const ref: string = d['_ref'];
         return ref.substring(ref.indexOf('/') + 1);
     });
+    const pageList = await importPageList(lzData, pageIds);
+    
+    const document = new Document(data["do_objectID"], "", pageList, gurad);
+    
+    new DataLoader(lzData, document);
 
-    // todo
-    const meta = await importMeta(lzData, pageIds);
-    const symsMgr = new SymsMgr();
-    const mediaMgr = new MediaMgr((id: string) => lzData.loadRaw(id));
-    const pagesMgr = new PagesMgr(meta.pagesMeta, (id: string): Promise<Page> => {
-        return importPage(lzData, 'pages/'+id+'.json', symsMgr, mediaMgr, styleMgr);
-    });
-    const artMgr = new ArtboardsMgr(meta.artboardsMeta);
-    const styleMgr = new StyleMgr();
-
-    return new Document(data["do_objectID"], symsMgr, pagesMgr, mediaMgr, artMgr, styleMgr);
+    return document;
 }

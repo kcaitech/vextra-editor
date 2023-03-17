@@ -1,6 +1,9 @@
 import { Artboard } from "@/data/data/artboard";
 import { BoolOp, ShapeType } from "@/data/data/shape";
+import { Color } from "@/data/data/style";
 import { renderGroupChilds as gR } from "@/render/group";
+
+const defaultColor = new Color(0, 0, 0, 0)
 
 export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
     // name
@@ -12,7 +15,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
     const frame = shape.frame;
     // background
     if (shape.hasBackgroundColor) {
-        const color = shape.backgroundColor;
+        const color = shape.backgroundColor || defaultColor;
         childs.push(h("rect", {
             x: 0, y: 0, width: frame.width, height: frame.height,
             fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")",

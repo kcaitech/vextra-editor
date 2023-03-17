@@ -9,32 +9,32 @@ import { Selection } from '@/context/selection'
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
+import { Repository } from '@/data/data/transact';
 
-const props = defineProps<{data: Document}>();
+const props = defineProps<{data: Document, repo: Repository}>();
 const curPage = shallowRef<Page | undefined>(undefined);
-const context = shallowRef<Context>(new Context(props.data));
+const context = shallowRef<Context>(new Context(props.data, props.repo));
 (window as any).__context = context.value;
 
 function topDblClick() {
-    const isFullscreen = props.data.isFullscreen;
-    const element = document.documentElement;
-    if (isFullscreen) {
-        document.exitFullscreen && document.exitFullscreen()
-  	} else {
-        element.requestFullscreen && element.requestFullscreen()
-    }
-  	props.data.setScreen(!isFullscreen)
+    // const isFullscreen = props.data.isFullscreen;
+    // const element = document.documentElement;
+    // if (isFullscreen) {
+    //     document.exitFullscreen && document.exitFullscreen()
+  	// } else {
+    //     element.requestFullscreen && element.requestFullscreen()
+    // }
+  	// props.data.setScreen(!isFullscreen)
 }
 function onWindowBlur() {
     // Window blur, Close the process that should be closed
 }
-function switchPage(id: string) {
+function switchPage(id?: string) {
+    if (!id) return
     const ctx: Context = context.value;
     const pagesMgr = ctx.data.pagesMgr;
-    const index = pagesMgr.getPageIndexById(id);
-    pagesMgr.getPageByIndex(index).then((page: Page) => {
-        // curPage.value = page;
-        ctx.selection.selectPage(page);
+    pagesMgr.get(id).then((page: Page | undefined) => {
+        if (page) ctx.selection.selectPage(page);
     })
 }
 function selectionWatcher(t: number) {
@@ -46,7 +46,7 @@ function selectionWatcher(t: number) {
 
 onMounted(() => {    
     context.value.selection.watch(selectionWatcher);
-    switchPage(props.data.pagesMgr.getPageIdByIndex(0));
+    switchPage(props.data.pagesList[0]?.id);
     window.addEventListener('blur', onWindowBlur)
 })
 onUnmounted(() => {

@@ -6,11 +6,15 @@ import {
     ContextSettings, 
     Fill, 
     Gradient, 
+    Shadow, 
     Stop, 
     Style} from "@/data/data/style";
-import { Env } from "./envio";
-import { IJSON } from "@/data/data/lzdata";
-import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "@/data/types"
+import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "@/data/data/classes"
+import { BasicArray } from "@/data/data/basic";
+
+interface IJSON {
+    [key: string]: any
+}
 
 export function importColor(data: IJSON): Color {
     // if (!data)
@@ -41,7 +45,7 @@ export function importXY(str: string): Point2D {
     const idx3 = str.lastIndexOf('}');
     const x: number = parseFloat(str.substring(idx1 + 1, idx2));
     const y: number = parseFloat(str.substring(idx2 + 1, idx3));
-    return {x, y};
+    return new Point2D(x, y);
 }
 
 // function genGradientId(gradient: Gradient): string {
@@ -67,13 +71,15 @@ function importGradient(data: IJSON): Gradient {
         }
         position = Math.min(Math.max(0, position), 1);
         const color: Color = importColor(d['color']);
-        return new Stop(position, color);
+        const stop = new Stop(position);
+        stop.color = color;
+        return stop;
     });
     stops.sort((a, b) => a.position == b.position ? -1 : a.position - b.position);
-    return new Gradient(elipseLength, from, gradientType, to, stops);
+    return new Gradient(elipseLength, from, to, gradientType, new BasicArray<Stop>(...stops));
 }
 
-export function importStyle(env:Env, data: IJSON): Style {
+export function importStyle(data: IJSON): Style {
 
     // const gradients = env.gradients;
 
@@ -99,21 +105,21 @@ export function importStyle(env:Env, data: IJSON): Style {
     })(data['windingRule']);
 
     const blur: Blur = ((d) => {
-            return {
-                isEnabled: false,
-                center: {x: 0, y: 0},
-                saturation: 0,
-                type: BlurType.Gaussian
-            };
+            return new Blur (
+                false,
+                new Point2D(0, 0), // {x: 0, y: 0},
+                0,
+                BlurType.Gaussian
+            );
         })(data['blur']);
 
     const borderOptions: BorderOptions = ((d: IJSON) => {
-            return {
-                isEnabled: false,
-                dashPattern: [],
-                lineCapStyle: LineCapStyle.Butt,
-                lineJoinStyle: LineJoinStyle.Miter
-            }
+            return new BorderOptions(
+                false,
+                new BasicArray<number>(),
+                LineCapStyle.Butt,
+                LineJoinStyle.Miter
+            )
         })(data['borderOptions']);
 
     const borders: Border[] = (data['borders'] || []).map((d: IJSON) => {
@@ -149,7 +155,10 @@ export function importStyle(env:Env, data: IJSON): Style {
 
         const thickness: number = d['thickness'];
 
-        return new Border(isEnabled, fillType, color, contextSettings, position, thickness, gradient);
+        const border = new Border(isEnabled, fillType, color, contextSettings, position, thickness);
+        border.gradient = gradient;
+
+        return border;
     });
 
     const contextSettings: ContextSettings = importContextSettings(data['contextSettings']);
@@ -175,7 +184,9 @@ export function importStyle(env:Env, data: IJSON): Style {
             // gradients.set(gradientId, gradient);
         }
 
-        return new Fill(isEnabled, fillType, color, contextSettings, gradient);
+        const fill = new Fill(isEnabled, fillType, color, contextSettings);
+        fill.gradient = gradient;
+        return fill;
     });
 
     // const innerShadows: object[] = (data['innerShadows'] || []).map((d: object) => {
@@ -187,16 +198,16 @@ export function importStyle(env:Env, data: IJSON): Style {
 
     const style: Style = new Style(//shape, 
         endMarkerType, 
-        miterLimit, 
         startMarkerType, 
+        miterLimit, 
         windingRule, 
         blur, 
         borderOptions, 
-        borders, 
+        new BasicArray<Border>(...borders), 
         contextSettings, 
-        fills, 
-        [], 
-        []);
+        new BasicArray<Fill>(...fills), 
+        new BasicArray<Shadow>(), 
+        new BasicArray<Shadow>());
 
     // return makePair(style, gradients);
     return style;
