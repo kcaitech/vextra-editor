@@ -27,7 +27,7 @@ function openLocalFile(file?: File) {
 
 function openRemoteFile(name: string, fid: string) {
     const repo = new Repository();
-    importRemote('http://localhost:8000/', fid, "", name, repo).then((document) => {
+    importRemote('http://localhost:8000/', fid, "0", name, repo).then((document) => {
         curRepo.value = repo;
         curDoc.value = document;
         window.document.title = document.name;
