@@ -2,14 +2,14 @@
     <div class="examples">
         <h2>See some examples:</h2>
         <ul>
-            <li v-for="file in examples" @click="onOpen(file.uri)" :key="file.uri">{{ file.name }}</li>
+            <li v-for="file in examples" @click="onOpen(file.name, file.uri)" :key="file.uri">{{ file.name }}</li>
         </ul>
     </div>
 </template>
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue';
 const emit = defineEmits<{
-    (e: 'selectExample', uri: string): void;
+    (e: 'selectExample', name: string, uri: string): void;
 }>();
 const props = defineProps<{
     examples: { name: string, uri: string }[]
@@ -22,13 +22,13 @@ const props = defineProps<{
 //     fileList.value = arr;
 //   });
 
-function onOpen(uri: string) {
+function onOpen(name: string, uri: string) {
     //   fetch(process.env.PWD + '/samples/' + filename)
     //     .then((res) => res.arrayBuffer())
     //     .then((buffer) => {
     //       emit('selectExample', { buffer, filename });
     //     });
-    emit('selectExample', uri);
+    emit('selectExample', name, uri);
 }
 </script>
 <style scoped>

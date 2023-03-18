@@ -18,17 +18,19 @@ function openLocalFile(file?: File) {
     if (!file) return;
     const lzdata = new LzDataLocal(new Zip(file));
     const repo = new Repository();
-    importDocument(lzdata, repo).then((document) => {
+    importDocument(file.name, lzdata, repo).then((document) => {
         curRepo.value = repo;
-        curDoc.value = document
+        curDoc.value = document;
+        window.document.title = document.name;
     })
 }
 
-function openRemoteFile(fid: string) {
+function openRemoteFile(name: string, fid: string) {
     const repo = new Repository();
-    importRemote('http://localhost:8000/', fid, "", repo).then((document) => {
+    importRemote('http://localhost:8000/', fid, "", name, repo).then((document) => {
         curRepo.value = repo;
-        curDoc.value = document
+        curDoc.value = document;
+        window.document.title = document.name;
     })
 }
 
