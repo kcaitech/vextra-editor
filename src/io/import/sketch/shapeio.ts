@@ -31,7 +31,7 @@ type ImportFun = (data: IJSON) => Shape
 function importExportOptions(data: IJSON): ExportOptions {
     return ((d) => {
         return new ExportOptions(
-            new ExportFormat(),
+            new BasicArray<ExportFormat>(),
             new BasicArray<string>(),
             0,
             false)
