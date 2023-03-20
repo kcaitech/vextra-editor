@@ -18,6 +18,7 @@
     --el-component-size-large: 32px;
     --el-component-size: 24px;
     --el-component-size-small: 16px;
+    --default-radius: 8px;
 
     // color
     color-scheme: light;
@@ -27,6 +28,8 @@
     --theme-color-line: #f0f0f0;
     --theme-color: #2c2c2c;
     --theme-color-anti: #ffffff;
+    --input-background: #efefef;
+    --active-color: #0929fa;
 
     --el-color-white: #ffffff;
     --el-color-black: #000000;
@@ -108,4 +111,8 @@
     --el-border-color-hover: var(--el-text-color-disabled);
     --el-border: var(--el-border-width) var(--el-border-style) var(--el-border-color);
     --el-svg-monochrome-grey: var(--el-border-color);
+}
+
+.mt-16 {
+    margin-top: 16px;
 }

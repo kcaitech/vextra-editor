@@ -3,12 +3,11 @@
  * @Date: 2023-03-03 14:52:04
  * @LastEditors: Zrx georgezrx@163.com
  * @LastEditTime: 2023-03-03 17:58:48
- * @FilePath: \kcdesign\src\components\Document\Attribute\TypeHeader.vue
 -->
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@/data/data/shape';
+import { Shape,  } from '@/data/data/shape';
 import TypeHeader from './TypeHeader.vue';
 import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
@@ -29,7 +28,6 @@ const props = defineProps<{
     context: Context,
     shape: Shape,
 }>();
-// const data = reactive<{ borders: BorderItem[] }>({ borders: [] });
 const data: { borders: BorderItem []} = reactive({ borders: [] });
 const { borders } = data;
 const editor = computed(() => {
@@ -51,7 +49,7 @@ function setupWatcher() {
 }
 
 function watcher(...args: any[]) {    
-    if (args.length > 0 && args[0] == 'style') updateData();
+    if (args.length > 0 && args.includes('style')) updateData();
 }
 
 function updateData() {    
@@ -69,14 +67,11 @@ function updateData() {
 }
 
 function addBorder(): void {
-    const color = new Color(0, 0, 0, 1);
+    const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1);
-    const item: BorderItem = {
-        id: borders.length,
-        border
-    }
-    borders.push(item);
+    editor.value.addBorder(border);
+    
 }
 function deleteBorder(idx: number): void {
     editor.value.deleteBorder(idx);
@@ -122,6 +117,10 @@ function onAlphaChange(e: Event, idx: number) {
 function setBorder(idx: number,  options: { color: Color, isEnabled: boolean }) {
     editor.value.setBorder(idx, options);
 }
+function getBorderIndex(border: Border) {
+    console.log('-index-', shape?.getBorderIndex(border));
+}
+function onBorderMouseDown() {}
 // hooks
 onMounted(() => {
     updateData();
@@ -149,7 +148,7 @@ onBeforeUpdate(() => {
             </template>
         </TypeHeader>
         <div class="borders-container">
-            <div class="border" v-for="(b, idx) in borders" :key="b.id">
+            <div class="border" v-for="(b, idx) in borders" :key="b.id" @mousedown.stop="onBorderMouseDown()">
                 <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
@@ -171,7 +170,6 @@ onBeforeUpdate(() => {
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>
-            
         </div>
     </div>
 </template>
@@ -211,7 +209,7 @@ onBeforeUpdate(() => {
                 height: 16px;
                 background-color: #2561D9;
                 border-radius: 3px;
-                border: 1px solid #d8d8d8;
+                border: 1px solid var(--input-background);
                 box-sizing: border-box;
                 color: #ffffff;
                 display: flex;
@@ -227,11 +225,11 @@ onBeforeUpdate(() => {
                 height: 16px;
                 background-color: transparent;
                 border-radius: 3px;
-                border: 1px solid #d8d8d8;
+                border: 1px solid var(--input-background);
                 box-sizing: border-box;
             }
             .color {
-                background-color: rgba(#D8D8D8, 0.4);
+                background-color: var(--input-background);
                 height: 100%;
                 padding: 2px 8px;
                 margin-left: 12px;

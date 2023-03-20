@@ -46,7 +46,7 @@ watch(popoverVisible, (val) => {
     nextTick(() => {
       if (container.value) {
         container.value.focus();
-        container.value.addEventListener('blur', onBlur);
+        // container.value.addEventListener('blur', onBlur);
       }
     })
   }
@@ -95,6 +95,7 @@ function popoverClose() {
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
     background-color: #ffffff;
     z-index: 1;
+    // border-radius: var(--default-radius);
     > .header {
         width: 100%;
         height: 32px;

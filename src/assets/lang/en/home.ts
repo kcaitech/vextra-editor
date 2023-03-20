@@ -1,5 +1,7 @@
 export const system = {
-    'illegal_input': 'illegal input!'
+    'illegal_input': 'illegal input!',
+    'select': 'Select',
+    'space': '...'
 }
 
 export const home = {
@@ -28,5 +30,10 @@ export const attr = {
     position: 'Position',
     'corner_smoothing': 'Cornor smoothing',
     vertical: 'Vertical',
-    horizontal:'Horizontal'
+    horizontal: 'Horizontal',
+    fixedLeft: 'Left fixed',
+    fixedRight: 'Right fixed',
+    withContainer: 'Follow container scaling',
+    fixedTop: 'Top fixed',
+    fixedBottom: 'Bottom fixed'
 }

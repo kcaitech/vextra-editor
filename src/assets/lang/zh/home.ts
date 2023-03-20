@@ -1,5 +1,7 @@
 export const system = {
-    'illegal_input': '输入不合法！'
+    'illegal_input': '输入不合法！',
+    'select': '请选择！',
+    'space': '...'
 }
 
 export const home = {
@@ -28,5 +30,10 @@ export const attr = {
     position: '位置',
     'corner_smoothing': '平滑圆角',
     vertical: '垂直方向',
-    horizontal:'水平方向'
+    horizontal:'水平方向',
+    fixedLeft: '左部固定',
+    fixedRight: '右部固定',
+    withContainer: '跟随容器缩放',
+    fixedTop: '顶部固定',
+    fixedBottom: '底部固定'
 }
