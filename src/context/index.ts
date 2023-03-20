@@ -23,10 +23,10 @@ class ShapeNaviShadowMgr implements IDocShadow {
         // throw new Error("Method not implemented.");
         return true;
     }
-    modify(page: Page, attribute: string, value: any): boolean {
-        // throw new Error("Method not implemented.");
-        return true;
-    }
+    // modify(page: Page, attribute: string, value: any): boolean {
+    //     // throw new Error("Method not implemented.");
+    //     return true;
+    // }
     move(page: Page, index: number): boolean {
         // throw new Error("Method not implemented.");
         return true;
