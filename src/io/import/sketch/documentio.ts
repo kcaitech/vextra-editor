@@ -29,7 +29,7 @@ async function importPageList(lzData: LzData, pageIds: string[]): Promise<BasicA
     return pageList;
 }
 
-export async function importDocument(lzData: LzData, gurad: IDataGruad) {
+export async function importDocument(name: string, lzData: LzData, gurad: IDataGruad) {
     const data: IJSON = await lzData.loadJson('document.json');
     const pageIds = (data["pages"] || []).map((d: IJSON) => {
         const ref: string = d['_ref'];
@@ -37,7 +37,7 @@ export async function importDocument(lzData: LzData, gurad: IDataGruad) {
     });
     const pageList = await importPageList(lzData, pageIds);
     
-    const document = new Document(data["do_objectID"], "", pageList, gurad);
+    const document = new Document(data["do_objectID"], "", name, pageList, gurad);
     
     new DataLoader(lzData, document);
 

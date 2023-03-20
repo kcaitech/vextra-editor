@@ -6,7 +6,7 @@ import Examples from './Examples.vue'
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: "openlocalfile", file?: File): void;
-    (e: "openremotefile", fid: string): void;
+    (e: "openremotefile", name: string, fid: string): void;
 }>();
 
 function onClick(e: Event) {
@@ -21,8 +21,8 @@ function onFilePick(f: File) {
     // console.log('filepick', f)
     emit("openlocalfile", f);
 }
-function selectExample(uri: string) {
-    emit("openremotefile", uri);
+function selectExample(name: string, uri: string) {
+    emit("openremotefile", name, uri);
 }
 
 const fileList = reactive<{ name: string, uri: string }[]>([])
