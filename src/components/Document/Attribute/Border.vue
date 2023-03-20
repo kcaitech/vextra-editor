@@ -29,7 +29,8 @@ const props = defineProps<{
     context: Context,
     shape: Shape,
 }>();
-const data = reactive<{ borders: BorderItem[] }>({ borders: [] });
+// const data = reactive<{ borders: BorderItem[] }>({ borders: [] });
+const data: { borders: BorderItem []} = reactive({ borders: [] });
 const { borders } = data;
 const editor = computed(() => {
     return props.context.editor4Shape(props.shape);
@@ -85,7 +86,7 @@ function toggleVisible(idx: number) {
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
     const color = border.color;
-    setBorder(idx, { isEnabled, color: color as Color });
+    setBorder(idx, { isEnabled, color: color });
 }
 
 function onColorChange(e: Event, idx: number) {
@@ -112,7 +113,7 @@ function onAlphaChange(e: Event, idx: number) {
         return;
     }
     const border = borders[idx].border;
-    const color = border.color as Color;
+    const color = border.color;
     color.alpha = alpha;
     const isEnabled = border.isEnabled;
     setBorder(idx, { isEnabled, color })
@@ -153,7 +154,7 @@ onBeforeUpdate(() => {
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="(b.border.color as Color)"/>
+                    <ColorPicker :color="b.border.color"/>
                     <input
                         :spellcheck ="false"
                         :value="toHex(b.border.color)"

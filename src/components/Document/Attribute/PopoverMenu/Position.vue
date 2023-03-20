@@ -2,6 +2,7 @@
 import Popover from '@/components/common/Popover.vue';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { ElSelect } from 'element-plus';
 const { t } = useI18n();
 
 const popover = ref();
@@ -16,6 +17,21 @@ function showMenu() {
     <Popover ref="popover" :left="-636" :title="t('attr.constraints')">
       <template #trigger>
         <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+      </template>
+      <template #body>
+        <div class="position">
+          <div class="options">
+            <div>
+              <label>{{t('attr.horizontal')}}</label>
+              <el-select></el-select>
+            </div>
+            <div>
+              <label>{{t('attr.vertical')}}</label>
+              <el-select></el-select>
+            </div>
+          </div>
+          <div class="control"></div>
+        </div>
       </template>
     </Popover>
   </div>
@@ -32,6 +48,11 @@ function showMenu() {
   }
   svg:hover {
     transform: rotate(90deg);
+  }
+  .position {
+    display: flex;
+    // .options {}
+    // .control {}
   }
 }
 </style>
