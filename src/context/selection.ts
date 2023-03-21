@@ -1,7 +1,7 @@
-import { ISave4Restore, Watchable } from "@/data/data/basic";
-import { Document } from "@/data/data/document";
-import { Page } from "@/data/data/page";
-import { Shape } from "@/data/data/shape";
+import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
+import { Document } from "@kcdesign/data/data/document";
+import { Page } from "@kcdesign/data/data/page";
+import { Shape } from "@kcdesign/data/data/shape";
 
 interface Saved {
     page: Page | undefined,

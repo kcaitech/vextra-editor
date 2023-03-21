@@ -1,6 +1,6 @@
-import { Artboard } from "@/data/data/artboard";
-import { BoolOp, ShapeType } from "@/data/data/shape";
-import { Color } from "@/data/data/style";
+import { Artboard } from "@kcdesign/data/data/artboard";
+import { BoolOp, ShapeType } from "@kcdesign/data/data/shape";
+import { Color } from "@kcdesign/data/data/style";
 import { renderGroupChilds as gR } from "@/render/group";
 
 const defaultColor = new Color(0, 0, 0, 0)

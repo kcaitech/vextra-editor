@@ -1,7 +1,7 @@
-import { objectId } from "@/data/basic/objectid";
-import { ShapeFrame } from "@/data/data/shape";
-import { Color, Gradient, GradientType, Stop } from "@/data/data/style";
-import * as types from "@/data/data/classes"
+import { objectId } from "@kcdesign/data/basic/objectid";
+import { ShapeFrame } from "@kcdesign/data/data/shape";
+import { Color, Gradient, GradientType, Stop } from "@kcdesign/data/data/style";
+import * as types from "@kcdesign/data/data/classes"
 
 const defaultColor = new Color(0, 0, 0, 0)
 

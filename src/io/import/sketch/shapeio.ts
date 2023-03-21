@@ -12,15 +12,15 @@ import {
     SymbolRefShape,
     TextShape,
     ExportFormat
-} from "@/data/data/shape";
-import { Color } from "@/data/data/style";
+} from "@kcdesign/data/data/shape";
+import { Color } from "@kcdesign/data/data/style";
 import { importXY, importStyle, importColor } from "./styleio";
-import { Page } from "@/data/data/page";
+import { Page } from "@kcdesign/data/data/page";
 import { importText } from "./textio";
-import { Artboard } from "@/data/data/artboard";
-import { Text } from "@/data/data/text";
-import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D } from "@/data/data/classes"
-import { BasicArray } from "@/data/data/basic";
+import { Artboard } from "@kcdesign/data/data/artboard";
+import { Text } from "@kcdesign/data/data/text";
+import { ShapeType, TextBehaviour, BoolOp, CurveMode, Point2D } from "@kcdesign/data/data/classes"
+import { BasicArray } from "@kcdesign/data/data/basic";
 
 interface IJSON {
     [key: string]: any

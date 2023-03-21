@@ -2,14 +2,14 @@
 import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
-import { Document } from "@/data/data/document";
+import { Document } from "@kcdesign/data/data/document";
 import Navigation from './Navigation/index.vue';
-import { Page } from '@/data/data/page';
+import { Page } from '@kcdesign/data/data/page';
 import { Selection } from '@/context/selection'
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
-import { Repository } from '@/data/data/transact';
+import { Repository } from '@kcdesign/data/data/transact';
 
 const props = defineProps<{data: Document, repo: Repository}>();
 const curPage = shallowRef<Page | undefined>(undefined);

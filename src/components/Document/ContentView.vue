@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
-import { Page } from '@/data/data/page';
+import { Page } from '@kcdesign/data/data/page';
 import { ref } from '@vue/reactivity';
 import { reactive, defineProps, onMounted, onUnmounted, watchEffect } from 'vue';
 import PageView from './Content/PageView.vue';

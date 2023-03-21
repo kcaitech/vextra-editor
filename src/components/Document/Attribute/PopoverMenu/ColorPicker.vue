@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineProps, ref, nextTick, reactive, defineEmits } from 'vue';
-import { Color } from '@/data/data/style';
+import { Color } from '@kcdesign/data/data/style';
 import { toRGBA } from '@/utils/color';
 
 type RgbMeta = number[]

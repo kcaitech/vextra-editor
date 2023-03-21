@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
 import { importDocument } from '@/io/import/sketch/documentio';
-import { Document } from "./data/data/document";
+import { Document } from "@kcdesign/data/data/document";
 import DocumentVue from "@/components/Document/index.vue"
 import HomeVue from "@/components/Home/index.vue"
 import { Zip } from "@pal/zip";
 import { LzDataLocal } from './io/import/sketch/lzdatalocal'; // todo
-import { importDocument as importRemote } from './data/io/import';
-import { Repository } from './data/data/transact';
+import { importDocument as importRemote } from '@kcdesign/data/io/import';
+import { Repository } from '@kcdesign/data/data/transact';
 
 const props = defineProps<{}>();
 // const dataReady = ref<boolean>(false);

@@ -1,10 +1,10 @@
 
-import { Shape } from '@/data/data/shape';
-import { Border, Gradient } from '@/data/data/style';
+import { Shape } from '@kcdesign/data/data/shape';
+import { Border, Gradient } from '@kcdesign/data/data/style';
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
-import { objectId } from '@/data/basic/objectid';
-import { BorderPosition, FillType, GradientType } from "@/data/data/classes"
+import { objectId } from '@kcdesign/data/basic/objectid';
+import { BorderPosition, FillType, GradientType } from "@kcdesign/data/data/classes"
 
 const handler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};
 const angularHandler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string) => any } = {};

@@ -8,9 +8,9 @@ import {
     Gradient, 
     Shadow, 
     Stop, 
-    Style} from "@/data/data/style";
-import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "@/data/data/classes"
-import { BasicArray } from "@/data/data/basic";
+    Style} from "@kcdesign/data/data/style";
+import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "@kcdesign/data/data/classes"
+import { BasicArray } from "@kcdesign/data/data/basic";
 
 interface IJSON {
     [key: string]: any

@@ -2,7 +2,7 @@
 import { defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
-import { Shape } from "@/data/data/shape";
+import { Shape } from "@kcdesign/data/data/shape";
 
 const reflush = ref(0);
 const watcher = () => {

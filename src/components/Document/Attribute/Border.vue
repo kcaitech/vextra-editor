@@ -8,13 +8,13 @@
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@/data/data/shape';
+import { Shape } from '@kcdesign/data/data/shape';
 import TypeHeader from './TypeHeader.vue';
 import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
 import { useI18n } from 'vue-i18n';
-import { Color, Border, ContextSettings } from '@/data/data/style';
-import { FillType, BlendMode, BorderPosition } from '@/data/data/classes';
+import { Color, Border, ContextSettings } from '@kcdesign/data/data/style';
+import { FillType, BlendMode, BorderPosition } from '@kcdesign/data/data/classes';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
 import { toHex } from "@/utils/color"

@@ -1,4 +1,4 @@
-import { PathShape, CurvePoint } from "@/data/data/shape";
+import { PathShape, CurvePoint } from "@kcdesign/data/data/shape";
 
 function format(str: string, args: any) {
     const keys = Object.keys(args);

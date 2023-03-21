@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-// import { Document } from "./data/document";
+// import { Document } from "@kcdesign/data/document";
 // const AppVue = () => import("@/App.vue");
 // const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");

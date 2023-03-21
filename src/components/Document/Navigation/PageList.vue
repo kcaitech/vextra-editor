@@ -10,9 +10,9 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
-import { ResourceMgr } from "@/data/data/basic";
-import { Page } from "@/data/data/page";
-import { Document, PageListItem } from "@/data/data/document";
+import { ResourceMgr } from "@kcdesign/data/data/basic";
+import { Page } from "@kcdesign/data/data/page";
+import { Document, PageListItem } from "@kcdesign/data/data/document";
 const { t } = useI18n();
 
 const props = defineProps<{ context: Context }>();

@@ -1,7 +1,7 @@
 
-import { BasicArray, IDataGruad } from "@/data/data/basic";
-import { Document, PageListItem } from "@/data/data/document";
-import { LzData } from "@/data/io/lzdata";
+import { BasicArray, IDataGruad } from "@kcdesign/data/data/basic";
+import { Document, PageListItem } from "@kcdesign/data/data/document";
+import { LzData } from "@kcdesign/data/io/lzdata";
 import { DataLoader } from "./lzdatalocal";
 interface IJSON {
     [key: string]: any

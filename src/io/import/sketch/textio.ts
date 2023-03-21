@@ -1,8 +1,8 @@
 
-import { Para, ParaAttr, Span, Text, TextAttr } from "@/data/data/text";
+import { Para, ParaAttr, Span, Text, TextAttr } from "@kcdesign/data/data/text";
 import { importColor } from "./styleio";
-import * as types from "@/data/data/classes"
-import { BasicArray } from "@/data/data/basic";
+import * as types from "@kcdesign/data/data/classes"
+import { BasicArray } from "@kcdesign/data/data/basic";
 
 interface IJSON {
     [key: string]: any
