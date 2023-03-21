@@ -165,7 +165,7 @@ onBeforeUpdate(() => {
                         @change="e => onAlphaChange(e, idx)"
                     />
                 </div>
-                <BorderDetail></BorderDetail>
+                <BorderDetail :context="props.context" :shape="props.shape" :border="b.border"></BorderDetail>
                 <div class="delete" @click="deleteBorder(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>

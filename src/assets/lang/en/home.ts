@@ -35,5 +35,12 @@ export const attr = {
     fixedRight: 'Right fixed',
     withContainer: 'Follow container scaling',
     fixedTop: 'Top fixed',
-    fixedBottom: 'Bottom fixed'
+    fixedBottom: 'Bottom fixed',
+    thickness: 'Thickness',
+    borderStyle: 'Border style',
+    outer: 'Outer',
+    center: 'Center',
+    inner: 'Inner',
+    dash: 'Dash',
+    solid: 'Solid'
 }

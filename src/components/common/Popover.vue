@@ -47,10 +47,19 @@ watch(popoverVisible, (val) => {
       if (container.value) {
         container.value.focus();
         // container.value.addEventListener('blur', onBlur);
+        container.value.addEventListener('keyup', esc)
       }
     })
   }
 })
+
+function esc(e: KeyboardEvent) {
+  if (e.code === 'Escape') {
+    popoverVisible.value = false;
+    container.value?.removeEventListener('keyup', esc);
+    container.value?.removeEventListener('blur', onBlur);
+  }
+}
 
 function popoverClose() {
   if (popoverVisible.value) return popoverVisible.value = false;
@@ -89,6 +98,7 @@ function popoverClose() {
   position: relative;
   width: 32px;
   height: 32px;
+  outline: none;
   > .popover {
     position: absolute;
     outline: none;

@@ -35,5 +35,12 @@ export const attr = {
     fixedRight: '右部固定',
     withContainer: '跟随容器缩放',
     fixedTop: '顶部固定',
-    fixedBottom: '底部固定'
+    fixedBottom: '底部固定',
+    thickness: '厚度',
+    borderStyle: '边框样式',
+    outer: '外部',
+    center: '居中',
+    inner: '内部',
+    dash: '虚线',
+    solid: '实线'
 }
