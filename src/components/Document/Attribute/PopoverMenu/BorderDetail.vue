@@ -65,6 +65,20 @@ const positonOptionsSource = [
 ];
 function showMenu() {
   popover.value.show();
+  initValue();
+
+}
+function initValue() {
+  const bp = ((p: BorderPosition) => {
+    switch(p) {
+      case BorderPosition.Center: return 0;
+      case BorderPosition.Inner: return 1;
+      case BorderPosition.Outer: return 2;
+      default: return 0;
+    }
+  })(props.border.position);
+  const positionSelected = positonOptionsSource.find(i => i.data.value === bp)?.data;
+  positionSelected && (position.value = positionSelected);  
 }
 function borderStyleSelect(value: SelectItem) {
   borderStyle.value = value;
@@ -124,7 +138,6 @@ function setThickness(e: Event) {
               :source="borderStyleOptionsSource"
             ></Select>
           </div>
-          
         </div>
       </template>
     </Popover>
