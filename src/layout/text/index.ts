@@ -1,4 +1,4 @@
-import { Para, SpanAttr, TextHorAlign, TextVerAlign } from "@/data/data/text";
+import { Para, SpanAttr, TextHorAlign, TextVerAlign } from "@kcdesign/data/data/text";
 import { measure } from "./measure";
 
 export interface IGraphy {

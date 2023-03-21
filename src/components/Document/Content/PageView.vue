@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Page } from '@/data/data/page';
-import { Shape } from '@/data/data/shape';
+import { Page } from '@kcdesign/data/data/page';
+import { Shape } from '@kcdesign/data/data/shape';
 import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap';
 

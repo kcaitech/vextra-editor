@@ -2,7 +2,7 @@
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap'
 import { render as r } from "@/render/symbolref"
-import { SymbolRefShape } from '@/data/data/shape';
+import { SymbolRefShape } from '@kcdesign/data/data/shape';
 
 const props = defineProps<{ data: SymbolRefShape }>();
 

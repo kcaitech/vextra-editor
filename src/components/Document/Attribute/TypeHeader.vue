@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { defineProps } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@/data/data/shape';
+import { Shape } from '@kcdesign/data/data/shape';
 const props = defineProps<{
     context?: Context,
     shape?: Shape,

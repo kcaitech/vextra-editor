@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
-import { Shape, ShapeType, RectShape } from '@/data/data/shape';
+import { Shape, ShapeType, RectShape } from '@kcdesign/data/data/shape';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import Scale from './PopoverMenu/Scale.vue'

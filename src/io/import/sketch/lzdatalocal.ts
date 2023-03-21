@@ -1,5 +1,5 @@
-import { Document, Page, Shape, SymbolShape } from "@/data/data/classes";
-import { LzData } from "@/data/io/lzdata";
+import { Document, Page, Shape, SymbolShape } from "@kcdesign/data/data/classes";
+import { LzData } from "@kcdesign/data/io/lzdata";
 import { Zip } from "@pal/zip";
 import { importArtboard, importGroupShape, importImage, importPage, importPathShape, importRectShape, importShapeGroupShape, importSymbol, importSymbolRef, importTextShape } from "./shapeio";
 

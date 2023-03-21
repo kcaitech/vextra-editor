@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TextShape } from '@/data/data/shape';
+import { TextShape } from '@kcdesign/data/data/shape';
 import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
 import { render as r } from "@/render/text"
 

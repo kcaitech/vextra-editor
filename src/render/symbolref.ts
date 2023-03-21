@@ -1,4 +1,4 @@
-import { ShapeType, SymbolRefShape } from "@/data/data/shape";
+import { ShapeType, SymbolRefShape } from "@kcdesign/data/data/shape";
 import { renderGroupChilds as gR } from "@/render/group";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"

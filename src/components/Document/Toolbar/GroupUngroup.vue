@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
-import { Artboard } from '@/data/data/artboard';
-import { Page } from '@/data/data/page';
-import { GroupShape } from '@/data/data/shape';
+import { Artboard } from '@kcdesign/data/data/artboard';
+import { Page } from '@kcdesign/data/data/page';
+import { GroupShape } from '@kcdesign/data/data/shape';
 import { defineProps, computed, onMounted, onUnmounted, ref } from 'vue';
 // import Icon from "@/components/common/Icon.vue";
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 const props = defineProps<{ context: Context, selection: Selection }>();
 const editor = computed(() => {
     if (props.selection.selectedPage == undefined) {
@@ -59,7 +62,7 @@ const groupClick = () => {
     console.log("group")
     updater();
     if (state.value === GROUP) {
-        editor.value.group(props.selection.selectedShapes);
+        editor.value.group(props.selection.selectedShapes, t("shape.group_shape"));
     }
 }
 const ungroupClick = () => {

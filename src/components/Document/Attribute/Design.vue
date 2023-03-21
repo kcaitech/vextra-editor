@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { Shape } from '@/data/data/shape';
-import { ShapeType } from "@/data/data/classes"
+import { Shape } from '@kcdesign/data/data/shape';
+import { ShapeType } from "@kcdesign/data/data/classes"
 import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill.vue';

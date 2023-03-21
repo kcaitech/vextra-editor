@@ -1,4 +1,4 @@
-import { PathShape } from "@/data/data/shape";
+import { PathShape } from "@kcdesign/data/data/shape";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 

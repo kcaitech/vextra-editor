@@ -8,8 +8,8 @@
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@/data/data/shape';
-import { Color } from "@/data/data/style";
+import { Shape } from '@kcdesign/data/data/shape';
+import { Color } from "@kcdesign/data/data/style";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from './TypeHeader.vue';
 import { useI18n } from 'vue-i18n';

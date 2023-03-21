@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ImageShape } from '@/data/data/shape';
+import { ImageShape } from '@kcdesign/data/data/shape';
 import { defineProps, ref, onMounted, onUnmounted, h } from 'vue';
 import { render as r } from "@/render/image"
 

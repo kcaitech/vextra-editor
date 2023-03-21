@@ -1,8 +1,8 @@
-import { BoolOp, GroupShape, Shape } from "@/data/data/shape";
+import { BoolOp, GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { difference, intersection, subtract, union } from "./boolop";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
-import * as types from "@/data/data/classes"
+import * as types from "@kcdesign/data/data/classes"
 
 function opPath(bop: BoolOp, path0: string, path1: string): string {
     let path = "";

@@ -1,14 +1,14 @@
-import { Watchable } from "@/data/data/basic";
-import { Document } from "@/data/data/document";
-import { IDocShadow } from "@/data/data/ishadow";
-import { Page } from "@/data/data/page";
-import { ShapeNaviShadow } from "@/data/data/shadow/shapeNavi";
-import { Shape } from "@/data/data/shape";
-import { Repository } from "@/data/data/transact";
-import { DocEditor, Editor, PageEditor } from "@/data/editor";
-import { ShapeEditor } from "@/data/editor/shape";
-import { uploadExForm } from "@/data/io/export";
-// import { uploadExForm } from "@/data/io/exform/export";
+import { Watchable } from "@kcdesign/data/data/basic";
+import { Document } from "@kcdesign/data/data/document";
+import { IDocShadow } from "@kcdesign/data/data/ishadow";
+import { Page } from "@kcdesign/data/data/page";
+import { ShapeNaviShadow } from "@kcdesign/data/data/shadow/shapeNavi";
+import { Shape } from "@kcdesign/data/data/shape";
+import { Repository } from "@kcdesign/data/data/transact";
+import { DocEditor, Editor, PageEditor } from "@kcdesign/data/editor";
+import { ShapeEditor } from "@kcdesign/data/editor/shape";
+import { uploadExForm } from "@kcdesign/data/io/export";
+// import { uploadExForm } from "@kcdesign/data/io/exform/export";
 import { Selection } from "./selection";
 
 class ShapeNaviShadowMgr implements IDocShadow {
@@ -23,10 +23,10 @@ class ShapeNaviShadowMgr implements IDocShadow {
         // throw new Error("Method not implemented.");
         return true;
     }
-    modify(page: Page, attribute: string, value: any): boolean {
-        // throw new Error("Method not implemented.");
-        return true;
-    }
+    // modify(page: Page, attribute: string, value: any): boolean {
+    //     // throw new Error("Method not implemented.");
+    //     return true;
+    // }
     move(page: Page, index: number): boolean {
         // throw new Error("Method not implemented.");
         return true;
