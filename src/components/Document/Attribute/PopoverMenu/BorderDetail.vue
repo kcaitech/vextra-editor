@@ -5,8 +5,8 @@ import { useI18n } from 'vue-i18n';
 import Select, { SelectItem } from '@/components/common/Select.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import { Context } from '@/context';
-import { Shape,  } from '@/data/data/shape';
-import { Border } from "@/data/data/style";
+import { Shape } from '@kcdesign/data/data/shape';
+import { Border } from "@kcdesign//data/data/style";
 
 const props = defineProps<{
     context: Context,
