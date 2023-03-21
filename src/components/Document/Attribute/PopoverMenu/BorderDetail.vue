@@ -6,7 +6,7 @@ import Select, { SelectItem } from '@/components/common/Select.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
-import { Border } from "@kcdesign//data/data/style";
+import { Border, BorderPosition } from "@kcdesign//data/data/style";
 
 const props = defineProps<{
     context: Context,
@@ -38,9 +38,8 @@ const borderStyleOptionsSource = [
     }
   },
 ];
-const thickness = ref<number>(1);
 const position = ref<SelectItem>({
-  value: 'center',
+  value: 0,
   content: t('attr.center')
 });
 const positonOptionsSource = [
@@ -48,19 +47,19 @@ const positonOptionsSource = [
     id: 1,
     data: {
       content: t('attr.outer'),
-      value: 'outer'
+      value: 2
     }
   }, {
     id: 2,
     data: {
       content: t('attr.center'),
-      value: 'center',
+      value: 0,
     }
   }, {
     id: 3,
     data: {
       content: t('attr.inner'),
-      value: 'inner',
+      value: 1,
     }
   },
 ];
@@ -70,13 +69,23 @@ function showMenu() {
 function borderStyleSelect(value: SelectItem) {
   borderStyle.value = value;
 }
-function positionSelect(value: SelectItem) {
-  position.value = value
+function positionSelect(selected: SelectItem) {
+  position.value = selected;
+  const p: BorderPosition = ((p: number) => {
+    switch(p) {
+      case 0: return BorderPosition.Center;
+      case 1: return BorderPosition.Inner;
+      case 2: return BorderPosition.Outer;
+      default: return BorderPosition.Center;
+    }
+  })(selected.value as number);
+  const index = props.shape.getBorderIndex(props.border);
+  editor.value.setBorderPosition(index, p);
 }
 function setThickness(e: Event) {
-  const value = (e.target as HTMLInputElement).value;
-  console.log('-border-', props.border);
-  props.shape.getBorderIndex(props.border)
+  const thickness = Number((e.target as HTMLInputElement).value);
+  const index = props.shape.getBorderIndex(props.border);
+  editor.value.setBorderThickness(index, thickness)
 }
 </script>
 
@@ -102,7 +111,7 @@ function setThickness(e: Event) {
             <label>{{ t('attr.thickness') }}</label>
             <div class="thickness-container">
               <svg-icon icon-class="thickness"></svg-icon>
-              <input type="text" :value="thickness" @change="e => setThickness(e)">
+              <input type="text" :value="border.thickness" @change="e => setThickness(e)">
             </div>
           </div>
           <div>

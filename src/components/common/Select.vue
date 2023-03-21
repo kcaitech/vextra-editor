@@ -2,7 +2,7 @@
 import { ref, defineProps, nextTick, onMounted, defineEmits, watch } from 'vue';
 import { cloneDeep } from 'lodash';
 export interface SelectItem {
-    value: string,
+    value: string | number,
     content: string
 } 
 
