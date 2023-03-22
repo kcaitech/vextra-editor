@@ -14,29 +14,19 @@ function select() {
 onMounted(() => {})
 </script>
 <template>
-    <div class="border-style-item-container" @click="select">
-       <span>{{ props.data.content }}</span>
-       <svg-icon :icon-class="props.data.value"></svg-icon>
+    <div class="border-position-item-container" @click="select">
+        {{ props.data.content }}
     </div>
 </template>
 <style scoped lang="scss">
-.border-style-item-container {
+.border-position-item-container {
     height: 32px;
     width: 100%;
     color: var(--theme-color-anti);
+    text-align: left;
+    line-height: 32px;
     padding: 0 var(--default-padding);
     margin-left: var(--default-margin-half);
     box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    > span {
-        text-align: left;
-        line-height: 32px;
-        flex: 0 0 40px;
-    }
-    > svg {
-        width: calc(100% - 48px);
-        height: 100%;
-    }
 }
 </style>

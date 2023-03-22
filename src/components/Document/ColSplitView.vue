@@ -16,6 +16,8 @@ const props = defineProps<{
     left: SizeBound, // .1 .05 .50
     middle: SizeBound, // .8 .3 .9
     right: SizeBound // .1 .05 .5
+    rightMinWidthInPx: number,
+    leftMinWidthInPx: number
 }>();
 
 const sizeBounds = reactive<{
@@ -178,10 +180,8 @@ function onSizeChange() {
     if (savedRootWidth === rootWidth) return;
     const delta = rootWidth - savedRootWidth;
 
-    const rightMinWidthInPx = 336;
-    const rigthMinWidthImportant = Number((rightMinWidthInPx / rootWidth).toFixed(2));
-    const leftMinWidthInPx = 336;
-    const leftMinWidthImportant = Number((leftMinWidthInPx / rootWidth).toFixed(2));
+    const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth).toFixed(2));
+    const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth).toFixed(2));
 
     // sizeBounds.left.width = props.left.width * rootWidth;
     sizeBounds.left.minWidth = Math.max(leftMinWidthImportant, props.left.minWidth) * rootWidth;
@@ -212,10 +212,8 @@ function initSizeBounds() {
     const rootWidth = getRootWidth();
     savedRootWidth = rootWidth;
 
-    const rightMinWidthInPx = 336;
-    const rigthMinWidthImportant = Number((rightMinWidthInPx / rootWidth).toFixed(2));
-    const leftMinWidthInPx = 336;
-    const leftMinWidthImportant = Number((leftMinWidthInPx / rootWidth).toFixed(2));   
+    const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth).toFixed(2));
+    const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth).toFixed(2));   
     const middleMaxWidthImportant = 1 - (leftMinWidthImportant + rigthMinWidthImportant);
     
     sizeBounds.left.width = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;

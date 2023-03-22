@@ -14,9 +14,10 @@ const curValueIndex = ref<number>(0);
 const props = defineProps<{
     selected?: SelectItem,
     source: Array<any>,
-    itemView?: any,
+    itemView: any,
+    valueView?: any
     itemHeight: number,
-    width?: number
+    width?: number,
 }>();
 const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
@@ -61,7 +62,7 @@ onMounted(() => {
         curValue.value = props.selected;
         const index = source.value.findIndex((i: any) => i.data.value === curValue.value?.value);
         if (index > 0) curValueIndex.value = index;
-    }
+    }    
 })
 </script>
 <template>
@@ -69,7 +70,10 @@ onMounted(() => {
     width: props.width ? `${props.width}px` : '100%'
 }">
     <div class="trigger" @click="toggle">
-        <div class="value-wrap">{{ curValue?.content }}</div>
+        <div class="value-wrap" v-if="!props.valueView">{{ curValue?.content }}</div>
+        <div v-else class="value-wrap">
+            <component :is="props.valueView" :data="curValue"/>
+        </div>
         <div class="svg-wrap">
             <svg-icon icon-class="down"></svg-icon>
         </div>
@@ -88,9 +92,11 @@ onMounted(() => {
                 @select="select"
             />
         </div>
-        <div class="checkout" :style="{
-            top: `${curValueIndex * props.itemHeight + props.itemHeight / 2}px`
-        }"></div>
+        <div
+            class="checkout"
+            :style="{ top: `${curValueIndex * props.itemHeight + props.itemHeight / 2}px` }"
+        >
+        </div>
     </div>
 </div>
 </template>

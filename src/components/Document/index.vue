@@ -10,22 +10,26 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 import { Repository } from '@kcdesign/data/data/transact';
+import { SCREEN_SIZE } from '@/utils/setting'
 
 const props = defineProps<{data: Document, repo: Repository}>();
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(props.data, props.repo));
 (window as any).__context = context.value;
 
-function topDblClick() {
-    // const isFullscreen = props.data.isFullscreen;
-    // const element = document.documentElement;
-    // if (isFullscreen) {
-    //     document.exitFullscreen && document.exitFullscreen()
-  	// } else {
-    //     element.requestFullscreen && element.requestFullscreen()
-    // }
-  	// props.data.setScreen(!isFullscreen)
+function screenSetting() {
+    const element = document.documentElement;
+    const isFullScreen = document.fullscreenElement;
+    
+    if (isFullScreen === null) {
+        element.requestFullscreen && element.requestFullscreen();
+        localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
+    } else {
+        document.exitFullscreen && document.exitFullscreen();
+        localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
+    }
 }
+
 function onWindowBlur() {
     // Window blur, Close the process that should be closed
 }
@@ -47,7 +51,10 @@ function selectionWatcher(t: number) {
 onMounted(() => {    
     context.value.selection.watch(selectionWatcher);
     switchPage(props.data.pagesList[0]?.id);
-    window.addEventListener('blur', onWindowBlur)
+    if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
+        document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    }
+    window.addEventListener('blur', onWindowBlur);
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
@@ -56,14 +63,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div id="top" @dblclick="topDblClick">
+    <div id="top" @dblclick="screenSetting">
         <Toolbar :context="context" />
     </div>
     <ColSplitView 
         id="center"
         :left="{width: 0.1, minWidth: 0.1, maxWidth: 0.5}" 
         :middle="{width: 0.8, minWidth: 0.3, maxWidth: 0.8}"
-        :right="{width: 0.1, minWidth: 0.1, maxWidth: 0.5}"
+        :right="{width: 0.1, minWidth: 0.1, maxWidth: 0.5}" 
+        :right-min-width-in-px="336" 
+        :left-min-width-in-px="336"
     >
         <template #slot1>
             <Navigation

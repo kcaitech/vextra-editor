@@ -2,6 +2,7 @@ import {
     Blur, 
     Border, 
     BorderOptions, 
+    BorderStyle,
     Color, 
     ContextSettings, 
     Fill, 
@@ -10,7 +11,7 @@ import {
     Stop, 
     Style} from "@kcdesign/data/data/style";
 import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "@kcdesign/data/data/classes"
-import { BasicArray } from "@kcdesign/data/data/basic";
+import { Basic, BasicArray } from "@kcdesign/data/data/basic";
 
 interface IJSON {
     [key: string]: any
@@ -116,7 +117,7 @@ export function importStyle(data: IJSON): Style {
     const borderOptions: BorderOptions = ((d: IJSON) => {
             return new BorderOptions(
                 false,
-                new BasicArray<number>(),
+                // new BasicArray<number>(),
                 LineCapStyle.Butt,
                 LineJoinStyle.Miter
             )
@@ -155,7 +156,19 @@ export function importStyle(data: IJSON): Style {
 
         const thickness: number = d['thickness'];
 
-        const border = new Border(isEnabled, fillType, color, contextSettings, position, thickness);
+        const borderStyle: BorderStyle = ((dashPattern: number[]) => {
+            const bs = new BorderStyle(0, 0);
+            if (dashPattern.length === 1) {
+                bs.length = dashPattern[0];
+                bs.gap = 0;
+            } else if (dashPattern.length === 2) {
+                bs.length = dashPattern[0];
+                bs.gap = dashPattern[1];
+            }
+            return bs
+        })(data['borderOptions'].dashPattern);
+
+        const border = new Border(isEnabled, fillType, color, contextSettings, position, thickness, borderStyle);
         border.gradient = gradient;
 
         return border;

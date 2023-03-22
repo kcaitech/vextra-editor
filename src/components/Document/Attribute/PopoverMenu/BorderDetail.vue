@@ -3,10 +3,12 @@ import Popover from '@/components/common/Popover.vue';
 import { ref, defineProps, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem } from '@/components/common/Select.vue';
+import BorderPositonItem from './BorderPositionItem.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
+import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
-import { Border, BorderPosition } from "@kcdesign//data/data/style";
+import { Border, BorderPosition, BorderStyle } from "@kcdesign//data/data/style";
 
 const props = defineProps<{
     context: Context,
@@ -79,9 +81,25 @@ function initValue() {
   })(props.border.position);
   const positionSelected = positonOptionsSource.find(i => i.data.value === bp)?.data;
   positionSelected && (position.value = positionSelected);  
+
+  const bs = ((s: BorderStyle) => {
+    if (s.length > 0) return 'dash'; else return 'solid';
+  })(props.border.borderStyle);  
+  const borderStyleSelected = borderStyleOptionsSource.find(i => i.data.value === bs)?.data;
+  borderStyleSelected && (borderStyle.value = borderStyleSelected);
 }
-function borderStyleSelect(value: SelectItem) {
-  borderStyle.value = value;
+function borderStyleSelect(selected: SelectItem) {
+  borderStyle.value = selected;
+  const bs = new BorderStyle(0, 0);
+  if (selected.value === 'dash') {
+    bs.length = 10;
+    bs.gap = 10;
+  } else {
+    bs.length = 0;
+    bs.gap = 0;
+  }
+  const index = props.shape.getBorderIndex(props.border);
+  editor.value.setBorderStyle(index, bs);
 }
 function positionSelect(selected: SelectItem) {
   position.value = selected;
@@ -99,7 +117,7 @@ function positionSelect(selected: SelectItem) {
 function setThickness(e: Event) {
   const thickness = Number((e.target as HTMLInputElement).value);
   const index = props.shape.getBorderIndex(props.border);
-  editor.value.setBorderThickness(index, thickness)
+  editor.value.setBorderThickness(index, thickness);    
 }
 </script>
 
@@ -115,7 +133,7 @@ function setThickness(e: Event) {
             <label>{{ t('attr.position') }}</label>
             <Select
               :selected="position"
-              :item-view="BorderStyleItem"
+              :item-view="BorderPositonItem"
               :item-height="32"
               @select="positionSelect"
               :source="positonOptionsSource"
@@ -133,6 +151,7 @@ function setThickness(e: Event) {
             <Select
               :selected="borderStyle"
               :item-view="BorderStyleItem"
+              :value-view="BorderStyleSelected"
               :item-height="32"
               @select="borderStyleSelect"
               :source="borderStyleOptionsSource"

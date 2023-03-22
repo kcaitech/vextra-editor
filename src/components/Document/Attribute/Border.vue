@@ -12,7 +12,7 @@ import TypeHeader from './TypeHeader.vue';
 import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
 import { useI18n } from 'vue-i18n';
-import { Color, Border, ContextSettings } from '@kcdesign/data/data/style';
+import { Color, Border, ContextSettings, BorderStyle } from '@kcdesign/data/data/style';
 import { FillType, BlendMode, BorderPosition } from '@kcdesign/data/data/classes';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
@@ -69,7 +69,8 @@ function updateData() {
 function addBorder(): void {
     const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1);
+    const borderStyle = new BorderStyle(0, 0)
+    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle);
     editor.value.addBorder(border);
     
 }
