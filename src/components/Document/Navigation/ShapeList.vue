@@ -29,7 +29,7 @@ class Iter implements IDataIter<ItemData> {
     }
     next(): ItemData {
         const data = (this.__it as ShapeNaviIter).next();
-        const shape = data.shape;
+        const shape = data.data;
         let level = 0; // todo
         let p = shape.parent;
         while (p) {
@@ -40,7 +40,7 @@ class Iter implements IDataIter<ItemData> {
             id: shape.id,
             shape,
             selected: props.context.selection.isSelectedShape(shape),
-            expand: data.expand,
+            expand: !data.fold,
             level
         }
     }
