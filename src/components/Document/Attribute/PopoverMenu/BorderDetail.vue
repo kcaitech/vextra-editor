@@ -49,42 +49,33 @@ const positonOptionsSource = [
     id: 1,
     data: {
       content: t('attr.outer'),
-      value: 2
+      value: BorderPosition.Outer
     }
   }, {
     id: 2,
     data: {
       content: t('attr.center'),
-      value: 0,
+      value: BorderPosition.Center,
     }
   }, {
     id: 3,
     data: {
       content: t('attr.inner'),
-      value: 1,
+      value: BorderPosition.Inner,
     }
   },
 ];
 function showMenu() {
   popover.value.show();
   initValue();
-
 }
 function initValue() {
-  const bp = ((p: BorderPosition) => {
-    switch(p) {
-      case BorderPosition.Center: return 0;
-      case BorderPosition.Inner: return 1;
-      case BorderPosition.Outer: return 2;
-      default: return 0;
-    }
-  })(props.border.position);
-  const positionSelected = positonOptionsSource.find(i => i.data.value === bp)?.data;
+  // border position init
+  const positionSelected = positonOptionsSource.find(i => i.data.value === props.border.position)?.data;
   positionSelected && (position.value = positionSelected);  
 
-  const bs = ((s: BorderStyle) => {
-    if (s.length > 0) return 'dash'; else return 'solid';
-  })(props.border.borderStyle);  
+  // border style init
+  const bs = ((s: BorderStyle) => s.length > 0 ? 'dash' : 'solid')(props.border.borderStyle);  
   const borderStyleSelected = borderStyleOptionsSource.find(i => i.data.value === bs)?.data;
   borderStyleSelected && (borderStyle.value = borderStyleSelected);
 }
@@ -103,21 +94,13 @@ function borderStyleSelect(selected: SelectItem) {
 }
 function positionSelect(selected: SelectItem) {
   position.value = selected;
-  const p: BorderPosition = ((p: number) => {
-    switch(p) {
-      case 0: return BorderPosition.Center;
-      case 1: return BorderPosition.Inner;
-      case 2: return BorderPosition.Outer;
-      default: return BorderPosition.Center;
-    }
-  })(selected.value as number);
   const index = props.shape.getBorderIndex(props.border);
-  editor.value.setBorderPosition(index, p);
+  editor.value.setBorderPosition(index, selected.value as BorderPosition);
 }
 function setThickness(e: Event) {
   const thickness = Number((e.target as HTMLInputElement).value);
   const index = props.shape.getBorderIndex(props.border);
-  editor.value.setBorderThickness(index, thickness);    
+  editor.value.setBorderThickness(index, thickness);
 }
 </script>
 

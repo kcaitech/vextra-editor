@@ -1,7 +1,8 @@
 export const system = {
     'illegal_input': 'illegal input!',
     'select': 'Select',
-    'space': '...'
+    'space': '...',
+    'empty': 'No data'
 }
 
 export const home = {

@@ -1,7 +1,8 @@
 export const system = {
     'illegal_input': '输入不合法！',
     'select': '请选择！',
-    'space': '...'
+    'space': '...',
+    'empty': '暂无数据'
 }
 
 export const home = {

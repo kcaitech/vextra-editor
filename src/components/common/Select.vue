@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { ref, defineProps, nextTick, onMounted, defineEmits, watch } from 'vue';
+import { ref, defineProps, nextTick, onMounted, defineEmits } from 'vue';
+import { useI18n } from 'vue-i18n'; 
 import { cloneDeep } from 'lodash';
 export interface SelectItem {
     value: string | number,
@@ -9,6 +10,7 @@ export interface SelectItem {
 const emit = defineEmits<{
     (e: "select", value: SelectItem): void;
 }>();
+const { t } = useI18n();
 const curValue = ref<SelectItem>();
 const curValueIndex = ref<number>(0);
 const props = defineProps<{
@@ -80,7 +82,7 @@ onMounted(() => {
     </div>
     <div @click.stop class="options-container" ref="optionsContainer" tabindex="-1" v-if="optionsContainerVisible">
         <div v-if="!source.length" class="no-data">
-            no data
+            {{ t('system.empty') }}
         </div>
         <div v-else>
             <component
