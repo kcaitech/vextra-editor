@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
-import { importDocument } from '@/io/import/sketch/documentio';
 import { Document } from "@kcdesign/data/data/document";
 import DocumentVue from "@/components/Document/index.vue"
 import HomeVue from "@/components/Home/index.vue"
 import { Zip } from "@pal/zip";
-import { LzDataLocal } from './io/import/sketch/lzdatalocal'; // todo
-import { importDocument as importRemote } from '@kcdesign/data/io/import';
+import { LzDataLocal } from './io/lzdatalocal'; // todo
+import { importRemote, importSketch } from '@kcdesign/data/io';
 import { Repository } from '@kcdesign/data/data/transact';
 
 const props = defineProps<{}>();
@@ -18,7 +17,7 @@ function openLocalFile(file?: File) {
     if (!file) return;
     const lzdata = new LzDataLocal(new Zip(file));
     const repo = new Repository();
-    importDocument(file.name, lzdata, repo).then((document) => {
+    importSketch(file.name, lzdata, repo).then((document) => {
         curRepo.value = repo;
         curDoc.value = document;
         window.document.title = document.name;
