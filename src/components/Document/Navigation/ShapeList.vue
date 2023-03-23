@@ -71,14 +71,14 @@ const shapeSource = new class implements IDataSource<ItemData> {
         this.m_onchange = l;
     }
 
-    indexOf(data: ItemData): number {return 0;
-        // const shadows = props.context.shadows;
-        // const page = props.context.selection.selectedPage;
-        // if (page == undefined) {
-        //     return -1;
-        // }
-        // const sd = shadows.get(page as Page);
-        // return sd.indexOf(data.shape);
+    indexOf(data: ItemData): number {
+        const shadows = props.context.shadows;
+        const page = props.context.selection.selectedPage;
+        if (page == undefined) {
+            return -1;
+        }
+        const sd = shadows.get(page as Page);
+        return sd.indexOf(data.shape);
     }
 
     notify(index: number, del: number, insert: number, modify: number) {

@@ -1,3 +1,5 @@
+import { BorderPosition } from "@kcdesign/data/data/typesdefine"
+
 export const system = {
     'illegal_input': 'illegal input!',
     'select': 'Select',
@@ -19,7 +21,7 @@ export const navi = {
     page: 'Page',
 }
 
-export const attr = {
+export const attr: any = {
     design: 'Design',
     prototype: 'Prototype',
     inspect: 'Inspect',
@@ -39,9 +41,11 @@ export const attr = {
     fixedBottom: 'Bottom fixed',
     thickness: 'Thickness',
     borderStyle: 'Border style',
-    outer: 'Outer',
-    center: 'Center',
-    inner: 'Inner',
     dash: 'Dash',
-    solid: 'Solid'
+    solid: 'Solid',
+    startMarkerType: 'Start Marker Type',
+    endMarkerType: 'End Marker Type'
 }
+attr[BorderPosition.Inner] = 'Inner';
+attr[BorderPosition.Center] = 'Center';
+attr[BorderPosition.Outer] = 'Outer';

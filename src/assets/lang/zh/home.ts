@@ -1,3 +1,5 @@
+import { BorderPosition } from "@kcdesign/data/data/typesdefine"
+
 export const system = {
     'illegal_input': '输入不合法！',
     'select': '请选择！',
@@ -19,7 +21,7 @@ export const navi = {
 }
 
 
-export const attr = {
+export const attr: any = {
     design: '设计',
     prototype: '原型',
     inspect: '标注',
@@ -39,9 +41,12 @@ export const attr = {
     fixedBottom: '底部固定',
     thickness: '厚度',
     borderStyle: '边框样式',
-    outer: '外部',
-    center: '居中',
-    inner: '内部',
     dash: '虚线',
-    solid: '实线'
+    solid: '实线',
+    startMarkerType: '起点样式',
+    endMarkerType: '终点样式',
 }
+
+attr[BorderPosition.Inner] = '内部';
+attr[BorderPosition.Center] = '居中';
+attr[BorderPosition.Outer] = '外部';

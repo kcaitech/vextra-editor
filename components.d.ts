@@ -12,6 +12,8 @@ declare module '@vue/runtime-core' {
     ArtboardView: typeof import('./src/components/Document/Content/ArtboardView.vue')['default']
     BaseAttr: typeof import('./src/components/Document/Attribute/BaseAttr.vue')['default']
     Border: typeof import('./src/components/Document/Attribute/Border.vue')['default']
+    BorderApexStyleItem: typeof import('./src/components/Document/Attribute/PopoverMenu/BorderApexStyleItem.vue')['default']
+    BorderApexStyleSelectedItem: typeof import('./src/components/Document/Attribute/PopoverMenu/BorderApexStyleSelectedItem.vue')['default']
     BorderDetail: typeof import('./src/components/Document/Attribute/PopoverMenu/BorderDetail.vue')['default']
     BorderPositionItem: typeof import('./src/components/Document/Attribute/PopoverMenu/BorderPositionItem.vue')['default']
     BorderStyleItem: typeof import('./src/components/Document/Attribute/PopoverMenu/BorderStyleItem.vue')['default']

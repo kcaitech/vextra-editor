@@ -112,10 +112,11 @@ function popoverClose() {
         border-bottom: 1px solid var(--grey-light);
         display: flex;
         font-size: var(--font-default-fontsize);
+        padding: 0 var(--default-padding);
+        box-sizing: border-box;
         > .title {
           line-height: 32px;
           font-weight: var(--font-default-bold);
-          margin-left: 4px;
         }
         > .close {
           width: 24px;
@@ -123,12 +124,15 @@ function popoverClose() {
           text-align: center;
           line-height: 24px;
           position: absolute;
-          right: 4px;
+          right: var(--default-padding);
           top: 4px;
           color: var(--grey-dark);
+          text-align: right;
         }
     }
     > .body {
+      width: 100%;
+      height: calc(100% - 32px);
       font-size: 10px;
       position: relative;
     }

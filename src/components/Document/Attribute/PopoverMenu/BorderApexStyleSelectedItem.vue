@@ -1,0 +1,32 @@
+<script lang="ts" setup>
+import { SelectItem } from '@/components/common/Select.vue';
+import { defineProps, computed } from 'vue'
+const props = defineProps<{
+    data: SelectItem
+}>();
+const isEnd = computed(() => {     
+    return props.data.content.startsWith('end');
+})
+</script>
+
+<template>
+<div class="item-container">
+    <svg-icon :class="{ isEnd }" :icon-class="props.data?.value || ''"></svg-icon>
+</div>
+</template>
+
+<style scoped lang="scss">
+.item-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    > svg {
+        width: 100%;
+        height: 100%;
+    }
+    > .isEnd {
+        transform: rotate(180deg);
+    }
+}
+</style>

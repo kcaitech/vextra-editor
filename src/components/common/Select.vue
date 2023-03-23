@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, defineProps, nextTick, onMounted, defineEmits } from 'vue';
+import { ref, defineProps, nextTick, defineEmits, watch } from 'vue';
 import { useI18n } from 'vue-i18n'; 
 import { cloneDeep } from 'lodash';
 export interface SelectItem {
@@ -21,18 +21,36 @@ const props = defineProps<{
     itemHeight: number,
     width?: number,
 }>();
+const trigger = ref<HTMLDivElement>();
 const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
 const source: any = ref();
 function toggle() {
-    optionsContainerVisible.value = !optionsContainerVisible.value
+    optionsContainerVisible.value = !optionsContainerVisible.value;
     nextTick(() => {
-        if(optionsContainer.value) {
-            // const rect = optionsContainer.value.getBoundingClientRect();
+        if(optionsContainer.value && trigger.value) {       
             optionsContainer.value.focus();
             optionsContainer.value.addEventListener('blur', onBlur);
             optionsContainer.value.addEventListener('keydown', esc);
             optionsContainer.value.style.top = `${-curValueIndex.value * (props.itemHeight || 32)}px`;
+            const triggerRect = trigger.value.getBoundingClientRect();
+            const optionsContainerRect = optionsContainer.value.getBoundingClientRect();
+            const documentClientHeight = document.documentElement.clientHeight - 30;
+
+            const optionsContainerTop = triggerRect.top - curValueIndex.value * (props.itemHeight || 32);
+            const over = optionsContainerTop + optionsContainerRect.height - documentClientHeight;
+            console.log('-over-', over);
+            
+            if (over > 0) {
+                optionsContainer.value.style.top = `${-over - 4}px`;
+            }
+            // console.log('height', documentClientHeight);
+            // console.log('bottom', rect.bottom);
+            
+            // if ( optionsContainerRect.bottom > documentClientHeight ) {
+            //     const over = documentClientHeight - optionsContainerRect.bottom;
+            //     optionsContainer.value.style.top = `${over - 20}px`;
+            // }
         }
     })
 }
@@ -56,7 +74,7 @@ function select(data: SelectItem) {
     optionsContainer.value?.removeEventListener('blur', onBlur);
 }
 
-onMounted(() => {
+function render() {    
     if (props.source.length) {
         source.value = cloneDeep(props.source);
     }
@@ -65,13 +83,17 @@ onMounted(() => {
         const index = source.value.findIndex((i: any) => i.data.value === curValue.value?.value);
         if (index > 0) curValueIndex.value = index;
     }    
-})
+}
+
+watch(() => props.selected, () => {    
+    render();
+}, { immediate: true })
 </script>
 <template>
 <div class="select-container" :style="{
     width: props.width ? `${props.width}px` : '100%'
 }">
-    <div class="trigger" @click="toggle">
+    <div ref="trigger" class="trigger" @click="toggle">
         <div class="value-wrap" v-if="!props.valueView">{{ curValue?.content }}</div>
         <div v-else class="value-wrap">
             <component :is="props.valueView" :data="curValue"/>

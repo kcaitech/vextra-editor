@@ -11,7 +11,7 @@ import {
     Stop, 
     Style} from "@kcdesign/data/data/style";
 import { BlendMode, GradientType, MarkerType, WindingRule, BlurType, LineCapStyle, LineJoinStyle, FillType, BorderPosition, Point2D } from "@kcdesign/data/data/classes"
-import { Basic, BasicArray } from "@kcdesign/data/data/basic";
+import { BasicArray } from "@kcdesign/data/data/basic";
 
 interface IJSON {
     [key: string]: any
@@ -83,20 +83,8 @@ function importGradient(data: IJSON): Gradient {
 export function importStyle(data: IJSON): Style {
 
     // const gradients = env.gradients;
-
-    const endMarkerType: MarkerType = ((t: number) => {
-            switch(t) {
-                case 0: return MarkerType.OpenArrow;
-                default: return MarkerType.OpenArrow;
-            }
-        })(data['endMarkerType']);
     const miterLimit: number = data['miterLimit'];
-    const startMarkerType: MarkerType = ((t: number) => {
-            switch(t) {
-                case 0: return MarkerType.OpenArrow;
-                default: return MarkerType.OpenArrow;
-            }
-        })(data['startMarkerType']);
+    
     const windingRule: WindingRule = ((t: number) => {
         switch(t) {
             case 0: return WindingRule.NonZero;
@@ -168,7 +156,23 @@ export function importStyle(data: IJSON): Style {
             return bs
         })(data['borderOptions'].dashPattern);
 
-        const border = new Border(isEnabled, fillType, color, contextSettings, position, thickness, borderStyle);
+        const getMarkerType = (st: number): MarkerType => {
+            switch (st) {
+                case 0: return MarkerType.Line;
+                case 1: return MarkerType.OpenArrow;
+                case 2: return MarkerType.FilledArrow;
+                case 3: return MarkerType.FallT;
+                case 4: return MarkerType.OpenCircle;
+                case 5: return MarkerType.FilledCircle;
+                case 6: return MarkerType.OpenSquare;
+                case 7: return MarkerType.FilledSquare;            
+                default: return MarkerType.Line;
+            }
+        }
+        const startMarkerType: MarkerType = getMarkerType(data['startMarkerType']);
+        const endMarkerType: MarkerType = getMarkerType(data['endMarkerType']);
+
+        const border = new Border(isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType);
         border.gradient = gradient;
 
         return border;
@@ -210,8 +214,6 @@ export function importStyle(data: IJSON): Style {
     // });
 
     const style: Style = new Style(//shape, 
-        endMarkerType, 
-        startMarkerType, 
         miterLimit, 
         windingRule, 
         blur, 
@@ -221,7 +223,6 @@ export function importStyle(data: IJSON): Style {
         new BasicArray<Fill>(...fills), 
         new BasicArray<Shadow>(), 
         new BasicArray<Shadow>());
-
     // return makePair(style, gradients);
     return style;
 }
