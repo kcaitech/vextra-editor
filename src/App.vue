@@ -4,7 +4,7 @@ import { Document } from "@kcdesign/data/data/document";
 import DocumentVue from "@/components/Document/index.vue"
 import HomeVue from "@/components/Home/index.vue"
 import { Zip } from "@pal/zip";
-import { LzDataLocal } from './io/lzdatalocal'; // todo
+import { LzDataLocal } from './basic/lzdatalocal'; // todo
 import { importRemote, importSketch } from '@kcdesign/data/io';
 import { Repository } from '@kcdesign/data/data/transact';
 
