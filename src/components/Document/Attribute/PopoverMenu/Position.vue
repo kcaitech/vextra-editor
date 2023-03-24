@@ -2,7 +2,7 @@
 import Popover from '@/components/common/Popover.vue';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ElSelect, ElOption } from 'element-plus';
+import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 type Side = 'top' | 'right' | 'bottom' | 'left';
 const { t } = useI18n();
 
@@ -12,43 +12,37 @@ const constraintLeft = ref<boolean>(false);
 const constraintTop = ref<boolean>(false);
 const constraintRight = ref<boolean>(false);
 const constraintBottom = ref<boolean>(false);
-const width = ref<string>();
-const height = ref<string>();
-const ResizingConstraints = {
-  Unset: 0b111111,
-  Right: 0b000001,
-  Width: 0b000010,
-  Left: 0b000100,
-  Bottom: 0b001000,
-  Height: 0b010000,
-  Top: 0b100000,
+
+const widthSelected = ref<SelectItem>();
+const widthOptions: SelectSource[] = genOptions([
+  ['left', '靠左固定'],
+  ['right', '靠左固定'],
+  ['lr', '左右固定'],
+  ['centerh', '居中'],
+  ['widthWithContainer', '跟随缩放']
+]);
+
+const heightSelected = ref<SelectItem>();
+const heightOptions: SelectSource[] = genOptions([
+  ['top', '顶部固定'],
+  ['bottom', '底部固定'],
+  ['tb', '上下固定'],
+  ['centerv', '居中'],
+  ['heightWithContainer', '跟随缩放']
+])
+
+
+function genOptions(items: string[][]) {
+  return items.map((item: string[], index: number) => {
+    return {
+      id: index,
+      data: {
+        value: item[0],
+        content: item[1]
+      }
+    }
+  })
 }
-const widthOptions = [
-  {
-    value: 'left',
-    label: '靠左固定'
-  }, {
-    value: 'right',
-    label: '靠右固定'
-  }, {
-    value: 'widthWithContainer',
-    label: '跟随容器缩放'
-  }
-]
-const heightOptions = [
-  {
-    value: 'top',
-    label: '顶部固定'
-  }, {
-    value: 'bottom',
-    label: '底部固定'
-  }, {
-    value: 'heightWithContainer',
-    label: '跟随容器缩放'
-  }
-]
-
-
 function showMenu() {
   popover.value?.show()
 }
@@ -70,41 +64,12 @@ function setConstrainTop(side: Side) {
       break;
   }
 }
-function select(value: string) {  
-  switch (value) {
-    case 'top':
-      constraintTop.value  = true;
-      constraintBottom.value  = false;
-      break;
-    case 'right':
-      constraintRight.value  = true;
-      constraintLeft.value = false;
-      break;
-    case 'bottom':
-      constraintBottom.value  = true;
-      constraintTop.value  = false;
-      break;
-    case 'left':
-      constraintLeft.value  = true;
-      constraintRight.value  = false;
-      break;
-    case 'widthWithContainer':
-      constraintLeft.value  = true;
-      constraintRight.value  = true;
-      break;
-    case 'heightWithContainer':
-      constraintBottom.value  = true;
-      constraintTop.value  = true;
-      break;
-    default:
-      break;
-  }
-}
+
 </script>
 
 <template>
   <div class="position-container">
-    <Popover ref="popover" :left="-636" :height="124" :title="t('attr.constraints')">
+    <Popover ref="popover" :left="-636" :height="160" :title="t('attr.constraints')">
       <template #trigger>
         <svg-icon icon-class="gear" @click="showMenu" class="trigger"></svg-icon>
       </template>
@@ -113,30 +78,11 @@ function select(value: string) {
           <div class="options">
             <div>
               <label>{{t('attr.horizontal')}}</label>
-              <el-select
-                size="large"
-                v-model="width"
-                @change="select"
-                :placeholder="t('system.space')"
-              >
-                <el-option
-                  v-for="(item, index) in widthOptions"
-                  :label="item.label"
-                  :value="item.value"
-                  :key="index"
-                />
-              </el-select>
+              <Select :item-height="32" :width="136" :source="widthOptions"></Select>
             </div>
-            <div class="mt-16">
+            <div>
               <label>{{t('attr.vertical')}}</label>
-              <el-select
-                size="large"
-                v-model="height"
-                @change="select"
-                :placeholder="t('system.space')"
-              >
-                <el-option v-for="(item, index) in heightOptions" :label="item.label" :value="item.value" :key="index"/>
-              </el-select>
+              <Select :item-height="32" :width="136" :source="heightOptions"></Select>
             </div>
           </div>
           <div class="control">
@@ -175,16 +121,20 @@ function select(value: string) {
     width: 40%;
     height: 40%;
     transition: 0.5s;
-    margin-top: 10px;
   }
   .trigger:hover {
     transform: rotate(90deg);
   }
   .position {
+    height: 100%;
     display: flex;
-    padding: var(--default-padding-quarter);
+    padding: var(--default-padding);
+    box-sizing: border-box;
     .options {
-      flex: 0 0 240px;
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
       > div {
         display: flex;
         align-items: center;
@@ -196,10 +146,11 @@ function select(value: string) {
       }
     }
     .control {
-      flex: 0 0 auto;
+      flex: 0 0 96px;
+      box-sizing: border-box;
+      border: 2px solid var(--grey-dark);
+      height: 100%;
       border-radius: var(--default-radius);
-      height: 80px;
-      width: 80px;
       background-color: var(--input-background);
       margin: 0 auto;
       position: relative;
@@ -208,9 +159,9 @@ function select(value: string) {
         height: 32px;
         width: 32px;
         > svg {
-          height: 100%;
-          width: 100%;
-          margin-top: 6px;
+          height: 80%;
+          width: 80%;
+          margin-top: 12px;
         }
       }
       > .active {

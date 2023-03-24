@@ -12,7 +12,7 @@ import TypeHeader from './TypeHeader.vue';
 import BorderDetail from './PopoverMenu/BorderDetail.vue';
 import ColorPicker from './PopoverMenu/ColorPicker.vue';
 import { useI18n } from 'vue-i18n';
-import { Color, Border, ContextSettings, BorderStyle } from '@kcdesign/data/data/style';
+import { Color, Border, ContextSettings, BorderStyle, MarkerType } from '@kcdesign/data/data/style';
 import { FillType, BlendMode, BorderPosition } from '@kcdesign/data/data/classes';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
@@ -28,7 +28,7 @@ const props = defineProps<{
     context: Context,
     shape: Shape,
 }>();
-const data: { borders: BorderItem []} = reactive({ borders: [] });
+const data: { borders: BorderItem[] } = reactive({ borders: [] });
 const { borders } = data;
 const editor = computed(() => {
     return props.context.editor4Shape(props.shape);
@@ -47,11 +47,9 @@ function setupWatcher() {
         shape.watch(watcher);
     }
 }
-
 function watcher(...args: any[]) {    
     if (args.length > 0 && args.includes('style')) updateData();
 }
-
 function updateData() {    
     shapeId = props.shape.id;
     borders.length = 0;
@@ -65,34 +63,33 @@ function updateData() {
         borders.push(b);
     }
 }
-
-function addBorder(): void {
+function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const borderStyle = new BorderStyle(0, 0)
-    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle);
+    const borderStyle = new BorderStyle(0, 0);
+    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
     editor.value.addBorder(border);
-    
 }
-function deleteBorder(idx: number): void {
+function deleteBorder(idx: number) {
     editor.value.deleteBorder(idx);
 }
-
 function toggleVisible(idx: number) {
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
     const color = border.color;
     setBorder(idx, { isEnabled, color: color });
 }
-
 function onColorChange(e: Event, idx: number) {
-    const hex = (e.target as HTMLInputElement).value.match(Reg_HEX);
+    let value = (e.target as HTMLInputElement)?.value;
+    if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
+    if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
+    const hex = value.match(Reg_HEX);
     const border = borders[idx].border;
     if (!hex) {
         message('danger', t('system.illegal_input'));
         return;
     }
-
+    
     const r = Number.parseInt(hex[1], 16);
     const g = Number.parseInt(hex[2], 16);
     const b = Number.parseInt(hex[3], 16);
@@ -101,7 +98,6 @@ function onColorChange(e: Event, idx: number) {
     const isEnabled = border.isEnabled;
     setBorder(idx, { isEnabled, color });
 }
-
 function onAlphaChange(e: Event, idx: number) {
     const alpha = Number(Number.parseFloat((e.target as HTMLInputElement).value).toFixed(2));
     if (isNaN(alpha) || alpha < 0 || alpha > 1) {
@@ -112,14 +108,10 @@ function onAlphaChange(e: Event, idx: number) {
     const color = border.color;
     color.alpha = alpha;
     const isEnabled = border.isEnabled;
-    setBorder(idx, { isEnabled, color })
+    setBorder(idx, { isEnabled, color });
 }
-
 function setBorder(idx: number,  options: { color: Color, isEnabled: boolean }) {
     editor.value.setBorder(idx, options);
-}
-function getBorderIndex(border: Border) {
-    console.log('-index-', shape?.getBorderIndex(border));
 }
 function onBorderMouseDown() {}
 // hooks
@@ -166,9 +158,11 @@ onBeforeUpdate(() => {
                         @change="e => onAlphaChange(e, idx)"
                     />
                 </div>
-                <BorderDetail :context="props.context" :shape="props.shape" :border="b.border"></BorderDetail>
-                <div class="delete" @click="deleteBorder(idx)">
-                    <svg-icon icon-class="delete"></svg-icon>
+                <div class="extra-action">
+                    <BorderDetail :context="props.context" :shape="props.shape" :border="b.border"></BorderDetail>
+                    <div class="delete" @click="deleteBorder(idx)">
+                        <svg-icon icon-class="delete"></svg-icon>
+                    </div>
                 </div>
             </div>
         </div>
@@ -176,9 +170,6 @@ onBeforeUpdate(() => {
 </template>
 
 <style scoped lang="scss">
-.ml-24 {
-    margin-left: 24px;
-}
 .border-panel {
     width: 100%;
     display: flex;
@@ -206,7 +197,7 @@ onBeforeUpdate(() => {
             align-items: center;
             margin-top: 4px;
             .visibility {
-                width: 16px;
+                flex: 0 0 16px;
                 height: 16px;
                 background-color: #2561D9;
                 border-radius: 3px;
@@ -222,7 +213,7 @@ onBeforeUpdate(() => {
                 }
             }
             .hidden {
-                width: 16px;
+                flex: 0 0 16px;
                 height: 16px;
                 background-color: transparent;
                 border-radius: 3px;
@@ -230,6 +221,7 @@ onBeforeUpdate(() => {
                 box-sizing: border-box;
             }
             .color {
+                flex: 0 1 140px;
                 background-color: var(--input-background);
                 height: 100%;
                 padding: 2px 8px;
@@ -238,37 +230,37 @@ onBeforeUpdate(() => {
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
-                .color-block {
-                    position: relative;
-                    width: 16px;
-                    height: 16px;
-                }
                 input {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 80px;
+                    width: 68px;
                     margin-left: 10px;
                 }
                 input + input {
                     width: 30px;
                 }
             }
-            .space {
-                width: 30px;
-            }
-            .delete {
-                flex-shrink: 0;
-                width: 16px;
-                height: 16px;
-                transition: 0.2s;
-                > svg {
-                    width: 80%;
-                    height: 80%;
+            .extra-action {
+                flex: 0 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                .delete {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 16px;
+                    height: 16px;
+                    transition: 0.2s;
+                    > svg {
+                        width: 80%;
+                        height: 80%;
+                    }
                 }
-            }
-            .delete:hover {
-                color: #ff5555;
+                .delete:hover {
+                    color: #ff5555;
+                }
             }
         }
     }

@@ -264,7 +264,7 @@ onUnmounted(() => {
             flex-shrink: 0;
         }
         .title {
-            font-weight: var(--default-bold);
+            font-weight: var(--font-default-bold);
             line-height: 30px;
             height: 30px;
         }

@@ -3,7 +3,6 @@ import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
 import { Shape, ShapeType, RectShape } from '@kcdesign/data/data/shape';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
-import Scale from './PopoverMenu/Scale.vue'
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
 import { Context } from '@/context';
 import { computed } from '@vue/reactivity';
@@ -149,7 +148,6 @@ onBeforeUpdate(() => {
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
             <IconText class="td frame" ticon="H" :text="h.toFixed(fix)" @onchange="onChangeH"/>
-            <Scale></Scale>
         </div>
         <div class="tr">
             <IconText

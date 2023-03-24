@@ -2,9 +2,9 @@ import { BorderPosition } from "@kcdesign/data/data/typesdefine"
 
 export const system = {
     'illegal_input': '输入不合法！',
-    'select': '请选择！',
-    'space': '...',
-    'empty': '暂无数据'
+    select: '请选择！',
+    space: '...',
+    empty: '暂无数据'
 }
 
 export const home = {
@@ -45,6 +45,9 @@ export const attr: any = {
     solid: '实线',
     startMarkerType: '起点样式',
     endMarkerType: '终点样式',
+    background: '画布背景',
+    color: '颜色',
+    alpha: '不透明度'
 }
 
 attr[BorderPosition.Inner] = '内部';

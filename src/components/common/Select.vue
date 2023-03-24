@@ -5,52 +5,46 @@ import { cloneDeep } from 'lodash';
 export interface SelectItem {
     value: string | number,
     content: string
-} 
+}
+export interface SelectSource {
+    id: number,
+    data: SelectItem
+}
 
 const emit = defineEmits<{
     (e: "select", value: SelectItem): void;
 }>();
 const { t } = useI18n();
 const curValue = ref<SelectItem>();
-const curValueIndex = ref<number>(0);
+const curValueIndex = ref<number>(-1);
 const props = defineProps<{
-    selected?: SelectItem,
-    source: Array<any>,
-    itemView: any,
-    valueView?: any
     itemHeight: number,
+    source: SelectSource[],
+    selected?: SelectItem,
+    itemView?: any,
+    valueView?: any
     width?: number,
 }>();
-const trigger = ref<HTMLDivElement>();
+const selectContainer = ref<HTMLDivElement>();
 const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
-const source: any = ref();
+const source  = ref<SelectSource[]>([]);
 function toggle() {
     optionsContainerVisible.value = !optionsContainerVisible.value;
     nextTick(() => {
-        if(optionsContainer.value && trigger.value) {       
+        if(optionsContainer.value && selectContainer.value) {
             optionsContainer.value.focus();
             optionsContainer.value.addEventListener('blur', onBlur);
             optionsContainer.value.addEventListener('keydown', esc);
             optionsContainer.value.style.top = `${-curValueIndex.value * (props.itemHeight || 32)}px`;
-            const triggerRect = trigger.value.getBoundingClientRect();
+            const selectContainerRect = selectContainer.value.getBoundingClientRect();
             const optionsContainerRect = optionsContainer.value.getBoundingClientRect();
             const documentClientHeight = document.documentElement.clientHeight - 30;
-
-            const optionsContainerTop = triggerRect.top - curValueIndex.value * (props.itemHeight || 32);
+            const optionsContainerTop = selectContainerRect.top - curValueIndex.value * (props.itemHeight || 32);
             const over = optionsContainerTop + optionsContainerRect.height - documentClientHeight;
-            console.log('-over-', over);
-            
             if (over > 0) {
                 optionsContainer.value.style.top = `${-over - 4}px`;
             }
-            // console.log('height', documentClientHeight);
-            // console.log('bottom', rect.bottom);
-            
-            // if ( optionsContainerRect.bottom > documentClientHeight ) {
-            //     const over = documentClientHeight - optionsContainerRect.bottom;
-            //     optionsContainer.value.style.top = `${over - 20}px`;
-            // }
         }
     })
 }
@@ -65,7 +59,7 @@ function onBlur() {
     optionsContainer.value?.removeEventListener('blur', onBlur);
 }
 function select(data: SelectItem) {
-    const index = source.value.findIndex((item: any) => item.data === data);
+    const index = source.value.findIndex((item: SelectSource) => item.data === data);
     curValueIndex.value = index;
     curValue.value = data;
     emit('select', curValue.value);
@@ -80,8 +74,8 @@ function render() {
     }
     if (props.selected && props.source.length) {
         curValue.value = props.selected;
-        const index = source.value.findIndex((i: any) => i.data.value === curValue.value?.value);
-        if (index > 0) curValueIndex.value = index;
+        const index = source.value.findIndex((i: SelectSource) => i.data.value === curValue.value?.value);
+        if (index > -1) curValueIndex.value = index;
     }    
 }
 
@@ -90,10 +84,14 @@ watch(() => props.selected, () => {
 }, { immediate: true })
 </script>
 <template>
-<div class="select-container" :style="{
-    width: props.width ? `${props.width}px` : '100%'
-}">
-    <div ref="trigger" class="trigger" @click="toggle">
+<div
+    class="select-container"
+    :style="{
+        width: props.width ? `${props.width}px` : '100%'
+    }"
+    ref="selectContainer"
+>
+    <div class="trigger" @click="toggle">
         <div class="value-wrap" v-if="!props.valueView">{{ curValue?.content }}</div>
         <div v-else class="value-wrap">
             <component :is="props.valueView" :data="curValue"/>
@@ -106,18 +104,30 @@ watch(() => props.selected, () => {
         <div v-if="!source.length" class="no-data">
             {{ t('system.empty') }}
         </div>
-        <div v-else>
+        <div v-else-if="props.itemView">
             <component
                 :is="props.itemView"
-                v-for="(c) in source"
+                v-for="c in source"
                 :key="c.id"
                 :data="c.data"
                 v-bind="$attrs"
                 @select="select"
             />
         </div>
+        <div v-else>
+            <div
+                class="item-default"
+                v-for="c in source"
+                :key="c.id"
+                v-bind="$attrs"
+                @click="() => select(c.data)"
+            >
+                {{ c.data.content }}
+            </div>
+        </div>
         <div
-            class="checkout"
+            v-if="curValue"
+            class="check"
             :style="{ top: `${curValueIndex * props.itemHeight + props.itemHeight / 2}px` }"
         >
         </div>
@@ -173,7 +183,14 @@ watch(() => props.selected, () => {
             color: var(--theme-color-anti);
             line-height: 32px;
         }
-        .checkout {
+        .item-default {
+            height: 32px;
+            color: var(--theme-color-anti);
+            line-height: 32px;
+            padding: 0 var(--default-padding);
+            text-align: left;
+        }
+        .check {
             top: 0px;
             position: absolute;
             box-sizing: border-box;

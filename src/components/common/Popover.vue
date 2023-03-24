@@ -99,13 +99,15 @@ function popoverClose() {
   width: 32px;
   height: 32px;
   outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   > .popover {
     position: absolute;
     outline: none;
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
     background-color: #ffffff;
     z-index: 1;
-    // border-radius: var(--default-radius);
     > .header {
         width: 100%;
         height: 32px;

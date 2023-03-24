@@ -2,7 +2,7 @@
 import Popover from '@/components/common/Popover.vue';
 import { ref, defineProps, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Select, { SelectItem } from '@/components/common/Select.vue';
+import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderPositonItem from './BorderPositionItem.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
@@ -11,6 +11,7 @@ import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue'
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
 import { Border, BorderPosition, BorderStyle, MarkerType } from "@kcdesign//data/data/style";
+import { genOptions } from '@/utils/common'
 
 const props = defineProps<{
     context: Context,
@@ -27,156 +28,50 @@ const borderStyle = ref<SelectItem>({
   value: 'dash',
   content: t('attr.dash')
 });
-const borderStyleOptionsSource = [
-  {
-    id: 1,
-    data: {
-      content: t('attr.solid'),
-      value: 'solid'
-    }
-  }, {
-    id: 2,
-    data: {
-      content: t('attr.dash'),
-      value: 'dash',
-    }
-  },
-];
+const borderStyleOptionsSource: SelectSource[] = genOptions([
+  ['solid', t('attr.solid')],
+  ['dash', t('attr.dash')]
+]);
 const position = ref<SelectItem>({
   value: 0,
   content: t('attr.center')
 });
-const positonOptionsSource = [
-  {
-    id: 1,
-    data: {
-      content: t(`attr.${BorderPosition.Outer}`),
-      value: BorderPosition.Outer
-    }
-  }, {
-    id: 2,
-    data: {
-      content: t(`attr.${BorderPosition.Center}`),
-      value: BorderPosition.Center,
-    }
-  }, {
-    id: 3,
-    data: {
-      content: t(`attr.${BorderPosition.Inner}`),
-      value: BorderPosition.Inner,
-    }
-  },
-];
+const positonOptionsSource: SelectSource[] = genOptions([
+  [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
+  [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
+  [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
+]);
+
 const borderFrontStyle = ref<SelectItem>({
   value: MarkerType.Line,
   content: MarkerType.Line
 });
-const borderFrontStyleOptionsSource = [
-  {
-    id: 0,
-    data: {
-      value: MarkerType.Line,
-      content: MarkerType.Line
-    }
-  }, {
-    id: 1,
-    data: {
-      value: MarkerType.OpenArrow,
-      content: MarkerType.OpenArrow
-    }
-  }, {
-    id: 2,
-    data: {
-      value: MarkerType.FilledArrow,
-      content: MarkerType.FilledArrow
-    }
-  }, {
-    id: 3,
-    data: {
-      value: MarkerType.OpenCircle,
-      content: MarkerType.OpenCircle
-    }
-  }, {
-    id: 4,
-    data: {
-      value: MarkerType.FilledCircle,
-      content: MarkerType.FilledCircle
-    }
-  }, {
-    id: 5,
-    data: {
-      value: MarkerType.OpenSquare,
-      content: MarkerType.OpenSquare
-    }
-  }, {
-    id: 6,
-    data: {
-      value: MarkerType.FilledSquare,
-      content: MarkerType.FilledSquare
-    }
-  }, {
-    id: 7,
-    data: {
-      value: MarkerType.FallT,
-      content: MarkerType.FallT
-    }
-  }
-]
+const borderFrontStyleOptionsSource: SelectSource[] = genOptions([
+  [MarkerType.Line, MarkerType.Line],
+  [MarkerType.OpenArrow, MarkerType.OpenArrow],
+  [MarkerType.FilledArrow, MarkerType.FilledArrow],
+  [MarkerType.OpenCircle, MarkerType.OpenCircle],
+  [MarkerType.FilledCircle, MarkerType.FilledCircle],
+  [MarkerType.OpenSquare, MarkerType.OpenSquare],
+  [MarkerType.FilledSquare, MarkerType.FilledSquare],
+  [MarkerType.FallT, MarkerType.FallT],
+]);
+
 const borderEndStyle = ref<SelectItem>({
   value: MarkerType.Line,
   content: `end-${MarkerType.Line}`
 });
-const borderEndStyleOptionsSource = [
-  {
-    id: 0,
-    data: {
-      value: MarkerType.Line,
-      content: `end-${MarkerType.Line}`
-    }
-  }, {
-    id: 1,
-    data: {
-      value: MarkerType.OpenArrow,
-      content: `end-${MarkerType.OpenArrow}`
-    }
-  }, {
-    id: 2,
-    data: {
-      value: MarkerType.FilledArrow,
-      content: `end-${MarkerType.FilledArrow}`
-    }
-  }, {
-    id: 3,
-    data: {
-      value: MarkerType.OpenCircle,
-      content: `end-${MarkerType.OpenCircle}`
-    }
-  }, {
-    id: 4,
-    data: {
-      value: MarkerType.FilledCircle,
-      content: `end-${MarkerType.FilledCircle}`
-    }
-  }, {
-    id: 5,
-    data: {
-      value: MarkerType.OpenSquare,
-      content: `end-${MarkerType.OpenSquare}`
-    }
-  }, {
-    id: 6,
-    data: {
-      value: MarkerType.FilledSquare,
-      content: `end-${MarkerType.FilledSquare}`
-    }
-  }, {
-    id: 7,
-    data: {
-      value: MarkerType.FallT,
-      content:`end-${MarkerType.FallT}`
-    }
-  }
-]
+const borderEndStyleOptionsSource: SelectSource[] = genOptions([
+  [MarkerType.Line, `end-${MarkerType.Line}`],
+  [MarkerType.OpenArrow, `end-${MarkerType.OpenArrow}`],
+  [MarkerType.FilledArrow, `end-${MarkerType.FilledArrow}`],
+  [MarkerType.OpenCircle, `end-${MarkerType.OpenCircle}`],
+  [MarkerType.FilledCircle, `end-${MarkerType.FilledCircle}`],
+  [MarkerType.OpenSquare, `end-${MarkerType.OpenSquare}`],
+  [MarkerType.FilledSquare, `end-${MarkerType.FilledSquare}`],
+  [MarkerType.FallT, `end-${MarkerType.FallT}`],
+]);
+
 function showMenu() {
   popover.value.show();
   initValue();
@@ -201,14 +96,7 @@ function initValue() {
 }
 function borderStyleSelect(selected: SelectItem) {
   borderStyle.value = selected;
-  const bs = new BorderStyle(0, 0);
-  if (selected.value === 'dash') {
-    bs.length = 10;
-    bs.gap = 10;
-  } else {
-    bs.length = 0;
-    bs.gap = 0;
-  }
+  const bs = selected.value === 'dash' ? new BorderStyle(10, 10) : new BorderStyle(0, 0);
   const index = props.shape.getBorderIndex(props.border);
   editor.value.setBorderStyle(index, bs);
 }
@@ -308,12 +196,12 @@ watch(() => props.border, () => {
 
 <style scoped lang="scss">
   .border-detail-container {
-    text-align: center;
+    width: 32px;
+    height: 32px;
     .trigger {
       width: 40%;
       height: 40%;
       transition: 0.5s;
-      margin-top: 13px;
     }
     .trigger:hover {
       transform: rotate(90deg);

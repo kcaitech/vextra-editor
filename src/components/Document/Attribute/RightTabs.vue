@@ -15,7 +15,9 @@ const { t } = useI18n();
 
 const props = defineProps<{ context: Context }>();
 
-type Tab = "Design" | "Prototype" | "Inspect"
+// type Tab = "Design" | "Prototype" | "Inspect";
+type Tab = "Design" | "Inspect";
+
 
 const currentTab = ref<Tab>("Design");
 
@@ -23,10 +25,12 @@ const tabs: { title: string, id: Tab }[] = [
     {
         title: t('attr.design'),
         id: 'Design'
-    }, {
-        title: t('attr.prototype'),
-        id: 'Prototype'
-    }, {
+    },
+    // {
+    //     title: t('attr.prototype'),
+    //     id: 'Prototype'
+    // },
+    {
         title: t('attr.inspect'),
         id: 'Inspect'
     }
@@ -51,7 +55,7 @@ function toggle(id: Tab) {
         </div>
         <div class="body">
             <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
-            <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab>
+            <!-- <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab> -->
             <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
         </div>
     </div>
@@ -70,7 +74,7 @@ function toggle(id: Tab) {
         flex-direction: row;
         margin-left: 13px;
         > .tab {
-            font-weight: var(--default-bold);
+            font-weight: var(--font-default-bold);
             font-size: 10px;
             min-width: 42px;
             margin-right: 4px;

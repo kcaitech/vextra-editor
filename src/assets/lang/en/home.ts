@@ -2,9 +2,9 @@ import { BorderPosition } from "@kcdesign/data/data/typesdefine"
 
 export const system = {
     'illegal_input': 'illegal input!',
-    'select': 'Select',
-    'space': '...',
-    'empty': 'No data'
+    select: 'Select',
+    space: '...',
+    empty: 'No data',
 }
 
 export const home = {
@@ -44,7 +44,10 @@ export const attr: any = {
     dash: 'Dash',
     solid: 'Solid',
     startMarkerType: 'Start Marker Type',
-    endMarkerType: 'End Marker Type'
+    endMarkerType: 'End Marker Type',
+    background: 'Background',
+    color: 'Color',
+    alpha: 'Alpha'
 }
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';

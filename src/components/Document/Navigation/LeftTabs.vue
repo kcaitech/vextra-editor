@@ -64,7 +64,7 @@ function toggle(id: Tab) {
         flex-direction: row;
         margin-left: 13px;
         > .tab {
-            font-weight: var(--default-bold);
+            font-weight: var(--font-default-bold);
             font-size: 10px;
             min-width: 42px;
             margin-right: 4px;

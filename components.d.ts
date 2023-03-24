@@ -57,7 +57,6 @@ declare module '@vue/runtime-core' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Sash: typeof import('./src/components/common/Sash.vue')['default']
-    Scale: typeof import('./src/components/Document/Attribute/PopoverMenu/Scale.vue')['default']
     Select: typeof import('./src/components/common/Select.vue')['default']
     SelectionView: typeof import('./src/components/Document/SelectionView.vue')['default']
     Shadow: typeof import('./src/components/Document/Attribute/Shadow.vue')['default']

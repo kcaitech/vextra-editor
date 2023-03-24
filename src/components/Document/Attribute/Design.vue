@@ -4,9 +4,13 @@ import { Selection } from '@/context/selection';
 import { Shape } from '@kcdesign/data/data/shape';
 import { ShapeType } from "@kcdesign/data/data/classes"
 import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
+import ColorPicker from './PopoverMenu/ColorPicker.vue';
+import { Color } from '@kcdesign/data/data/style';
+import { useI18n } from 'vue-i18n';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill.vue';
 import Border from './Border.vue';
+const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 
 const shape = shallowRef<Shape>();
@@ -14,7 +18,7 @@ const shape = shallowRef<Shape>();
 const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text];
 const shapeType = ref();
 
-function selectionChange(t: number) {
+function selectionChange(t: number) {    
     if (t === Selection.CHANGE_PAGE) {
         shape.value = undefined;
     }
@@ -45,12 +49,42 @@ onUnmounted(() => {
         <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shape" :context="props.context"></Fill>
         <Border :shape="shape" :context="props.context"></Border>
     </div>
+    <div v-else class="back-setting-container">
+        <span>{{ t('attr.background') }}</span>
+        <div class="setting">
+            <div>
+                <label>{{ t('attr.color') }}:</label>
+                <ColorPicker :color="new Color(1, 88, 88, 88)"></ColorPicker>
+            </div>
+            <div>
+                <label>{{ t('attr.alpha') }}:</label>
+                <input type="text">
+            </div>
+        </div>
+        
+    </div>
 </section>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 section {
     width: 100%;
     height: 100%;
+    font-size: var(--font-default-fontsize);
+    .back-setting-container {
+        font-weight: var(--font-default-bold);
+        padding: var(--default-padding);
+        .setting {
+            width: 100%;
+            max-width: 336px;
+            > div {
+                margin: var(--default-margin-half) 0px;
+                display: flex;
+                > label {
+                    flex: 0 0 64px;
+                }
+            }
+        }
+    }
 }
 </style>

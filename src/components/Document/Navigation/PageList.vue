@@ -147,7 +147,7 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
         }
         .title {
             height: 30px;
-            font-weight: var(--default-bold);
+            font-weight: var(--font-default-bold);
             line-height: 36px;
         }
         .btn {
