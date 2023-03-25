@@ -40,12 +40,6 @@ const controller: Controller = reactive({
   height: false,
   top: false
 });
-
-const constraintLeft = ref<boolean>(false);
-const constraintTop = ref<boolean>(false);
-const constraintRight = ref<boolean>(false);
-const constraintBottom = ref<boolean>(false);
-
 const widthSelected = ref<SelectItem>();
 const widthOptions: SelectSource[] = genOptions([
   ['left', '靠左固定'],
@@ -78,7 +72,7 @@ function setupWatcher() {
 function showMenu() {
   popover.value?.show();
 }
-function setConstrainTop(side: Side) {
+function setConstrain(side: Side) {
   let resizingConstraint = props.shape.resizingConstraint as number;
 
   switch (side) {
@@ -110,7 +104,9 @@ function setConstrainTop(side: Side) {
       break;
     default: break;
   }
+
   editor.value.setResizingConstraint(resizingConstraint);
+  
   controllerInit();  
 }
 function controllerInit() {
@@ -198,42 +194,42 @@ onBeforeUpdate(() => {
             <div
               class="top"
               :style="{color: status('top')}"
-              @click="setConstrainTop('top')"
+              @click="setConstrain('top')"
             >
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
             <div
               class="right"
               :style="{color: status('right')}"
-              @click="setConstrainTop('right')"
+              @click="setConstrain('right')"
             >
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
             <div
               class="bottom"
               :style="{color: status('bottom')}"
-              @click="setConstrainTop('bottom')"
+              @click="setConstrain('bottom')"
             >
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
             <div
               class="left"
               :style="{color: status('left')}"
-              @click="setConstrainTop('left')"
+              @click="setConstrain('left')"
             >
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
             <div 
               class="height" 
-              @click="setConstrainTop('height')"
+              @click="setConstrain('height')"
               :style="{ backgroundColor: status('height') }"/>
             <div
               class="width"
-              @click="setConstrainTop('width')"
+              @click="setConstrain('width')"
               :style="{ backgroundColor: status('width') }"/>
             <div
               class="dot"
-              @click.stop="setConstrainTop('center')"
+              @click.stop="setConstrain('center')"
               :style="{ backgroundColor: status('center')}"></div>
           </div>
         </div>
