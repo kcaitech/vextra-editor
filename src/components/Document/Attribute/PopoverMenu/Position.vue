@@ -1,12 +1,45 @@
 <script setup lang="ts">
 import Popover from '@/components/common/Popover.vue';
-import { ref } from 'vue';
+import { ref, defineProps, onMounted, reactive, computed, onUnmounted, onBeforeUpdate } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
-type Side = 'top' | 'right' | 'bottom' | 'left';
-const { t } = useI18n();
+import { Context } from '@/context';
+import { Shape } from '@kcdesign/data/data/shape';
+import { genOptions } from '@/utils/common';
+import { ResizingConstraints } from '@kcdesign/data/data/model';
 
+type Side = 'top' | 'right' | 'bottom' | 'left' | 'width' | 'height'| 'center';
+interface Controller {
+  right: boolean;
+  width: boolean;
+  left: boolean;
+  bottom: boolean;
+  height: boolean;
+  top: boolean;
+}
+const props = defineProps<{
+    context: Context,
+    shape: Shape,
+}>();
+const editor = computed(() => {
+    return props.context.editor4Shape(props.shape);
+})
+let shape: Shape | undefined;
+const reflush = ref(0);
+const watcher = () => {
+    reflush.value++;
+}
+
+const { t } = useI18n();
 const popover = ref();
+const controller: Controller = reactive({
+  right: false,
+  width: false,
+  left: false,
+  bottom: false,
+  height: false,
+  top: false
+});
 
 const constraintLeft = ref<boolean>(false);
 const constraintTop = ref<boolean>(false);
@@ -29,42 +62,118 @@ const heightOptions: SelectSource[] = genOptions([
   ['tb', '上下固定'],
   ['centerv', '居中'],
   ['heightWithContainer', '跟随缩放']
-])
+]);
 
-
-function genOptions(items: string[][]) {
-  return items.map((item: string[], index: number) => {
-    return {
-      id: index,
-      data: {
-        value: item[0],
-        content: item[1]
-      }
+function setupWatcher() {
+    if (!shape) {
+        shape = props.shape;
+        shape.watch(watcher);
     }
-  })
+    else if (shape.id != props.shape.id) {
+        shape.unwatch(watcher);
+        shape = props.shape;
+        shape.watch(watcher);
+    }
 }
 function showMenu() {
-  popover.value?.show()
+  popover.value?.show();
 }
 function setConstrainTop(side: Side) {
+  let resizingConstraint = props.shape.resizingConstraint as number;
+
   switch (side) {
-    case 'top':
-      constraintTop.value  = !constraintTop.value;
-      break;
     case 'right':
-      constraintRight.value  = !constraintRight.value;
+      if (controller.left && controller.width) return;
+      resizingConstraint = resizingConstraint ^ ResizingConstraints.Right;
       break;
-    case 'bottom':
-      constraintBottom.value  = !constraintBottom.value;
+    case 'width':
+      if (controller.left && controller.right) return;
+      resizingConstraint = resizingConstraint ^ ResizingConstraints.Width;
       break;
     case 'left':
-      constraintLeft.value  = !constraintLeft.value;
+      if (controller.width && controller.right) return;
+      resizingConstraint = resizingConstraint ^ ResizingConstraints.Left;
       break;
-    default:
+    case 'bottom':
+      if (controller.height && controller.top) return;
+      resizingConstraint = resizingConstraint ^ ResizingConstraints.Bottom;
       break;
+    case 'height':
+      if (controller.top && controller.bottom) return;
+      resizingConstraint = resizingConstraint ^ ResizingConstraints.Height;
+      break;
+    case 'top':
+      if (controller.height && controller.bottom) return;
+      resizingConstraint = resizingConstraint ^ ResizingConstraints.Top;
+      break;
+    case 'center':
+      break;
+    default: break;
+  }
+  editor.value.setResizingConstraint(resizingConstraint);
+  controllerInit();  
+}
+function controllerInit() {
+  const init = props.shape.resizingConstraint as number;
+  controller.right = Boolean((~init & ResizingConstraints.Right));
+  controller.width = Boolean((~init & ResizingConstraints.Width));
+  controller.left = Boolean((~init & ResizingConstraints.Left));
+  controller.bottom = Boolean((~init & ResizingConstraints.Bottom));
+  controller.height = Boolean((~init & ResizingConstraints.Height));
+  controller.top = Boolean((~init & ResizingConstraints.Top));
+}
+function status(side: Side): string {
+  const disabled = '#e0e0e0';
+  const active = '#0929fa';
+  const normal = '#000000';
+  switch (side) {
+    case 'right':
+      if (controller.left && controller.width) return disabled;
+      if (controller.right) return active;
+      return normal;
+    case 'width':
+      if (controller.left && controller.right) return disabled;
+      if (controller.width) return active;
+      return normal;
+    case 'left':
+      if (controller.right && controller.width) return disabled;
+      if (controller.left) return active;
+      return normal;
+    case 'bottom':
+      if (controller.top && controller.height) return disabled;
+      if (controller.bottom) return active;
+      return normal;
+    case 'height':
+      if (controller.top && controller.bottom) return disabled;
+      if (controller.height) return active;
+      return normal;
+    case 'top':
+      if (controller.bottom && controller.height) return disabled;
+      if (controller.top) return active;
+      return normal;
+    case 'center':
+      if (controller.left && controller.right && controller.bottom && controller.top) return disabled;
+      if (controller.height || controller.width) return active;
+      return normal;
+    default: return '#000000';
   }
 }
 
+// hooks
+onMounted(() => {
+    setupWatcher();
+    controllerInit();
+})
+onUnmounted(() => {
+    if (shape) {
+        shape.unwatch(watcher);
+        shape = undefined;
+    }
+})
+onBeforeUpdate(() => {
+    setupWatcher();
+    controllerInit();
+})
 </script>
 
 <template>
@@ -86,27 +195,46 @@ function setConstrainTop(side: Side) {
             </div>
           </div>
           <div class="control">
-            <div class="top" :class="{active: constraintTop}" @click="setConstrainTop('top')">
+            <div
+              class="top"
+              :style="{color: status('top')}"
+              @click="setConstrainTop('top')"
+            >
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
-            <div class="right" :class="{active: constraintRight}" @click="setConstrainTop('right')">
+            <div
+              class="right"
+              :style="{color: status('right')}"
+              @click="setConstrainTop('right')"
+            >
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
-            <div class="bottom" :class="{active: constraintBottom}" @click="setConstrainTop('bottom')">
+            <div
+              class="bottom"
+              :style="{color: status('bottom')}"
+              @click="setConstrainTop('bottom')"
+            >
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
-            <div class="left" :class="{active: constraintLeft}" @click="setConstrainTop('left')">
+            <div
+              class="left"
+              :style="{color: status('left')}"
+              @click="setConstrainTop('left')"
+            >
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
-            <div class="height" :style="{
-              backgroundColor: (constraintTop && constraintBottom) ? '#0929fa' : '#B6B6B6',
-            }"/>
-            <div class="width" :style="{
-              backgroundColor: (constraintLeft && constraintRight) ? '#0929fa' : '#B6B6B6',
-            }"/>
-            <div class="dot" :style="{
-              backgroundColor: ((constraintTop && constraintBottom) || (constraintLeft && constraintRight)) ? '#0929fa' : '#B6B6B6'
-            }"></div>
+            <div 
+              class="height" 
+              @click="setConstrainTop('height')"
+              :style="{ backgroundColor: status('height') }"/>
+            <div
+              class="width"
+              @click="setConstrainTop('width')"
+              :style="{ backgroundColor: status('width') }"/>
+            <div
+              class="dot"
+              @click.stop="setConstrainTop('center')"
+              :style="{ backgroundColor: status('center')}"></div>
           </div>
         </div>
       </template>

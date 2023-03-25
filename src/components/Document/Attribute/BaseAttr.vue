@@ -140,7 +140,7 @@ onBeforeUpdate(() => {
             <IconText class="td positon" ticon="X" :text="x.toFixed(fix)" @onchange="onChangeX"/>
             <div class="space"></div>
             <IconText class="td positon" ticon="Y" :text="y.toFixed(fix)" @onchange="onChangeY"/>
-            <Position></Position>
+            <Position :context="props.context" :shape="props.shape"></Position>
         </div>
         <div class="tr">
             <IconText class="td frame" ticon="W" :text="w.toFixed(fix)" @onchange="onChangeW"/>

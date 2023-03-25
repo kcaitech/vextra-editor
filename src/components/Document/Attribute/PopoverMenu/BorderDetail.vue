@@ -11,7 +11,7 @@ import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue'
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
 import { Border, BorderPosition, BorderStyle, MarkerType } from "@kcdesign//data/data/style";
-import { genOptions } from '@/utils/common'
+import { genOptions } from '@/utils/common';
 
 const props = defineProps<{
     context: Context,
@@ -24,28 +24,19 @@ const editor = computed(() => {
     return props.context.editor4Shape(props.shape);
 });
 const popover = ref();
-const borderStyle = ref<SelectItem>({
-  value: 'dash',
-  content: t('attr.dash')
-});
+const borderStyle = ref<SelectItem>({ value: 'dash', content: t('attr.dash') });
 const borderStyleOptionsSource: SelectSource[] = genOptions([
   ['solid', t('attr.solid')],
   ['dash', t('attr.dash')]
 ]);
-const position = ref<SelectItem>({
-  value: 0,
-  content: t('attr.center')
-});
+const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
   [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
   [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
   [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
 ]);
 
-const borderFrontStyle = ref<SelectItem>({
-  value: MarkerType.Line,
-  content: MarkerType.Line
-});
+const borderFrontStyle = ref<SelectItem>({ value: MarkerType.Line, content: MarkerType.Line });
 const borderFrontStyleOptionsSource: SelectSource[] = genOptions([
   [MarkerType.Line, MarkerType.Line],
   [MarkerType.OpenArrow, MarkerType.OpenArrow],
@@ -57,10 +48,7 @@ const borderFrontStyleOptionsSource: SelectSource[] = genOptions([
   [MarkerType.FallT, MarkerType.FallT],
 ]);
 
-const borderEndStyle = ref<SelectItem>({
-  value: MarkerType.Line,
-  content: `end-${MarkerType.Line}`
-});
+const borderEndStyle = ref<SelectItem>({ value: MarkerType.Line, content: `end-${MarkerType.Line}` });
 const borderEndStyleOptionsSource: SelectSource[] = genOptions([
   [MarkerType.Line, `end-${MarkerType.Line}`],
   [MarkerType.OpenArrow, `end-${MarkerType.OpenArrow}`],
