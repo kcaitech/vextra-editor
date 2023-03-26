@@ -52,14 +52,9 @@ onUnmounted(() => {
     <div v-else class="back-setting-container">
         <span>{{ t('attr.background') }}</span>
         <div class="setting">
-            <div>
-                <label>{{ t('attr.color') }}:</label>
-                <ColorPicker :color="new Color(1, 88, 88, 88)"></ColorPicker>
-            </div>
-            <div>
-                <label>{{ t('attr.alpha') }}:</label>
-                <input type="text">
-            </div>
+            <ColorPicker class="color" :color="new Color(1, 239, 239, 239)"></ColorPicker>
+            <input type="text" :value="'#EFEFEF'" :spellcheck ="false">
+            <input type="text" :value="1">
         </div>
         
     </div>
@@ -76,13 +71,31 @@ section {
         padding: var(--default-padding);
         .setting {
             width: 100%;
+            height: 32px;
             max-width: 336px;
-            > div {
-                margin: var(--default-margin-half) 0px;
-                display: flex;
-                > label {
-                    flex: 0 0 64px;
-                }
+            align-items: center;
+            box-sizing: border-box;
+            padding: 0 var(--default-padding);
+            background-color: var(--input-background);
+            border-radius: var(--default-radius);
+            margin-top: var(--default-margin-half);
+            display: flex;
+            > .color {
+                flex: 0 0 16px;
+            }
+            > input {
+                display: block;
+                outline: none;
+                border: none;
+                background: transparent;
+                width: 120px;
+                flex-shrink: 1;
+                margin-left: var(--default-margin);
+            }
+            > input + input {
+                width: 50px;
+                flex-shrink: 0;
+                margin-left: var(--default-margin);
             }
         }
     }

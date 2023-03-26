@@ -292,6 +292,9 @@ function eyedropper() {
   position: relative;
   width: 16px;
   height: 16px;
+  // border: 1px solid var(--theme-color);
+  border-radius: 2px;
+  box-shadow: 0 0 2px var(--theme-color);
   .popover {
     position: absolute;
     width: 240px;
