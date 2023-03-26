@@ -12,9 +12,9 @@ import { Shape } from '@kcdesign/data/data/shape';
 import { Color, Fill, ContextSettings } from "@kcdesign/data/data/style";
 import { FillType, BlendMode } from '@kcdesign/data/data/classes';
 import { Reg_HEX } from "@/utils/RegExp";
-import TypeHeader from './TypeHeader.vue';
+import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
-import ColorPicker from './PopoverMenu/ColorPicker.vue';
+import ColorPicker from '@/components/common/ColorPicker.vue';
 import { message } from "@/utils/message";
 
 interface FillItem {

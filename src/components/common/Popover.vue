@@ -93,15 +93,10 @@ function popoverClose() {
   </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .__popover-container {
   position: relative;
-  width: 32px;
-  height: 32px;
   outline: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   > .popover {
     position: absolute;
     outline: none;
@@ -128,7 +123,6 @@ function popoverClose() {
           position: absolute;
           right: var(--default-padding);
           top: 4px;
-          color: var(--grey-dark);
           text-align: right;
         }
     }

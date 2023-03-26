@@ -10,7 +10,6 @@ function showMenu() {
   popover.value?.show();
 }
 
-
 </script>
 
 <template>
@@ -21,9 +20,12 @@ function showMenu() {
       :height="100"
       ref="popover"
       :title="t('attr.corner_smoothing')"
+      class="popover"
     >
       <template #trigger>
-        <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+        <div class="trigger">
+          <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+        </div>
       </template>
       <template #body>
       </template>
@@ -33,15 +35,25 @@ function showMenu() {
 
 <style scoped lang="scss">
 .radius-for-ios-container {
-  text-align: center;
-  svg {
-    width: 40%;
-    height: 40%;
-    transition: 0.5s;
-    margin-top: 13px;
+  .popover {
+    width: 32px;
+    height: 32px;
+    .trigger {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      svg {
+        width: 40%;
+        height: 40%;
+        transition: 0.5s;
+      }
+      svg:hover {
+        transform: rotate(90deg);
+      }
+    }
   }
-  svg:hover {
-    transform: rotate(90deg);
-  }
+  
 }
 </style>

@@ -33,18 +33,24 @@ function toggle() {
     optionsContainerVisible.value = !optionsContainerVisible.value;
     nextTick(() => {
         if(optionsContainer.value && selectContainer.value) {
-            optionsContainer.value.focus();
-            optionsContainer.value.addEventListener('blur', onBlur);
-            optionsContainer.value.addEventListener('keydown', esc);
-            optionsContainer.value.style.top = `${-curValueIndex.value * (props.itemHeight || 32)}px`;
-            const selectContainerRect = selectContainer.value.getBoundingClientRect();
+            const selectedToTop = curValueIndex.value * (props.itemHeight || 32);
+            optionsContainer.value.style.top = `${-selectedToTop}px`;
+            const selectContainerRect = selectContainer.value.getBoundingClientRect();            
             const optionsContainerRect = optionsContainer.value.getBoundingClientRect();
             const documentClientHeight = document.documentElement.clientHeight - 30;
-            const optionsContainerTop = selectContainerRect.top - curValueIndex.value * (props.itemHeight || 32);
+            const optionsContainerTop = selectContainerRect.top - selectedToTop;
+
             const over = optionsContainerTop + optionsContainerRect.height - documentClientHeight;
             if (over > 0) {
-                optionsContainer.value.style.top = `${-over - 4}px`;
+                optionsContainer.value.style.top = `${-(selectedToTop + over + 4)}px`;
             }
+            const top = optionsContainerTop - 40;
+            if (top < 0) {
+                optionsContainer.value.style.top = `${-(selectedToTop + top - 4)}px`
+            }
+            optionsContainer.value.addEventListener('keydown', esc);
+            optionsContainer.value.addEventListener('blur', onBlur);
+            optionsContainer.value.focus();
         }
     })
 }

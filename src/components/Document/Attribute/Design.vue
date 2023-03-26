@@ -4,12 +4,12 @@ import { Selection } from '@/context/selection';
 import { Shape } from '@kcdesign/data/data/shape';
 import { ShapeType } from "@kcdesign/data/data/classes"
 import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
-import ColorPicker from './PopoverMenu/ColorPicker.vue';
+import ColorPicker from '../../common/ColorPicker.vue';
 import { Color } from '@kcdesign/data/data/style';
 import { useI18n } from 'vue-i18n';
 import ShapeBaseAttr from './BaseAttr.vue';
-import Fill from './Fill.vue';
-import Border from './Border.vue';
+import Fill from './Fill/Fill.vue';
+import Border from './Border/Border.vue';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 

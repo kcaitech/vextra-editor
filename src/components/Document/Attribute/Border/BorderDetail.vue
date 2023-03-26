@@ -115,9 +115,11 @@ watch(() => props.border, () => {
 
 <template>
   <div class="border-detail-container">
-    <Popover ref="popover" :width="240" :left="-470" :height="256" :title="t('attr.advanced_stroke')">
+    <Popover class="popover" ref="popover" :width="240" :left="-470" :height="256" :title="t('attr.advanced_stroke')">
       <template #trigger>
-        <svg-icon class="trigger" icon-class="gear" @click="showMenu"></svg-icon>
+        <div class="trigger">
+          <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+        </div>
       </template>
       <template #body>
         <div class="options-container">
@@ -184,55 +186,63 @@ watch(() => props.border, () => {
 
 <style scoped lang="scss">
   .border-detail-container {
-    width: 32px;
-    height: 32px;
-    .trigger {
-      width: 40%;
-      height: 40%;
-      transition: 0.5s;
-    }
-    .trigger:hover {
-      transform: rotate(90deg);
-    }
-    .options-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: var(--default-padding);
-      box-sizing: border-box;
-      height: 100%;
-      > div {
+    > .popover {
+      width: 32px;
+      height: 32px;
+      .trigger {
+        width: 100%;
+        height: 100%;
         display: flex;
+        justify-content: center;
         align-items: center;
-        > label {
-          flex: 0 0 72px;
-          text-align: left;
-          box-sizing: border-box;
-          font-weight: var(--font-default-bold);
+        > svg {
+          width: 40%;
+          height: 40%;
+          transition: 0.5s;
         }
-        > .thickness-container {
-          box-sizing: border-box;
-          padding: 0 var(--default-padding);
-          background-color: var(--input-background);
-          width: calc(100% - 72px);
-          height: 32px;
-          border-radius: var(--default-radius);
+        > svg:hover {
+          transform: rotate(90deg);
+        }
+      }
+      .options-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: var(--default-padding);
+        box-sizing: border-box;
+        height: 100%;
+        > div {
           display: flex;
           align-items: center;
-          > svg {
-            flex: 0 0 24px;
-            height: 24px;
+          > label {
+            flex: 0 0 72px;
+            text-align: left;
+            box-sizing: border-box;
+            font-weight: var(--font-default-bold);
           }
-          > input {
-            outline: none;
-            border: none;
-            width: calc(100% - 24px);
-            margin-left: var(--default-margin-half);
-            background-color: transparent;
+          > .thickness-container {
+            box-sizing: border-box;
+            padding: 0 var(--default-padding);
+            background-color: var(--input-background);
+            width: calc(100% - 72px);
+            height: 32px;
+            border-radius: var(--default-radius);
+            display: flex;
+            align-items: center;
+            > svg {
+              flex: 0 0 24px;
+              height: 24px;
+            }
+            > input {
+              outline: none;
+              border: none;
+              width: calc(100% - 24px);
+              margin-left: var(--default-margin-half);
+              background-color: transparent;
+            }
           }
         }
       }
     }
-
   }
 </style>

@@ -174,9 +174,11 @@ onBeforeUpdate(() => {
 
 <template>
   <div class="position-container">
-    <Popover ref="popover" :left="-636" :height="160" :title="t('attr.constraints')">
+    <Popover class="popover" ref="popover" :left="-636" :height="160" :title="t('attr.constraints')">
       <template #trigger>
-        <svg-icon icon-class="gear" @click="showMenu" class="trigger"></svg-icon>
+        <div class="trigger">
+          <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+        </div>
       </template>
       <template #body>
         <div class="position">
@@ -240,96 +242,103 @@ onBeforeUpdate(() => {
 
 <style scoped lang="scss">
 .position-container {
-  text-align: center;
-  .trigger {
-    width: 40%;
-    height: 40%;
-    transition: 0.5s;
-  }
-  .trigger:hover {
-    transform: rotate(90deg);
-  }
-  .position {
-    height: 100%;
-    display: flex;
-    padding: var(--default-padding);
-    box-sizing: border-box;
-    .options {
-      flex: 1 1 auto;
+  > .popover {
+    width: 32px;
+    height: 32px;
+    .trigger {
+      width: 100%;
+      height: 100%;
       display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      > div {
-        display: flex;
-        align-items: center;
-        > label {
-          flex: 0 0 80px;
-          text-align: left;
-          font-weight: var(--font-default-bold);
-        }
+      justify-content: center;
+      align-items: center;
+      > svg {
+        width: 40%;
+        height: 40%;
+        transition: 0.5s;
+      }
+      > svg:hover {
+        transform: rotate(90deg);
       }
     }
-    .control {
-      flex: 0 0 96px;
-      box-sizing: border-box;
-      border: 2px solid var(--grey-dark);
+    .position {
       height: 100%;
-      border-radius: var(--default-radius);
-      background-color: var(--input-background);
-      margin: 0 auto;
-      position: relative;
-      > div {
-        position: absolute;
-        height: 32px;
-        width: 32px;
-        > svg {
-          height: 80%;
-          width: 80%;
-          margin-top: 12px;
+      display: flex;
+      padding: var(--default-padding);
+      box-sizing: border-box;
+      .options {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        > div {
+          display: flex;
+          align-items: center;
+          > label {
+            flex: 0 0 80px;
+            text-align: left;
+            font-weight: var(--font-default-bold);
+          }
         }
       }
-      > .active {
-        color: var(--active-color);
-      }
-      > .top {
-        transform: rotate(180deg) translateX(50%);
-        left: 50%;
-      }
-      > .right {
-        transform: rotate(270deg) translateX(50%);
-        right: 0;
-        top: 50%;
-      }
-      > .bottom {
-        transform: rotate(0deg) translateX(-50%);
-        left: 50%;
-        bottom: 0;
-      }
-      > .left {
-        transform: rotate(90deg) translateX(-50%);
-        left: 0;
-        top: 50%;
-      }
-      .height {
-        width: 3px;
-        height: 20px;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-      }
-      .width {
-        width: 20px;
-        height: 3px;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-      }
-      .dot {
-        width: 3px;
-        height: 3px;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+      .control {
+        flex: 0 0 96px;
+        box-sizing: border-box;
+        border: 2px solid var(--grey-dark);
+        height: 100%;
+        border-radius: var(--default-radius);
+        background-color: var(--input-background);
+        margin: 0 auto;
+        position: relative;
+        > div {
+          position: absolute;
+          height: 32px;
+          width: 32px;
+          > svg {
+            height: 80%;
+            width: 80%;
+            margin-top: 12px;
+          }
+        }
+        > .top {
+          transform: rotate(180deg) translateX(50%);
+          left: 50%;
+        }
+        > .right {
+          transform: rotate(270deg) translateX(50%);
+          right: 0;
+          top: 50%;
+        }
+        > .bottom {
+          transform: rotate(0deg) translateX(-50%);
+          left: 50%;
+          bottom: 0;
+        }
+        > .left {
+          transform: rotate(90deg) translateX(-50%);
+          left: 0;
+          top: 50%;
+        }
+        .height {
+          width: 3px;
+          height: 20px;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
+        .width {
+          width: 20px;
+          height: 3px;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
+        .dot {
+          width: 3px;
+          height: 3px;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
       }
     }
   }

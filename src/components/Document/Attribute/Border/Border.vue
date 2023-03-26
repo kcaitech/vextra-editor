@@ -8,9 +8,9 @@
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
-import TypeHeader from './TypeHeader.vue';
-import BorderDetail from './PopoverMenu/BorderDetail.vue';
-import ColorPicker from './PopoverMenu/ColorPicker.vue';
+import TypeHeader from '../TypeHeader.vue';
+import BorderDetail from './BorderDetail.vue';
+import ColorPicker from '@/components/common/ColorPicker.vue';
 import { useI18n } from 'vue-i18n';
 import { Color, Border, ContextSettings, BorderStyle, MarkerType } from '@kcdesign/data/data/style';
 import { FillType, BlendMode, BorderPosition } from '@kcdesign/data/data/classes';
