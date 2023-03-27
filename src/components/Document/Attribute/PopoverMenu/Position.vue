@@ -293,6 +293,7 @@ onBeforeUpdate(() => {
           position: absolute;
           height: 32px;
           width: 32px;
+          text-align: center;
           > svg {
             height: 80%;
             width: 80%;

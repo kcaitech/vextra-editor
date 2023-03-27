@@ -250,9 +250,6 @@ onBeforeUpdate(() => {
                     width: 30px;
                 }
             }
-            .space {
-                width: 30px;
-            }
             .delete {
                 display: flex;
                 justify-content: center;
