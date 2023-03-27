@@ -7,12 +7,10 @@ import { reactive, defineProps, onMounted, onUnmounted, watchEffect, computed } 
 import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
 import { init as renderinit } from '@/render'
-import { Keyboard } from '@/utils/keyboard';
 
 const props = defineProps<{
     context: Context,
     page: Page,
-    keyboard: Keyboard
 }>();
 const matrix = reactive(new Matrix());
 
@@ -38,12 +36,6 @@ renderinit().then(() => {
     inited.value = true;
 })
 
-const Cursor = computed(() => {
-    const r = props.context.keyboard.rect;
-    console.log('r status', r);
-    if(r) return 'crosshair';
-    return 'auto'
-})
 const width = 800;
 const height = 600;
 const scale_delta = 1.2;
@@ -83,13 +75,13 @@ const viewBox = () => {
     return { x, y, width: Math.max(800, width), height: Math.max(600, height) };
 }
 const reflush = ref(0);
-const watcher = () => {    
+const watcher = () => {       
     reflush.value++;
 }
 const updateCursor = () => {
     cursor.value = 'auto';
-    const isRect = props.keyboard.rect;
-    isRect && (cursor.value = 'crosshair')
+    const isRect = props.context.keyboard.rect;
+    isRect && (cursor.value = 'crosshair');
 } 
 
 let spacePressed = false;
@@ -143,16 +135,16 @@ function onMouseUp(e: MouseEvent) {
 }
 
 onMounted(() => {
-    props.keyboard.watch(updateCursor);
+    props.context.keyboard.watch(updateCursor);    
     props.page.watch(watcher);
-    document.addEventListener("keydown", onKeyDown)
-    document.addEventListener("keyup", onKeyUp)
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
 })
-onUnmounted(() => {
-    props.keyboard.unwatch(updateCursor);
+onUnmounted(() => {    
+    props.context.keyboard.unwatch(updateCursor);
     props.page.unwatch(watcher);
     document.removeEventListener("keydown", onKeyDown);
-    document.removeEventListener("keyup", onKeyUp)
+    document.removeEventListener("keyup", onKeyUp);
 })
 </script>
 

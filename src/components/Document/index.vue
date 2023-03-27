@@ -12,11 +12,12 @@ import ColSplitView from './ColSplitView.vue';
 import { Repository } from '@kcdesign/data/data/transact';
 import { SCREEN_SIZE } from '@/utils/setting';
 import { Keyboard } from '@/utils/keyboard';
+import { KEYBOARD } from '@kcdesign/data/data/model';
 
 const props = defineProps<{data: Document, repo: Repository}>();
 const curPage = shallowRef<Page | undefined>(undefined);
 const keyboard = new Keyboard();
-const context = shallowRef<Context>(new Context(props.data, props.repo, keyboard));
+const context = shallowRef<Context>(new Context(props.data, props.repo));
 (window as any).__context = context.value;
 
 function screenSetting() {
@@ -49,6 +50,11 @@ function selectionWatcher(t: number) {
         curPage.value = ctx.selection.selectedPage;
     }
 }
+function keyR(e: KeyboardEvent) {
+    if (e.code === KEYBOARD.Rect) {
+        context.value.keyboard.keydown_r();
+    }
+}
 
 onMounted(() => {    
     context.value.selection.watch(selectionWatcher);
@@ -57,12 +63,14 @@ onMounted(() => {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
     window.addEventListener('blur', onWindowBlur);
-    keyboard.setupKeyboardListener();
+    // keyboard.setupKeyboardListener();
+    document.addEventListener('keydown', keyR);
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
     window.removeEventListener('blur', onWindowBlur);
-    keyboard.removeKeyboardListener();
+    // keyboard.removeKeyboardListener();
+    document.removeEventListener('keydown', keyR);
 })
 </script>
 
@@ -91,7 +99,6 @@ onUnmounted(() => {
                 id="content"
                 :context="context"
                 :page="(curPage as Page)"
-                :keyboard="keyboard"
             ></ContentView>
         </template>
         <template #slot3>

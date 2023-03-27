@@ -20,23 +20,25 @@ export class Keyboard extends Watchable(Object) {
     }
 
     setupKeyboardListener() {
-        document.addEventListener('keydown', this.handler);
+        document.addEventListener('keydown', e => { this.handler(e, this) });
     }
     removeKeyboardListener() {
-        document.removeEventListener('keydown', this.handler);
+        document.removeEventListener('keydown', e => { this.handler(e, this) });
     }
 
-    handler(e: KeyboardEvent) {        
+    handler(e: KeyboardEvent, keyboard: Keyboard) {                
         switch (e.code) {
             case KEYBOARD.Rect:
-                console.log('-R-');
-                
-                this.__rect = true;
+                this.__rect = true;              
+                keyboard.notify();
                 break;
             default:
                 break;
         }
-        // this.notify(Keyboard.CHANGE_CURSOR);
+    }
+    keydown_r() {
+        this.__rect = true;
+        this.notify();
     }
     get rect(): boolean {
         return this.__rect;

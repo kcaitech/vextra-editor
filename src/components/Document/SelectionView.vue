@@ -79,6 +79,7 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
 }
 
 function updater(_: number) {
+    
     matrix.reset(props.matrix);    
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;

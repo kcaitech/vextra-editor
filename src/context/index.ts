@@ -54,12 +54,12 @@ export class Context extends Watchable(Object) {
     private m_repo: Repository;
     private m_keyboard: Keyboard;
 
-    constructor(data: Document, repo: Repository, keyboard: Keyboard) {
+    constructor(data: Document, repo: Repository) {
         super();
         this.m_data = data;
         this.m_selection = new Selection(data);
         this.m_repo = repo;
-        this.m_keyboard = keyboard;
+        this.m_keyboard = new Keyboard();
     }
 
     get editor(): Editor {
