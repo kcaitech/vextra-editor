@@ -47,7 +47,15 @@ export const attr: any = {
     endMarkerType: '终点样式',
     background: '画布背景',
     color: '颜色',
-    alpha: '不透明度'
+    alpha: '不透明度',
+    'fixed_left': '靠左固定',
+    'fixed_right': '靠右固定',
+    'fixed_left_right': '左右固定',
+    'center': '居中',
+    'follow_container': '跟随容器缩放',
+    'fixed_bottom': '底部固定',
+    'fixed_top': '顶部固定',
+    'fixed_top_bottom': '上下固定'
 }
 
 attr[BorderPosition.Inner] = '内部';

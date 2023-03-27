@@ -47,7 +47,15 @@ export const attr: any = {
     endMarkerType: 'End Marker Type',
     background: 'Background',
     color: 'Color',
-    alpha: 'Alpha'
+    alpha: 'Alpha',
+    'fixed_left': 'Left fixed',
+    'fixed_right': 'Right fixed',
+    'fixed_left_right': 'Fixed left and right',
+    'center': 'Center',
+    'follow_container': 'Follow container',
+    'fixed_bottom': 'Bottom fixed',
+    'fixed_top': 'Top fixed',
+    'fixed_top_bottom': 'Fixed top and bottom'
 }
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';

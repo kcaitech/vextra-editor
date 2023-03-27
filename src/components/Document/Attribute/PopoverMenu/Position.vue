@@ -42,20 +42,20 @@ const controller: Controller = reactive({
 });
 const widthSelected = ref<SelectItem>();
 const widthOptions: SelectSource[] = genOptions([
-  ['left', '靠左固定'],
-  ['right', '靠左固定'],
-  ['lr', '左右固定'],
-  ['centerh', '居中'],
-  ['widthWithContainer', '跟随缩放']
+  ['left', t('attr.fixed_left')],
+  ['right', t('attr.fixed_right')],
+  ['lr', t('attr.fixed_left_right')],
+  ['centerh', t('attr.center')],
+  ['widthWithContainer', t('attr.follow_container')]
 ]);
 
 const heightSelected = ref<SelectItem>();
 const heightOptions: SelectSource[] = genOptions([
-  ['top', '顶部固定'],
-  ['bottom', '底部固定'],
-  ['tb', '上下固定'],
-  ['centerv', '居中'],
-  ['heightWithContainer', '跟随缩放']
+  ['top', t('attr.fixed_top')],
+  ['bottom', t('attr.fixed_bottom')],
+  ['tb', t('attr.fixed_top_bottom')],
+  ['centerv', t('attr.center')],
+  ['heightWithContainer', t('attr.follow_container')]
 ]);
 
 function setupWatcher() {
