@@ -10,11 +10,13 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 import { Repository } from '@kcdesign/data/data/transact';
-import { SCREEN_SIZE } from '@/utils/setting'
+import { SCREEN_SIZE } from '@/utils/setting';
+import { Keyboard } from '@/utils/keyboard';
 
 const props = defineProps<{data: Document, repo: Repository}>();
 const curPage = shallowRef<Page | undefined>(undefined);
-const context = shallowRef<Context>(new Context(props.data, props.repo));
+const keyboard = new Keyboard();
+const context = shallowRef<Context>(new Context(props.data, props.repo, keyboard));
 (window as any).__context = context.value;
 
 function screenSetting() {
@@ -55,10 +57,12 @@ onMounted(() => {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
     window.addEventListener('blur', onWindowBlur);
+    keyboard.setupKeyboardListener();
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
     window.removeEventListener('blur', onWindowBlur);
+    keyboard.removeKeyboardListener();
 })
 </script>
 
@@ -87,6 +91,7 @@ onUnmounted(() => {
                 id="content"
                 :context="context"
                 :page="(curPage as Page)"
+                :keyboard="keyboard"
             ></ContentView>
         </template>
         <template #slot3>

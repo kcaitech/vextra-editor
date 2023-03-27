@@ -26,29 +26,35 @@ const props = defineProps<{
 <template>
     <div class="editor-tools" @dblclick.stop>
         <Cursor></Cursor>
+        <div class="vertical-line" />
+        <Frame></Frame>
         <ToolButton>
             <div class="temp" title="Rectangle">
                 <svg-icon icon-class="rectangle"></svg-icon>
             </div>
         </ToolButton>
-        <Frame></Frame>
-        <Pen></Pen>
+        <!-- <Pen></Pen> -->
         <ToolButton>
             <div class="temp" title="Text">
                 <svg-icon icon-class="text"></svg-icon>
             </div>
         </ToolButton>
+        <!-- <ToolButton>
+            <div class="temp" title="Resource">
+                <svg-icon icon-class="resource"></svg-icon>
+            </div>
+        </ToolButton> -->
+        <!-- <ToolButton>
+            <div class="temp" title="Pointer">
+                <svg-icon icon-class="pointer"></svg-icon>
+            </div>
+        </ToolButton> -->
+        <div class="vertical-line" />
         <ToolButton>
             <div class="temp" title="Resource">
                 <svg-icon icon-class="resource"></svg-icon>
             </div>
         </ToolButton>
-        <ToolButton>
-            <div class="temp" title="Pointer">
-                <svg-icon icon-class="pointer"></svg-icon>
-            </div>
-        </ToolButton>
-        <div class="vertical-line" />
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     

@@ -3,12 +3,17 @@ import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
 import { ref } from '@vue/reactivity';
-import { reactive, defineProps, onMounted, onUnmounted, watchEffect } from 'vue';
+import { reactive, defineProps, onMounted, onUnmounted, watchEffect, computed } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
 import { init as renderinit } from '@/render'
+import { Keyboard } from '@/utils/keyboard';
 
-const props = defineProps<{ context: Context, page: Page }>();
+const props = defineProps<{
+    context: Context,
+    page: Page,
+    keyboard: Keyboard
+}>();
 const matrix = reactive(new Matrix());
 
 const matrixMap = new Map<string, Matrix>();
@@ -27,12 +32,18 @@ watchEffect(() => {
     }
     matrix.reset(m);
 })
-
+const cursor = ref<string>('auto');
 const inited = ref(false);
 renderinit().then(() => {
     inited.value = true;
 })
 
+const Cursor = computed(() => {
+    const r = props.context.keyboard.rect;
+    console.log('r status', r);
+    if(r) return 'crosshair';
+    return 'auto'
+})
 const width = 800;
 const height = 600;
 const scale_delta = 1.2;
@@ -72,19 +83,14 @@ const viewBox = () => {
     return { x, y, width: Math.max(800, width), height: Math.max(600, height) };
 }
 const reflush = ref(0);
-const watcher = () => {
+const watcher = () => {    
     reflush.value++;
 }
-onMounted(() => {
-    props.page.watch(watcher);
-    document.addEventListener("keydown", onKeyDown)
-    document.addEventListener("keyup", onKeyUp)
-})
-onUnmounted(() => {
-    props.page.unwatch(watcher);
-    document.removeEventListener("keydown", onKeyDown);
-    document.removeEventListener("keyup", onKeyUp)
-})
+const updateCursor = () => {
+    cursor.value = 'auto';
+    const isRect = props.keyboard.rect;
+    isRect && (cursor.value = 'crosshair')
+} 
 
 let spacePressed = false;
 const STATE_NONE = 0;
@@ -136,10 +142,24 @@ function onMouseUp(e: MouseEvent) {
     document.removeEventListener('mouseup', onMouseUp)
 }
 
+onMounted(() => {
+    props.keyboard.watch(updateCursor);
+    props.page.watch(watcher);
+    document.addEventListener("keydown", onKeyDown)
+    document.addEventListener("keyup", onKeyUp)
+})
+onUnmounted(() => {
+    props.keyboard.unwatch(updateCursor);
+    props.page.unwatch(watcher);
+    document.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("keyup", onKeyUp)
+})
 </script>
 
 <template>
-    <div @wheel.passive="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited">
+    <div @wheel.passive="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited"
+        :style="{ cursor: cursor }"
+    >
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"

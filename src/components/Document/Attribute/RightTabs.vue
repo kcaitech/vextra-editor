@@ -13,7 +13,9 @@ import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{
+    context: Context
+}>();
 
 // type Tab = "Design" | "Prototype" | "Inspect";
 type Tab = "Design" | "Inspect";

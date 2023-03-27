@@ -88,7 +88,7 @@ function onMenuBlur() {
 .popover {
   position: absolute;
   z-index: 999;
-  width: 360px;
+  width: 120px;
   height: 100px;
   background-color: var(--theme-color);
   border-radius: 4px;
