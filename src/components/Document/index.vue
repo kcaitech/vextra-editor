@@ -11,12 +11,11 @@ import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 import { Repository } from '@kcdesign/data/data/transact';
 import { SCREEN_SIZE } from '@/utils/setting';
-import { Keyboard } from '@/utils/keyboard';
-import { KEYBOARD } from '@kcdesign/data/data/model';
+import { KeyboardKeys } from '@/utils/keyboard';
+import { Tools } from '@/context/toolbar';
 
 const props = defineProps<{data: Document, repo: Repository}>();
 const curPage = shallowRef<Page | undefined>(undefined);
-const keyboard = new Keyboard();
 const context = shallowRef<Context>(new Context(props.data, props.repo));
 (window as any).__context = context.value;
 
@@ -50,9 +49,16 @@ function selectionWatcher(t: number) {
         curPage.value = ctx.selection.selectedPage;
     }
 }
-function keyR(e: KeyboardEvent) {
-    if (e.code === KEYBOARD.Rect) {
+function keyboardEventHandler(e: KeyboardEvent) {
+    if (e.code === KeyboardKeys.R) {
         context.value.keyboard.keydown_r();
+        context.value.toolbar.setCurrent(Tools.PattnerR);
+    } else if (e.code === KeyboardKeys.V) {
+        context.value.keyboard.keydown_v();
+        context.value.toolbar.setCurrent(Tools.Cursor);
+    } else if (e.code === KeyboardKeys.L) {
+        context.value.keyboard.keydown_r();
+        context.value.toolbar.setCurrent(Tools.PattnerL);
     }
 }
 
@@ -63,14 +69,12 @@ onMounted(() => {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
     window.addEventListener('blur', onWindowBlur);
-    // keyboard.setupKeyboardListener();
-    document.addEventListener('keydown', keyR);
+    document.addEventListener('keydown', keyboardEventHandler);
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
     window.removeEventListener('blur', onWindowBlur);
-    // keyboard.removeKeyboardListener();
-    document.removeEventListener('keydown', keyR);
+    document.removeEventListener('keydown', keyboardEventHandler);
 })
 </script>
 

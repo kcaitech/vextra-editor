@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, watch } from 'vue';
+import { ref, nextTick, watch, defineProps } from 'vue';
 import ToolButton from '../ToolButton.vue';
 
 type Button = InstanceType<typeof ToolButton>
@@ -7,6 +7,9 @@ type Button = InstanceType<typeof ToolButton>
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
+const props = defineProps<{
+  active: boolean
+}>();
 
 function showMenu() {
   if (popoverVisible.value) return popoverVisible.value = false;
@@ -48,7 +51,7 @@ function onMenuBlur() {
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
   
   </div>
-  <ToolButton ref="button">
+  <ToolButton ref="button" :selected="props.active">
     <div class="svg-container" title="Cursor">
       <svg-icon icon-class="cursor"></svg-icon>
     </div>

@@ -3,10 +3,12 @@ import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
 import { ref } from '@vue/reactivity';
-import { reactive, defineProps, onMounted, onUnmounted, watchEffect, computed } from 'vue';
+import { reactive, defineProps, onMounted, onUnmounted, watchEffect } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
-import { init as renderinit } from '@/render'
+import { init as renderinit } from '@/render';
+import { CursorType } from '@/utils/mouse';
+import { KeyboardKeys } from '@/utils/keyboard';
 
 const props = defineProps<{
     context: Context,
@@ -30,7 +32,7 @@ watchEffect(() => {
     }
     matrix.reset(m);
 })
-const cursor = ref<string>('auto');
+const cursor = ref<CursorType>(CursorType.Auto);
 const inited = ref(false);
 renderinit().then(() => {
     inited.value = true;
@@ -79,9 +81,9 @@ const watcher = () => {
     reflush.value++;
 }
 const updateCursor = () => {
-    cursor.value = 'auto';
+    cursor.value = CursorType.Auto;
     const isRect = props.context.keyboard.rect;
-    isRect && (cursor.value = 'crosshair');
+    isRect && (cursor.value = CursorType.Crosshair);
 } 
 
 let spacePressed = false;
@@ -94,14 +96,21 @@ const dragActiveDis = 3;
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 
 function onKeyDown(e: KeyboardEvent) {    
-    spacePressed = e.code == 'Space';
+    spacePressed = e.code === KeyboardKeys.Space;
+    if (spacePressed && cursor.value === CursorType.Auto) {
+        cursor.value = CursorType.Grab;
+    }
 }
 function onKeyUp(e: KeyboardEvent) {
-    if (spacePressed && e.code == 'Space') spacePressed = false;
+    if (spacePressed && e.code == KeyboardKeys.Space) {
+        cursor.value = CursorType.Auto;
+        spacePressed = false;
+    }
 }
 function onMouseDown(e: MouseEvent) {
     if (spacePressed) {
         e.preventDefault();
+        cursor.value = CursorType.Grabbing;
         state = STATE_CHECKMOVE;
         document.addEventListener("mousemove", onMouseMove)
         document.addEventListener("mouseup", onMouseUp)
@@ -129,6 +138,11 @@ function onMouseMove(e: MouseEvent) {
 }
 function onMouseUp(e: MouseEvent) {
     e.preventDefault();
+    if (spacePressed) {
+        cursor.value = CursorType.Grab;
+    } else {
+        cursor.value = CursorType.Auto;
+    }
     state = STATE_NONE;
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
@@ -150,7 +164,7 @@ onUnmounted(() => {
 
 <template>
     <div @wheel.passive="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited"
-        :style="{ cursor: cursor }"
+        :style="{ cursor }"
     >
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>

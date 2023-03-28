@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
-import { Shape } from '@kcdesign/data/data/shape';
+import { Shape, ShapeType } from '@kcdesign/data/data/shape';
 import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap';
+// import { ShapeFrame } from '@kcdesign/data/data/typesdefine';
+import { v4 as uuid } from "uuid";
+import { viewDepthKey } from 'vue-router';
+import { Style, BoolOp, ShapeFrame, WindingRule, Blur, Point2D, BlurType, BorderOptions, LineCapStyle, LineJoinStyle, Border, ContextSettings, BlendMode, Fill, Shadow } from '@kcdesign/data/data/baseclasses';
+import { BasicArray } from '@kcdesign/data/data/basic';
+
 
 const props = defineProps<{
     context: Context,
@@ -33,32 +39,34 @@ const updater = () => {
     trans.y = props.data.frame.y;
 }
 
-onBeforeMount(() => {
-    updater();
-})
-
-// onMounted(() => {
-//     props.data.watch(updater);
-// })
-
-// onUnmounted(() => {
-//     props.data.unwatch(updater);
-// })
-
 const viewBox2Str = () => {
     return "" + props.viewbox.x + " " + props.viewbox.y + " " + props.viewbox.width + " " + props.viewbox.height;
 }
 
-// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
+function addShape(viewbox: ShapeFrame, type: ShapeType) {
+    const id = uuid();
+    const windingRule = WindingRule.EvenOdd;
+    const blur = new Blur(false,new Point2D(0, 0), 0, BlurType.Gaussian);
+    const borderOptions = new BorderOptions(false, LineCapStyle.Butt, LineJoinStyle.Miter);
+    const borders =  new BasicArray<Border>();
+    const contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    const fills = new BasicArray<Fill>();
+    const innerShadows = new BasicArray<Shadow>();
+    const shadows = new BasicArray<Shadow>();
+    const style = new Style(10, windingRule, blur, borderOptions, borders, contextSettings, fills, innerShadows, shadows);
+    const shape = new Shape(id, 'rectangle', type, viewbox, style, BoolOp.None);
+}
 
 function onClick(e: MouseEvent) {
-    // console.log(e);
-    // console.log(proxy?.$el);
-    // console.log(getCurrentInstance());
+    const { offsetX, offsetY } = e;
+    console.log('offsetX', offsetX);
+    console.log('offsetY', offsetY);
+
+    const viewbox = new ShapeFrame(offsetX, offsetY, 100, 100);
+    addShape(viewbox, ShapeType.Rectangle);
 }
 
 onBeforeUpdate(() => {
-    // console.log("page",props.data.id)
     updater();
 })
 
@@ -66,6 +74,9 @@ const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
 }
+onBeforeMount(() => {
+    updater();
+})
 onMounted(() => {
     props.data.watch(watcher);
 })
@@ -80,7 +91,8 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="props.width" :height="props.height" @click="onClick"
         preserveAspectRatio="xMinYMin meet"
         :style="{ transform: matrix }"
-        :reflush="reflush !== 0 ? reflush : undefined">
+        :reflush="reflush !== 0 ? reflush : undefined"
+    >
 
         <defs>
             <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">

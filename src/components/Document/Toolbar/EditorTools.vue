@@ -6,49 +6,53 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\EditorTools.vue
 -->
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, onMounted, onUnmounted, ref, computed } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import ToolButton from './ToolButton.vue';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
-import Pen from "./Buttons/Pen.vue";
 import GroupUngroup from "./GroupUngroup.vue";
+import Pattern from "./Buttons/Pattern.vue";
+import { Tools } from "@/context/toolbar";
 
 const props = defineProps<{ 
     context: Context,
     selection: Selection
 }>();
 
+const selected = ref<Tools>(Tools.Cursor);
 
+
+const isPatternSelect = computed<boolean>(() => [Tools.PattnerL, Tools.PattnerR].includes(selected.value));
+
+function patternSelect(pattern: Tools) {
+    props.context.toolbar.setCurrent(pattern);
+}
+
+function update() {    
+    selected.value = props.context.toolbar.active;
+}
+// hooks
+onMounted(() => {
+    props.context.toolbar.watch(update);
+});
+onUnmounted(() => {
+    props.context.toolbar.unwatch(update);
+})
 </script>
 
 <template>
     <div class="editor-tools" @dblclick.stop>
-        <Cursor></Cursor>
+        <Cursor :active="selected === Tools.Cursor"></Cursor>
         <div class="vertical-line" />
         <Frame></Frame>
-        <ToolButton>
-            <div class="temp" title="Rectangle">
-                <svg-icon icon-class="rectangle"></svg-icon>
-            </div>
-        </ToolButton>
-        <!-- <Pen></Pen> -->
+        <Pattern :active="isPatternSelect" :pattern="isPatternSelect ? selected : undefined" @select="patternSelect"></Pattern>
         <ToolButton>
             <div class="temp" title="Text">
                 <svg-icon icon-class="text"></svg-icon>
             </div>
         </ToolButton>
-        <!-- <ToolButton>
-            <div class="temp" title="Resource">
-                <svg-icon icon-class="resource"></svg-icon>
-            </div>
-        </ToolButton> -->
-        <!-- <ToolButton>
-            <div class="temp" title="Pointer">
-                <svg-icon icon-class="pointer"></svg-icon>
-            </div>
-        </ToolButton> -->
         <div class="vertical-line" />
         <ToolButton>
             <div class="temp" title="Resource">

@@ -47,6 +47,7 @@ declare module '@vue/runtime-core' {
     PageItem: typeof import('./src/components/Document/Navigation/PageItem.vue')['default']
     PageList: typeof import('./src/components/Document/Navigation/PageList.vue')['default']
     PageView: typeof import('./src/components/Document/Content/PageView.vue')['default']
+    Pattern: typeof import('./src/components/Document/Toolbar/Buttons/Pattern.vue')['default']
     Pen: typeof import('./src/components/Document/Toolbar/Buttons/Pen.vue')['default']
     Popover: typeof import('./src/components/common/Popover.vue')['default']
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
