@@ -149,13 +149,15 @@ function onMouseUp(e: MouseEvent) {
 }
 
 onMounted(() => {
-    props.context.keyboard.watch(updateCursor);    
+    props.context.keyboard.watch(updateCursor);
+    props.context.toolbar.watch(updateCursor); 
     props.page.watch(watcher);
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
 })
 onUnmounted(() => {    
     props.context.keyboard.unwatch(updateCursor);
+    props.context.toolbar.unwatch(updateCursor);
     props.page.unwatch(watcher);
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("keyup", onKeyUp);

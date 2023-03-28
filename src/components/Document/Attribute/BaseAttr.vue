@@ -42,8 +42,8 @@ function calcFrame() {
     }
 }
 function getRectShapeAttr(shape: Shape) {
-    points.value = (shape as RectShape).pointsCount;
-    radius.value = (shape as RectShape).fixedRadius;
+    points.value = (shape as RectShape).pointsCount || 0;
+    radius.value = (shape as RectShape).fixedRadius || 0;
 }
 function setupWatcher() {
     if (!shape) {

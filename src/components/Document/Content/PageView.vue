@@ -6,8 +6,10 @@ import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref
 import comsMap from './comsmap';
 // import { ShapeFrame } from '@kcdesign/data/data/typesdefine';
 import { v4 as uuid } from "uuid";
-import { viewDepthKey } from 'vue-router';
-import { Style, BoolOp, ShapeFrame, WindingRule, Blur, Point2D, BlurType, BorderOptions, LineCapStyle, LineJoinStyle, Border, ContextSettings, BlendMode, Fill, Shadow } from '@kcdesign/data/data/baseclasses';
+import { Style, BoolOp, ShapeFrame, WindingRule, Blur, Point2D, BlurType,
+    BorderOptions, LineCapStyle, LineJoinStyle, Border, ContextSettings, BlendMode, Fill, Shadow,
+    BorderStyle, BorderPosition, Color, FillType, MarkerType
+} from '@kcdesign/data/data/baseclasses';
 import { BasicArray } from '@kcdesign/data/data/basic';
 
 
@@ -50,25 +52,27 @@ function addShape(viewbox: ShapeFrame, type: ShapeType) {
     const borderOptions = new BorderOptions(false, LineCapStyle.Butt, LineJoinStyle.Miter);
     const borders =  new BasicArray<Border>();
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
+    const color = new Color(1, 0, 0, 0);
+    const borderStyle = new BorderStyle(0, 0);
+    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
     const fills = new BasicArray<Fill>();
     const innerShadows = new BasicArray<Shadow>();
     const shadows = new BasicArray<Shadow>();
     const style = new Style(10, windingRule, blur, borderOptions, borders, contextSettings, fills, innerShadows, shadows);
+    style.borders.push(border);
     const shape = new Shape(id, 'rectangle', type, viewbox, style, BoolOp.None);
+    const page = props.context.selection.selectedPage;
+    if (page) {
+        const editor = props.context.editor4Page(page);
+        editor.insert(page, 2, shape)
+    }
 }
 
 function onClick(e: MouseEvent) {
     const { offsetX, offsetY } = e;
-    console.log('offsetX', offsetX);
-    console.log('offsetY', offsetY);
-
     const viewbox = new ShapeFrame(offsetX, offsetY, 100, 100);
     addShape(viewbox, ShapeType.Rectangle);
 }
-
-onBeforeUpdate(() => {
-    updater();
-})
 
 const reflush = ref(0);
 const watcher = () => {
@@ -82,6 +86,9 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
+})
+onBeforeUpdate(() => {
+    updater();
 })
 
 </script>
