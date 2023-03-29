@@ -2,17 +2,13 @@
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
 import { Shape, ShapeType } from '@kcdesign/data/data/shape';
-import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue';
+import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref, computed } from 'vue';
 import comsMap from './comsmap';
-// import { ShapeFrame } from '@kcdesign/data/data/typesdefine';
-import { v4 as uuid } from "uuid";
-import { Style, BoolOp, ShapeFrame, WindingRule, Blur, Point2D, BlurType,
-    BorderOptions, LineCapStyle, LineJoinStyle, Border, ContextSettings, BlendMode, Fill, Shadow,
-    BorderStyle, BorderPosition, Color, FillType, MarkerType
-} from '@kcdesign/data/data/baseclasses';
-import { BasicArray } from '@kcdesign/data/data/basic';
-
-
+import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
+import { Action } from '@/context/workspace';
+import { useI18n } from 'vue-i18n';
+const pageview = ref<HTMLElement>();
+const { t } = useI18n();
 const props = defineProps<{
     context: Context,
     data: Page,
@@ -26,8 +22,14 @@ const props = defineProps<{
     width: number,
     height: number
 }>();
+const workspace = computed(() => props.context.workspace);
 const childs = new Array<Shape>();
 const trans = {x: 0, y: 0};
+const target = {
+    move: false,
+    x: 0,
+    y: 0
+};
 const updater = () => {
     const cc = props.data.childs.length || 0;
     if (childs.length !== cc) childs.length = cc;
@@ -46,32 +48,40 @@ const viewBox2Str = () => {
 }
 
 function addShape(viewbox: ShapeFrame, type: ShapeType) {
-    const id = uuid();
-    const windingRule = WindingRule.EvenOdd;
-    const blur = new Blur(false,new Point2D(0, 0), 0, BlurType.Gaussian);
-    const borderOptions = new BorderOptions(false, LineCapStyle.Butt, LineJoinStyle.Miter);
-    const borders =  new BasicArray<Border>();
-    const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const color = new Color(1, 0, 0, 0);
-    const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
-    const fills = new BasicArray<Fill>();
-    const innerShadows = new BasicArray<Shadow>();
-    const shadows = new BasicArray<Shadow>();
-    const style = new Style(10, windingRule, blur, borderOptions, borders, contextSettings, fills, innerShadows, shadows);
-    style.borders.push(border);
-    const shape = new Shape(id, 'rectangle', type, viewbox, style, BoolOp.None);
     const page = props.context.selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        editor.insert(page, 2, shape)
+        const shapesLength = page.childs.length;
+        let name = t(`shape.${ShapeType.Rectangle}`);
+        const repeats: number = page.childs.filter(item => item.type === ShapeType.Rectangle).length;
+        name = repeats ? `${name} ${repeats}` : name; 
+        const shape = editor.create(type, name, viewbox);
+        const insertSuccess = editor.insert(page, shapesLength, shape);
+        if (insertSuccess) {
+            props.context.selection.selectShape(shape);
+        }
     }
 }
 
-function onClick(e: MouseEvent) {
-    const { offsetX, offsetY } = e;
-    const viewbox = new ShapeFrame(offsetX, offsetY, 100, 100);
-    addShape(viewbox, ShapeType.Rectangle);
+function onMouseDown(e: MouseEvent) {
+    const action: Action = workspace.value.action;
+    if (action !== Action.Auto) {
+        const { offsetX, offsetY } = e;
+        const viewbox = new ShapeFrame(offsetX - 20, offsetY - 20, 100, 100);
+        addShape(viewbox, ShapeType.Rectangle);
+        workspace.value.setAction(Action.Auto);
+        target.x = offsetX - 20;
+        target.y = offsetY - 20;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp)
+    }
+}
+function onMouseMove(e: MouseEvent) {
+    
+}
+function onMouseUp(e: MouseEvent) {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
 }
 
 const reflush = ref(0);
@@ -95,10 +105,12 @@ onBeforeUpdate(() => {
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="props.width" :height="props.height" @click="onClick"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="props.width" :height="props.height"
+        @mousedown="onMouseDown"
         preserveAspectRatio="xMinYMin meet"
         :style="{ transform: matrix }"
         :reflush="reflush !== 0 ? reflush : undefined"
+        ref="pageview"
     >
 
         <defs>

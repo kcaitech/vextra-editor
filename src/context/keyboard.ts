@@ -1,4 +1,5 @@
 import { Watchable } from "@kcdesign/data/data/basic";
+import { WorkSpace, Action } from "./workspace";
 export enum KeyboardKeys {
     Space = 'Space',
     R = 'KeyR',
@@ -16,11 +17,9 @@ export class Keyboard extends Watchable(Object) {
     }
     keydown_r() {
         this.__rect = true;
-        this.notify();
     }
     keydown_v() {
         this.__rect = false;
-        this.notify();
     }
     get rect(): boolean {
         return this.__rect;

@@ -19,8 +19,8 @@ const button = ref<Button>();
 const container =  ref<HTMLDivElement>();
 
 const patterns = ((items: [string, Tools, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2]}))))([
-    ['Rectangle', Tools.PattnerR, 'R'],
-    ['Line', Tools.PattnerL, 'L']
+    ['Rectangle', Tools.PatternRectangle, 'R'],
+    ['Line', Tools.PatternLine, 'L']
 ]);
 
 function showMenu() {

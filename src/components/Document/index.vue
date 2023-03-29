@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
+import { defineProps, onMounted, onUnmounted, shallowRef, computed } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import { Document } from "@kcdesign/data/data/document";
@@ -11,13 +11,13 @@ import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 import { Repository } from '@kcdesign/data/data/transact';
 import { SCREEN_SIZE } from '@/utils/setting';
-import { KeyboardKeys } from '@/utils/keyboard';
-import { Tools } from '@/context/toolbar';
+import { KeyboardKeys, WorkSpace } from '@/context/workspace';
 
 const props = defineProps<{data: Document, repo: Repository}>();
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(props.data, props.repo));
 (window as any).__context = context.value;
+const workspace = computed<WorkSpace>(() => context.value.workspace);
 
 function screenSetting() {
     const element = document.documentElement;
@@ -51,14 +51,11 @@ function selectionWatcher(t: number) {
 }
 function keyboardEventHandler(e: KeyboardEvent) {
     if (e.code === KeyboardKeys.R) {
-        context.value.keyboard.keydown_r();
-        context.value.toolbar.setCurrent(Tools.PattnerR);
+        workspace.value.keydown_r();
     } else if (e.code === KeyboardKeys.V) {
-        context.value.keyboard.keydown_v();
-        context.value.toolbar.setCurrent(Tools.Cursor);
+        workspace.value.keydown_v();
     } else if (e.code === KeyboardKeys.L) {
-        context.value.keyboard.keydown_r();
-        context.value.toolbar.setCurrent(Tools.PattnerL);
+        workspace.value.keydown_l();
     }
 }
 

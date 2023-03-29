@@ -13,41 +13,40 @@ import ToolButton from './ToolButton.vue';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
-import Pattern from "./Buttons/Pattern.vue";
-import { Tools } from "@/context/toolbar";
+import Rect from "./Buttons/Rect.vue";
+import { Action, WorkSpace } from "@/context/workspace";
 
 const props = defineProps<{ 
     context: Context,
     selection: Selection
 }>();
 
-const selected = ref<Tools>(Tools.Cursor);
+const workspace = computed<WorkSpace>(() => props.context.workspace)
 
+const selected = ref<Action>(Action.Auto);
 
-const isPatternSelect = computed<boolean>(() => [Tools.PattnerL, Tools.PattnerR].includes(selected.value));
-
-function patternSelect(pattern: Tools) {
-    props.context.toolbar.setCurrent(pattern);
+function select(action: Action) {
+    workspace.value.setAction(action);
 }
 
 function update() {    
-    selected.value = props.context.toolbar.active;
+    selected.value = workspace.value.action;
 }
 // hooks
 onMounted(() => {
-    props.context.toolbar.watch(update);
+    props.context.workspace.watch(update);
 });
 onUnmounted(() => {
-    props.context.toolbar.unwatch(update);
+    props.context.workspace.unwatch(update);
 })
 </script>
 
 <template>
     <div class="editor-tools" @dblclick.stop>
-        <Cursor :active="selected === Tools.Cursor"></Cursor>
+        <Cursor :active="selected === Action.Auto"></Cursor>
         <div class="vertical-line" />
         <Frame></Frame>
-        <Pattern :active="isPatternSelect" :pattern="isPatternSelect ? selected : undefined" @select="patternSelect"></Pattern>
+        <Rect @select="select" :active="selected === Action.AddRect" ></Rect>
         <ToolButton>
             <div class="temp" title="Text">
                 <svg-icon icon-class="text"></svg-icon>

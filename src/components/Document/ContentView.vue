@@ -7,8 +7,7 @@ import { reactive, defineProps, onMounted, onUnmounted, watchEffect } from 'vue'
 import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
 import { init as renderinit } from '@/render';
-import { CursorType } from '@/utils/mouse';
-import { KeyboardKeys } from '@/utils/keyboard';
+import { Action, CursorType, KeyboardKeys } from '@/context/workspace';
 
 const props = defineProps<{
     context: Context,
@@ -43,7 +42,6 @@ const height = 600;
 const scale_delta = 1.2;
 const scale_delta_ = 1 / scale_delta;
 
-// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const root = ref<HTMLDivElement>();
 function offset2Root() {
     let el = root.value as HTMLElement;
@@ -80,11 +78,6 @@ const reflush = ref(0);
 const watcher = () => {       
     reflush.value++;
 }
-const updateCursor = () => {
-    cursor.value = CursorType.Auto;
-    const isRect = props.context.keyboard.rect;
-    isRect && (cursor.value = CursorType.Crosshair);
-} 
 
 let spacePressed = false;
 const STATE_NONE = 0;
@@ -147,17 +140,23 @@ function onMouseUp(e: MouseEvent) {
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 }
+function workspaceUpdate() {
+    const action: Action = props.context.workspace.action;
+    if (action.startsWith('add')) {
+        cursor.value = CursorType.Crosshair
+    } else {
+        cursor.value = CursorType.Auto
+    }
+}
 
 onMounted(() => {
-    props.context.keyboard.watch(updateCursor);
-    props.context.toolbar.watch(updateCursor); 
+    props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
 })
-onUnmounted(() => {    
-    props.context.keyboard.unwatch(updateCursor);
-    props.context.toolbar.unwatch(updateCursor);
+onUnmounted(() => {
+    props.context.workspace.unwatch(workspaceUpdate);
     props.page.unwatch(watcher);
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("keyup", onKeyUp);

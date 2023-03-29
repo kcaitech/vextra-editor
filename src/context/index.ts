@@ -10,8 +10,7 @@ import { ShapeEditor } from "@kcdesign/data/editor/shape";
 import { uploadExForm } from "@kcdesign/data/io/export";
 // import { uploadExForm } from "@kcdesign/data/io/exform/export";
 import { Selection } from "./selection";
-import { Keyboard } from "@/utils/keyboard";
-import { Toolbar } from "./toolbar";
+import { WorkSpace } from "./workspace";
 
 class ShapeNaviShadowMgr implements IDocShadow {
     private __map: Map<string, ShapeNaviShadow> = new Map();
@@ -53,16 +52,14 @@ export class Context extends Watchable(Object) {
     private m_shadows: ShapeNaviShadowMgr | undefined;
     private m_editor?: Editor;
     private m_repo: Repository;
-    private m_keyboard: Keyboard;
-    private m_toolbar: Toolbar;
+    private m_workspace: WorkSpace;
 
     constructor(data: Document, repo: Repository) {
         super();
         this.m_data = data;
         this.m_selection = new Selection(data);
         this.m_repo = repo;
-        this.m_keyboard = new Keyboard();
-        this.m_toolbar = new Toolbar();
+        this.m_workspace =  new WorkSpace();
     }
 
     get editor(): Editor {
@@ -102,11 +99,8 @@ export class Context extends Watchable(Object) {
     get selection() {
         return this.m_selection;
     }
-    get keyboard() {
-        return this.m_keyboard;
-    }
-    get toolbar() {
-        return this.m_toolbar;
+    get workspace() {
+        return this.m_workspace;
     }
 
     // debug

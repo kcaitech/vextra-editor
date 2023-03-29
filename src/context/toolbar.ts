@@ -1,8 +1,9 @@
 import { Watchable } from "@kcdesign/data/data/basic";
 export enum Tools {
+    Auto = 'auto',
     Cursor = 'cursor',
-    PattnerR = 'pattern-rectangle',
-    PattnerL = 'pattern-line'
+    PatternRectangle = 'pattern-rectangle',
+    PatternLine = 'pattern-line'
 }
 export class Toolbar extends Watchable(Object) {
     private __current: Tools = Tools.Cursor;

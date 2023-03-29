@@ -52,6 +52,7 @@ declare module '@vue/runtime-core' {
     Popover: typeof import('./src/components/common/Popover.vue')['default']
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
     RadiusForIos: typeof import('./src/components/Document/Attribute/PopoverMenu/RadiusForIos.vue')['default']
+    Rect: typeof import('./src/components/Document/Toolbar/Buttons/Rect.vue')['default']
     Rectangle: typeof import('./src/components/Document/Content/Rectangle.vue')['default']
     ResourceTab: typeof import('./src/components/Document/Navigation/ResourceTab.vue')['default']
     RightTabs: typeof import('./src/components/Document/Attribute/RightTabs.vue')['default']
