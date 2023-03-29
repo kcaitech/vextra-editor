@@ -4,7 +4,7 @@
  * @FilePath: \kcdesign\src\components\common\IconText.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
+import { defineProps, defineEmits, ref } from "vue";
 const props = defineProps<{
     svgicon?: any,
     icon?: any,
@@ -20,11 +20,49 @@ function onChange(e: Event) {
     const value = (e.currentTarget as any)['value']
     emit("onchange", value);
 }
+const curpt: {x: number, y: number} = {x: 0, y: 0}
+
+const scale: {axleX: number, axleY: number, degX: number, degY: number} = {
+    axleX: 0,
+    axleY: 0,
+    degX: 0,
+    degY: 0
+}
+const onMouseDown = (e:MouseEvent) => {
+    //鼠标按下时的位置
+    curpt.x = e.pageX
+    curpt.y = e.pageY
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+
+}
+
+const onMouseMove = (e: MouseEvent) => {
+    //鼠标移动的距离
+    const mx = e.pageX - curpt.x
+    const my = e.pageY - curpt.y
+    // console.log(mx,'mx');
+
+    scale.axleX = Number((mx / 5).toFixed(2));
+    scale.axleY = Number((mx / 5).toFixed(2));
+    
+    scale.degX = Number((mx / 10).toFixed(2))
+    scale.degY = Number((mx / 10).toFixed(2));
+    console.log(scale,'scale');
+    
+}
+
+const onMouseUp = (e: MouseEvent) => {
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+
+}
 </script>
 
 <template>
 <label class="icontext">
     <svg-icon
+        @mousedown="onMouseDown"
         class="icon"
         v-if="props.svgicon"
         :icon-class="props.svgicon"
@@ -35,7 +73,7 @@ function onChange(e: Event) {
         }"
     ></svg-icon>
     <img class="icon" v-if="props.icon" :src="props.icon" />
-    <span class="icon" v-if="!props.icon && props.ticon" >{{props.ticon}}</span>
+    <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon" >{{props.ticon}}</span>
     <input :value="props.text" v-on:change="onChange"/>
 </label>
 </template>
