@@ -43,7 +43,7 @@ onUnmounted(() => {
 
 <template>
     <div class="editor-tools" @dblclick.stop>
-        <Cursor :active="selected === Action.Auto"></Cursor>
+        <Cursor @select="select" :active="selected === Action.Auto"></Cursor>
         <div class="vertical-line" />
         <Frame></Frame>
         <Rect @select="select" :active="selected === Action.AddRect" ></Rect>
