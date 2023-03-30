@@ -112,6 +112,7 @@ function flipv() {
 }
 
 function onChangeRotate(value: string) {
+    value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return editor.value.rotate(rotate.value);
     editor.value.rotate(newRotate);

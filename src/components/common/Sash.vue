@@ -23,7 +23,7 @@ let isDown = false;
 function onMouseDown(event: MouseEvent) {
     isDown = true;
     draging.value = false;
-    downPt.x = event.screenX;
+    downPt.x = event.screenX;  //当前鼠标的位置
     downPt.y = event.screenY;
     event.preventDefault();
     document.addEventListener('mousemove', onMouseMove)
