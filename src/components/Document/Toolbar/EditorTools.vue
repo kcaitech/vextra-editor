@@ -6,49 +6,58 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\EditorTools.vue
 -->
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, onMounted, onUnmounted, ref, computed } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import ToolButton from './ToolButton.vue';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
-import Pen from "./Buttons/Pen.vue";
 import GroupUngroup from "./GroupUngroup.vue";
+import Rect from "./Buttons/Rect.vue";
+import { Action, WorkSpace } from "@/context/workspace";
 
 const props = defineProps<{ 
     context: Context,
     selection: Selection
 }>();
 
+const workspace = computed<WorkSpace>(() => props.context.workspace)
 
+const selected = ref<Action>(Action.Auto);
+
+function select(action: Action) {
+    workspace.value.setAction(action);
+}
+
+function update() {    
+    selected.value = workspace.value.action;
+}
+// hooks
+onMounted(() => {
+    props.context.workspace.watch(update);
+});
+onUnmounted(() => {
+    props.context.workspace.unwatch(update);
+})
 </script>
 
 <template>
     <div class="editor-tools" @dblclick.stop>
-        <Cursor></Cursor>
-        <ToolButton>
-            <div class="temp" title="Rectangle">
-                <svg-icon icon-class="rectangle"></svg-icon>
-            </div>
-        </ToolButton>
+        <Cursor :active="selected === Action.Auto"></Cursor>
+        <div class="vertical-line" />
         <Frame></Frame>
-        <Pen></Pen>
+        <Rect @select="select" :active="selected === Action.AddRect" ></Rect>
         <ToolButton>
             <div class="temp" title="Text">
                 <svg-icon icon-class="text"></svg-icon>
             </div>
         </ToolButton>
+        <div class="vertical-line" />
         <ToolButton>
             <div class="temp" title="Resource">
                 <svg-icon icon-class="resource"></svg-icon>
             </div>
         </ToolButton>
-        <ToolButton>
-            <div class="temp" title="Pointer">
-                <svg-icon icon-class="pointer"></svg-icon>
-            </div>
-        </ToolButton>
-        <div class="vertical-line" />
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     

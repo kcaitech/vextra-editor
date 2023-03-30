@@ -4,12 +4,12 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\ToolButton.vue
 -->
 <template>
-    <div ref="toolButtonEl" :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!selected }">
+    <div ref="toolButtonEl" :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!props.selected }">
         <slot />
     </div>
 </template>
 <script setup lang="ts">
-import { computed, defineProps, ref, defineExpose, onMounted } from 'vue';
+import { computed, defineProps, ref, defineExpose } from 'vue';
 const props = defineProps<{ valid?: boolean, selected?: boolean }>();
 
 const toolButtonEl = ref<HTMLDivElement>();
@@ -18,7 +18,7 @@ defineExpose({
     toolButtonEl
 })
 
-const invalid = computed(() => {
+const invalid = computed(() => {    
     return props.valid === undefined ? false : !props.valid;
 })
 
@@ -39,14 +39,17 @@ const invalid = computed(() => {
 
 .tool-button:hover,
 .tool-button:active {
-    background-color: #333333;
+    background-color: #000;
 }
 
 .tool-button-invalid {
-    color: gray;
+    color: var(--grey-light);
 }
 
 .tool-button-selected {
-    color: blue;
+    background-color: var(--active-color);
+}
+.tool-button-selected:hover {
+    background-color: var(--active-color);
 }
 </style>

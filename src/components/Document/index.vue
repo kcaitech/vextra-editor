@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
+import { defineProps, onMounted, onUnmounted, shallowRef, computed } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import { Document } from "@kcdesign/data/data/document";
@@ -10,12 +10,14 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 import { Repository } from '@kcdesign/data/data/transact';
-import { SCREEN_SIZE } from '@/utils/setting'
+import { SCREEN_SIZE } from '@/utils/setting';
+import { KeyboardKeys, WorkSpace } from '@/context/workspace';
 
 const props = defineProps<{data: Document, repo: Repository}>();
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(props.data, props.repo));
 (window as any).__context = context.value;
+const workspace = computed<WorkSpace>(() => context.value.workspace);
 
 function screenSetting() {
     const element = document.documentElement;
@@ -47,6 +49,15 @@ function selectionWatcher(t: number) {
         curPage.value = ctx.selection.selectedPage;
     }
 }
+function keyboardEventHandler(e: KeyboardEvent) {
+    if (e.code === KeyboardKeys.R) {
+        workspace.value.keydown_r();
+    } else if (e.code === KeyboardKeys.V) {
+        workspace.value.keydown_v();
+    } else if (e.code === KeyboardKeys.L) {
+        workspace.value.keydown_l();
+    }
+}
 
 onMounted(() => {    
     context.value.selection.watch(selectionWatcher);
@@ -55,10 +66,12 @@ onMounted(() => {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
     window.addEventListener('blur', onWindowBlur);
+    document.addEventListener('keydown', keyboardEventHandler);
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
     window.removeEventListener('blur', onWindowBlur);
+    document.removeEventListener('keydown', keyboardEventHandler);
 })
 </script>
 

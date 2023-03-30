@@ -6,9 +6,13 @@ import { ref } from '@vue/reactivity';
 import { reactive, defineProps, onMounted, onUnmounted, watchEffect } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './SelectionView.vue';
-import { init as renderinit } from '@/render'
+import { init as renderinit } from '@/render';
+import { Action, CursorType, KeyboardKeys } from '@/context/workspace';
 
-const props = defineProps<{ context: Context, page: Page }>();
+const props = defineProps<{
+    context: Context,
+    page: Page,
+}>();
 const matrix = reactive(new Matrix());
 
 const matrixMap = new Map<string, Matrix>();
@@ -27,7 +31,7 @@ watchEffect(() => {
     }
     matrix.reset(m);
 })
-
+const cursor = ref<CursorType>(CursorType.Auto);
 const inited = ref(false);
 renderinit().then(() => {
     inited.value = true;
@@ -38,7 +42,6 @@ const height = 600;
 const scale_delta = 1.2;
 const scale_delta_ = 1 / scale_delta;
 
-// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 const root = ref<HTMLDivElement>();
 function offset2Root() {
     let el = root.value as HTMLElement;
@@ -72,19 +75,9 @@ const viewBox = () => {
     return { x, y, width: Math.max(800, width), height: Math.max(600, height) };
 }
 const reflush = ref(0);
-const watcher = () => {
+const watcher = () => {       
     reflush.value++;
 }
-onMounted(() => {
-    props.page.watch(watcher);
-    document.addEventListener("keydown", onKeyDown)
-    document.addEventListener("keyup", onKeyUp)
-})
-onUnmounted(() => {
-    props.page.unwatch(watcher);
-    document.removeEventListener("keydown", onKeyDown);
-    document.removeEventListener("keyup", onKeyUp)
-})
 
 let spacePressed = false;
 const STATE_NONE = 0;
@@ -96,14 +89,21 @@ const dragActiveDis = 3;
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 
 function onKeyDown(e: KeyboardEvent) {    
-    spacePressed = e.code == 'Space';
+    spacePressed = e.code === KeyboardKeys.Space;
+    if (spacePressed && cursor.value === CursorType.Auto) {
+        cursor.value = CursorType.Grab;
+    }
 }
 function onKeyUp(e: KeyboardEvent) {
-    if (spacePressed && e.code == 'Space') spacePressed = false;
+    if (spacePressed && e.code == KeyboardKeys.Space) {
+        cursor.value = CursorType.Auto;
+        spacePressed = false;
+    }
 }
 function onMouseDown(e: MouseEvent) {
     if (spacePressed) {
         e.preventDefault();
+        cursor.value = CursorType.Grabbing;
         state = STATE_CHECKMOVE;
         document.addEventListener("mousemove", onMouseMove)
         document.addEventListener("mouseup", onMouseUp)
@@ -131,15 +131,42 @@ function onMouseMove(e: MouseEvent) {
 }
 function onMouseUp(e: MouseEvent) {
     e.preventDefault();
+    if (spacePressed) {
+        cursor.value = CursorType.Grab;
+    } else {
+        cursor.value = CursorType.Auto;
+    }
     state = STATE_NONE;
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 }
+function workspaceUpdate() {
+    const action: Action = props.context.workspace.action;
+    if (action.startsWith('add')) {
+        cursor.value = CursorType.Crosshair
+    } else {
+        cursor.value = CursorType.Auto
+    }
+}
 
+onMounted(() => {
+    props.context.workspace.watch(workspaceUpdate);
+    props.page.watch(watcher);
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
+})
+onUnmounted(() => {
+    props.context.workspace.unwatch(workspaceUpdate);
+    props.page.unwatch(watcher);
+    document.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("keyup", onKeyUp);
+})
 </script>
 
 <template>
-    <div @wheel.passive="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited">
+    <div @wheel.passive="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited"
+        :style="{ cursor }"
+    >
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"

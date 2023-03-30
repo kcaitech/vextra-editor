@@ -1,4 +1,4 @@
-import { BorderPosition } from "@kcdesign/data/data/typesdefine"
+import { BorderPosition, ShapeType } from "@kcdesign/data/data/typesdefine";
 
 export const system = {
     'illegal_input': 'illegal input!',
@@ -12,7 +12,6 @@ export const home = {
     open_remote_file: "Open remote file",
     new_file: "New file"
 }
-
 
 export const navi = {
     shape: 'Shape',

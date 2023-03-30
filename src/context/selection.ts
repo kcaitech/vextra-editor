@@ -59,6 +59,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_selectShapes.length = 0;
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
+
         this.notify(Selection.CHANGE_PAGE);
     }
 
@@ -72,7 +73,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
                 this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
             } else {
                 this.m_selectShapes.push(shape);
-            }
+            }            
             this.notify(Selection.CHANGE_SHAPE);
             return;
         } else if (this.m_keyboard_onshift) {
@@ -82,7 +83,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_selectShapes.push(shape);
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
-        this.m_hoverShape = undefined;
+        this.m_hoverShape = undefined;        
         this.notify(Selection.CHANGE_SHAPE);
     }
 
