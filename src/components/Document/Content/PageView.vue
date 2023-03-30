@@ -51,12 +51,11 @@ function addShape(viewbox: ShapeFrame, type: ShapeType) {
     const page = props.context.selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapesLength = page.childs.length;
         let name = t(`shape.${ShapeType.Rectangle}`);
         const repeats: number = page.childs.filter(item => item.type === ShapeType.Rectangle).length;
-        name = repeats ? `${name} ${repeats}` : name; 
+        name = repeats ? `${name} ${repeats + 1}` : name; 
         const shape = editor.create(type, name, viewbox);
-        const insertSuccess = editor.insert(page, shapesLength, shape);
+        const insertSuccess = editor.insert(page, 0, shape);
         if (insertSuccess) {
             props.context.selection.selectShape(shape);
         }
@@ -131,6 +130,7 @@ onBeforeUpdate(() => {
 
 <style scoped>
 svg {
+    position: absolute;
     transform-origin: top left;
     background-color: var(--center-content-bg-color);
 }

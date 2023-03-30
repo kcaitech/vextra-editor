@@ -41,6 +41,7 @@ const width = 800;
 const height = 600;
 const scale_delta = 1.2;
 const scale_delta_ = 1 / scale_delta;
+const wheel_step = 20;
 
 const root = ref<HTMLDivElement>();
 function offset2Root() {
@@ -56,13 +57,20 @@ function offset2Root() {
     return {x, y}
 }
 
-function onMouseWheel(e: WheelEvent) {    
+function onMouseWheel(e: WheelEvent) {
     const xy = offset2Root();
     const offsetX = e.x - xy.x;
-    const offsetY = e.y - xy.y;
-    matrix.trans(-offsetX, -offsetY);
-    matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
-    matrix.trans(offsetX, offsetY);
+    const offsetY = e.y - xy.y;    
+    if (e.ctrlKey) {
+        e.preventDefault();
+        matrix.trans(-offsetX, -offsetY);
+        matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
+        matrix.trans(offsetX, offsetY);
+    } else if (e.shiftKey) {
+        matrix.trans(e.deltaY > 0 ? -wheel_step : wheel_step, 0);
+    } else {
+        matrix.trans(0, e.deltaY > 0 ? -wheel_step : wheel_step);
+    }       
 }
 
 const viewBox = () => {
@@ -164,7 +172,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div @wheel.passive="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited"
+    <div @wheel="onMouseWheel" @mousedown="onMouseDown" :reflush="reflush !== 0 ? reflush : undefined" ref="root" v-if="inited"
         :style="{ cursor }"
     >
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"

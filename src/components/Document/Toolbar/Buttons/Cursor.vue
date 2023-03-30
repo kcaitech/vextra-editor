@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, nextTick, watch, defineProps } from 'vue';
+import { ref, nextTick, watch, defineProps, defineEmits } from 'vue';
 import ToolButton from '../ToolButton.vue';
+import { Action } from '@/context/workspace';
 
 type Button = InstanceType<typeof ToolButton>
 
@@ -45,13 +46,19 @@ function onMenuBlur() {
   //   clearTimeout(timer)
   // }, 100)
 }
+const emit = defineEmits<{
+    (e: "select", action: Action): void;
+}>();
+function select(action: Action) {    
+    emit('select', action);
+}
 </script>
 
 <template>
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
   
   </div>
-  <ToolButton ref="button" :selected="props.active">
+  <ToolButton ref="button" :selected="props.active" @click="select(Action.Auto)">
     <div class="svg-container" title="Cursor">
       <svg-icon icon-class="cursor"></svg-icon>
     </div>
