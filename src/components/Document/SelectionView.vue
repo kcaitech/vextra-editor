@@ -234,7 +234,7 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div class="controllerBar" v-for="(bar, index) in controllerBars"
+    <!-- <div class="controllerBar" v-for="(bar, index) in controllerBars"
         :ref="bar[0]"
         :key="index"
         :style="{
@@ -254,7 +254,7 @@ onBeforeUpdate(() => {
             top: '' + (point[2] - 3) + 'px',
             cursor: point[3]
         }"
-    ></div>
+    ></div> -->
     <div v-for="s in data.shapes"
         :class="{selectrect: data.isSelect, hoverrect: data.isHover}" 
         :style="{

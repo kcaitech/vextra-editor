@@ -7,7 +7,6 @@ import comsMap from './comsmap';
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { Action } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
-const pageview = ref<HTMLElement>();
 const { t } = useI18n();
 const props = defineProps<{
     context: Context,
@@ -25,11 +24,6 @@ const props = defineProps<{
 const workspace = computed(() => props.context.workspace);
 const childs = new Array<Shape>();
 const trans = {x: 0, y: 0};
-const target = {
-    move: false,
-    x: 0,
-    y: 0
-};
 const updater = () => {
     const cc = props.data.childs.length || 0;
     if (childs.length !== cc) childs.length = cc;
@@ -62,25 +56,14 @@ function addShape(viewbox: ShapeFrame, type: ShapeType) {
     }
 }
 
-function onMouseDown(e: MouseEvent) {
+function onMouseDown(e: MouseEvent) {    
     const action: Action = workspace.value.action;
     if (action !== Action.Auto) {
         const { offsetX, offsetY } = e;
-        const viewbox = new ShapeFrame(offsetX - 20, offsetY - 20, 100, 100);
+        const viewbox = new ShapeFrame(-100, -100 , 100, 100);
         addShape(viewbox, ShapeType.Rectangle);
         workspace.value.setAction(Action.Auto);
-        target.x = offsetX - 20;
-        target.y = offsetY - 20;
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp)
     }
-}
-function onMouseMove(e: MouseEvent) {
-    
-}
-function onMouseUp(e: MouseEvent) {
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
 }
 
 const reflush = ref(0);
@@ -103,13 +86,16 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" :viewBox="viewBox2Str()" :width="props.width" :height="props.height"
-        @mousedown="onMouseDown"
+    <svg
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
         preserveAspectRatio="xMinYMin meet"
+        :viewBox="viewBox2Str()" :width="props.width" :height="props.height"
         :style="{ transform: matrix }"
         :reflush="reflush !== 0 ? reflush : undefined"
-        ref="pageview"
+        @mousedown="onMouseDown"
     >
 
         <defs>
