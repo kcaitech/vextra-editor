@@ -10,7 +10,8 @@ export const system = {
 export const home = {
     open_local_file: "Open file",
     open_remote_file: "Open remote file",
-    new_file: "New file"
+    new_file: "New file",
+    object_selector: 'Move'
 }
 
 export const navi = {
