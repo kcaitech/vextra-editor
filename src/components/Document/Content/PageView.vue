@@ -60,7 +60,7 @@ function onMouseDown(e: MouseEvent) {
     const action: Action = workspace.value.action;
     if (action !== Action.Auto) {
         const { offsetX, offsetY } = e;
-        const viewbox = new ShapeFrame(-100, -100 , 100, 100);
+        const viewbox = new ShapeFrame(offsetX, offsetY , 100, 100);
         addShape(viewbox, ShapeType.Rectangle);
         workspace.value.setAction(Action.Auto);
     }

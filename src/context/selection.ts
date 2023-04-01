@@ -9,6 +9,10 @@ interface Saved {
     cursorStart: number,
     cursorEnd: number
 }
+export interface AbsolutePosition {
+    x: number,
+    y: number
+}
 
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
@@ -65,6 +69,20 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
+    }
+    getShapesByXY(position: AbsolutePosition): Shape[] {        
+        const shapes: Shape[] = [];
+        const childs = this.m_selectPage?.childs;
+        if (childs?.length) deep(childs, position);
+        return shapes;
+
+        function deep(source: Shape[], position: AbsolutePosition) {
+            for(let i = 0; i < source.length; i++) {                
+                const { x, y, width, height } = source[i].frame;
+                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
+                if (source[i].childs?.length) deep(source[i].childs, position);
+            }
+        }
     }
 
     selectShape(shape: Shape) {

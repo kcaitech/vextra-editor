@@ -4,7 +4,10 @@ export const system = {
     'illegal_input': '输入不合法！',
     select: '请选择！',
     space: '...',
-    empty: '暂无数据'
+    empty: '暂无数据',
+    paste: '粘贴',
+    copy: '复制',
+    'select_layer': '图层选择'
 }
 
 export const home = {
