@@ -24,12 +24,10 @@ function handleClickOutside(event: MouseEvent) {
 }
 
 onMounted(() => {
-  // 监听点击事件，当点击菜单以外的区域时关闭菜单
   document.addEventListener('click', handleClickOutside);
 })
 
 onUnmounted(() => {
-  // 组件销毁时，移除事件监听器
   document.removeEventListener('click', handleClickOutside);
 })
 </script>
