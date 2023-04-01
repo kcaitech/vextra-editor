@@ -185,7 +185,7 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <ControlPoint></ControlPoint>
+    <!-- <ControlPoint></ControlPoint> -->
     <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
         left: '' + s.x + 'px',
         top: '' + s.y + 'px',
