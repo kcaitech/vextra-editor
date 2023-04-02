@@ -1,20 +1,13 @@
-<template>
-  <div class="__context-menu" :style="{ top: `${y}px`, left: `${x}px` }">
-    <div class="header"></div>
-    <slot></slot>
-    <div class="bottom"></div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, defineEmits } from 'vue';
 
 interface Props {
   x: number
   y: number
+  width?: number
 }
 
-defineProps<Props>()
+defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
@@ -31,7 +24,13 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 })
 </script>
-
+<template>
+  <div class="__context-menu" :style="{ top: `${y}px`, left: `${x}px`, width: `${width || 240}px` }">
+    <div class="header"></div>
+    <slot></slot>
+    <div class="bottom"></div>
+  </div>
+</template>
 <style scoped lang="scss">
 .__context-menu {
   position: absolute;

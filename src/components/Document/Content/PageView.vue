@@ -23,7 +23,7 @@ const props = defineProps<{
 }>();
 const workspace = computed(() => props.context.workspace);
 const childs = new Array<Shape>();
-const trans = {x: 0, y: 0};
+const trans = { x: 0, y: 0 };
 const updater = () => {
     const cc = props.data.childs.length || 0;
     if (childs.length !== cc) childs.length = cc;
@@ -40,32 +40,6 @@ const updater = () => {
 const viewBox2Str = () => {
     return "" + props.viewbox.x + " " + props.viewbox.y + " " + props.viewbox.width + " " + props.viewbox.height;
 }
-
-function addShape(viewbox: ShapeFrame, type: ShapeType) {
-    const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        let name = t(`shape.${ShapeType.Rectangle}`);
-        const repeats: number = page.childs.filter(item => item.type === ShapeType.Rectangle).length;
-        name = repeats ? `${name} ${repeats + 1}` : name; 
-        const shape = editor.create(type, name, viewbox);
-        const insertSuccess = editor.insert(page, 0, shape);
-        if (insertSuccess) {
-            props.context.selection.selectShape(shape);
-        }
-    }
-}
-
-function onMouseDown(e: MouseEvent) {    
-    const action: Action = workspace.value.action;
-    if (action !== Action.Auto) {
-        const { offsetX, offsetY } = e;
-        const viewbox = new ShapeFrame(offsetX, offsetY , 100, 100);
-        addShape(viewbox, ShapeType.Rectangle);
-        workspace.value.setAction(Action.Auto);
-    }
-}
-
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -86,17 +60,10 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <svg
-        version="1.1"
-        xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        preserveAspectRatio="xMinYMin meet"
-        :viewBox="viewBox2Str()" :width="props.width" :height="props.height"
-        :style="{ transform: matrix }"
-        :reflush="reflush !== 0 ? reflush : undefined"
-        @mousedown="onMouseDown"
-    >
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox2Str()"
+        :width="props.width" :height="props.height" :style="{ transform: matrix }"
+        :reflush="reflush !== 0 ? reflush : undefined">
 
         <defs>
             <filter id="artboard-shadow" x="-5%" y="-5%" width="110%" height="110%">

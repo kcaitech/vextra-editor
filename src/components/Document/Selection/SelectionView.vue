@@ -4,11 +4,10 @@ import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { Shape } from "@kcdesign/data/data/shape";
 import ControlPoint from "./ControlPoint.vue"
+import { ShapeEditor } from "@kcdesign/data/editor/shape";
 type Side = 'top' | 'right' | 'bottom' | 'left';
 const reflush = ref(0);
-const watcher = () => {
-    reflush.value++;
-}
+const watcher = () => { reflush.value++; }
 const props = defineProps<{
     context: Context,
     matrix: number[],
@@ -38,24 +37,8 @@ const data = reactive<{
     isSelect: false,
     shapes: []
 });
-const editor = computed(() => {
-    return props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-})
-const refresh = ref<number>(0);
+let editor: ShapeEditor;
 const shapes: Array<Shape> = [];
-const controllerBox = {
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-}
-const top = ref<HTMLDivElement>();
-const right = ref<HTMLDivElement>();
-const bottom = ref<HTMLDivElement>();
-const left = ref<HTMLDivElement>();
-const currentTarget = ref<HTMLDivElement>();
-let currentSide: Side | undefined;
-const moveFrom = { x: 0, y: 0 };
 // [side, x, y, width, height, cursor type][];
 const controllerBars: [Side, number, number, number, number, string][] = [
     ['top', 0, 0, 0, 0, 'ns-resize'],
@@ -74,6 +57,7 @@ const controllerPoints: [string, number, number, string][] = [
 const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
+let startPosition = { x: 0, y: 0 };
 
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
@@ -165,9 +149,32 @@ function updater(_: number) {
                 // do nothing
             }
         }
+        setPoint(data.shapes[0]);
     }
 }
-
+function setPoint(s: ShapeSelectData) {
+    controllerPoints[0] = ['lt', s.x, s.y, 'nwse-resize'];
+    controllerPoints[1] = ['rt', s.x + s.width, s.y, 'nesw-resize'];
+    controllerPoints[2] = ['rb', s.x + s.width, s.y + s.height, 'nwse-resize'];
+    controllerPoints[3] = ['lb', s.x, s.y + s.height, 'nesw-resize'];
+    const offset = 13;
+    controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
+}
+function mousedown(e: MouseEvent) {
+    document.addEventListener('mousemove', mousemove);
+    document.addEventListener('mouseup', mouseup);
+    startPosition = { x: e.clientX, y: e.clientY };
+    editor = props.context.editor4Shape(shapes[0]);
+}
+function mousemove(e: MouseEvent) {
+    if (!editor) return
+    editor.translate(e.clientX - startPosition.x, e.clientY - startPosition.y);
+    startPosition = { x: e.clientX, y: e.clientY };
+}
+function mouseup() {
+    document.removeEventListener('mousemove', mousemove);
+    document.removeEventListener('mouseup', mouseup);
+}
 // hooks
 onMounted(() => {
     props.context.selection.watch(updater);
@@ -185,14 +192,19 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <!-- <ControlPoint></ControlPoint> -->
-    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
-        left: '' + s.x + 'px',
-        top: '' + s.y + 'px',
-        width: '' + s.width + 'px',
-        height: '' + s.height + 'px',
-        borderWidth: '' + borderWidth + 'px'
-    }" :key="s.id" :reflush="reflush">
+    <div v-if="data.isSelect">
+        <ControlPoint v-for="(point, index) in controllerPoints" :point="point" :key="index" :shape="shapes[0]"
+            :context="props.context">
+        </ControlPoint>
+    </div>
+    <div @mousedown="mousedown" v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }"
+        :style="{
+            left: '' + s.x + 'px',
+            top: '' + s.y + 'px',
+            width: '' + s.width + 'px',
+            height: '' + s.height + 'px',
+            borderWidth: '' + borderWidth + 'px'
+        }" :key="s.id" :reflush="reflush">
     </div>
 </template>
 

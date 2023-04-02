@@ -7,10 +7,14 @@ import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import { AbsolutePosition } from '@/context/selection';
 import { init as renderinit } from '@/render';
-import { Action, CursorType, KeyboardKeys } from '@/context/workspace';
+import { Action, CursorType, KeyboardKeys, ResultByAction } from '@/context/workspace';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from './Selection/PageViewContextMenuItems.vue';
-import { Shape } from '@kcdesign/data/data/typesdefine';
+import { ShapeType } from '@kcdesign/data/data/typesdefine';
+import { Shape } from "@kcdesign/data/data/shape";
+import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const props = defineProps<{
     context: Context,
     page: Page,
@@ -44,7 +48,8 @@ const cursor = ref<CursorType>(CursorType.Auto);
 const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnPageXY: AbsolutePosition = { x: 0, y: 0 }; // 鼠标在page中的坐标
-const shapesContainsMousedownOnPageXY: Shape[] = [];
+let shapesContainsMousedownOnPageXY: Shape[] = [];
+let contextMenuItems: string[] = [];
 function offset2Root() {
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
@@ -65,7 +70,29 @@ function setMousedownOnPageXY(e: MouseEvent) {
     mousedownOnPageXY.x = clientX - x - transX;
     mousedownOnPageXY.y = clientY - y - transY;
 }
-
+function getMouseOnPageXY(e: MouseEvent): AbsolutePosition {
+    const { clientX, clientY } = e;
+    const { x, y } = offset2Root();
+    const transX = matrix.toArray()[4];
+    const transY = matrix.toArray()[5];
+    return { x: clientX - x - transX, y: clientY - y - transY }
+}
+function addShape(frame: ShapeFrame) {
+    const type = ResultByAction(workspace.value.action);
+    const page = props.context.selection.selectedPage;
+    if (page && type) {
+        const editor = props.context.editor4Page(page);
+        let name = t(`shape.${ShapeType.Rectangle}`);
+        const repeats: number = page.childs.filter(item => item.type === ShapeType.Rectangle).length;
+        name = repeats ? `${name} ${repeats + 1}` : name;
+        const shape = editor.create(type, name, frame);
+        const insertSuccess = editor.insert(page, 0, shape);
+        if (insertSuccess) {
+            props.context.selection.selectShape(shape);
+            workspace.value.setAction(Action.Auto);
+        }
+    }
+}
 function onMouseWheel(e: WheelEvent) {
     const xy = offset2Root();
     const offsetX = e.x - xy.x;
@@ -106,38 +133,74 @@ function onKeyUp(e: KeyboardEvent) {
 }
 function onMouseDown(e: MouseEvent) {
     e.preventDefault();
-    if (e.button === MOUSE_LEFT) {
+    if (e.button === MOUSE_LEFT) { // 左键按下
         if (spacePressed) {
             pageViewDragStart(e);
         } else {
-            setMousedownOnPageXY(e);
-            getShapesByXY();
+            setMousedownOnPageXY(e); // 记录鼠标点下的位置（相对于page）
         }
-    } else if (e.button === MOUSE_RIGHT) {
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    } else if (e.button === MOUSE_RIGHT) { // 右键按下
         contextMenuMount(e);
     }
+}
+function onMouseMove(e: MouseEvent) {
+    e.preventDefault();
+    if (spacePressed) {
+        pageViewDragging(e);
+    }
+}
+function onMouseUp(e: MouseEvent) {
+    e.preventDefault();
+    // 现有情况，不是拖动pageview，便是操作图层
+    if (spacePressed) {
+        pageViewDragEnd();
+    } else {
+        pageEditorOnMoveEnd(e);
+    }
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+}
+function pageEditorOnMoveEnd(e: MouseEvent) {
+    const { x, y } = getMouseOnPageXY(e);
+    const deltaX = Math.abs(x - mousedownOnPageXY.x);
+    const deltaY = Math.abs(y - mousedownOnPageXY.y);
+    const shapeFrame = new ShapeFrame(x, y, deltaX, deltaY);
 
+    const diff = Math.hypot(deltaX, deltaY);
+    if (diff > dragActiveDis) {
+        // todo 抬起之前存在拖动
+    } else {
+        // 抬起之前未存在拖动
+        shapeFrame.height = 100;
+        shapeFrame.width = 100;
+        const action = workspace.value.action;
+        if (action.startsWith('add')) {
+            // todo 添加shape
+            addShape(shapeFrame);
+        } else if (action === Action.Auto) {
+            // 选择图层
+            getShapesByXY(); // 获取与鼠标点击位置相交的所有图层，并选择最上层的图层
+        }
+    }
+    cursor.value = CursorType.Auto;
+}
+function workspaceUpdate() {
+    const action: Action = props.context.workspace.action;
+    if (action.startsWith('add')) {
+        cursor.value = CursorType.Crosshair
+    } else {
+        cursor.value = CursorType.Auto
+    }
 }
 function pageViewDragStart(e: MouseEvent) {
     cursor.value = CursorType.Grabbing;
     state = STATE_CHECKMOVE;
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
     prePt.x = e.screenX;
     prePt.y = e.screenY;
 }
-function getShapesByXY() {
-    const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
-    if (shapes.length) props.context.selection.selectShape(shapes[shapes.length - 1]);
-}
-function contextMenuMount(e: MouseEvent) {
-    const { x, y } = offset2Root();
-    contextMenuPosition.x = e.clientX - x;
-    contextMenuPosition.y = e.clientY - y;
-    contextMenu.value = true;
-}
-function onMouseMove(e: MouseEvent) {
-    e.preventDefault();
+function pageViewDragging(e: MouseEvent) {
     const dx = e.screenX - prePt.x;
     const dy = e.screenY - prePt.y;
     if (state === STATE_MOVEING) {
@@ -154,24 +217,26 @@ function onMouseMove(e: MouseEvent) {
         }
     }
 }
-function onMouseUp(e: MouseEvent) {
-    e.preventDefault();
-    if (spacePressed) {
-        cursor.value = CursorType.Grab;
-    } else {
-        cursor.value = CursorType.Auto;
-    }
+function pageViewDragEnd() {
+    cursor.value = CursorType.Grab;
     state = STATE_NONE;
-    document.removeEventListener('mousemove', onMouseMove)
-    document.removeEventListener('mouseup', onMouseUp)
 }
-function workspaceUpdate() {
-    const action: Action = props.context.workspace.action;
-    if (action.startsWith('add')) {
-        cursor.value = CursorType.Crosshair
-    } else {
-        cursor.value = CursorType.Auto
+function getShapesByXY() {
+    const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
+    if (shapes.length) props.context.selection.selectShape(shapes[shapes.length - 1]);
+}
+function contextMenuMount(e: MouseEvent) {
+    const { x, y } = offset2Root();
+    contextMenuPosition.x = e.clientX - x;
+    contextMenuPosition.y = e.clientY - y;
+    const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
+    contextMenuItems = ['paste', 'copy'];
+    if (shapes.length > 1) {
+        shapesContainsMousedownOnPageXY.length = 0;
+        shapesContainsMousedownOnPageXY = shapes;
+        contextMenuItems.push('layers');
     }
+    contextMenu.value = true;
 }
 
 // hooks
@@ -214,7 +279,9 @@ renderinit().then(() => {
         <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"
             :height="height"></SelectionView>
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenu = false;">
-            <PageViewContextMenuItems></PageViewContextMenuItems>
+            <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
+                :context="props.context" @close="contextMenu = false;">
+            </PageViewContextMenuItems>
         </ContextMenu>
     </div>
 </template>
@@ -223,9 +290,5 @@ renderinit().then(() => {
 div {
     background-color: var(--center-content-bg-color);
     position: relative;
-
-    .menu-options {
-        width: 100%;
-    }
 }
 </style>
