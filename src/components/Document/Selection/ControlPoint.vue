@@ -64,7 +64,8 @@ const onMouseUp = () => {
 <template>
   <div ref="dragContainer" class="drag-container" :style="{
     left: `${point[1]}px`,
-    top: `${point[2]}px`
+    top: `${point[2]}px`,
+    cursor: point[3]
   }" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp">
     <div class="drag-handle" ref="dragHandle">
       <div></div>
@@ -87,7 +88,6 @@ const onMouseUp = () => {
     align-items: center;
 
     >div {
-      cursor: move;
       width: 10px;
       height: 10px;
       border: solid 1px var(--active-color);

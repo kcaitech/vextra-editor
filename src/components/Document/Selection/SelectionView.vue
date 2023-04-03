@@ -47,7 +47,7 @@ const controllerBars: [Side, number, number, number, number, string][] = [
     ['bottom', 0, 0, 0, 0, 'ns-resize'],
     ['left', 0, 0, 0, 0, 'ew-resize']
 ];
-// [point, x, y, cursor type][]
+// [point type, x, y, cursor type][]
 const controllerPoints: [string, number, number, string][] = [
     [CtrlElementType.RectLT, 0, 0, 'nwse-resize'],
     [CtrlElementType.RectRT, 0, 0, 'nesw-resize'],

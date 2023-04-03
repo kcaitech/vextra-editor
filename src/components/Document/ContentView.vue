@@ -229,6 +229,7 @@ function contextMenuMount(e: MouseEvent) {
     const { x, y } = offset2Root();
     contextMenuPosition.x = e.clientX - x;
     contextMenuPosition.y = e.clientY - y;
+    setMousedownOnPageXY(e); // 更新鼠标定位
     const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
     contextMenuItems = ['paste', 'copy'];
     if (shapes.length > 1) {
