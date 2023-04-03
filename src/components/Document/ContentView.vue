@@ -25,7 +25,7 @@ const height = 600;
 const scale_delta = 1.2;
 const scale_delta_ = 1 / scale_delta;
 const wheel_step = 10;
-let spacePressed = false;
+const spacePressed = ref<boolean>(false);
 const STATE_NONE = 0;
 const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
@@ -50,6 +50,8 @@ const root = ref<HTMLDivElement>();
 const mousedownOnPageXY: AbsolutePosition = { x: 0, y: 0 }; // 鼠标在page中的坐标
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
+const selectionIsCtrl = computed(() => !spacePressed.value);
+
 function offset2Root() {
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
@@ -120,21 +122,21 @@ const viewBox = () => {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    spacePressed = e.code === KeyboardKeys.Space;
-    if (spacePressed && cursor.value === CursorType.Auto) {
+    spacePressed.value = e.code === KeyboardKeys.Space;
+    if (spacePressed.value && cursor.value === CursorType.Auto) {
         cursor.value = CursorType.Grab;
     }
 }
 function onKeyUp(e: KeyboardEvent) {
-    if (spacePressed && e.code == KeyboardKeys.Space) {
+    if (spacePressed.value && e.code == KeyboardKeys.Space) {
         cursor.value = CursorType.Auto;
-        spacePressed = false;
+        spacePressed.value = false;
     }
 }
 function onMouseDown(e: MouseEvent) {
     e.preventDefault();
     if (e.button === MOUSE_LEFT) { // 左键按下
-        if (spacePressed) {
+        if (spacePressed.value) {
             pageViewDragStart(e);
         } else {
             setMousedownOnPageXY(e); // 记录鼠标点下的位置（相对于page）
@@ -147,14 +149,14 @@ function onMouseDown(e: MouseEvent) {
 }
 function onMouseMove(e: MouseEvent) {
     e.preventDefault();
-    if (spacePressed) {
+    if (spacePressed.value) {
         pageViewDragging(e);
     }
 }
 function onMouseUp(e: MouseEvent) {
     e.preventDefault();
     // 现有情况，不是拖动pageview，便是操作图层
-    if (spacePressed) {
+    if (spacePressed.value) {
         pageViewDragEnd();
     } else {
         pageEditorOnMoveEnd(e);
@@ -223,7 +225,11 @@ function pageViewDragEnd() {
 }
 function getShapesByXY() {
     const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
-    if (shapes.length) props.context.selection.selectShape(shapes[shapes.length - 1]);
+    if (shapes.length) {
+        props.context.selection.selectShape(shapes.at(-1));
+    } else {
+        props.context.selection.selectShape();
+    }
 }
 function contextMenuMount(e: MouseEvent) {
     const { x, y } = offset2Root();
@@ -277,7 +283,7 @@ renderinit().then(() => {
         @mousedown="onMouseDown">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
             :width="width" :height="height"></PageView>
-        <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"
+        <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width" :is-controller="selectionIsCtrl"
             :height="height"></SelectionView>
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenu = false;">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"

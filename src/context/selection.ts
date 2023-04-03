@@ -85,7 +85,15 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
     }
 
-    selectShape(shape: Shape) {
+    selectShape(shape?: Shape) {
+        if (!shape) {
+            this.m_selectShapes.length = 0;
+            this.m_cursorStart = -1;
+            this.m_cursorEnd = -1;
+            this.m_hoverShape = undefined;        
+            this.notify(Selection.CHANGE_SHAPE);
+            return;
+        }
         if (this.m_keyboard_oncontrol) {
             if (this.isSelectedShape(shape)) {
                 this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);

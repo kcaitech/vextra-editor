@@ -87,10 +87,12 @@ function borderStyleSelect(selected: SelectItem) {
   borderStyle.value = selected;
   const bs = selected.value === 'dash' ? new BorderStyle(10, 10) : new BorderStyle(0, 0);
   editor.value.setBorderStyle(props.index, bs);
+  popover.value.focus();
 }
 function positionSelect(selected: SelectItem) {
   position.value = selected;
   editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
+  popover.value.focus();
 }
 function setThickness(e: Event) {
   const thickness = Number((e.target as HTMLInputElement).value);
@@ -104,6 +106,7 @@ function borderApexStyleSelect(selected: SelectItem) {
     borderFrontStyle.value = selected;
     editor.value.setBorderApexStyle(props.index, selected.value as MarkerType, false);
   }
+  popover.value.focus();
 }
 watch(() => props.border, () => {
   initValue();  
@@ -112,7 +115,7 @@ watch(() => props.border, () => {
 
 <template>
   <div class="border-detail-container">
-    <Popover class="popover" ref="popover" :width="240" :left="-470" :height="256" :title="t('attr.advanced_stroke')">
+    <Popover class="popover" ref="popover" :width="240" :left="-460" :height="256" :title="t('attr.advanced_stroke')">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
@@ -127,8 +130,8 @@ watch(() => props.border, () => {
               :selected="position"
               :item-view="BorderPositonItem"
               :item-height="32"
-              @select="positionSelect"
               :source="positonOptionsSource"
+              @select="positionSelect"
             ></Select>
           </div>
           <!-- 边框厚度 -->

@@ -6,7 +6,6 @@ import { Shape } from "@kcdesign/data/data/shape";
 import ControlPoint from "./ControlPoint.vue"
 import { ShapeEditor } from "@kcdesign/data/editor/shape";
 import { CtrlElementType } from "@/context/workspace";
-type Side = 'top' | 'right' | 'bottom' | 'left';
 const reflush = ref(0);
 const watcher = () => { reflush.value++; }
 const props = defineProps<{
@@ -19,7 +18,8 @@ const props = defineProps<{
         height: number
     },
     width: number,
-    height: number
+    height: number,
+    isController: boolean
 }>();
 interface ShapeSelectData {
     width: number,
@@ -40,15 +40,15 @@ const data = reactive<{
 });
 let editor: ShapeEditor;
 const shapes: Array<Shape> = [];
-// [side, x, y, width, height, cursor type][];
-const controllerBars: [Side, number, number, number, number, string][] = [
-    ['top', 0, 0, 0, 0, 'ns-resize'],
-    ['right', 0, 0, 0, 0, 'ew-resize'],
-    ['bottom', 0, 0, 0, 0, 'ns-resize'],
-    ['left', 0, 0, 0, 0, 'ew-resize']
+// [side type, x, y, width, height, cursor type][];
+const controllerBars: [CtrlElementType, number, number, number, number, string][] = [
+    [CtrlElementType.RectT, 0, 0, 0, 0, 'ns-resize'],
+    [CtrlElementType.RectR, 0, 0, 0, 0, 'ew-resize'],
+    [CtrlElementType.RectB, 0, 0, 0, 0, 'ns-resize'],
+    [CtrlElementType.RectL, 0, 0, 0, 0, 'ew-resize']
 ];
 // [point type, x, y, cursor type][]
-const controllerPoints: [string, number, number, string][] = [
+const controllerPoints: [CtrlElementType, number, number, string][] = [
     [CtrlElementType.RectLT, 0, 0, 'nwse-resize'],
     [CtrlElementType.RectRT, 0, 0, 'nesw-resize'],
     [CtrlElementType.RectRB, 0, 0, 'nwse-resize'],
@@ -95,11 +95,11 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
 }
 
 function updater(_: number) {
-
     matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
-    data.isSelect = !data.isHover && selection.selectedShapes.length > 0;
+    // data.isSelect = !data.isHover && selection.selectedShapes.length > 0;
+    data.isSelect = selection.selectedShapes.length > 0;
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -162,13 +162,14 @@ function setPoint(s: ShapeSelectData) {
     controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
 }
 function mousedown(e: MouseEvent) {
+    if (!props.isController) return;
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
     startPosition = { x: e.clientX, y: e.clientY };
     editor = props.context.editor4Shape(shapes[0]);
 }
 function mousemove(e: MouseEvent) {
-    if (!editor) return
+    if (!editor) return;
     editor.translate(e.clientX - startPosition.x, e.clientY - startPosition.y);
     startPosition = { x: e.clientX, y: e.clientY };
 }
