@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
-import { Shape, ShapeType } from '@kcdesign/data/data/shape';
-import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref, computed } from 'vue';
+import { Shape } from '@kcdesign/data/data/shape';
+import { onBeforeMount, defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from './comsmap';
-import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
-import { Action } from '@/context/workspace';
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
 const props = defineProps<{
     context: Context,
     data: Page,
@@ -21,7 +17,6 @@ const props = defineProps<{
     width: number,
     height: number
 }>();
-const workspace = computed(() => props.context.workspace);
 const childs = new Array<Shape>();
 const trans = { x: 0, y: 0 };
 const updater = () => {

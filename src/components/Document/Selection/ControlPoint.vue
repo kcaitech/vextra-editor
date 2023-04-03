@@ -2,6 +2,7 @@
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
 import { ref, defineProps, computed } from 'vue';
+import { CtrlElementType } from '@/context/workspace';
 interface Props {
   point: [string, number, number, string],
   shape: Shape,
@@ -37,17 +38,17 @@ const onMouseMove = (event: MouseEvent) => {
 }
 
 function change(delta: { x: number, y: number }) {
-  const p = props.point[0];
+  const p = props.point[0];  
   const realXY = props.shape.realXY();
-  if (p === 'lt') {
+  if (p === CtrlElementType.RectLT) {
     editor.value.translateTo(realXY.x + delta.x, realXY.y + delta.y);
     editor.value.expandTo(realXY.width - delta.x, realXY.height - delta.y);
-  } else if (p === 'rt') {
+  } else if (p === CtrlElementType.RectRT) {
     editor.value.translateTo(realXY.x, realXY.y + delta.y);
     editor.value.expandTo(realXY.width + delta.x, realXY.height - delta.y);
-  } else if (p === 'rb') {
+  } else if (p === CtrlElementType.RectRB) {
     editor.value.expandTo(realXY.width + delta.x, realXY.height + delta.y);
-  } else {
+  } else if (p === CtrlElementType.RectLB){
     editor.value.translateTo(realXY.x + delta.x, realXY.y);
     editor.value.expandTo(realXY.width - delta.x, realXY.height + delta.y);
   }

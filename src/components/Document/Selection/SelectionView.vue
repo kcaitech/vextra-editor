@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref, computed } from "vue";
+import { defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { Shape } from "@kcdesign/data/data/shape";
 import ControlPoint from "./ControlPoint.vue"
 import { ShapeEditor } from "@kcdesign/data/editor/shape";
+import { CtrlElementType } from "@/context/workspace";
 type Side = 'top' | 'right' | 'bottom' | 'left';
 const reflush = ref(0);
 const watcher = () => { reflush.value++; }
@@ -48,10 +49,10 @@ const controllerBars: [Side, number, number, number, number, string][] = [
 ];
 // [point, x, y, cursor type][]
 const controllerPoints: [string, number, number, string][] = [
-    ['lt', 0, 0, 'nwse-resize'],
-    ['rt', 0, 0, 'nesw-resize'],
-    ['rb', 0, 0, 'nwse-resize'],
-    ['lb', 0, 0, 'nesw-resize']
+    [CtrlElementType.RectLT, 0, 0, 'nwse-resize'],
+    [CtrlElementType.RectRT, 0, 0, 'nesw-resize'],
+    [CtrlElementType.RectRB, 0, 0, 'nwse-resize'],
+    [CtrlElementType.RectLB, 0, 0, 'nesw-resize']
 ];
 
 const matrix = new Matrix();
@@ -153,10 +154,10 @@ function updater(_: number) {
     }
 }
 function setPoint(s: ShapeSelectData) {
-    controllerPoints[0] = ['lt', s.x, s.y, 'nwse-resize'];
-    controllerPoints[1] = ['rt', s.x + s.width, s.y, 'nesw-resize'];
-    controllerPoints[2] = ['rb', s.x + s.width, s.y + s.height, 'nwse-resize'];
-    controllerPoints[3] = ['lb', s.x, s.y + s.height, 'nesw-resize'];
+    controllerPoints[0] = [CtrlElementType.RectLT, s.x, s.y, 'nwse-resize'];
+    controllerPoints[1] = [CtrlElementType.RectRT, s.x + s.width, s.y, 'nesw-resize'];
+    controllerPoints[2] = [CtrlElementType.RectRB, s.x + s.width, s.y + s.height, 'nwse-resize'];
+    controllerPoints[3] = [CtrlElementType.RectLB, s.x, s.y + s.height, 'nesw-resize'];
     const offset = 13;
     controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
 }

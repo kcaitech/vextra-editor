@@ -1,5 +1,4 @@
 import { Watchable } from "@kcdesign/data/data/basic";
-import { ShapeFrame } from "@kcdesign/data/data/typesdefine";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
 export enum Action {
     Auto = 'auto',
@@ -18,6 +17,16 @@ export enum CursorType {
     Grab = 'grab',
     Grabbing = 'grabbing'
 }
+export enum CtrlElementType {
+    RectL = 'rect-left',
+    RectR = 'rect-top',
+    RectB = 'rect-bottom',
+    RectT = 'rect-top',
+    RectLT = 'rect-left-top',
+    RectRT = 'rect-right-top',
+    RectRB = 'rect-right-bottom',
+    RectLB = 'rect-left-bottom'
+}
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle]
@@ -34,10 +43,6 @@ export class WorkSpace extends Watchable(Object) {
     setAction(action: Action) {
         this.m_current_action = action;
         this.notify();
-    }
-
-    addShape(frame: ShapeFrame) {
-
     }
 
     // keyboard
