@@ -3,12 +3,12 @@ import { defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } fr
 import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { Shape } from "@kcdesign/data/data/shape";
-
+import ControlPoint from "./ControlPoint.vue"
+import { ShapeEditor } from "@kcdesign/data/editor/shape";
+import { CtrlElementType } from "@/context/workspace";
+type Side = 'top' | 'right' | 'bottom' | 'left';
 const reflush = ref(0);
-const watcher = () => {
-    reflush.value++;
-}
-
+const watcher = () => { reflush.value++; }
 const props = defineProps<{
     context: Context,
     matrix: number[],
@@ -38,11 +38,27 @@ const data = reactive<{
     isSelect: false,
     shapes: []
 });
+let editor: ShapeEditor;
 const shapes: Array<Shape> = [];
+// [side, x, y, width, height, cursor type][];
+const controllerBars: [Side, number, number, number, number, string][] = [
+    ['top', 0, 0, 0, 0, 'ns-resize'],
+    ['right', 0, 0, 0, 0, 'ew-resize'],
+    ['bottom', 0, 0, 0, 0, 'ns-resize'],
+    ['left', 0, 0, 0, 0, 'ew-resize']
+];
+// [point type, x, y, cursor type][]
+const controllerPoints: [string, number, number, string][] = [
+    [CtrlElementType.RectLT, 0, 0, 'nwse-resize'],
+    [CtrlElementType.RectRT, 0, 0, 'nesw-resize'],
+    [CtrlElementType.RectRB, 0, 0, 'nwse-resize'],
+    [CtrlElementType.RectLB, 0, 0, 'nesw-resize']
+];
 
 const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
+let startPosition = { x: 0, y: 0 };
 
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
@@ -79,11 +95,11 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
 }
 
 function updater(_: number) {
-    
-    matrix.reset(props.matrix);    
+
+    matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
-    data.isSelect = !data.isHover && selection.selectedShapes.length > 0;    
+    data.isSelect = !data.isHover && selection.selectedShapes.length > 0;
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -110,10 +126,6 @@ function updater(_: number) {
             shapes[0].watch(watcher);
         }
         data.shapes[0] = updateShape(data.shapes[0], selection.hoveredShape as Shape);
-        // data.shapes.length = selection.selectedShapes.length;
-        // for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
-        //     data.shapes[i] = updateShape(data.shapes[i], selection.selectedShapes[i]);
-        // }
     }
     else if (data.isSelect) {
         data.shapes.length = selection.selectedShapes.length;
@@ -138,9 +150,32 @@ function updater(_: number) {
                 // do nothing
             }
         }
+        setPoint(data.shapes[0]);
     }
 }
-
+function setPoint(s: ShapeSelectData) {
+    controllerPoints[0] = [CtrlElementType.RectLT, s.x, s.y, 'nwse-resize'];
+    controllerPoints[1] = [CtrlElementType.RectRT, s.x + s.width, s.y, 'nesw-resize'];
+    controllerPoints[2] = [CtrlElementType.RectRB, s.x + s.width, s.y + s.height, 'nwse-resize'];
+    controllerPoints[3] = [CtrlElementType.RectLB, s.x, s.y + s.height, 'nesw-resize'];
+    const offset = 13;
+    controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
+}
+function mousedown(e: MouseEvent) {
+    document.addEventListener('mousemove', mousemove);
+    document.addEventListener('mouseup', mouseup);
+    startPosition = { x: e.clientX, y: e.clientY };
+    editor = props.context.editor4Shape(shapes[0]);
+}
+function mousemove(e: MouseEvent) {
+    if (!editor) return
+    editor.translate(e.clientX - startPosition.x, e.clientY - startPosition.y);
+    startPosition = { x: e.clientX, y: e.clientY };
+}
+function mouseup() {
+    document.removeEventListener('mousemove', mousemove);
+    document.removeEventListener('mouseup', mouseup);
+}
 // hooks
 onMounted(() => {
     props.context.selection.watch(updater);
@@ -158,36 +193,27 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div v-for="s in data.shapes"
-        :class="{selectrect: data.isSelect, hoverrect: data.isHover}" 
-        :style="{
-            left: '' + s.x + 'px', 
-            top: '' + s.y + 'px', 
-            width: '' + s.width + 'px', 
-            height: '' + s.height + 'px', 
-            borderWidth: '' + borderWidth +'px'
-        }" 
-        :key="s.id"
-        :reflush="reflush"
-    >
+    <div v-if="data.isSelect">
+        <ControlPoint v-for="(point, index) in controllerPoints" :point="point" :key="index" :shape="shapes[0]"
+            :context="props.context">
+        </ControlPoint>
     </div>
-
+    <div @mousedown="mousedown" v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }"
+        :style="{
+            left: '' + s.x + 'px',
+            top: '' + s.y + 'px',
+            width: '' + s.width + 'px',
+            height: '' + s.height + 'px',
+            borderWidth: '' + borderWidth + 'px'
+        }" :key="s.id" :reflush="reflush">
+    </div>
 </template>
 
-<style scoped>
-.circle {
-    width: 5px;
-    height: 5px;
-    background-color: blue;
-    border-radius: 5px;
-    -webkit-border-radius: 5px;
-}
-
+<style scoped lang="scss">
 .selectrect {
-    background-color: none;
     border-radius: 0px;
     border-style: solid;
-    border-color: rgb(0, 0, 205, 0.25);
+    border-color: var(--active-color);
     position: absolute;
 }
 
@@ -195,7 +221,7 @@ onBeforeUpdate(() => {
     background-color: none;
     border-radius: 0px;
     border-style: solid;
-    border-color: rgb(0, 191, 255, 0.25);
+    border-color: var(--active-color);
     position: absolute;
 }
 </style>

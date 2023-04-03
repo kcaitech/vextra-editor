@@ -4,11 +4,10 @@ import { useI18n } from 'vue-i18n'
 import { Action } from '@/context/workspace';
 const { t } = useI18n()
 const props = defineProps<{
-    active: boolean,
     lg: string,
     quick: string,
     select: Action,
-    pattern: Action | undefined,
+    d: Action
 }>();
 const emit = defineEmits<{
     (e: "selector", select: Action): void;
@@ -16,13 +15,12 @@ const emit = defineEmits<{
 const selector = (active: Action) => {
     emit('selector', active);
 }
-console.log(props.pattern,'333');
 
 </script>
 <template>
   <div class="container-change" @click="selector(props.select)">
       <div style="display: flex; align-items: center;">
-        <div class="choose" :style="{ visibility: props.pattern === props.select ? 'visible' : 'hidden'  }"></div>
+        <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>
         <div class="svg-container" title="Cursor">
           <svg-icon :icon-class="select"></svg-icon>
         </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, watch, defineProps,defineEmits, onMounted } from 'vue';
+import { ref, nextTick, watch, defineProps,defineEmits, onMounted, onUnmounted, onUpdated } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { Action } from '@/context/workspace';
 import DropSelect from "./DropSelect.vue"
@@ -9,6 +9,7 @@ const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
 const selected = ref<Action>(Action.AutoV);
+const selects = ref<string>('')
 const props = defineProps<{
   active: boolean,
   d: Action
@@ -53,30 +54,35 @@ watch(popoverVisible, (val) => {
 
 const selector = (active: Action) => {
   selected.value = active
+ 
 }
 
 function onMenuBlur() {
-  // if (popover.value) {
-  //   popover.value.removeEventListener('blur', onMenuBlur);
-  // }
-  // var timer = setTimeout(() => {
-  //   popoverVisible.value = false;
-  //   clearTimeout(timer)
-  // }, 100)
+  if (popover.value) {
+    popover.value.removeEventListener('blur', onMenuBlur);
+  }
+  var timer = setTimeout(() => {
+    popoverVisible.value = false;
+    clearTimeout(timer)
+  }, 100)
 }
-
+onUpdated(()=> {
+  if(props.d === Action.AutoV || props.d === Action.AutoK) {
+    selects.value = props.d
+  }  
+})
 </script>
 
 <template>
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
     <template v-for="item in patterns" :key="item.value">
-      <DropSelect @selector="selector" :active="props.active" :lg="item.value" :quick="item.key" :select="item.content" :pattern="selected" ></DropSelect>
+      <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content"></DropSelect>
     </template>
     
   </div>
   <ToolButton ref="button" @click="() => {select(selected)}" :selected="props.active">
     <div class="svg-container" title="Cursor">
-      <svg-icon :icon-class="props.d"></svg-icon>
+      <svg-icon :icon-class="props.d === selected ? props.d: selects"></svg-icon>
     </div>
     <div class="menu" @click="showMenu">
       <svg-icon icon-class="down"></svg-icon>

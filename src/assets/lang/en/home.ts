@@ -5,6 +5,9 @@ export const system = {
     select: 'Select',
     space: '...',
     empty: 'No data',
+    paste: 'Paste',
+    copy: 'Copy',
+    'select_layer': 'Select layer'
 }
 
 export const home = {
