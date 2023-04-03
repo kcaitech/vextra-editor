@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { ref, nextTick, watch, defineProps,defineEmits } from 'vue';
+import { ref, nextTick, watch, defineProps,defineEmits, onMounted } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { Action } from '@/context/workspace';
 import DropSelect from "./DropSelect.vue"
-import { Tools } from '@/context/toolbar';
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
 type Button = InstanceType<typeof ToolButton>
 
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
-const selected = ref<Action>(Action.Auto);
+const selected = ref<Action>(Action.AutoV);
 const props = defineProps<{
-  active: boolean
+  active: boolean,
+  d: Action
 }>();
 const emit = defineEmits<{
     (e: "select", action: Action): void;
@@ -23,12 +21,11 @@ function select(action: Action) {
 }
 
 const patterns = ((items: [string, Action, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2]}))))([
-    ['Rectangle', Action.AddRect, 'R'],
-    ['Line', Action.AddLine, 'L'],
-    ['object_selector', Action.Auto, 'K']
+    ['object_selector', Action.AutoV, 'V'],
+    ['scale', Action.AutoK, 'K']
 ]);
 
-function showMenu() {
+function showMenu() {  
   if (popoverVisible.value) return popoverVisible.value = false;
   if (button.value?.toolButtonEl) {
     const el = button.value?.toolButtonEl;
@@ -55,8 +52,7 @@ watch(popoverVisible, (val) => {
 })
 
 const selector = (active: Action) => {
-  console.log(active,'active');
-  
+  selected.value = active
 }
 
 function onMenuBlur() {
@@ -68,29 +64,19 @@ function onMenuBlur() {
   //   clearTimeout(timer)
   // }, 100)
 }
+
 </script>
 
 <template>
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-    <!-- <div class="container-change">
-      <div style="display: flex; align-items: center;">
-        <div class="choose"></div>
-        <div class="svg-container" title="Cursor">
-          <svg-icon icon-class="cursor"></svg-icon>
-        </div>
-        <div class="select">{{ t('home.object_selector') }}</div>
-      </div>
-      <span class="quick">V</span>
-    </div> -->
     <template v-for="item in patterns" :key="item.value">
       <DropSelect @selector="selector" :active="props.active" :lg="item.value" :quick="item.key" :select="item.content" :pattern="selected" ></DropSelect>
     </template>
     
-    
   </div>
-  <ToolButton ref="button" @click="() => {select(Action.Auto)}" :selected="props.active">
+  <ToolButton ref="button" @click="() => {select(selected)}" :selected="props.active">
     <div class="svg-container" title="Cursor">
-      <svg-icon icon-class="cursor"></svg-icon>
+      <svg-icon :icon-class="props.d"></svg-icon>
     </div>
     <div class="menu" @click="showMenu">
       <svg-icon icon-class="down"></svg-icon>
@@ -130,40 +116,12 @@ function onMenuBlur() {
 .popover {
   position: absolute;
   z-index: 999;
-  width: 200px;
-  height: 260px;
+  width: 180px;
+  height: auto;
   background-color: var(--theme-color);
   border-radius: 4px;
   outline: none;
   padding: var(--default-padding-half) 0;
 }
-.container-change {
-  display: flex;
-  color: var(--theme-color-anti);
-  width: 100%;
-  height: 32px;
-  align-items: center;
-  justify-content: space-around;
-  .svg-container {
-    svg {
-      width: 60%;
-      height: 60%;
-    }
-  }
-}
-.container-change:hover {
-  background-color: var(--active-color);
-}
-.choose {
-  box-sizing: border-box;
-  width: 13px;
-  height: 9px;
-  border-width: 0 0 2px 2px;
-  border-style: solid;
-  border-color: var(--theme-color-anti);
-  transform: rotate(-45deg) translateY(-30%);
-}
-.select {
-  font-size: var(--font-default-fontsize);
-}
+
 </style>

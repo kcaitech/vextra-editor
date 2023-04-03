@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { defineEmits, defineProps } from 'vue';
 import { useI18n } from 'vue-i18n'
-import { Tools } from '@/context/toolbar';
 import { Action } from '@/context/workspace';
 const { t } = useI18n()
 const props = defineProps<{
@@ -17,13 +16,15 @@ const emit = defineEmits<{
 const selector = (active: Action) => {
     emit('selector', active);
 }
+console.log(props.pattern,'333');
+
 </script>
 <template>
   <div class="container-change" @click="selector(props.select)">
       <div style="display: flex; align-items: center;">
         <div class="choose" :style="{ visibility: props.pattern === props.select ? 'visible' : 'hidden'  }"></div>
         <div class="svg-container" title="Cursor">
-          <svg-icon icon-class="cursor"></svg-icon>
+          <svg-icon :icon-class="select"></svg-icon>
         </div>
         <div class="select">{{ t(`home.${props.lg}`) }}</div>
       </div>
@@ -36,8 +37,8 @@ const selector = (active: Action) => {
 }
 .choose {
   box-sizing: border-box;
-  width: 13px;
-  height: 9px;
+  width: 12px;
+  height: 8px;
   border-width: 0 0 2px 2px;
   border-style: solid;
   border-color: var(--theme-color-anti);
@@ -52,7 +53,7 @@ const selector = (active: Action) => {
   width: 100%;
   height: 32px;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
   .svg-container {
     width: 32px;
     height: 32px;
@@ -60,9 +61,16 @@ const selector = (active: Action) => {
     justify-content: center;
     align-items: center;
     svg {
-      width: 60%;
-      height: 60%;
+      width: 50%;
+      height: 50%;
     }
   }
+}
+.quick {
+  margin-right: var(--default-margin);
+  font-size: 14px;
+}
+.container-change>div {
+  margin-left: var(--default-margin);
 }
 </style>

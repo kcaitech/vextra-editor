@@ -23,7 +23,7 @@ const props = defineProps<{
 
 const workspace = computed<WorkSpace>(() => props.context.workspace)
 
-const selected = ref<Action>(Action.Auto);
+const selected = ref<Action>(Action.AutoV);
 
 function select(action: Action) {
     workspace.value.setAction(action);
@@ -43,7 +43,7 @@ onUnmounted(() => {
 
 <template>
     <div class="editor-tools" @dblclick.stop>
-        <Cursor @select="select" :active="selected === Action.Auto"></Cursor>
+        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
         <div class="vertical-line" />
         <Frame></Frame>
         <Rect @select="select" :active="selected === Action.AddRect" ></Rect>
