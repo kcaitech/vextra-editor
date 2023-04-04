@@ -10,7 +10,8 @@ const { t } = useI18n();
 interface Props {
   context: Context,
   layers?: Shape[],
-  items: string[]
+  items: string[],
+  site:{ x: number, y: number }
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -36,7 +37,7 @@ function closeLayerSubMenu(e: MouseEvent) {
       @mouseleave="e => closeLayerSubMenu(e)">
       <span>{{ t('system.select_layer') }}</span>
       <div class="triangle"></div>
-      <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180">
+      <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site">
         <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
       </ContextMenu>
     </div>

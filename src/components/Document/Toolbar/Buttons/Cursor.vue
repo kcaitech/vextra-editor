@@ -9,7 +9,7 @@ const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
 const selected = ref<Action>(Action.AutoV);
-const selects = ref<string>('')
+const selects = ref<Action>(Action.AutoV);
 const props = defineProps<{
   active: boolean,
   d: Action

@@ -2,7 +2,7 @@
 import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
-import { reactive, defineProps, onMounted, onUnmounted, watchEffect, computed, ref } from 'vue';
+import { reactive, defineProps, onMounted, onUnmounted, watchEffect, computed, ref, nextTick } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import { AbsolutePosition } from '@/context/selection';
@@ -14,6 +14,8 @@ import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
+type ContextMenuEl = InstanceType<typeof ContextMenu>
+
 const { t } = useI18n();
 const props = defineProps<{
     context: Context,
@@ -50,6 +52,8 @@ const root = ref<HTMLDivElement>();
 const mousedownOnPageXY: AbsolutePosition = { x: 0, y: 0 }; // 鼠标在page中的坐标
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
+const contextMenuEl = ref<ContextMenuEl>();
+const surplusY = ref<number>(0)
 function offset2Root() {
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
@@ -225,7 +229,10 @@ function getShapesByXY() {
     const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
     if (shapes.length) props.context.selection.selectShape(shapes[shapes.length - 1]);
 }
+let site:{ x: number, y: number } = { x: 0, y: 0 };
 function contextMenuMount(e: MouseEvent) {
+    site.x = e.clientX
+    site.y = e.clientY
     const { x, y } = offset2Root();
     contextMenuPosition.x = e.clientX - x;
     contextMenuPosition.y = e.clientY - y;
@@ -238,6 +245,20 @@ function contextMenuMount(e: MouseEvent) {
         contextMenuItems.push('layers');
     }
     contextMenu.value = true;
+    nextTick(() => {
+        if (contextMenuEl.value) {
+            let el = contextMenuEl.value.menu
+            surplusY.value = document.documentElement.clientHeight - site.y
+            if(el) {
+                let height = el.offsetHeight
+                if(surplusY.value-30 < height ) {
+                    surplusY.value = document.documentElement.clientHeight - site.y - 30
+                    el.style.top = contextMenuPosition.y + surplusY.value - height + 'px'
+                }   
+            }
+            
+        }
+    })
 }
 
 // hooks
@@ -279,9 +300,9 @@ renderinit().then(() => {
             :width="width" :height="height"></PageView>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width"
             :height="height"></SelectionView>
-        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenu = false;">
+        <ContextMenu ref="contextMenuEl" :site="site" v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenu = false;">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                :context="props.context" @close="contextMenu = false;">
+                :context="props.context" @close="contextMenu = false;" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
     </div>
@@ -290,6 +311,6 @@ renderinit().then(() => {
 <style scoped lang="scss">
 div {
     background-color: var(--center-content-bg-color);
-    position: relative;
+    // position: relative;
 }
 </style>
