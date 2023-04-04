@@ -1,61 +1,72 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
-import { ref, defineProps, computed } from 'vue';
+import { ref, defineProps } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
+import { AbsolutePosition } from '@/context/selection';
+import { translateTo, expandTo } from '@kcdesign/data/editor/frame';
 interface Props {
   point: [CtrlElementType, number, number, string],
   shape: Shape,
   context: Context
 }
 const props = defineProps<Props>();
-const editor = computed(() => {
-  return props.context.editor4Shape(props.shape);
-})
-let dragContainer = ref<HTMLElement>();
-let dragHandle = ref<HTMLElement>();
+const dragActiveDis = 3;
+
+const dragContainer = ref<HTMLElement>();
+const dragHandle = ref<HTMLElement>();
 let isDragging = false;
 let startPosition = { x: 0, y: 0 };
 
-const onMouseDown = (event: MouseEvent) => {
-  if (!dragContainer.value || !dragHandle.value) return;
+function onMouseDown(event: MouseEvent) {
+  if (!dragContainer.value || !dragHandle.value || !props.context.repo) return;
   if (event.button !== 0) return;
-  isDragging = true;
-  const { clientX, clientY } = event;
   startPosition = {
-    x: clientX,
-    y: clientY
+    x: event.clientX,
+    y: event.clientY
   }
+  props.context.repo.start('scale', {});
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
 }
 
-const onMouseMove = (event: MouseEvent) => {
-  if (!isDragging || !dragContainer.value || !dragHandle.value) return;
-  change({ x: event.clientX - startPosition.x, y: event.clientY - startPosition.y });
-  startPosition.x = event.clientX;
-  startPosition.y = event.clientY;
+function onMouseMove(event: MouseEvent) {
+  const delta: AbsolutePosition = { x: event.clientX - startPosition.x, y: event.clientY - startPosition.y };
+  if (isDragging && props.context.repo) {
+    change({ x: delta.x, y: delta.y });
+    props.context.repo.transactCtx.fireNotify();
+    startPosition.x = event.clientX;
+    startPosition.y = event.clientY;
+  } else {
+    if (Math.hypot(delta.x, delta.y) > dragActiveDis) {
+      isDragging = true;
+    }
+  }
 }
 
 function change(delta: { x: number, y: number }) {
   const p = props.point[0];
   const realXY = props.shape.realXY();
   if (p === CtrlElementType.RectLT) {
-    editor.value.translateTo(realXY.x + delta.x, realXY.y + delta.y);
-    editor.value.expandTo(realXY.width - delta.x, realXY.height - delta.y);
+    translateTo(props.shape, realXY.x + delta.x, realXY.y + delta.y);
+    expandTo(props.shape, realXY.width - delta.x, realXY.height - delta.y);
   } else if (p === CtrlElementType.RectRT) {
-    editor.value.translateTo(realXY.x, realXY.y + delta.y);
-    editor.value.expandTo(realXY.width + delta.x, realXY.height - delta.y);
+    translateTo(props.shape, realXY.x, realXY.y + delta.y);
+    expandTo(props.shape, realXY.width + delta.x, realXY.height - delta.y);
   } else if (p === CtrlElementType.RectRB) {
-    editor.value.expandTo(realXY.width + delta.x, realXY.height + delta.y);
+    expandTo(props.shape, realXY.width + delta.x, realXY.height + delta.y);
   } else if (p === CtrlElementType.RectLB) {
-    editor.value.translateTo(realXY.x + delta.x, realXY.y);
-    editor.value.expandTo(realXY.width - delta.x, realXY.height + delta.y);
+    translateTo(props.shape, realXY.x + delta.x, realXY.y);
+    expandTo(props.shape, realXY.width - delta.x, realXY.height + delta.y);
   }
 }
 
-const onMouseUp = () => {
-  if (!isDragging) return;
+function onMouseUp() {
+  if (!isDragging) {
+    props.context.repo?.rollback();
+  } else {
+    props.context.repo?.commit({});
+  }
   isDragging = false;
   document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mouseup', onMouseUp);
@@ -66,7 +77,7 @@ const onMouseUp = () => {
     left: `${point[1]}px`,
     top: `${point[2]}px`,
     cursor: point[3]
-  }" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp">
+  }" @mousedown="onMouseDown">
     <div class="drag-handle" ref="dragHandle">
       <div></div>
     </div>

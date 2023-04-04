@@ -4,8 +4,10 @@ import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { Shape } from "@kcdesign/data/data/shape";
 import ControlPoint from "./ControlPoint.vue"
-import { ShapeEditor } from "@kcdesign/data/editor/shape";
+// import { ShapeEditor } from "@kcdesign/data/editor/shape";
 import { CtrlElementType } from "@/context/workspace";
+import { AbsolutePosition } from "@/context/selection";
+import { translate } from "@kcdesign/data/editor/frame";
 const reflush = ref(0);
 const watcher = () => { reflush.value++; }
 const props = defineProps<{
@@ -38,7 +40,7 @@ const data = reactive<{
     isSelect: false,
     shapes: []
 });
-let editor: ShapeEditor;
+// let editor: ShapeEditor;
 const shapes: Array<Shape> = [];
 // [side type, x, y, width, height, cursor type][];
 const controllerBars: [CtrlElementType, number, number, number, number, string][] = [
@@ -59,6 +61,8 @@ const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
 let startPosition = { x: 0, y: 0 };
+let isDragging = false;
+const dragActiveDis = 3;
 
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
@@ -162,18 +166,30 @@ function setPoint(s: ShapeSelectData) {
     controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
 }
 function mousedown(e: MouseEvent) {
-    if (!props.isController) return;
+    props.context.editor4Shape(shapes[0]);
+    if (!props.isController || !props.context.repo) return;
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
     startPosition = { x: e.clientX, y: e.clientY };
-    editor = props.context.editor4Shape(shapes[0]);
+    props.context.repo.start('transform', {});
 }
 function mousemove(e: MouseEvent) {
-    if (!editor) return;
-    editor.translate(e.clientX - startPosition.x, e.clientY - startPosition.y);
-    startPosition = { x: e.clientX, y: e.clientY };
+    const delta: AbsolutePosition = { x: e.clientX - startPosition.x, y: e.clientY - startPosition.y };
+    if (isDragging) {
+        translate(shapes[0], delta.x, delta.y);
+        props.context.repo?.transactCtx.fireNotify();
+        startPosition = { x: e.clientX, y: e.clientY };
+    } else {
+        if (Math.hypot(delta.x, delta.y) > dragActiveDis) isDragging = true;
+    }
 }
 function mouseup() {
+    if (isDragging) {
+        props.context.repo?.commit({});        
+    } else {        
+        props.context.repo?.rollback();
+    }
+    isDragging = false;
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
