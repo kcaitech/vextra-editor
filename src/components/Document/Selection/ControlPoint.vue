@@ -4,7 +4,7 @@ import { Shape } from '@kcdesign/data/data/shape';
 import { ref, defineProps, computed } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
 interface Props {
-  point: [string, number, number, string],
+  point: [CtrlElementType, number, number, string],
   shape: Shape,
   context: Context
 }
@@ -38,7 +38,7 @@ const onMouseMove = (event: MouseEvent) => {
 }
 
 function change(delta: { x: number, y: number }) {
-  const p = props.point[0];  
+  const p = props.point[0];
   const realXY = props.shape.realXY();
   if (p === CtrlElementType.RectLT) {
     editor.value.translateTo(realXY.x + delta.x, realXY.y + delta.y);
@@ -48,7 +48,7 @@ function change(delta: { x: number, y: number }) {
     editor.value.expandTo(realXY.width + delta.x, realXY.height - delta.y);
   } else if (p === CtrlElementType.RectRB) {
     editor.value.expandTo(realXY.width + delta.x, realXY.height + delta.y);
-  } else if (p === CtrlElementType.RectLB){
+  } else if (p === CtrlElementType.RectLB) {
     editor.value.translateTo(realXY.x + delta.x, realXY.y);
     editor.value.expandTo(realXY.width - delta.x, realXY.height + delta.y);
   }
@@ -56,7 +56,7 @@ function change(delta: { x: number, y: number }) {
 
 const onMouseUp = () => {
   if (!isDragging) return;
-  isDragging = false
+  isDragging = false;
   document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mouseup', onMouseUp);
 }

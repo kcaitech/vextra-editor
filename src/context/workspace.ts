@@ -1,4 +1,5 @@
 import { Watchable } from "@kcdesign/data/data/basic";
+import { Repository } from "@kcdesign/data/data/transact";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
 export enum Action {
     Auto = 'auto',
@@ -9,7 +10,8 @@ export enum KeyboardKeys {
     Space = 'Space',
     R = 'KeyR',
     V = 'KeyV',
-    L = 'KeyL'
+    L = 'KeyL',
+    Z = 'KeyZ'
 }
 export enum CursorType {
     Crosshair = 'crosshair',
@@ -57,5 +59,12 @@ export class WorkSpace extends Watchable(Object) {
     keydown_l() {
         this.m_current_action = Action.AddLine;
         this.notify();
+    }
+    keydown_z(repo: Repository, ctrl?: boolean, shift?: boolean, meta?: boolean) {
+        if ((ctrl || meta) && !shift) {
+            repo.canUndo() && repo.undo();
+        } else if ((ctrl || meta) && shift) {
+            repo.canRedo() && repo.redo();
+        }
     }
 }
