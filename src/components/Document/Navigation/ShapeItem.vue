@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed } from "vue";
+import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed, nextTick } from "vue";
 import { Shape, GroupShape } from '@kcdesign/data/data/shape';
 
 export interface ItemData {
@@ -11,7 +11,11 @@ export interface ItemData {
     level: number
 }
 
-
+const isLock = ref<boolean>(true)
+const isRead = ref<boolean>(true)
+const isVisible = ref<boolean>(false)
+const isInput = ref<boolean>(false)
+const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<{ data: ItemData }>();
 const phWidth = computed(() => {
     return (props.data.level - 1) * 6;
@@ -21,6 +25,8 @@ const emit = defineEmits<{
     (e: "selectshape", data: ItemData): void;
     (e: "hovershape", shape: Shape): void;
     (e: "unhovershape", shape: Shape): void;
+    (e: "isLock", isLock: boolean): void;
+    (e: "isRead", isRead: boolean): void;
 }>();
 let showTriangle = ref<boolean>(false);
 function updater() {
@@ -45,11 +51,36 @@ function selectShape(e: Event) {
 function hoverShape(e: MouseEvent) {
     e.stopPropagation();
     emit("hovershape", props.data.shape);
+    isVisible.value = true
 }
 function unHoverShape(e: MouseEvent) {
     e.stopPropagation();
     emit("unhovershape", props.data.shape);
+    isVisible.value = false
 }
+const onLock = () => {
+    isLock.value = !isLock.value
+    emit('isLock', isLock.value)
+}
+const onRead = () => {
+    isRead.value = !isRead.value
+    emit('isRead', isRead.value)
+}
+const onRename = () => {
+    isInput.value = true
+    nextTick(() => {
+        if(nameInput.value) {            
+            nameInput.value.focus();
+            nameInput.value.select()
+            nameInput.value?.addEventListener('blur', stopInput);
+        }
+    })
+    
+}
+const stopInput = () => {    
+    isInput.value = false
+}
+
 onBeforeMount(() => {
     updater();
 })
@@ -76,14 +107,28 @@ onBeforeUpdate(() => {
                 :class="{'triangle-right': !props.data.expand, 'triangle-down': props.data.expand}"
             ></div>
         </div>
-        <div class="text">{{props.data.shape.name}}</div>
+        <div class="text" :class="{ container: true, selected: props.data.selected }" :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : ''}">
+            <div class="text" @dblclick="onRename">{{props.data.shape.name}}</div>
+            <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible': 'hidden'}`}">
+                <div class="tool_lock tool" :class="{ 'visible':!isLock }" @click="onLock" >
+                    <svg-icon v-if="isLock" class="svg-open" icon-class="lock-open"></svg-icon>
+                    <svg-icon v-else class="svg" icon-class="lock-lock"></svg-icon>
+                </div>
+                <div class="tool_eye tool" :class="{ 'visible':!isRead }" @click="onRead">
+                    <svg-icon v-if="isRead" class="svg" icon-class="eye-open"></svg-icon>
+                    <svg-icon v-else class="svg" icon-class="eye-closed"></svg-icon>
+                </div>
+            </div>
+        </div>
+        <input v-if="isInput" class="rename" type="text" ref="nameInput" :value="props.data.shape.name">
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 div.container {
     display: flex;
     flex-flow: row;
+    align-items: center;
     width: 100%;
     height: 30px;
     color: var(--left-navi-font-color);
@@ -97,6 +142,9 @@ div.container:hover {
 
 div.container.selected {
     background-color: var(--left-navi-button-select-color);
+}
+div.ph {
+    margin-left: 6px;
 }
 
 div.triangle {
@@ -141,12 +189,59 @@ div.triangle-down {
 }
 
 div.text {
+    flex: 1;
     line-height: 30px;
     font-size: 10px;
-    text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
     padding-left: 2px;
+}
+div .rename {
+    flex: 1;
+    height: 20px;
+    width: 100%;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    padding-left:6px;
+    margin-right: 6px;
+    outline-style: none;
+    border: 1px solid var(--left-navi-bg-color);
+}
+
+.tool {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    
+}
+.tool_icon {
+    display: flex;
+    align-items: center;
+    margin-right: 6px;
+    .tool_lock {
+    .svg {
+        width: 8px;
+        height: 10px;
+    }
+    .svg-open {
+        width: 16px;
+        height: 16px;
+    }
+    }
+    .tool_eye {
+        margin-right: 5px;
+        .svg {
+        width: 16px;
+        height: 16px;
+    }
+    }
+    .visible {
+        visibility: visible;
+    }
 }
 </style>

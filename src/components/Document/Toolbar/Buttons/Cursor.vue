@@ -17,7 +17,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: "select", action: Action): void;
 }>();
-function select(action: Action) {    
+function select(action: Action) {  
     emit('select', action);
 }
 
@@ -54,6 +54,7 @@ watch(popoverVisible, (val) => {
 
 const selector = (active: Action) => {
   selected.value = active
+  emit('select', active);
  
 }
 
