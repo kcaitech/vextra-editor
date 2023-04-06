@@ -32,6 +32,14 @@ interface ShapeSelectData {
     id: string,
     rotate: number
 }
+interface ControlRect {
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    rotate: number,
+    visible: boolean
+}
 const data = reactive<{
     isHover: boolean,
     isSelect: boolean,
@@ -64,6 +72,14 @@ const halfBorderWidth = borderWidth / 2;
 let startPosition = { x: 0, y: 0 };
 let isDragging = false;
 const dragActiveDis = 3;
+const controlRect: ControlRect = reactive({
+    width: 0,
+    height: 0,
+    x: 0,
+    y: 0,
+    rotate: 0,
+    visible: false
+});
 
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
@@ -156,18 +172,37 @@ function updater(_: number) {
                 // do nothing
             }
         }
-        setPoint(data.shapes[0]);
+        genControlRect(data.shapes);
+        genPoint();
+        
     }
 }
-function setPoint(s: ShapeSelectData) {
-    controllerPoints[0] = [CtrlElementType.RectLT, s.x, s.y, 'nwse-resize'];
-    controllerPoints[1] = [CtrlElementType.RectRT, s.x + s.width, s.y, 'nesw-resize'];
-    controllerPoints[2] = [CtrlElementType.RectRB, s.x + s.width, s.y + s.height, 'nwse-resize'];
-    controllerPoints[3] = [CtrlElementType.RectLB, s.x, s.y + s.height, 'nesw-resize'];
+function genPoint() {
+    controllerPoints[0] = [CtrlElementType.RectLT, 0, 0, 'nwse-resize'];
+    controllerPoints[1] = [CtrlElementType.RectRT, controlRect.width, 0, 'nesw-resize'];
+    controllerPoints[2] = [CtrlElementType.RectRB, controlRect.width, controlRect.height, 'nwse-resize'];
+    controllerPoints[3] = [CtrlElementType.RectLB, 0, controlRect.height, 'nesw-resize'];
     const offset = 13;
     controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
 }
-function mousedown(e: MouseEvent) {
+function genControlRect(shapes: ShapeSelectData[]) {
+    const s = shapes[0];
+    controlRect.x = s.x;
+    controlRect.y = s.y;
+    controlRect.width = s.width;
+    controlRect.height = s.height;
+    controlRect.rotate = s.rotate;
+    if (shapes.length > 1) {
+        for (let i = 1; i < shapes.length; i++) {
+            const si = shapes[i];
+            if (si.x < controlRect.x) controlRect.x = si.x;
+            if (si.y < controlRect.y) controlRect.y = si.y;
+            if (si.x + si.width > controlRect.width) controlRect.width = si.x + si.width;
+            if (si.y + si.height > controlRect.height) controlRect.height = si.y + si.height;
+        }
+    }
+}
+function mousedown(e: MouseEvent) {    
     props.context.editor4Shape(shapes[0]);
     if (!props.isController || !props.context.repo) return;
     document.addEventListener('mousemove', mousemove);
@@ -175,7 +210,7 @@ function mousedown(e: MouseEvent) {
     startPosition = { x: e.clientX, y: e.clientY };
     props.context.repo.start('transform', {});
 }
-function mousemove(e: MouseEvent) {
+function mousemove(e: MouseEvent) {    
     const delta: AbsolutePosition = { x: e.clientX - startPosition.x, y: e.clientY - startPosition.y };
     if (isDragging) {
         translate(shapes[0], delta.x, delta.y);
@@ -187,8 +222,8 @@ function mousemove(e: MouseEvent) {
 }
 function mouseup() {
     if (isDragging) {
-        props.context.repo?.commit({});        
-    } else {        
+        props.context.repo?.commit({});
+    } else {
         props.context.repo?.rollback();
     }
     isDragging = false;
@@ -212,25 +247,39 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div v-if="data.isSelect">
+    <div class="control-rect" @mousedown="mousedown" v-if="data.isSelect" :style="{
+        left: '' + controlRect.x + 'px',
+        top: '' + controlRect.y + 'px',
+        width: '' + controlRect.width + 'px',
+        height: '' + controlRect.height + 'px',
+        borderWidth: '' + borderWidth + 'px',
+        transform: `rotate(${controlRect.rotate}deg)`
+    }">
         <ControlPoint v-for="(point, index) in controllerPoints" :point="point" :key="index" :shape="shapes[0]"
             :context="props.context">
         </ControlPoint>
     </div>
-    <div @mousedown="mousedown" v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }"
+    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }"
         :style="{
             left: '' + s.x + 'px',
             top: '' + s.y + 'px',
             width: '' + s.width + 'px',
             height: '' + s.height + 'px',
             borderWidth: '' + borderWidth + 'px',
-            transformOrigin: `${s.width / 2}px ${s.height / 2}px`,
             transform: `rotate(${s.rotate}deg)`
         }" :key="s.id" :reflush="reflush">
     </div>
 </template>
 
 <style scoped lang="scss">
+.control-rect {
+    border-radius: 0px;
+    border-style: solid;
+    border-color: var(--active-color);
+    position: absolute;
+    z-index: 1;
+}
+
 .selectrect {
     border-radius: 0px;
     border-style: solid;

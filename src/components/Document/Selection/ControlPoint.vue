@@ -5,6 +5,7 @@ import { ref, defineProps } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
 import { AbsolutePosition } from '@/context/selection';
 import { translateTo, expandTo } from '@kcdesign/data/editor/frame';
+// import { getAngle } from '@/utils/index'
 interface Props {
   point: [CtrlElementType, number, number, string],
   shape: Shape,
@@ -16,14 +17,16 @@ const dragActiveDis = 3;
 const dragContainer = ref<HTMLElement>();
 const dragHandle = ref<HTMLElement>();
 let isDragging = false;
-let startPosition = { x: 0, y: 0 };
+let startPosition = { x: 0, y: 0, sx: 0, sy: 0 };
 
 function onMouseDown(event: MouseEvent) {
   if (!dragContainer.value || !dragHandle.value || !props.context.repo) return;
   if (event.button !== 0) return;
   startPosition = {
     x: event.clientX,
-    y: event.clientY
+    y: event.clientY,
+    sx: event.screenX,
+    sy: event.screenY,
   }
   props.context.repo.start('scale', {});
   document.addEventListener('mousemove', onMouseMove);
@@ -32,7 +35,12 @@ function onMouseDown(event: MouseEvent) {
 
 function onMouseMove(event: MouseEvent) {
   const delta: AbsolutePosition = { x: event.clientX - startPosition.x, y: event.clientY - startPosition.y };
+
   if (isDragging && props.context.repo) {
+    if (event.ctrlKey) {
+      const { screenX, screenY } = event;
+      // const deg = getAngle([], [])
+    }
     change({ x: delta.x, y: delta.y });
     props.context.repo.transactCtx.fireNotify();
     startPosition.x = event.clientX;
@@ -44,7 +52,7 @@ function onMouseMove(event: MouseEvent) {
   }
 }
 
-function change(delta: { x: number, y: number }) {
+function change(delta: { x: number, y: number }, deg?: number) {
   const p = props.point[0];
   const realXY = props.shape.realXY();
   if (p === CtrlElementType.RectLT) {
@@ -77,8 +85,7 @@ function onMouseUp() {
     left: `${point[1]}px`,
     top: `${point[2]}px`,
     cursor: point[3],
-    transform: `rotate(${props.shape.rotation}deg)`
-  }" @mousedown="onMouseDown">
+  }" @mousedown.stop="onMouseDown">
     <div class="drag-handle" ref="dragHandle">
       <div></div>
     </div>
