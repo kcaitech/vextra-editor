@@ -1,6 +1,7 @@
 import { Watchable } from "@kcdesign/data/data/basic";
 import { Repository } from "@kcdesign/data/data/transact";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
+import { Matrix } from '@/basic/matrix';
 export enum Action {
     Auto = 'auto',
     AddRect = 'add-rect',
@@ -36,16 +37,30 @@ const A2R = new Map([
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action);
 export class WorkSpace extends Watchable(Object) {
     private m_current_action: Action = Action.Auto;
+    private m_scale: number = 1;
+    private m_matrix: Matrix = new Matrix();
     constructor() {
         super();
     }
     get action() {
         return this.m_current_action;
     }
+    get scale() {
+        return this.m_scale;
+    }
+    get matrix() {
+        return this.m_matrix;
+    }
+
     setAction(action: Action) {
         this.m_current_action = action;
         this.notify();
     }
+    setScale(s: number) {
+        this.m_scale = s;
+        this.notify();
+    }
+
 
     // keyboard
     keydown_r() {

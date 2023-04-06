@@ -30,6 +30,7 @@ interface ShapeSelectData {
     y: number,
     radius: number[],
     id: string,
+    rotate: number
 }
 const data = reactive<{
     isHover: boolean,
@@ -72,6 +73,7 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
         y: 0,
         radius: [5, 5, 5, 5],
         id: "",
+        rotate: 0
     };
     data.id = shape.id;
 
@@ -94,7 +96,7 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
     data.y = xy0.y - halfBorderWidth;
     data.width = xy1.x - xy0.x - borderWidth;
     data.height = xy1.y - xy0.y - borderWidth;
-
+    data.rotate = shape.rotation || 0;
     return data;
 }
 
@@ -221,7 +223,9 @@ onBeforeUpdate(() => {
             top: '' + s.y + 'px',
             width: '' + s.width + 'px',
             height: '' + s.height + 'px',
-            borderWidth: '' + borderWidth + 'px'
+            borderWidth: '' + borderWidth + 'px',
+            transformOrigin: `${s.width / 2}px ${s.height / 2}px`,
+            transform: `rotate(${s.rotate}deg)`
         }" :key="s.id" :reflush="reflush">
     </div>
 </template>

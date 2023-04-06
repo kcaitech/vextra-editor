@@ -76,7 +76,8 @@ function onMouseUp() {
   <div ref="dragContainer" class="drag-container" :style="{
     left: `${point[1]}px`,
     top: `${point[2]}px`,
-    cursor: point[3]
+    cursor: point[3],
+    transform: `rotate(${props.shape.rotation}deg)`
   }" @mousedown="onMouseDown">
     <div class="drag-handle" ref="dragHandle">
       <div></div>

@@ -22,7 +22,7 @@ const props = defineProps<{
 const workspace = computed(() => props.context.workspace);
 const width = 800;
 const height = 600;
-const scale_delta = 1.2;
+const scale_delta = 1.02;
 const scale_delta_ = 1 / scale_delta;
 const wheel_step = 10;
 const spacePressed = ref<boolean>(false);
@@ -37,7 +37,9 @@ let state = STATE_NONE;
 // 拖动 3px 后开始触发移动
 const dragActiveDis = 3;
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
-const matrix = reactive(new Matrix());
+// const matrix = reactive(new Matrix());
+const matrix = reactive(props.context.workspace.matrix);
+
 const matrixMap = new Map<string, Matrix>();
 let savePageId: string = "";
 const reflush = ref(0);
@@ -69,8 +71,9 @@ function setMousedownOnPageXY(e: MouseEvent) {
     const { x, y } = offset2Root();
     const transX = matrix.toArray()[4];
     const transY = matrix.toArray()[5];
-    mousedownOnPageXY.x = clientX - x - transX;
-    mousedownOnPageXY.y = clientY - y - transY;
+    const scale = 1 / matrix.toArray()[0];
+    mousedownOnPageXY.x = scale * (clientX - x) - transX;
+    mousedownOnPageXY.y = scale * (clientY - y) - transY;    
 }
 function getMouseOnPageXY(e: MouseEvent): AbsolutePosition {
     const { clientX, clientY } = e;
@@ -109,6 +112,7 @@ function onMouseWheel(e: WheelEvent) {
     } else {
         matrix.trans(0, e.deltaY > 0 ? -wheel_step : wheel_step);
     }
+    props.context.workspace.notify();
 }
 
 const viewBox = () => {
