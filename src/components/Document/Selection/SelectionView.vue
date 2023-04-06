@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } from "vue";
+import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { Shape } from "@kcdesign/data/data/shape";
@@ -12,14 +12,6 @@ const watcher = () => { reflush.value++; }
 const props = defineProps<{
     context: Context,
     matrix: number[],
-    viewbox: {
-        x: number,
-        y: number,
-        width: number,
-        height: number
-    },
-    width: number,
-    height: number
 }>();
 interface ShapeSelectData {
     width: number,
@@ -78,13 +70,8 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
     let x = rXY.x;
     let y = rXY.y;
 
-    // view box
-    const scale = Math.min(props.width / props.viewbox.width, props.height / props.viewbox.height);
-    x = x - props.viewbox.x;
-    y = y - props.viewbox.y;
-
-    const xy0 = matrix.computeCoord(x * scale, y * scale);
-    const xy1 = matrix.computeCoord((x + width) * scale, (y + height) * scale);
+    const xy0 = matrix.computeCoord(x, y);
+    const xy1 = matrix.computeCoord(x + width, y + height);
 
     data.x = xy0.x - halfBorderWidth;
     data.y = xy0.y - halfBorderWidth;
@@ -94,7 +81,7 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
     return data;
 }
 
-function updater(_: number) {
+function updater() {
 
     matrix.reset(props.matrix);
     const selection = props.context.selection;
@@ -186,9 +173,7 @@ onUnmounted(() => {
     shapes.length = 0;
 })
 
-onBeforeUpdate(() => {
-    updater(0);
-})
+watchEffect(updater)
 
 </script>
 

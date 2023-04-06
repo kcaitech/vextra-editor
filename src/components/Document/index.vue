@@ -89,9 +89,11 @@ onUnmounted(() => {
     >
         <template #slot1>
             <Navigation
+                v-if="curPage !== undefined"
                 id="navigation"
                 :context="context"
                 @switchpage="switchPage"
+                :page="(curPage as Page)"
             ></Navigation>
         </template>
         <template #slot2>
