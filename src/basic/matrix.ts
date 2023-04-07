@@ -29,30 +29,43 @@ export class Matrix {
                 (args[0] instanceof Matrix ? this.m_matrix = args[0].toArray() : [...args]));
     }
 
-    multi(m: number[]): void
-    multi(m: Matrix): void
-    multi(m: any): void { // 左乘
+    multiAtLeft(m: number[]): void
+    multiAtLeft(m: Matrix): void
+    multiAtLeft(m: any): void { // 左乘 this = m * this
         const m0 = this.m_matrix;
         const mm = m instanceof Matrix ? m.m_matrix : m;
         this.m_matrix = __multi(mm, m0);
     }
 
-    preMulti(m: number[]): void
-    preMulti(m: Matrix): void
-    preMulti(m: any): void { // 左乘
+    multi(m: number[]): void
+    multi(m: Matrix): void
+    multi(m: any): void { // 右乘 this = this * m
         const m0 = this.m_matrix;
         const mm = m instanceof Matrix ? m.m_matrix : m;
         this.m_matrix = __multi(m0, mm);
     }
 
     trans(x: number, y: number) {
-        this.multi([1, 0, 0, 1, x, y]);
+        this.multiAtLeft([1, 0, 0, 1, x, y]);
     }
     preTrans(x: number, y: number) {
-        this.preMulti([1, 0, 0, 1, x, y]);
+        this.multi([1, 0, 0, 1, x, y]);
     }
     scale(s: number) {
-        this.multi([s, 0, 0, s, 0, 0]);
+        this.multiAtLeft([s, 0, 0, s, 0, 0]);
+    }
+    /** 
+     * @degree 顺时针方向，0-2pi 
+     * @x @y 旋转中心点
+     * */
+    rotate(degree: number): void;
+    rotate(degree: number, x: number, y: number): void;
+    rotate(degree: number, x?: number, y?: number) {
+        if (x && y) this.trans(-x, -y);
+        const cos = Math.cos(degree);
+        const sin = Math.sin(degree);
+        this.multiAtLeft([cos, sin, -sin, cos, 0, 0])
+        if (x && y) this.trans(x, y);
     }
     computeCoord(x: number, y: number) {
         const m = this.m_matrix
