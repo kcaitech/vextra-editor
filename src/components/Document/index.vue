@@ -88,7 +88,13 @@ onUnmounted(() => {
         :middle="{ width: 0.8, minWidth: 0.3, maxWidth: 0.8 }" :right="{ width: 0.1, minWidth: 0.1, maxWidth: 0.5 }"
         :right-min-width-in-px="336" :left-min-width-in-px="336">
         <template #slot1>
-            <Navigation id="navigation" :context="context" @switchpage="switchPage"></Navigation>
+            <Navigation
+                v-if="curPage !== undefined"
+                id="navigation"
+                :context="context"
+                @switchpage="switchPage"
+                :page="(curPage as Page)"
+            ></Navigation>
         </template>
         <template #slot2>
             <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ImageShape } from '@kcdesign/data/data/shape';
-import { defineProps, ref, onMounted, onUnmounted, h } from 'vue';
+import { defineProps, ref, onMounted, onUnmounted, h, watch } from 'vue';
 import { render as r } from "@/render/image"
 
 const props = defineProps<{ data: ImageShape }>();
@@ -9,6 +9,10 @@ const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
 }
+const stopWatch = watch(() => props.data, (value, old) => {
+    old.unwatch(watcher);
+    value.watch(watcher);
+})
 onMounted(() => {
     props.data.loadImage().then((val) => {
         url.value = val;
@@ -17,6 +21,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
+    stopWatch();
 })
 const render = () => {
     return r(h, props.data, url.value, reflush.value !== 0 ? reflush.value : undefined);

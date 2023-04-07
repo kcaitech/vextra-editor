@@ -72,7 +72,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     getShapesByXY(position: AbsolutePosition): Shape[] {        
         const shapes: Shape[] = [];
-        const childs = this.m_selectPage?.childs;
+        const page = this.m_selectPage!;
+        const childs = page.childs;
+        position.x -= page.frame.x;
+        position.y -= page.frame.y;
         if (childs?.length) deep(childs, position);
         return shapes;
 
@@ -80,7 +83,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             for(let i = 0; i < source.length; i++) {                
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
-                if (source[i].childs?.length) deep(source[i].childs, position);
+                const suppos = {x: position.x - x, y: position.y - y}
+                if (source[i].childs?.length) deep(source[i].childs, suppos);
             }
         }
     }

@@ -2,7 +2,7 @@
 import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
-import { reactive, defineProps, onMounted, onUnmounted, watchEffect, computed, ref } from 'vue';
+import { reactive, defineProps, onMounted, onUnmounted, watchEffect, computed, ref, watch } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import { AbsolutePosition } from '@/context/selection';
@@ -20,8 +20,6 @@ const props = defineProps<{
     page: Page,
 }>();
 const workspace = computed(() => props.context.workspace);
-const width = 800;
-const height = 600;
 const scale_delta = 1.02;
 const scale_delta_ = 1 / scale_delta;
 const wheel_step = 10;
@@ -37,11 +35,9 @@ let state = STATE_NONE;
 // 拖动 3px 后开始触发移动
 const dragActiveDis = 3;
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
-// const matrix = reactive(new Matrix());
 const matrix = reactive(props.context.workspace.matrix);
-
-const matrixMap = new Map<string, Matrix>();
-let savePageId: string = "";
+const matrixMap = new Map<string, {m: Matrix, x: number, y: number}>();
+// let savePageId: string = "";
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -69,18 +65,14 @@ function offset2Root() {
 function setMousedownOnPageXY(e: MouseEvent) {
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
-    const transX = matrix.toArray()[4];
-    const transY = matrix.toArray()[5];
-    const scale = 1 / matrix.toArray()[0];
-    mousedownOnPageXY.x = scale * (clientX - x) - transX;
-    mousedownOnPageXY.y = scale * (clientY - y) - transY;    
+    const xy = matrix.inverseCoord(clientX - x, clientY - y);
+    mousedownOnPageXY.x = xy.x;
+    mousedownOnPageXY.y = xy.y;
 }
 function getMouseOnPageXY(e: MouseEvent): AbsolutePosition {
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
-    const transX = matrix.toArray()[4];
-    const transY = matrix.toArray()[5];
-    return { x: clientX - x - transX, y: clientY - y - transY }
+    return matrix.inverseCoord(clientX - x, clientY - y);
 }
 function addShape(frame: ShapeFrame) {
     const type = ResultByAction(workspace.value.action);
@@ -113,16 +105,6 @@ function onMouseWheel(e: WheelEvent) {
         matrix.trans(0, e.deltaY > 0 ? -wheel_step : wheel_step);
     }
     props.context.workspace.notify();
-}
-
-const viewBox = () => {
-    const frame = props.page.frame;
-    const expandBox = 0;
-    const x = frame.x - expandBox;
-    const y = frame.y - expandBox;
-    const width = frame.width + 2 * expandBox;
-    const height = frame.height + 2 * expandBox;
-    return { x, y, width: Math.max(800, width), height: Math.max(600, height) };
 }
 
 function onKeyDown(e: KeyboardEvent) {
@@ -251,21 +233,27 @@ function contextMenuMount(e: MouseEvent) {
 }
 
 // hooks
-watchEffect(() => {
-    const id = props.page.id;
-    if (savePageId.length > 0 && id != savePageId) {
-        let m = matrixMap.get(savePageId);
-        if (m) m.reset(matrix.toArray());
+function initMatrix(cur: Page) {
+    let info = matrixMap.get(cur.id)
+    if (!info) {
+        const m = new Matrix();
+        m.trans(-cur.frame.x, -cur.frame.y)
+        info = {m, x: cur.frame.x, y: cur.frame.y}
+        matrixMap.set(cur.id, info)
     }
-    savePageId = id;
-    let m = matrixMap.get(id);
-    if (!m) {
-        m = new Matrix();
-        matrixMap.set(id, m);
-    }
-    matrix.reset(m);
+    matrix.reset(info.m.toArray())
+}
+const stopWatch = watch(() => props.page, (cur, old) => {
+    old.unwatch(watcher)
+    cur.watch(watcher)
+
+    let info = matrixMap.get(old.id);
+    info!.m.reset(matrix.toArray())
+
+    initMatrix(cur)
 })
 onMounted(() => {
+    initMatrix(props.page)
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
     document.addEventListener("keydown", onKeyDown);
@@ -276,6 +264,7 @@ onUnmounted(() => {
     props.page.unwatch(watcher);
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("keyup", onKeyUp);
+    stopWatch();
 })
 renderinit().then(() => {
     inited.value = true;
@@ -285,10 +274,8 @@ renderinit().then(() => {
 <template>
     <div v-if="inited" ref="root" :style="{ cursor }" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
         @mousedown="onMouseDown">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toString()" :viewbox="viewBox()"
-            :width="width" :height="height"></PageView>
-        <SelectionView :context="props.context" :matrix="matrix.toArray()" :viewbox="viewBox()" :width="width" :is-controller="selectionIsCtrl"
-            :height="height"></SelectionView>
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
+        <SelectionView  :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenu = false;">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenu = false;">

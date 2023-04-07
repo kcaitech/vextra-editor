@@ -7,14 +7,15 @@
 import { defineProps } from "vue";
 import { Context } from "@/context";
 import Tabs from "@/components/Document/Navigation/LeftTabs.vue";
+import { Page } from "@kcdesign/data/data/page";
 
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, page: Page }>();
 
 </script>
 
 <template>
     <section>
-        <Tabs :context="props.context" v-bind="$attrs"></Tabs>
+        <Tabs :context="props.context" v-bind="$attrs" :page="page"></Tabs>
     </section>
 </template>
 

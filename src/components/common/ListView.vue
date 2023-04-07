@@ -11,7 +11,6 @@ export interface IDataSource<T extends { id: string }> {
     length(): number;
     iterAt(index: number): IDataIter<T>;
     onChange(l: (index: number, del: number, insert: number, modify: number) => void): void;
-    indexOf(data: T): number;
 }
 
 enum Orientation {

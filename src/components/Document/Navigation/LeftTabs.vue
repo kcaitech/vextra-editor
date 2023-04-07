@@ -11,9 +11,10 @@ import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
+import { Page } from "@kcdesign/data/data/page";
 const { t } = useI18n();
 
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, page: Page }>();
 
 type Tab = "Shape" | "Comps" | "Resource"
 
@@ -44,7 +45,7 @@ function toggle(id: Tab) {
             <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index" @click="toggle(i.id)">{{ i.title }}</div>
         </div>
         <div class="body">
-            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs"></ShapeTab>
+            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"></ShapeTab>
             <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
             <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
         </div>

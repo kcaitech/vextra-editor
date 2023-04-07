@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onBeforeUpdate, onMounted, onUnmounted, ref } from 'vue'
+import { defineProps, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Shape, ShapeType, RectShape } from '@kcdesign/data/data/shape';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
@@ -11,7 +11,7 @@ const props = defineProps<{ context: Context, shape: Shape }>();
 const editor = computed(() => {
     return props.context.editor4Shape(props.shape);
 })
-let shape: Shape | undefined;
+
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -45,18 +45,6 @@ function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
     radius.value = (shape as RectShape).fixedRadius || 0;
 }
-function setupWatcher() {
-    if (!shape) {
-        shape = props.shape;
-        shape.watch(watcher);
-    }
-    else if (shape.id != props.shape.id) {
-        shape.unwatch(watcher);
-        shape = props.shape;
-        shape.watch(watcher);
-    }
-}
-
 function onChangeX(value: string) {
     // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
@@ -118,20 +106,20 @@ function onChangeRotate(value: string) {
 }
 
 // hooks
-onMounted(() => {
-    setupWatcher();
+const stopWatchShape = watch(() => props.shape, (value, old) => {
+    old.unwatch(watcher);
+    value.watch(watcher);
     calcFrame();
+})
+onMounted(() => {
+    calcFrame();
+    props.shape.watch(watcher);
 })
 onUnmounted(() => {
-    if (shape) {
-        shape.unwatch(watcher);
-        shape = undefined;
-    }
+    props.shape.unwatch(watcher);
+    stopWatchShape();
 })
-onBeforeUpdate(() => {
-    setupWatcher();
-    calcFrame();
-})
+
 </script>
 
 <template>

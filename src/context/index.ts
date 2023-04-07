@@ -1,8 +1,6 @@
 import { Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
-import { IDocShadow } from "@kcdesign/data/data/ishadow";
 import { Page } from "@kcdesign/data/data/page";
-import { ShapeNaviShadow } from "@kcdesign/data/data/shadow/shapeNavi";
 import { Shape } from "@kcdesign/data/data/shape";
 import { Repository } from "@kcdesign/data/data/transact";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data/editor";
@@ -12,44 +10,9 @@ import { uploadExForm } from "@kcdesign/data/io/export";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
 
-class ShapeNaviShadowMgr implements IDocShadow {
-    private __map: Map<string, ShapeNaviShadow> = new Map();
-
-    delete(page: Page): boolean {
-        // throw new Error("Method not implemented.");
-        this.__map.delete(page.id);
-        return true;
-    }
-    insert(index: number, page: Page): boolean {
-        // throw new Error("Method not implemented.");
-        return true;
-    }
-    // modify(page: Page, attribute: string, value: any): boolean {
-    //     // throw new Error("Method not implemented.");
-    //     return true;
-    // }
-    move(page: Page, index: number): boolean {
-        // throw new Error("Method not implemented.");
-        return true;
-    }
-    get(page: Page): ShapeNaviShadow {
-        let shadow = this.__map.get(page.id);
-        if (!shadow) {
-            shadow = new ShapeNaviShadow(page);
-            page.addShadow(shadow);
-            this.__map.set(page.id, shadow);
-        }
-        return shadow;
-    }
-    clear() {
-        this.__map.clear();
-    }
-}
-
 export class Context extends Watchable(Object) {
     private m_data: Document;
     private m_selection: Selection;
-    private m_shadows: ShapeNaviShadowMgr | undefined;
     private m_editor?: Editor;
     private m_repo: Repository;
     private m_workspace: WorkSpace;
@@ -80,14 +43,6 @@ export class Context extends Watchable(Object) {
 
     editor4Shape(shape: Shape): ShapeEditor {
         return this.editor.editor4Shape(shape);
-    }
-    
-    get shadows(): ShapeNaviShadowMgr {
-        if (!this.m_shadows) {
-            this.m_shadows = new ShapeNaviShadowMgr();
-            this.m_data.addShadow(this.m_shadows);
-        }
-        return this.m_shadows;
     }
 
     get data() {

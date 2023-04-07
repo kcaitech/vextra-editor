@@ -1,16 +1,23 @@
+/**
+ * 标准矩阵
+ *  1  0  0
+ *  0  1  0
+ *  0  0  1
+ * https://developer.mozilla.org/zh-CN/docs/Web/CSS/transform-function/matrix
+ * 对应数组下标
+ *  0  2  4
+ *  1  3  5
+ * -1 -1 -1
+ */
+function __multi(lhs: number[], rhs: number[]): number[] {
+    return [
+        lhs[0] * rhs[0] + lhs[2] * rhs[1], lhs[0] * rhs[2] + lhs[2] * rhs[3],
+        lhs[1] * rhs[0] + lhs[3] * rhs[1], lhs[1] * rhs[2] + lhs[3] * rhs[3],
+        lhs[0] * rhs[4] + lhs[2] * rhs[5] + lhs[4], lhs[1] * rhs[4] + lhs[3] * rhs[5] + lhs[5]
+    ]
+}
 
 export class Matrix {
-    /**
-     * 标准矩阵
-     *  1  0  0
-     *  0  1  0
-     *  0  0  1
-     * https://developer.mozilla.org/zh-CN/docs/Web/CSS/transform-function/matrix
-     * 对应数组下标
-     *  0  2  4
-     *  1  3  5
-     * -1 -1 -1
-     */
     private m_matrix: number[];
 
     constructor()
@@ -27,15 +34,22 @@ export class Matrix {
     multi(m: any): void { // 左乘
         const m0 = this.m_matrix;
         const mm = m instanceof Matrix ? m.m_matrix : m;
-        const m1 = [
-            mm[0] * m0[0] + mm[2] * m0[1], mm[0] * m0[2] + mm[2] * m0[3],
-            mm[1] * m0[0] + mm[3] * m0[1], mm[1] * m0[2] + mm[3] * m0[3],
-            mm[0] * m0[4] + mm[2] * m0[5] + mm[4], mm[1] * m0[4] + mm[3] * m0[5] + mm[5]
-        ]
-        this.m_matrix = m1;
+        this.m_matrix = __multi(mm, m0);
     }
+
+    preMulti(m: number[]): void
+    preMulti(m: Matrix): void
+    preMulti(m: any): void { // 左乘
+        const m0 = this.m_matrix;
+        const mm = m instanceof Matrix ? m.m_matrix : m;
+        this.m_matrix = __multi(m0, mm);
+    }
+
     trans(x: number, y: number) {
         this.multi([1, 0, 0, 1, x, y]);
+    }
+    preTrans(x: number, y: number) {
+        this.preMulti([1, 0, 0, 1, x, y]);
     }
     scale(s: number) {
         this.multi([s, 0, 0, s, 0, 0]);
