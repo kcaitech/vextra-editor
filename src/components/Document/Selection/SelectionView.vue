@@ -8,7 +8,11 @@ import { CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
 import { translate } from "@kcdesign/data/editor/frame";
 const reflush = ref(0);
-const watcher = () => { reflush.value++; }
+const watcher = () => {
+    reflush.value++;
+    updater();
+}
+
 const props = defineProps<{
     context: Context,
     matrix: number[],
