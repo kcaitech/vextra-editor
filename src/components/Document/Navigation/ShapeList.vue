@@ -61,7 +61,7 @@ let listviewSource = new class implements IDataSource<ItemData> {
     }
 }
 
-function shadowWatcher() {
+function notifySourceChange() {
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE)
 }
 
@@ -71,10 +71,10 @@ const stopWatch = watch(() => props.page, () => {
         source = new ShapeDirList(props.page);
         shapeListMap.set(props.page.id, source);
     }
-    if (shapeDirList) shapeDirList.unwatch(shadowWatcher)
+    if (shapeDirList) shapeDirList.unwatch(notifySourceChange)
     shapeDirList = source;
-    shapeDirList.watch(shadowWatcher)
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE)
+    shapeDirList.watch(notifySourceChange)
+    notifySourceChange();
 
 }, {immediate: true})
 
@@ -149,6 +149,7 @@ function onKeyUp(e: KeyboardEvent) {
 }
 
 onMounted(() => {
+    props.context.selection.watch(notifySourceChange)
     listInstance = shapelist.value?.container;
     if (listInstance) {
         listInstance.addEventListener("keydown", onKeyDown);
@@ -157,12 +158,13 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    props.context.selection.unwatch(notifySourceChange)
     if (listInstance) {
         listInstance.removeEventListener("keydown", onKeyDown);
         listInstance.removeEventListener("keyup", onKeyUp);
     }
     stopWatch();
-    if (shapeDirList) shapeDirList.unwatch(shadowWatcher)
+    if (shapeDirList) shapeDirList.unwatch(notifySourceChange)
 });
 
 </script>
