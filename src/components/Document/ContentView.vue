@@ -224,14 +224,41 @@ function contextMenuMount(e: MouseEvent) {
     setMousedownOnPageXY(e); // 更新鼠标定位
     const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
     contextMenuItems = ['paste', 'copy'];
-    if (shapes.length > 1) {
+    if (!shapes.length) {
+        contextMenuItems = ['paste'];
+    } else if (shapes.length === 1) {
+        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom'];
+        props.context.selection.selectShape(shapes[shapes.length - 1]);
+    } else if (shapes.length > 1) {
+        const isCommon = hasCommon(props.context.selection.selectedShapes, shapes);        
+        if (!isCommon) {
+            props.context.selection.selectShape(shapes[shapes.length - 1]);
+        }
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
-        contextMenuItems.push('layers');
+        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers'];
     }
     contextMenu.value = true;
-}
+    document.addEventListener('keydown', esc);
 
+    function hasCommon(arr1: any[], arr2: any[]) {        
+        const arr = [];
+        for (let i = 0; i < arr1.length; i++) {
+            arr[i] = arr1[i].__uuid;
+        }
+        for (let i = 0; i < arr2.length; i++) {            
+            if (arr.includes(arr2[i].__uuid)) return true;
+        }
+        return false;
+    }
+}
+function esc(e: KeyboardEvent) {
+    if (e.code === 'Escape') contextMenuUnmount();
+}
+function contextMenuUnmount() {
+    document.removeEventListener('keydown', esc);
+    contextMenu.value = false;
+}
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id)
@@ -276,9 +303,9 @@ renderinit().then(() => {
         @mousedown="onMouseDown">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView  :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
-        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenu = false;">
+        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                :context="props.context" @close="contextMenu = false;">
+                :context="props.context" @close="contextMenuUnmount">
             </PageViewContextMenuItems>
         </ContextMenu>
     </div>

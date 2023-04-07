@@ -7,7 +7,13 @@ export const system = {
     empty: '暂无数据',
     paste: '粘贴',
     copy: '复制',
-    'select_layer': '图层选择'
+    'select_layer': '图层选择',
+    'bring_forward': '上移一层',
+    'send_backward': '下移一层',
+    'bring_to_top': '置于顶层',
+    'send_to_bottom': '置于底层',
+    'visible': '显示/隐藏',
+    'Lock': '锁定/解锁'
 }
 
 export const home = {

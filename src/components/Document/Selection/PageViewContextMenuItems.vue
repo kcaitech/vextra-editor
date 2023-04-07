@@ -24,6 +24,12 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuPosition.x = targetWidth;
   layerSubMenuPosition.y = -10;
   layerSubMenuVisiable.value = true;
+}
+function copy() {
+  const copyObj = props.context.selection.selectedShapes;
+  props.context.workspace.setClipBoard(copyObj);
+}
+function paste() {
 
 }
 function closeLayerSubMenu(e: MouseEvent) {
@@ -41,11 +47,39 @@ function closeLayerSubMenu(e: MouseEvent) {
       </ContextMenu>
     </div>
     <div class="line" v-if="props.items.includes('layers')"></div>
-    <div class="item" v-if="props.items.includes('paste')">
+    <div class="item" v-if="props.items.includes('paste')" @click="paste">
       <span>{{ t('system.paste') }}</span>
+      <span class="shortkey">Ctrl + V</span>
+    </div>
+    <div class="item" v-if="props.items.includes('copy')" @click="copy">
+      <span>{{ t('system.copy') }}</span>
+      <span class="shortkey">Ctrl + C</span>
+    </div>
+    <div class="line" v-if="props.items.includes('forward')"></div>
+    <div class="item" v-if="props.items.includes('forward')">
+      <span>{{ t('system.bring_forward') }}</span>
+    </div>
+    <div class="item" v-if="props.items.includes('back')">
+      <span>{{ t('system.send_backward') }}</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('copy')">{{ t('system.copy') }}</div>
+    <div class="item" v-if="props.items.includes('top')">
+      <span>{{ t('system.bring_to_top') }}</span>
+      <span></span>
+    </div>
+    <div class="item" v-if="props.items.includes('bottom')">
+      <span>{{ t('system.send_to_bottom') }}</span>
+      <span></span>
+    </div>
+    <div class="line" v-if="props.items.includes('visible')"></div>
+    <div class="item" v-if="props.items.includes('visible')">
+      <span>{{ t('system.visible') }}</span>
+      <span></span>
+    </div>
+    <div class="item" v-if="props.items.includes('visible')">
+      <span>{{ t('system.Lock') }}</span>
+      <span></span>
+    </div>
   </div>
 </template>
 <style lang='scss' scoped>
@@ -72,11 +106,10 @@ function closeLayerSubMenu(e: MouseEvent) {
       border-bottom: 5px solid transparent;
       border-left: 10px solid var(--theme-color-anti);
     }
+    >.shortkey {
+      margin-left: auto;
+    }
   }
-
-  // .layer-select {
-
-  // }
 
   .line {
     width: 100%;

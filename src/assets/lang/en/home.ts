@@ -1,4 +1,4 @@
-import { BorderPosition, ShapeType } from "@kcdesign/data/data/typesdefine";
+import { BorderPosition } from "@kcdesign/data/data/typesdefine";
 
 export const system = {
     'illegal_input': 'illegal input!',
@@ -7,7 +7,13 @@ export const system = {
     empty: 'No data',
     paste: 'Paste',
     copy: 'Copy',
-    'select_layer': 'Select layer'
+    'select_layer': 'Select layer',
+    'bring_forward': 'Bring forward',
+    'send_backward': 'Send backward',
+    'bring_to_top': 'Bring to top',
+    'send_to_bottom': 'Send to bottom',
+    'visible': 'Visible/Hidden',
+    'Lock': 'Lock/Unlock'
 }
 
 export const home = {

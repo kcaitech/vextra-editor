@@ -45,6 +45,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_current_action: Action = Action.Auto;
     private m_scale: number = 1;
     private m_matrix: Matrix = new Matrix();
+    private m_clip_board: any;
     constructor(context: Context) {
         super();
         this.r_context = context
@@ -58,7 +59,10 @@ export class WorkSpace extends Watchable(Object) {
     get matrix() {
         return this.m_matrix;
     }
-
+    get clipBoard() {
+        return this.m_clip_board;
+    }
+    
     setAction(action: Action) {
         this.m_current_action = action;
         this.notify();
@@ -66,6 +70,9 @@ export class WorkSpace extends Watchable(Object) {
     setScale(s: number) {
         this.m_scale = s;
         this.notify();
+    }
+    setClipBoard(v: any) {
+        this.m_clip_board = v;
     }
 
     // keyboard
