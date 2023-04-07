@@ -28,6 +28,7 @@ declare module '@vue/runtime-core' {
     Design: typeof import('./src/components/Document/Attribute/Design.vue')['default']
     Document: typeof import('./src/components/Document/index.vue')['default']
     DropFile: typeof import('./src/components/Home/DropFile.vue')['default']
+    DropSelect: typeof import('./src/components/Document/Toolbar/Buttons/DropSelect.vue')['default']
     EditorTools: typeof import('./src/components/Document/Toolbar/EditorTools.vue')['default']
     Examples: typeof import('./src/components/Home/Examples.vue')['default']
     ExportAttr: typeof import('./src/components/Document/Attribute/ExportAttr.vue')['default']

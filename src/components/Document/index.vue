@@ -61,6 +61,8 @@ function keyboardEventHandler(e: KeyboardEvent) {
         workspace.value.keydown_z(props.repo, ctrlKey, shiftKey, metaKey);
     } else if ([KeyboardKeys.Up, KeyboardKeys.Right, KeyboardKeys.Down, KeyboardKeys.Left].includes(e.code as KeyboardKeys)) {
         workspace.value.keydown_arrow(e.code as KeyboardKeys, shiftKey);
+    } else if (e.code === KeyboardKeys.K) {
+        workspace.value.keydown_K();
     }
 }
 

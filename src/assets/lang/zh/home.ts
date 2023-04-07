@@ -19,7 +19,9 @@ export const system = {
 export const home = {
     open_local_file: "打开文件",
     open_remote_file: "打开远程文件",
-    new_file: "新建文档"
+    new_file: "新建文档",
+    object_selector: '选择对象',
+    scale: '等比缩放'
 }
 
 export const navi = {

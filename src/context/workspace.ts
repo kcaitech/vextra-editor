@@ -5,6 +5,8 @@ import { ShapeType } from "@kcdesign/data/data/typesdefine";
 import { Matrix } from '@/basic/matrix';
 export enum Action {
     Auto = 'auto',
+    AutoV = 'cursor',
+    AutoK = 'scale',
     AddRect = 'add-rect',
     AddLine = 'add-line'
 }
@@ -18,6 +20,7 @@ export enum KeyboardKeys {
     Down = 'ArrowDown',
     Left = 'ArrowLeft',
     Right = 'ArrowRight',
+    K = 'KeyK'
 }
 export enum CursorType {
     Crosshair = 'crosshair',
@@ -42,7 +45,7 @@ const A2R = new Map([
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action);
 export class WorkSpace extends Watchable(Object) {
     readonly r_context: Context
-    private m_current_action: Action = Action.Auto;
+    private m_current_action: Action = Action.AutoV;
     private m_scale: number = 1;
     private m_matrix: Matrix = new Matrix();
     private m_clip_board: any;
@@ -81,7 +84,7 @@ export class WorkSpace extends Watchable(Object) {
         this.notify();
     }
     keydown_v() {
-        this.m_current_action = Action.Auto;
+        this.m_current_action = Action.AutoV;
         this.notify();
     }
     keydown_l() {
@@ -97,5 +100,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     keydown_arrow(type: KeyboardKeys, shift?: boolean) {        
         return this.r_context;
+    }
+    keydown_K() {
+        this.m_current_action = Action.AutoK;
+        this.notify();
     }
 }

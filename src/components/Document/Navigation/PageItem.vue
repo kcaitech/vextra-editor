@@ -4,7 +4,7 @@
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageItem.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
+import { defineProps, defineEmits, ref, nextTick } from "vue";
 
 export interface ItemData {
     name: string
@@ -16,12 +16,35 @@ const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
     (e: "switchpage", id: string): void;
 }>();
+const isInput = ref<boolean>(false)
+const nameInput = ref<HTMLInputElement>()
 
 function onClick(e: MouseEvent) {
     e.stopPropagation();
     emit("switchpage", props.data.id);
 }
 
+const onRename = () => {
+    isInput.value = true
+    nextTick(() => {
+        if(nameInput.value) {            
+            nameInput.value.focus();
+            nameInput.value.select();
+            nameInput.value?.addEventListener('blur', saveInput);
+            nameInput.value?.addEventListener('keydown', keySaveInput);
+        }
+    })
+}
+const saveInput = () => {
+    isInput.value = false
+}
+const keySaveInput = (e: KeyboardEvent) => {
+    if(e.code === 'Enter') {
+        isInput.value = false
+    }else if(e.code === 'Escape') {
+        isInput.value = false
+    }
+}
 </script>
 
 <template>
@@ -31,7 +54,8 @@ function onClick(e: MouseEvent) {
     >
         <div class="ph"></div>
         <div class="item">
-            <div class="title">{{props.data.name}}</div>
+            <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : ''}">{{props.data.name}}</div>
+            <input v-if="isInput" class="rename" type="text" ref="nameInput" :value="props.data.name">
         </div>
     </div>
 </template>
@@ -51,7 +75,8 @@ function onClick(e: MouseEvent) {
     flex-direction: row;
     position: relative;
     .item {
-        line-height: 30px;
+        display: flex;
+        align-items: center;
         width: 100%;
         position: relative;
         > .title {
@@ -80,4 +105,17 @@ div.container.selected {
     height: 100%;
 }
 
+div .rename {
+    flex: 1;
+    width: 100%;
+    height: 22px;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    padding-left:6px;
+    margin-right: 6px;
+    outline-style: none;
+    border: 1px solid var(--left-navi-button-select-color);
+}
 </style>
