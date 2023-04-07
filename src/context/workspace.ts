@@ -1,4 +1,5 @@
 import { Watchable } from "@kcdesign/data/data/basic";
+import { Context } from "./index"
 import { Repository } from "@kcdesign/data/data/transact";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
 import { Matrix } from '@/basic/matrix';
@@ -12,7 +13,11 @@ export enum KeyboardKeys {
     R = 'KeyR',
     V = 'KeyV',
     L = 'KeyL',
-    Z = 'KeyZ'
+    Z = 'KeyZ',
+    Up = 'ArrowUp',
+    Down = 'ArrowDown',
+    Left = 'ArrowLeft',
+    Right = 'ArrowRight',
 }
 export enum CursorType {
     Crosshair = 'crosshair',
@@ -36,11 +41,13 @@ const A2R = new Map([
 ]);
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action);
 export class WorkSpace extends Watchable(Object) {
+    readonly r_context: Context
     private m_current_action: Action = Action.Auto;
     private m_scale: number = 1;
     private m_matrix: Matrix = new Matrix();
-    constructor() {
+    constructor(context: Context) {
         super();
+        this.r_context = context
     }
     get action() {
         return this.m_current_action;
@@ -61,7 +68,6 @@ export class WorkSpace extends Watchable(Object) {
         this.notify();
     }
 
-
     // keyboard
     keydown_r() {
         this.m_current_action = Action.AddRect;
@@ -81,5 +87,8 @@ export class WorkSpace extends Watchable(Object) {
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
         }
+    }
+    keydown_arrow(type: KeyboardKeys, shift?: boolean) {        
+        return this.r_context;
     }
 }

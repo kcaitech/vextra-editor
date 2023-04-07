@@ -18,7 +18,6 @@ const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(props.data, props.repo));
 (window as any).__context = context.value;
 const workspace = computed<WorkSpace>(() => context.value.workspace);
-
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -51,6 +50,7 @@ function selectionWatcher(t: number) {
 }
 function keyboardEventHandler(e: KeyboardEvent) {
     const { ctrlKey, shiftKey, metaKey } = e;
+    
     if (e.code === KeyboardKeys.R) {
         workspace.value.keydown_r();
     } else if (e.code === KeyboardKeys.V) {
@@ -59,6 +59,8 @@ function keyboardEventHandler(e: KeyboardEvent) {
         workspace.value.keydown_l();
     } else if (e.code === KeyboardKeys.Z) {
         workspace.value.keydown_z(props.repo, ctrlKey, shiftKey, metaKey);
+    } else if ([KeyboardKeys.Up, KeyboardKeys.Right, KeyboardKeys.Down, KeyboardKeys.Left].includes(e.code as KeyboardKeys)) {
+        workspace.value.keydown_arrow(e.code as KeyboardKeys, shiftKey);
     }
 }
 
