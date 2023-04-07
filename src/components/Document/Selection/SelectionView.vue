@@ -8,7 +8,11 @@ import { ShapeEditor } from "@kcdesign/data/editor/shape";
 import { CtrlElementType } from "@/context/workspace";
 type Side = 'top' | 'right' | 'bottom' | 'left';
 const reflush = ref(0);
-const watcher = () => { reflush.value++; }
+const watcher = () => {
+    reflush.value++;
+    updater();
+}
+
 const props = defineProps<{
     context: Context,
     matrix: number[],
