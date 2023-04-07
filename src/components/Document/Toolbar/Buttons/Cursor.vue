@@ -36,21 +36,12 @@ function showMenu() {
       if (popover.value) {      
         popover.value.style.left = el.offsetLeft + 'px';
         popover.value.style.top = el.offsetHeight + 2 + 'px';
+       
       } 
     })
+    document.addEventListener('click', onMenuBlur);
   }
 }
-
-watch(popoverVisible, (val) => {
-  if (val) {
-    nextTick(() => {
-      if (popover.value) {
-        popover.value.addEventListener('blur', onMenuBlur);
-        popover.value.focus();
-      }
-    })
-  }
-})
 
 const selector = (active: Action) => {
   selected.value = active
@@ -58,20 +49,28 @@ const selector = (active: Action) => {
  
 }
 
-function onMenuBlur() {
-  if (popover.value) {
-    popover.value.removeEventListener('blur', onMenuBlur);
-  }
-  var timer = setTimeout(() => {
-    popoverVisible.value = false;
-    clearTimeout(timer)
-  }, 100)
+function onMenuBlur(e: MouseEvent) {
+  if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu')) {        
+    if(e.target.closest('.popover'))return 
+    var timer = setTimeout(() => {
+      popoverVisible.value = false;
+      clearTimeout(timer)
+      document.removeEventListener('click', onMenuBlur);
+    }, 10)
+  }  
 }
+
 onUpdated(()=> {
   if(props.d === Action.AutoV || props.d === Action.AutoK) {
-    selects.value = props.d
+    if(props.d === Action.AutoV) {
+      selects.value = props.d
+    }else {
+      selects.value = props.d
+    }
+    
   }  
 })
+
 </script>
 
 <template>
@@ -81,7 +80,7 @@ onUpdated(()=> {
     </template>
     
   </div>
-  <ToolButton ref="button" @click="() => {select(selected)}" :selected="props.active">
+  <ToolButton ref="button" @click="() => {select(selects)}" :selected="props.active">
     <div class="svg-container" title="Cursor">
       <svg-icon :icon-class="props.d === selected ? props.d: selects"></svg-icon>
     </div>

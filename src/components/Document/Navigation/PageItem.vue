@@ -29,15 +29,22 @@ const onRename = () => {
     nextTick(() => {
         if(nameInput.value) {            
             nameInput.value.focus();
-            nameInput.value.select()
-            nameInput.value?.addEventListener('blur', stopInput);
+            nameInput.value.select();
+            nameInput.value?.addEventListener('blur', saveInput);
+            nameInput.value?.addEventListener('keydown', keySaveInput);
         }
     })
 }
-const stopInput = () => {
+const saveInput = () => {
     isInput.value = false
 }
-
+const keySaveInput = (e: KeyboardEvent) => {
+    if(e.code === 'Enter') {
+        isInput.value = false
+    }else if(e.code === 'Escape') {
+        isInput.value = false
+    }
+}
 </script>
 
 <template>

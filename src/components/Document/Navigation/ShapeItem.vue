@@ -33,7 +33,6 @@ function updater() {
     let shape = props.data.shape;
     showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0;
 }
-
 // const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 function toggleExpand(e: Event) {
     if (!showTriangle.value) {
@@ -41,6 +40,11 @@ function toggleExpand(e: Event) {
     }
     e.stopPropagation();    
     emit("toggleexpand", props.data.shape);
+}
+
+const toggleContainer = (e: MouseEvent) => {
+    e.stopPropagation()
+    console.log(e,'e');
 }
 
 function selectShape(e: Event) {
@@ -71,14 +75,23 @@ const onRename = () => {
     nextTick(() => {
         if(nameInput.value) {            
             nameInput.value.focus();
-            nameInput.value.select()
+            nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
+            nameInput.value?.addEventListener('keydown', keySaveInput);
+
         }
     })
     
 }
 const stopInput = () => {    
     isInput.value = false
+}
+const keySaveInput = (e: KeyboardEvent) => {
+    if(e.code === 'Enter') {
+        isInput.value = false
+    }else if(e.code === 'Escape') {
+        isInput.value = false
+    }
 }
 
 onBeforeMount(() => {
@@ -107,6 +120,9 @@ onBeforeUpdate(() => {
                 :class="{'triangle-right': !props.data.expand, 'triangle-down': props.data.expand}"
             ></div>
         </div>
+        <div class="containerSvg" @dblclick="toggleContainer">
+            <svg-icon class="svg" icon-class="pattern-rectangle"></svg-icon>
+        </div>
         <div class="text" :class="{ container: true, selected: props.data.selected }" :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : ''}">
             <div class="text" @dblclick="onRename">{{props.data.shape.name}}</div>
             <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible': 'hidden'}`}">
@@ -120,7 +136,7 @@ onBeforeUpdate(() => {
                 </div>
             </div>
         </div>
-        <input v-if="isInput" class="rename" type="text" ref="nameInput" :value="props.data.shape.name">
+        <input v-if="isInput" :value="props.data.shape.name" class="rename" type="text" ref="nameInput">
     </div>
 </template>
 
@@ -186,6 +202,17 @@ div.triangle-down {
     position: relative;
     left: 1px;
     top: 13px;
+}
+
+div.containerSvg {
+    display: flex;
+    width: 16px;
+    justify-content: center;
+    align-items: center;
+    .svg {
+        width: 10px;
+        height: 10px;
+    }
 }
 
 div.text {
