@@ -9,7 +9,7 @@ import { Shape } from "@kcdesign/data/data/shape";
 import { useI18n } from 'vue-i18n';
 type List = InstanceType<typeof ListView>;
 
-    class Iter implements IDataIter<ItemData> {
+class Iter implements IDataIter<ItemData> {
     private __it: ShapeDirListIter | undefined;
     constructor(it: ShapeDirListIter | undefined) {
         this.__it = it;
@@ -39,13 +39,13 @@ type List = InstanceType<typeof ListView>;
 const props = defineProps<{ context: Context, page: Page }>();
 const { t } = useI18n();
 
-const shapeListMap:Map<string, ShapeDirList > = new Map();
+const shapeListMap: Map<string, ShapeDirList> = new Map();
 
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
-    
+
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
-    
+
     length(): number {
         return shapeDirList && shapeDirList.length || 0;
     }
@@ -76,10 +76,9 @@ const stopWatch = watch(() => props.page, () => {
     shapeDirList.watch(notifySourceChange)
     notifySourceChange();
 
-}, {immediate: true})
+}, { immediate: true })
 
 const shapelist = ref<List>();
-let listInstance: HTMLDivElement | undefined;
 
 function search(e: Event) {
     console.log((e.target as HTMLInputElement).value);
@@ -87,12 +86,12 @@ function search(e: Event) {
 function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)
 }
-function selectShape(data: ItemData) {
-    if (props.context.selection.onShift) {
+function selectShape(data: ItemData, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
+    if (shiftKey) {
         selectShapeWhenShiftIsPressed(data);
-        return;
+    } else {
+        props.context.selection.selectShape(data.shape, ctrlKey, metaKey);
     }
-    props.context.selection.selectShape(data.shape);
 }
 function selectShapeWhenShiftIsPressed(curData: ItemData) {
     const to = shapeDirList.indexOf(curData.shape);
@@ -127,42 +126,12 @@ function unHovershape(shape: Shape) {
     props.context.selection.unHoverShape(shape);
 }
 
-function changeControlPressStatus(e: KeyboardEvent, down: boolean) {        
-    if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {  
-        props.context?.selection.setControlStatus(down);
-    }
-}
-function changeShiftPressStatus(e: KeyboardEvent, down: boolean) {
-    if (e.code === 'ShiftLeft') {  
-        props.context?.selection.setShiftStatus(down);
-    }
-}
-
-function onKeyDown(e: KeyboardEvent) {
-    changeControlPressStatus(e, true);
-    changeShiftPressStatus(e, true);
-    
-}
-function onKeyUp(e: KeyboardEvent) {
-    changeControlPressStatus(e, false)
-    changeShiftPressStatus(e, false);
-}
-
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
-    listInstance = shapelist.value?.container;
-    if (listInstance) {
-        listInstance.addEventListener("keydown", onKeyDown);
-        listInstance.addEventListener("keyup", onKeyUp);
-    }
 });
 
 onUnmounted(() => {
     props.context.selection.unwatch(notifySourceChange)
-    if (listInstance) {
-        listInstance.removeEventListener("keydown", onKeyDown);
-        listInstance.removeEventListener("keyup", onKeyUp);
-    }
     stopWatch();
     if (shapeDirList) shapeDirList.unwatch(notifySourceChange)
 });
@@ -179,30 +148,18 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body">
-            <ListView
-                ref="shapelist"
-                location="shapelist"
-                :source="listviewSource"
-                :item-view="ShapeItem"
-                :item-height="30"
-                :item-width="0"
-                :first-index="0"
-                :context="props.context"
-                @toggleexpand="toggleExpand"
-                @selectshape="selectShape"
-                @hovershape="hoverShape"
-                @unhovershape="unHovershape"
-                orientation="vertical"
-            >
+            <ListView ref="shapelist" location="shapelist" :source="listviewSource" :item-view="ShapeItem" :item-height="30"
+                :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
+                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape" orientation="vertical">
             </ListView>
         </div>
     </div>
-
 </template>
 
 <style scoped lang="scss">
 .shapelist-wrap {
     height: 100%;
+
     .header {
         width: 100%;
         height: 64px;
@@ -210,14 +167,17 @@ onUnmounted(() => {
         padding: 0 13px;
         box-sizing: border-box;
         position: relative;
-        > div:not(.space) {
+
+        >div:not(.space) {
             flex-shrink: 0;
         }
+
         .title {
             font-weight: var(--font-default-bold);
             line-height: 30px;
             height: 30px;
         }
+
         .search {
             width: 100%;
             height: 32px;
@@ -228,11 +188,13 @@ onUnmounted(() => {
             background-color: var(--grey-light);
             padding: 4px var(--default-padding);
             border-radius: 8px;
-            > svg {
+
+            >svg {
                 height: 20px;
                 flex: 0 0 20px;
             }
-            > input {
+
+            >input {
                 flex: 1 1 auto;
                 border: none;
                 outline: none;
@@ -241,12 +203,13 @@ onUnmounted(() => {
             }
         }
     }
+
     .body {
         height: calc(100% - 64px);
-        > .container {
+
+        >.container {
             height: 100%;
         }
     }
 }
-
 </style>
