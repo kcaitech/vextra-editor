@@ -50,7 +50,6 @@ function selectionWatcher(t: number) {
 }
 function keyboardEventHandler(e: KeyboardEvent) {
     const { ctrlKey, shiftKey, metaKey } = e;
-    
     if (e.code === KeyboardKeys.R) {
         workspace.value.keydown_r();
     } else if (e.code === KeyboardKeys.V) {
@@ -90,13 +89,8 @@ onUnmounted(() => {
         :middle="{ width: 0.8, minWidth: 0.3, maxWidth: 0.8 }" :right="{ width: 0.1, minWidth: 0.1, maxWidth: 0.5 }"
         :right-min-width-in-px="336" :left-min-width-in-px="336">
         <template #slot1>
-            <Navigation
-                v-if="curPage !== undefined"
-                id="navigation"
-                :context="context"
-                @switchpage="switchPage"
-                :page="(curPage as Page)"
-            ></Navigation>
+            <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
+                :page="(curPage as Page)"></Navigation>
         </template>
         <template #slot2>
             <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)">
@@ -108,7 +102,6 @@ onUnmounted(() => {
     </ColSplitView>
     <div id="bottom"></div>
 </template>
-
 <style>
 :root {
     /* top toolbar */
@@ -125,8 +118,7 @@ onUnmounted(() => {
     --center-content-bg-color: var(--grey-light);
 }
 </style>
-
-<style scoped>
+<style scoped lang="scss">
 #top {
     display: flex;
     flex-flow: row nowrap;
@@ -144,6 +136,25 @@ onUnmounted(() => {
     width: 100%;
     height: auto;
     overflow: hidden;
+    position: relative;
+
+    #navigation {
+        height: 100%;
+        background-color: var(--left-navi-bg-color);
+        z-index: 1;
+    }
+
+    #content {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    #attributes {
+        height: 100%;
+        background-color: var(--right-attr-bg-color);
+        z-index: 1;
+    }
 }
 
 #bottom {
@@ -152,29 +163,7 @@ onUnmounted(() => {
     height: 30px;
     min-height: 30px;
     align-self: flex-end;
-    /* visibility: hidden; */
     background-color: var(--theme-color);
-    z-index: 1;
-}
-
-.navigation {
-    flex-flow: column nowrap;
-    height: 100%;
-    background-color: var(--left-navi-bg-color);
-    z-index: 1;
-}
-
-#content {
-    flex: 1 1 auto;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-#attributes {
-    flex-flow: column nowrap;
-    height: 100%;
-    background-color: var(--right-attr-bg-color);
     z-index: 1;
 }
 </style>

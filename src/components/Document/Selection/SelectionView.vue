@@ -229,6 +229,15 @@ watchEffect(updater)
 </script>
 
 <template>
+    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
+        left: '' + s.x + 'px',
+        top: '' + s.y + 'px',
+        width: '' + s.width + 'px',
+        height: '' + s.height + 'px',
+        borderWidth: '' + borderWidth + 'px',
+        transform: `rotate(${s.rotate}deg)`
+    }" :key="s.id" :reflush="reflush">
+    </div>
     <div class="control-rect" @mousedown="mousedown" v-if="data.isSelect" :style="{
         left: '' + controlRect.x + 'px',
         top: '' + controlRect.y + 'px',
@@ -241,26 +250,9 @@ watchEffect(updater)
             :context="props.context">
         </ControlPoint>
     </div>
-    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
-        left: '' + s.x + 'px',
-        top: '' + s.y + 'px',
-        width: '' + s.width + 'px',
-        height: '' + s.height + 'px',
-        borderWidth: '' + borderWidth + 'px',
-        transform: `rotate(${s.rotate}deg)`
-    }" :key="s.id" :reflush="reflush">
-    </div>
 </template>
 
 <style scoped lang="scss">
-.control-rect {
-    border-radius: 0px;
-    border-style: solid;
-    border-color: var(--active-color);
-    position: absolute;
-    z-index: 1;
-}
-
 .selectrect {
     border-radius: 0px;
     border-style: solid;
@@ -270,6 +262,13 @@ watchEffect(updater)
 
 .hoverrect {
     background-color: none;
+    border-radius: 0px;
+    border-style: solid;
+    border-color: var(--active-color);
+    position: absolute;
+}
+
+.control-rect {
     border-radius: 0px;
     border-style: solid;
     border-color: var(--active-color);

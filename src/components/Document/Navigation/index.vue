@@ -14,14 +14,5 @@ const props = defineProps<{ context: Context, page: Page }>();
 </script>
 
 <template>
-    <section>
-        <Tabs :context="props.context" v-bind="$attrs" :page="page"></Tabs>
-    </section>
+    <Tabs :context="props.context" v-bind="$attrs" :page="page"></Tabs>
 </template>
-
-<style scoped lang="scss">
-section {
-    width: 100%;
-    height: 100%;
-}
-</style>
