@@ -90,7 +90,7 @@ function addShape(frame: ShapeFrame) {
         const insertSuccess = editor.insert(page, 0, shape);
         if (insertSuccess) {
             props.context.selection.selectShape(shape);
-            workspace.value.setAction(Action.Auto);
+            workspace.value.setAction(Action.AutoV);
         }
     }
 }
