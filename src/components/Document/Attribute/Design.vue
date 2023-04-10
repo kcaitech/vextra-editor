@@ -15,7 +15,7 @@ const props = defineProps<{ context: Context }>();
 
 const shape = shallowRef<Shape>();
 
-const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text];
+const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path];
 const shapeType = ref();
 
 function selectionChange(t: number) {    

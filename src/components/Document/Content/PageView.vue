@@ -2,6 +2,7 @@
 import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
+import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { defineProps, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 const props = defineProps<{
@@ -44,7 +45,7 @@ onUnmounted(() => {
         overflow="visible"
         :reflush="reflush !== 0 ? reflush : undefined">
 
-        <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type)" :data="c" />
+        <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" :data="c" />
 
     </svg>
 </template>
