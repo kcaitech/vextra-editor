@@ -1,7 +1,7 @@
 import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape, GroupShape } from "@kcdesign/data/data/shape";
 
 interface Saved {
     page: Page | undefined,
@@ -62,6 +62,28 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             for(let i = 0; i < source.length; i++) {                
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
+                const suppos = {x: position.x - x, y: position.y - y}
+                if (source[i].childs?.length) deep(source[i].childs, suppos);
+            }
+        }
+    }
+    getClosetContainer(position: AbsolutePosition): GroupShape {
+        const page = this.m_selectPage!;
+        const groups: GroupShape[] = [page];
+        const childs = page.childs;
+        position.x -= page.frame.x;
+        position.y -= page.frame.y;
+        if (childs?.length) deep(childs, position);
+        return groups[0];
+
+        function deep(source: Shape[], position: AbsolutePosition) {
+            for(let i = 0; i < source.length; i++) {                
+                const { x, y, width, height } = source[i].frame;
+                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {
+                    if (['group-shape', 'artboard'].includes(source[i].typeId)) {
+                        groups.unshift(source[i] as GroupShape);
+                    }
+                }
                 const suppos = {x: position.x - x, y: position.y - y}
                 if (source[i].childs?.length) deep(source[i].childs, suppos);
             }

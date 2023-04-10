@@ -81,18 +81,25 @@ function getMouseOnPageXY(e: MouseEvent): AbsolutePosition {
 function addShape(frame: ShapeFrame) {
     const type = ResultByAction(workspace.value.action);
     const page = props.context.selection.selectedPage;
-    if (page && type) {
+    const parent = getCloestContainer();
+    // const { x, y } = parent.realXY();
+    // frame.x -= x;
+    // frame.y -= y;
+    if (page && parent && type) {
         const editor = props.context.editor4Page(page);
-        let name = t(`shape.${ShapeType.Rectangle}`);
-        const repeats: number = page.childs.filter(item => item.type === ShapeType.Rectangle).length;
+        let name = t(`shape.${type}`);
+        const repeats: number = parent.childs.filter(item => item.type === ShapeType.Rectangle).length;
         name = repeats ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
-        const insertSuccess = editor.insert(page, 0, shape);
+        const insertSuccess = editor.insert(parent, 0, shape);
         if (insertSuccess) {
             props.context.selection.selectShape(shape);
             workspace.value.setAction(Action.AutoV);
         }
     }
+}
+function getCloestContainer() {
+    return props.context.selection.getClosetContainer(mousedownOnPageXY);
 }
 function onMouseWheel(e: WheelEvent) {
     const xy = offset2Root();
@@ -144,6 +151,7 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 function onMouseUp(e: MouseEvent) {
+
     e.preventDefault();
     // 现有情况，不是拖动pageview，便是操作图层
     if (spacePressed.value) {
