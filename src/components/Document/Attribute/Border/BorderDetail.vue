@@ -16,7 +16,8 @@ import { genOptions } from '@/utils/common';
 const props = defineProps<{
     context: Context,
     shape: Shape,
-    border: Border
+    border: Border,
+    index: number
 }>();
 
 const { t } = useI18n();
@@ -85,28 +86,27 @@ function initValue() {
 function borderStyleSelect(selected: SelectItem) {
   borderStyle.value = selected;
   const bs = selected.value === 'dash' ? new BorderStyle(10, 10) : new BorderStyle(0, 0);
-  const index = props.shape.getBorderIndex(props.border);
-  editor.value.setBorderStyle(index, bs);
+  editor.value.setBorderStyle(props.index, bs);
+  popover.value.focus();
 }
 function positionSelect(selected: SelectItem) {
   position.value = selected;
-  const index = props.shape.getBorderIndex(props.border);
-  editor.value.setBorderPosition(index, selected.value as BorderPosition);
+  editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
+  popover.value.focus();
 }
 function setThickness(e: Event) {
   const thickness = Number((e.target as HTMLInputElement).value);
-  const index = props.shape.getBorderIndex(props.border);
-  editor.value.setBorderThickness(index, thickness);
+  editor.value.setBorderThickness(props.index, thickness);
 }
 function borderApexStyleSelect(selected: SelectItem) {
-  const index = props.shape.getBorderIndex(props.border);
   if (selected.content.startsWith('end')) {
     borderEndStyle.value = selected;
-    editor.value.setBorderApexStyle(index, selected.value as MarkerType, true);
+    editor.value.setBorderApexStyle(props.index, selected.value as MarkerType, true);
   } else {
     borderFrontStyle.value = selected;
-    editor.value.setBorderApexStyle(index, selected.value as MarkerType, false);
+    editor.value.setBorderApexStyle(props.index, selected.value as MarkerType, false);
   }
+  popover.value.focus();
 }
 watch(() => props.border, () => {
   initValue();  
@@ -115,7 +115,7 @@ watch(() => props.border, () => {
 
 <template>
   <div class="border-detail-container">
-    <Popover class="popover" ref="popover" :width="240" :left="-470" :height="256" :title="t('attr.advanced_stroke')">
+    <Popover class="popover" ref="popover" :width="240" :left="-460" :height="256" :title="t('attr.advanced_stroke')">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
@@ -130,8 +130,8 @@ watch(() => props.border, () => {
               :selected="position"
               :item-view="BorderPositonItem"
               :item-height="32"
-              @select="positionSelect"
               :source="positonOptionsSource"
+              @select="positionSelect"
             ></Select>
           </div>
           <!-- 边框厚度 -->

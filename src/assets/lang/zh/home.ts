@@ -4,13 +4,24 @@ export const system = {
     'illegal_input': '输入不合法！',
     select: '请选择！',
     space: '...',
-    empty: '暂无数据'
+    empty: '暂无数据',
+    paste: '粘贴',
+    copy: '复制',
+    'select_layer': '图层选择',
+    'bring_forward': '上移一层',
+    'send_backward': '下移一层',
+    'bring_to_top': '置于顶层',
+    'send_to_bottom': '置于底层',
+    'visible': '显示/隐藏',
+    'Lock': '锁定/解锁'
 }
 
 export const home = {
     open_local_file: "打开文件",
     open_remote_file: "打开远程文件",
-    new_file: "新建文档"
+    new_file: "新建文档",
+    object_selector: '选择对象',
+    scale: '等比缩放'
 }
 
 export const navi = {

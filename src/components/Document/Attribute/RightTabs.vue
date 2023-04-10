@@ -13,7 +13,9 @@ import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{
+    context: Context
+}>();
 
 // type Tab = "Design" | "Prototype" | "Inspect";
 type Tab = "Design" | "Inspect";
@@ -41,7 +43,7 @@ function toggle(id: Tab) {
         if (props.context.selection.selectedShapes.length === 1) {
             props.context.selection.selectShape(props.context.selection.selectedShapes[0]);
         }
-        
+
     }
     currentTab.value = id;
 }
@@ -51,7 +53,8 @@ function toggle(id: Tab) {
 <template>
     <div class="tab-container">
         <div class="tab-controller">
-            <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index" @click="toggle(i.id)">{{ i.title }}</div>
+            <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
+                @click="toggle(i.id)">{{ i.title }}</div>
         </div>
         <div class="body">
             <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
@@ -65,15 +68,16 @@ function toggle(id: Tab) {
 .tab-container {
     position: relative;
     width: 100%;
-    height: 100%;
+
     .tab-controller {
         height: 36px;
-        width: 100%;  
+        width: 100%;
         flex: 0 0 auto;
         display: flex;
         flex-direction: row;
         margin-left: 13px;
-        > .tab {
+
+        >.tab {
             font-weight: var(--font-default-bold);
             font-size: 10px;
             min-width: 42px;
@@ -83,11 +87,13 @@ function toggle(id: Tab) {
             text-align: center;
             line-height: 24px;
         }
-        > .active {
+
+        >.active {
             border-radius: 4px 4px 0 0;
             background-color: var(--grey-dark);
         }
     }
+
     .body {
         border-top: 1px solid var(--theme-color);
         width: 100%;
@@ -96,6 +102,6 @@ function toggle(id: Tab) {
         flex: 1 1 auto;
         box-sizing: border-box;
     }
-    
+
 }
 </style>

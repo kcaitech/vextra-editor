@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, defineProps, onMounted, onUnmounted, ref } from 'vue';
+import { h, defineProps, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Shape, GroupShape } from "@kcdesign/data/data/shape";
 import { render as r } from "@/render/shapegroup";
 
@@ -10,6 +10,14 @@ const consumed: Array<Shape> = [];
 const watcher = () => {
     reflush.value++;
 }
+const stopWatch = watch(() => props.data, (value, old) => {
+    old.unwatch(watcher);
+    value.watch(watcher);
+    for (let i = 0, len = consumed.length; i < len; i++) {
+        consumed[i].unwatch(watcher);
+    }
+    consumed.length = 0;
+})
 onMounted(() => {
     props.data.watch(watcher);
 })
@@ -19,6 +27,7 @@ onUnmounted(() => {
         consumed[i].unwatch(watcher);
     }
     consumed.length = 0;
+    stopWatch();
 })
 function render() {
     const consumed0: Array<Shape> = [];

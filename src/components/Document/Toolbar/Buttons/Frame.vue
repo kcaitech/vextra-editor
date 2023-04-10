@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, watch } from 'vue';
+import { ref, nextTick, watch, onUnmounted } from 'vue';
 import ToolButton from '../ToolButton.vue';
 
 type Button = InstanceType<typeof ToolButton>
@@ -19,29 +19,21 @@ function showMenu(e: MouseEvent) {
         popover.value.style.top = el.offsetHeight + 2 + 'px';
       } 
     })
+    document.addEventListener('click', onMenuBlur);
   }
 }
 
-watch(popoverVisible, (val) => {
-  if (val) {
-    nextTick(() => {
-      if (popover.value) {
-        popover.value.addEventListener('blur', onMenuBlur);
-        popover.value.focus();
-      }
-    })
+function onMenuBlur(e: MouseEvent) {
+  if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu')) {
+    var timer = setTimeout(() => {
+      popoverVisible.value = false;
+      clearTimeout(timer)
+      document.removeEventListener('click', onMenuBlur);
+    }, 10)
   }
-})
-
-function onMenuBlur() {
-  if (popover.value) {
-    popover.value.removeEventListener('blur', onMenuBlur);
-  }
-  var timer = setTimeout(() => {
-    popoverVisible.value = false;
-    clearTimeout(timer)
-  }, 100)
+  
 }
+
 </script>
 
 <template>
@@ -88,7 +80,7 @@ function onMenuBlur() {
 .popover {
   position: absolute;
   z-index: 999;
-  width: 360px;
+  width: 120px;
   height: 100px;
   background-color: var(--theme-color);
   border-radius: 4px;

@@ -1,18 +1,28 @@
-import { BorderPosition } from "@kcdesign/data/data/typesdefine"
+import { BorderPosition } from "@kcdesign/data/data/typesdefine";
 
 export const system = {
     'illegal_input': 'illegal input!',
     select: 'Select',
     space: '...',
     empty: 'No data',
+    paste: 'Paste',
+    copy: 'Copy',
+    'select_layer': 'Select layer',
+    'bring_forward': 'Bring forward',
+    'send_backward': 'Send backward',
+    'bring_to_top': 'Bring to top',
+    'send_to_bottom': 'Send to bottom',
+    'visible': 'Visible/Hidden',
+    'Lock': 'Lock/Unlock'
 }
 
 export const home = {
     open_local_file: "Open file",
     open_remote_file: "Open remote file",
-    new_file: "New file"
+    new_file: "New file",
+    object_selector: 'Move',
+    scale: 'Scale'
 }
-
 
 export const navi = {
     shape: 'Shape',

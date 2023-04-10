@@ -16,7 +16,6 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     childs.push(...fillR(h, shape, path));
     // border
     childs.push(...borderR(h, shape, path));
-
     if (childs.length == 0) {
         // todo
         return h('rect', { 

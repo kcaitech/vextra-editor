@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, shallowRef } from "vue"
 import { Context } from '@/context';
-import UndoRedo from './UndoRedo.vue';
-import GroupUngroup from './GroupUngroup.vue';
 import OpenFile from "./OpenFile.vue";
 import EditorTools from "./EditorTools.vue";
 import UserInfo from './UserInfo.vue';
@@ -25,11 +23,7 @@ onUnmounted(() => {
     <div class="toolbar">
         <OpenFile></OpenFile>
         <EditorTools :context="context" :selection="selection"></EditorTools>
-        <UserInfo></UserInfo>
-        <!-- <UndoRedo :repo="repo" /> back/go
-        <div class="vertical-line" />-->
-        <!-- <GroupUngroup :context="context" :selection="selection" /> -->
-
+        <UserInfo :context="props.context" ></UserInfo>
     </div>
 </template>
 
@@ -41,13 +35,5 @@ onUnmounted(() => {
     display: flex;
     flex-flow:row nowrap;
     padding: 0px 14px;
-}
-.vertical-line {
-    width: 1px;
-    height: 50%;
-    background-color: gray;
-    flex: 0 0 auto;
-    margin-left: 5px;
-    margin-right: 5px;
 }
 </style>

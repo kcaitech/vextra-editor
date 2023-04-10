@@ -11,7 +11,8 @@ import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
-const props = defineProps<{ context: Context }>();
+import { Page } from "@kcdesign/data/data/page";
+const props = defineProps<{ context: Context, page: Page }>();
 
 const structure = ref<{pagelistHeight: number, pagelistHeightBackup: number}>({pagelistHeight: 30, pagelistHeightBackup: 30});
 const container = ref<HTMLDivElement>();
@@ -47,11 +48,11 @@ onUnmounted(() => {
 <template>
     <div class="shapetab-container" ref="container">
         <div class="page-navi" :style="{height: isPagelistFold ? '30px' : `${structure.pagelistHeight}%`}">
-            <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold"></PageList>
+            <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"></PageList>
             <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"></Sash>
         </div>
         <div :style="{height: isPagelistFold ? 'calc(100% - 30px)' : `${100 - structure.pagelistHeight}%`}">
-            <ShapeList :context="props.context"></ShapeList>
+            <ShapeList :context="props.context" :page="page"></ShapeList>
         </div>
     </div>
     
