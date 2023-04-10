@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, watch, onUnmounted } from 'vue';
+import { ref, nextTick } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { useI18n } from 'vue-i18n';
 import FrameChild from './FrameChild.vue'
@@ -30,7 +30,6 @@ function showMenu(e: MouseEvent) {
 function onMenuBlur(e: MouseEvent) {
   if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu-f')) {
     var timer = setTimeout(() => {
-      top.value = 0;
       popoverVisible.value = false;
       clearTimeout(timer)
       document.removeEventListener('click', onMenuBlur);
@@ -39,24 +38,12 @@ function onMenuBlur(e: MouseEvent) {
   
 }
 
-
-const top = ref(0)
 const left = ref(0)
 const showChildFrame = (i: number) => {
-    
     hoverIndex.value = i
     if(popover.value) {
       left.value = popover.value.offsetWidth
-      
     }
-    nextTick(() => {
-      if(frame.value) {
-          let el = (frame.value as any)[i]
-          const { y } = offset2Root(i)
-          top.value = y - 42
-        }        
-      })
-
   
 }
 function offset2Root(i: number) {

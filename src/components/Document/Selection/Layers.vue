@@ -66,8 +66,6 @@ function mouseout(shape: Shape) {
       }
     }
 
-
-
     >span {
       margin-left: var(--default-margin-half);
     }
