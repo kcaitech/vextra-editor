@@ -14,7 +14,7 @@ import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
-type ContextMenuEl = InstanceType<typeof ContextMenu>
+type ContextMenuEl = InstanceType<typeof ContextMenu>;
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -38,7 +38,7 @@ let state = STATE_NONE;
 const dragActiveDis = 3;
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix = reactive(props.context.workspace.matrix);
-const matrixMap = new Map<string, {m: Matrix, x: number, y: number}>();
+const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 // let savePageId: string = "";
 const reflush = ref(0);
 const watcher = () => {
@@ -90,7 +90,7 @@ function addShape(frame: ShapeFrame) {
         const insertSuccess = editor.insert(page, 0, shape);
         if (insertSuccess) {
             props.context.selection.selectShape(shape);
-            workspace.value.setAction(Action.Auto);
+            workspace.value.setAction(Action.AutoV);
         }
     }
 }
@@ -171,7 +171,7 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
         if (action.startsWith('add')) {
             // todo 添加shape
             addShape(shapeFrame);
-        } else if (action === Action.Auto) {
+        } else if (action === Action.AutoV) {
             // 选择图层
             getShapesByXY(); // 获取与鼠标点击位置相交的所有图层，并选择最上层的图层
         }
@@ -221,7 +221,7 @@ function getShapesByXY() {
         props.context.selection.selectShape();
     }
 }
-let site:{ x: number, y: number } = { x: 0, y: 0 };
+let site: { x: number, y: number } = { x: 0, y: 0 };
 function contextMenuMount(e: MouseEvent) {
     site.x = e.clientX
     site.y = e.clientY
@@ -237,7 +237,7 @@ function contextMenuMount(e: MouseEvent) {
         contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom'];
         props.context.selection.selectShape(shapes[shapes.length - 1]);
     } else if (shapes.length > 1) {
-        const isCommon = hasCommon(props.context.selection.selectedShapes, shapes);        
+        const isCommon = hasCommon(props.context.selection.selectedShapes, shapes);
         if (!isCommon) {
             props.context.selection.selectShape(shapes[shapes.length - 1]);
         }
@@ -251,23 +251,23 @@ function contextMenuMount(e: MouseEvent) {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
             surplusY.value = document.documentElement.clientHeight - site.y;
-            if(el) {
+            if (el) {
                 const height = el.offsetHeight;
-                if(surplusY.value-30 < height ) {
+                if (surplusY.value - 30 < height) {
                     surplusY.value = document.documentElement.clientHeight - site.y - 30
                     el.style.top = contextMenuPosition.y + surplusY.value - height + 'px'
-                }   
+                }
             }
-            
+
         }
     })
 
-    function hasCommon(arr1: any[], arr2: any[]) {        
+    function hasCommon(arr1: any[], arr2: any[]) {
         const arr = [];
         for (let i = 0; i < arr1.length; i++) {
             arr[i] = arr1[i].__uuid;
         }
-        for (let i = 0; i < arr2.length; i++) {            
+        for (let i = 0; i < arr2.length; i++) {
             if (arr.includes(arr2[i].__uuid)) return true;
         }
         return false;
@@ -286,7 +286,7 @@ function initMatrix(cur: Page) {
     if (!info) {
         const m = new Matrix();
         m.trans(-cur.frame.x, -cur.frame.y)
-        info = {m, x: cur.frame.x, y: cur.frame.y}
+        info = { m, x: cur.frame.x, y: cur.frame.y }
         matrixMap.set(cur.id, info)
     }
     matrix.reset(info.m.toArray())
@@ -323,8 +323,9 @@ renderinit().then(() => {
     <div v-if="inited" ref="root" :style="{ cursor }" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
         @mousedown="onMouseDown">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
-        <SelectionView  :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
-        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount" :site="site">
+        <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
+        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount"
+            :site="site">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
@@ -335,6 +336,5 @@ renderinit().then(() => {
 <style scoped lang="scss">
 div {
     background-color: var(--center-content-bg-color);
-    // position: relative;
 }
 </style>

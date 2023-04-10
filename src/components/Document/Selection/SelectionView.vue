@@ -46,13 +46,6 @@ const data = reactive<{
 });
 // let editor: ShapeEditor;
 const shapes: Array<Shape> = [];
-// [side type, x, y, width, height, cursor type][];
-const controllerBars: [CtrlElementType, number, number, number, number, string][] = [
-    [CtrlElementType.RectT, 0, 0, 0, 0, 'ns-resize'],
-    [CtrlElementType.RectR, 0, 0, 0, 0, 'ew-resize'],
-    [CtrlElementType.RectB, 0, 0, 0, 0, 'ns-resize'],
-    [CtrlElementType.RectL, 0, 0, 0, 0, 'ew-resize']
-];
 // [point type, x, y, cursor type][]
 const controllerPoints: [CtrlElementType, number, number, string][] = [
     [CtrlElementType.RectLT, 0, 0, 'nwse-resize'],
@@ -165,7 +158,7 @@ function updater() {
         }
         genControlRect(data.shapes);
         genPoint();
-        
+
     }
 }
 function genPoint() {
@@ -194,7 +187,7 @@ function genControlRect(shapes: ShapeSelectData[]) {
         controlRect.rotate = 0;
     }
 }
-function mousedown(e: MouseEvent) {    
+function mousedown(e: MouseEvent) {
     props.context.editor4Shape(shapes[0]);
     if (!props.isController || !props.context.repo) return;
     document.addEventListener('mousemove', mousemove);
@@ -202,7 +195,7 @@ function mousedown(e: MouseEvent) {
     startPosition = { x: e.clientX, y: e.clientY };
     props.context.repo.start('transform', {});
 }
-function mousemove(e: MouseEvent) {    
+function mousemove(e: MouseEvent) {
     const delta: AbsolutePosition = { x: e.clientX - startPosition.x, y: e.clientY - startPosition.y };
     if (isDragging) {
         translate(shapes[0], delta.x, delta.y);
@@ -237,6 +230,15 @@ watchEffect(updater)
 </script>
 
 <template>
+    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
+        left: '' + s.x + 'px',
+        top: '' + s.y + 'px',
+        width: '' + s.width + 'px',
+        height: '' + s.height + 'px',
+        borderWidth: '' + borderWidth + 'px',
+        transform: `rotate(${s.rotate}deg)`
+    }" :key="s.id" :reflush="reflush">
+    </div>
     <div class="control-rect" @mousedown="mousedown" v-if="data.isSelect" :style="{
         left: '' + controlRect.x + 'px',
         top: '' + controlRect.y + 'px',
@@ -249,27 +251,9 @@ watchEffect(updater)
             :context="props.context">
         </ControlPoint>
     </div>
-    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }"
-        :style="{
-            left: '' + s.x + 'px',
-            top: '' + s.y + 'px',
-            width: '' + s.width + 'px',
-            height: '' + s.height + 'px',
-            borderWidth: '' + borderWidth + 'px',
-            transform: `rotate(${s.rotate}deg)`
-        }" :key="s.id" :reflush="reflush">
-    </div>
 </template>
 
 <style scoped lang="scss">
-.control-rect {
-    border-radius: 0px;
-    border-style: solid;
-    border-color: var(--active-color);
-    position: absolute;
-    z-index: 1;
-}
-
 .selectrect {
     border-radius: 0px;
     border-style: solid;
@@ -279,6 +263,13 @@ watchEffect(updater)
 
 .hoverrect {
     background-color: none;
+    border-radius: 0px;
+    border-style: solid;
+    border-color: var(--active-color);
+    position: absolute;
+}
+
+.control-rect {
     border-radius: 0px;
     border-style: solid;
     border-color: var(--active-color);

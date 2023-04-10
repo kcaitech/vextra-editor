@@ -22,7 +22,7 @@ const phWidth = computed(() => {
 })
 const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
-    (e: "selectshape", data: ItemData): void;
+    (e: "selectshape", data: ItemData, ctrl: boolean, meta: boolean, shift: boolean): void;
     (e: "hovershape", shape: Shape): void;
     (e: "unhovershape", shape: Shape): void;
     (e: "isLock", isLock: boolean): void;
@@ -38,18 +38,19 @@ function toggleExpand(e: Event) {
     if (!showTriangle.value) {
         return;
     }
-    e.stopPropagation();    
+    e.stopPropagation();
     emit("toggleexpand", props.data.shape);
 }
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation()
-    console.log(e,'e');
+    console.log(e, 'e');
 }
 
-function selectShape(e: Event) {
+function selectShape(e: MouseEvent) {
     e.stopPropagation();
-    emit("selectshape", props.data);
+    const { ctrlKey, metaKey, shiftKey } = e;
+    emit("selectshape", props.data, ctrlKey, metaKey, shiftKey);
 }
 
 function hoverShape(e: MouseEvent) {
@@ -73,7 +74,7 @@ const onRead = () => {
 const onRename = () => {
     isInput.value = true
     nextTick(() => {
-        if(nameInput.value) {            
+        if (nameInput.value) {
             nameInput.value.focus();
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
@@ -81,15 +82,15 @@ const onRename = () => {
 
         }
     })
-    
+
 }
-const stopInput = () => {    
+const stopInput = () => {
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
-    if(e.code === 'Enter') {
+    if (e.code === 'Enter') {
         isInput.value = false
-    }else if(e.code === 'Escape') {
+    } else if (e.code === 'Escape') {
         isInput.value = false
     }
 }
@@ -104,33 +105,25 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div
-        :class="{ container: true, selected: props.data.selected }"
-        @click="selectShape"
-        @mouseover="hoverShape"
-        @mouseleave="unHoverShape"
-    >
-        <div
-            class="ph"
-            :style="{ width:`${phWidth}px`, height:'100%', minWidth:`${phWidth}px` }"
-        ></div>
+    <div :class="{ container: true, selected: props.data.selected }" @click="selectShape" @mouseover="hoverShape"
+        @mouseleave="unHoverShape">
+        <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
-            <div
-                v-if="showTriangle"
-                :class="{'triangle-right': !props.data.expand, 'triangle-down': props.data.expand}"
-            ></div>
+            <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
+            </div>
         </div>
         <div class="containerSvg" @dblclick="toggleContainer">
             <svg-icon class="svg" icon-class="pattern-rectangle"></svg-icon>
         </div>
-        <div class="text" :class="{ container: true, selected: props.data.selected }" :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : ''}">
-            <div class="text" @dblclick="onRename">{{props.data.shape.name}}</div>
-            <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible': 'hidden'}`}">
-                <div class="tool_lock tool" :class="{ 'visible':!isLock }" @click="onLock" >
+        <div class="text" :class="{ container: true, selected: props.data.selected }"
+            :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
+            <div class="text" @dblclick="onRename">{{ props.data.shape.name }}</div>
+            <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}` }">
+                <div class="tool_lock tool" :class="{ 'visible': !isLock }" @click="onLock">
                     <svg-icon v-if="isLock" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="lock-lock"></svg-icon>
                 </div>
-                <div class="tool_eye tool" :class="{ 'visible':!isRead }" @click="onRead">
+                <div class="tool_eye tool" :class="{ 'visible': !isRead }" @click="onRead">
                     <svg-icon v-if="isRead" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="eye-closed"></svg-icon>
                 </div>
@@ -159,6 +152,7 @@ div.container:hover {
 div.container.selected {
     background-color: var(--left-navi-button-select-color);
 }
+
 div.ph {
     margin-left: 6px;
 }
@@ -209,6 +203,7 @@ div.containerSvg {
     width: 16px;
     justify-content: center;
     align-items: center;
+
     .svg {
         width: 10px;
         height: 10px;
@@ -224,6 +219,7 @@ div.text {
     overflow: hidden;
     padding-left: 2px;
 }
+
 div .rename {
     flex: 1;
     height: 20px;
@@ -232,7 +228,7 @@ div .rename {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding-left:6px;
+    padding-left: 6px;
     margin-right: 6px;
     outline-style: none;
     border: 1px solid var(--left-navi-bg-color);
@@ -244,29 +240,35 @@ div .rename {
     justify-content: center;
     width: 24px;
     height: 24px;
-    
+
 }
+
 .tool_icon {
     display: flex;
     align-items: center;
     margin-right: 6px;
+
     .tool_lock {
-    .svg {
-        width: 8px;
-        height: 10px;
+        .svg {
+            width: 8px;
+            height: 10px;
+        }
+
+        .svg-open {
+            width: 16px;
+            height: 16px;
+        }
     }
-    .svg-open {
-        width: 16px;
-        height: 16px;
-    }
-    }
+
     .tool_eye {
         margin-right: 5px;
+
         .svg {
-        width: 16px;
-        height: 16px;
+            width: 16px;
+            height: 16px;
+        }
     }
-    }
+
     .visible {
         visibility: visible;
     }
