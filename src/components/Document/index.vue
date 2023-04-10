@@ -50,18 +50,21 @@ function selectionWatcher(t: number) {
 }
 function keyboardEventHandler(e: KeyboardEvent) {
     const { ctrlKey, shiftKey, metaKey } = e;
+    
     if (e.code === KeyboardKeys.R) {
         workspace.value.keydown_r();
     } else if (e.code === KeyboardKeys.V) {
         workspace.value.keydown_v();
     } else if (e.code === KeyboardKeys.L) {
-        workspace.value.keydown_l();
+        workspace.value.keydown_l(shiftKey);
     } else if (e.code === KeyboardKeys.Z) {
         workspace.value.keydown_z(props.repo, ctrlKey, shiftKey, metaKey);
     } else if ([KeyboardKeys.Up, KeyboardKeys.Right, KeyboardKeys.Down, KeyboardKeys.Left].includes(e.code as KeyboardKeys)) {
         workspace.value.keydown_arrow(e.code as KeyboardKeys, shiftKey);
     } else if (e.code === KeyboardKeys.K) {
         workspace.value.keydown_K();
+    } else if (e.code === KeyboardKeys.O) {
+        workspace.value.keydown_o();
     }
 }
 

@@ -8,7 +8,9 @@ export enum Action {
     AutoV = 'cursor',
     AutoK = 'scale',
     AddRect = 'add-rect',
-    AddLine = 'add-line'
+    AddLine = 'add-line',
+    AddEllipse = 'add-ellipse',
+    AddArrow = 'add-arrow'
 }
 export enum KeyboardKeys {
     Space = 'Space',
@@ -20,7 +22,8 @@ export enum KeyboardKeys {
     Down = 'ArrowDown',
     Left = 'ArrowLeft',
     Right = 'ArrowRight',
-    K = 'KeyK'
+    K = 'KeyK',
+    O = 'KeyO'
 }
 export enum CursorType {
     Crosshair = 'crosshair',
@@ -40,7 +43,8 @@ export enum CtrlElementType {
 }
 const A2R = new Map([
     [Action.Auto, undefined],
-    [Action.AddRect, ShapeType.Rectangle]
+    [Action.AddRect, ShapeType.Rectangle],
+    [Action.AddEllipse, ShapeType.Oval]
 ]);
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action);
 export class WorkSpace extends Watchable(Object) {
@@ -87,8 +91,8 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AutoV;
         this.notify();
     }
-    keydown_l() {
-        this.m_current_action = Action.AddLine;
+    keydown_l(shiftKey: boolean) {        
+        this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
     }
     keydown_z(repo: Repository, ctrl?: boolean, shift?: boolean, meta?: boolean) {
@@ -103,6 +107,10 @@ export class WorkSpace extends Watchable(Object) {
     }
     keydown_K() {
         this.m_current_action = Action.AutoK;
+        this.notify();
+    }
+    keydown_o() {
+        this.m_current_action = Action.AddEllipse;
         this.notify();
     }
 }

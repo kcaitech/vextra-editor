@@ -9,6 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    Arrow: typeof import('./src/components/Document/Toolbar/Buttons/Arrow.vue')['default']
     ArtboardView: typeof import('./src/components/Document/Content/ArtboardView.vue')['default']
     BaseAttr: typeof import('./src/components/Document/Attribute/BaseAttr.vue')['default']
     Border: typeof import('./src/components/Document/Attribute/Border/Border.vue')['default']
@@ -30,11 +31,13 @@ declare module '@vue/runtime-core' {
     DropFile: typeof import('./src/components/Home/DropFile.vue')['default']
     DropSelect: typeof import('./src/components/Document/Toolbar/Buttons/DropSelect.vue')['default']
     EditorTools: typeof import('./src/components/Document/Toolbar/EditorTools.vue')['default']
+    Ellipse: typeof import('./src/components/Document/Toolbar/Buttons/Ellipse.vue')['default']
     Examples: typeof import('./src/components/Home/Examples.vue')['default']
     ExportAttr: typeof import('./src/components/Document/Attribute/ExportAttr.vue')['default']
     FilePickButton: typeof import('./src/components/common/FilePickButton.vue')['default']
     Fill: typeof import('./src/components/Document/Attribute/Fill/Fill.vue')['default']
     Frame: typeof import('./src/components/Document/Toolbar/Buttons/Frame.vue')['default']
+    FrameChild: typeof import('./src/components/Document/Toolbar/Buttons/FrameChild.vue')['default']
     GridView: typeof import('./src/components/Document/GridView.vue')['default']
     GroupUngroup: typeof import('./src/components/Document/Toolbar/GroupUngroup.vue')['default']
     Home: typeof import('./src/components/Home/index.vue')['default']
@@ -43,6 +46,7 @@ declare module '@vue/runtime-core' {
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
     Layers: typeof import('./src/components/Document/Selection/Layers.vue')['default']
     LeftTabs: typeof import('./src/components/Document/Navigation/LeftTabs.vue')['default']
+    Line: typeof import('./src/components/Document/Toolbar/Buttons/Line.vue')['default']
     ListView: typeof import('./src/components/common/ListView.vue')['default']
     Menu: typeof import('./src/components/Document/Menu/index.vue')['default']
     Navigation: typeof import('./src/components/Document/Navigation/index.vue')['default']

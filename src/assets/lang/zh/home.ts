@@ -31,6 +31,16 @@ export const navi = {
     page: '页面'
 }
 
+export const frame = {
+    custom: '自定义',
+    phone: '手机',
+    tablet: '平板',
+    deskdop: '桌面',
+    presentation: '预览',
+    watch: '手表',
+    paper: '纸张',
+    social_media : '社交媒体'
+}
 
 export const attr: any = {
     design: '设计',
