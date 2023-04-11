@@ -122,8 +122,8 @@ function hoverShape(shape: Shape) {
     props.context.selection.hoverShape(shape);
 }
 
-function unHovershape(shape: Shape) {
-    props.context.selection.unHoverShape(shape);
+function unHovershape() {
+    props.context.selection.unHoverShape();
 }
 
 onMounted(() => {

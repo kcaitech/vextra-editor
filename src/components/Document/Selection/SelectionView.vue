@@ -16,7 +16,7 @@ const watcher = () => {
 const props = defineProps<{
     context: Context,
     matrix: number[],
-    isController: boolean
+    isController: boolean,
 }>();
 interface ShapeSelectData {
     width: number,
@@ -25,7 +25,15 @@ interface ShapeSelectData {
     y: number,
     radius: number[],
     id: string,
-    rotate: number
+    rotate: number,
+    center: {
+        x: number,
+        y: number
+    },
+    clientCenter: {
+        x: number,
+        y: number
+    }
 }
 interface ControlRect {
     width: number,
@@ -44,7 +52,6 @@ const data = reactive<{
     isSelect: false,
     shapes: []
 });
-// let editor: ShapeEditor;
 const shapes: Array<Shape> = [];
 // [point type, x, y, cursor type][]
 const controllerPoints: [CtrlElementType, number, number, string][] = [
@@ -77,7 +84,15 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
         y: 0,
         radius: [5, 5, 5, 5],
         id: "",
-        rotate: 0
+        rotate: 0,
+        center: {
+            x: 0,
+            y: 0
+        },
+        clientCenter: {
+            x: 0,
+            y: 0
+        }
     };
     data.id = shape.id;
 
@@ -90,7 +105,10 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
 
     const xy0 = matrix.computeCoord(x, y);
     const xy1 = matrix.computeCoord(x + width, y + height);
-
+    data.center = {
+        x: (xy0.x + xy1.x) / 2,
+        y: (xy0.y + xy1.y) / 2
+    }
     data.x = xy0.x - halfBorderWidth;
     data.y = xy0.y - halfBorderWidth;
     data.width = xy1.x - xy0.x - borderWidth;
@@ -98,14 +116,13 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
     data.rotate = shape.rotation || 0;
     return data;
 }
-
-function updater() {
-
+function updater() {     
     matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
-    // data.isSelect = !data.isHover && selection.selectedShapes.length > 0;
     data.isSelect = selection.selectedShapes.length > 0;
+    console.log(data.isSelect);
+    
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -133,7 +150,7 @@ function updater() {
         }
         data.shapes[0] = updateShape(data.shapes[0], selection.hoveredShape as Shape);
     }
-    else if (data.isSelect) {
+    else if (data.isSelect) {        
         data.shapes.length = selection.selectedShapes.length;
         for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
             data.shapes[i] = updateShape(data.shapes[i], selection.selectedShapes[i]);
@@ -155,10 +172,9 @@ function updater() {
             else {
                 // do nothing
             }
-        }
-        genControlRect(data.shapes);
+        }        
+        genControlRect();
         genPoint();
-
     }
 }
 function genPoint() {
@@ -169,21 +185,29 @@ function genPoint() {
     const offset = 13;
     controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
 }
-function genControlRect(shapes: ShapeSelectData[]) {
-    const s = shapes[0];
-    controlRect.x = s.x;
-    controlRect.y = s.y;
-    controlRect.width = s.width;
-    controlRect.height = s.height;
-    controlRect.rotate = s.rotate;
-    if (shapes.length > 1) {
-        for (let i = 1; i < shapes.length; i++) {
-            const si = shapes[i];
-            if (si.x < controlRect.x) controlRect.x = si.x;
-            if (si.y < controlRect.y) controlRect.y = si.y;
-            if (si.x + si.width > controlRect.width) controlRect.width = si.x + si.width;
-            if (si.y + si.height > controlRect.height) controlRect.height = si.y + si.height;
-        }
+function genControlRect() {    
+    const selection: Shape[] = props.context.selection.selectedShapes;
+    const xy0 = matrix.computeCoord(selection[0].realXY().x, selection[0].realXY().y);
+    const xy1 = { x: 0, y: 0 };
+    for (let i = 0; i < selection.length; i++) {
+        const { width, height } = selection[i].frame;
+        const realXY = selection[i].realXY();
+        const cXY0 = matrix.computeCoord(realXY.x, realXY.y);
+        const cXY1 = matrix.computeCoord(realXY.x + width, realXY.y + height);
+        xy0.x = xy0.x > cXY0.x ? cXY0.x : xy0.x;
+        xy0.y = xy0.y > cXY0.y ? cXY0.y : xy0.y;
+        xy1.x = xy1.x < cXY1.x ? cXY1.x : xy1.x;
+        xy1.y = xy1.y < cXY1.y ? cXY1.y : xy1.y;
+    }
+
+    controlRect.x = xy0.x - halfBorderWidth;
+    controlRect.y = xy0.y - halfBorderWidth;
+    controlRect.width = xy1.x - xy0.x - borderWidth;
+    controlRect.height = xy1.y - xy0.y - borderWidth;
+
+    if (selection.length === 1) {
+        controlRect.rotate = selection[0].rotation || 0;
+    } else {
         controlRect.rotate = 0;
     }
 }
@@ -198,11 +222,17 @@ function mousedown(e: MouseEvent) {
 function mousemove(e: MouseEvent) {
     const delta: AbsolutePosition = { x: e.clientX - startPosition.x, y: e.clientY - startPosition.y };
     if (isDragging) {
-        translate(shapes[0], delta.x, delta.y);
+        transform(shapes, delta);
         props.context.repo?.transactCtx.fireNotify();
         startPosition = { x: e.clientX, y: e.clientY };
     } else {
         if (Math.hypot(delta.x, delta.y) > dragActiveDis) isDragging = true;
+    }
+
+}
+function transform(shapes: Shape[], delta: AbsolutePosition) {
+    for (let i = 0; i < shapes.length; i++) {
+        translate(shapes[i], delta.x, delta.y);
     }
 }
 function mouseup() {

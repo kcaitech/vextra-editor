@@ -50,6 +50,7 @@ const root = ref<HTMLDivElement>();
 const mousedownOnPageXY: AbsolutePosition = { x: 0, y: 0 }; // 鼠标在page中的坐标
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
+let isMouseDown: boolean = false;
 const selectionIsCtrl = computed(() => !spacePressed.value);
 
 const contextMenuEl = ref<ContextMenuEl>();
@@ -132,6 +133,7 @@ function onKeyUp(e: KeyboardEvent) {
 }
 function onMouseDown(e: MouseEvent) {
     e.preventDefault();
+    isMouseDown = true;
     if (e.button === MOUSE_LEFT) { // 左键按下
         if (spacePressed.value) {
             pageViewDragStart(e);
@@ -145,13 +147,16 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 function onMouseMove(e: MouseEvent) {
-    e.preventDefault();
-    if (spacePressed.value) {
-        pageViewDragging(e);
+    if (isMouseDown) {
+        e.preventDefault();
+        if (spacePressed.value) {
+            pageViewDragging(e);
+        }
+    } else {
+        hoveredShape(e);
     }
 }
 function onMouseUp(e: MouseEvent) {
-
     e.preventDefault();
     // 现有情况，不是拖动pageview，便是操作图层
     if (spacePressed.value) {
@@ -161,6 +166,7 @@ function onMouseUp(e: MouseEvent) {
     }
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
+    isMouseDown = false;
 }
 function pageEditorOnMoveEnd(e: MouseEvent) {
     const { x, y } = getMouseOnPageXY(e);
@@ -192,6 +198,19 @@ function workspaceUpdate() {
         cursor.value = CursorType.Crosshair
     } else {
         cursor.value = CursorType.Auto
+    }
+}
+function hoveredShape(e: MouseEvent) {
+    const { clientX, clientY } = e;
+    const { x, y } = offset2Root();
+    const xy = matrix.inverseCoord(clientX - x, clientY - y);
+    const shapes = props.context.selection.getShapesByXY(xy);
+    
+    const hoveredShape = shapes.find(s => s.type && s.type !== ShapeType.Artboard);
+    if (hoveredShape) {
+        props.context.selection.hoverShape(hoveredShape);
+    } else {
+        props.context.selection.unHoverShape();
     }
 }
 function pageViewDragStart(e: MouseEvent) {
@@ -329,7 +348,7 @@ renderinit().then(() => {
 
 <template>
     <div v-if="inited" ref="root" :style="{ cursor }" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
-        @mousedown="onMouseDown">
+        @mousedown="onMouseDown" @mousemove="onMouseMove">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount"

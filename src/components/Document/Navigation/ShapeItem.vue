@@ -24,7 +24,7 @@ const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
     (e: "selectshape", data: ItemData, ctrl: boolean, meta: boolean, shift: boolean): void;
     (e: "hovershape", shape: Shape): void;
-    (e: "unhovershape", shape: Shape): void;
+    (e: "unhovershape"): void;
     (e: "isLock", isLock: boolean): void;
     (e: "isRead", isRead: boolean): void;
 }>();
@@ -60,7 +60,7 @@ function hoverShape(e: MouseEvent) {
 }
 function unHoverShape(e: MouseEvent) {
     e.stopPropagation();
-    emit("unhovershape", props.data.shape);
+    emit("unhovershape");
     isVisible.value = false
 }
 const onLock = () => {
