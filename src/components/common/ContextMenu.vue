@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, defineEmits, ref, onUpdated, nextTick, defineExpose } from 'vue';
+import { defineProps, onMounted, onUnmounted, defineEmits, ref, defineExpose } from 'vue';
 
 interface Props {
   x: number

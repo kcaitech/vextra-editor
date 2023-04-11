@@ -1,20 +1,31 @@
 <script setup lang="ts">
-import { left } from '@popperjs/core';
-import { defineEmits, defineProps, onMounted, onUpdated } from 'vue';
+import { defineEmits, defineProps } from 'vue';
+import { WorkSpace } from "@/context/workspace";
+
 
 const props = defineProps<{
     childFrame: boolean,
     top: number,
     left: number,
-    framesChild: string[][]
+    framesChild: string[][],
+    workspace: WorkSpace
 }>();
 const emit = defineEmits<{
+  (e: "closeFrame"): void;
 }>();
+
+const addFrame = (size: string) => {
+  const width = Number(size.split('×')[0])
+  const height = Number(size.split('×')[1])
+  emit('closeFrame')
+  props.workspace.setFrameSize({width: width, height: height})
+  
+}
 
 </script>
 <template>
     <div class="child" v-if="childFrame" :style="{top: top+ 'px', left: props.left+'px'}">
-          <div class="item" v-for="(item, i) in props.framesChild" :key="i">
+          <div class="item" v-for="(item, i) in props.framesChild" :key="i" @click="addFrame(item[1])">
             <span>{{ item[0] }}</span>
             <span>{{ item[1] }}</span>
           </div>

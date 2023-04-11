@@ -6,7 +6,7 @@ const props = defineProps<{
   top?: number,
   left?: number,
   width?: number,
-  height?: number,
+  height?: string | number,
 }>();
 defineExpose({
   show,

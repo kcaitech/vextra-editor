@@ -65,6 +65,8 @@ function keyboardEventHandler(e: KeyboardEvent) {
         workspace.value.keydown_K();
     } else if (e.code === KeyboardKeys.O) {
         workspace.value.keydown_o();
+    } else if (e.code === KeyboardKeys.F) {
+        workspace.value.keydown_f();
     }
 }
 
