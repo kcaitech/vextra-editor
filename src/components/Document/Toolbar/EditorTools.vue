@@ -14,6 +14,9 @@ import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
 import Rect from "./Buttons/Rect.vue";
+import Ellipse from "./Buttons/Ellipse.vue";
+import Line from "./Buttons/Line.vue";
+import Arrow from "./Buttons/Arrow.vue";
 import { Action, WorkSpace } from "@/context/workspace";
 
 const props = defineProps<{ 
@@ -47,9 +50,17 @@ onUnmounted(() => {
         <div class="vertical-line" />
         <Frame></Frame>
         <Rect @select="select" :active="selected === Action.AddRect" ></Rect>
+        <Ellipse @select="select" :active="selected === Action.AddEllipse" ></Ellipse>
+        <Line @select="select" :active="selected === Action.AddLine" ></Line>
+        <Arrow @select="select" :active="selected === Action.AddArrow" ></Arrow>
         <ToolButton>
             <div class="temp" title="Text">
                 <svg-icon icon-class="text"></svg-icon>
+            </div>
+        </ToolButton>
+        <ToolButton>
+            <div class="temp" title="Picture">
+                <svg-icon icon-class="picture"></svg-icon>
             </div>
         </ToolButton>
         <div class="vertical-line" />
@@ -73,7 +84,7 @@ onUnmounted(() => {
         transform: translateX(-50%);
         height: 40px;
         div {
-            margin: auto 4px;
+            margin: auto 0;
         }
         .temp {
             width: 28px;

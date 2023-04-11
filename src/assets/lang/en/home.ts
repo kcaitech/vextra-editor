@@ -31,6 +31,17 @@ export const navi = {
     page: 'Page',
 }
 
+export const frame = {
+    custom: 'Custom',
+    phone: 'Phone',
+    tablet: 'Tablet',
+    deskdop: 'Deskdop',
+    presentation: 'Presentation',
+    watch: 'Watch',
+    paper: 'Paper',
+    social_media : 'Social media'
+}
+
 export const attr: any = {
     design: 'Design',
     prototype: 'Prototype',
