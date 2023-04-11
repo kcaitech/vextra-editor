@@ -76,6 +76,7 @@ const onRename = () => {
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
+            (nameInput.value as HTMLInputElement).value = props.data.shape.name;
             nameInput.value.focus();
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
@@ -135,7 +136,7 @@ onBeforeUpdate(() => {
                 </div>
             </div>
         </div>
-        <input v-if="isInput" @change="onChangeName" :value="props.data.shape.name" class="rename" type="text" ref="nameInput">
+        <input v-if="isInput" @change="onChangeName" class="rename" type="text" ref="nameInput">
     </div>
 </template>
 
