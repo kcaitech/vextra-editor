@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref, computed } from "vue";
+import { defineProps, computed, ref, onMounted, onUnmounted, watchEffect } from "vue";
 import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { CtrlElementType } from "@/context/workspace";
@@ -14,6 +14,14 @@ interface Props {
     ctrlRect: CtrlRect,
     isController: boolean
 }
+interface FramePosition {
+    top: string,
+    left: string,
+    transX: number,
+    transY: number,
+    rotate: number
+}
+const reflush = ref<number>(0);
 const props = defineProps<Props>();
 const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
@@ -38,6 +46,59 @@ const points = computed<CPoint[]>(() => {
     })
     return ps;
 });
+let framePosition: FramePosition = {
+    top: `${props.ctrlRect.height}px`,
+    left: '50%',
+    transX: -50,
+    transY: 0,
+    rotate: 0
+}
+function updater() {
+    if (props.context.selection.selectedShapes.length === 1) {
+        const rotate = (props.context.selection.selectedShapes[0].rotation || 0) % 360;
+        if (0 <= rotate && rotate < 45) {
+            framePosition = {
+                top: `${props.ctrlRect.height}px`,
+                left: '50%',
+                transX: -50,
+                transY: 0,
+                rotate: 0
+            }
+        } else if (45 <= rotate && rotate < 135) {
+            framePosition = {
+                top: '50%',
+                left: `${props.ctrlRect.width + 10}px`,
+                transX: -50,
+                transY: -50,
+                rotate: 270
+            }
+        } else if (135 <= rotate && rotate < 225) {
+            framePosition = {
+                top: '-4px',
+                left: '50%',
+                transX: -50,
+                transY: -100,
+                rotate: 180
+            }
+        } else if (225 <= rotate && rotate < 315) {
+            framePosition = {
+                top: '50%',
+                left: '-14px',
+                transX: -50,
+                transY: -50,
+                rotate: 90
+            }
+        } else if (315 <= rotate && rotate < 360) {
+            framePosition = {
+                top: `${props.ctrlRect.height}px`,
+                left: '50%',
+                transX: -50,
+                transY: 0,
+                rotate: 0
+            }
+        }
+    }
+}
 
 function mousedown(e: MouseEvent) {
     shapes = props.context.selection.selectedShapes;
@@ -82,6 +143,12 @@ function mouseup() {
 }
 function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {
     shapes.forEach(item => {
+        if (delta.deg !== 0 && item.rotation !== undefined) {
+            const newDeg = item.rotation + delta.deg;
+            item.rotate(newDeg);
+            delta.x = 0;
+            delta.y = 0;
+        }
         const realXY = item.realXY();
         if (type === CtrlElementType.RectLT) {
             translateTo(item, realXY.x + delta.x, realXY.y + delta.y);
@@ -96,11 +163,21 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
             expandTo(item, realXY.width - delta.x, realXY.height + delta.y);
         }
     });
-
 }
+
+onMounted(() => {
+    props.context.selection.watch(updater);
+})
+
+onUnmounted(() => {
+    props.context.selection.unwatch(updater);
+    shapes.length = 0;
+})
+
+watchEffect(updater)
 </script>
 <template>
-    <div class="ctrl-rect" @mousedown="mousedown" :style="{
+    <div :reflush="reflush" class="ctrl-rect" @mousedown="mousedown" :style="{
         left: `${props.ctrlRect.x}px`,
         top: `${props.ctrlRect.y}px`,
         width: `${props.ctrlRect.width}px`,
@@ -112,16 +189,16 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
             :ctrl-point-type="CtrlElementType.RectLT" :axle="props.ctrlRect.axle" :point="point"
             @transform="handlePointAction"></CtrlPoint>
         <div class="frame" :style="{
-            top: `${props.ctrlRect.height}px`,
-            width: `${(props.ctrlRect.width.toFixed(2).length + props.ctrlRect.height.toFixed(2).length + 5.2) * 5}px`
+            top: framePosition.top,
+            left: framePosition.left,
+            transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
         }">
-            {{ `${props.ctrlRect.width.toFixed(2)} * ${props.ctrlRect.height.toFixed(2)}` }}
+            <span>{{ `${props.ctrlRect.realWidth.toFixed(2)} * ${props.ctrlRect.realHeight.toFixed(2)}` }}</span>
         </div>
     </div>
 </template>
 <style lang='scss' scoped>
 .ctrl-rect {
-    border-radius: 0px;
     border-style: solid;
     border-color: var(--active-color);
     position: absolute;
@@ -130,7 +207,7 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
 
     >.frame {
         position: absolute;
-        display: inline-block;
+        display: table;
         text-align: center;
         height: 20px;
         padding: 0 var(--default-padding-quarter);
@@ -139,8 +216,11 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
         color: var(--theme-color-anti);
         background-color: var(--active-color);
         border-radius: 2px;
-        left: 50%;
-        transform: translateX(-50%);
+
+        >span {
+            display: table-cell;
+            white-space: nowrap;
+        }
     }
 }
 </style>

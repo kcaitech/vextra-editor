@@ -81,11 +81,11 @@ function getMouseOnPageXY(e: MouseEvent): AbsolutePosition {
 }
 function addShape(frame: ShapeFrame) {
     const type = ResultByAction(workspace.value.action);
-    if(type === 'artboard') {
+    if (type === 'artboard') {
         frame.width = workspace.value.frameSize.width
         frame.height = workspace.value.frameSize.height
     }
-    
+
     const page = props.context.selection.selectedPage;
     const parent = getCloestContainer();
     if (page && parent && type) {
@@ -204,7 +204,7 @@ function workspaceUpdate(t?: number) {
         const height = 100;
         const shapeFrame = new ShapeFrame(x, y, width, height);
         addShape(shapeFrame)
-        
+
     }
     const action: Action = props.context.workspace.action;
     if (action.startsWith('add')) {
@@ -218,8 +218,7 @@ function hoveredShape(e: MouseEvent) {
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
     const shapes = props.context.selection.getShapesByXY(xy);
-    
-    const hoveredShape = shapes.find(s => s.type && s.type !== ShapeType.Artboard);
+    const hoveredShape = shapes.reverse().find(s => s.type && s.type !== ShapeType.Artboard);
     if (hoveredShape) {
         props.context.selection.hoverShape(hoveredShape);
     } else {
@@ -363,7 +362,7 @@ renderinit().then(() => {
     <div v-if="inited" ref="root" :style="{ cursor }" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
         @mousedown="onMouseDown" @mousemove="onMouseMove">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
-        <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()"/>
+        <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount"
             :site="site">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"

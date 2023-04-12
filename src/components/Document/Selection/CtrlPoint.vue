@@ -48,7 +48,7 @@ function onMouseMove(event: MouseEvent) {
       const { x: sx, y: sy } = startPosition;
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
-      delta.deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]);
+      delta.deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
     }
     emit('transform', props.point[0], delta);
     props.context.repo.transactCtx.fireNotify();

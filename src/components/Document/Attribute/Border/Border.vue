@@ -47,10 +47,10 @@ function setupWatcher() {
         shape.watch(watcher);
     }
 }
-function watcher(...args: any[]) {    
+function watcher(...args: any[]) {
     if (args.length > 0 && args.includes('style')) updateData();
 }
-function updateData() {    
+function updateData() {
     shapeId = props.shape.id;
     borders.length = 0;
     const style = props.shape.style;
@@ -89,7 +89,7 @@ function onColorChange(e: Event, idx: number) {
         message('danger', t('system.illegal_input'));
         return;
     }
-    
+
     const r = Number.parseInt(hex[1], 16);
     const g = Number.parseInt(hex[2], 16);
     const b = Number.parseInt(hex[3], 16);
@@ -105,12 +105,12 @@ function onAlphaChange(e: Event, idx: number) {
         return;
     }
     const border = borders[idx].border;
-    const color = border.color;
-    color.alpha = alpha;
+    const { red, green, blue } = border.color
+    const color = new Color(alpha, red, green, blue);
     const isEnabled = border.isEnabled;
     setBorder(idx, { isEnabled, color });
 }
-function setBorder(idx: number,  options: { color: Color, isEnabled: boolean }) {
+function setBorder(idx: number, options: { color: Color, isEnabled: boolean }) {
     editor.value.setBorder(idx, options);
 }
 // hooks
@@ -145,20 +145,13 @@ onBeforeUpdate(() => {
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="b.border.color"/>
-                    <input
-                        :spellcheck ="false"
-                        :value="toHex(b.border.color)"
-                        @change="e => onColorChange(e, idx)"
-                    />
-                    <input
-                        style="text-align: center;"
-                        :value="b.border.color.alpha"
-                        @change="e => onAlphaChange(e, idx)"
-                    />
+                    <ColorPicker :color="b.border.color" />
+                    <input :spellcheck="false" :value="toHex(b.border.color)" @change="e => onColorChange(e, idx)" />
+                    <input style="text-align: center;" :value="b.border.color.alpha" @change="e => onAlphaChange(e, idx)" />
                 </div>
                 <div class="extra-action">
-                    <BorderDetail :context="props.context" :shape="props.shape" :border="b.border" :index="idx"></BorderDetail>
+                    <BorderDetail :context="props.context" :shape="props.shape" :border="b.border" :index="idx">
+                    </BorderDetail>
                     <div class="delete" @click="deleteBorder(idx)">
                         <svg-icon icon-class="delete"></svg-icon>
                     </div>
@@ -175,18 +168,22 @@ onBeforeUpdate(() => {
     flex-direction: column;
     padding: 12px 24px;
     box-sizing: border-box;
+
     .add {
         width: 16px;
         height: 16px;
         transition: .2s;
-        > svg {
+
+        >svg {
             width: 80%;
             height: 80%;
         }
     }
+
     .add:hover {
         transform: scale(1.25);
     }
+
     .borders-container {
         .border {
             height: 32px;
@@ -195,6 +192,7 @@ onBeforeUpdate(() => {
             flex-direction: row;
             align-items: center;
             margin-top: 4px;
+
             .visibility {
                 flex: 0 0 16px;
                 height: 16px;
@@ -206,11 +204,13 @@ onBeforeUpdate(() => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                > svg {
+
+                >svg {
                     width: 80%;
                     height: 80%;
                 }
             }
+
             .hidden {
                 flex: 0 0 16px;
                 height: 16px;
@@ -219,6 +219,7 @@ onBeforeUpdate(() => {
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;
             }
+
             .color {
                 flex: 0 1 140px;
                 background-color: var(--input-background);
@@ -229,6 +230,7 @@ onBeforeUpdate(() => {
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
+
                 input {
                     outline: none;
                     border: none;
@@ -236,15 +238,18 @@ onBeforeUpdate(() => {
                     width: 68px;
                     margin-left: 10px;
                 }
-                input + input {
+
+                input+input {
                     width: 30px;
                 }
             }
+
             .extra-action {
                 flex: 0 0 auto;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+
                 .delete {
                     display: flex;
                     align-items: center;
@@ -252,11 +257,13 @@ onBeforeUpdate(() => {
                     width: 16px;
                     height: 16px;
                     transition: 0.2s;
-                    > svg {
+
+                    >svg {
                         width: 80%;
                         height: 80%;
                     }
                 }
+
                 .delete:hover {
                     color: #ff5555;
                 }

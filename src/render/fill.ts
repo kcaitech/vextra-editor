@@ -6,7 +6,7 @@ import { render as clippathR } from "./clippath"
 import { objectId } from "@kcdesign/data/basic/objectid";
 import * as types from "@kcdesign/data/data/classes"
 
-const handler: {[key: string]: (h: Function, shape: Shape, fill: Fill, path: string) => any} = {};
+const handler: { [key: string]: (h: Function, shape: Shape, fill: Fill, path: string) => any } = {};
 handler[types.FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
     const frame = shape.frame;
@@ -16,7 +16,7 @@ handler[types.FillType.SolidColor] = function (h: Function, shape: Shape, fill: 
         "fill-opacity": color ? color.alpha : 1,
         stroke: 'none',
         'stroke-width': 0,
-        transform: "translate(" + frame.x + " " + frame.y + ")",
+        transform: `translate(${frame.x} ${frame.y}) rotate(${shape.rotation || 0} ${frame.width / 2} ${frame.height / 2})`
     });
 }
 
@@ -52,7 +52,7 @@ handler[types.FillType.Gradient] = function (h: Function, shape: Shape, fill: Fi
     // if (elArr.length == 1) {
     //     return elArr[0];
     // }
-    return h("g", {transform: "translate(" + frame.x + " " + frame.y + ")"}, elArr);
+    return h("g", { transform: `translate(${frame.x} ${frame.y}) rotate(${shape.rotation || 0} ${frame.width / 2} ${frame.height / 2})` }, elArr);
 }
 
 export function render(h: Function, shape: Shape, path?: string): Array<any> {

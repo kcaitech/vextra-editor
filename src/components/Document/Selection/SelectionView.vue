@@ -3,14 +3,13 @@ import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from 
 import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { Shape } from "@kcdesign/data/data/shape";
-import ControlPoint from "./ControlPoint.vue";
-import { CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
-import { translate } from "@kcdesign/data/editor/frame";
 import RectangleCtrl from "./CtrlRect/RectangleCtrl.vue";
 export interface CtrlRect {
     width: number,
     height: number,
+    realWidth: number,
+    realHeight: number,
     x: number,
     y: number,
     axle: AbsolutePosition,
@@ -23,7 +22,6 @@ const watcher = () => {
     reflush.value++;
     updater();
 }
-
 const props = defineProps<{
     context: Context,
     matrix: number[],
@@ -42,7 +40,6 @@ interface ShapeSelectData {
         y: number
     }
 }
-
 const data = reactive<{
     isHover: boolean,
     isSelect: boolean,
@@ -53,23 +50,15 @@ const data = reactive<{
     shapes: []
 });
 const shapes: Array<Shape> = [];
-// [point type, x, y, cursor type][]
-const controllerPoints: [CtrlElementType, number, number, string][] = [
-    [CtrlElementType.RectLT, 0, 0, 'nwse-resize'],
-    [CtrlElementType.RectRT, 0, 0, 'nesw-resize'],
-    [CtrlElementType.RectRB, 0, 0, 'nwse-resize'],
-    [CtrlElementType.RectLB, 0, 0, 'nesw-resize']
-];
 
 const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
-let startPosition = { x: 0, y: 0 };
-let isDragging = false;
-const dragActiveDis = 3;
 const controlRect: CtrlRect = reactive({
     width: 0,
     height: 0,
+    realWidth: 0,
+    realHeight: 0,
     x: 0,
     y: 0,
     rotate: 0,
@@ -170,16 +159,7 @@ function updater() {
             }
         }
         genControlRect();
-        genPoint();
     }
-}
-function genPoint() {
-    controllerPoints[0] = [CtrlElementType.RectLT, 0, 0, 'nwse-resize'];
-    controllerPoints[1] = [CtrlElementType.RectRT, controlRect.width, 0, 'nesw-resize'];
-    controllerPoints[2] = [CtrlElementType.RectRB, controlRect.width, controlRect.height, 'nwse-resize'];
-    controllerPoints[3] = [CtrlElementType.RectLB, 0, controlRect.height, 'nesw-resize'];
-    const offset = 13;
-    controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
 }
 function genControlRect() {
     const selection: Shape[] = props.context.selection.selectedShapes;
@@ -201,45 +181,14 @@ function genControlRect() {
     controlRect.width = xy1.x - xy0.x;
     controlRect.height = xy1.y - xy0.y;
     controlRect.axle = matrix.inverseCoord((xy0.x + xy1.x) / 2, (xy0.y + xy1.y) / 2);
+    controlRect.realWidth = matrix.inverseCoord(xy1.x, xy1.y).x - matrix.inverseCoord(xy0.x, xy0.y).x;
+    controlRect.realHeight = matrix.inverseCoord(xy1.x, xy1.y).y - matrix.inverseCoord(xy0.x, xy0.y).y;
+
     if (selection.length === 1) {
         controlRect.rotate = selection[0].rotation || 0;
     } else {
         controlRect.rotate = 0;
     }
-}
-function mousedown(e: MouseEvent) {
-    props.context.editor4Shape(shapes[0]);
-    if (!props.isController || !props.context.repo) return;
-    document.addEventListener('mousemove', mousemove);
-    document.addEventListener('mouseup', mouseup);
-    startPosition = { x: e.clientX, y: e.clientY };
-    props.context.repo.start('transform', {});
-}
-function mousemove(e: MouseEvent) {
-    const delta: AbsolutePosition = { x: e.clientX - startPosition.x, y: e.clientY - startPosition.y };
-    if (isDragging) {
-        transform(shapes, delta);
-        props.context.repo?.transactCtx.fireNotify();
-        startPosition = { x: e.clientX, y: e.clientY };
-    } else {
-        if (Math.hypot(delta.x, delta.y) > dragActiveDis) isDragging = true;
-    }
-
-}
-function transform(shapes: Shape[], delta: AbsolutePosition) {
-    for (let i = 0; i < shapes.length; i++) {
-        translate(shapes[i], delta.x, delta.y);
-    }
-}
-function mouseup() {
-    if (isDragging) {
-        props.context.repo?.commit({});
-    } else {
-        props.context.repo?.rollback();
-    }
-    isDragging = false;
-    document.removeEventListener('mousemove', mousemove);
-    document.removeEventListener('mouseup', mouseup);
 }
 // hooks
 onMounted(() => {
@@ -256,7 +205,7 @@ watchEffect(updater)
 </script>
 
 <template>
-    <!-- <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
+    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
         left: '' + s.x + 'px',
         top: '' + s.y + 'px',
         width: '' + s.width + 'px',
@@ -264,20 +213,10 @@ watchEffect(updater)
         borderWidth: '' + borderWidth + 'px',
         transform: `rotate(${s.rotate}deg)`
     }" :key="s.id" :reflush="reflush">
-    </div> -->
-    <!-- <div class="control-rect" @mousedown="mousedown" v-if="data.isSelect" :style="{
-        left: '' + controlRect.x + 'px',
-        top: '' + controlRect.y + 'px',
-        width: '' + controlRect.width + 'px',
-        height: '' + controlRect.height + 'px',
-        borderWidth: '' + borderWidth + 'px',
-        transform: `rotate(${controlRect.rotate}deg)`
-    }">
-        <ControlPoint v-for="(point, index) in controllerPoints" :point="point" :key="index" :shape="shapes[0]"
-            :context="props.context">
-        </ControlPoint>
-    </div> -->
-    <RectangleCtrl :context="props.context" :ctrl-rect="controlRect" :is-controller="props.isController"></RectangleCtrl>
+    </div>
+    <RectangleCtrl v-if="data.isSelect" :reflush="reflush" :context="props.context" :ctrl-rect="controlRect"
+        :is-controller="props.isController">
+    </RectangleCtrl>
 </template>
 
 <style scoped lang="scss">
@@ -290,13 +229,6 @@ watchEffect(updater)
 
 .hoverrect {
     background-color: none;
-    border-radius: 0px;
-    border-style: solid;
-    border-color: var(--active-color);
-    position: absolute;
-}
-
-.control-rect {
     border-radius: 0px;
     border-style: solid;
     border-color: var(--active-color);
