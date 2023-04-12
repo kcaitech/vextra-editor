@@ -10,7 +10,8 @@ export enum Action {
     AddRect = 'add-rect',
     AddLine = 'add-line',
     AddEllipse = 'add-ellipse',
-    AddArrow = 'add-arrow'
+    AddArrow = 'add-arrow',
+    AddFrame = 'add-frame'
 }
 export enum KeyboardKeys {
     Space = 'Space',
@@ -23,7 +24,8 @@ export enum KeyboardKeys {
     Left = 'ArrowLeft',
     Right = 'ArrowRight',
     K = 'KeyK',
-    O = 'KeyO'
+    O = 'KeyO',
+    F = 'KeyF'
 }
 export enum CursorType {
     Crosshair = 'crosshair',
@@ -41,18 +43,23 @@ export enum CtrlElementType {
     RectRB = 'rect-right-bottom',
     RectLB = 'rect-left-bottom'
 }
+
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle],
-    [Action.AddEllipse, ShapeType.Oval]
+    [Action.AddEllipse, ShapeType.Oval],
+    [Action.AddLine, ShapeType.Line],
+    [Action.AddFrame, ShapeType.Artboard]
 ]);
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action);
 export class WorkSpace extends Watchable(Object) {
     readonly r_context: Context
+    static INSERT_FRAME = 1;
     private m_current_action: Action = Action.AutoV;
     private m_scale: number = 1;
     private m_matrix: Matrix = new Matrix();
     private m_clip_board: any;
+    private m_frame_size: {width: number, height: number} = {width: 100, height: 100};
     constructor(context: Context) {
         super();
         this.r_context = context
@@ -69,6 +76,9 @@ export class WorkSpace extends Watchable(Object) {
     get clipBoard() {
         return this.m_clip_board;
     }
+    get frameSize() {
+        return this.m_frame_size;
+    }
     
     setAction(action: Action) {
         this.m_current_action = action;
@@ -80,6 +90,10 @@ export class WorkSpace extends Watchable(Object) {
     }
     setClipBoard(v: any) {
         this.m_clip_board = v;
+    }
+    setFrameSize(size: {width: number, height: number}) {
+        this.m_frame_size = size        
+        this.notify(WorkSpace.INSERT_FRAME);
     }
 
     // keyboard
@@ -111,6 +125,10 @@ export class WorkSpace extends Watchable(Object) {
     }
     keydown_o() {
         this.m_current_action = Action.AddEllipse;
+        this.notify();
+    }
+    keydown_f() {
+        this.m_current_action = Action.AddFrame;
         this.notify();
     }
 }

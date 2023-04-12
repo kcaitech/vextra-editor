@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, ref, watch } from 'vue'
+import { defineProps, onMounted, onUnmounted, ref, watch, onUpdated } from 'vue'
 import { Shape, ShapeType, RectShape } from '@kcdesign/data/data/shape';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
@@ -27,6 +27,8 @@ const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
 const points = ref<number>(0);
 const radius = ref<number>(0);
+const showRadius = ref<boolean>(false)
+const showRadian = ref<boolean>(false)
 
 function calcFrame() {
     const xy = props.shape.realXY();
@@ -106,12 +108,29 @@ function onChangeRotate(value: string) {
     editor.value.rotate(newRotate);
 }
 
+const radiusArr = ['rect-shape', 'artboard']
+const radianArr = ['line-shape', 'oval-shape']
+onUpdated(() => {
+  if(radiusArr.includes(props.shape.typeId)) {
+    showRadius.value = true
+  }else {
+    showRadius.value = false
+  }
+
+  if(radianArr.includes(props.shape.typeId)) {
+    showRadius.value = false
+  }else {
+    showRadius.value = true
+  }
+})
+
 // hooks
 const stopWatchShape = watch(() => props.shape, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
     calcFrame();
 })
+
 onMounted(() => {
     calcFrame();
     props.shape.watch(watcher);
@@ -153,7 +172,7 @@ onUnmounted(() => {
                 <svg-icon icon-class="flipv"></svg-icon>
             </div>
         </div>
-        <div class="tr">
+        <div class="tr" v-if="showRadius">
             <IconText
                 class="td frame"
                 svgicon="radius"
@@ -171,7 +190,7 @@ onUnmounted(() => {
                 }"
                 @onchange="onChangeW"
             />
-            <div class="more-for-radius" @click="radiusToggle">
+            <div class="more-for-radius" @click="radiusToggle" v-if="showRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>

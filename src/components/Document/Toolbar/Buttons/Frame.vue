@@ -1,12 +1,24 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, defineProps, defineEmits } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { useI18n } from 'vue-i18n';
 import FrameChild from './FrameChild.vue'
+import { Action, WorkSpace } from "@/context/workspace";
+
 const { t } = useI18n();
 
 type Button = InstanceType<typeof ToolButton>
 
+const props = defineProps<{
+  workspace: WorkSpace,
+  active: boolean
+}>()
+const emit = defineEmits<{
+    (e: "select", action: Action): void;
+}>();
+function select(action: Action) {  
+    emit('select', action);
+}
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
@@ -46,28 +58,26 @@ const showChildFrame = (i: number) => {
     }
   
 }
-function offset2Root(i: number) {
-    let el = (frame.value as any)[i];
-    let y = el.offsetTop
-    el = el.offsetParent as any;
-    while (el) {
-        y += el.offsetTop
-        el = el.offsetParent as any;
-    }
-    return { y }
-}
 
 const closeChildFrame = () => {
   hoverIndex.value = -1
 }
 
-// const frames = ['frame.phone', 'frame.tablet', 'frame.deskdop', 'frame.presentation', 'frame.watch', 'frame.paper', 'frame.social_media']
-const frames = ['frame.phone', 'frame.tablet']
+const frames = ['frame.phone', 'frame.tablet', 'frame.deskdop', 'frame.presentation', 'frame.watch', 'frame.paper', 'frame.social_media']
 
 const framesChild = [
   [['iphone 14', '390 × 844'], ['iphone 14 Pro', '393 × 852']],
-  [['iphone 13', '390 × 844'], ['iphone 13 Pro', '393 × 852']]
+  [['Surface Pro 8', '1440 × 960'], ['iPad mini 8.3', '744 × 1133']],
+  [['MacBook Air', '1280 × 832'], ['Desktop', '1440 × 1024']],
+  [['Slide 16:9', '1920 × 1080'], ['Slide 4:3', '1024 × 768']],
+  [['Apple Watch 41mm', '176 × 215'], ['Apple Watch 45mm', '198 × 242']],
+  [['A4', '595 × 842'], ['A5', '420 × 595']],
+  [['Twitter post', '1200 × 675'], ['Twitter header', '1500 × 500']]
 ]
+
+const closeFrame = () => {
+  popoverVisible.value = false;
+}
 
 </script>
 
@@ -80,11 +90,11 @@ const framesChild = [
       <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
         <span>{{ t(`${item}`) }}</span>
         <div class="triangle"></div>
-        <FrameChild :childFrame="hoverIndex === i" :top="-8" :left="left" :framesChild="framesChild[i]"></FrameChild>
+        <FrameChild :workspace="props.workspace" :childFrame="hoverIndex === i" :top="-8" :left="left" :framesChild="framesChild[i]" @closeFrame="closeFrame" ></FrameChild>
       </div>
     </div>
   </div>
-  <ToolButton ref="button">
+  <ToolButton ref="button" @click="() => {select(Action.AddFrame)}" :selected="props.active">
     <div class="svg-container" title="Frame">
       <svg-icon icon-class="frame"></svg-icon>
     </div>
@@ -165,27 +175,6 @@ const framesChild = [
         border-top: 5px solid transparent;
         border-bottom: 5px solid transparent;
         border-left: 10px solid var(--theme-color-anti);
-      }
-      .child {
-        position: absolute;
-        width: 200px;
-        height: auto;
-        z-index: 999;
-        color: #ffffff;
-        font-size: var(--font-default-fontsize);
-        background-color: var(--theme-color);
-        border-radius: 4px;
-        outline: none;
-        padding: var(--default-padding-half) 0;
-        .item {
-          width: 100%;
-          box-sizing: border-box;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 4px var(--default-padding);
-        }
       }
     }
     

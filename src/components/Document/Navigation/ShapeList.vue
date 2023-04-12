@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { defineProps, onMounted, onUnmounted, ref, watch } from "vue";
+import { defineProps, onMounted, onUnmounted, ref, watch, computed } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data/data/page";
@@ -126,6 +126,13 @@ function unHovershape() {
     props.context.selection.unHoverShape();
 }
 
+const rename = (value: string, shape: Shape) => {
+    const editor = computed(() => {
+        return props.context.editor4Shape(shape);
+    });
+    editor.value.setName(value)
+}
+
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
 });
@@ -150,7 +157,7 @@ onUnmounted(() => {
         <div class="body">
             <ListView ref="shapelist" location="shapelist" :source="listviewSource" :item-view="ShapeItem" :item-height="30"
                 :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
-                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape" orientation="vertical">
+                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape" @rename="rename" orientation="vertical">
             </ListView>
         </div>
     </div>

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 
-import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed, nextTick } from "vue";
+import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed, nextTick, InputHTMLAttributes } from "vue";
 import { Shape, GroupShape } from '@kcdesign/data/data/shape';
-
 export interface ItemData {
     id: string
     shape: Shape
@@ -20,6 +19,7 @@ const props = defineProps<{ data: ItemData }>();
 const phWidth = computed(() => {
     return (props.data.level - 1) * 6;
 })
+
 const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
     (e: "selectshape", data: ItemData, ctrl: boolean, meta: boolean, shift: boolean): void;
@@ -27,6 +27,7 @@ const emit = defineEmits<{
     (e: "unhovershape"): void;
     (e: "isLock", isLock: boolean): void;
     (e: "isRead", isRead: boolean): void;
+    (e: "rename", name: string, shape: Shape): void;
 }>();
 let showTriangle = ref<boolean>(false);
 function updater() {
@@ -75,6 +76,7 @@ const onRename = () => {
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
+            (nameInput.value as HTMLInputElement).value = props.data.shape.name;
             nameInput.value.focus();
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
@@ -84,12 +86,17 @@ const onRename = () => {
     })
 
 }
+const onChangeName = (e: Event) => {
+    const value = (e.target as InputHTMLAttributes).value
+    emit('rename', value, props.data.shape);
+}
+
 const stopInput = () => {
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
     if (e.code === 'Enter') {
-        isInput.value = false
+        isInput.value = false       
     } else if (e.code === 'Escape') {
         isInput.value = false
     }
@@ -129,7 +136,7 @@ onBeforeUpdate(() => {
                 </div>
             </div>
         </div>
-        <input v-if="isInput" :value="props.data.shape.name" class="rename" type="text" ref="nameInput">
+        <input v-if="isInput" @change="onChangeName" class="rename" type="text" ref="nameInput">
     </div>
 </template>
 

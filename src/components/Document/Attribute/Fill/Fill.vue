@@ -6,7 +6,7 @@
  * @FilePath: \kcdesign\src\components\Document\Attribute\TypeHeader.vue
 -->
 <script setup lang="ts">
-import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
+import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref, nextTick } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
 import { Color, Fill, ContextSettings } from "@kcdesign/data/data/style";
@@ -33,6 +33,7 @@ const editor = computed(() => {
 })
 
 const fills: FillItem[] = reactive([]);
+const showFill = ref<boolean>(false)
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -125,7 +126,15 @@ function getColorFromPicker(rgb: number[], idx: number) {
     setColor(idx, clr, alpha);
 }
 
+const fillArr = ['line-shape']
+
 // hooks
+onUpdated(() => {
+    if(fillArr.includes(props.shape.typeId)) {
+       deleteFill(0)
+    }
+})
+
 onMounted(() => {
     updateData();
     setupWatcher();

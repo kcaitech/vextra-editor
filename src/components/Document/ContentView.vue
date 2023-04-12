@@ -81,15 +81,17 @@ function getMouseOnPageXY(e: MouseEvent): AbsolutePosition {
 }
 function addShape(frame: ShapeFrame) {
     const type = ResultByAction(workspace.value.action);
+    if(type === 'artboard') {
+        frame.width = workspace.value.frameSize.width
+        frame.height = workspace.value.frameSize.height
+    }
+    
     const page = props.context.selection.selectedPage;
     const parent = getCloestContainer();
-    // const { x, y } = parent.realXY();
-    // frame.x -= x;
-    // frame.y -= y;
     if (page && parent && type) {
         const editor = props.context.editor4Page(page);
         let name = t(`shape.${type}`);
-        const repeats: number = parent.childs.filter(item => item.type === ShapeType.Rectangle).length;
+        const repeats: number = parent.childs.filter(item => item.type === type).length;
         name = repeats ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
         const insertSuccess = editor.insert(parent, 0, shape);
@@ -192,7 +194,18 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     }
     cursor.value = CursorType.Auto;
 }
-function workspaceUpdate() {
+function workspaceUpdate(t?: number) {
+    if (t === 1) {
+        // todo
+        console.log('添加容器');
+        const x = 600
+        const y = 400
+        const width = 100;
+        const height = 100;
+        const shapeFrame = new ShapeFrame(x, y, width, height);
+        addShape(shapeFrame)
+        
+    }
     const action: Action = props.context.workspace.action;
     if (action.startsWith('add')) {
         cursor.value = CursorType.Crosshair

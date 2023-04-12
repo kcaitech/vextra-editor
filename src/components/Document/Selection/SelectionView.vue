@@ -116,13 +116,12 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
     data.rotate = shape.rotation || 0;
     return data;
 }
-function updater() {     
+function updater() {
     matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
     data.isSelect = selection.selectedShapes.length > 0;
-    console.log(data.isSelect);
-    
+
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -150,7 +149,7 @@ function updater() {
         }
         data.shapes[0] = updateShape(data.shapes[0], selection.hoveredShape as Shape);
     }
-    else if (data.isSelect) {        
+    else if (data.isSelect) {
         data.shapes.length = selection.selectedShapes.length;
         for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
             data.shapes[i] = updateShape(data.shapes[i], selection.selectedShapes[i]);
@@ -172,7 +171,7 @@ function updater() {
             else {
                 // do nothing
             }
-        }        
+        }
         genControlRect();
         genPoint();
     }
@@ -185,7 +184,7 @@ function genPoint() {
     const offset = 13;
     controllerPoints.forEach(point => { point[1] -= offset; point[2] -= offset; });
 }
-function genControlRect() {    
+function genControlRect() {
     const selection: Shape[] = props.context.selection.selectedShapes;
     const xy0 = matrix.computeCoord(selection[0].realXY().x, selection[0].realXY().y);
     const xy1 = { x: 0, y: 0 };

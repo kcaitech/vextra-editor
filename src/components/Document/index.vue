@@ -49,8 +49,8 @@ function selectionWatcher(t: number) {
     }
 }
 function keyboardEventHandler(e: KeyboardEvent) {
-    const { ctrlKey, shiftKey, metaKey } = e;
-    
+    const { ctrlKey, shiftKey, metaKey, target } = e;
+    if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发键盘事件
     if (e.code === KeyboardKeys.R) {
         workspace.value.keydown_r();
     } else if (e.code === KeyboardKeys.V) {
@@ -65,6 +65,8 @@ function keyboardEventHandler(e: KeyboardEvent) {
         workspace.value.keydown_K();
     } else if (e.code === KeyboardKeys.O) {
         workspace.value.keydown_o();
+    } else if (e.code === KeyboardKeys.F) {
+        workspace.value.keydown_f();
     }
 }
 
