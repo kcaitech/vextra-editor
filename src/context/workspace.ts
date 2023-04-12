@@ -64,6 +64,17 @@ export class WorkSpace extends Watchable(Object) {
         super();
         this.r_context = context
     }
+    get root() {
+        const root = { x: 332, y: 30 };
+        // 保证全局id唯一
+        const content = document.querySelector('#content');        
+        if (content) {
+            const { x, y } = content.getBoundingClientRect();
+            root.x = x;
+            root.y = y;
+        }
+        return root;
+    }
     get action() {
         return this.m_current_action;
     }

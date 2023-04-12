@@ -3,10 +3,21 @@ import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from 
 import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { Shape } from "@kcdesign/data/data/shape";
-import ControlPoint from "./ControlPoint.vue"
+import ControlPoint from "./ControlPoint.vue";
 import { CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
 import { translate } from "@kcdesign/data/editor/frame";
+import RectangleCtrl from "./CtrlRect/RectangleCtrl.vue";
+export interface CtrlRect {
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    axle: AbsolutePosition,
+    rotate: number,
+    visible: boolean
+}
+
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -26,23 +37,12 @@ interface ShapeSelectData {
     radius: number[],
     id: string,
     rotate: number,
-    center: {
-        x: number,
-        y: number
-    },
-    clientCenter: {
+    axle: {
         x: number,
         y: number
     }
 }
-interface ControlRect {
-    width: number,
-    height: number,
-    x: number,
-    y: number,
-    rotate: number,
-    visible: boolean
-}
+
 const data = reactive<{
     isHover: boolean,
     isSelect: boolean,
@@ -67,13 +67,14 @@ const halfBorderWidth = borderWidth / 2;
 let startPosition = { x: 0, y: 0 };
 let isDragging = false;
 const dragActiveDis = 3;
-const controlRect: ControlRect = reactive({
+const controlRect: CtrlRect = reactive({
     width: 0,
     height: 0,
     x: 0,
     y: 0,
     rotate: 0,
-    visible: false
+    visible: false,
+    axle: { x: 0, y: 0 }
 });
 
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
@@ -85,11 +86,7 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
         radius: [5, 5, 5, 5],
         id: "",
         rotate: 0,
-        center: {
-            x: 0,
-            y: 0
-        },
-        clientCenter: {
+        axle: {
             x: 0,
             y: 0
         }
@@ -105,7 +102,7 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
 
     const xy0 = matrix.computeCoord(x, y);
     const xy1 = matrix.computeCoord(x + width, y + height);
-    data.center = {
+    data.axle = {
         x: (xy0.x + xy1.x) / 2,
         y: (xy0.y + xy1.y) / 2
     }
@@ -199,11 +196,11 @@ function genControlRect() {
         xy1.y = xy1.y < cXY1.y ? cXY1.y : xy1.y;
     }
 
-    controlRect.x = xy0.x - halfBorderWidth;
-    controlRect.y = xy0.y - halfBorderWidth;
-    controlRect.width = xy1.x - xy0.x - borderWidth;
-    controlRect.height = xy1.y - xy0.y - borderWidth;
-
+    controlRect.x = xy0.x;
+    controlRect.y = xy0.y;
+    controlRect.width = xy1.x - xy0.x;
+    controlRect.height = xy1.y - xy0.y;
+    controlRect.axle = matrix.inverseCoord((xy0.x + xy1.x) / 2, (xy0.y + xy1.y) / 2);
     if (selection.length === 1) {
         controlRect.rotate = selection[0].rotation || 0;
     } else {
@@ -259,7 +256,7 @@ watchEffect(updater)
 </script>
 
 <template>
-    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
+    <!-- <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
         left: '' + s.x + 'px',
         top: '' + s.y + 'px',
         width: '' + s.width + 'px',
@@ -267,8 +264,8 @@ watchEffect(updater)
         borderWidth: '' + borderWidth + 'px',
         transform: `rotate(${s.rotate}deg)`
     }" :key="s.id" :reflush="reflush">
-    </div>
-    <div class="control-rect" @mousedown="mousedown" v-if="data.isSelect" :style="{
+    </div> -->
+    <!-- <div class="control-rect" @mousedown="mousedown" v-if="data.isSelect" :style="{
         left: '' + controlRect.x + 'px',
         top: '' + controlRect.y + 'px',
         width: '' + controlRect.width + 'px',
@@ -279,7 +276,8 @@ watchEffect(updater)
         <ControlPoint v-for="(point, index) in controllerPoints" :point="point" :key="index" :shape="shapes[0]"
             :context="props.context">
         </ControlPoint>
-    </div>
+    </div> -->
+    <RectangleCtrl :context="props.context" :ctrl-rect="controlRect" :is-controller="props.isController"></RectangleCtrl>
 </template>
 
 <style scoped lang="scss">
