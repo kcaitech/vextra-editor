@@ -49,8 +49,8 @@ function selectionWatcher(t: number) {
     }
 }
 function keyboardEventHandler(e: KeyboardEvent) {
-    const { ctrlKey, shiftKey, metaKey } = e;
-    
+    const { ctrlKey, shiftKey, metaKey, target } = e;
+    if ( target instanceof HTMLInputElement ) return;
     if (e.code === KeyboardKeys.R) {
         workspace.value.keydown_r();
     } else if (e.code === KeyboardKeys.V) {
