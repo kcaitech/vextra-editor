@@ -46,7 +46,6 @@ function toggleExpand(e: Event) {
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation()
-    console.log(e, 'e');
 }
 
 function selectShape(e: MouseEvent) {
@@ -82,10 +81,9 @@ const onRename = () => {
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
             nameInput.value?.addEventListener('keydown', keySaveInput);
-
         }
     })
-
+    document.addEventListener('click', onInputBlur)
 }
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
@@ -106,6 +104,17 @@ const keySaveInput = (e: KeyboardEvent) => {
         isInput.value = false
     }
 }
+const onInputBlur = (e: MouseEvent) => {
+    if (e.target instanceof Element && !e.target.closest('.rename')) {  
+    var timer = setTimeout(() => {
+        if(nameInput.value) {
+            (nameInput.value).blur()
+        }
+      clearTimeout(timer)
+      document.removeEventListener('click', onInputBlur);
+    }, 10)
+  } 
+}
 
 onBeforeMount(() => {
     updater();
@@ -117,7 +126,7 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div :class="{ container: true, selected: props.data.selected }" @click="selectShape" @mouseover="hoverShape"
+    <div class="contain" :class="{ container: true, selected: props.data.selected }" @click="selectShape" @mouseover="hoverShape"
         @mouseleave="unHoverShape">
         <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
@@ -156,7 +165,9 @@ div.container {
     background-color: var(--left-navi-bg-color);
 }
 
-div.container:hover {
+
+
+.contain:hover {
     cursor: default;
     background-color: var(--left-navi-button-hover-color);
 }
@@ -230,6 +241,7 @@ div.text {
     white-space: nowrap;
     overflow: hidden;
     padding-left: 2px;
+    background-color: transparent;
     .txt {
         width: 100%;
         height: 30px;

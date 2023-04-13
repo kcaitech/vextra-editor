@@ -4,7 +4,7 @@
  * @FilePath: \kcdesign\src\components\common\IconText.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits,watch,ref } from "vue";
+import { defineProps, defineEmits,watch,ref, nextTick } from "vue";
 const props = defineProps<{
     svgicon?: any,
     icon?: any,
@@ -15,11 +15,31 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: "onchange", value: string): void;
 }>();
+const input = ref<HTMLInputElement>()
 
 function onChange(e: Event) {
     const value = (e.currentTarget as any)['value']
-    
     emit("onchange", value);
+}
+const onBlur = (e: MouseEvent) => {
+    document.addEventListener('click', onBlur)
+    if (e.target instanceof Element && !e.target.closest('.icontext')) {  
+    var timer = setTimeout(() => {
+        if(input.value) {
+            (input.value).blur()
+        }
+      clearTimeout(timer)
+      document.removeEventListener('click', onBlur);
+    }, 10)
+  } 
+}
+
+const onKeyBlur = (e: KeyboardEvent) => {
+    if(e.key === 'Enter') {
+        if(input.value) {
+            (e.currentTarget as HTMLInputElement).blur()
+        }
+    }
 }
 
 const curpt: {x: number, y: number} = {x: 0, y: 0}
@@ -40,27 +60,24 @@ const onMouseDown = (e:MouseEvent) => {
 
 const onMouseMove = (e: MouseEvent) => {
     //鼠标移动的距离
-    const mx = e.screenX - curpt.x
-    if(isDrag.value && mx > 4 || mx < 4) {
+    let mx = e.screenX - curpt.x
+    if(isDrag.value && mx > 4 || mx < -4) {
         curpt.x = e.screenX
     }
-    // console.log(mx,'mx');
+    
     //坐标移动的大小
-    scale.value.axleX = Number((mx / 5).toFixed(2));
+    scale.value.axleX = scale.value.axleX + Number((mx / 2).toFixed(2));
     //角度移动的大小
-    scale.value.degX = Number((mx / 10).toFixed(2))
+    scale.value.degX = scale.value.degX + Number((mx / 10).toFixed(2))
     
 }
 
 watch(scale, (newV, oldV) => {
     //input的值加上鼠标移动后的大小等于最终改变的值
     let result = Number(props.text)+ Number(newV.axleX)
-   
     if(props.ticon) {
         let value = result 
-        
         emit("onchange", value.toString());
-        
     }else {
         let value = result + scale.value.degX
         emit("onchange", value.toString())
@@ -73,6 +90,8 @@ const onMouseUp = (e: MouseEvent) => {
     document.removeEventListener('mouseup', onMouseUp)
 
 }
+
+
 </script>
 
 <template>
@@ -90,7 +109,7 @@ const onMouseUp = (e: MouseEvent) => {
     ></svg-icon>
     <img class="icon" v-if="props.icon" :src="props.icon" />
     <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon" >{{props.ticon}}</span>
-    <input :value="props.text" v-on:change="onChange"/>
+    <input ref="input" @click="onBlur" :value="props.text"  @keydown="onKeyBlur" v-on:change="onChange"/>
 </label>
 </template>
 

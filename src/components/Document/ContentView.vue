@@ -149,7 +149,6 @@ function onMouseDown(e: MouseEvent) {
         contextMenuMount(e);
     }
 }
-let hasMove = false
 function onMouseMove(e: MouseEvent) {
     e.preventDefault();
     if (spacePressed.value) {
@@ -159,11 +158,8 @@ function onMouseMove(e: MouseEvent) {
         const deltaX = Math.abs(x - mousedownOnPageXY.x);
         const deltaY = Math.abs(y - mousedownOnPageXY.y);
         const diff = Math.hypot(deltaX, deltaY);
-        if(diff > dragActiveDis) {
-            if(!hasMove) {
-                pageEditorOnMoveEnd(e)
-                hasMove = true
-            }
+        if(diff === dragActiveDis) {
+            pageEditorOnMoveEnd(e)
         }
     }
     
@@ -219,7 +215,6 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
 function workspaceUpdate(t?: number) {
     if (t === 1) {
         // todo
-        console.log('添加容器');
         const x = 600
         const y = 400
         const width = 100;
@@ -374,7 +369,7 @@ renderinit().then(() => {
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount"
-            :site="site">
+            :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>

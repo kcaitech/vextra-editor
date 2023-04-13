@@ -81,7 +81,7 @@ const stopWatch = watch(() => props.page, () => {
 const shapelist = ref<List>();
 
 function search(e: Event) {
-    console.log((e.target as HTMLInputElement).value);
+    // console.log((e.target as HTMLInputElement).value);
 }
 function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)

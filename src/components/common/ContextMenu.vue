@@ -8,9 +8,7 @@ interface Props {
   site:{ x: number, y: number }
 }
 const surplusX = ref<number>(0)
-const surplusY = ref<number>(0)
 const menu = ref<HTMLDivElement>()
-let height = 0
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;

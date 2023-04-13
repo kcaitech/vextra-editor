@@ -71,7 +71,6 @@ relayout[Orientation.V] = () => {
     scrollBar.mount = scrollBar.length < visibleHeight;
 }
 relayout[Orientation.H] = () => {
-    // console.log("re - h")
     layoutResult.length = 0;
     layoutIndex = Math.max(0, Math.floor(-scroll.x / props.itemWidth));
     const iter = props.source.iterAt(layoutIndex);
@@ -91,7 +90,6 @@ relayout[Orientation.H] = () => {
 
 const layoutUp: { [key: string]: Function } = {};
 layoutUp[Orientation.V] = () => {
-    // console.log("up - v")
     if (layoutIndex <= 0) {
         return;
     }
@@ -121,7 +119,6 @@ layoutUp[Orientation.V] = () => {
     }
 }
 layoutUp[Orientation.H] = () => {
-    // console.log("up - h")
     if (layoutIndex <= 0) {
         return;
     }
@@ -179,7 +176,6 @@ layoutDown[Orientation.V] = () => {
     }
 }
 layoutDown[Orientation.H] = () => {
-    // console.log("down - h")
     if (layoutIndex + layoutResult.length >= props.source.length()) {
         return;
     }
