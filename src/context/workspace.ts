@@ -54,12 +54,15 @@ const A2R = new Map([
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action);
 export class WorkSpace extends Watchable(Object) {
     readonly r_context: Context
+    static ESC_EVENT_POINTER: any = undefined;
     static INSERT_FRAME = 1;
+    static RELAY = 2;
+    private m_any: number = 0;
     private m_current_action: Action = Action.AutoV;
     private m_scale: number = 1;
     private m_matrix: Matrix = new Matrix();
     private m_clip_board: any;
-    private m_frame_size: {width: number, height: number} = {width: 100, height: 100};
+    private m_frame_size: { width: number, height: number } = { width: 100, height: 100 };
     constructor(context: Context) {
         super();
         this.r_context = context
@@ -67,7 +70,7 @@ export class WorkSpace extends Watchable(Object) {
     get root() {
         const root = { x: 332, y: 30 };
         // 保证全局id唯一
-        const content = document.querySelector('#content');        
+        const content = document.querySelector('#content');
         if (content) {
             const { x, y } = content.getBoundingClientRect();
             root.x = x;
@@ -90,7 +93,7 @@ export class WorkSpace extends Watchable(Object) {
     get frameSize() {
         return this.m_frame_size;
     }
-    
+
     setAction(action: Action) {
         this.m_current_action = action;
         this.notify();
@@ -102,13 +105,20 @@ export class WorkSpace extends Watchable(Object) {
     setClipBoard(v: any) {
         this.m_clip_board = v;
     }
-    setFrameSize(size: {width: number, height: number}) {
-        this.m_frame_size = size        
+    setFrameSize(size: { width: number, height: number }) {
+        this.m_frame_size = size
         this.notify(WorkSpace.INSERT_FRAME);
+    }
+
+    relay(params: any) {
+        console.log('emit');
+        this.m_any++;
+        this.notify(WorkSpace.RELAY, params);
     }
 
     // keyboard
     keydown_r() {
+        this.escSetup();
         this.m_current_action = Action.AddRect;
         this.notify();
     }
@@ -116,7 +126,8 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AutoV;
         this.notify();
     }
-    keydown_l(shiftKey: boolean) {        
+    keydown_l(shiftKey: boolean) {
+        this.escSetup();
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
     }
@@ -127,19 +138,34 @@ export class WorkSpace extends Watchable(Object) {
             repo.canRedo() && repo.redo();
         }
     }
-    keydown_arrow(type: KeyboardKeys, shift?: boolean) {        
+    keydown_arrow(type: KeyboardKeys, shift?: boolean) {
         return this.r_context;
     }
     keydown_K() {
+        this.escSetup();
         this.m_current_action = Action.AutoK;
         this.notify();
     }
     keydown_o() {
+        this.escSetup();
         this.m_current_action = Action.AddEllipse;
         this.notify();
     }
     keydown_f() {
+        this.escSetup();
         this.m_current_action = Action.AddFrame;
         this.notify();
+    }
+    escSetup() {
+        WorkSpace.ESC_EVENT_POINTER = this.esc.bind(this)
+        document.addEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+    }
+    esc(e: KeyboardEvent) {
+        const { code } = e;
+        if (code === 'Escape') {
+            this.setAction(Action.AutoV);
+            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+            WorkSpace.ESC_EVENT_POINTER = undefined;
+        }
     }
 }

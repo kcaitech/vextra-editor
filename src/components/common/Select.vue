@@ -55,6 +55,7 @@ function toggle() {
     })
 }
 function esc(e: KeyboardEvent) {
+    e.stopPropagation();    
     if (e.code === 'Escape') {
         optionsContainerVisible.value = false;
         optionsContainer.value?.removeEventListener('keydown', esc);

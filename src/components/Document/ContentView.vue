@@ -2,18 +2,19 @@
 import { Matrix } from '@/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
-import { reactive, defineProps, onMounted, onUnmounted, watchEffect, computed, ref, nextTick, watch } from 'vue';
+import { reactive, defineProps, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import { AbsolutePosition } from '@/context/selection';
 import { init as renderinit } from '@/render';
-import { Action, CursorType, KeyboardKeys, ResultByAction } from '@/context/workspace';
+import { Action, CursorType, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from './Selection/PageViewContextMenuItems.vue';
 import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
+import { cloneDeep } from 'lodash';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 
 const { t } = useI18n();
@@ -81,7 +82,7 @@ function getMouseOnPageXY(e: MouseEvent): AbsolutePosition {
 }
 function addShape(frame: ShapeFrame) {
     const type = ResultByAction(workspace.value.action);
-    if (type === 'artboard') {
+    if (type === ShapeType.Artboard) {
         frame.width = workspace.value.frameSize.width
         frame.height = workspace.value.frameSize.height
     }
@@ -98,6 +99,7 @@ function addShape(frame: ShapeFrame) {
         if (insertSuccess) {
             props.context.selection.selectShape(shape);
             workspace.value.setAction(Action.AutoV);
+            return shape;
         }
     }
 }
@@ -129,7 +131,12 @@ function onKeyDown(e: KeyboardEvent) {
 }
 function onKeyUp(e: KeyboardEvent) {
     if (spacePressed.value && e.code == KeyboardKeys.Space) {
-        cursor.value = CursorType.Auto;
+        const action: Action = props.context.workspace.action;
+        if (action.startsWith('add')) {
+            cursor.value = CursorType.Crosshair
+        } else {
+            cursor.value = CursorType.Auto
+        }
         spacePressed.value = false;
     }
 }
@@ -153,6 +160,8 @@ function onMouseMove(e: MouseEvent) {
         e.preventDefault();
         if (spacePressed.value) {
             pageViewDragging(e);
+        } else {            
+            pageEditOnMoving(e);
         }
     } else {
         hoveredShape(e);
@@ -163,7 +172,7 @@ function onMouseUp(e: MouseEvent) {
     // 现有情况，不是拖动pageview，便是操作图层
     if (spacePressed.value) {
         pageViewDragEnd();
-    } else {
+    } else {        
         pageEditorOnMoveEnd(e);
     }
     document.removeEventListener('mousemove', onMouseMove)
@@ -194,17 +203,29 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     }
     cursor.value = CursorType.Auto;
 }
+function pageEditOnMoving(e: MouseEvent) {
+    const { x, y } = getMouseOnPageXY(e);
+    const deltaX = Math.abs(x - mousedownOnPageXY.x);
+    const deltaY = Math.abs(y - mousedownOnPageXY.y);
+    const diff = Math.hypot(deltaX, deltaY);
+    if (diff > dragActiveDis) {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        const shapeFrame = new ShapeFrame(x, y, 3, 3);
+        const shape = addShape(shapeFrame);        
+        if (!shape) return;
+        isMouseDown = false;
+        props.context.workspace.relay({ shape, startPositon: { x, y }, systemPositon: { x: e.clientX, y: e.clientY } })
+    }
+}
 function workspaceUpdate(t?: number) {
-    if (t === 1) {
-        // todo
-        console.log('添加容器');
+    if (t === WorkSpace.INSERT_FRAME) {
         const x = 600
         const y = 400
         const width = 100;
         const height = 100;
         const shapeFrame = new ShapeFrame(x, y, width, height);
-        addShape(shapeFrame)
-
+        addShape(shapeFrame);
     }
     const action: Action = props.context.workspace.action;
     if (action.startsWith('add')) {

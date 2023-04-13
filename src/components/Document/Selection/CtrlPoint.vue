@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { ref, defineProps, defineEmits, computed } from 'vue';
+import { ref, defineProps, defineEmits, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
 import { AbsolutePosition } from '@/context/selection';
 import { Matrix } from '@/basic/matrix';
 import { getAngle } from '@/utils/common';
 import { CPoint } from './CtrlRect/RectangleCtrl.vue'
+import { WorkSpace } from '@/context/workspace';
 interface Props {
   context: Context,
   ctrlPointType: CtrlElementType,
@@ -71,6 +72,39 @@ function onMouseUp() {
   document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mouseup', onMouseUp);
 }
+function actionFormWorkspace(t: number, params: any) {
+  console.log('copy');
+  if (t !== WorkSpace.RELAY) return;
+  props.context.editor4Shape(params.shpae);
+  props.context.repo?.rollback();
+  props.context.repo?.start('addShapeByFreeFrame', {});
+  root = workspace.value.root;
+  startPosition = params.startPosition;
+  systemPosition = params.systemPosition;
+  document.addEventListener('mousemove', onMouseMoveRelay);
+  document.addEventListener('mouseup', onMouseUpRelay);
+}
+function onMouseMoveRelay(event: MouseEvent) {
+  const { clientX, clientY } = event;
+  const mouseOnPage = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+  const delta = { x: mouseOnPage.x - startPosition.x, y: mouseOnPage.y - startPosition.y, deg: 0 };
+  emit('transform', props.point[0], delta);
+  props.context.repo?.transactCtx.fireNotify();
+  startPosition = { x: mouseOnPage.x, y: mouseOnPage.y };
+  systemPosition = { x: clientX, y: clientY };
+}
+function onMouseUpRelay(event: MouseEvent) {
+  props.context.repo?.commit({});
+  document.removeEventListener('mousemove', onMouseMoveRelay);
+  document.removeEventListener('mouseup', onMouseUpRelay);
+}
+onMounted(() => {
+  props.context.workspace.watch(actionFormWorkspace);
+})
+
+onUnmounted(() => {
+  props.context.workspace.unwatch(actionFormWorkspace);
+})
 </script>
 <template>
   <div ref="dragContainer" class="drag-container" @mousedown.stop="onMouseDown"

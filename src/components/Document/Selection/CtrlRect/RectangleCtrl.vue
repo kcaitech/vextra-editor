@@ -21,7 +21,6 @@ interface FramePosition {
     transY: number,
     rotate: number
 }
-const reflush = ref<number>(0);
 const props = defineProps<Props>();
 const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
@@ -39,7 +38,7 @@ const points = computed<CPoint[]>(() => {
     const p2: CPoint = [CtrlElementType.RectRT, width - 2 * borderWidth, 0 - borderWidth, 'move']
     const p3: CPoint = [CtrlElementType.RectRB, width - 2 * borderWidth, height - 2 * borderWidth, 'move']
     const p4: CPoint = [CtrlElementType.RectLB, 0 - borderWidth, height - 2 * borderWidth, 'move']
-    const ps: CPoint[] = [p1, p2, p3, p4];
+    const ps: CPoint[] = [p1, p2, p4, p3];
     ps.forEach(p => {
         p[1] -= offset;
         p[2] -= offset;
@@ -54,49 +53,18 @@ let framePosition: FramePosition = {
     rotate: 0
 }
 function updater() {
-    if (props.context.selection.selectedShapes.length === 1) {
-        const rotate = (props.context.selection.selectedShapes[0].rotation || 0) % 360;
-        if (0 <= rotate && rotate < 45) {
-            framePosition = {
-                top: `${props.ctrlRect.height}px`,
-                left: '50%',
-                transX: -50,
-                transY: 0,
-                rotate: 0
-            }
-        } else if (45 <= rotate && rotate < 135) {
-            framePosition = {
-                top: '50%',
-                left: `${props.ctrlRect.width + 10}px`,
-                transX: -50,
-                transY: -50,
-                rotate: 270
-            }
-        } else if (135 <= rotate && rotate < 225) {
-            framePosition = {
-                top: '-4px',
-                left: '50%',
-                transX: -50,
-                transY: -100,
-                rotate: 180
-            }
-        } else if (225 <= rotate && rotate < 315) {
-            framePosition = {
-                top: '50%',
-                left: '-14px',
-                transX: -50,
-                transY: -50,
-                rotate: 90
-            }
-        } else if (315 <= rotate && rotate < 360) {
-            framePosition = {
-                top: `${props.ctrlRect.height}px`,
-                left: '50%',
-                transX: -50,
-                transY: 0,
-                rotate: 0
-            }
-        }
+    let rotate = (props.ctrlRect.rotate || 0) % 360;
+    rotate = rotate < 0 ? rotate + 360 : rotate;
+    if (0 <= rotate && rotate < 45) {
+        framePosition = { top: `${props.ctrlRect.height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+    } else if (45 <= rotate && rotate < 135) {
+        framePosition = { top: '50%', left: `${props.ctrlRect.width + 10}px`, transX: -50, transY: -50, rotate: 270 }
+    } else if (135 <= rotate && rotate < 225) {
+        framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
+    } else if (225 <= rotate && rotate < 315) {
+        framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
+    } else if (315 <= rotate && rotate < 360) {
+        framePosition = { top: `${props.ctrlRect.height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
     }
 }
 
@@ -177,7 +145,7 @@ onUnmounted(() => {
 watchEffect(updater)
 </script>
 <template>
-    <div :reflush="reflush" class="ctrl-rect" @mousedown="mousedown" :style="{
+    <div class="ctrl-rect" @mousedown="mousedown" :style="{
         left: `${props.ctrlRect.x}px`,
         top: `${props.ctrlRect.y}px`,
         width: `${props.ctrlRect.width}px`,
