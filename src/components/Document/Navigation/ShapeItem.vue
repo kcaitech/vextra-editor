@@ -16,6 +16,7 @@ const isVisible = ref<boolean>(false)
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<{ data: ItemData }>();
+const esc = ref<boolean>(false)
 const phWidth = computed(() => {
     return (props.data.level - 1) * 6;
 })
@@ -25,9 +26,9 @@ const emit = defineEmits<{
     (e: "selectshape", data: ItemData, ctrl: boolean, meta: boolean, shift: boolean): void;
     (e: "hovershape", shape: Shape): void;
     (e: "unhovershape"): void;
-    (e: "isLock", isLock: boolean): void;
-    (e: "isRead", isRead: boolean): void;
-    (e: "rename", name: string, shape: Shape): void;
+    (e: "isLock", isLock: boolean, shape: Shape): void;
+    (e: "isRead", isRead: boolean, shape: Shape): void;
+    (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
 }>();
 let showTriangle = ref<boolean>(false);
 function updater() {
@@ -45,7 +46,6 @@ function toggleExpand(e: Event) {
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation()
-    console.log(e, 'e');
 }
 
 function selectShape(e: MouseEvent) {
@@ -66,11 +66,11 @@ function unHoverShape(e: MouseEvent) {
 }
 const onLock = () => {
     isLock.value = !isLock.value
-    emit('isLock', isLock.value)
+    emit('isLock', isLock.value, props.data.shape)
 }
 const onRead = () => {
     isRead.value = !isRead.value
-    emit('isRead', isRead.value)
+    emit('isRead', isRead.value, props.data.shape)
 }
 const onRename = () => {
     isInput.value = true
@@ -81,25 +81,39 @@ const onRename = () => {
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
             nameInput.value?.addEventListener('keydown', keySaveInput);
-
         }
     })
-
+    document.addEventListener('click', onInputBlur)
 }
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
+    if(esc.value) return
     emit('rename', value, props.data.shape);
 }
 
 const stopInput = () => {
+    esc.value = false
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
     if (e.code === 'Enter') {
+        esc.value = false
         isInput.value = false       
     } else if (e.code === 'Escape') {
+        esc.value = true 
         isInput.value = false
     }
+}
+const onInputBlur = (e: MouseEvent) => {
+    if (e.target instanceof Element && !e.target.closest('.rename')) {  
+    var timer = setTimeout(() => {
+        if(nameInput.value) {
+            (nameInput.value).blur()
+        }
+      clearTimeout(timer)
+      document.removeEventListener('click', onInputBlur);
+    }, 10)
+  } 
 }
 
 onBeforeMount(() => {
@@ -112,7 +126,7 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div :class="{ container: true, selected: props.data.selected }" @click="selectShape" @mouseover="hoverShape"
+    <div class="contain" :class="{ container: true, selected: props.data.selected }" @click="selectShape" @mouseover="hoverShape"
         @mouseleave="unHoverShape">
         <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
@@ -124,7 +138,7 @@ onBeforeUpdate(() => {
         </div>
         <div class="text" :class="{ container: true, selected: props.data.selected }"
             :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
-            <div class="text" @dblclick="onRename">{{ props.data.shape.name }}</div>
+            <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
             <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}` }">
                 <div class="tool_lock tool" :class="{ 'visible': !isLock }" @click="onLock">
                     <svg-icon v-if="isLock" class="svg-open" icon-class="lock-open"></svg-icon>
@@ -151,7 +165,9 @@ div.container {
     background-color: var(--left-navi-bg-color);
 }
 
-div.container:hover {
+
+
+.contain:hover {
     cursor: default;
     background-color: var(--left-navi-button-hover-color);
 }
@@ -225,6 +241,17 @@ div.text {
     white-space: nowrap;
     overflow: hidden;
     padding-left: 2px;
+    background-color: transparent;
+    .txt {
+        width: 100%;
+        height: 30px;
+        line-height: 30px;
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        padding-left: 2px;
+    }
 }
 
 div .rename {

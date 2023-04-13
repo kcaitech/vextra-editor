@@ -4,8 +4,7 @@
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageItem.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, nextTick } from "vue";
-
+import { defineProps, defineEmits, ref, nextTick, InputHTMLAttributes } from "vue";
 export interface ItemData {
     name: string
     id: string
@@ -15,10 +14,11 @@ export interface ItemData {
 const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
     (e: "switchpage", id: string): void;
+    (e: "rename", name: string, event?: KeyboardEvent): void;
 }>();
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
-
+const esc = ref<boolean>(false)
 function onClick(e: MouseEvent) {
     e.stopPropagation();
     emit("switchpage", props.data.id);
@@ -34,16 +34,36 @@ const onRename = () => {
             nameInput.value?.addEventListener('keydown', keySaveInput);
         }
     })
+    document.addEventListener('click', onInputBlur)
+}
+const onChangeName = (e: Event) => {
+    const value = (e.target as InputHTMLAttributes).value
+    if(esc.value) return
+    emit('rename', value);
 }
 const saveInput = () => {
+    esc.value = false
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
     if(e.code === 'Enter') {
+        esc.value = false
         isInput.value = false
     }else if(e.code === 'Escape') {
+        esc.value = true
         isInput.value = false
     }
+}
+const onInputBlur = (e: MouseEvent) => {
+    if (e.target instanceof Element && !e.target.closest('.rename')) {  
+    var timer = setTimeout(() => {
+        if(nameInput.value) {
+            (nameInput.value).blur()
+        }
+      clearTimeout(timer)
+      document.removeEventListener('click', onInputBlur);
+    }, 10)
+  } 
 }
 </script>
 
@@ -55,7 +75,7 @@ const keySaveInput = (e: KeyboardEvent) => {
         <div class="ph"></div>
         <div class="item">
             <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : ''}">{{props.data.name}}</div>
-            <input v-if="isInput" class="rename" type="text" ref="nameInput" :value="props.data.name">
+            <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput" :value="props.data.name">
         </div>
     </div>
 </template>

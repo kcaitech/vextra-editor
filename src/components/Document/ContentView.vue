@@ -14,7 +14,8 @@ import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
-import { cloneDeep } from 'lodash';
+import { translate } from "@kcdesign/data/editor/frame";
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 
 const { t } = useI18n();
@@ -50,6 +51,7 @@ const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnPageXY: AbsolutePosition = { x: 0, y: 0 }; // 鼠标在page中的坐标
 let shapesContainsMousedownOnPageXY: Shape[] = [];
+const shape = ref<Shape>()
 let contextMenuItems: string[] = [];
 let isMouseDown: boolean = false;
 const selectionIsCtrl = computed(() => !spacePressed.value);
@@ -166,6 +168,7 @@ function onMouseMove(e: MouseEvent) {
     } else {
         hoveredShape(e);
     }
+    
 }
 function onMouseUp(e: MouseEvent) {
     e.preventDefault();
@@ -188,6 +191,18 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     const diff = Math.hypot(deltaX, deltaY);
     if (diff > dragActiveDis) {
         // todo 抬起之前存在拖动
+        // console.log(mousedownOnPageXY.x,'');
+        // console.log(deltaX,'拖动的距离');
+        // console.log(x,'鼠标拖动后的位置');
+        shapeFrame.height = deltaY;
+        shapeFrame.width = deltaX;
+        shapeFrame.x = mousedownOnPageXY.x;
+        shapeFrame.y = mousedownOnPageXY.y;
+        const action = workspace.value.action;
+        if (action.startsWith('add')) {
+            // todo 添加shape
+            addShape(shapeFrame);
+        }
     } else {
         // 抬起之前未存在拖动
         shapeFrame.height = 100;
@@ -385,7 +400,7 @@ renderinit().then(() => {
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount"
-            :site="site">
+            :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>

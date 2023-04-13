@@ -13,7 +13,7 @@ const editor = computed(() => {
 })
 
 const reflush = ref(0);
-const watcher = () => {
+const watcher = () => {    
     reflush.value++;
     calcFrame();
 }
@@ -30,6 +30,8 @@ const points = ref<number>(0);
 const radius = ref<number>(0);
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
+const showBgColorH = ref<boolean>(false)
+const showBgColorV = ref<boolean>(false)
 
 function calcFrame() {
     const xy = props.shape.realXY();
@@ -49,17 +51,15 @@ function getRectShapeAttr(shape: Shape) {
     radius.value = (shape as RectShape).fixedRadius || 0;
 }
 function onChangeX(value: string) {
-    // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
-    const x: number = Number.parseFloat(value);
-    if (isNaN(x)) return;
+    const _x: number = Number.parseFloat(value);
+    if (isNaN(_x)) return;
     if (props.shape.frame.x.toFixed(fix) != value && props.context.selection.selectedPage) {
         const xy = props.shape.realXY();
-        editor.value.translateTo(x, xy.y);
+        editor.value.translateTo(_x, xy.y);
     }
 }
 function onChangeY(value: string) {
-    // console.log(value)
     value = Number.parseFloat(value).toFixed(fix);
     const y: number = Number.parseFloat(value);
     if (isNaN(y)) return;
@@ -97,9 +97,11 @@ function radiusToggle() {
 
 function fliph() {
     editor.value.flipH();
+    showBgColorH.value = !showBgColorH.value
 }
 function flipv() {
     editor.value.flipV();
+    showBgColorV.value = !showBgColorV.value
 }
 
 function onChangeRotate(value: string) {
@@ -107,6 +109,12 @@ function onChangeRotate(value: string) {
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return editor.value.rotate(rotate.value);
     editor.value.rotate(newRotate);
+}
+
+const onChangeRadian = (value: string) => {
+    value = Number.parseFloat(value).toFixed(fix);
+    const newRadian: number = Number.parseFloat(value);
+    
 }
 
 const radiusArr = ['rect-shape', 'artboard']
@@ -119,9 +127,9 @@ onUpdated(() => {
     }
 
     if (radianArr.includes(props.shape.typeId)) {
-        showRadius.value = false
+        showRadian.value = false
     } else {
-        showRadius.value = true
+        showRadian.value = true
     }
 })
 
@@ -161,16 +169,16 @@ onUnmounted(() => {
         <div class="tr">
             <IconText class="td angle" svgicon="angle" :text="rotate.toFixed(fix)" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
-            <div class="flip ml-24" @click="fliph">
+            <div class="flip ml-24" @click="fliph" :class="{ bgColor: showBgColorH }">
                 <svg-icon icon-class="fliph"></svg-icon>
             </div>
-            <div class="flip ml-12" @click="flipv">
+            <div class="flip ml-12" @click="flipv" :class="{ bgColor: showBgColorV }">
                 <svg-icon icon-class="flipv"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="showRadius">
             <IconText class="td frame" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12 }"
-                @onchange="onChangeW" />
+                @onchange="onChangeRotate" />
             <IconText class="td frame ml-24" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12, rotate: 90 }"
                 :style="{
                     visibility: isMoreForRadius ? 'visible' : 'hidden'
@@ -186,10 +194,15 @@ onUnmounted(() => {
                 @onchange="onChangeW" />
             <RadiusForIos></RadiusForIos>
         </div>
-        <div class="tr" v-if="shapeType === 'rectangle'">
-            <IconText class="td frame" svgicon="points" :text="points" :frame="{ width: 12, height: 12 }"
-                @onchange="onChangeW" />
-        </div>
+        <!-- <div class="tr" v-if="shapeType === 'rectangle'">
+                <IconText
+                    class="td frame"
+                    svgicon="points"
+                    :text="points"
+                    :frame="{ width: 12, height: 12 }"
+                    @onchange="onChangeW"
+                />
+            </div> -->
     </div>
 </template>
 
@@ -276,6 +289,11 @@ onUnmounted(() => {
                 width: 40%;
                 height: 40%;
             }
+        }
+
+        .bgColor {
+            background-color: var(--active-color);
+            color: #fff;
         }
 
         .more-for-radius {

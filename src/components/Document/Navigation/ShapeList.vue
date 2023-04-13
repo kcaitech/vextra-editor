@@ -81,7 +81,7 @@ const stopWatch = watch(() => props.page, () => {
 const shapelist = ref<List>();
 
 function search(e: Event) {
-    console.log((e.target as HTMLInputElement).value);
+    // console.log((e.target as HTMLInputElement).value);
 }
 function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)
@@ -126,11 +126,29 @@ function unHovershape() {
     props.context.selection.unHoverShape();
 }
 
-const rename = (value: string, shape: Shape) => {
+const rename = ( value: string, shape: Shape) => { 
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
     editor.value.setName(value)
+}
+
+const isLock = (lock: boolean, shape: Shape) => {
+    const editor = computed(() => {
+        return props.context.editor4Shape(shape);
+    });
+    if(!lock) {
+        editor.value.setLock()
+    }
+}
+
+const isRead = (read: boolean, shape: Shape) => {
+    const editor = computed(() => {
+        return props.context.editor4Shape(shape);
+    });
+    if(!read) {
+        editor.value.setVisible()
+    }
 }
 
 onMounted(() => {
@@ -157,7 +175,8 @@ onUnmounted(() => {
         <div class="body">
             <ListView ref="shapelist" location="shapelist" :source="listviewSource" :item-view="ShapeItem" :item-height="30"
                 :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
-                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape" @rename="rename" orientation="vertical">
+                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape" 
+                @rename="rename" @isRead="isRead" @isLock="isLock" orientation="vertical">
             </ListView>
         </div>
     </div>

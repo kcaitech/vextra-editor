@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { defineProps, defineEmits, onMounted, onUnmounted, ref } from "vue";
+import { defineProps, defineEmits, onMounted, onUnmounted, ref, computed } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -93,6 +93,12 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
     const docEditor = props.context.editor4Doc();
     docEditor.move(params.dragTarget, params.to);
 }
+const rename = ( value: string) => { 
+    // const editor = computed(() => {
+    //     return props.context.editor4Shape(shape);
+    // });
+    // editor.value.setName(value)
+}
 
 </script>
     
@@ -125,6 +131,7 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
                 :allowDrag="true"
                 location="pagelist"
                 @update-after-drag="updateAfterDrag"
+                @rename="rename"
             >
             </ListView>
         </div>

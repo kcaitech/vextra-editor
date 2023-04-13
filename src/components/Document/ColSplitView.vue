@@ -152,7 +152,6 @@ function createColumnCtx(bound: SizeBoundEx, col: string): Ctx {
         _saveWidth = bound.width;
     }
     function onDragOffset(offset: number) {
-        // console.log(offset)
         if (adjustsFun[col]) adjustsFun[col](_saveWidth, offset);
     }
     return {
@@ -197,7 +196,6 @@ function onSizeChange() {
     let leftWidth = sizeBounds.left.width + (savedRootWidth ? sizeBounds.left.width / savedRootWidth * delta : 0);
     let rightWidth = sizeBounds.right.width + (savedRootWidth ? sizeBounds.right.width / savedRootWidth * delta : 0);
 
-    // console.log(leftWidth, rightWidth)
     leftWidth = Math.max(sizeBounds.left.minWidth, Math.min(sizeBounds.left.maxWidth, leftWidth));
     rightWidth = Math.max(sizeBounds.right.minWidth, Math.min(sizeBounds.right.maxWidth, rightWidth));
     const middleWidth = Math.max(rootWidth - leftWidth - rightWidth, 0);
