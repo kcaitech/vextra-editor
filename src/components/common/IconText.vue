@@ -48,6 +48,7 @@ const scale = ref<Scale>({
     axleX: 0,
     degX: 0
 })
+const result = ref<number | string>(0)
 const isDrag = ref(false)
 const onMouseDown = (e:MouseEvent) => {
     isDrag.value = true
@@ -61,25 +62,24 @@ const onMouseDown = (e:MouseEvent) => {
 const onMouseMove = (e: MouseEvent) => {
     //鼠标移动的距离
     let mx = e.screenX - curpt.x
+    result.value = 0
     if(isDrag.value && mx > 4 || mx < -4) {
         curpt.x = e.screenX
     }
-    
     //坐标移动的大小
     scale.value.axleX = scale.value.axleX + Number((mx / 2).toFixed(2));
     //角度移动的大小
     scale.value.degX = scale.value.degX + Number((mx / 10).toFixed(2))
-    
+    result.value = Number(props.text) + scale.value.axleX
 }
 
 watch(scale, (newV, oldV) => {
     //input的值加上鼠标移动后的大小等于最终改变的值
-    let result = Number(props.text)+ Number(newV.axleX)
+    // let result = Number(props.text)+ Number(newV.axleX)
     if(props.ticon) {
-        let value = result 
-        emit("onchange", value.toString());
+        emit("onchange", result.value.toString());
     }else {
-        let value = result + scale.value.degX
+        let value = result.value
         emit("onchange", value.toString())
     }
     

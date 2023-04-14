@@ -265,6 +265,7 @@ onBeforeUpdate(() => {
                 align-items: center;
                 width: 16px;
                 height: 16px;
+                margin-left: 32px;
                 padding: 0 var(--default-padding-half);
                 > svg {
                     width: 80%;

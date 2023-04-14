@@ -49,6 +49,7 @@ export const attr: any = {
     constraints: 'Constraints',
     border: 'Border',
     fill: 'Fill',
+    text: 'Text',
     'follow_container_scaling': 'Follow container scaling',
     'advanced_stroke': 'Advanced stroke',
     position: 'Position',

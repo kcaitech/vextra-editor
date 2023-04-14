@@ -15,6 +15,7 @@ const editor = computed(() => {
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
+    // calcFrame();
 }
 const shapeType = ref<ShapeType>();
 const x = ref<number>(0);
@@ -29,8 +30,8 @@ const points = ref<number>(0);
 const radius = ref<number>(0);
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
-const showBgColorH = ref<boolean>(false)
-const showBgColorV = ref<boolean>(false)
+const showBgColorH = ref<boolean>()
+const showBgColorV = ref<boolean>()
 
 function calcFrame() {
     const xy = props.shape.realXY();
@@ -41,6 +42,8 @@ function calcFrame() {
     h.value = frame.height;
     rotate.value = props.shape.rotation || 0;
     shapeType.value = props.shape.type;
+    showBgColorH.value = props.shape.isFlippedHorizontal;
+    showBgColorV.value = props.shape.isFlippedVertical
     if (shapeType.value === 'rectangle') {
         getRectShapeAttr(props.shape);
     }
@@ -104,6 +107,8 @@ function flipv() {
 }
 
 function onChangeRotate(value: string) {
+    console.log(value);
+    
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return editor.value.rotate(rotate.value);
@@ -143,12 +148,6 @@ onMounted(() => {
     calcFrame();
     props.shape.watch(watcher);
 })
-onUpdated(() => {
-    calcFrame();
-
-    props.shape.unwatch(watcher);
-
-})
 onUnmounted(() => {
     props.shape.unwatch(watcher);
     stopWatchShape();
@@ -172,7 +171,7 @@ onUnmounted(() => {
             <IconText class="td frame" ticon="H" :text="h.toFixed(fix)" @onchange="onChangeH" />
         </div>
         <div class="tr">
-            <IconText class="td angle" svgicon="angle" :text="rotate" @onchange="onChangeRotate"
+            <IconText class="td angle" svgicon="angle" :text="`${rotate}°`" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
             <div class="flip ml-24" @click="fliph" :class="{ bgColor: showBgColorH }">
                 <svg-icon icon-class="fliph"></svg-icon>

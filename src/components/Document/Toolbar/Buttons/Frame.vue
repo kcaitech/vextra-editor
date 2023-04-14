@@ -25,6 +25,7 @@ const button = ref<Button>();
 const frame = ref<HTMLDivElement>();
 const hoverIndex = ref<number>(-1);
 function showMenu(e: MouseEvent) {
+  e.stopPropagation()
   if (popoverVisible.value) return popoverVisible.value = false;
   if (button.value?.toolButtonEl) {
     let el = button.value?.toolButtonEl;

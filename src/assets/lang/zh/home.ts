@@ -49,6 +49,7 @@ export const attr: any = {
     constraints: '相对容器位置',
     border: '边框',
     fill: '填充',
+    text: '文本',
     'follow_container_scaling': '跟随容器缩放',
     'advanced_stroke': '边框设置',
     position: '位置',
