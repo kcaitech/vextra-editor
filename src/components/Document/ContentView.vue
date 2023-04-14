@@ -7,14 +7,14 @@ import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import { AbsolutePosition } from '@/context/selection';
 import { init as renderinit } from '@/render';
-import { Action, CursorType, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
+import { Action, CtrlElementType, CursorType, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from './Selection/PageViewContextMenuItems.vue';
 import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
-import { translate } from "@kcdesign/data/editor/frame";
+import { cursorHandle } from "@/utils/common"
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 
@@ -41,17 +41,15 @@ const dragActiveDis = 3;
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix = reactive(props.context.workspace.matrix);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
-// let savePageId: string = "";
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
 }
-const cursor = ref<CursorType>(CursorType.Auto);
+const cursor = ref<string>(CursorType.Auto);
 const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnPageXY: AbsolutePosition = { x: 0, y: 0 }; // 鼠标在page中的坐标
 let shapesContainsMousedownOnPageXY: Shape[] = [];
-const shape = ref<Shape>()
 let contextMenuItems: string[] = [];
 let isMouseDown: boolean = false;
 const selectionIsCtrl = computed(() => !spacePressed.value);
@@ -162,20 +160,20 @@ function onMouseMove(e: MouseEvent) {
         e.preventDefault();
         if (spacePressed.value) {
             pageViewDragging(e);
-        } else {            
-            pageEditOnMoving(e);
+        } else {
+            // pageEditOnMoving(e);
         }
     } else {
         hoveredShape(e);
     }
-    
+
 }
 function onMouseUp(e: MouseEvent) {
     e.preventDefault();
     // 现有情况，不是拖动pageview，便是操作图层
     if (spacePressed.value) {
         pageViewDragEnd();
-    } else {        
+    } else {
         pageEditorOnMoveEnd(e);
     }
     document.removeEventListener('mousemove', onMouseMove)
@@ -191,9 +189,6 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     const diff = Math.hypot(deltaX, deltaY);
     if (diff > dragActiveDis) {
         // todo 抬起之前存在拖动
-        // console.log(mousedownOnPageXY.x,'');
-        // console.log(deltaX,'拖动的距离');
-        // console.log(x,'鼠标拖动后的位置');
         shapeFrame.height = deltaY;
         shapeFrame.width = deltaX;
         shapeFrame.x = mousedownOnPageXY.x;
@@ -227,13 +222,21 @@ function pageEditOnMoving(e: MouseEvent) {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         const shapeFrame = new ShapeFrame(x, y, 3, 3);
-        const shape = addShape(shapeFrame);        
+        const shape = addShape(shapeFrame);
         if (!shape) return;
         isMouseDown = false;
         props.context.workspace.relay({ shape, startPositon: { x, y }, systemPositon: { x: e.clientX, y: e.clientY } })
     }
 }
-function workspaceUpdate(t?: number) {
+async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) {
+    if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {        
+        cursor.value = await cursorHandle(ct, rotate);
+        return;
+    }
+    if (t === WorkSpace.RESET_CURSOR) {
+        cursor.value = CursorType.Auto;
+        return;
+    }
     if (t === WorkSpace.INSERT_FRAME) {
         const x = 600
         const y = 400

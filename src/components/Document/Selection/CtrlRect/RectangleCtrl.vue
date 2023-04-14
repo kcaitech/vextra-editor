@@ -5,7 +5,7 @@ import { Matrix } from "@/basic/matrix";
 import { CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
 import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
-import CtrlPoint from "../CtrlPoint.vue";
+import CtrlPoint from "../Points/CtrlPoint.vue";
 import { CtrlRect } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
 export type CPoint = [CtrlElementType, number, number, string];
@@ -26,7 +26,7 @@ const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
 const borderWidth = 2;
-const offset = 3.5;
+const offset = 13;
 let isDragging = false;
 let systemPosition: AbsolutePosition = { x: 0, y: 0 };
 let startPosition: AbsolutePosition = { x: 0, y: 0 };
@@ -153,9 +153,8 @@ watchEffect(updater)
         borderWidth: '' + borderWidth + 'px',
         transform: `rotate(${props.ctrlRect.rotate}deg)`
     }">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context"
-            :ctrl-point-type="CtrlElementType.RectLT" :axle="props.ctrlRect.axle" :point="point"
-            @transform="handlePointAction"></CtrlPoint>
+        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.ctrlRect.axle" :ctrl-rect="props.ctrlRect"
+            :point="point" @transform="handlePointAction"></CtrlPoint>
         <div class="frame" :style="{
             top: framePosition.top,
             left: framePosition.left,
