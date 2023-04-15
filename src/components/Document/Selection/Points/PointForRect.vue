@@ -20,40 +20,77 @@ const emit = defineEmits<{
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
 const dragActiveDis = 3;
-const dragContainer = ref<HTMLElement>();
-const dragHandle = ref<HTMLElement>();
+const pointContainer = ref<HTMLElement>();
 let isDragging = false;
 let startPosition = { x: 0, y: 0 };
 let systemPosition = { x: 0, y: 0 };
 let root = { x: 0, y: 0 };
 let scaling: boolean = false;
 let rotating: boolean = false;
+let clt: CtrlElementType;
+const rotatePositon = computed(() => {
+  const map = new Map([
+    [CtrlElementType.RectLT, 'lt'],
+    [CtrlElementType.RectRT, 'rt'],
+    [CtrlElementType.RectRB, 'rb'],
+    [CtrlElementType.RectLB, 'lb']
+  ])
+  return map.get(props.point[0]) || ''
+})
+const positionToCtrlElementType = new Map([
+  ['rotate', props.point[0] + '-rotate'],
+  ['scale', props.point[0]]
+])
+function setStatus(ct?: CtrlElementType) {
+  if (!ct) {
+    rotating = false;
+    scaling = rotating;
+  } else if (ct.endsWith('rotate')) {
+    rotating = true;
+    scaling = !rotating;
+    props.context.selection.unHoverShape();
+  } else {
+    rotating = false;
+    scaling = !rotating;
+    props.context.selection.unHoverShape();
+  }
+  workspace.value.rotating(rotating);
+  workspace.value.scaling(scaling);
+}
+function getCtrlElementType(event: MouseEvent) {
+  const ele = (event.target as HTMLDivElement)?.dataset?.pointId || '';
+  return positionToCtrlElementType.get(ele) as CtrlElementType;
+}
+
+// mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
-  if (!dragContainer.value || !dragHandle.value || !props.context.repo) return;
-  const { button, clientX, clientY, offsetX, offsetY } = event;
+  if (workspace.value.transforming) return;
+  event.stopPropagation();
+  const ct = getCtrlElementType(event);
+  if (!pointContainer.value || !props.context.repo || !ct) return;
+  const { button, clientX, clientY } = event;
   if (button !== 0) return;
-  matrix.reset(props.context.workspace.matrix);
-  const area = getAreaStatus(props.point[0], {x: offsetX, y: offsetY});
+  setStatus(ct);
+  clt = getCtrlElementType(event);
+  matrix.reset(workspace.value.matrix);
   root = workspace.value.root;
   startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
   systemPosition = { x: clientX, y: clientY };
   props.context.repo.start('transform', {});
   document.addEventListener('mousemove', onMouseMove);
   document.addEventListener('mouseup', onMouseUp);
-  
 }
-
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
-
   if (isDragging && props.context.repo) {
     const mouseOnPage = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const delta = { x: mouseOnPage.x - startPosition.x, y: mouseOnPage.y - startPosition.y, deg: 0 };
-    if (event.ctrlKey) {
+    if (rotating) {
       const { x: sx, y: sy } = startPosition;
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       delta.deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
+      workspace.value.setCursor(clt, props.ctrlRect.rotate);
     }
     emit('transform', props.point[0], delta);
     props.context.repo.transactCtx.fireNotify();
@@ -65,8 +102,8 @@ function onMouseMove(event: MouseEvent) {
     }
   }
 }
-
-function onMouseUp() {
+function onMouseUp(event: MouseEvent) {
+  if (event.button) return;
   if (!isDragging) {
     props.context.repo?.rollback();
   } else {
@@ -75,100 +112,85 @@ function onMouseUp() {
   isDragging = false;
   document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mouseup', onMouseUp);
-}
-function mouseleave() {
+  setStatus();
   workspace.value.resetCursor();
 }
-function mousemove(e: MouseEvent) {
-  const { offsetX, offsetY } = e;
-  const area = getAreaStatus(props.point[0], { x: offsetX, y: offsetY });
-  console.log(area);  
-  workspace.value.genCursor(area, props.ctrlRect.rotate);
+function mouseleave() {
+  if (rotating || scaling) return;
+  workspace.value.resetCursor();
 }
-function getAreaStatus(ct: CtrlElementType, position: { x: number, y: number }): CtrlElementType {
-  let area = ct;
-  const { x, y } = position;
-  if (ct === CtrlElementType.RectLB) {
-    if ((x < 10 && y < 18) || (y >= 18)) {
-      area = CtrlElementType.RectLBR;
-    }
-  }
-  return area
+function mousemove(event: MouseEvent) {
+  if (rotating || scaling) return;
+  const ct = getCtrlElementType(event);
+  workspace.value.setCursor(ct, props.ctrlRect.rotate);
 }
 </script>
 <template>
-  <div ref="dragContainer" class="drag-container" @mousedown.stop="onMouseDown" @mousemove="mousemove"
+  <div ref="pointContainer" class="point-container" @mousedown="onMouseDown" @mousemove="mousemove"
     @mouseleave="mouseleave" :style="{ left: `${props.point[1]}px`, top: `${props.point[2]}px` }">
-    <div v-if="props.point[0] === CtrlElementType.RectLT" class="drag-handle lt" ref="dragHandle">
-      <div class="center"></div>
-    </div>
-    <div v-if="props.point[0] === CtrlElementType.RectRT" class="drag-handle rt" ref="dragHandle">
-      <div class="center"></div>
-    </div>
-    <div v-if="props.point[0] === CtrlElementType.RectRB" class="drag-handle rb" ref="dragHandle">
-      <div class="center"></div>
-    </div>
-    <div v-if="props.point[0] === CtrlElementType.RectLB" class="drag-handle lb" ref="dragHandle">
-      <div class="center"></div>
+    <div data-point-id="rotate" :class="`rotate ${rotatePositon}`"></div>
+    <div data-point-id="scale" class="scale">
+      <div data-point-id="scale"></div>
     </div>
   </div>
 </template>
 <style scoped lang="scss">
-.drag-container {
+.point-container {
   position: absolute;
   z-index: 1;
-  width: 28px;
-  height: 28px;
-  background-color: aquamarine;
-  .drag-handle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(43, 144, 226, 0.573);
+  overflow: hidden;
+
+  >.scale {
     position: absolute;
-    width: 18px;
-    height: 18px;
-    background-color: antiquewhite;
-    >.center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    background-color: rgba(255, 228, 196, 0.511);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+
+    >div {
       width: 8px;
       height: 8px;
-      border: solid 1px var(--active-color);
-      border-radius: 0px;
-      background-color: var(--theme-color-anti);
       box-sizing: border-box;
+      border: 1px solid var(--active-color);
+      background-color: var(--theme-color-anti);
     }
   }
-  .lt {
-    right: 0;
-    bottom: 0;
-    > div {
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
+
+  >.rotate {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(137, 43, 226, 0.673);
   }
-  .rt {
-    right: 0;
-    bottom: 0;
-    > div {
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
+
+  >.lt {
+    top: 0px;
+    left: 0px;
   }
-  .rb {
-    right: 0;
-    bottom: 0;
-    > div {
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
+
+  >.rt {
+    right: 0px;
+    top: 0px;
   }
-  .lb {
-    right: 0;
-    bottom: 0;
-    > div {
-      position: absolute;
-      left: 0;
-      top: 0;
-    }
+
+  >.rb {
+    right: 0px;
+    bottom: 0px;
+  }
+
+  >.lb {
+    left: 0px;
+    bottom: 0px;
   }
 }
 </style>

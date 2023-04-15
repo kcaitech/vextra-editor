@@ -141,6 +141,7 @@ function onKeyUp(e: KeyboardEvent) {
     }
 }
 function onMouseDown(e: MouseEvent) {
+    if (workspace.value.transforming) return;
     e.preventDefault();
     isMouseDown = true;
     if (e.button === MOUSE_LEFT) { // 左键按下
@@ -162,6 +163,7 @@ function onMouseMove(e: MouseEvent) {
             pageViewDragging(e);
         } else {
             // pageEditOnMoving(e);
+            workspace.value.translating(true);
         }
     } else {
         hoveredShape(e);
@@ -170,15 +172,20 @@ function onMouseMove(e: MouseEvent) {
 }
 function onMouseUp(e: MouseEvent) {
     e.preventDefault();
+    if (workspace.value.transforming && e.button) return;
     // 现有情况，不是拖动pageview，便是操作图层
     if (spacePressed.value) {
         pageViewDragEnd();
     } else {
         pageEditorOnMoveEnd(e);
+        workspace.value.translating(false);
     }
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
     isMouseDown = false;
+}
+function onMouseLeave() {
+    props.context.selection.unHoverShape();
 }
 function pageEditorOnMoveEnd(e: MouseEvent) {
     const { x, y } = getMouseOnPageXY(e);
@@ -229,7 +236,7 @@ function pageEditOnMoving(e: MouseEvent) {
     }
 }
 async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) {
-    if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {        
+    if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {
         cursor.value = await cursorHandle(ct, rotate);
         return;
     }
@@ -253,6 +260,7 @@ async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number
     }
 }
 function hoveredShape(e: MouseEvent) {
+    if (props.context.workspace.transforming) return; // shapes编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
@@ -399,7 +407,7 @@ renderinit().then(() => {
 
 <template>
     <div v-if="inited" ref="root" :style="{ cursor }" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
-        @mousedown="onMouseDown" @mousemove="onMouseMove">
+        @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount"

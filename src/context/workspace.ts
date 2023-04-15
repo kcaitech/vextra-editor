@@ -68,6 +68,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 };
     private m_scaling: boolean = false;
     private m_rotating: boolean = false;
+    private m_translating: boolean = false;
     constructor(context: Context) {
         super();
         this.r_context = context
@@ -96,7 +97,7 @@ export class WorkSpace extends Watchable(Object) {
         return this.m_frame_size;
     }
     get transforming() {
-        return this.m_scaling || this.m_rotating;
+        return this.m_scaling || this.m_rotating || this.m_translating;
     }
 
     setAction(action: Action) {
@@ -119,6 +120,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     rotating(v: boolean) {
         this.m_rotating = v;
+    }
+    translating(v: boolean) {
+        this.m_translating = v;
     }
 
     // keyboard
@@ -173,7 +177,7 @@ export class WorkSpace extends Watchable(Object) {
             WorkSpace.ESC_EVENT_POINTER = undefined;
         }
     }
-    genCursor(type: CtrlElementType, deg: number) {        
+    setCursor(type: CtrlElementType, deg: number) {
         this.notify(WorkSpace.CURSOR_CHANGE, type, deg)
     }
     resetCursor() {

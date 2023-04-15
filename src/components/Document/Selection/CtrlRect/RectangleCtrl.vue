@@ -1,11 +1,11 @@
 <script setup lang='ts'>
-import { defineProps, computed, ref, onMounted, onUnmounted, watchEffect } from "vue";
+import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
 import { Context } from "@/context";
 import { Matrix } from "@/basic/matrix";
 import { CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
 import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
-import CtrlPoint from "../Points/CtrlPoint.vue";
+import CtrlPoint from "../Points/PointForRect.vue";
 import { CtrlRect } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
 export type CPoint = [CtrlElementType, number, number, string];
@@ -26,7 +26,7 @@ const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
 const borderWidth = 2;
-const offset = 13;
+const offset = 14.5;
 let isDragging = false;
 let systemPosition: AbsolutePosition = { x: 0, y: 0 };
 let startPosition: AbsolutePosition = { x: 0, y: 0 };
@@ -69,6 +69,7 @@ function updater() {
 }
 
 function mousedown(e: MouseEvent) {
+    if (workspace.value.transforming) return;
     shapes = props.context.selection.selectedShapes;
     if (!shapes.length) return;
     props.context.editor4Shape(shapes[0]);
@@ -85,6 +86,8 @@ function mousedown(e: MouseEvent) {
 function mousemove(e: MouseEvent) {
     const { clientX, clientY } = e;
     if (isDragging) {
+        workspace.value.translating(true);
+        props.context.selection.unHoverShape();
         const mousePosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
         const delta: AbsolutePosition = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
         transform(shapes, delta);
@@ -99,7 +102,8 @@ function transform(shapes: Shape[], delta: AbsolutePosition) {
         translate(shapes[i], delta.x, delta.y);
     }
 }
-function mouseup() {
+function mouseup(e: MouseEvent) {
+    if (workspace.value.transforming && e.button) return;
     if (isDragging) {
         props.context.repo?.commit({});
     } else {
@@ -135,11 +139,14 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
 
 onMounted(() => {
     props.context.selection.watch(updater);
+    console.log('ctrlrect mount');
+
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     shapes.length = 0;
+    console.log('ctrlrect unMount');
 })
 
 watchEffect(updater)
@@ -153,8 +160,8 @@ watchEffect(updater)
         borderWidth: '' + borderWidth + 'px',
         transform: `rotate(${props.ctrlRect.rotate}deg)`
     }">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.ctrlRect.axle" :ctrl-rect="props.ctrlRect"
-            :point="point" @transform="handlePointAction"></CtrlPoint>
+        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.ctrlRect.axle"
+            :ctrl-rect="props.ctrlRect" :point="point" @transform="handlePointAction"></CtrlPoint>
         <div class="frame" :style="{
             top: framePosition.top,
             left: framePosition.left,

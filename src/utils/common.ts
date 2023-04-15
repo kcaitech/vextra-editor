@@ -1,6 +1,7 @@
 import { CtrlElementType } from '@/context/workspace';
 import scaleBase64 from "@/assets/cursor/scale.png";
-import rotateBase64 from '@/assets/cursor/rotate.png'
+import rotateBase64 from '@/assets/cursor/rotate.png';
+
 export function genOptions(items: string[][]) {
   return items.map((item: string[], index: number) => {
     return {
@@ -68,20 +69,20 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
     hot.y = 12;
   } else if (ct === CtrlElementType.RectLTR) {
     img = rotateBase64;
-    deg = 135;
+    deg = 0;
   } else if (ct === CtrlElementType.RectRBR) {
     img = rotateBase64;
-    deg = 135;
+    deg = 180;
   } else if (ct === CtrlElementType.RectRTR) {
     img = rotateBase64;
-    deg = 135;
+    deg = 90;
   }
   if (!img) return cursor;
   await rotateBase64Image(img, deg + rotate).then(cr => {
-    if (cr) {      
+    if (cr) {
       cursor = getString(cr, 1.5, hot);
     }
-  }, () => { })  
+  }, () => { })
   return cursor
 
   function getString(url: any, times: number, hotPosition: { x: number, y: number }) {
