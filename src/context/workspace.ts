@@ -2,7 +2,7 @@ import { Watchable } from "@kcdesign/data/data/basic";
 import { Context } from "./index"
 import { Repository } from "@kcdesign/data/data/transact";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
-import { Matrix } from '@/basic/matrix';
+import { Matrix } from '@kcdesign/data/basic/matrix';
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',

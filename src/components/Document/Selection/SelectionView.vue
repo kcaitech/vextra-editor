@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
-import { Matrix } from "@/basic/matrix";
+import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape } from "@kcdesign/data/data/shape";
 import { AbsolutePosition } from "@/context/selection";
 import RectangleCtrl from "./CtrlRect/RectangleCtrl.vue";

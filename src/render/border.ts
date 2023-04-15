@@ -18,7 +18,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, shape: Shape, bord
     const height = frame.height;
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
 
-    return h("g", { transform: `translate(${frame.x} ${frame.y}) rotate(${shape.rotation || 0} ${frame.width / 2} ${frame.height / 2})` }, [
+    return h("g", { transform: `translate(${frame.x} ${frame.y})` }, [
 
         h("mask", {
             id: maskId,
@@ -66,7 +66,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, shape: Shape, bor
     const width = frame.width + thickness;
     const height = frame.height + thickness;
 
-    return h("g", { transform: `translate(${frame.x} ${frame.y}) rotate(${shape.rotation || 0} ${frame.width / 2} ${frame.height / 2})` }, [
+    return h("g", { transform: `translate(${frame.x} ${frame.y})` }, [
         h("mask", {
             id: maskId,
             maskContentUnits: "userSpaceOnUse",
@@ -103,7 +103,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, shape: Shape, bord
     const mask1Id = "mask1-border" + objectId(border);
     const mask2Id = "mask2-border" + objectId(border);
 
-    return h("g", { transform: `translate(${frame.x} ${frame.y}) rotate(${shape.rotation || 0} ${frame.width / 2} ${frame.height / 2})` }, [
+    return h("g", { transform: `translate(${frame.x} ${frame.y})` }, [
         h("mask", {
             id: mask2Id,
             width,
@@ -170,7 +170,7 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
             "clip-path": "url(#" + clipId + ")"
         })
     );
-    return h("g", { transform: `translate(${x} ${y}) rotate(${shape.rotation || 0} ${frame.width / 2} ${frame.height / 2})` }, elArr);
+    return h("g", { transform: `translate(${x} ${y})` }, elArr);
 }
 
 handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Border, path: string): any {
@@ -192,7 +192,7 @@ handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Bo
 
     if (g_ && g_.node) {
         // elArr.push(g_.node);
-        return h("g", { transform: `translate(${x} ${y}) rotate(${shape.rotation || 0} ${frame.width / 2} ${frame.height / 2})` }, [
+        return h("g", { transform: `translate(${x} ${y})` }, [
             g_.node,
             h('path', {
                 d: path,
@@ -249,7 +249,7 @@ handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Bor
             mask: "url(#" + maskId + ")"
         }))
 
-    return (h("g", { transform: `translate(${frame.x} ${frame.y}) rotate(${shape.rotation || 0} ${frame.width / 2} ${frame.height / 2})` }, elArr));
+    return (h("g", { transform: `translate(${frame.x} ${frame.y})` }, elArr));
 }
 
 export function render(h: Function, shape: Shape, path?:string): Array<any> {

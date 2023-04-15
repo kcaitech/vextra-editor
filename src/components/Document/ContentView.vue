@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix } from '@/basic/matrix';
+import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Context } from '@/context';
 import { Page } from '@kcdesign/data/data/page';
 import { reactive, defineProps, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
