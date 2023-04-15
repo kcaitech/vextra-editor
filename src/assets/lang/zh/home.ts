@@ -4,13 +4,24 @@ export const system = {
     'illegal_input': '输入不合法！',
     select: '请选择！',
     space: '...',
-    empty: '暂无数据'
+    empty: '暂无数据',
+    paste: '粘贴',
+    copy: '复制',
+    'select_layer': '图层选择',
+    'bring_forward': '上移一层',
+    'send_backward': '下移一层',
+    'bring_to_top': '置于顶层',
+    'send_to_bottom': '置于底层',
+    'visible': '显示/隐藏',
+    'Lock': '锁定/解锁'
 }
 
 export const home = {
     open_local_file: "打开文件",
     open_remote_file: "打开远程文件",
-    new_file: "新建文档"
+    new_file: "新建文档",
+    object_selector: '选择对象',
+    scale: '等比缩放'
 }
 
 export const navi = {
@@ -20,6 +31,16 @@ export const navi = {
     page: '页面'
 }
 
+export const frame = {
+    custom: '自定义',
+    phone: '手机',
+    tablet: '平板',
+    deskdop: '桌面',
+    presentation: '预览',
+    watch: '手表',
+    paper: '纸张',
+    social_media : '社交媒体'
+}
 
 export const attr: any = {
     design: '设计',
@@ -28,6 +49,7 @@ export const attr: any = {
     constraints: '相对容器位置',
     border: '边框',
     fill: '填充',
+    text: '文本',
     'follow_container_scaling': '跟随容器缩放',
     'advanced_stroke': '边框设置',
     position: '位置',

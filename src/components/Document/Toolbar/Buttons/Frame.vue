@@ -1,14 +1,31 @@
 <script setup lang="ts">
-import { ref, nextTick, watch } from 'vue';
+import { ref, nextTick, defineProps, defineEmits } from 'vue';
 import ToolButton from '../ToolButton.vue';
+import { useI18n } from 'vue-i18n';
+import FrameChild from './FrameChild.vue'
+import { Action, WorkSpace } from "@/context/workspace";
+
+const { t } = useI18n();
 
 type Button = InstanceType<typeof ToolButton>
 
+const props = defineProps<{
+  workspace: WorkSpace,
+  active: boolean
+}>()
+const emit = defineEmits<{
+    (e: "select", action: Action): void;
+}>();
+function select(action: Action) {  
+    emit('select', action);
+}
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
-
+const frame = ref<HTMLDivElement>();
+const hoverIndex = ref<number>(-1);
 function showMenu(e: MouseEvent) {
+  e.stopPropagation()
   if (popoverVisible.value) return popoverVisible.value = false;
   if (button.value?.toolButtonEl) {
     let el = button.value?.toolButtonEl;
@@ -19,38 +36,70 @@ function showMenu(e: MouseEvent) {
         popover.value.style.top = el.offsetHeight + 2 + 'px';
       } 
     })
+    document.addEventListener('click', onMenuBlur);
   }
 }
 
-watch(popoverVisible, (val) => {
-  if (val) {
-    nextTick(() => {
-      if (popover.value) {
-        popover.value.addEventListener('blur', onMenuBlur);
-        popover.value.focus();
-      }
-    })
+function onMenuBlur(e: MouseEvent) {
+  if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu-f')) {
+    var timer = setTimeout(() => {
+      popoverVisible.value = false;
+      clearTimeout(timer)
+      document.removeEventListener('click', onMenuBlur);
+    }, 10)
   }
-})
-
-function onMenuBlur() {
-  if (popover.value) {
-    popover.value.removeEventListener('blur', onMenuBlur);
-  }
-  var timer = setTimeout(() => {
-    popoverVisible.value = false;
-    clearTimeout(timer)
-  }, 100)
+  
 }
+
+const left = ref(0)
+const showChildFrame = (i: number) => {
+    hoverIndex.value = i
+    if(popover.value) {
+      left.value = popover.value.offsetWidth
+    }
+  
+}
+
+const closeChildFrame = () => {
+  hoverIndex.value = -1
+}
+
+const frames = ['frame.phone', 'frame.tablet', 'frame.deskdop', 'frame.presentation', 'frame.watch', 'frame.paper', 'frame.social_media']
+
+const framesChild = [
+  [['iphone 14', '390 × 844'], ['iphone 14 Pro', '393 × 852']],
+  [['Surface Pro 8', '1440 × 960'], ['iPad mini 8.3', '744 × 1133']],
+  [['MacBook Air', '1280 × 832'], ['Desktop', '1440 × 1024']],
+  [['Slide 16:9', '1920 × 1080'], ['Slide 4:3', '1024 × 768']],
+  [['Apple Watch 41mm', '176 × 215'], ['Apple Watch 45mm', '198 × 242']],
+  [['A4', '595 × 842'], ['A5', '420 × 595']],
+  [['Twitter post', '1200 × 675'], ['Twitter header', '1500 × 500']]
+]
+
+const closeFrame = () => {
+  popoverVisible.value = false;
+}
+
 </script>
 
 <template>
-  <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible"></div>
-  <ToolButton ref="button">
+  <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+    <div>
+      <span>{{ t('frame.custom') }}</span>
+    </div>
+    <div ref="frame" v-for="(item, i) in frames" :key="i" style="position: relative;">
+      <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
+        <span>{{ t(`${item}`) }}</span>
+        <div class="triangle"></div>
+        <FrameChild :workspace="props.workspace" :childFrame="hoverIndex === i" :top="-8" :left="left" :framesChild="framesChild[i]" @closeFrame="closeFrame" ></FrameChild>
+      </div>
+    </div>
+  </div>
+  <ToolButton ref="button" @click="() => {select(Action.AddFrame)}" :selected="props.active">
     <div class="svg-container" title="Frame">
       <svg-icon icon-class="frame"></svg-icon>
     </div>
-    <div class="menu" @click="showMenu">
+    <div class="menu-f" @click="showMenu">
       <svg-icon icon-class="down"></svg-icon>
     </div>
   </ToolButton>
@@ -69,7 +118,7 @@ function onMenuBlur() {
     height: 50%;
   }
 }
-.menu {
+.menu-f {
   width: 10px;
   height: 32px;
   display: flex;
@@ -82,18 +131,57 @@ function onMenuBlur() {
     height: 80%;
   }
 }
-.menu:hover {
+.menu-f:hover {
   transform: translateY(4px);
 }
 .popover {
   position: absolute;
+  color: #ffffff;
   z-index: 999;
-  width: 360px;
-  height: 100px;
+  width: 150px;
+  height: auto;
+  font-size: var(--font-default-fontsize);
   background-color: var(--theme-color);
   border-radius: 4px;
   outline: none;
+  padding: var(--default-padding-half) 0;
+  >div {
+    >span {
+      padding: 4px var(--default-padding);
+      height: 32px;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      &:hover {
+        background-color: var(--active-color);
+      }
+    }
+    .frame {
+      position: relative;
+      width: 100%;
+      box-sizing: border-box;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px var(--default-padding);
+      &:hover {
+        background-color: var(--active-color);
+      }
+      .triangle {
+        width: 0;
+        height: 0;
+        padding: 0;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+        border-left: 10px solid var(--theme-color-anti);
+      }
+    }
+    
+  }
 }
+
 // @keyframes bounce {
 //   0% {
 //     transform: translateY(0);

@@ -6,4 +6,10 @@
  * @FilePath: \kcdesign\src\utils\mouse.ts
  * @Description: mouse event
  */
+export enum CursorType {
+    Auto = 'auto',
+    Grab = 'grab',
+    Grabbing = 'grabbing',
+    Crosshair = 'crosshair'
+}
 export class Mouse {}

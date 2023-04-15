@@ -1,6 +1,6 @@
 <template>
     <div ref="sashEl" :style="style" :class="{ sash: true }" @mousedown="onMouseDown">
-        <div class="line" :style="lineStyle"  :class="{ draging: draging }"/>
+        <div class="line" :style="lineStyle" :class="{ draging: draging }" />
     </div>
 </template>
 <!-- 需要 parent relative/absolute 定位。 然后再指定 sash 的位置-->
@@ -23,7 +23,7 @@ let isDown = false;
 function onMouseDown(event: MouseEvent) {
     isDown = true;
     draging.value = false;
-    downPt.x = event.screenX;
+    downPt.x = event.screenX;  //当前鼠标的位置
     downPt.y = event.screenY;
     event.preventDefault();
     document.addEventListener('mousemove', onMouseMove)
@@ -85,16 +85,14 @@ const sashEl = ref<HTMLElement>();
 <style scoped>
 .sash {
     position: absolute;
-    /* background-color: red; */
-    z-index: 1;
 }
 
 .draging {
     background-color: darkgrey;
 }
+
 .line {
     background-color: var(--theme-color-line);
-    /* background-color: red; */
     position: inherit;
 }
 </style>

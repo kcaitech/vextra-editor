@@ -6,12 +6,7 @@ import { renderGroupChilds as gR } from "@/render/group";
 const defaultColor = new Color(0, 0, 0, 0)
 
 export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
-    // name
-    // border
-    // background
-
     const childs = [];
-    // childs.push(h("text", {y: -5}, this.data.name));
     const frame = shape.frame;
     // background
     if (shape.hasBackgroundColor) {
@@ -19,12 +14,22 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         childs.push(h("rect", {
             x: 0, y: 0, width: frame.width, height: frame.height,
             fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")",
-            "fill-opacity": color ? color.alpha : 1,
-            filter: "url(#artboard-shadow)"
+            "fill-opacity": color ? color.alpha : 1
         }))
-    } else {
-        childs.push(h("rect", { x: 0, y: 0, width: frame.width, height: frame.height, filter: "url(#artboard-shadow)" }))
     }
     childs.push(...gR(h, shape, comsMap));
-    return h('g', { transform: 'translate(' + frame.x + ',' + frame.y + ')', class: "artboard", reflush }, childs);
+    // artboard单独一个svg节点，需要设置overflow
+    return h('svg', {
+        version:"1.1", 
+        xmlns:"http://www.w3.org/2000/svg", 
+        "xmlns:xlink":"http://www.w3.org/1999/xlink", 
+        "xmlns:xhtml":"http://www.w3.org/1999/xhtml",
+        preserveAspectRatio:"xMinYMin meet",
+        width: frame.width,
+        height: frame.height,
+        viewBox: "0 0 " + frame.width + " " + frame.height,
+        x: frame.x,
+        y: frame.y,
+        overflow: "hidden"
+    }, childs);
 }

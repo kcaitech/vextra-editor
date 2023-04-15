@@ -113,7 +113,6 @@ function onAlphaChange(e: Event, idx: number) {
 function setBorder(idx: number,  options: { color: Color, isEnabled: boolean }) {
     editor.value.setBorder(idx, options);
 }
-function onBorderMouseDown() {}
 // hooks
 onMounted(() => {
     updateData();
@@ -141,7 +140,7 @@ onBeforeUpdate(() => {
             </template>
         </TypeHeader>
         <div class="borders-container">
-            <div class="border" v-for="(b, idx) in borders" :key="b.id" @mousedown.stop="onBorderMouseDown()">
+            <div class="border" v-for="(b, idx) in borders" :key="b.id">
                 <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
@@ -159,7 +158,7 @@ onBeforeUpdate(() => {
                     />
                 </div>
                 <div class="extra-action">
-                    <BorderDetail :context="props.context" :shape="props.shape" :border="b.border"></BorderDetail>
+                    <BorderDetail :context="props.context" :shape="props.shape" :border="b.border" :index="idx"></BorderDetail>
                     <div class="delete" @click="deleteBorder(idx)">
                         <svg-icon icon-class="delete"></svg-icon>
                     </div>
@@ -234,7 +233,7 @@ onBeforeUpdate(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 68px;
+                    width: 92px;
                     margin-left: 10px;
                 }
                 input + input {
@@ -245,6 +244,7 @@ onBeforeUpdate(() => {
                 flex: 0 0 auto;
                 display: flex;
                 align-items: center;
+                margin-left: 8px;
                 justify-content: center;
                 .delete {
                     display: flex;

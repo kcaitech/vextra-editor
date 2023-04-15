@@ -1,7 +1,7 @@
 import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape, GroupShape } from "@kcdesign/data/data/shape";
 
 interface Saved {
     page: Page | undefined,
@@ -9,14 +9,16 @@ interface Saved {
     cursorStart: number,
     cursorEnd: number
 }
+export interface AbsolutePosition {
+    x: number,
+    y: number
+}
 
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
     static CHANGE_SHAPE = 2;
     static CHANGE_SHAPE_HOVER = 3;
-
-    private m_document: Document;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -26,28 +28,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_cursorStart: number = -1;
     private m_cursorEnd: number = -1;
 
-    private m_keyboard_oncontrol: boolean = false; // 当shapelist获得焦点时 按键control被按下
-    private m_keyboard_onshift: boolean = false; // 当shapelist获得焦点时 案件shift被按下
-
     constructor(document: Document) {
         super();
         this.m_document = document;
-    }
-
-    setControlStatus(status: boolean) {
-        this.m_keyboard_oncontrol !== status && (this.m_keyboard_oncontrol = status);
-        (status && this.m_keyboard_onshift) && (this.m_keyboard_onshift = false); // shift or control
-    }
-    setShiftStatus(status: boolean) {
-        this.m_keyboard_onshift !== status && (this.m_keyboard_onshift = status);
-        (status && this.m_keyboard_oncontrol) && (this.m_keyboard_oncontrol = false);
-    }
-
-    get onControl(): Boolean {
-        return this.m_keyboard_oncontrol
-    }
-    get onShift(): Boolean {
-        return this.m_keyboard_onshift
     }
 
     selectPage(p: Page | undefined) {
@@ -59,30 +42,77 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_selectShapes.length = 0;
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
+
         this.notify(Selection.CHANGE_PAGE);
     }
 
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
+    getShapesByXY(position: AbsolutePosition): Shape[] {        
+        const shapes: Shape[] = [];
+        const page = this.m_selectPage!;
+        const childs = page.childs;
+        position.x -= page.frame.x;
+        position.y -= page.frame.y;
+        if (childs?.length) deep(childs, position);
+        return shapes;
 
-    selectShape(shape: Shape) {
-        if (this.m_keyboard_oncontrol) {
+        function deep(source: Shape[], position: AbsolutePosition) {
+            for(let i = 0; i < source.length; i++) {                
+                const { x, y, width, height } = source[i].frame;
+                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
+                const suppos = {x: position.x - x, y: position.y - y}
+                if (source[i].childs?.length) deep(source[i].childs, suppos);
+            }
+        }
+    }
+    getClosetContainer(position: AbsolutePosition): GroupShape {
+        const page = this.m_selectPage!;
+        const groups: GroupShape[] = [page];
+        const childs = page.childs;
+        position.x -= page.frame.x;
+        position.y -= page.frame.y;
+        if (childs?.length) deep(childs, position);
+        return groups[0];
+
+        function deep(source: Shape[], position: AbsolutePosition) {
+            for(let i = 0; i < source.length; i++) {                
+                const { x, y, width, height } = source[i].frame;
+                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {
+                    if (['group-shape', 'artboard'].includes(source[i].typeId)) {
+                        groups.unshift(source[i] as GroupShape);
+                    }
+                }
+                const suppos = {x: position.x - x, y: position.y - y}
+                if (source[i].childs?.length) deep(source[i].childs, suppos);
+            }
+        }
+    }
+
+    selectShape(shape?: Shape, ctrl?: boolean, meta?: boolean) {
+        if (!shape) {
+            this.m_selectShapes.length = 0;
+            this.m_cursorStart = -1;
+            this.m_cursorEnd = -1;
+            this.m_hoverShape = undefined;        
+            this.notify(Selection.CHANGE_SHAPE);
+            return;
+        }
+        if (ctrl || meta) {
             if (this.isSelectedShape(shape)) {
                 this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
             } else {
                 this.m_selectShapes.push(shape);
-            }
+            }            
             this.notify(Selection.CHANGE_SHAPE);
-            return;
-        } else if (this.m_keyboard_onshift) {
             return;
         }
         this.m_selectShapes.length = 0;
         this.m_selectShapes.push(shape);
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
-        this.m_hoverShape = undefined;
+        this.m_hoverShape = undefined;        
         this.notify(Selection.CHANGE_SHAPE);
     }
 
@@ -95,10 +125,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.notify(Selection.CHANGE_SHAPE);
     }
 
-    // selectShapeIndex(): number[] {
-    //     return this.m_selectShapes.map((item: Shape) => item.index)
-    // }
-
     addSelectShape(shape: Shape) {
         // check?
         if (this.isSelectedShape(shape)) {
@@ -109,22 +135,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_cursorEnd = -1;
         this.notify(Selection.CHANGE_SHAPE);
     }
-
-    unselectShape(shape: Shape) {
-        // todo
-    }
-
-    // selectRangeShape(start: Shape, end: Shape) {
-    //     this.m_selectShapes.length = 0;
-    //     this.m_selectShapes.push(...shapes);
-    //     this.m_cursorStart = -1;
-    //     this.m_cursorEnd = -1;
-    //     this.m_hoverShape = undefined;
-    //     this.notify(Selection.CHANGE_SHAPE);
-    // }
-    // selectRangeShapeByIndex(start: number, end: number) {
-    //     // todo
-    // }
 
     resetSelectShapes() {
         this.m_selectShapes.length = 0;

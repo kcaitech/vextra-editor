@@ -6,6 +6,13 @@
 <script setup lang="ts">
 import ToolButton from './ToolButton.vue';
 import UserAvatar from './UserAvatar.vue';
+import Scale from './Scale.vue';
+import { defineProps } from 'vue';
+import { Context } from '@/context';
+interface Props {
+    context: Context
+}
+const props = defineProps<Props>();
 
 </script>
 
@@ -17,6 +24,7 @@ import UserAvatar from './UserAvatar.vue';
             </div>
         </ToolButton>
         <UserAvatar user="kc"></UserAvatar>
+        <Scale :context="props.context"></Scale>
     </div>
     
 </template>

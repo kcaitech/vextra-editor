@@ -123,8 +123,8 @@ function leftAdjust(saveWidth: number, offset: number) {
     sizeBounds.middle.width = middleWidth;
 }
 
-type AdjustsFun = {[key:string]: (saveWidth: number, offset: number) => void}
-const adjustsFun:AdjustsFun = {
+type AdjustsFun = { [key: string]: (saveWidth: number, offset: number) => void }
+const adjustsFun: AdjustsFun = {
     "left": leftAdjust,
     // "middle": middleAdjust,
     "right": rightAdjust
@@ -152,7 +152,6 @@ function createColumnCtx(bound: SizeBoundEx, col: string): Ctx {
         _saveWidth = bound.width;
     }
     function onDragOffset(offset: number) {
-        // console.log(offset)
         if (adjustsFun[col]) adjustsFun[col](_saveWidth, offset);
     }
     return {
@@ -193,11 +192,10 @@ function onSizeChange() {
     sizeBounds.right.minWidth = Math.max(rigthMinWidthImportant, props.right.minWidth) * rootWidth;
     sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;
 
-    
+
     let leftWidth = sizeBounds.left.width + (savedRootWidth ? sizeBounds.left.width / savedRootWidth * delta : 0);
     let rightWidth = sizeBounds.right.width + (savedRootWidth ? sizeBounds.right.width / savedRootWidth * delta : 0);
-    
-    // console.log(leftWidth, rightWidth)
+
     leftWidth = Math.max(sizeBounds.left.minWidth, Math.min(sizeBounds.left.maxWidth, leftWidth));
     rightWidth = Math.max(sizeBounds.right.minWidth, Math.min(sizeBounds.right.maxWidth, rightWidth));
     const middleWidth = Math.max(rootWidth - leftWidth - rightWidth, 0);
@@ -213,9 +211,9 @@ function initSizeBounds() {
     savedRootWidth = rootWidth;
 
     const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth).toFixed(2));
-    const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth).toFixed(2));   
+    const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth).toFixed(2));
     const middleMaxWidthImportant = 1 - (leftMinWidthImportant + rigthMinWidthImportant);
-    
+
     sizeBounds.left.width = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.minWidth = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
@@ -226,11 +224,11 @@ function initSizeBounds() {
 
     sizeBounds.right.width = Math.max(props.right.width, rigthMinWidthImportant) * rootWidth;
     sizeBounds.right.minWidth = Math.max(props.right.minWidth, rigthMinWidthImportant) * rootWidth;
-    sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;    
+    sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;
 }
 
 onMounted(() => {
-    initSizeBounds();    
+    initSizeBounds();
     if (refRoot.value) observer.observe(refRoot.value);
 })
 onUnmounted(() => {
@@ -240,41 +238,38 @@ onUnmounted(() => {
 
 <template>
     <div class="columnsplit" ref="refRoot">
-        <!-- navigation -->
         <div class="column1" :style="`width:${sizeBounds.left.width}px; minWidth:${sizeBounds.left.width}px`">
             <slot name="slot1" />
-            <!-- width controller on left -->
             <Sash side="right" @dragStart="leftCtx.onDragStart" @offset="leftCtx.onDragOffset" />
         </div>
-        <!-- editor core -->
         <div class="column2" :style="`width:${sizeBounds.middle.width}px; minWidth:${sizeBounds.middle.width}px`">
             <slot name="slot2" />
         </div>
-        <!-- element`s attributes -->
         <div class="column3" :style="`width:${sizeBounds.right.width}px; minWidth:${sizeBounds.right.width}px`">
             <slot name="slot3" />
-            <!-- width controller on right -->
             <Sash side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" />
         </div>
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .columnsplit {
     display: flex;
     flex-direction: row;
     width: 100%;
     height: auto;
     position: relative;
-}
-.column1 {
-    position: relative;
-}
-.column2 {
-    position: relative;
-}
-.column3 {
-    position: relative;
-}
 
+    .column1 {
+        position: relative;
+    }
+
+    .column2 {
+        position: relative;
+    }
+
+    .column3 {
+        position: relative;
+    }
+}
 </style>

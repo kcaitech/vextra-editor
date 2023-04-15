@@ -6,49 +6,69 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\EditorTools.vue
 -->
 <script setup lang="ts">
-import { defineProps } from "vue";
+import { defineProps, onMounted, onUnmounted, ref, computed } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import ToolButton from './ToolButton.vue';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
-import Pen from "./Buttons/Pen.vue";
 import GroupUngroup from "./GroupUngroup.vue";
+import Rect from "./Buttons/Rect.vue";
+import Ellipse from "./Buttons/Ellipse.vue";
+import Line from "./Buttons/Line.vue";
+import Arrow from "./Buttons/Arrow.vue";
+import { Action, WorkSpace } from "@/context/workspace";
 
 const props = defineProps<{ 
     context: Context,
     selection: Selection
 }>();
 
+const workspace = computed<WorkSpace>(() => props.context.workspace)
 
+const selected = ref<Action>(Action.AutoV);
+
+function select(action: Action) {
+    workspace.value.setAction(action);
+}
+
+function update() {    
+    selected.value = workspace.value.action;
+}
+// hooks
+onMounted(() => {
+    props.context.workspace.watch(update);
+});
+onUnmounted(() => {
+    props.context.workspace.unwatch(update);
+})
 </script>
 
 <template>
     <div class="editor-tools" @dblclick.stop>
-        <Cursor></Cursor>
-        <ToolButton>
-            <div class="temp" title="Rectangle">
-                <svg-icon icon-class="rectangle"></svg-icon>
-            </div>
-        </ToolButton>
-        <Frame></Frame>
-        <Pen></Pen>
+        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
+        <div class="vertical-line" />
+        <Frame :workspace="workspace" :active="selected === Action.AddFrame" @select="select"></Frame>
+        <Rect @select="select" :active="selected === Action.AddRect" ></Rect>
+        <Ellipse @select="select" :active="selected === Action.AddEllipse" ></Ellipse>
+        <Line @select="select" :active="selected === Action.AddLine" ></Line>
+        <Arrow @select="select" :active="selected === Action.AddArrow" ></Arrow>
         <ToolButton>
             <div class="temp" title="Text">
                 <svg-icon icon-class="text"></svg-icon>
             </div>
         </ToolButton>
         <ToolButton>
+            <div class="temp" title="Picture">
+                <svg-icon icon-class="picture"></svg-icon>
+            </div>
+        </ToolButton>
+        <div class="vertical-line" />
+        <ToolButton>
             <div class="temp" title="Resource">
                 <svg-icon icon-class="resource"></svg-icon>
             </div>
         </ToolButton>
-        <ToolButton>
-            <div class="temp" title="Pointer">
-                <svg-icon icon-class="pointer"></svg-icon>
-            </div>
-        </ToolButton>
-        <div class="vertical-line" />
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     
@@ -64,7 +84,7 @@ const props = defineProps<{
         transform: translateX(-50%);
         height: 40px;
         div {
-            margin: auto 4px;
+            margin: auto 0;
         }
         .temp {
             width: 28px;
