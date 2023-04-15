@@ -98,7 +98,8 @@ onUnmounted(() => {
                 :page="(curPage as Page)"></Navigation>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined" data-area="content" id="content" :context="context"
+                :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>

@@ -71,12 +71,12 @@ export class WorkSpace extends Watchable(Object) {
     private m_translating: boolean = false;
     constructor(context: Context) {
         super();
-        this.r_context = context
+        this.r_context = context;
     }
     get root() {
         const root = { x: 332, y: 30 };
-        // 保证全局id唯一
-        const content = document.querySelector('#content');
+        let content: any = document.querySelectorAll('#content');
+        content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === 'content');
         if (content) {
             const { x, y } = content.getBoundingClientRect();
             root.x = x;
@@ -101,6 +101,9 @@ export class WorkSpace extends Watchable(Object) {
     }
 
     setAction(action: Action) {
+        if (action === Action.AutoV && WorkSpace.ESC_EVENT_POINTER) {
+            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        } else this.escSetup();
         this.m_current_action = action;
         this.notify();
     }
@@ -165,8 +168,11 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddFrame;
         this.notify();
     }
-    escSetup() {
-        WorkSpace.ESC_EVENT_POINTER = this.esc.bind(this)
+    escSetup() { // 安装取消当前状态的键盘事件(Esc)
+        if (WorkSpace.ESC_EVENT_POINTER) {
+            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        }
+        WorkSpace.ESC_EVENT_POINTER = this.esc.bind(this);
         document.addEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
     }
     esc(e: KeyboardEvent) {
@@ -178,10 +184,10 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     setCursor(type: CtrlElementType, deg: number) {
-        this.notify(WorkSpace.CURSOR_CHANGE, type, deg)
+        this.notify(WorkSpace.CURSOR_CHANGE, type, deg);
     }
     resetCursor() {
         if (this.m_scaling || this.m_rotating) return;
-        this.notify(WorkSpace.RESET_CURSOR)
+        this.notify(WorkSpace.RESET_CURSOR);
     }
 }

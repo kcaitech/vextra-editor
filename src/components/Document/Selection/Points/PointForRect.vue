@@ -143,7 +143,7 @@ function mousemove(event: MouseEvent) {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: rgba(43, 144, 226, 0.573);
+  // background-color: rgba(43, 144, 226, 0.573);
   overflow: hidden;
 
   >.scale {

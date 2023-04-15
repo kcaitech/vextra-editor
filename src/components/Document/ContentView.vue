@@ -56,7 +56,7 @@ const selectionIsCtrl = computed(() => !spacePressed.value);
 
 const contextMenuEl = ref<ContextMenuEl>();
 const surplusY = ref<number>(0)
-function offset2Root() {
+function offset2Root() { // === props.context.workspace.root
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
     let y = el.offsetTop
@@ -86,14 +86,14 @@ function addShape(frame: ShapeFrame) {
         frame.width = workspace.value.frameSize.width
         frame.height = workspace.value.frameSize.height
     }
-
     const page = props.context.selection.selectedPage;
     const parent = getCloestContainer();
     if (page && parent && type) {
         const editor = props.context.editor4Page(page);
         let name = t(`shape.${type}`);
-        const repeats: number = parent.childs.filter(item => item.type === type).length;
-        name = repeats ? `${name} ${repeats + 1}` : name;
+        const brothers = parent.childs.filter(item => item.type === type)
+        const repeats: number = brothers.length;
+        name = (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
         const insertSuccess = editor.insert(parent, 0, shape);
         if (insertSuccess) {
@@ -307,7 +307,7 @@ function getShapesByXY() {
         props.context.selection.selectShape();
     }
 }
-let site: { x: number, y: number } = { x: 0, y: 0 };
+const site: { x: number, y: number } = { x: 0, y: 0 };
 function contextMenuMount(e: MouseEvent) {
     site.x = e.clientX
     site.y = e.clientY
@@ -340,8 +340,8 @@ function contextMenuMount(e: MouseEvent) {
             if (el) {
                 const height = el.offsetHeight;
                 if (surplusY.value - 30 < height) {
-                    surplusY.value = document.documentElement.clientHeight - site.y - 30
-                    el.style.top = contextMenuPosition.y + surplusY.value - height + 'px'
+                    surplusY.value = document.documentElement.clientHeight - site.y - 30;
+                    el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
                 }
             }
 
