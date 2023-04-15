@@ -139,14 +139,12 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
 
 onMounted(() => {
     props.context.selection.watch(updater);
-    console.log('ctrlrect mount');
 
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     shapes.length = 0;
-    console.log('ctrlrect unMount');
 })
 
 watchEffect(updater)
