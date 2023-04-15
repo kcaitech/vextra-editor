@@ -65,20 +65,22 @@ function getCtrlElementType(event: MouseEvent) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
   if (workspace.value.transforming) return;
-  event.stopPropagation();
   const ct = getCtrlElementType(event);
-  if (!pointContainer.value || !props.context.repo || !ct) return;
-  const { button, clientX, clientY } = event;
-  if (button !== 0) return;
-  setStatus(ct);
-  clt = getCtrlElementType(event);
-  matrix.reset(workspace.value.matrix);
-  root = workspace.value.root;
-  startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-  systemPosition = { x: clientX, y: clientY };
-  props.context.repo.start('transform', {});
-  document.addEventListener('mousemove', onMouseMove);
-  document.addEventListener('mouseup', onMouseUp);
+  if (ct) {
+    event.stopPropagation();
+    if (!pointContainer.value || !props.context.repo) return;
+    const { button, clientX, clientY } = event;
+    if (button !== 0) return;
+    setStatus(ct);
+    clt = getCtrlElementType(event);
+    matrix.reset(workspace.value.matrix);
+    root = workspace.value.root;
+    startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+    systemPosition = { x: clientX, y: clientY };
+    props.context.repo.start('transform', {});
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  }
 }
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
