@@ -39,7 +39,7 @@ let state = STATE_NONE;
 // 拖动 3px 后开始触发移动
 const dragActiveDis = 3;
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
-const matrix = reactive(props.context.workspace.matrix);
+const matrix = reactive(props.context.workspace.matrix); // 一切图形可视变换的根源！！！
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const watcher = () => {
@@ -110,7 +110,7 @@ function onMouseWheel(e: WheelEvent) {
     const xy = offset2Root();
     const offsetX = e.x - xy.x;
     const offsetY = e.y - xy.y;
-    if (e.ctrlKey) {
+    if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         matrix.trans(-offsetX, -offsetY);
         matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
@@ -120,7 +120,7 @@ function onMouseWheel(e: WheelEvent) {
     } else {
         matrix.trans(0, e.deltaY > 0 ? -wheel_step : wheel_step);
     }
-    props.context.workspace.notify();
+    props.context.workspace.matrixTransformation();
 }
 
 function onKeyDown(e: KeyboardEvent) {
@@ -238,26 +238,27 @@ function pageEditOnMoving(e: MouseEvent) {
 async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) {
     if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {
         cursor.value = await cursorHandle(ct, rotate);
-        return;
-    }
-    if (t === WorkSpace.RESET_CURSOR) {
+    } else if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        matrix.reset(workspace.value.matrix);
+    } else if (t === WorkSpace.RESET_CURSOR) {
         cursor.value = CursorType.Auto;
-        return;
-    }
-    if (t === WorkSpace.INSERT_FRAME) {
-        const x = 600
-        const y = 400
-        const width = 100;
-        const height = 100;
-        const shapeFrame = new ShapeFrame(x, y, width, height);
-        addShape(shapeFrame);
+    } else if (t === WorkSpace.INSERT_FRAME) {
+        insertFrame();
     }
     const action: Action = props.context.workspace.action;
     if (action.startsWith('add')) {
-        cursor.value = CursorType.Crosshair
+        cursor.value = CursorType.Crosshair;
     } else {
-        cursor.value = CursorType.Auto
+        cursor.value = CursorType.Auto;
     }
+}
+function insertFrame() {
+    const x = 600
+    const y = 400
+    const width = 100;
+    const height = 100;
+    const shapeFrame = new ShapeFrame(x, y, width, height);
+    addShape(shapeFrame);
 }
 function hoveredShape(e: MouseEvent) {
     if (props.context.workspace.transforming) return; // shapes编辑过程中不再判断其他未选择的shape的hover状态
@@ -366,6 +367,7 @@ function contextMenuUnmount() {
     document.removeEventListener('keydown', esc);
     contextMenu.value = false;
 }
+
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id)
