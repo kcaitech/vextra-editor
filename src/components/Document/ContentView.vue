@@ -87,7 +87,6 @@ function addShape(frame: ShapeFrame) {
         frame.width = workspace.value.frameSize.width
         frame.height = workspace.value.frameSize.height
     }
-    
     const page = props.context.selection.selectedPage;
     const parent = getCloestContainer();
     if (page && parent && type) {
@@ -158,7 +157,8 @@ function onMouseMove(e: MouseEvent) {
         const deltaX = Math.abs(x - mousedownOnPageXY.x);
         const deltaY = Math.abs(y - mousedownOnPageXY.y);
         const diff = Math.hypot(deltaX, deltaY);
-        if(diff === dragActiveDis) {
+        const action = workspace.value.action;
+        if (diff === dragActiveDis ) {
             pageEditorOnMoveEnd(e)
         }
     }
@@ -177,6 +177,8 @@ function onMouseUp(e: MouseEvent) {
     document.removeEventListener('mouseup', onMouseUp)
 }
 function pageEditorOnMoveEnd(e: MouseEvent) {
+    console.log(11);
+    
     const { x, y } = getMouseOnPageXY(e);
     const deltaX = Math.abs(x - mousedownOnPageXY.x);
     const deltaY = Math.abs(y - mousedownOnPageXY.y);

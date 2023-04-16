@@ -13,6 +13,7 @@ import { useI18n } from 'vue-i18n';
 import { ResourceMgr } from "@kcdesign/data/data/basic";
 import { Page } from "@kcdesign/data/data/page";
 import { Document, PageListItem } from "@kcdesign/data/data/document";
+import { Shape } from "@kcdesign/data/data/shape";
 const { t } = useI18n();
 
 const props = defineProps<{ context: Context }>();
@@ -93,7 +94,7 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
     const docEditor = props.context.editor4Doc();
     docEditor.move(params.dragTarget, params.to);
 }
-const rename = ( value: string) => { 
+const rename = (value: string) => { 
     // const editor = computed(() => {
     //     return props.context.editor4Shape(shape);
     // });

@@ -118,6 +118,32 @@ function onChangeRotate(value: string) {
 const onChangeRadian = (value: string) => {
     value = Number.parseFloat(value).toFixed(fix);
     const newRadian: number = Number.parseFloat(value);
+    if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
+    editor.value.rotate(newRadian);
+    
+}
+
+const onChangeRadianRT = (value: string) => {
+    value = Number.parseFloat(value).toFixed(fix);
+    const newRadian: number = Number.parseFloat(value);
+    if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
+    editor.value.rotate(newRadian);
+    
+}
+
+const onChangeRadianLB = (value: string) => {
+    value = Number.parseFloat(value).toFixed(fix);
+    const newRadian: number = Number.parseFloat(value);
+    if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
+    editor.value.rotate(newRadian);
+    
+}
+
+const onChangeRadianRB = (value: string) => {
+    value = Number.parseFloat(value).toFixed(fix);
+    const newRadian: number = Number.parseFloat(value);
+    if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
+    editor.value.rotate(newRadian);
     
 }
 
@@ -182,20 +208,19 @@ onUnmounted(() => {
         </div>
         <div class="tr" v-if="showRadius">
             <IconText class="td frame" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12 }"
-                @onchange="onChangeRotate" />
-            <IconText class="td frame ml-24" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12, rotate: 90 }"
-                :style="{
-                    visibility: isMoreForRadius ? 'visible' : 'hidden'
-                }" @onchange="onChangeW" />
+                @onchange="onChangeRadian" />
+            <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
+            <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12, rotate: 90 }"
+                 @onchange="onChangeRadianRT" />
             <div class="more-for-radius" @click="radiusToggle" v-if="showRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="isMoreForRadius">
             <IconText class="td frame" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12, rotate: 270 }"
-                @onchange="onChangeW" />
+                @onchange="onChangeRadianLB" />
             <IconText class="td frame ml-24" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12, rotate: 180 }"
-                @onchange="onChangeW" />
+                @onchange="onChangeRadianRB" />
             <RadiusForIos></RadiusForIos>
         </div>
         <!-- <div class="tr" v-if="shapeType === 'rectangle'">
