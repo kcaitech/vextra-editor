@@ -1,17 +1,17 @@
-import CanvasKitInit, { CanvasKit, Path } from "canvaskit-wasm";
+const PathKitInit = require('pathkit-wasm/bin/pathkit.js')
 
-let _ck: CanvasKit | undefined;
+let _ck: any;
 export async function init() {
     if (_ck) return;
-    _ck = await CanvasKitInit({
-        locateFile: (file) => '/wasm/' + file,
+    _ck = await PathKitInit({
+        locateFile: (file: any) => file,
     })
 }
 
 export function difference(path0: string, path1: string): string {
     if (!_ck) throw Error("Not init");
-    const p0: Path | null = _ck.Path.MakeFromSVGString(path0);
-    const p1: Path | null = _ck.Path.MakeFromSVGString(path1);
+    const p0: any = _ck.FromSVGString(path0);
+    const p1: any = _ck.FromSVGString(path1);
     if (p0 && p1) {
         p0.op(p1, _ck.PathOp.XOR)
         const path = p0.toSVGString();
@@ -24,10 +24,10 @@ export function difference(path0: string, path1: string): string {
 }
 export function intersection(path0: string, path1: string): string {
     if (!_ck) throw Error("Not init");
-    const p0: Path | null = _ck.Path.MakeFromSVGString(path0);
-    const p1: Path | null = _ck.Path.MakeFromSVGString(path1);
+    const p0: any = _ck.FromSVGString(path0);
+    const p1: any = _ck.FromSVGString(path1);
     if (p0 && p1) {
-        p0.op(p1, _ck.PathOp.Intersect)
+        p0.op(p1, _ck.PathOp.INTERSECT)
         const path = p0.toSVGString();
         p0.delete();
         p1.delete();
@@ -38,10 +38,10 @@ export function intersection(path0: string, path1: string): string {
 }
 export function subtract(path0: string, path1: string): string {
     if (!_ck) throw Error("Not init");
-    const p0: Path | null = _ck.Path.MakeFromSVGString(path0);
-    const p1: Path | null = _ck.Path.MakeFromSVGString(path1);
+    const p0: any = _ck.FromSVGString(path0);
+    const p1: any = _ck.FromSVGString(path1);
     if (p0 && p1) {
-        p0.op(p1, _ck.PathOp.Difference)
+        p0.op(p1, _ck.PathOp.DIFFERENCE)
         const path = p0.toSVGString();
         p0.delete();
         p1.delete();
@@ -52,10 +52,10 @@ export function subtract(path0: string, path1: string): string {
 }
 export function union(path0: string, path1: string): string {
     if (!_ck) throw Error("Not init");
-    const p0: Path | null = _ck.Path.MakeFromSVGString(path0);
-    const p1: Path | null = _ck.Path.MakeFromSVGString(path1);
+    const p0: any = _ck.FromSVGString(path0);
+    const p1: any = _ck.FromSVGString(path1);
     if (p0 && p1) {
-        p0.op(p1, _ck.PathOp.Union)
+        p0.op(p1, _ck.PathOp.UNION)
         const path = p0.toSVGString();
         p0.delete();
         p1.delete();
