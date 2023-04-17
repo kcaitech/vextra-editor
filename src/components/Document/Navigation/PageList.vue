@@ -85,20 +85,25 @@ const pageSource = new class implements IDataSource<ItemData> {
     }
 }
 
+const addPage = () => {
+    
+}
+
 function toggle() {
     fold.value = !fold.value;
     emit('fold', fold.value)
 }
-
 function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
     const docEditor = props.context.editor4Doc();
     docEditor.move(params.dragTarget, params.to);
 }
 const rename = (value: string) => { 
-    // const editor = computed(() => {
-    //     return props.context.editor4Shape(shape);
-    // });
-    // editor.value.setName(value)
+    const page = props.context.selection.selectedPage
+    if(!page) return
+    const editor = computed(() => {
+        return props.context.editor4Page(page)
+    });
+    editor.value.setName(value)
 }
 
 </script>
@@ -109,7 +114,7 @@ const rename = (value: string) => {
             <div class="title">{{ t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add">
+                <div class="add" @click="addPage">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="file">

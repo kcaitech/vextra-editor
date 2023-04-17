@@ -6,6 +6,8 @@ import Position from './PopoverMenu/Position.vue';
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
 import { Context } from '@/context';
 import { computed } from '@vue/reactivity';
+import { RectRadius } from '@kcdesign/data/data/baseclasses'
+import { cloneDeep } from 'lodash';
 
 const props = defineProps<{ context: Context, shape: Shape }>();
 const editor = computed(() => {
@@ -15,7 +17,7 @@ const editor = computed(() => {
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
-    // calcFrame();
+    calcFrame();
 }
 const shapeType = ref<ShapeType>();
 const x = ref<number>(0);
@@ -27,7 +29,7 @@ const isLock = ref<boolean>(true);
 const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
 const points = ref<number>(0);
-const radius = ref<number>(0);
+const radius = ref<RectRadius>();
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
 const showBgColorH = ref<boolean>()
@@ -43,14 +45,15 @@ function calcFrame() {
     rotate.value = props.shape.rotation || 0;
     shapeType.value = props.shape.type;
     showBgColorH.value = props.shape.isFlippedHorizontal;
-    showBgColorV.value = props.shape.isFlippedVertical
+    showBgColorV.value = props.shape.isFlippedVertical;
     if (shapeType.value === 'rectangle') {
         getRectShapeAttr(props.shape);
     }
 }
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
-    radius.value = (shape as RectShape).fixedRadius || 0;
+    const r = new RectRadius(0, 0, 0, 0);
+    radius.value = (shape as RectShape).fixedRadius || r;
 }
 function onChangeX(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
@@ -107,42 +110,28 @@ function flipv() {
 }
 
 function onChangeRotate(value: string) {
-    console.log(value);
-    
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return editor.value.rotate(rotate.value);
     editor.value.rotate(newRotate);
 }
 
-const onChangeRadian = (value: string) => {
+const onChangeRadian = (value: string, type: 'rrt' | 'rlt' | 'rrb' | 'rlb') => {
     value = Number.parseFloat(value).toFixed(fix);
-    const newRadian: number = Number.parseFloat(value);
-    if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
-    editor.value.rotate(newRadian);
+    const newRadian: number = Number.parseFloat(value) < Math.min(w.value, h.value) ? Number.parseFloat(value) :Math.min(w.value, h.value)
+    if (!radius.value) return;
+    const newR = cloneDeep(radius.value);
+    newR[type] = newRadian > 0 ? newRadian : 0;
+    editor.value.setRadius(newR);
 }
 
-const onChangeRadianRT = (value: string) => {
+const onChangeRadianRT = (value: string,  type: 'rrt') => {
     value = Number.parseFloat(value).toFixed(fix);
     const newRadian: number = Number.parseFloat(value);
-    if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
-    editor.value.rotate(newRadian);
-}
-
-const onChangeRadianLB = (value: string) => {
-    value = Number.parseFloat(value).toFixed(fix);
-    const newRadian: number = Number.parseFloat(value);
-    if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
-    editor.value.rotate(newRadian);
-    
-}
-
-const onChangeRadianRB = (value: string) => {
-    value = Number.parseFloat(value).toFixed(fix);
-    const newRadian: number = Number.parseFloat(value);
-    if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
-    editor.value.rotate(newRadian);
-    
+    if (!radius.value) return;
+    const newR = cloneDeep(radius.value);
+    newR[type] = newRadian;
+    editor.value.setRadius(newR);
 }
 
 const radiusArr = ['rect-shape', 'artboard']
@@ -205,20 +194,20 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="tr" v-if="showRadius">
-            <IconText class="td frame" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12 }"
-                @onchange="onChangeRadian" />
+            <IconText class="td frame" svgicon="radius" :text="radius?.rlt || 0" :frame="{ width: 12, height: 12 }"
+                @onchange="e => onChangeRadian(e, 'rlt')" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
-            <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12, rotate: 90 }"
-                 @onchange="onChangeRadianRT" />
+            <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rrt || 0" :frame="{ width: 12, height: 12, rotate: 90 }"
+                 @onchange="e => onChangeRadianRT(e, 'rrt')" />
             <div class="more-for-radius" @click="radiusToggle" v-if="showRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="isMoreForRadius">
-            <IconText class="td frame" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12, rotate: 270 }"
-                @onchange="onChangeRadianLB" />
-            <IconText class="td frame ml-24" svgicon="radius" :text="radius" :frame="{ width: 12, height: 12, rotate: 180 }"
-                @onchange="onChangeRadianRB" />
+            <IconText class="td frame" svgicon="radius" :text="radius?.rlb || 0" :frame="{ width: 12, height: 12, rotate: 270 }"
+                @onchange="e => onChangeRadian(e, 'rlb')" />
+            <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rrb || 0" :frame="{ width: 12, height: 12, rotate: 180 }"
+                @onchange="e => onChangeRadian(e, 'rrb')" />
             <RadiusForIos></RadiusForIos>
         </div>
         <!-- <div class="tr" v-if="shapeType === 'rectangle'">

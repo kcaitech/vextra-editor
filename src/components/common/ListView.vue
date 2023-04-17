@@ -481,7 +481,7 @@ const destinationVisible = computed(() => {
 const substituteVisible = computed(() => {
     return draging.value
 })
-function mouseDownOnItem(index: number, e: MouseEvent) {
+function mouseDownOnItem(index: number, e: MouseEvent) {    
     if (!props.allowDrag) return;
     // record fromIndex && pre to take off
     fromIndex.value = index;

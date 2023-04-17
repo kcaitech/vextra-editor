@@ -27,7 +27,8 @@ function onClick(e: MouseEvent) {
 const onRename = () => {
     isInput.value = true
     nextTick(() => {
-        if(nameInput.value) {            
+        if(nameInput.value) { 
+            (nameInput.value as HTMLInputElement).value = props.data.name;
             nameInput.value.focus();
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', saveInput);
@@ -75,7 +76,7 @@ const onInputBlur = (e: MouseEvent) => {
         <div class="ph"></div>
         <div class="item">
             <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : ''}">{{props.data.name}}</div>
-            <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput" :value="props.data.name">
+            <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput">
         </div>
     </div>
 </template>

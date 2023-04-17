@@ -18,8 +18,8 @@ function select(shape: Shape) {
 function mouseenter(shape: Shape) {
   props.context.selection.hoverShape(shape);
 }
-function mouseout(shape: Shape) {
-  props.context.selection.unHoverShape(shape);
+function mouseout() {
+  props.context.selection.unHoverShape();
 }
 </script>
 <template>
@@ -27,7 +27,7 @@ function mouseout(shape: Shape) {
     <div class="item" v-for="shape in props.layers" :key="shape.id"
       @click="select(shape)"
       @mouseenter="() => mouseenter(shape)"
-      @mouseleave="() => mouseout(shape)"
+      @mouseleave="() => mouseout"
     >
       <div>
         <div class="check" v-if="selectedShapes.find(i => i.id === shape.id)"></div>

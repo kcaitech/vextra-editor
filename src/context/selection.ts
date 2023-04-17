@@ -14,6 +14,8 @@ export interface AbsolutePosition {
     y: number
 }
 
+export type ActionType = 'translate' | 'scale' | 'rotate'
+
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -49,7 +51,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
-    getShapesByXY(position: AbsolutePosition): Shape[] {        
+    getShapesByXY(position: AbsolutePosition): Shape[] {
         const shapes: Shape[] = [];
         const page = this.m_selectPage!;
         const childs = page.childs;
@@ -59,10 +61,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return shapes;
 
         function deep(source: Shape[], position: AbsolutePosition) {
-            for(let i = 0; i < source.length; i++) {                
+            for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
-                const suppos = {x: position.x - x, y: position.y - y}
+                const suppos = { x: position.x - x, y: position.y - y }
                 if (source[i].childs?.length) deep(source[i].childs, suppos);
             }
         }
@@ -77,14 +79,14 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return groups[0];
 
         function deep(source: Shape[], position: AbsolutePosition) {
-            for(let i = 0; i < source.length; i++) {                
+            for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {
                     if (['group-shape', 'artboard'].includes(source[i].typeId)) {
                         groups.unshift(source[i] as GroupShape);
                     }
                 }
-                const suppos = {x: position.x - x, y: position.y - y}
+                const suppos = { x: position.x - x, y: position.y - y }
                 if (source[i].childs?.length) deep(source[i].childs, suppos);
             }
         }
@@ -95,7 +97,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             this.m_selectShapes.length = 0;
             this.m_cursorStart = -1;
             this.m_cursorEnd = -1;
-            this.m_hoverShape = undefined;        
+            this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
             return;
         }
@@ -104,7 +106,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
                 this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
             } else {
                 this.m_selectShapes.push(shape);
-            }            
+            }
             this.notify(Selection.CHANGE_SHAPE);
             return;
         }
@@ -112,7 +114,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_selectShapes.push(shape);
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
-        this.m_hoverShape = undefined;        
+        this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
     }
 
@@ -168,11 +170,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.notify(Selection.CHANGE_SHAPE_HOVER);
     }
 
-    unHoverShape(shape: Shape) {
-        if (shape === this.m_hoverShape) {
-            this.m_hoverShape = undefined;
-            this.notify(Selection.CHANGE_SHAPE_HOVER);
-        }
+    unHoverShape() {
+        this.m_hoverShape = undefined;
+        this.notify(Selection.CHANGE_SHAPE_HOVER);
     }
 
     save(): Saved {

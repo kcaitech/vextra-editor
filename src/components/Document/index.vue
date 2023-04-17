@@ -49,8 +49,8 @@ function selectionWatcher(t: number) {
     }
 }
 function keyboardEventHandler(e: KeyboardEvent) {
-    const { ctrlKey, shiftKey, metaKey, target } = e;
-    if ( target instanceof HTMLInputElement ) return;
+    const { ctrlKey, shiftKey, metaKey, altKey, target } = e;
+    if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
     if (e.code === KeyboardKeys.R) {
         workspace.value.keydown_r();
     } else if (e.code === KeyboardKeys.V) {
@@ -59,8 +59,6 @@ function keyboardEventHandler(e: KeyboardEvent) {
         workspace.value.keydown_l(shiftKey);
     } else if (e.code === KeyboardKeys.Z) {
         workspace.value.keydown_z(props.repo, ctrlKey, shiftKey, metaKey);
-    } else if ([KeyboardKeys.Up, KeyboardKeys.Right, KeyboardKeys.Down, KeyboardKeys.Left].includes(e.code as KeyboardKeys)) {
-        workspace.value.keydown_arrow(e.code as KeyboardKeys, shiftKey);
     } else if (e.code === KeyboardKeys.K) {
         workspace.value.keydown_K();
     } else if (e.code === KeyboardKeys.O) {
@@ -98,7 +96,8 @@ onUnmounted(() => {
                 :page="(curPage as Page)"></Navigation>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined" data-area="content" id="content" :context="context"
+                :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>

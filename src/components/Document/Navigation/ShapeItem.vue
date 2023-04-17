@@ -25,10 +25,11 @@ const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
     (e: "selectshape", data: ItemData, ctrl: boolean, meta: boolean, shift: boolean): void;
     (e: "hovershape", shape: Shape): void;
-    (e: "unhovershape", shape: Shape): void;
+    (e: "unhovershape"): void;
     (e: "isLock", isLock: boolean, shape: Shape): void;
     (e: "isRead", isRead: boolean, shape: Shape): void;
     (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
+    (e: "scrolltoview", shape: Shape): void;
 }>();
 let showTriangle = ref<boolean>(false);
 function updater() {
@@ -46,6 +47,7 @@ function toggleExpand(e: Event) {
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation()
+    emit('scrolltoview', props.data.shape);
 }
 
 function selectShape(e: MouseEvent) {
@@ -61,7 +63,7 @@ function hoverShape(e: MouseEvent) {
 }
 function unHoverShape(e: MouseEvent) {
     e.stopPropagation();
-    emit("unhovershape", props.data.shape);
+    emit("unhovershape");
     isVisible.value = false
 }
 const onLock = () => {
@@ -87,7 +89,7 @@ const onRename = () => {
 }
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
-    if(esc.value) return
+    if (esc.value) return
     emit('rename', value, props.data.shape);
 }
 
@@ -96,24 +98,24 @@ const stopInput = () => {
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
-    if (e.code === 'Enter') {
+    if (e.key === 'Enter') {
         esc.value = false
-        isInput.value = false       
+        isInput.value = false
     } else if (e.code === 'Escape') {
-        esc.value = true 
+        esc.value = true
         isInput.value = false
     }
 }
 const onInputBlur = (e: MouseEvent) => {
-    if (e.target instanceof Element && !e.target.closest('.rename')) {  
-    var timer = setTimeout(() => {
-        if(nameInput.value) {
-            (nameInput.value).blur()
-        }
-      clearTimeout(timer)
-      document.removeEventListener('click', onInputBlur);
-    }, 10)
-  } 
+    if (e.target instanceof Element && !e.target.closest('.rename')) {
+        var timer = setTimeout(() => {
+            if (nameInput.value) {
+                (nameInput.value).blur()
+            }
+            clearTimeout(timer)
+            document.removeEventListener('click', onInputBlur);
+        }, 10)
+    }
 }
 
 onBeforeMount(() => {
@@ -126,15 +128,15 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div class="contain" :class="{ container: true, selected: props.data.selected }" @click="selectShape" @mouseover="hoverShape"
-        @mouseleave="unHoverShape">
+    <div class="contain" :class="{ container: true, selected: props.data.selected }" @click="selectShape"
+        @mouseover="hoverShape" @mouseleave="unHoverShape">
         <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
             <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
             </div>
         </div>
         <div class="containerSvg" @dblclick="toggleContainer">
-            <svg-icon class="svg" icon-class="pattern-rectangle"></svg-icon>
+            <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
         </div>
         <div class="text" :class="{ container: true, selected: props.data.selected }"
             :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
@@ -242,6 +244,7 @@ div.text {
     overflow: hidden;
     padding-left: 2px;
     background-color: transparent;
+
     .txt {
         width: 100%;
         height: 30px;
