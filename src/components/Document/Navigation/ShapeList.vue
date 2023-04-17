@@ -5,8 +5,9 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data/data/page";
 import { ShapeDirListIter, ShapeDirList } from "@kcdesign/data/service/shapedirlist"
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape, ShapeType } from "@kcdesign/data/data/shape";
 import { useI18n } from 'vue-i18n';
+import { Selection } from "@/context/selection";
 type List = InstanceType<typeof ListView>;
 
 class Iter implements IDataIter<ItemData> {
@@ -61,8 +62,15 @@ let listviewSource = new class implements IDataSource<ItemData> {
     }
 }
 
-function notifySourceChange() {
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE)
+function notifySourceChange(t?: number) {
+    if (t === Selection.CHANGE_SHAPE) {
+        const shapes = props.context.selection.selectedShapes;
+        shapes.forEach(item => {
+            const parent = item.parent;
+            if (parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent);
+        })
+    }
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 const stopWatch = watch(() => props.page, () => {

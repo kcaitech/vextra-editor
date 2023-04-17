@@ -70,18 +70,21 @@ function updater() {
 }
 
 function mousedown(e: MouseEvent) {
-    if (workspace.value.transforming) return;
-    shapes = props.context.selection.selectedShapes;
-    if (!shapes.length) return;
-    matrix.reset(workspace.value.matrix);
-    if (!props.isController || !props.context.repo) return;
-    const { clientX, clientY } = e;
-    root = workspace.value.root;
-    document.addEventListener('mousemove', mousemove);
-    document.addEventListener('mouseup', mouseup);
-    startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    systemPosition = { x: clientX, y: clientY };
-    props.context.repo.start('transform', {});
+    if (!e.button) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        e.stopPropagation();
+        if (workspace.value.transforming) return;
+        shapes = props.context.selection.selectedShapes;
+        if (!shapes.length) return;
+        matrix.reset(workspace.value.matrix);
+        if (!props.isController || !props.context.repo) return;
+        const { clientX, clientY } = e;
+        root = workspace.value.root;
+        document.addEventListener('mousemove', mousemove);
+        document.addEventListener('mouseup', mouseup);
+        startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+        systemPosition = { x: clientX, y: clientY };
+        props.context.repo.start('transform', {});
+    }
 }
 function mousemove(e: MouseEvent) {
     const { clientX, clientY } = e;
@@ -110,6 +113,7 @@ function mouseup(e: MouseEvent) {
         props.context.repo?.rollback();
     }
     isDragging = false;
+    workspace.value.translating(false);
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
@@ -166,7 +170,8 @@ watchEffect(updater)
             left: framePosition.left,
             transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
         }">
-            <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}` }}</span>
+            <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+            }}</span>
         </div>
     </div>
 </template>

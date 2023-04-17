@@ -141,7 +141,7 @@ function onKeyUp(e: KeyboardEvent) {
     }
 }
 function onMouseDown(e: MouseEvent) {
-    if (workspace.value.transforming) return;
+    if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     e.preventDefault();
     isMouseDown = true;
     if (e.button === MOUSE_LEFT) { // 左键按下
@@ -163,7 +163,6 @@ function onMouseMove(e: MouseEvent) {
             pageViewDragging(e);
         } else {
             // pageEditOnMoving(e);
-            workspace.value.translating(true);
         }
     } else {
         hoveredShape(e);
@@ -172,13 +171,11 @@ function onMouseMove(e: MouseEvent) {
 }
 function onMouseUp(e: MouseEvent) {
     e.preventDefault();
-    if (workspace.value.transforming && e.button) return;
     // 现有情况，不是拖动pageview，便是操作图层
     if (spacePressed.value) {
         pageViewDragEnd();
     } else {
         pageEditorOnMoveEnd(e);
-        workspace.value.translating(false);
     }
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)

@@ -7,6 +7,7 @@ import TextView from "./TextView.vue";
 import SymbolRef from "./SymbolRef.vue";
 import ArtboardView from "./ArtboardView.vue"
 import ShapeGroupShape from "./ShapeGroupShape.vue"
+import Line from "./Line.vue";
 
 const comsMap: Map<ShapeType, any> = new Map();
 
@@ -21,5 +22,6 @@ comsMap.set(ShapeType.Text, TextView);
 // comsMap.set(ShapeType.Boolean, ShapeBool);
 comsMap.set(ShapeType.Symbol, ShapeGroup);
 comsMap.set(ShapeType.SymbolRef, SymbolRef);
+comsMap.set(ShapeType.Line, Line);
 
 export default comsMap;

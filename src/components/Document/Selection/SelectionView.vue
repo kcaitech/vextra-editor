@@ -175,7 +175,6 @@ function genControlRect() {
         xy1.x = xy1.x < cXY1.x ? cXY1.x : xy1.x;
         xy1.y = xy1.y < cXY1.y ? cXY1.y : xy1.y;
     }
-
     controllerFrame.x = xy0.x;
     controllerFrame.y = xy0.y;
     controllerFrame.width = xy1.x - xy0.x;
@@ -183,13 +182,15 @@ function genControlRect() {
     controllerFrame.axle = matrix.inverseCoord((xy0.x + xy1.x) / 2, (xy0.y + xy1.y) / 2);
     controllerFrame.realWidth = matrix.inverseCoord(xy1.x, xy1.y).x - matrix.inverseCoord(xy0.x, xy0.y).x;
     controllerFrame.realHeight = matrix.inverseCoord(xy1.x, xy1.y).y - matrix.inverseCoord(xy0.x, xy0.y).y;
-
     if (selection.length === 1) {
         controllerFrame.rotate = selection[0].rotation || 0;
     } else {
         controllerFrame.rotate = 0;
     }
     ctrlGroupType.value = CtrlGroupType.Rect;
+    if (selection.length === 1 && selection[0].typeId === 'line-shape') {
+        ctrlGroupType.value = CtrlGroupType.Line;
+    }
 }
 // hooks
 onMounted(() => {
@@ -205,7 +206,7 @@ watchEffect(updater)
 </script>
 
 <template>
-    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
+    <!-- <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
         left: '' + s.x + 'px',
         top: '' + s.y + 'px',
         width: '' + s.width + 'px',
@@ -213,7 +214,7 @@ watchEffect(updater)
         borderWidth: '' + borderWidth + 'px',
         transform: `rotate(${s.rotate}deg)`
     }" :key="s.id" :reflush="reflush">
-    </div>
+    </div> -->
     <component v-if="data.isSelect" :is="ctrlMap.get(ctrlGroupType) ?? ctrlMap.get(CtrlGroupType.Rect)"
         :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController"></component>
 </template>

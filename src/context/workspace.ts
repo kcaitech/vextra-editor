@@ -123,7 +123,7 @@ export class WorkSpace extends Watchable(Object) {
     rotating(v: boolean) {
         this.m_rotating = v;
     }
-    translating(v: boolean) {
+    translating(v: boolean) {        
         this.m_translating = v;
     }
 
