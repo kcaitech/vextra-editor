@@ -32,7 +32,7 @@ function selectionChange(t: number) {
         }
     }
 }
-
+const backgroundColor = new Color(1, 239, 239, 239);
 onMounted(() => {
     props.context.selection.watch(selectionChange);
 })
@@ -52,7 +52,7 @@ onUnmounted(() => {
         <div v-else class="back-setting-container">
             <span>{{ t('attr.background') }}</span>
             <div class="setting">
-                <ColorPicker class="color" :color="new Color(1, 239, 239, 239)"></ColorPicker>
+                <ColorPicker class="color" :color="backgroundColor"></ColorPicker>
                 <input type="text" :value="'#EFEFEF'" :spellcheck="false">
                 <input type="text" :value="1">
             </div>
