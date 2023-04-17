@@ -120,7 +120,6 @@ const onChangeRadian = (value: string) => {
     const newRadian: number = Number.parseFloat(value);
     if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
     editor.value.rotate(newRadian);
-    
 }
 
 const onChangeRadianRT = (value: string) => {
@@ -128,7 +127,6 @@ const onChangeRadianRT = (value: string) => {
     const newRadian: number = Number.parseFloat(value);
     if (isNaN(newRadian)) return editor.value.rotate(rotate.value);
     editor.value.rotate(newRadian);
-    
 }
 
 const onChangeRadianLB = (value: string) => {
