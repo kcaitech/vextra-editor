@@ -7,6 +7,7 @@ import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
 import { CPoint } from '../CtrlRect/RectangleCtrl.vue'
 import { ControllerFrame } from '../SelectionView.vue';
+
 interface Props {
   context: Context,
   axle: AbsolutePosition,
@@ -85,15 +86,19 @@ function onMouseDown(event: MouseEvent) {
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
   if (isDragging) {
+    const m = new Matrix();
+    m.rotate(props.controllerFrame.rotate, props.axle.x, props.axle.y);
     const mouseOnPage = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    const delta = { x: mouseOnPage.x - startPosition.x, y: mouseOnPage.y - startPosition.y, deg: 0 };    
+    const _mp = m.computeCoord(mouseOnPage.x, mouseOnPage.y);
+    const _sp = m.computeCoord(startPosition.x, startPosition.y);
+    const delta = { x: _mp.x - _sp.x, y: _mp.y - _sp.y, deg: 0 };
     if (rotating) {
       const { x: sx, y: sy } = startPosition;
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       delta.deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
       workspace.value.setCursor(clt, props.controllerFrame.rotate);
-    }    
+    }
     emit('transform', props.point[0], delta);
     props.context.repo.transactCtx.fireNotify();
     startPosition = { x: mouseOnPage.x, y: mouseOnPage.y };

@@ -2,6 +2,7 @@ import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape } from "@kcdesign/data/data/shape";
+import { cloneDeep } from "lodash";
 
 interface Saved {
     page: Page | undefined,
@@ -52,6 +53,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_selectPage;
     }
     getShapesByXY(position: AbsolutePosition): Shape[] {
+        position = cloneDeep(position);
         const shapes: Shape[] = [];
         const page = this.m_selectPage!;
         const childs = page.childs;
@@ -70,6 +72,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
     }
     getClosetContainer(position: AbsolutePosition): GroupShape {
+        position = cloneDeep(position);
         const page = this.m_selectPage!;
         const groups: GroupShape[] = [page];
         const childs = page.childs;

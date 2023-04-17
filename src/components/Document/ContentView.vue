@@ -15,9 +15,8 @@ import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
 import { cursorHandle } from "@/utils/common";
-
+import { expandTo, translateTo } from "@kcdesign/data/editor/frame";
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
-
 const { t } = useI18n();
 const props = defineProps<{
     context: Context,
@@ -53,7 +52,7 @@ let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
 let isMouseDown: boolean = false;
 const selectionIsCtrl = computed(() => !spacePressed.value);
-
+let newShape: Shape | undefined;
 const contextMenuEl = ref<ContextMenuEl>();
 const surplusY = ref<number>(0)
 function offset2Root() { // === props.context.workspace.root
@@ -98,7 +97,6 @@ function addShape(frame: ShapeFrame) {
         const insertSuccess = editor.insert(parent, 0, shape);
         if (insertSuccess) {
             props.context.selection.selectShape(shape);
-            workspace.value.setAction(Action.AutoV);
             return shape;
         }
     }
@@ -142,7 +140,6 @@ function onKeyUp(e: KeyboardEvent) {
 }
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
-    e.preventDefault();
     isMouseDown = true;
     if (e.button === MOUSE_LEFT) { // 左键按下
         if (spacePressed.value) {
@@ -157,29 +154,34 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 function onMouseMove(e: MouseEvent) {
-    if (isMouseDown) {
-        e.preventDefault();
-        if (spacePressed.value) {
-            pageViewDragging(e);
+    if (e.button === MOUSE_LEFT) {
+        if (isMouseDown) {
+            if (spacePressed.value) {
+                pageViewDragging(e);
+            } else {
+                if (workspace.value.action !== Action.AutoV) {
+                    pageEditOnMoving(e);
+                } else {
+                    // 单纯没什么事点着滑来滑去
+                }
+            }
         } else {
-            // pageEditOnMoving(e);
+            hoveredShape(e);
         }
-    } else {
-        hoveredShape(e);
     }
-
 }
 function onMouseUp(e: MouseEvent) {
-    e.preventDefault();
     // 现有情况，不是拖动pageview，便是操作图层
-    if (spacePressed.value) {
-        pageViewDragEnd();
-    } else {
-        pageEditorOnMoveEnd(e);
+    if (e.button === MOUSE_LEFT) {
+        if (spacePressed.value) {
+            pageViewDragEnd();
+        } else {
+            pageEditorOnMoveEnd(e);
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        isMouseDown = false;
     }
-    document.removeEventListener('mousemove', onMouseMove)
-    document.removeEventListener('mouseup', onMouseUp)
-    isMouseDown = false;
 }
 function onMouseLeave() {
     props.context.selection.unHoverShape();
@@ -192,24 +194,21 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
 
     const diff = Math.hypot(deltaX, deltaY);
     if (diff > dragActiveDis) {
-        // todo 抬起之前存在拖动
-        shapeFrame.height = deltaY;
-        shapeFrame.width = deltaX;
-        shapeFrame.x = mousedownOnPageXY.x;
-        shapeFrame.y = mousedownOnPageXY.y;
-        const action = workspace.value.action;
-        if (action.startsWith('add')) {
-            // todo 添加shape
-            addShape(shapeFrame);
+        // 抬起之前存在拖动
+        if (newShape) {
+            props.context.repo.commit({});
+            newShape = undefined;
+            workspace.value.setAction(Action.AutoV);
         }
     } else {
         // 抬起之前未存在拖动
         shapeFrame.height = 100;
         shapeFrame.width = 100;
         const action = workspace.value.action;
-        if (action.startsWith('add')) {
-            // todo 添加shape
+        if (action.startsWith('add')) { // 存在action
+            // 添加shape
             addShape(shapeFrame);
+            workspace.value.setAction(Action.AutoV);
         } else if (action === Action.AutoV) {
             // 选择图层
             getShapesByXY(); // 获取与鼠标点击位置相交的所有图层，并选择最上层的图层
@@ -219,18 +218,29 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
 }
 function pageEditOnMoving(e: MouseEvent) {
     const { x, y } = getMouseOnPageXY(e);
-    const deltaX = Math.abs(x - mousedownOnPageXY.x);
-    const deltaY = Math.abs(y - mousedownOnPageXY.y);
-    const diff = Math.hypot(deltaX, deltaY);
-    if (diff > dragActiveDis) {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        const shapeFrame = new ShapeFrame(x, y, 3, 3);
-        const shape = addShape(shapeFrame);
-        if (!shape) return;
-        isMouseDown = false;
-        props.context.workspace.relay({ shape, startPositon: { x, y }, systemPositon: { x: e.clientX, y: e.clientY } })
+    if (newShape) {
+        newFrame(newShape, { x, y });
+    } else {
+        const deltaX = x - mousedownOnPageXY.x;
+        const deltaY = y - mousedownOnPageXY.y;
+        const diff = Math.hypot(deltaX, deltaY);
+        if (diff > dragActiveDis) {
+            const shapeFrame = new ShapeFrame(x, y, 3, 3);
+            newShape = addShape(shapeFrame);
+            props.context.repo.start('customFrameInsert', {});
+        }
     }
+}
+function newFrame(shape: Shape, point: AbsolutePosition) {
+    const { x: sx, y: sy } = mousedownOnPageXY;
+    const { x: px, y: py } = point;
+    const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
+    const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
+    const height = x2.y - x1.y;
+    const width = x2.x - x1.x;
+    expandTo(shape, width, height);
+    translateTo(shape, x1.x, x1.y);
+    props.context.repo?.transactCtx.fireNotify();
 }
 async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) {
     if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {
@@ -256,6 +266,7 @@ function insertFrame() {
     const height = 100;
     const shapeFrame = new ShapeFrame(x, y, width, height);
     addShape(shapeFrame);
+    workspace.value.setAction(Action.AutoV);
 }
 function hoveredShape(e: MouseEvent) {
     if (props.context.workspace.transforming) return; // shapes编辑过程中不再判断其他未选择的shape的hover状态
