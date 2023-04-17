@@ -1,9 +1,0 @@
-{
-	"Print to console": {
-		"prefix": "i18n",
-		"body": [
-			"import { useI18n } from 'vue-i18n';",
-		],
-		"description": "i18n"
-	}
-}
