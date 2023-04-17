@@ -14,7 +14,7 @@ import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
-import { cursorHandle } from "@/utils/common"
+import { cursorHandle } from "@/utils/common";
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 

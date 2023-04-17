@@ -6,12 +6,12 @@ import { AbsolutePosition } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
 import { CPoint } from '../CtrlRect/RectangleCtrl.vue'
-import { CtrlRect } from '../SelectionView.vue';
+import { ControllerFrame } from '../SelectionView.vue';
 interface Props {
   context: Context,
   axle: AbsolutePosition,
   point: CPoint,
-  ctrlRect: CtrlRect
+  controllerFrame: ControllerFrame
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -92,7 +92,7 @@ function onMouseMove(event: MouseEvent) {
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       delta.deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-      workspace.value.setCursor(clt, props.ctrlRect.rotate);
+      workspace.value.setCursor(clt, props.controllerFrame.rotate);
     }
     emit('transform', props.point[0], delta);
     props.context.repo.transactCtx.fireNotify();
@@ -124,7 +124,7 @@ function mouseleave() {
 function mousemove(event: MouseEvent) {
   if (rotating || scaling) return;
   const ct = getCtrlElementType(event);
-  workspace.value.setCursor(ct, props.ctrlRect.rotate);
+  workspace.value.setCursor(ct, props.controllerFrame.rotate);
 }
 </script>
 <template>

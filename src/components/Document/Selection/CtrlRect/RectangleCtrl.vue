@@ -6,12 +6,12 @@ import { CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
 import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
-import { CtrlRect } from "../SelectionView.vue";
+import { ControllerFrame } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
 export type CPoint = [CtrlElementType, number, number, string];
 interface Props {
     context: Context,
-    ctrlRect: CtrlRect,
+    controllerFrame: ControllerFrame,
     isController: boolean
 }
 interface FramePosition {
@@ -33,7 +33,7 @@ let startPosition: AbsolutePosition = { x: 0, y: 0 };
 let root: AbsolutePosition = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 const points = computed<CPoint[]>(() => {
-    const { width, height } = props.ctrlRect;
+    const { width, height } = props.controllerFrame;
     const p1: CPoint = [CtrlElementType.RectLT, 0 - borderWidth, 0 - borderWidth, 'move']
     const p2: CPoint = [CtrlElementType.RectRT, width - 2 * borderWidth, 0 - borderWidth, 'move']
     const p3: CPoint = [CtrlElementType.RectRB, width - 2 * borderWidth, height - 2 * borderWidth, 'move']
@@ -46,25 +46,26 @@ const points = computed<CPoint[]>(() => {
     return ps;
 });
 let framePosition: FramePosition = {
-    top: `${props.ctrlRect.height}px`,
+    top: `${props.controllerFrame.height}px`,
     left: '50%',
     transX: -50,
     transY: 0,
     rotate: 0
 }
 function updater() {
-    let rotate = (props.ctrlRect.rotate || 0) % 360;
+    let rotate = (props.controllerFrame.rotate || 0) % 360;
     rotate = rotate < 0 ? rotate + 360 : rotate;
+    const { width, height } = props.controllerFrame;
     if (0 <= rotate && rotate < 45) {
-        framePosition = { top: `${props.ctrlRect.height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+        framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
     } else if (45 <= rotate && rotate < 135) {
-        framePosition = { top: '50%', left: `${props.ctrlRect.width + 10}px`, transX: -50, transY: -50, rotate: 270 }
+        framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
     } else if (135 <= rotate && rotate < 225) {
         framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
     } else if (225 <= rotate && rotate < 315) {
         framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
     } else if (315 <= rotate && rotate < 360) {
-        framePosition = { top: `${props.ctrlRect.height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+        framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
     }
 }
 
@@ -151,21 +152,21 @@ watchEffect(updater)
 </script>
 <template>
     <div class="ctrl-rect" @mousedown="mousedown" :style="{
-        left: `${props.ctrlRect.x}px`,
-        top: `${props.ctrlRect.y}px`,
-        width: `${props.ctrlRect.width}px`,
-        height: `${props.ctrlRect.height}px`,
+        left: `${props.controllerFrame.x}px`,
+        top: `${props.controllerFrame.y}px`,
+        width: `${props.controllerFrame.width}px`,
+        height: `${props.controllerFrame.height}px`,
         borderWidth: '' + borderWidth + 'px',
-        transform: `rotate(${props.ctrlRect.rotate}deg)`
+        transform: `rotate(${props.controllerFrame.rotate}deg)`
     }">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.ctrlRect.axle"
-            :ctrl-rect="props.ctrlRect" :point="point" @transform="handlePointAction"></CtrlPoint>
+        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.controllerFrame.axle"
+            :point="point" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <div class="frame" :style="{
             top: framePosition.top,
             left: framePosition.left,
             transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
         }">
-            <span>{{ `${props.ctrlRect.realWidth.toFixed(2)} * ${props.ctrlRect.realHeight.toFixed(2)}` }}</span>
+            <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}` }}</span>
         </div>
     </div>
 </template>
