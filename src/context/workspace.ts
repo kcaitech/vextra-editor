@@ -117,6 +117,9 @@ export class WorkSpace extends Watchable(Object) {
         this.m_frame_size = size
         this.notify(WorkSpace.INSERT_FRAME);
     }
+    setFrame(size: { width: number, height: number }) {
+        this.m_frame_size = size
+    }
     scaling(v: boolean) {
         this.m_scaling = v;
     }

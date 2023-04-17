@@ -32,7 +32,7 @@ const points = ref<number>(0);
 const radius = ref<RectRadius>();
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
-const showBgColorH = ref<boolean>()
+const showBgFlipH = ref<boolean>()
 const showBgColorV = ref<boolean>()
 
 function calcFrame() {
@@ -44,7 +44,7 @@ function calcFrame() {
     h.value = frame.height;
     rotate.value = props.shape.rotation || 0;
     shapeType.value = props.shape.type;
-    showBgColorH.value = props.shape.isFlippedHorizontal;
+    showBgFlipH.value = props.shape.isFlippedHorizontal;
     showBgColorV.value = props.shape.isFlippedVertical;
     if (shapeType.value === 'rectangle') {
         getRectShapeAttr(props.shape);
@@ -102,11 +102,9 @@ function radiusToggle() {
 
 function fliph() {
     editor.value.flipH();
-    showBgColorH.value = !showBgColorH.value
 }
 function flipv() {
     editor.value.flipV();
-    showBgColorV.value = !showBgColorV.value
 }
 
 function onChangeRotate(value: string) {
@@ -186,7 +184,7 @@ onUnmounted(() => {
         <div class="tr">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}°`" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
-            <div class="flip ml-24" @click="fliph" :class="{ bgColor: showBgColorH }">
+            <div class="flip ml-24" @click="fliph" :class="{ bgColor: showBgFlipH }">
                 <svg-icon icon-class="fliph"></svg-icon>
             </div>
             <div class="flip ml-12" @click="flipv" :class="{ bgColor: showBgColorV }">
