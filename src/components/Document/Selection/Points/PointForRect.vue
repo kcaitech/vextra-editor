@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { ref, defineProps, defineEmits, computed } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
 import { AbsolutePosition } from '@/context/selection';
-import { Matrix } from '@/basic/matrix';
+import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
 import { CPoint } from '../CtrlRect/RectangleCtrl.vue'
 import { CtrlRect } from '../SelectionView.vue';
@@ -151,8 +151,8 @@ function mousemove(event: MouseEvent) {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     background-color: rgba(255, 228, 196, 0.511);
     display: flex;
     justify-content: center;

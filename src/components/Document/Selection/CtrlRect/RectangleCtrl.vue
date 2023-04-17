@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
 import { Context } from "@/context";
-import { Matrix } from "@/basic/matrix";
+import { Matrix } from '@kcdesign/data/basic/matrix';
 import { CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
 import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";

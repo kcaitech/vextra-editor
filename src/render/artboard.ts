@@ -30,6 +30,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         viewBox: "0 0 " + frame.width + " " + frame.height,
         x: frame.x,
         y: frame.y,
-        overflow: "hidden"
+        overflow: "hidden",
+        reflush
     }, childs);
 }

@@ -1,8 +1,8 @@
 import { Watchable } from "@kcdesign/data/data/basic";
 import { Repository } from "@kcdesign/data/data/transact";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
-import { Matrix } from '@/basic/matrix';
-export enum Action { // 编辑器状态类型
+import { Matrix } from '@kcdesign/data/basic/matrix';
+export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
     AutoK = 'scale',
