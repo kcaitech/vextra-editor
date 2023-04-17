@@ -48,8 +48,8 @@ export class Context extends Watchable(Object) {
     get data() {
         return this.m_data;
     }
-    get repo(): Repository | undefined {
-        return this.m_editor ? this.m_editor.repo : undefined;
+    get repo(): Repository {
+        return this.m_repo;
     }
     get selection() {
         return this.m_selection;

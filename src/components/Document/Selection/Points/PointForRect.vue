@@ -68,7 +68,7 @@ function onMouseDown(event: MouseEvent) {
   const ct = getCtrlElementType(event);
   if (ct) {
     event.stopPropagation();
-    if (!pointContainer.value || !props.context.repo) return;
+    if (!pointContainer.value) return;
     const { button, clientX, clientY } = event;
     if (button !== 0) return;
     setStatus(ct);
@@ -84,16 +84,16 @@ function onMouseDown(event: MouseEvent) {
 }
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
-  if (isDragging && props.context.repo) {
+  if (isDragging) {
     const mouseOnPage = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    const delta = { x: mouseOnPage.x - startPosition.x, y: mouseOnPage.y - startPosition.y, deg: 0 };
+    const delta = { x: mouseOnPage.x - startPosition.x, y: mouseOnPage.y - startPosition.y, deg: 0 };    
     if (rotating) {
       const { x: sx, y: sy } = startPosition;
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       delta.deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
       workspace.value.setCursor(clt, props.controllerFrame.rotate);
-    }
+    }    
     emit('transform', props.point[0], delta);
     props.context.repo.transactCtx.fireNotify();
     startPosition = { x: mouseOnPage.x, y: mouseOnPage.y };

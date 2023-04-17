@@ -73,7 +73,6 @@ function mousedown(e: MouseEvent) {
     if (workspace.value.transforming) return;
     shapes = props.context.selection.selectedShapes;
     if (!shapes.length) return;
-    props.context.editor4Shape(shapes[0]);
     matrix.reset(workspace.value.matrix);
     if (!props.isController || !props.context.repo) return;
     const { clientX, clientY } = e;
@@ -115,9 +114,10 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mouseup', mouseup);
 }
 function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {
+    shapes = props.context.selection.selectedShapes;
     shapes.forEach(item => {
-        if (delta.deg !== 0 && item.rotation !== undefined) {
-            const newDeg = item.rotation + delta.deg;
+        if (delta.deg !== 0) {
+            const newDeg = (item.rotation || 0) + delta.deg;
             item.rotate(newDeg);
             delta.x = 0;
             delta.y = 0;
