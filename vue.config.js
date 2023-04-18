@@ -4,6 +4,7 @@ const path = require('path')
 const AutoImport = require('unplugin-auto-import/webpack')
 const Components = require('unplugin-vue-components/webpack')
 const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs';
 // var run_env = 'nodejs'
@@ -75,6 +76,9 @@ var configureWebpack = (config) => {
     config.plugins = [
         AutoImport({resolvers: [ElementPlusResolver()]}),
         Components({resolvers: [ElementPlusResolver()]}),
+        new CopyWebpackPlugin({patterns: [
+            { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
+        ]}),
         ...config.plugins
     ]
 }

@@ -5,8 +5,7 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     const frame = shape.frame;
     const props: any = {}
     props['xlink:href'] = url;
-    props.x = frame.x;
-    props.y = frame.y;
+
     props.width = frame.width;
     props.height = frame.height;
 
@@ -18,8 +17,11 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
         if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
         if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
         if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
-        style.transform += "translate(-" + cx + "px,-" + cy + "px)"
+        style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
         props.style = style;
+    }
+    else {
+        props.transform = `translate(${frame.x},${frame.y})`
     }
 
     if (reflush) props.reflush = reflush;

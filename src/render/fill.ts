@@ -15,8 +15,7 @@ handler[types.FillType.SolidColor] = function (h: Function, shape: Shape, fill: 
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
         "fill-opacity": color ? color.alpha : 1,
         stroke: 'none',
-        'stroke-width': 0,
-        transform: `translate(${frame.x} ${frame.y})`
+        'stroke-width': 0
     });
 }
 
@@ -52,14 +51,14 @@ handler[types.FillType.Gradient] = function (h: Function, shape: Shape, fill: Fi
     // if (elArr.length == 1) {
     //     return elArr[0];
     // }
-    return h("g", { transform: `translate(${frame.x} ${frame.y})` }, elArr);
+    return h("g", elArr);
 }
 
 export function render(h: Function, shape: Shape, path?: string): Array<any> {
     const style = shape.style;
     const fillsCount = style.fills.length;
     const elArr = new Array();
-    path = path || shape.getPath(true);
+    path = path || shape.getPath(true).toString();
 
     for (let i = 0; i < fillsCount; i++) {
         const fill = style.fills[i];
