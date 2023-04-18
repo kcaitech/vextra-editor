@@ -47,7 +47,7 @@ const ctrlGroupType = ref<CtrlGroupType>(CtrlGroupType.Rect);
 const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
-const controllerFrame  = ref<Point[]>();
+const controllerFrame = ref<Point[]>([]);
 
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
@@ -149,12 +149,17 @@ function genControlRect() {
     const shape = selection[0];
     const m = shape.matrix2Root();
     const frame = shape.frame;
-    const points = [{ x: 0, y: 0, type: CtrlPointType.LT }, { x: frame.width, y: 0, type: CtrlPointType.RT }, { x: 0, y: frame.height, type: CtrlPointType.RB }, { x: frame.width, y: frame.height, type: CtrlPointType.LB }];
-    points.forEach(p => {
+    const points = [
+        { x: 0, y: 0, type: CtrlPointType.LT },
+        { x: frame.width, y: 0, type: CtrlPointType.RT },
+        { x: frame.width, y: frame.height, type: CtrlPointType.LB },
+        { x: 0, y: frame.height, type: CtrlPointType.RB }
+    ];
+    controllerFrame.value = points.map(p => {
         let _s = m.computeCoord(p.x, p.y)
         let _p = matrix.computeCoord(_s.x, _s.y);
         p.x = _p.x; p.y = _p.y;
-        controllerFrame.value?.push(p)
+        return p;
     });
     // const points = [{ x: 0, y: 0 }, { x: 0, y: 0 }].map((p) => matrix.inverseCoord(p.x, p.y)).map((p) => m.inverseCoord(p.x, p.y))
     ctrlGroupType.value = CtrlGroupType.Rect;
@@ -173,7 +178,7 @@ watchEffect(updater)
 </script>
 
 <template>
-    <!-- <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
+    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
         left: '' + s.x + 'px',
         top: '' + s.y + 'px',
         width: '' + s.width + 'px',
@@ -181,7 +186,7 @@ watchEffect(updater)
         borderWidth: '' + borderWidth + 'px',
         transform: `rotate(${s.rotate}deg)`
     }" :key="s.id" :reflush="reflush">
-    </div> -->
+    </div>
     <component v-if="data.isSelect" :is="ctrlMap.get(ctrlGroupType) ?? ctrlMap.get(CtrlGroupType.Rect)"
         :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController"></component>
 </template>

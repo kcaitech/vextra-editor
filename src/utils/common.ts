@@ -14,11 +14,9 @@ export function genOptions(items: string[][]) {
   })
 }
 export function getAngle(line1: [number, number, number, number], line2: [number, number, number, number]): number {
-  const slope1 = (line1[3] - line1[1]) / (line1[2] - line1[0]);
-  const slope2 = (line2[3] - line2[1]) / (line2[2] - line2[0]);
-
+  const slope1 = Math.abs((line1[3] - line1[1]) / (line1[2] - line1[0])) === Infinity ? 0 : (line1[3] - line1[1]) / (line1[2] - line1[0]);
+  const slope2 = Math.abs((line2[3] - line2[1]) / (line2[2] - line2[0])) === Infinity ? 0 : (line2[3] - line2[1]) / (line2[2] - line2[0]);
   const angleRad = Math.atan((slope2 - slope1) / (1 + slope1 * slope2));
-
   return angleRad * (180 / Math.PI);
 }
 export function rotateBase64Image(base64Image: any, angle: number) {
@@ -91,34 +89,35 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
   }
 }
 
+// 根据四个点生成一个矩形
+// p1 p2
+// p4 p3
 export function createRect(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
-  // 确定矩形的左上角和右下角坐标
   const left = Math.min(x1, x2, x3, x4);
   const top = Math.min(y1, y2, y3, y4);
   const right = Math.max(x1, x2, x3, x4);
   const bottom = Math.max(y1, y2, y3, y4);
+  const corner = getAngle([x3, y3, x1, y1], [x3, y3, x4, y4]);
+  const diagonal1 = Math.hypot(x1 - x3, y1 - y3);
+  const width = Math.abs(diagonal1 * Math.cos(corner * (Math.PI / 180)));
+  const height = Math.abs(diagonal1 * Math.sin(corner * (Math.PI / 180)));
+  const transX = ((right - left) - width) / 2;
+  const transY = ((bottom - top) - height) / 2;
+  const angle = getAngle([x2, y2, x1, y1], [2, 1, 1, 1]);
 
-  // 计算矩形的宽度和高度
-  const width = right - left;
-  const height = bottom - top;
-
-  // 计算旋转角度
-  const dx1 = x2 - x1;
-  const dy1 = y2 - y1;
-  const dx2 = x3 - x2;
-  const dy2 = y3 - y2;
-  let angle = Math.atan2(dy1, dx1) - Math.atan2(dy2, dx2);
-  angle = angle * 180 / Math.PI;
-
-  // 创建样式字符串
-  const style = "position: absolute; " +
-    "left: " + left + "px; " +
-    "top: " + top + "px; " +
-    "width: " + width + "px; " +
-    "height: " + height + "px; " +
-    "border: 1px solid black; " +
-    "transform: rotate(" + angle + "deg);";
-
-  // 返回样式字符串
-  return style;
+  return "position: absolute; " +
+    `left: ${left}px; ` +
+    `top: ${top}px;` +
+    `width: ${width}px;` +
+    `height: ${height}px;` +
+    "border: 1px solid orange; " +
+    `transform: translate(${transX}px, ${transY}px) rotate(${-angle}deg);`;
+}
+// 根据矩形的四个点获取其中心轴
+export function getAxle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
+  const left = Math.min(x1, x2, x3, x4);
+  const top = Math.min(y1, y2, y3, y4);
+  const right = Math.max(x1, x2, x3, x4);
+  const bottom = Math.max(y1, y2, y3, y4);
+  return { x: (left + right) / 2, y: (top + bottom) / 2 };
 }

@@ -33,7 +33,7 @@ let systemPosition: XY = { x: 0, y: 0 };
 let startPosition: XY = { x: 0, y: 0 };
 let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
-let rectStyle;
+let rectStyle: string;
 // const points = computed<CPoint[]>(() => {
 //     const { width, height } = props.controllerFrame;
 //     const p1: CPoint = [CtrlElementType.RectLT, 0 - borderWidth, 0 - borderWidth, 'move']
@@ -54,22 +54,23 @@ let rectStyle;
 //     transY: 0,
 //     rotate: 0
 // }
-// function updater() {
-//     let rotate = (props.controllerFrame.rotate || 0) % 360;
-//     rotate = rotate < 0 ? rotate + 360 : rotate;
-//     const { width, height } = props.controllerFrame;
-//     if (0 <= rotate && rotate < 45) {
-//         framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-//     } else if (45 <= rotate && rotate < 135) {
-//         framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
-//     } else if (135 <= rotate && rotate < 225) {
-//         framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
-//     } else if (225 <= rotate && rotate < 315) {
-//         framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
-//     } else if (315 <= rotate && rotate < 360) {
-//         framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-//     }
-// }
+function updater() {
+    // let rotate = (props.controllerFrame.rotate || 0) % 360;
+    // rotate = rotate < 0 ? rotate + 360 : rotate;
+    // const { width, height } = props.controllerFrame;
+    // if (0 <= rotate && rotate < 45) {
+    //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+    // } else if (45 <= rotate && rotate < 135) {
+    //     framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
+    // } else if (135 <= rotate && rotate < 225) {
+    //     framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
+    // } else if (225 <= rotate && rotate < 315) {
+    //     framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
+    // } else if (315 <= rotate && rotate < 360) {
+    //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+    // }
+    getRect(props.controllerFrame);
+}
 function getShapesByXY() {
     const shapes = props.context.selection.getShapesByXY(startPosition);
     if (shapes.length) {
@@ -169,34 +170,34 @@ function windowBlur() {
     }
 }
 function getRect(points: Point[]) {
-    rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y)
+    rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
 }
 onMounted(() => {
-    getRect(props.controllerFrame);
-    // props.context.selection.watch(updater);
+    props.context.selection.watch(updater);
     window.addEventListener('blur', windowBlur);
+    getRect(props.controllerFrame);
 })
 
 onUnmounted(() => {
-    // props.context.selection.unwatch(updater);
+    props.context.selection.unwatch(updater);
     shapes.length = 0;
     window.removeEventListener('blur', windowBlur);
 })
 
-// watchEffect(updater)
+watchEffect(updater)
 </script>
 <template>
     <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
         <!-- <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.controllerFrame.axle"
-            :point="point" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
-        <div class="frame" :style="{
-            top: framePosition.top,
-            left: framePosition.left,
-            transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
-        }">
-            <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
-            }}</span>
-        </div> -->
+                    :point="point" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
+                <div class="frame" :style="{
+                    top: framePosition.top,
+                    left: framePosition.left,
+                    transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
+                }">
+                    <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+                    }}</span>
+                </div> -->
     </div>
 </template>
 <style lang='scss' scoped>
