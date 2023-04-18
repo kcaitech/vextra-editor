@@ -73,12 +73,12 @@ function mousedown(e: MouseEvent) {
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
         const action = workspace.value.action;
         if (action === Action.AutoV) {
-            // e.stopPropagation();
+            e.stopPropagation();
             if (workspace.value.transforming) return;
             shapes = props.context.selection.selectedShapes;
             if (!shapes.length) return;
             matrix.reset(workspace.value.matrix);
-            if (!props.isController || !props.context.repo) return;
+            if (!props.isController) return;
             const { clientX, clientY } = e;
             root = workspace.value.root;
             document.addEventListener('mousemove', mousemove);
@@ -86,7 +86,16 @@ function mousedown(e: MouseEvent) {
             startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
             systemPosition = { x: clientX, y: clientY };
             props.context.repo.start('transform', {});
+            getShapesByXY();
         }
+    }
+}
+function getShapesByXY() {
+    const shapes = props.context.selection.getShapesByXY(startPosition);
+    if (shapes.length) {
+        props.context.selection.selectShape(shapes.at(-1));
+    } else {
+        props.context.selection.selectShape();
     }
 }
 function mousemove(e: MouseEvent) {
@@ -97,7 +106,7 @@ function mousemove(e: MouseEvent) {
         const mousePosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
         const delta: AbsolutePosition = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
         transform(shapes, delta);
-        props.context.repo?.transactCtx.fireNotify();
+        props.context.repo.transactCtx.fireNotify();
         startPosition = { x: mousePosition.x, y: mousePosition.y };
     } else {
         if (Math.hypot(systemPosition.x - clientX, systemPosition.y - clientY) > dragActiveDis) isDragging = true;
@@ -111,9 +120,9 @@ function transform(shapes: Shape[], delta: AbsolutePosition) {
 function mouseup(e: MouseEvent) {
     if (workspace.value.transforming && e.button) return;
     if (isDragging) {
-        props.context.repo?.commit({});
+        props.context.repo.commit({});
     } else {
-        props.context.repo?.rollback();
+        props.context.repo.rollback();
     }
     isDragging = false;
     workspace.value.translating(false);
@@ -144,15 +153,24 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
         }
     });
 }
-
+function windowBlur() {
+    if (isDragging) {
+        workspace.value.translating(false);
+        props.context.repo?.commit({});
+        isDragging = false;
+        document.removeEventListener('mousemove', mousemove);
+        document.removeEventListener('mouseup', mouseup);
+    }
+}
 onMounted(() => {
     props.context.selection.watch(updater);
-
+    window.addEventListener('blur', windowBlur);
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     shapes.length = 0;
+    window.removeEventListener('blur', windowBlur);
 })
 
 watchEffect(updater)

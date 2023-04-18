@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { ref, defineProps, defineEmits, computed } from 'vue';
+import { ref, defineProps, defineEmits, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
 import { AbsolutePosition } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
@@ -131,6 +131,22 @@ function mousemove(event: MouseEvent) {
   const ct = getCtrlElementType(event);
   workspace.value.setCursor(ct, props.controllerFrame.rotate);
 }
+function windowBlur() {
+  if (isDragging) {
+    setStatus();
+    props.context.repo?.commit({});
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    workspace.value.resetCursor();
+    isDragging = false;
+  }
+}
+onMounted(() => {
+  window.addEventListener('blur', windowBlur);
+})
+onUnmounted(() => {
+  window.removeEventListener('blur', windowBlur);
+})
 </script>
 <template>
   <div ref="pointContainer" class="point-container" @mousedown="onMouseDown" @mousemove="mousemove"

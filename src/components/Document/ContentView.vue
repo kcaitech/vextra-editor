@@ -35,8 +35,7 @@ const MOUSE_RIGHT = 2;
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: AbsolutePosition = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
-// 拖动 3px 后开始触发移动
-const dragActiveDis = 3;
+const dragActiveDis = 3; // 拖动 3px 后开始触发移动
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix = reactive(props.context.workspace.matrix); // 一切图形可视变换的根源！！！
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
@@ -54,7 +53,9 @@ let isMouseLeftDown: boolean = false;
 const selectionIsCtrl = computed(() => !spacePressed.value);
 let newShape: Shape | undefined;
 const contextMenuEl = ref<ContextMenuEl>();
-const surplusY = ref<number>(0)
+const surplusY = ref<number>(0);
+const site: { x: number, y: number } = { x: 0, y: 0 };
+
 function offset2Root() { // === props.context.workspace.root
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
@@ -67,19 +68,19 @@ function offset2Root() { // === props.context.workspace.root
     }
     return { x, y }
 }
-function setMousedownOnPageXY(e: MouseEvent) {
+function setMousedownOnPageXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x;
     mousedownOnPageXY.y = xy.y;
 }
-function getMouseOnPageXY(e: MouseEvent): AbsolutePosition {
+function getMouseOnPageXY(e: MouseEvent): AbsolutePosition { // 获取鼠标在页面上的点击位置
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     return matrix.inverseCoord(clientX - x, clientY - y);
 }
-function addShape(frame: ShapeFrame) {
+function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增图形
     const type = ResultByAction(workspace.value.action);
     if (type === ShapeType.Artboard) {
         frame.width = workspace.value.frameSize.width
@@ -101,7 +102,7 @@ function addShape(frame: ShapeFrame) {
         }
     }
 }
-function getCloestContainer() {
+function getCloestContainer() { // 获取鼠标当前位置的最近容器
     return props.context.selection.getClosetContainer(mousedownOnPageXY);
 }
 function onMouseWheel(e: WheelEvent) {
@@ -138,54 +139,7 @@ function onKeyUp(e: KeyboardEvent) {
         spacePressed.value = false;
     }
 }
-function onMouseDown(e: MouseEvent) {
-    if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
-    if (e.button === MOUSE_LEFT) { // 左键按下
-        isMouseLeftDown = true;
-        if (spacePressed.value) {
-            pageViewDragStart(e);
-        } else {
-            setMousedownOnPageXY(e); // 记录鼠标点下的位置（相对于page）
-        }
-        document.addEventListener("mousemove", onMouseMove);
-        document.addEventListener("mouseup", onMouseUp);
-    } else if (e.button === MOUSE_RIGHT) { // 右键按下
-        contextMenuMount(e);
-    }
-}
-function onMouseMove(e: MouseEvent) {
-    if (e.button === MOUSE_LEFT) {
-        if (isMouseLeftDown) {
-            if (spacePressed.value) {
-                pageViewDragging(e);
-            } else {
-                if (workspace.value.action !== Action.AutoV) {
-                    pageEditOnMoving(e);
-                } else {
-                    // 单纯没什么事点着滑来滑去
-                }
-            }
-        } else {
-            hoveredShape(e);
-        }
-    }
-}
-function onMouseUp(e: MouseEvent) {
-    // 现有情况，不是拖动pageview，便是操作图层
-    if (e.button === MOUSE_LEFT) {
-        if (spacePressed.value) {
-            pageViewDragEnd();
-        } else {
-            pageEditorOnMoveEnd(e);
-        }
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        isMouseLeftDown = false;
-    }
-}
-function onMouseLeave() {
-    props.context.selection.unHoverShape();
-}
+
 function pageEditorOnMoveEnd(e: MouseEvent) {
     const { x, y } = getMouseOnPageXY(e);
     const deltaX = Math.abs(x - mousedownOnPageXY.x);
@@ -242,7 +196,7 @@ function newFrame(shape: Shape, point: AbsolutePosition) {
     translateTo(shape, x1.x, x1.y);
     props.context.repo?.transactCtx.fireNotify();
 }
-async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) {
+async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {
         cursor.value = await cursorHandle(ct, rotate);
     } else if (t === WorkSpace.MATRIX_TRANSFORMATION) {
@@ -316,7 +270,6 @@ function getShapesByXY() {
         props.context.selection.selectShape();
     }
 }
-const site: { x: number, y: number } = { x: 0, y: 0 };
 function contextMenuMount(e: MouseEvent) {
     site.x = e.clientX
     site.y = e.clientY
@@ -376,6 +329,67 @@ function contextMenuUnmount() {
     contextMenu.value = false;
 }
 
+// mouse event flow 
+function onMouseDown(e: MouseEvent) {
+    if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
+    if (e.button === MOUSE_LEFT) { // 左键按下
+        isMouseLeftDown = true;
+        if (spacePressed.value) {
+            pageViewDragStart(e);
+        } else {
+            setMousedownOnPageXY(e); // 记录鼠标点下的位置（相对于page）
+        }
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    } else if (e.button === MOUSE_RIGHT) { // 右键按下
+        contextMenuMount(e);
+    }
+}
+function onMouseMove(e: MouseEvent) {
+    if (e.button === MOUSE_LEFT) {
+        if (isMouseLeftDown) {
+            if (spacePressed.value) {
+                pageViewDragging(e);
+            } else {
+                if (workspace.value.action !== Action.AutoV) {
+                    pageEditOnMoving(e);
+                } else {
+                    // 单纯没什么事点着滑来滑去
+                }
+            }
+        } else {
+            hoveredShape(e);
+        }
+    }
+}
+function onMouseUp(e: MouseEvent) {
+    // 现有情况，不是拖动pageview，便是操作图层
+    if (e.button === MOUSE_LEFT) {
+        if (spacePressed.value) {
+            pageViewDragEnd();
+        } else {
+            pageEditorOnMoveEnd(e);
+        }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        isMouseLeftDown = false;
+    }
+}
+function onMouseLeave() {
+    props.context.selection.unHoverShape();
+}
+function windowBlur() {
+    if (isMouseLeftDown) {
+        isMouseLeftDown = false;
+    }
+    if (newShape) {
+        props.context.repo.commit({});
+        newShape = undefined;
+        workspace.value.setAction(Action.AutoV);
+    }
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+}
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id)
@@ -402,12 +416,14 @@ onMounted(() => {
     props.page.watch(watcher);
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
+    window.addEventListener('blur', windowBlur);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
     props.page.unwatch(watcher);
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("keyup", onKeyUp);
+    window.removeEventListener('blur', windowBlur);
     stopWatch();
 })
 renderinit().then(() => {
