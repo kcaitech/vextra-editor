@@ -100,6 +100,7 @@ const pageMenuMount = (e: MouseEvent) => {
             const el = contextMenuEl.value.menu;
             if (el) {
                 el.style.borderRadius = 4 + 'px'
+                el.style.width = 180 + 'px'
             }
         }
     

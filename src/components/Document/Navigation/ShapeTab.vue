@@ -51,7 +51,7 @@ onUnmounted(() => {
             <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"></PageList>
             <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"></Sash>
         </div>
-        <div :style="{height: isPagelistFold ? 'calc(100% - 30px)' : `calc(100% - ${structure.pagelistHeight}px)`}">
+        <div class="page-navi" :style="{height: isPagelistFold ? 'calc(100% - 30px)' : `calc(100% - ${structure.pagelistHeight}px)`}">
             <ShapeList :context="props.context" :page="page"></ShapeList>
         </div>
     </div>

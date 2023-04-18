@@ -35,7 +35,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <div ref="menu" class="__context-menu" :style="{ top: `${y}px`, left: `${props.width && surplusX < 240 + props.width ? -props.width : x}px`, width: `${width || 180}px` }">
+  <div ref="menu" class="__context-menu" :style="{ top: `${y}px`, left: `${props.width && surplusX < 240 + props.width ? -props.width : x}px`, width: `${width || 240}px` }">
     <div class="header"></div>
     <slot></slot>
     <div class="bottom"></div>

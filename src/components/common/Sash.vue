@@ -85,6 +85,7 @@ const sashEl = ref<HTMLElement>();
 <style scoped>
 .sash {
     position: absolute;
+    z-index: 1;
 }
 
 .draging {

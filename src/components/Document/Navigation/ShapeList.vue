@@ -69,7 +69,7 @@ function notifySourceChange(t?: number) {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
             const parent = item.parent
-            if(parent?.parent) toggleExpand(parent.parent) //父级还有父级          
+            // if(parent?.parent) toggleExpand(parent.parent) //父级还有父级          
             if (parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent)
             const indexItem = shapeDirList.indexOf(item)
             if (ListBody.value) {
@@ -222,6 +222,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .shapelist-wrap {
     height: 100%;
+    background-color: #fff;
 
     .header {
         width: 100%;
