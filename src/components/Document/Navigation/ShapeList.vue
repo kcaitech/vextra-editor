@@ -37,7 +37,6 @@ class Iter implements IDataIter<ItemData> {
         }
     }
 }
-
 const props = defineProps<{ context: Context, page: Page }>();
 const { t } = useI18n();
 
@@ -62,14 +61,34 @@ let listviewSource = new class implements IDataSource<ItemData> {
         this.m_onchange && this.m_onchange(index, del, insert, modify);
     }
 }
-
+const shapelist = ref<List>();
+const ListBody = ref<HTMLDivElement>()
+const ListH = ref<number>(0)
 function notifySourceChange(t?: number) {
-    if(t === Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
             const parent = item.parent
-            if(parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent)
+            if(parent?.parent) toggleExpand(parent.parent) //父级还有父级          
+            if (parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent)
+            const indexItem = shapeDirList.indexOf(item)
+            if (ListBody.value) {
+                ListH.value = ListBody.value.clientHeight //list可视高度
+            }
+            if (shapelist.value && indexItem > 0) {
+                const itemScrollH = indexItem * 30
+                if (itemScrollH + 30 >= ListH.value - shapelist.value.scroll.y) {
+                    if((itemScrollH) + shapelist.value.scroll.y < ListH.value - 30) return
+                    shapelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
+                }else if(itemScrollH < -(shapelist.value.scroll.y)){
+                    shapelist.value.clampScroll(0, -itemScrollH)
+                }
+            }
         })
+        // const positionsY = Math.min(...shapes.map(item => {
+        //         return shapeDirList.indexOf(item) * 30
+        //     }))
+        //     console.log(positionsY)
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE)
 }
@@ -87,7 +106,6 @@ const stopWatch = watch(() => props.page, () => {
 
 }, { immediate: true })
 
-const shapelist = ref<List>();
 
 function search(e: Event) {
     // console.log((e.target as HTMLInputElement).value);
@@ -145,18 +163,14 @@ const isLock = (lock: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    if (!lock) {
-        editor.value.setLock()
-    }
+    editor.value.setLock()
 }
 
 const isRead = (read: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    if (!read) {
-        editor.value.setVisible()
-    }
+    editor.value.setVisible()
 }
 function shapeScrollToContentView(shape: Shape) {
     const workspace = props.context.workspace;
@@ -194,12 +208,12 @@ onUnmounted(() => {
                 <input type="text" @change="e => search(e)">
             </div>
         </div>
-        <div class="body">
-            <ListView ref="shapelist" location="shapelist" :allowDrag="true" :source="listviewSource" :item-view="ShapeItem" :item-height="30"
-                :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
+        <div class="body" ref="ListBody">
+            <ListView ref="shapelist" location="shapelist" :allowDrag="true" :source="listviewSource" :item-view="ShapeItem"
+                :item-height="30" :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
                 @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
-                @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock" @update-after-drag="updateAfterDrag"
-                orientation="vertical">
+                @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"
+                @update-after-drag="updateAfterDrag" orientation="vertical">
             </ListView>
         </div>
     </div>

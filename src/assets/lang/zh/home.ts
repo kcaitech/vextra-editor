@@ -42,6 +42,13 @@ export const frame = {
     social_media : '社交媒体'
 }
 
+export const pageMenu = {
+    copy_link: '复制页面链接',
+    duplicate: '创建页面副本',
+    rename: '重命名',
+    delete: '删除页面'
+}
+
 export const attr: any = {
     design: '设计',
     prototype: '原型',

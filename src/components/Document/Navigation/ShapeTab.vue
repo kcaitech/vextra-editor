@@ -14,7 +14,7 @@ import Sash from "@/components/common/Sash.vue";
 import { Page } from "@kcdesign/data/data/page";
 const props = defineProps<{ context: Context, page: Page }>();
 
-const structure = ref<{pagelistHeight: number, pagelistHeightBackup: number}>({pagelistHeight: 30, pagelistHeightBackup: 30});
+const structure = ref<{pagelistHeight: number, pagelistHeightBackup: number}>({pagelistHeight: 150, pagelistHeightBackup: 30});
 const container = ref<HTMLDivElement>();
 const sash = ref<HTMLDivElement>();
 const containerHeight = ref<number>(0);
@@ -24,7 +24,7 @@ function dragStart() {
     structure.value.pagelistHeightBackup = structure.value.pagelistHeight
 }
 function onDragOffset(offset: number) {
-    const newheight = Math.min(70, Math.max(30, structure.value.pagelistHeightBackup + Number((offset * 100 / containerHeight.value).toFixed(4))));
+    const newheight = Math.min(containerHeight.value - 95, Math.max(60, structure.value.pagelistHeightBackup + Number(offset)));
     structure.value.pagelistHeight = newheight
 }
 function pageListFold(fold: boolean) {
@@ -47,11 +47,11 @@ onUnmounted(() => {
 
 <template>
     <div class="shapetab-container" ref="container">
-        <div class="page-navi" :style="{height: isPagelistFold ? '30px' : `${structure.pagelistHeight}%`}">
+        <div class="page-navi" :style="{height: isPagelistFold ? '30px' : `${structure.pagelistHeight}px`}">
             <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"></PageList>
             <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"></Sash>
         </div>
-        <div :style="{height: isPagelistFold ? 'calc(100% - 30px)' : `${100 - structure.pagelistHeight}%`}">
+        <div :style="{height: isPagelistFold ? 'calc(100% - 30px)' : `calc(100% - ${structure.pagelistHeight}px)`}">
             <ShapeList :context="props.context" :page="page"></ShapeList>
         </div>
     </div>

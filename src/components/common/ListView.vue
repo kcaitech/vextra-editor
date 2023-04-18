@@ -49,7 +49,9 @@ const prepareCount = 10; //  多准备的
 const listMouseOver = ref<boolean>(false);
 
 defineExpose({
-    container
+    container,
+    clampScroll,
+    scroll
 })
 
 const relayout: { [key: string]: Function } = {};
@@ -620,7 +622,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .container {
-    overflow: hidden;
+    // overflow: hidden;
     position: relative;
     outline: none;
 

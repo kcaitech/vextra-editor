@@ -5,7 +5,7 @@ interface Props {
   x: number
   y: number
   width?: number,
-  site:{ x: number, y: number }
+  site?:{ x: number, y: number }
 }
 const surplusX = ref<number>(0)
 const menu = ref<HTMLDivElement>()
@@ -23,6 +23,7 @@ function handleClickOutside(event: MouseEvent) {
 }
 
  //二级菜单距离右侧的距离
+ if(props.site)
   surplusX.value = document.documentElement.clientWidth - props.site.x
  
 onMounted(() => {
@@ -34,7 +35,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <div ref="menu" class="__context-menu" :style="{ top: `${y}px`, left: `${props.width && surplusX < 240 + props.width ? -props.width : x}px`, width: `${width || 240}px` }">
+  <div ref="menu" class="__context-menu" :style="{ top: `${y}px`, left: `${props.width && surplusX < 240 + props.width ? -props.width : x}px`, width: `${width || 180}px` }">
     <div class="header"></div>
     <slot></slot>
     <div class="bottom"></div>
