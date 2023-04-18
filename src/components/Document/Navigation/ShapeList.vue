@@ -39,7 +39,7 @@ class Iter implements IDataIter<ItemData> {
 
 const props = defineProps<{ context: Context, page: Page }>();
 const { t } = useI18n();
-
+const itemHieght = 30;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 
 let shapeDirList: ShapeDirList;
@@ -68,7 +68,7 @@ function notifySourceChange(t?: number) {
         shapes.forEach(item => {
             const parent = item.parent;
             if (parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent);
-        })
+        });
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
@@ -190,11 +190,11 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body">
-            <ListView ref="shapelist" location="shapelist" :source="listviewSource" :item-view="ShapeItem" :item-height="30"
-                :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
-                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
-                @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"
-                orientation="vertical">
+            <ListView ref="shapelist" location="shapelist" :source="listviewSource" :item-view="ShapeItem"
+                :item-height="itemHieght" :item-width="0" :first-index="0" :context="props.context"
+                @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
+                @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
+                @isLock="isLock" orientation="vertical">
             </ListView>
         </div>
     </div>

@@ -65,33 +65,28 @@ function getCtrlElementType(event: MouseEvent) {
 
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
-  if (workspace.value.transforming) return;
-  const ct = getCtrlElementType(event);
-  if (ct) {
-    event.stopPropagation();
-    if (!pointContainer.value) return;
-    const { button, clientX, clientY } = event;
-    if (button !== 0) return;
-    setStatus(ct);
-    clt = getCtrlElementType(event);
-    matrix.reset(workspace.value.matrix);
-    root = workspace.value.root;
-    startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    systemPosition = { x: clientX, y: clientY };
-    props.context.repo.start('transform', {});
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+  if (event.button === 0) {
+    const ct = getCtrlElementType(event);
+    if (ct) {
+      event.stopPropagation();
+      if (!pointContainer.value) return;
+      const { clientX, clientY } = event;
+      setStatus(ct);
+      clt = getCtrlElementType(event);
+      matrix.reset(workspace.value.matrix);
+      root = workspace.value.root;
+      startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+      systemPosition = { x: clientX, y: clientY };
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
   }
 }
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
   if (isDragging) {
-    const m = new Matrix();
-    m.rotate(props.controllerFrame.rotate, props.axle.x, props.axle.y);
     const mouseOnPage = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    const _mp = m.computeCoord(mouseOnPage.x, mouseOnPage.y);
-    const _sp = m.computeCoord(startPosition.x, startPosition.y);
-    const delta = { x: _mp.x - _sp.x, y: _mp.y - _sp.y, deg: 0 };
+    const delta = { x: mouseOnPage.x - startPosition.x, y: mouseOnPage.y - startPosition.y, deg: 0 }; // 鼠标动作
     if (rotating) {
       const { x: sx, y: sy } = startPosition;
       const { x: mx, y: my } = mouseOnPage;
@@ -100,27 +95,28 @@ function onMouseMove(event: MouseEvent) {
       workspace.value.setCursor(clt, props.controllerFrame.rotate);
     }
     emit('transform', props.point[0], delta);
+
     props.context.repo.transactCtx.fireNotify();
     startPosition = { x: mouseOnPage.x, y: mouseOnPage.y };
     systemPosition = { x: clientX, y: clientY };
   } else {
     if (Math.hypot(systemPosition.x - clientX, systemPosition.y - clientY) > dragActiveDis) {
       isDragging = true;
+      props.context.repo.start('transform', {});
     }
   }
 }
 function onMouseUp(event: MouseEvent) {
-  if (event.button) return;
-  if (!isDragging) {
-    props.context.repo?.rollback();
-  } else {
-    props.context.repo?.commit({});
+  if (event.button === 0) {
+    if (isDragging) {
+      props.context.repo.commit({});
+    }
+    isDragging = false;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+    setStatus();
+    workspace.value.resetCursor();
   }
-  isDragging = false;
-  document.removeEventListener('mousemove', onMouseMove);
-  document.removeEventListener('mouseup', onMouseUp);
-  setStatus();
-  workspace.value.resetCursor();
 }
 function mouseleave() {
   if (rotating || scaling) return;
@@ -134,7 +130,7 @@ function mousemove(event: MouseEvent) {
 function windowBlur() {
   if (isDragging) {
     setStatus();
-    props.context.repo?.commit({});
+    props.context.repo.commit({});
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
     workspace.value.resetCursor();

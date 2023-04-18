@@ -68,28 +68,6 @@ function updater() {
         framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
     }
 }
-
-function mousedown(e: MouseEvent) {
-    if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
-        const action = workspace.value.action;
-        if (action === Action.AutoV) {
-            e.stopPropagation();
-            if (workspace.value.transforming) return;
-            shapes = props.context.selection.selectedShapes;
-            if (!shapes.length) return;
-            matrix.reset(workspace.value.matrix);
-            if (!props.isController) return;
-            const { clientX, clientY } = e;
-            root = workspace.value.root;
-            document.addEventListener('mousemove', mousemove);
-            document.addEventListener('mouseup', mouseup);
-            startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-            systemPosition = { x: clientX, y: clientY };
-            props.context.repo.start('transform', {});
-            getShapesByXY();
-        }
-    }
-}
 function getShapesByXY() {
     const shapes = props.context.selection.getShapesByXY(startPosition);
     if (shapes.length) {
@@ -98,39 +76,65 @@ function getShapesByXY() {
         props.context.selection.selectShape();
     }
 }
+
+function mousedown(e: MouseEvent) {
+    if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        const action = workspace.value.action;
+        if (action === Action.AutoV && props.isController) {
+            e.stopPropagation(); // props.isController 当控制权在selection时，不要冒泡出去, 否则父节点也会被控制
+            shapes = props.context.selection.selectedShapes;
+            if (!shapes.length) return;
+            matrix.reset(workspace.value.matrix);
+            const { clientX, clientY } = e;
+            root = workspace.value.root;
+            document.addEventListener('mousemove', mousemove);
+            document.addEventListener('mouseup', mouseup);
+            startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+            systemPosition = { x: clientX, y: clientY };  
+        }
+    }
+}
 function mousemove(e: MouseEvent) {
-    const { clientX, clientY } = e;
-    if (isDragging) {
-        workspace.value.translating(true);
-        props.context.selection.unHoverShape();
-        const mousePosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-        const delta: AbsolutePosition = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
-        transform(shapes, delta);
-        props.context.repo.transactCtx.fireNotify();
-        startPosition = { x: mousePosition.x, y: mousePosition.y };
-    } else {
-        if (Math.hypot(systemPosition.x - clientX, systemPosition.y - clientY) > dragActiveDis) isDragging = true;
+    if (e.button === 0) { //只处理鼠标左键按下时的移动
+        const { clientX, clientY } = e;
+        if (isDragging) {
+            workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
+            props.context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
+            const mousePosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+            const delta: AbsolutePosition = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
+            transform(shapes, delta);
+            props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
+            startPosition = { x: mousePosition.x, y: mousePosition.y };
+        } else {
+            if (Math.hypot(systemPosition.x - clientX, systemPosition.y - clientY) > dragActiveDis) { // 是否开始移动的判定条件
+                isDragging = true;
+                props.context.repo.start('transform', {}); // 开启当前事务,事务在结束(commit/rollback)之前只能开启一次!!! ---begin transaction---
+            }
+        }
     }
 }
 function transform(shapes: Shape[], delta: AbsolutePosition) {
+    // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
         translate(shapes[i], delta.x, delta.y);
     }
 }
 function mouseup(e: MouseEvent) {
-    if (workspace.value.transforming && e.button) return;
-    if (isDragging) {
-        props.context.repo.commit({});
-    } else {
-        props.context.repo.rollback();
+    if (e.button === 0) { // 只处理鼠标左键按下时的抬起
+        if (isDragging) {
+            props.context.repo.commit({}); // 如果触发了拖拽状态,必定开启了事务 ---end transaction---
+        } else {
+            getShapesByXY(); // 单纯点击,只选择图层
+        }
+        isDragging = false;
+        workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
+        document.removeEventListener('mousemove', mousemove);
+        document.removeEventListener('mouseup', mouseup);
     }
-    isDragging = false;
-    workspace.value.translating(false);
-    document.removeEventListener('mousemove', mousemove);
-    document.removeEventListener('mouseup', mouseup);
 }
 function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {
     shapes = props.context.selection.selectedShapes;
+    
     shapes.forEach(item => {
         if (delta.deg !== 0) {
             const newDeg = (item.rotation || 0) + delta.deg;
@@ -151,12 +155,14 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
             translateTo(item, realXY.x + delta.x, realXY.y);
             expandTo(item, realXY.width - delta.x, realXY.height + delta.y);
         }
+        console.log('m', item.matrix2Root().toString());
+        
     });
 }
 function windowBlur() {
-    if (isDragging) {
+    if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
         workspace.value.translating(false);
-        props.context.repo?.commit({});
+        props.context.repo.commit({});
         isDragging = false;
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
