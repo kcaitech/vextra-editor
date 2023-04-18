@@ -50,7 +50,7 @@ const root = ref<HTMLDivElement>();
 const mousedownOnPageXY: AbsolutePosition = { x: 0, y: 0 }; // 鼠标在page中的坐标
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
-let isMouseDown: boolean = false;
+let isMouseLeftDown: boolean = false;
 const selectionIsCtrl = computed(() => !spacePressed.value);
 let newShape: Shape | undefined;
 const contextMenuEl = ref<ContextMenuEl>();
@@ -140,8 +140,8 @@ function onKeyUp(e: KeyboardEvent) {
 }
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
-    isMouseDown = true;
     if (e.button === MOUSE_LEFT) { // 左键按下
+        isMouseLeftDown = true;
         if (spacePressed.value) {
             pageViewDragStart(e);
         } else {
@@ -155,7 +155,7 @@ function onMouseDown(e: MouseEvent) {
 }
 function onMouseMove(e: MouseEvent) {
     if (e.button === MOUSE_LEFT) {
-        if (isMouseDown) {
+        if (isMouseLeftDown) {
             if (spacePressed.value) {
                 pageViewDragging(e);
             } else {
@@ -180,7 +180,7 @@ function onMouseUp(e: MouseEvent) {
         }
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        isMouseDown = false;
+        isMouseLeftDown = false;
     }
 }
 function onMouseLeave() {

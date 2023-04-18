@@ -206,7 +206,7 @@ watchEffect(updater)
 </script>
 
 <template>
-    <!-- <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
+    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
         left: '' + s.x + 'px',
         top: '' + s.y + 'px',
         width: '' + s.width + 'px',
@@ -214,7 +214,7 @@ watchEffect(updater)
         borderWidth: '' + borderWidth + 'px',
         transform: `rotate(${s.rotate}deg)`
     }" :key="s.id" :reflush="reflush">
-    </div> -->
+    </div>
     <component v-if="data.isSelect" :is="ctrlMap.get(ctrlGroupType) ?? ctrlMap.get(CtrlGroupType.Rect)"
         :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController"></component>
 </template>

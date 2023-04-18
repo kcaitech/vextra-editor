@@ -2,7 +2,7 @@
 import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { CtrlElementType } from "@/context/workspace";
+import { Action, CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
 import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
@@ -70,20 +70,23 @@ function updater() {
 }
 
 function mousedown(e: MouseEvent) {
-    if (!e.button) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
-        e.stopPropagation();
-        if (workspace.value.transforming) return;
-        shapes = props.context.selection.selectedShapes;
-        if (!shapes.length) return;
-        matrix.reset(workspace.value.matrix);
-        if (!props.isController || !props.context.repo) return;
-        const { clientX, clientY } = e;
-        root = workspace.value.root;
-        document.addEventListener('mousemove', mousemove);
-        document.addEventListener('mouseup', mouseup);
-        startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-        systemPosition = { x: clientX, y: clientY };
-        props.context.repo.start('transform', {});
+    if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        const action = workspace.value.action;
+        if (action === Action.AutoV) {
+            // e.stopPropagation();
+            if (workspace.value.transforming) return;
+            shapes = props.context.selection.selectedShapes;
+            if (!shapes.length) return;
+            matrix.reset(workspace.value.matrix);
+            if (!props.isController || !props.context.repo) return;
+            const { clientX, clientY } = e;
+            root = workspace.value.root;
+            document.addEventListener('mousemove', mousemove);
+            document.addEventListener('mouseup', mouseup);
+            startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+            systemPosition = { x: clientX, y: clientY };
+            props.context.repo.start('transform', {});
+        }
     }
 }
 function mousemove(e: MouseEvent) {
