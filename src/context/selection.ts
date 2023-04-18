@@ -10,9 +10,16 @@ interface Saved {
     cursorStart: number,
     cursorEnd: number
 }
-export interface AbsolutePosition {
+export interface XY {
     x: number,
     y: number
+}
+
+export enum CtrlPointType {
+    LT = 'lt',
+    RT = 'rt',
+    RB = 'rb',
+    LB = 'lb'
 }
 
 export type ActionType = 'translate' | 'scale' | 'rotate'
@@ -52,7 +59,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
-    getShapesByXY(position: AbsolutePosition): Shape[] {
+    getShapesByXY(position: XY): Shape[] {
         position = cloneDeep(position);
         const shapes: Shape[] = [];
         const page = this.m_selectPage!;
@@ -62,7 +69,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         if (childs?.length) deep(childs, position);
         return shapes;
 
-        function deep(source: Shape[], position: AbsolutePosition) {
+        function deep(source: Shape[], position: XY) {
             for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
@@ -71,7 +78,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             }
         }
     }
-    getClosetContainer(position: AbsolutePosition): GroupShape {
+    getClosetContainer(position: XY): GroupShape {
         position = cloneDeep(position);
         const page = this.m_selectPage!;
         const groups: GroupShape[] = [page];
@@ -81,7 +88,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         if (childs?.length) deep(childs, position);
         return groups[0];
 
-        function deep(source: Shape[], position: AbsolutePosition) {
+        function deep(source: Shape[], position: XY) {
             for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {

@@ -5,7 +5,7 @@ import { Page } from '@kcdesign/data/data/page';
 import { reactive, defineProps, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
-import { AbsolutePosition } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { init as renderinit } from '@/render';
 import { Action, CtrlElementType, CursorType, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
 import ContextMenu from '../common/ContextMenu.vue';
@@ -33,7 +33,7 @@ const STATE_MOVEING = 2;
 const MOUSE_LEFT = 0;
 const MOUSE_RIGHT = 2;
 const contextMenu = ref<boolean>(false);
-const contextMenuPosition: AbsolutePosition = reactive({ x: 0, y: 0 });
+const contextMenuPosition: XY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
 const dragActiveDis = 3; // 拖动 3px 后开始触发移动
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
@@ -46,7 +46,7 @@ const watcher = () => {
 const cursor = ref<string>(CursorType.Auto);
 const inited = ref(false);
 const root = ref<HTMLDivElement>();
-const mousedownOnPageXY: AbsolutePosition = { x: 0, y: 0 }; // 鼠标在page中的坐标
+const mousedownOnPageXY: XY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
 let isMouseLeftDown: boolean = false;
@@ -75,7 +75,7 @@ function setMousedownOnPageXY(e: MouseEvent) { // 记录鼠标在页面上的点
     mousedownOnPageXY.x = xy.x;
     mousedownOnPageXY.y = xy.y;
 }
-function getMouseOnPageXY(e: MouseEvent): AbsolutePosition { // 获取鼠标在页面上的点击位置
+function getMouseOnPageXY(e: MouseEvent): XY { // 获取鼠标在页面上的点击位置
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     return matrix.inverseCoord(clientX - x, clientY - y);
@@ -185,7 +185,7 @@ function pageEditOnMoving(e: MouseEvent) {
         }
     }
 }
-function newFrame(shape: Shape, point: AbsolutePosition) {
+function newFrame(shape: Shape, point: XY) {
     const { x: sx, y: sy } = mousedownOnPageXY;
     const { x: px, y: py } = point;
     const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };

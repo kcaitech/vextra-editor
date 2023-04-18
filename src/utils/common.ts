@@ -89,4 +89,36 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
     const { x, y } = hotPosition;
     return `-webkit-image-set(url(${url})${times}x) ${x} ${y}, auto`
   }
-} 
+}
+
+export function createRect(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
+  // 确定矩形的左上角和右下角坐标
+  const left = Math.min(x1, x2, x3, x4);
+  const top = Math.min(y1, y2, y3, y4);
+  const right = Math.max(x1, x2, x3, x4);
+  const bottom = Math.max(y1, y2, y3, y4);
+
+  // 计算矩形的宽度和高度
+  const width = right - left;
+  const height = bottom - top;
+
+  // 计算旋转角度
+  const dx1 = x2 - x1;
+  const dy1 = y2 - y1;
+  const dx2 = x3 - x2;
+  const dy2 = y3 - y2;
+  let angle = Math.atan2(dy1, dx1) - Math.atan2(dy2, dx2);
+  angle = angle * 180 / Math.PI;
+
+  // 创建样式字符串
+  const style = "position: absolute; " +
+    "left: " + left + "px; " +
+    "top: " + top + "px; " +
+    "width: " + width + "px; " +
+    "height: " + height + "px; " +
+    "border: 1px solid black; " +
+    "transform: rotate(" + angle + "deg);";
+
+  // 返回样式字符串
+  return style;
+}

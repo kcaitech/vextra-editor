@@ -2,7 +2,7 @@
 import { defineProps, reactive, ref, defineEmits } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
-import { AbsolutePosition } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { Shape } from "@kcdesign/data/data/shape";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
@@ -17,7 +17,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
-const layerSubMenuPosition: AbsolutePosition = reactive({ x: 0, y: 0 });
+const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 
 function showLayerSubMenu(e: MouseEvent) {

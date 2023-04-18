@@ -3,15 +3,16 @@ import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue"
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
-import { AbsolutePosition } from "@/context/selection";
+import { XY } from "@/context/selection";
 import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
-import { ControllerFrame } from "../SelectionView.vue";
+import { Point } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
+import { createRect } from "@/utils/common"
 export type CPoint = [CtrlElementType, number, number, string];
 interface Props {
     context: Context,
-    controllerFrame: ControllerFrame,
+    controllerFrame: Point[],
     isController: boolean
 }
 interface FramePosition {
@@ -28,46 +29,47 @@ const dragActiveDis = 3;
 const borderWidth = 2;
 const offset = 14.5;
 let isDragging = false;
-let systemPosition: AbsolutePosition = { x: 0, y: 0 };
-let startPosition: AbsolutePosition = { x: 0, y: 0 };
-let root: AbsolutePosition = { x: 0, y: 0 };
+let systemPosition: XY = { x: 0, y: 0 };
+let startPosition: XY = { x: 0, y: 0 };
+let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
-const points = computed<CPoint[]>(() => {
-    const { width, height } = props.controllerFrame;
-    const p1: CPoint = [CtrlElementType.RectLT, 0 - borderWidth, 0 - borderWidth, 'move']
-    const p2: CPoint = [CtrlElementType.RectRT, width - 2 * borderWidth, 0 - borderWidth, 'move']
-    const p3: CPoint = [CtrlElementType.RectRB, width - 2 * borderWidth, height - 2 * borderWidth, 'move']
-    const p4: CPoint = [CtrlElementType.RectLB, 0 - borderWidth, height - 2 * borderWidth, 'move']
-    const ps: CPoint[] = [p1, p2, p4, p3];
-    ps.forEach(p => {
-        p[1] -= offset;
-        p[2] -= offset;
-    })
-    return ps;
-});
-let framePosition: FramePosition = {
-    top: `${props.controllerFrame.height}px`,
-    left: '50%',
-    transX: -50,
-    transY: 0,
-    rotate: 0
-}
-function updater() {
-    let rotate = (props.controllerFrame.rotate || 0) % 360;
-    rotate = rotate < 0 ? rotate + 360 : rotate;
-    const { width, height } = props.controllerFrame;
-    if (0 <= rotate && rotate < 45) {
-        framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-    } else if (45 <= rotate && rotate < 135) {
-        framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
-    } else if (135 <= rotate && rotate < 225) {
-        framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
-    } else if (225 <= rotate && rotate < 315) {
-        framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
-    } else if (315 <= rotate && rotate < 360) {
-        framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-    }
-}
+let rectStyle;
+// const points = computed<CPoint[]>(() => {
+//     const { width, height } = props.controllerFrame;
+//     const p1: CPoint = [CtrlElementType.RectLT, 0 - borderWidth, 0 - borderWidth, 'move']
+//     const p2: CPoint = [CtrlElementType.RectRT, width - 2 * borderWidth, 0 - borderWidth, 'move']
+//     const p3: CPoint = [CtrlElementType.RectRB, width - 2 * borderWidth, height - 2 * borderWidth, 'move']
+//     const p4: CPoint = [CtrlElementType.RectLB, 0 - borderWidth, height - 2 * borderWidth, 'move']
+//     const ps: CPoint[] = [p1, p2, p4, p3];
+//     ps.forEach(p => {
+//         p[1] -= offset;
+//         p[2] -= offset;
+//     })
+//     return ps;
+// });
+// let framePosition: FramePosition = {
+//     top: `${props.controllerFrame.height}px`,
+//     left: '50%',
+//     transX: -50,
+//     transY: 0,
+//     rotate: 0
+// }
+// function updater() {
+//     let rotate = (props.controllerFrame.rotate || 0) % 360;
+//     rotate = rotate < 0 ? rotate + 360 : rotate;
+//     const { width, height } = props.controllerFrame;
+//     if (0 <= rotate && rotate < 45) {
+//         framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+//     } else if (45 <= rotate && rotate < 135) {
+//         framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
+//     } else if (135 <= rotate && rotate < 225) {
+//         framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
+//     } else if (225 <= rotate && rotate < 315) {
+//         framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
+//     } else if (315 <= rotate && rotate < 360) {
+//         framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+//     }
+// }
 function getShapesByXY() {
     const shapes = props.context.selection.getShapesByXY(startPosition);
     if (shapes.length) {
@@ -90,7 +92,7 @@ function mousedown(e: MouseEvent) {
             document.addEventListener('mousemove', mousemove);
             document.addEventListener('mouseup', mouseup);
             startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-            systemPosition = { x: clientX, y: clientY };  
+            systemPosition = { x: clientX, y: clientY };
         }
     }
 }
@@ -101,7 +103,7 @@ function mousemove(e: MouseEvent) {
             workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
             props.context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
             const mousePosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-            const delta: AbsolutePosition = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
+            const delta: XY = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
             transform(shapes, delta);
             props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
             startPosition = { x: mousePosition.x, y: mousePosition.y };
@@ -113,7 +115,7 @@ function mousemove(e: MouseEvent) {
         }
     }
 }
-function transform(shapes: Shape[], delta: AbsolutePosition) {
+function transform(shapes: Shape[], delta: XY) {
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
         translate(shapes[i], delta.x, delta.y);
@@ -134,7 +136,7 @@ function mouseup(e: MouseEvent) {
 }
 function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {
     shapes = props.context.selection.selectedShapes;
-    
+
     shapes.forEach(item => {
         if (delta.deg !== 0) {
             const newDeg = (item.rotation || 0) + delta.deg;
@@ -155,8 +157,6 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
             translateTo(item, realXY.x + delta.x, realXY.y);
             expandTo(item, realXY.width - delta.x, realXY.height + delta.y);
         }
-        console.log('m', item.matrix2Root().toString());
-        
     });
 }
 function windowBlur() {
@@ -168,29 +168,26 @@ function windowBlur() {
         document.removeEventListener('mouseup', mouseup);
     }
 }
+function getRect(points: Point[]) {
+    rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y)
+}
 onMounted(() => {
-    props.context.selection.watch(updater);
+    getRect(props.controllerFrame);
+    // props.context.selection.watch(updater);
     window.addEventListener('blur', windowBlur);
 })
 
 onUnmounted(() => {
-    props.context.selection.unwatch(updater);
+    // props.context.selection.unwatch(updater);
     shapes.length = 0;
     window.removeEventListener('blur', windowBlur);
 })
 
-watchEffect(updater)
+// watchEffect(updater)
 </script>
 <template>
-    <div class="ctrl-rect" @mousedown="mousedown" :style="{
-        left: `${props.controllerFrame.x}px`,
-        top: `${props.controllerFrame.y}px`,
-        width: `${props.controllerFrame.width}px`,
-        height: `${props.controllerFrame.height}px`,
-        borderWidth: '' + borderWidth + 'px',
-        transform: `rotate(${props.controllerFrame.rotate}deg)`
-    }">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.controllerFrame.axle"
+    <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
+        <!-- <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.controllerFrame.axle"
             :point="point" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <div class="frame" :style="{
             top: framePosition.top,
@@ -199,7 +196,7 @@ watchEffect(updater)
         }">
             <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
             }}</span>
-        </div>
+        </div> -->
     </div>
 </template>
 <style lang='scss' scoped>

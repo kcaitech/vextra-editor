@@ -3,7 +3,7 @@ import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue"
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { CtrlElementType } from "@/context/workspace";
-import { AbsolutePosition } from "@/context/selection";
+import { XY } from "@/context/selection";
 import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
 import { ControllerFrame } from "../SelectionView.vue";
@@ -28,9 +28,9 @@ const dragActiveDis = 3;
 const borderWidth = 2;
 const offset = 14.5;
 let isDragging = false;
-let systemPosition: AbsolutePosition = { x: 0, y: 0 };
-let startPosition: AbsolutePosition = { x: 0, y: 0 };
-let root: AbsolutePosition = { x: 0, y: 0 };
+let systemPosition: XY = { x: 0, y: 0 };
+let startPosition: XY = { x: 0, y: 0 };
+let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 const clipPath = computed<string>(() => {
     const { width, height } = props.controllerFrame;    
@@ -91,7 +91,7 @@ function mousemove(e: MouseEvent) {
         workspace.value.translating(true);
         props.context.selection.unHoverShape();
         const mousePosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-        const delta: AbsolutePosition = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
+        const delta: XY = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
         transform(shapes, delta);
         props.context.repo?.transactCtx.fireNotify();
         startPosition = { x: mousePosition.x, y: mousePosition.y };
@@ -99,7 +99,7 @@ function mousemove(e: MouseEvent) {
         if (Math.hypot(systemPosition.x - clientX, systemPosition.y - clientY) > dragActiveDis) isDragging = true;
     }
 }
-function transform(shapes: Shape[], delta: AbsolutePosition) {
+function transform(shapes: Shape[], delta: XY) {
     for (let i = 0; i < shapes.length; i++) {
         translate(shapes[i], delta.x, delta.y);
     }

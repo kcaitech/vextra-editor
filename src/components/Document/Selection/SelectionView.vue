@@ -3,20 +3,13 @@ import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from 
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape } from "@kcdesign/data/data/shape";
-import { AbsolutePosition } from "@/context/selection";
 import { CtrlGroupType, ctrlMap } from "./CtrlRect";
-export interface ControllerFrame {
-    width: number,
-    height: number,
-    realWidth: number,
-    realHeight: number,
+import { CtrlPointType } from "@/context/selection";
+export interface Point {
     x: number,
     y: number,
-    axle: AbsolutePosition,
-    rotate: number,
-    visible: boolean
+    type: CtrlPointType
 }
-
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -54,17 +47,7 @@ const ctrlGroupType = ref<CtrlGroupType>(CtrlGroupType.Rect);
 const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
-const controllerFrame: ControllerFrame = reactive({
-    width: 0,
-    height: 0,
-    realWidth: 0,
-    realHeight: 0,
-    x: 0,
-    y: 0,
-    rotate: 0,
-    visible: false,
-    axle: { x: 0, y: 0 }
-});
+const controllerFrame  = ref<Point[]>();
 
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
@@ -163,34 +146,18 @@ function updater() {
 }
 function genControlRect() {
     const selection: Shape[] = props.context.selection.selectedShapes;
-    const xy0 = matrix.computeCoord(selection[0].realXY().x, selection[0].realXY().y);
-    const xy1 = { x: 0, y: 0 };
-    for (let i = 0; i < selection.length; i++) {
-        const { width, height } = selection[i].frame;
-        const realXY = selection[i].realXY();
-        const cXY0 = matrix.computeCoord(realXY.x, realXY.y);
-        const cXY1 = matrix.computeCoord(realXY.x + width, realXY.y + height);
-        xy0.x = xy0.x > cXY0.x ? cXY0.x : xy0.x;
-        xy0.y = xy0.y > cXY0.y ? cXY0.y : xy0.y;
-        xy1.x = xy1.x < cXY1.x ? cXY1.x : xy1.x;
-        xy1.y = xy1.y < cXY1.y ? cXY1.y : xy1.y;
-    }
-    controllerFrame.x = xy0.x;
-    controllerFrame.y = xy0.y;
-    controllerFrame.width = xy1.x - xy0.x;
-    controllerFrame.height = xy1.y - xy0.y;
-    controllerFrame.axle = matrix.inverseCoord((xy0.x + xy1.x) / 2, (xy0.y + xy1.y) / 2);
-    controllerFrame.realWidth = matrix.inverseCoord(xy1.x, xy1.y).x - matrix.inverseCoord(xy0.x, xy0.y).x;
-    controllerFrame.realHeight = matrix.inverseCoord(xy1.x, xy1.y).y - matrix.inverseCoord(xy0.x, xy0.y).y;
-    if (selection.length === 1) {
-        controllerFrame.rotate = selection[0].rotation || 0;
-    } else {
-        controllerFrame.rotate = 0;
-    }
+    const shape = selection[0];
+    const m = shape.matrix2Root();
+    const frame = shape.frame;
+    const points = [{ x: 0, y: 0, type: CtrlPointType.LT }, { x: frame.width, y: 0, type: CtrlPointType.RT }, { x: 0, y: frame.height, type: CtrlPointType.RB }, { x: frame.width, y: frame.height, type: CtrlPointType.LB }];
+    points.forEach(p => {
+        let _s = m.computeCoord(p.x, p.y)
+        let _p = matrix.computeCoord(_s.x, _s.y);
+        p.x = _p.x; p.y = _p.y;
+        controllerFrame.value?.push(p)
+    });
+    // const points = [{ x: 0, y: 0 }, { x: 0, y: 0 }].map((p) => matrix.inverseCoord(p.x, p.y)).map((p) => m.inverseCoord(p.x, p.y))
     ctrlGroupType.value = CtrlGroupType.Rect;
-    if (selection.length === 1 && selection[0].typeId === 'line-shape') {
-        ctrlGroupType.value = CtrlGroupType.Line;
-    }
 }
 // hooks
 onMounted(() => {
@@ -206,7 +173,7 @@ watchEffect(updater)
 </script>
 
 <template>
-    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
+    <!-- <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
         left: '' + s.x + 'px',
         top: '' + s.y + 'px',
         width: '' + s.width + 'px',
@@ -214,7 +181,7 @@ watchEffect(updater)
         borderWidth: '' + borderWidth + 'px',
         transform: `rotate(${s.rotate}deg)`
     }" :key="s.id" :reflush="reflush">
-    </div>
+    </div> -->
     <component v-if="data.isSelect" :is="ctrlMap.get(ctrlGroupType) ?? ctrlMap.get(CtrlGroupType.Rect)"
         :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController"></component>
 </template>

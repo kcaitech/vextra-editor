@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { ref, defineProps, defineEmits, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
-import { AbsolutePosition } from '@/context/selection';
+import { XY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
 import { CPoint } from '../CtrlRect/RectangleCtrl.vue'
@@ -10,7 +10,7 @@ import { ControllerFrame } from '../SelectionView.vue';
 
 interface Props {
   context: Context,
-  axle: AbsolutePosition,
+  axle: XY,
   point: CPoint,
   controllerFrame: ControllerFrame
 }
