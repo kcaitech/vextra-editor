@@ -1,17 +1,17 @@
 <script setup lang='ts'>
-import { defineProps, computed, ref, onMounted, onUnmounted, watchEffect } from "vue";
+import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { CtrlElementType } from "@/context/workspace";
+import { Action, CtrlElementType } from "@/context/workspace";
 import { AbsolutePosition } from "@/context/selection";
 import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
-import CtrlPoint from "../CtrlPoint.vue";
-import { CtrlRect } from "../SelectionView.vue";
+import CtrlPoint from "../Points/PointForRect.vue";
+import { ControllerFrame } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
 export type CPoint = [CtrlElementType, number, number, string];
 interface Props {
     context: Context,
-    ctrlRect: CtrlRect,
+    controllerFrame: ControllerFrame,
     isController: boolean
 }
 interface FramePosition {
@@ -26,14 +26,14 @@ const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
 const borderWidth = 2;
-const offset = 3.5;
+const offset = 14.5;
 let isDragging = false;
 let systemPosition: AbsolutePosition = { x: 0, y: 0 };
 let startPosition: AbsolutePosition = { x: 0, y: 0 };
 let root: AbsolutePosition = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 const points = computed<CPoint[]>(() => {
-    const { width, height } = props.ctrlRect;
+    const { width, height } = props.controllerFrame;
     const p1: CPoint = [CtrlElementType.RectLT, 0 - borderWidth, 0 - borderWidth, 'move']
     const p2: CPoint = [CtrlElementType.RectRT, width - 2 * borderWidth, 0 - borderWidth, 'move']
     const p3: CPoint = [CtrlElementType.RectRB, width - 2 * borderWidth, height - 2 * borderWidth, 'move']
@@ -46,45 +46,54 @@ const points = computed<CPoint[]>(() => {
     return ps;
 });
 let framePosition: FramePosition = {
-    top: `${props.ctrlRect.height}px`,
+    top: `${props.controllerFrame.height}px`,
     left: '50%',
     transX: -50,
     transY: 0,
     rotate: 0
 }
 function updater() {
-    let rotate = (props.ctrlRect.rotate || 0) % 360;
+    let rotate = (props.controllerFrame.rotate || 0) % 360;
     rotate = rotate < 0 ? rotate + 360 : rotate;
+    const { width, height } = props.controllerFrame;
     if (0 <= rotate && rotate < 45) {
-        framePosition = { top: `${props.ctrlRect.height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+        framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
     } else if (45 <= rotate && rotate < 135) {
-        framePosition = { top: '50%', left: `${props.ctrlRect.width + 10}px`, transX: -50, transY: -50, rotate: 270 }
+        framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
     } else if (135 <= rotate && rotate < 225) {
         framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
     } else if (225 <= rotate && rotate < 315) {
         framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
     } else if (315 <= rotate && rotate < 360) {
-        framePosition = { top: `${props.ctrlRect.height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+        framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
     }
 }
 
 function mousedown(e: MouseEvent) {
-    shapes = props.context.selection.selectedShapes;
-    if (!shapes.length) return;
-    props.context.editor4Shape(shapes[0]);
-    matrix.reset(workspace.value.matrix);
-    if (!props.isController || !props.context.repo) return;
-    const { clientX, clientY } = e;
-    root = workspace.value.root;
-    document.addEventListener('mousemove', mousemove);
-    document.addEventListener('mouseup', mouseup);
-    startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    systemPosition = { x: clientX, y: clientY };
-    props.context.repo.start('transform', {});
+    if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        const action = workspace.value.action;
+        if (action === Action.AutoV) {
+            // e.stopPropagation();
+            if (workspace.value.transforming) return;
+            shapes = props.context.selection.selectedShapes;
+            if (!shapes.length) return;
+            matrix.reset(workspace.value.matrix);
+            if (!props.isController || !props.context.repo) return;
+            const { clientX, clientY } = e;
+            root = workspace.value.root;
+            document.addEventListener('mousemove', mousemove);
+            document.addEventListener('mouseup', mouseup);
+            startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+            systemPosition = { x: clientX, y: clientY };
+            props.context.repo.start('transform', {});
+        }
+    }
 }
 function mousemove(e: MouseEvent) {
     const { clientX, clientY } = e;
     if (isDragging) {
+        workspace.value.translating(true);
+        props.context.selection.unHoverShape();
         const mousePosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
         const delta: AbsolutePosition = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
         transform(shapes, delta);
@@ -99,20 +108,23 @@ function transform(shapes: Shape[], delta: AbsolutePosition) {
         translate(shapes[i], delta.x, delta.y);
     }
 }
-function mouseup() {
+function mouseup(e: MouseEvent) {
+    if (workspace.value.transforming && e.button) return;
     if (isDragging) {
         props.context.repo?.commit({});
     } else {
         props.context.repo?.rollback();
     }
     isDragging = false;
+    workspace.value.translating(false);
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
 function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {
+    shapes = props.context.selection.selectedShapes;
     shapes.forEach(item => {
-        if (delta.deg !== 0 && item.rotation !== undefined) {
-            const newDeg = item.rotation + delta.deg;
+        if (delta.deg !== 0) {
+            const newDeg = (item.rotation || 0) + delta.deg;
             item.rotate(newDeg);
             delta.x = 0;
             delta.y = 0;
@@ -135,6 +147,7 @@ function handlePointAction(type: CtrlElementType, delta: { x: number, y: number,
 
 onMounted(() => {
     props.context.selection.watch(updater);
+
 })
 
 onUnmounted(() => {
@@ -146,22 +159,22 @@ watchEffect(updater)
 </script>
 <template>
     <div class="ctrl-rect" @mousedown="mousedown" :style="{
-        left: `${props.ctrlRect.x}px`,
-        top: `${props.ctrlRect.y}px`,
-        width: `${props.ctrlRect.width}px`,
-        height: `${props.ctrlRect.height}px`,
+        left: `${props.controllerFrame.x}px`,
+        top: `${props.controllerFrame.y}px`,
+        width: `${props.controllerFrame.width}px`,
+        height: `${props.controllerFrame.height}px`,
         borderWidth: '' + borderWidth + 'px',
-        transform: `rotate(${props.ctrlRect.rotate}deg)`
+        transform: `rotate(${props.controllerFrame.rotate}deg)`
     }">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context"
-            :ctrl-point-type="CtrlElementType.RectLT" :axle="props.ctrlRect.axle" :point="point"
-            @transform="handlePointAction"></CtrlPoint>
+        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.controllerFrame.axle"
+            :point="point" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <div class="frame" :style="{
             top: framePosition.top,
             left: framePosition.left,
             transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
         }">
-            <span>{{ `${props.ctrlRect.realWidth.toFixed(2)} * ${props.ctrlRect.realHeight.toFixed(2)}` }}</span>
+            <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+            }}</span>
         </div>
     </div>
 </template>

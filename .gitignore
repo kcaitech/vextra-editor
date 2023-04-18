@@ -6,3 +6,4 @@ package-lock.json
 .VSCodeCounter
 .DS_Store
 yarn.lock
+.vscode

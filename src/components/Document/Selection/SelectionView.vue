@@ -4,8 +4,8 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape } from "@kcdesign/data/data/shape";
 import { AbsolutePosition } from "@/context/selection";
-import RectangleCtrl from "./CtrlRect/RectangleCtrl.vue";
-export interface CtrlRect {
+import { CtrlGroupType, ctrlMap } from "./CtrlRect";
+export interface ControllerFrame {
     width: number,
     height: number,
     realWidth: number,
@@ -50,11 +50,11 @@ const data = reactive<{
     shapes: []
 });
 const shapes: Array<Shape> = [];
-
+const ctrlGroupType = ref<CtrlGroupType>(CtrlGroupType.Rect);
 const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
-const controlRect: CtrlRect = reactive({
+const controllerFrame: ControllerFrame = reactive({
     width: 0,
     height: 0,
     realWidth: 0,
@@ -175,19 +175,21 @@ function genControlRect() {
         xy1.x = xy1.x < cXY1.x ? cXY1.x : xy1.x;
         xy1.y = xy1.y < cXY1.y ? cXY1.y : xy1.y;
     }
-
-    controlRect.x = xy0.x;
-    controlRect.y = xy0.y;
-    controlRect.width = xy1.x - xy0.x;
-    controlRect.height = xy1.y - xy0.y;
-    controlRect.axle = matrix.inverseCoord((xy0.x + xy1.x) / 2, (xy0.y + xy1.y) / 2);
-    controlRect.realWidth = matrix.inverseCoord(xy1.x, xy1.y).x - matrix.inverseCoord(xy0.x, xy0.y).x;
-    controlRect.realHeight = matrix.inverseCoord(xy1.x, xy1.y).y - matrix.inverseCoord(xy0.x, xy0.y).y;
-
+    controllerFrame.x = xy0.x;
+    controllerFrame.y = xy0.y;
+    controllerFrame.width = xy1.x - xy0.x;
+    controllerFrame.height = xy1.y - xy0.y;
+    controllerFrame.axle = matrix.inverseCoord((xy0.x + xy1.x) / 2, (xy0.y + xy1.y) / 2);
+    controllerFrame.realWidth = matrix.inverseCoord(xy1.x, xy1.y).x - matrix.inverseCoord(xy0.x, xy0.y).x;
+    controllerFrame.realHeight = matrix.inverseCoord(xy1.x, xy1.y).y - matrix.inverseCoord(xy0.x, xy0.y).y;
     if (selection.length === 1) {
-        controlRect.rotate = selection[0].rotation || 0;
+        controllerFrame.rotate = selection[0].rotation || 0;
     } else {
-        controlRect.rotate = 0;
+        controllerFrame.rotate = 0;
+    }
+    ctrlGroupType.value = CtrlGroupType.Rect;
+    if (selection.length === 1 && selection[0].typeId === 'line-shape') {
+        ctrlGroupType.value = CtrlGroupType.Line;
     }
 }
 // hooks
@@ -213,9 +215,8 @@ watchEffect(updater)
         transform: `rotate(${s.rotate}deg)`
     }" :key="s.id" :reflush="reflush">
     </div>
-    <RectangleCtrl v-if="data.isSelect" :reflush="reflush" :context="props.context" :ctrl-rect="controlRect"
-        :is-controller="props.isController">
-    </RectangleCtrl>
+    <component v-if="data.isSelect" :is="ctrlMap.get(ctrlGroupType) ?? ctrlMap.get(CtrlGroupType.Rect)"
+        :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController"></component>
 </template>
 
 <style scoped lang="scss">

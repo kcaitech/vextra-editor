@@ -5,8 +5,9 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data/data/page";
 import { ShapeDirListIter, ShapeDirList } from "@kcdesign/data/service/shapedirlist"
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape, ShapeType } from "@kcdesign/data/data/shape";
 import { useI18n } from 'vue-i18n';
+import { Selection } from "@/context/selection";
 type List = InstanceType<typeof ListView>;
 
 class Iter implements IDataIter<ItemData> {
@@ -61,8 +62,15 @@ let listviewSource = new class implements IDataSource<ItemData> {
     }
 }
 
-function notifySourceChange() {
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE)
+function notifySourceChange(t?: number) {
+    if (t === Selection.CHANGE_SHAPE) {
+        const shapes = props.context.selection.selectedShapes;
+        shapes.forEach(item => {
+            const parent = item.parent;
+            if (parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent);
+        })
+    }
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 const stopWatch = watch(() => props.page, () => {
@@ -126,7 +134,7 @@ function unHovershape() {
     props.context.selection.unHoverShape();
 }
 
-const rename = ( value: string, shape: Shape) => { 
+const rename = (value: string, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
@@ -137,7 +145,7 @@ const isLock = (lock: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    if(!lock) {
+    if (!lock) {
         editor.value.setLock()
     }
 }
@@ -146,9 +154,18 @@ const isRead = (read: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    if(!read) {
+    if (!read) {
         editor.value.setVisible()
     }
+}
+function shapeScrollToContentView(shape: Shape) {
+    const workspace = props.context.workspace;
+    const { x: sx, y: sy, height, width } = shape.realXY();
+    const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
+    const { x, y, bottom, right } = workspace.root;
+    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
+    workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
+    workspace.matrixTransformation();
 }
 
 onMounted(() => {
@@ -175,8 +192,9 @@ onUnmounted(() => {
         <div class="body">
             <ListView ref="shapelist" location="shapelist" :source="listviewSource" :item-view="ShapeItem" :item-height="30"
                 :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
-                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape" 
-                @rename="rename" @isRead="isRead" @isLock="isLock" orientation="vertical">
+                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
+                @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"
+                orientation="vertical">
             </ListView>
         </div>
     </div>
