@@ -319,7 +319,7 @@ function contextMenuMount(e: MouseEvent) {
     const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
     contextMenuItems = ['paste', 'copy'];
     if (!shapes.length) {
-        contextMenuItems = ['paste'];
+        contextMenuItems = ['all', 'copy', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor','comment', 'ruler', 'pixel', 'operation'];
     } else if (shapes.length === 1) {
         contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom'];
         props.context.selection.selectShape(shapes[shapes.length - 1]);

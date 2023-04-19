@@ -11,7 +11,7 @@ interface Props {
   context: Context,
   layers?: Shape[],
   items: string[],
-  site:{ x: number, y: number }
+  site?:{ x: number, y: number }
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -33,6 +33,9 @@ function copy() {
 function paste() {
 
 }
+function selectAll() {
+
+}
 function closeLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = false;
 }
@@ -48,6 +51,11 @@ function closeLayerSubMenu(e: MouseEvent) {
       </ContextMenu>
     </div>
     <div class="line" v-if="props.items.includes('layers')"></div>
+    <!-- 常用功能 -->
+    <div class="item" v-if="props.items.includes('all')" @click="selectAll">
+      <span>{{ t('system.select_all') }}</span>
+      <span class="shortkey">Ctrl + V</span>
+    </div>
     <div class="item" v-if="props.items.includes('paste')" @click="paste">
       <span>{{ t('system.paste') }}</span>
       <span class="shortkey">Ctrl + V</span>
@@ -56,6 +64,37 @@ function closeLayerSubMenu(e: MouseEvent) {
       <span>{{ t('system.copy') }}</span>
       <span class="shortkey">Ctrl + C</span>
     </div>
+      <!-- 视图比例 -->
+    <div class="line" v-if="props.items.includes('half')"></div>
+    <div class="item" v-if="props.items.includes('half')"><span>50%</span></div>
+    <div class="item" v-if="props.items.includes('hundred')"><span>100%</span></div>
+    <div class="item" v-if="props.items.includes('double')"><span>200%</span></div>
+    <div class="item" v-if="props.items.includes('canvas')">
+      <span>{{ t('system.fit_canvas') }}</span>
+    </div>
+    <!-- 协作 -->
+    <div class="line" v-if="props.items.includes('cursor')"></div>
+    <div class="item" v-if="props.items.includes('cursor')">
+      <span>{{ t('system.show_many_cursor') }}</span>
+    </div>
+    <div class="item" v-if="props.items.includes('comment')">
+      <span>{{ t('system.show_comment') }}</span>
+      <span></span>
+    </div>
+    <!-- 界面显示 -->
+    <div class="line" v-if="props.items.includes('ruler')"></div>
+    <div class="item" v-if="props.items.includes('ruler')">
+      <span>{{ t('system.show_ruler') }}</span>
+    </div>
+    <div class="item" v-if="props.items.includes('pixel')">
+      <span>{{ t('system.show_pixel_network') }}</span>
+      <span></span>
+    </div>
+    <div class="item" v-if="props.items.includes('operation')">
+      <span>{{ t('system.hide_operation_interface') }}</span>
+      <span></span>
+    </div>
+    <!-- 顺序调整 -->
     <div class="line" v-if="props.items.includes('forward')"></div>
     <div class="item" v-if="props.items.includes('forward')">
       <span>{{ t('system.bring_forward') }}</span>
@@ -72,6 +111,7 @@ function closeLayerSubMenu(e: MouseEvent) {
       <span>{{ t('system.send_to_bottom') }}</span>
       <span></span>
     </div>
+    <!-- 隐藏/锁定 -->
     <div class="line" v-if="props.items.includes('visible')"></div>
     <div class="item" v-if="props.items.includes('visible')">
       <span>{{ t('system.visible') }}</span>

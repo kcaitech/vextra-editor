@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { defineProps, onMounted, onUnmounted, ref, watch, computed } from "vue";
+import { defineProps, onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data/data/page";
-import { ShapeDirListIter, ShapeDirList } from "@kcdesign/data/service/shapedirlist"
+import { ShapeDirListIter, ShapeDirList } from "@kcdesign/data/service/shapedirlist";
 import { Shape } from "@kcdesign/data/data/shape";
 import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data/data/typesdefine';
-import { Selection } from '@/context/selection'
+import { Selection } from '@/context/selection';
+import ContextMenu from '@/components/common/ContextMenu.vue';
+import PageViewContextMenuItems from "../Selection/PageViewContextMenuItems.vue";
 type List = InstanceType<typeof ListView>;
-
+type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
     private __it: ShapeDirListIter | undefined;
     constructor(it: ShapeDirListIter | undefined) {
@@ -37,11 +39,14 @@ class Iter implements IDataIter<ItemData> {
         }
     }
 }
-const props = defineProps<{ context: Context, page: Page }>();
+const props = defineProps<{ context: Context, page: Page, pageHeight: number }>();
 const { t } = useI18n();
-
+const MOUSE_RIGHT = 2
 const shapeListMap: Map<string, ShapeDirList> = new Map();
-
+const chartMenu = ref<boolean>(false)
+const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
+let chartMenuItems: string[] = [];
+const contextMenuEl = ref<ContextMenuEl>();
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
 
@@ -69,7 +74,7 @@ function notifySourceChange(t?: number) {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
             const parent = item.parent
-            // if(parent?.parent) toggleExpand(parent.parent) //父级还有父级          
+            if(parent?.parent && parent.parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent.parent)) toggleExpand(parent.parent) //父级还有父级          
             if (parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent)
             const indexItem = shapeDirList.indexOf(item)
             if (ListBody.value) {
@@ -182,9 +187,52 @@ function shapeScrollToContentView(shape: Shape) {
     workspace.matrixTransformation();
 }
 
-function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
-    const docEditor = props.context.editor4Doc();
-    docEditor.move(params.dragTarget, params.to);
+function updateAfterDrag(params: { shape?:any, from: number, to: number, dragTarget: any }) {
+    // const docEditor = props.context.editor4Page(props.page);
+    // docEditor.move(params.shape, params.dragTarget, params.to);
+}
+
+const MouseDown = (e: MouseEvent) => {
+    chartMenu.value = false
+    if(e.button === MOUSE_RIGHT) {
+        e.stopPropagation()
+        const menu = contextMenuEl.value?.menu?.className
+        if(e.target instanceof Element && e.target.closest(`.${menu}`)) return
+        chartMenuMount(e)
+    }
+}
+
+const chartMenuMount = (e: MouseEvent) => {
+    chartMenuPosition.value.x = e.clientX
+    chartMenuPosition.value.y = e.clientY - props.pageHeight - ListBody.value!.offsetTop - 12
+    chartMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom']
+    chartMenu.value = true
+    e.stopPropagation()
+    document.addEventListener('keydown', Menuesc);
+    nextTick(() => {
+        if (contextMenuEl.value) {
+            const el = contextMenuEl.value.menu;
+            let sy =  document.documentElement.clientHeight - e.clientY //点击图形列表剩余的高度
+            if (el) {
+                const height = el.offsetHeight //菜单高度
+                if(sy - 30 < height) {
+                    let top = height - sy + 30
+                    el.style.top = chartMenuPosition.value.y - top + 'px'
+                }
+                el.style.borderRadius = 4 + 'px'
+                el.style.width = 180 + 'px'
+            }
+        }
+    
+    })
+}
+
+function Menuesc(e: KeyboardEvent) {
+    if (e.code === 'Escape') chartMenuUnmount();
+}
+function chartMenuUnmount() {
+    document.removeEventListener('keydown', Menuesc);
+    chartMenu.value = false;
 }
 
 onMounted(() => {
@@ -213,8 +261,13 @@ onUnmounted(() => {
                 :item-height="30" :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
                 @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
                 @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"
-                @update-after-drag="updateAfterDrag" orientation="vertical">
+                @update-after-drag="updateAfterDrag" @onMouseDown="MouseDown" orientation="vertical">
             </ListView>
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount" ref="contextMenuEl">
+            <PageViewContextMenuItems :items="chartMenuItems"
+                :context="props.context">
+            </PageViewContextMenuItems>
+            </ContextMenu>
         </div>
     </div>
 </template>

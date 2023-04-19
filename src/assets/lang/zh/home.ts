@@ -13,7 +13,14 @@ export const system = {
     'bring_to_top': '置于顶层',
     'send_to_bottom': '置于底层',
     'visible': '显示/隐藏',
-    'Lock': '锁定/解锁'
+    'Lock': '锁定/解锁',
+    'select_all': '选择全部',
+    'fit_canvas': '适应画布',
+    'show_many_cursor': '显示多人光标',
+    'show_comment': '显示评论',
+    'show_ruler': '显示标尺',
+    'show_pixel_network': '显示像素网络',
+    'hide_operation_interface': '隐藏操作界面'
 }
 
 export const home = {
