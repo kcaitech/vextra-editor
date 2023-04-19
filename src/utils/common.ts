@@ -1,6 +1,7 @@
 import { CtrlElementType } from '@/context/workspace';
 import scaleBase64 from "@/assets/cursor/scale.png";
 import rotateBase64 from '@/assets/cursor/rotate.png';
+import { XY } from '@/context/selection';
 
 export function genOptions(items: string[][]) {
   return items.map((item: string[], index: number) => {
@@ -93,6 +94,7 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
 // p1 p2
 // p4 p3
 export function createRect(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
+  // debugger
   const left = Math.min(x1, x2, x3, x4);
   const top = Math.min(y1, y2, y3, y4);
   const right = Math.max(x1, x2, x3, x4);
@@ -101,9 +103,9 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
   const diagonal1 = Math.hypot(x1 - x3, y1 - y3);
   const width = Math.abs(diagonal1 * Math.cos(corner * (Math.PI / 180)));
   const height = Math.abs(diagonal1 * Math.sin(corner * (Math.PI / 180)));
+  const angle = getHorizontalAngle({ x: x1, y: y1 }, { x: x2, y: y2 });
   const transX = ((right - left) - width) / 2;
   const transY = ((bottom - top) - height) / 2;
-  const angle = getAngle([x2, y2, x1, y1], [2, 1, 1, 1]);
 
   return "position: absolute; " +
     `left: ${left}px; ` +
@@ -111,13 +113,33 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
     `width: ${width}px;` +
     `height: ${height}px;` +
     "border: 2px solid orange; " +
-    `transform: translate(${transX}px, ${transY}px) rotate(${-angle}deg);`;
+    `transform: translate(${transX}px, ${transY}px) rotate(${angle}deg);`;
 }
 // 根据矩形的四个点获取其中心轴
-export function getAxle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
+// p1 p2
+// p4 p3
+export function getAxle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): XY {
   const left = Math.min(x1, x2, x3, x4);
   const top = Math.min(y1, y2, y3, y4);
   const right = Math.max(x1, x2, x3, x4);
   const bottom = Math.max(y1, y2, y3, y4);
   return { x: (left + right) / 2, y: (top + bottom) / 2 };
+}
+// 根据矩形的四个点，获取宽高
+// p1 p2
+// p4 p3
+export function getRectWH(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
+  const corner = getAngle([x3, y3, x1, y1], [x3, y3, x4, y4]);
+  const diagonal1 = Math.hypot(x1 - x3, y1 - y3);
+  const width = Math.abs(diagonal1 * Math.cos(corner * (Math.PI / 180)));
+  const height = Math.abs(diagonal1 * Math.sin(corner * (Math.PI / 180)));
+  return { width, height }
+}
+
+export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
+  const deltaX = B.x - A.x;
+  const deltaY = B.y - A.y;
+  const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+  const angle = (angleInDegrees + 360) % 360; // 将负角度转换为正角度
+  return angle;
 }

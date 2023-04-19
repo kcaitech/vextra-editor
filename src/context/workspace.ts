@@ -2,6 +2,7 @@ import { Watchable } from "@kcdesign/data/data/basic";
 import { Repository } from "@kcdesign/data/data/transact";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
 import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Context } from "./index";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -24,7 +25,8 @@ export enum KeyboardKeys { // 键盘按键类型
     Right = 'ArrowRight',
     K = 'KeyK',
     O = 'KeyO',
-    F = 'KeyF'
+    F = 'KeyF',
+    Digit0 = 'Digit0'
 }
 export enum CursorType { // 光标类型
     Crosshair = '-webkit-image-set(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABClJREFUaEPtVztMFFEUvbuAgmJ0F+gQlGQmULCAEFDooGGmobGxIEKMITYqiRpBrfxGTVAbQ4whhsLGhoalgQ4UAll2KCAzCQrSgaBR8QO7a874Ho7IZ5Z54JLMS17e/Oee+znnPg/t8uHZ5faTC+B/R9CNgBsBhx5wU8ihAx2/7kbAsQsdfkB0BLxEpjjyFebFiChqWR2a/PfrIgHA6GQiSmEzif0qQkRLbC4zMMJAiAKA78Dw1NnZ2RuZmZmXrBbOzc09zMrKuklE3xkQREXIEAkglYjSp6amrufk5Jzv6OgIeTyeWENDw7Hp6eknubm5t4joCwORcACQPvuI6JCu662SJJ1TVXUSLu7u7s4zDOOpLMt3iOgjES2KTCNREUC+7yeiDE3TWgoLC8+qqvqOATgyNjb2LBAI3CWiD0T0lYhQF0KGSAAHACAcDrcEAoEzqqpOMwA5mqY9Lyoq4gA+7woAiqJMAUAwGMxNJACreR4RxEQKpRORPxQKXS4uLm60RmB0dLSjpKTkARHNs0JGCqGQ+dyyTsSTQqt5HpzPAQEAivjg4ODghfLy8norgKGhoc6KiorHRPSJFTEHAMOhDVvWCbsANuT5tapRUZT3LIUOb1atTnQiHgD/8Hw0GkUEMDyxWMzDzr1Yu7q6EBGqq6tb9Hq98HQUK7SBpQ7hvLGxscSJTtgFsCbPB4PBvM28u9F9RVEmnepEPADA877x8fHW/Pz8JsMw3loiQIiA2bmxtbm52Txva2szVZd5fmXFNURAkqSjExMT7QUFBRC6BaYTiJitEQ8As0h1Xb/m9/uPLy0tJcNYbnA0iuzwmOfZ2dn5tbW1M7Cgp6cne2ZmZuL3rVjM6/WuAMK1lJSU5fn5+TeyLN+2FLlwAACKGkAUIFigTADaw2gU93Gc1tvbW19dXX3SWsR9fX2vampqOonoGxH9tNAnjtFaoEeCwEGl0fDZ7pXsRgDPgTYBgs+9jP95/58GYP39/U2VlZWnrAAGBgZeVlVVtTNDAYLzPuj0BzMahmOCVoUDMFOWgQAQTHC/VcjMZm54ePhiaWnpaasOjIyMvCgrK3tkaeasQoZjGM2n7fQxa8tWpfx5iBts3XHhLgAhrTJCodCVdZT4PmvmkC4wlg/rjs225/nL8QJYDy+igdrIDIfDV9dp5u4R0RzL9YTsRhEBADC70XWaOQBABBISABjKr2laK/YDuq6b+wFZlvl+ADyPZi4h9wNcqQ8ahtHq8/lORCIRc1OflJQUWVhYeC1JEgDwZi6uQt2oTkXVwFo6AVrFAG1umec3IxmRAFbrBIQNA2LFOT5unt8pAGvpBO9Uec+/JZ7fSQBcV7gyW//NlTdunt9pAJv9T/h9UTUg3DC7H3QB2PXUdj3nRmC7PGv3u24E7Hpqu55zI7BdnrX73V/2V8NA1VQ9gwAAAABJRU5ErkJggg==)1.5x)13 13, crosshair',
@@ -61,6 +63,7 @@ export class WorkSpace extends Watchable(Object) {
     static CURSOR_CHANGE = 2;
     static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
+    private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
     private m_clip_board: any; // 剪切板
@@ -68,15 +71,17 @@ export class WorkSpace extends Watchable(Object) {
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
     private m_translating: boolean = false; // 编辑器是否正在移动图形
-    constructor() {
+    constructor(context: Context) {
         super();
+        this.context = context
     }
     get root() { //return contentView HTMLElement
-        const root = { x: 332, y: 30, bottom: 0, right: 0, element: undefined };
+        const root = { x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
         let content: any = document.querySelectorAll('#content');
         content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === 'content');
         if (content) {
             const { x, y, bottom, right } = content.getBoundingClientRect();
+            root.center = { x: (x + right) / 2, y: (y + bottom) / 2 };
             root.x = x;
             root.y = y;
             root.bottom = bottom;
@@ -99,6 +104,27 @@ export class WorkSpace extends Watchable(Object) {
     }
     get transforming() {
         return this.m_scaling || this.m_rotating || this.m_translating;
+    }
+    keyboardHandle(event: KeyboardEvent) {
+        const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
+        if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
+        if (event.code === KeyboardKeys.R) {
+            this.keydown_r();
+        } else if (event.code === KeyboardKeys.V) {
+            this.keydown_v();
+        } else if (event.code === KeyboardKeys.L) {
+            this.keydown_l(shiftKey);
+        } else if (event.code === KeyboardKeys.Z) {
+            this.keydown_z(this.context.repo, ctrlKey, shiftKey, metaKey);
+        } else if (event.code === KeyboardKeys.K) {
+            this.keydown_k();
+        } else if (event.code === KeyboardKeys.O) {
+            this.keydown_o();
+        } else if (event.code === KeyboardKeys.F) {
+            this.keydown_f();
+        } else if (event.code === KeyboardKeys.Digit0) {
+            this.keydown_0(ctrlKey);
+        }
     }
     matrixTransformation() { // 矩阵发生变换
         this.notify(WorkSpace.MATRIX_TRANSFORMATION)
@@ -123,7 +149,7 @@ export class WorkSpace extends Watchable(Object) {
     rotating(v: boolean) {
         this.m_rotating = v;
     }
-    translating(v: boolean) {        
+    translating(v: boolean) {
         this.m_translating = v;
     }
 
@@ -149,7 +175,7 @@ export class WorkSpace extends Watchable(Object) {
             repo.canRedo() && repo.redo();
         }
     }
-    keydown_K() {
+    keydown_k() {
         this.escSetup();
         this.m_current_action = Action.AutoK;
         this.notify();
@@ -164,6 +190,16 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddFrame;
         this.notify();
     }
+    keydown_0(ctrl: boolean) {
+        if (ctrl) {
+            const { center } = this.root;
+            this.m_matrix.trans(-center.x, -center.y);
+            const _s = 1 / this.m_matrix.toArray()[0];
+            this.m_matrix.scale(_s);
+            this.m_matrix.trans(center.x, center.y);
+            this.notify(WorkSpace.MATRIX_TRANSFORMATION);
+        }
+    }
     escSetup() { // 安装取消当前状态的键盘事件(Esc)，在开启一个状态的时候应该考虑关闭状态的处理！
         if (WorkSpace.ESC_EVENT_POINTER) {
             document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
@@ -171,8 +207,8 @@ export class WorkSpace extends Watchable(Object) {
         WorkSpace.ESC_EVENT_POINTER = this.esc.bind(this);
         document.addEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
     }
-    esc(e: KeyboardEvent) {
-        if (e.code === 'Escape') {
+    esc(event: KeyboardEvent) {
+        if (event.code === 'Escape') {
             this.setAction(Action.AutoV);
             document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
             WorkSpace.ESC_EVENT_POINTER = undefined;

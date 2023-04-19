@@ -15,13 +15,6 @@ export interface XY {
     y: number
 }
 
-export enum CtrlPointType {
-    LT = 'lt',
-    RT = 'rt',
-    RB = 'rb',
-    LB = 'lb'
-}
-
 export type ActionType = 'translate' | 'scale' | 'rotate'
 
 export class Selection extends Watchable(Object) implements ISave4Restore {
@@ -173,9 +166,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     hoverShape(shape: Shape) {
-        if (this.isSelectedShape(shape)) {
-            return;
-        }
+        this.m_hoverShape = undefined;
         this.m_hoverShape = shape;
         this.notify(Selection.CHANGE_SHAPE_HOVER);
     }

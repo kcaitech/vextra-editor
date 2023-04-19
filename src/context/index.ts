@@ -22,7 +22,7 @@ export class Context extends Watchable(Object) {
         this.m_data = data;
         this.m_selection = new Selection(data);
         this.m_repo = repo;
-        this.m_workspace = new WorkSpace();
+        this.m_workspace = new WorkSpace(this);
     }
 
     get editor(): Editor {

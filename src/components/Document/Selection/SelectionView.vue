@@ -3,12 +3,12 @@ import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from 
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape } from "@kcdesign/data/data/shape";
-import { CtrlGroupType, ctrlMap } from "./CtrlRect";
-import { CtrlPointType } from "@/context/selection";
+import { ControllerType, ctrlMap } from "./CtrlRect";
+import { CtrlElementType } from "@/context/workspace";
 export interface Point {
     x: number,
     y: number,
-    type: CtrlPointType
+    type: CtrlElementType
 }
 const reflush = ref(0);
 const watcher = () => {
@@ -31,7 +31,8 @@ interface ShapeSelectData {
     axle: {
         x: number,
         y: number
-    }
+    },
+    isSelected: boolean
 }
 const data = reactive<{
     isHover: boolean,
@@ -43,7 +44,7 @@ const data = reactive<{
     shapes: []
 });
 const shapes: Array<Shape> = [];
-const ctrlGroupType = ref<CtrlGroupType>(CtrlGroupType.Rect);
+const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
@@ -61,7 +62,8 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
         axle: {
             x: 0,
             y: 0
-        }
+        },
+        isSelected: false
     };
     data.id = shape.id;
 
@@ -83,6 +85,7 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
     data.width = xy1.x - xy0.x - borderWidth;
     data.height = xy1.y - xy0.y - borderWidth;
     data.rotate = shape.rotation || 0;
+    data.isSelected = props.context.selection.isSelectedShape(shape)
     return data;
 }
 function updater() {
@@ -90,7 +93,6 @@ function updater() {
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
     data.isSelect = selection.selectedShapes.length > 0;
-
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -117,6 +119,7 @@ function updater() {
             shapes[0].watch(watcher);
         }
         data.shapes[0] = updateShape(data.shapes[0], selection.hoveredShape as Shape);
+        createController();
     }
     else if (data.isSelect) {
         data.shapes.length = selection.selectedShapes.length;
@@ -141,19 +144,22 @@ function updater() {
                 // do nothing
             }
         }
-        genControlRect();
+        createController(); // 根据已选图层生成控制器
     }
 }
-function genControlRect() {
+function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;
+    if (!selection.length) return;
     const shape = selection[0];
     const m = shape.matrix2Root();
     const frame = shape.frame;
+    // p1 p2
+    // p4 p3
     const points = [
-        { x: 0, y: 0, type: CtrlPointType.LT },
-        { x: frame.width, y: 0, type: CtrlPointType.RT },
-        { x: frame.width, y: frame.height, type: CtrlPointType.LB },
-        { x: 0, y: frame.height, type: CtrlPointType.RB }
+        { x: 0, y: 0, type: CtrlElementType.RectLT },
+        { x: frame.width, y: 0, type: CtrlElementType.RectRT },
+        { x: frame.width, y: frame.height, type: CtrlElementType.RectRB },
+        { x: 0, y: frame.height, type: CtrlElementType.RectLB }
     ];
     controllerFrame.value = points.map(p => {
         let _s = m.computeCoord(p.x, p.y)
@@ -161,8 +167,8 @@ function genControlRect() {
         p.x = _p.x; p.y = _p.y;
         return p;
     });
-    // const points = [{ x: 0, y: 0 }, { x: 0, y: 0 }].map((p) => matrix.inverseCoord(p.x, p.y)).map((p) => m.inverseCoord(p.x, p.y))
-    ctrlGroupType.value = CtrlGroupType.Rect;
+    // const points = [{ x: 0, y: 0 }, { x: 0, y: 0 }].map((p) => matrix.inverseCoord(p.x, p.y)).map((p) => m.inverseCoord(p.x, p.y));
+    controllerType.value = ControllerType.Rect;
 }
 // hooks
 onMounted(() => {
@@ -173,7 +179,6 @@ onUnmounted(() => {
     props.context.selection.unwatch(updater);
     shapes.length = 0;
 })
-
 watchEffect(updater)
 </script>
 
@@ -183,11 +188,11 @@ watchEffect(updater)
         top: '' + s.y + 'px',
         width: '' + s.width + 'px',
         height: '' + s.height + 'px',
-        borderWidth: '' + borderWidth + 'px',
+        borderWidth: `${s.isSelected ? 0 : borderWidth}px`,
         transform: `rotate(${s.rotate}deg)`
     }" :key="s.id" :reflush="reflush">
     </div>
-    <component v-if="data.isSelect" :is="ctrlMap.get(ctrlGroupType) ?? ctrlMap.get(CtrlGroupType.Rect)"
+    <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
         :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController"></component>
 </template>
 

@@ -8,12 +8,11 @@ import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
 import { Point } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
-import { createRect } from "@/utils/common"
-export type CPoint = [CtrlElementType, number, number, string];
+import { createRect, getAxle, getRectWH } from "@/utils/common"
 interface Props {
     context: Context,
-    controllerFrame: Point[],
     isController: boolean
+    controllerFrame: Point[],
 }
 interface FramePosition {
     top: string,
@@ -27,26 +26,31 @@ const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
 const borderWidth = 2;
-const offset = 14.5;
+const offset = 17; 
 let isDragging = false;
 let systemPosition: XY = { x: 0, y: 0 };
 let startPosition: XY = { x: 0, y: 0 };
 let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 let rectStyle: string;
-// const points = computed<CPoint[]>(() => {
-//     const { width, height } = props.controllerFrame;
-//     const p1: CPoint = [CtrlElementType.RectLT, 0 - borderWidth, 0 - borderWidth, 'move']
-//     const p2: CPoint = [CtrlElementType.RectRT, width - 2 * borderWidth, 0 - borderWidth, 'move']
-//     const p3: CPoint = [CtrlElementType.RectRB, width - 2 * borderWidth, height - 2 * borderWidth, 'move']
-//     const p4: CPoint = [CtrlElementType.RectLB, 0 - borderWidth, height - 2 * borderWidth, 'move']
-//     const ps: CPoint[] = [p1, p2, p4, p3];
-//     ps.forEach(p => {
-//         p[1] -= offset;
-//         p[2] -= offset;
-//     })
-//     return ps;
-// });
+const points = computed<Point[]>(() => {
+    const [lt, rt, rb, lb] = props.controllerFrame;
+    const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+    const p1: Point = { x: 0, y: 0, type: CtrlElementType.RectLT };
+    const p2: Point = { x: width - borderWidth, y: 0, type: CtrlElementType.RectRT };
+    const p3: Point = { x: width - borderWidth, y: height - borderWidth, type: CtrlElementType.RectRB };
+    const p4: Point = { x: 0, y: height - borderWidth, type: CtrlElementType.RectLB };
+    const ps: Point[] = [p1, p2, p4, p3];
+    ps.forEach(p => {
+        p.x -= offset;
+        p.y -= offset;
+    })
+    return ps;
+});
+const axle = computed<XY>(() => {
+    const [lt, rt, rb, lb] = props.controllerFrame;
+    return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+});
 // let framePosition: FramePosition = {
 //     top: `${props.controllerFrame.height}px`,
 //     left: '50%',
@@ -68,7 +72,7 @@ function updater() {
     //     framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
     // } else if (315 <= rotate && rotate < 360) {
     //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-    // }
+    // }    
     getRect(props.controllerFrame);
 }
 function getShapesByXY() {
@@ -135,9 +139,8 @@ function mouseup(e: MouseEvent) {
         document.removeEventListener('mouseup', mouseup);
     }
 }
-function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {
+function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {    
     shapes = props.context.selection.selectedShapes;
-
     shapes.forEach(item => {
         if (delta.deg !== 0) {
             const newDeg = (item.rotation || 0) + delta.deg;
@@ -188,16 +191,16 @@ watchEffect(updater)
 </script>
 <template>
     <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
-        <!-- <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="props.controllerFrame.axle"
-                    :point="point" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
-                <div class="frame" :style="{
-                    top: framePosition.top,
-                    left: framePosition.left,
-                    transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
-                }">
-                    <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
-                    }}</span>
-                </div> -->
+        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
+            @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
+        <!-- <div class="frame" :style="{
+                                    top: framePosition.top,
+                                    left: framePosition.left,
+                                    transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
+                                }">
+                                    <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+                                    }}</span>
+                                </div> -->
     </div>
 </template>
 <style lang='scss' scoped>

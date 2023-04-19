@@ -11,7 +11,7 @@ import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
 import { Repository } from '@kcdesign/data/data/transact';
 import { SCREEN_SIZE } from '@/utils/setting';
-import { KeyboardKeys, WorkSpace } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
 
 const props = defineProps<{ data: Document, repo: Repository }>();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -48,24 +48,8 @@ function selectionWatcher(t: number) {
         curPage.value = ctx.selection.selectedPage;
     }
 }
-function keyboardEventHandler(e: KeyboardEvent) {
-    const { ctrlKey, shiftKey, metaKey, altKey, target } = e;
-    if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
-    if (e.code === KeyboardKeys.R) {
-        workspace.value.keydown_r();
-    } else if (e.code === KeyboardKeys.V) {
-        workspace.value.keydown_v();
-    } else if (e.code === KeyboardKeys.L) {
-        workspace.value.keydown_l(shiftKey);
-    } else if (e.code === KeyboardKeys.Z) {
-        workspace.value.keydown_z(props.repo, ctrlKey, shiftKey, metaKey);
-    } else if (e.code === KeyboardKeys.K) {
-        workspace.value.keydown_K();
-    } else if (e.code === KeyboardKeys.O) {
-        workspace.value.keydown_o();
-    } else if (e.code === KeyboardKeys.F) {
-        workspace.value.keydown_f();
-    }
+function keyboardEventHandler(evevt: KeyboardEvent) {
+    workspace.value.keyboardHandle(evevt)
 }
 
 onMounted(() => {
