@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
-import { translate, translateTo, expandTo } from "@kcdesign/data/editor/frame";
+import { translate, translateTo, expandTo, translateByClientCroop } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
 import { Point } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
@@ -26,9 +26,8 @@ const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
 const borderWidth = 2;
-const offset = 17; 
+const offset = 17;
 let isDragging = false;
-let systemPosition: XY = { x: 0, y: 0 };
 let startPosition: XY = { x: 0, y: 0 };
 let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
@@ -96,35 +95,33 @@ function mousedown(e: MouseEvent) {
             root = workspace.value.root;
             document.addEventListener('mousemove', mousemove);
             document.addEventListener('mouseup', mouseup);
-            startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-            systemPosition = { x: clientX, y: clientY };
+            startPosition = { x: clientX - root.x, y: clientY - root.y };
         }
     }
 }
 function mousemove(e: MouseEvent) {
     if (e.button === 0) { //只处理鼠标左键按下时的移动
         const { clientX, clientY } = e;
+        const mousePosition = { x: clientX - root.x, y: clientY - root.y };
         if (isDragging) {
             workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
             props.context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
-            const mousePosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-            const delta: XY = { x: mousePosition.x - startPosition.x, y: mousePosition.y - startPosition.y };
-            transform(shapes, delta);
-            props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
-            startPosition = { x: mousePosition.x, y: mousePosition.y };
+            transform(shapes, matrix, startPosition, mousePosition);
+            startPosition = { ...mousePosition };
         } else {
-            if (Math.hypot(systemPosition.x - clientX, systemPosition.y - clientY) > dragActiveDis) { // 是否开始移动的判定条件
+            if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
                 isDragging = true;
                 props.context.repo.start('transform', {}); // 开启当前事务,事务在结束(commit/rollback)之前只能开启一次!!! ---begin transaction---
             }
         }
     }
 }
-function transform(shapes: Shape[], delta: XY) {
+function transform(shapes: Shape[], matrix: Matrix, satrt: XY, end: XY) {
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
-        translate(shapes[i], delta.x, delta.y);
+        translateByClientCroop(shapes[i], matrix, satrt, end);
     }
+    props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
 }
 function mouseup(e: MouseEvent) {
     if (e.button === 0) { // 只处理鼠标左键按下时的抬起
@@ -139,7 +136,7 @@ function mouseup(e: MouseEvent) {
         document.removeEventListener('mouseup', mouseup);
     }
 }
-function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {    
+function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {
     shapes = props.context.selection.selectedShapes;
     shapes.forEach(item => {
         if (delta.deg !== 0) {
@@ -194,13 +191,13 @@ watchEffect(updater)
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
             @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <!-- <div class="frame" :style="{
-                                    top: framePosition.top,
-                                    left: framePosition.left,
-                                    transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
-                                }">
-                                    <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
-                                    }}</span>
-                                </div> -->
+                                                                    top: framePosition.top,
+                                                                    left: framePosition.left,
+                                                                    transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
+                                                                }">
+                                                                    <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+                                                                    }}</span>
+                                                                </div> -->
     </div>
 </template>
 <style lang='scss' scoped>

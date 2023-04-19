@@ -94,7 +94,6 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
 // p1 p2
 // p4 p3
 export function createRect(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
-  // debugger
   const left = Math.min(x1, x2, x3, x4);
   const top = Math.min(y1, y2, y3, y4);
   const right = Math.max(x1, x2, x3, x4);

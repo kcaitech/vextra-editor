@@ -15,7 +15,7 @@ export interface XY {
     y: number
 }
 
-export type ActionType = 'translate' | 'scale' | 'rotate'
+export type ActionType = 'translate' | 'scale' | 'rotate';
 
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
@@ -66,7 +66,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
-                const suppos = { x: position.x - x, y: position.y - y }
+                const suppos = { x: position.x - x, y: position.y - y };
                 if (source[i].childs?.length) deep(source[i].childs, suppos);
             }
         }

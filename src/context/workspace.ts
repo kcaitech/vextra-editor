@@ -123,11 +123,11 @@ export class WorkSpace extends Watchable(Object) {
         } else if (event.code === KeyboardKeys.F) {
             this.keydown_f();
         } else if (event.code === KeyboardKeys.Digit0) {
-            this.keydown_0(ctrlKey);
+            this.keydown_0(ctrlKey, metaKey);
         }
     }
-    matrixTransformation() { // 矩阵发生变换
-        this.notify(WorkSpace.MATRIX_TRANSFORMATION)
+    matrixTransformation() { // 页面坐标系发生变化
+        this.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     setAction(action: Action) {
         if (action === Action.AutoV && WorkSpace.ESC_EVENT_POINTER) {
@@ -190,8 +190,8 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddFrame;
         this.notify();
     }
-    keydown_0(ctrl: boolean) {
-        if (ctrl) {
+    keydown_0(ctrl: boolean, meta: boolean) {
+        if (ctrl || meta) {
             const { center } = this.root;
             this.m_matrix.trans(-center.x, -center.y);
             const _s = 1 / this.m_matrix.toArray()[0];
