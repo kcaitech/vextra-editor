@@ -98,11 +98,12 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
   const top = Math.min(y1, y2, y3, y4);
   const right = Math.max(x1, x2, x3, x4);
   const bottom = Math.max(y1, y2, y3, y4);
-  const corner = getAngle([x3, y3, x1, y1], [x3, y3, x4, y4]);
-  const diagonal1 = Math.hypot(x1 - x3, y1 - y3);
-  const width = Math.abs(diagonal1 * Math.cos(corner * (Math.PI / 180)));
-  const height = Math.abs(diagonal1 * Math.sin(corner * (Math.PI / 180)));
+  
+  const width = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  const height = Math.sqrt(Math.pow(x3 - x2, 2) + Math.pow(y3 - y2, 2));
+
   const angle = getHorizontalAngle({ x: x1, y: y1 }, { x: x2, y: y2 });
+
   const transX = ((right - left) - width) / 2;
   const transY = ((bottom - top) - height) / 2;
 
@@ -124,14 +125,12 @@ export function getAxle(x1: number, y1: number, x2: number, y2: number, x3: numb
   const bottom = Math.max(y1, y2, y3, y4);
   return { x: (left + right) / 2, y: (top + bottom) / 2 };
 }
-// 根据矩形的四个点，获取宽高
+// 根据矩形的三个点，获取矩形宽高
 // p1 p2
 // p4 p3
-export function getRectWH(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
-  const corner = getAngle([x3, y3, x1, y1], [x3, y3, x4, y4]);
-  const diagonal1 = Math.hypot(x1 - x3, y1 - y3);
-  const width = Math.abs(diagonal1 * Math.cos(corner * (Math.PI / 180)));
-  const height = Math.abs(diagonal1 * Math.sin(corner * (Math.PI / 180)));
+export function getRectWH(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) {
+  const width = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  const height = Math.sqrt(Math.pow(x3 - x2, 2) + Math.pow(y3 - y2, 2));
   return { width, height }
 }
 
@@ -139,6 +138,6 @@ export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, 
   const deltaX = B.x - A.x;
   const deltaY = B.y - A.y;
   const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
-  const angle = (angleInDegrees + 360) % 360; // 将负角度转换为正角度
+  const angle = (angleInDegrees + 360) % 360;
   return angle;
 }

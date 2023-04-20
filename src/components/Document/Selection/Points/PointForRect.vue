@@ -13,7 +13,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  (e: 'transform', type: CtrlElementType, delta: { x: number, y: number, deg: number },): void
+  (e: 'transform', type: CtrlElementType, p1: XY, p2: XY, deg: number): void
 }>();
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
@@ -21,7 +21,6 @@ const dragActiveDis = 3;
 const pointContainer = ref<HTMLElement>();
 let isDragging = false;
 let startPosition = { x: 0, y: 0 };
-let systemPosition = { x: 0, y: 0 };
 let root = { x: 0, y: 0 };
 let scaling: boolean = false;
 let rotating: boolean = false;
@@ -61,7 +60,7 @@ function getCtrlElementType(event: MouseEvent) {
 }
 
 // mouse event flow: down -> move -> up
-function onMouseDown(event: MouseEvent) {  
+function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
     const ct = getCtrlElementType(event);
     if (ct) {
@@ -72,8 +71,7 @@ function onMouseDown(event: MouseEvent) {
       clt = getCtrlElementType(event);
       matrix.reset(workspace.value.matrix);
       root = workspace.value.root;
-      startPosition = matrix.inverseCoord(clientX - root.x, clientY - root.y);      
-      systemPosition = { x: clientX, y: clientY };
+      startPosition = { x: clientX - root.x, y: clientY - root.y }
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
     }
@@ -81,23 +79,21 @@ function onMouseDown(event: MouseEvent) {
 }
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
+  const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
   if (isDragging) {
-    const mouseOnPage = matrix.inverseCoord(clientX - root.x, clientY - root.y);    
-    const delta = { x: mouseOnPage.x - startPosition.x, y: mouseOnPage.y - startPosition.y, deg: 0 }; // 鼠标动作
+    let deg = 0;
     if (rotating) {
       const { x: sx, y: sy } = startPosition;
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
-      delta.deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
+      deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
       // workspace.value.setCursor(clt, props.controllerFrame.rotate);
     }
-    emit('transform', props.point.type, delta);
-
+    emit('transform', props.point.type, startPosition, mouseOnPage, deg);
     props.context.repo.transactCtx.fireNotify();
-    startPosition = { x: mouseOnPage.x, y: mouseOnPage.y };
-    systemPosition = { x: clientX, y: clientY };
+    startPosition = { ...mouseOnPage };
   } else {
-    if (Math.hypot(systemPosition.x - clientX, systemPosition.y - clientY) > dragActiveDis) {
+    if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
       isDragging = true;
       props.context.repo.start('transform', {});
     }

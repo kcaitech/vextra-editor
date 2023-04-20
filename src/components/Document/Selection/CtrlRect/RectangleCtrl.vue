@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
-import { translate, translateTo, expandTo, translateByClientCroop } from "@kcdesign/data/editor/frame";
+import { translateByClientSize, expandByClientSize } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
 import { Point } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
@@ -33,8 +33,8 @@ let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 let rectStyle: string;
 const points = computed<Point[]>(() => {
-    const [lt, rt, rb, lb] = props.controllerFrame;
-    const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+    const [lt, rt, rb] = props.controllerFrame;
+    const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y);
     const p1: Point = { x: 0, y: 0, type: CtrlElementType.RectLT };
     const p2: Point = { x: width - borderWidth, y: 0, type: CtrlElementType.RectRT };
     const p3: Point = { x: width - borderWidth, y: height - borderWidth, type: CtrlElementType.RectRB };
@@ -116,10 +116,10 @@ function mousemove(e: MouseEvent) {
         }
     }
 }
-function transform(shapes: Shape[], matrix: Matrix, satrt: XY, end: XY) {
+function transform(shapes: Shape[], matrix: Matrix, start: XY, end: XY) {
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
-        translateByClientCroop(shapes[i], matrix, satrt, end);
+        translateByClientSize(shapes[i], matrix, end.x - start.x, end.y - start.y);
     }
     props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
 }
@@ -136,27 +136,26 @@ function mouseup(e: MouseEvent) {
         document.removeEventListener('mouseup', mouseup);
     }
 }
-function handlePointAction(type: CtrlElementType, delta: { x: number, y: number, deg: number }) {
+function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg: number) {
     shapes = props.context.selection.selectedShapes;
     shapes.forEach(item => {
-        if (delta.deg !== 0) {
-            const newDeg = (item.rotation || 0) + delta.deg;
+        if (deg !== 0) {
+            const newDeg = (item.rotation || 0) + deg;
             item.rotate(newDeg);
-            delta.x = 0;
-            delta.y = 0;
-        }
-        const realXY = item.realXY();
-        if (type === CtrlElementType.RectLT) {
-            translateTo(item, realXY.x + delta.x, realXY.y + delta.y);
-            expandTo(item, realXY.width - delta.x, realXY.height - delta.y);
-        } else if (type === CtrlElementType.RectRT) {
-            translateTo(item, realXY.x, realXY.y + delta.y);
-            expandTo(item, realXY.width + delta.x, realXY.height - delta.y);
-        } else if (type === CtrlElementType.RectRB) {
-            expandTo(item, realXY.width + delta.x, realXY.height + delta.y);
-        } else if (type === CtrlElementType.RectLB) {
-            translateTo(item, realXY.x + delta.x, realXY.y);
-            expandTo(item, realXY.width - delta.x, realXY.height + delta.y);
+        } else {
+            const delX = p2.x - p1.x, delY = p2.y - p1.y;
+            if (type === CtrlElementType.RectLT) {
+                translateByClientSize(item, matrix, delX, delY);
+                expandByClientSize(item, matrix, -delX, -delY);
+            } else if (type === CtrlElementType.RectRT) {
+                translateByClientSize(item, matrix, 0, delY);
+                expandByClientSize(item, matrix, delX, -delY);
+            } else if (type === CtrlElementType.RectRB) {
+                expandByClientSize(item, matrix, delX, delY);
+            } else if (type === CtrlElementType.RectLB) {
+                translateByClientSize(item, matrix, delX, 0);
+                expandByClientSize(item, matrix, -delX, delY);
+            }
         }
     });
 }
@@ -191,13 +190,13 @@ watchEffect(updater)
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
             @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <!-- <div class="frame" :style="{
-                                                                    top: framePosition.top,
-                                                                    left: framePosition.left,
-                                                                    transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
-                                                                }">
-                                                                    <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
-                                                                    }}</span>
-                                                                </div> -->
+                                                                                            top: framePosition.top,
+                                                                                            left: framePosition.left,
+                                                                                            transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
+                                                                                        }">
+                                                                                            <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+                                                                                            }}</span>
+                                                                                        </div> -->
     </div>
 </template>
 <style lang='scss' scoped>
