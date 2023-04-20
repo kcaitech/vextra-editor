@@ -31,6 +31,10 @@ const Left = ref({
     leftWidth: 0.1,
     leftMinWidth: 0.1
 })
+const showRight = ref<boolean>(true);
+const showLeft = ref<boolean>(true);
+const showTop = ref<boolean>(true);
+const showBottom = ref<boolean>(true);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -43,7 +47,6 @@ function screenSetting() {
         localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
     }
 }
-
 function onWindowBlur() {
     // Window blur, Close the process that should be closed
 }
@@ -62,11 +65,27 @@ function selectionWatcher(t: number) {
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
-    workspace.value.keyboardHandle(evevt)
-}
-const showRight = ref<boolean>(true)
-const showLeft = ref<boolean>(true)
+    const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
+    if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
 
+    workspace.value.keyboardHandle(evevt); // 编辑器相关的键盘事件
+    
+    if (code === 'Backslash') {
+        if (ctrlKey || metaKey) {
+            if (showRight.value !== showLeft.value) {
+                showHiddenLeft();
+            } else {
+                showHiddenLeft();
+                showHiddenRight();
+            }
+            if (shiftKey) {
+                showTop.value = !showTop.value;
+                showBottom.value = showTop.value;
+            }
+        }
+    }
+    
+}
 const showHiddenRight = () => {
     if (showRight.value) {
         Right.value.rightMin = 0
@@ -116,20 +135,21 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div id="top" @dblclick="screenSetting">
+    <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context" />
     </div>
-    <ColSplitView ref="colSplitView" id="center" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+    <ColSplitView ref="colSplitView" id="center"
+        :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }" :right-min-width-in-px="Right.rightMin"
-        :left-min-width-in-px="Left.leftMin">
+        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+        :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
                 :page="(curPage as Page)"></Navigation>
-                <div class="showHiddenL" @click="showHiddenLeft">
-                    <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
-                    <svg-icon v-else class="svg" icon-class="right"></svg-icon>
-                </div>
+            <div class="showHiddenL" @click="showHiddenLeft">
+                <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
+                <svg-icon v-else class="svg" icon-class="right"></svg-icon>
+            </div>
         </template>
         <template #slot2>
             <ContentView v-if="curPage !== undefined" data-area="content" id="content" :context="context"
@@ -144,7 +164,7 @@ onUnmounted(() => {
             </div>
         </template>
     </ColSplitView>
-    <div id="bottom"></div>
+    <div id="bottom" v-if="showBottom"></div>
 </template>
 <style>
 :root {
@@ -202,24 +222,40 @@ onUnmounted(() => {
 
     .showHiddenR {
         position: absolute;
-        left: -18px;
+        left: -12px;
         top: 50%;
+        transform: translateY(-50%);
         cursor: pointer;
-        >.svg {
-            width: 18px;
-            height: 18px;
-        }
-    }
-    .showHiddenL {
-        position: absolute;
-        right: -18px;
-        top: 50%;
-        z-index: 1;
-        cursor: pointer;
+        height: 60px;
+        background-color: var(--theme-color-anti);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px 0px 0px 4px;
 
         >.svg {
-            width: 18px;
-            height: 18px;
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+    .showHiddenL {
+        position: absolute;
+        right: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+        cursor: pointer;
+        height: 60px;
+        background-color: var(--theme-color-anti);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0 4px 4px 0;
+
+        >.svg {
+            width: 12px;
+            height: 12px;
         }
     }
 }

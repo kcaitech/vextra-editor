@@ -107,7 +107,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
-        if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
         if (event.code === KeyboardKeys.R) {
             this.keydown_r();
         } else if (event.code === KeyboardKeys.V) {
