@@ -151,7 +151,7 @@ function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (!selection.length) return;
     const shape = selection[0];
-    const m = shape.matrix2Root();
+    const m = shape.matrix2Page();
     const frame = shape.frame;
     // p1 p2
     // p4 p3

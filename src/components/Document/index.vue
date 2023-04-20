@@ -47,6 +47,32 @@ function screenSetting() {
         localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
     }
 }
+const leftTriggleVisible = ref<boolean>(false);
+const rightTriggleVisible = ref<boolean>(false);
+let timer: any;
+function mouseenter(t: 'left' | 'right') {
+    if (timer) {
+        clearTimeout(timer);
+        timer = undefined;
+    }
+    if (t === 'left') {
+        leftTriggleVisible.value = true;
+    } else {
+        rightTriggleVisible.value = true;
+    }
+}
+function mouseleave(t: 'left' | 'right') {
+    timer = setTimeout(() => {
+        if (!timer) return;
+        if (t === 'left') {
+            leftTriggleVisible.value = false;
+        } else {
+            rightTriggleVisible.value = false;
+        }
+        clearTimeout(timer);
+        timer = undefined;
+    }, 1500)
+}
 function onWindowBlur() {
     // Window blur, Close the process that should be closed
 }
@@ -69,22 +95,13 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
 
     workspace.value.keyboardHandle(evevt); // 编辑器相关的键盘事件
-    
+
     if (code === 'Backslash') {
         if (ctrlKey || metaKey) {
-            if (showRight.value !== showLeft.value) {
-                showHiddenLeft();
-            } else {
-                showHiddenLeft();
-                showHiddenRight();
-            }
-            if (shiftKey) {
-                showTop.value = !showTop.value;
-                showBottom.value = showTop.value;
-            }
+            shiftKey ? keyToggleTB() : keyToggleLR()
         }
     }
-    
+
 }
 const showHiddenRight = () => {
     if (showRight.value) {
@@ -117,6 +134,29 @@ const showHiddenLeft = () => {
         showLeft.value = true
     }
 }
+function keyToggleLR() {
+    if (showRight.value !== showLeft.value) {
+        showHiddenLeft();
+    } else {
+        showHiddenLeft();
+        showHiddenRight();
+    }
+}
+function keyToggleTB() {
+    if (showRight.value !== showLeft.value) {
+        showHiddenLeft();
+        return;
+    }
+    if (showTop.value !== showLeft.value) {
+        showHiddenLeft();
+        showHiddenRight();
+        return;
+    }
+    showHiddenLeft();
+    showHiddenRight();
+    showBottom.value = !showBottom.value;
+    showTop.value = showBottom.value;
+}
 
 onMounted(() => {
     context.value.selection.watch(selectionWatcher);
@@ -145,8 +185,10 @@ onUnmounted(() => {
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
-                :page="(curPage as Page)"></Navigation>
-            <div class="showHiddenL" @click="showHiddenLeft">
+                @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
+                :page="(curPage as Page)">
+            </Navigation>
+            <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible">
                 <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="right"></svg-icon>
             </div>
@@ -157,8 +199,9 @@ onUnmounted(() => {
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" :context="context"></Attribute>
-            <div class="showHiddenR" @click="showHiddenRight">
+            <Attribute id="attributes" :context="context" @mouseenter="e => { mouseenter('right') }"
+                @mouseleave="() => { mouseleave('right') }"></Attribute>
+            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
             </div>
