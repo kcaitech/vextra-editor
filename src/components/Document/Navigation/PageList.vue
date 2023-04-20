@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { defineProps, defineEmits, onMounted, onUnmounted, ref, computed } from "vue";
+import { defineProps, defineEmits, onMounted, onUnmounted, ref, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -13,15 +13,20 @@ import { useI18n } from 'vue-i18n';
 import { ResourceMgr } from "@kcdesign/data/data/basic";
 import { Page } from "@kcdesign/data/data/page";
 import { Document, PageListItem } from "@kcdesign/data/data/document";
+import ContextMenu from '@/components/common/ContextMenu.vue'
 const { t } = useI18n();
-
+type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const props = defineProps<{ context: Context }>();
 const emit = defineEmits<{
     (e: "fold", fold: boolean): void;
 }>();
 
 const fold = ref<boolean>(false)
-
+const MOUSE_RIGHT = 2
+const pageMenu = ref<boolean>(false)
+const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
+let pageMenuItems: string[] = [];
+const contextMenuEl = ref<ContextMenuEl>();
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -84,22 +89,64 @@ const pageSource = new class implements IDataSource<ItemData> {
     }
 }
 
+const addPage = () => {
+    
+}
+
 function toggle() {
     fold.value = !fold.value;
     emit('fold', fold.value)
 }
-
 function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
     const docEditor = props.context.editor4Doc();
     docEditor.move(params.dragTarget, params.to);
 }
-const rename = ( value: string) => { 
-    // const editor = computed(() => {
-    //     return props.context.editor4Shape(shape);
-    // });
-    // editor.value.setName(value)
+const rename = (value: string) => { 
+    const page = props.context.selection.selectedPage
+    if(!page) return
+    const editor = computed(() => {
+        return props.context.editor4Page(page)
+    });
+    editor.value.setName(value)
 }
 
+const MouseDown = (e: MouseEvent) => {
+    if(e.button === MOUSE_RIGHT) {
+        e.stopPropagation()
+        const menu = contextMenuEl.value?.menu?.className
+        if(e.target instanceof Element && e.target.closest(`.${menu}`)) return
+        pageMenuMount(e)
+    }
+}
+const pageMenuMount = (e: MouseEvent) => {
+    pageMenuPosition.value.x = e.clientX
+    pageMenuPosition.value.y = e.clientY - 75
+    pageMenuItems = ['copy_link','duplicate','rename','delete']
+    pageMenu.value = true
+    e.stopPropagation()
+    document.addEventListener('keydown', Menuesc);
+    nextTick(() => {
+        if (contextMenuEl.value) {
+            const el = contextMenuEl.value.menu;
+            if (el) {
+                el.style.borderRadius = 4 + 'px'
+                el.style.width = 180 + 'px'
+            }
+        }
+    
+    })
+}
+function Menuesc(e: KeyboardEvent) {
+    if (e.code === 'Escape') pageMenuUnmount();
+}
+function pageMenuUnmount(e?: MouseEvent, item?: string) {
+    document.removeEventListener('keydown', Menuesc);
+    pageMenu.value = false;
+    if(item === 'rename') {
+        e?.stopPropagation()
+        // onRename(e!)
+    }  
+}
 </script>
     
 <template>
@@ -108,7 +155,7 @@ const rename = ( value: string) => {
             <div class="title">{{ t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add">
+                <div class="add" @click="addPage">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="file">
@@ -132,8 +179,14 @@ const rename = ( value: string) => {
                 location="pagelist"
                 @update-after-drag="updateAfterDrag"
                 @rename="rename"
+                @onMouseDown="MouseDown"
             >
             </ListView>
+            <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y"  ref="contextMenuEl" @close="pageMenuUnmount">
+                <div class="items-wrap" v-for="(item, index) in pageMenuItems" :key="index" @click="e => pageMenuUnmount(e, item)">
+                    <span>{{ t(`pageMenu.${item}`) }}</span>
+                </div>
+            </ContextMenu>
         </div>
     </div>
 </template>
@@ -198,6 +251,13 @@ const rename = ( value: string) => {
         }
     }
 }
-
+.items-wrap {
+    font-size: var(--font-default-fontsize);
+    line-height: 30px;
+    padding: 0 10px;
+    &:hover {
+        background-color: var(--active-color);
+    }
+}
 </style>
     

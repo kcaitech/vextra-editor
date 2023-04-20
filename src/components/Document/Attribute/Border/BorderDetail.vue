@@ -139,7 +139,7 @@ onUpdated(() => {
 
 <template>
   <div class="border-detail-container">
-    <Popover class="popover" ref="popover" :width="240" height="auto" :left="-460" :title="t('attr.advanced_stroke')">
+    <Popover class="popover" ref="popover" :width="240" height="auto" :left="-490" :title="t('attr.advanced_stroke')">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
@@ -254,6 +254,7 @@ onUpdated(() => {
             border-radius: var(--default-radius);
             display: flex;
             align-items: center;
+            cursor: ew-resize;
             > svg {
               flex: 0 0 24px;
               height: 24px;

@@ -77,6 +77,12 @@ const framesChild = [
 
 const closeFrame = () => {
   popoverVisible.value = false;
+  hoverIndex.value = -1
+}
+const isSelect = () => {
+  select(Action.AddFrame)
+  props.workspace.setFrame({width: 100, height: 100})
+
 }
 
 </script>
@@ -94,7 +100,7 @@ const closeFrame = () => {
       </div>
     </div>
   </div>
-  <ToolButton ref="button" @click="() => {select(Action.AddFrame)}" :selected="props.active">
+  <ToolButton ref="button" @click="isSelect" :selected="props.active">
     <div class="svg-container" title="Frame">
       <svg-icon icon-class="frame"></svg-icon>
     </div>

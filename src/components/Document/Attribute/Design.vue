@@ -10,6 +10,7 @@ import { useI18n } from 'vue-i18n';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
+import Text from './Text/Text.vue';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 
@@ -46,6 +47,7 @@ onUnmounted(() => {
     <section>
         <div v-if="shape">
             <ShapeBaseAttr :shape="shape" :context="props.context"></ShapeBaseAttr>
+            <Text :shape="shape" :context="props.context"></Text>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shape" :context="props.context"></Fill>
             <Border :shape="shape" :context="props.context"></Border>
         </div>

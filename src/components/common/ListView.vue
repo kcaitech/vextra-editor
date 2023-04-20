@@ -31,7 +31,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: "update-after-drag", params: { from: number, to: number, dragTarget: any }): void;
+    (e: "update-after-drag", params: { shape?:any, from: number, to: number, dragTarget: any }): void;
 }>();
 
 const contents = ref<HTMLDivElement>();
@@ -49,7 +49,9 @@ const prepareCount = 10; //  多准备的
 const listMouseOver = ref<boolean>(false);
 
 defineExpose({
-    container
+    container,
+    clampScroll,
+    scroll
 })
 
 const relayout: { [key: string]: Function } = {};
@@ -474,14 +476,14 @@ const mouseBegin: { x: number, y: number } = { x: 0, y: 0 };
 const destination = ref<{ x: number, y: number, length: number }>({ x: 0, y: 0, length: 20 });
 const destinationMount = ref<boolean>(false);
 const substitute = ref<{ x: number, y: number, context: string }>({ x: 0, y: 0, context: '' });
-
+const substituteName = ref<string>('')
 const destinationVisible = computed(() => {
     return draging.value && destinationMount.value && (fromIndex.value !== toIndex.value)
 })
 const substituteVisible = computed(() => {
     return draging.value
 })
-function mouseDownOnItem(index: number, e: MouseEvent) {
+function mouseDownOnItem(index: number, e: MouseEvent) {    
     if (!props.allowDrag) return;
     // record fromIndex && pre to take off
     fromIndex.value = index;
@@ -515,6 +517,7 @@ function mouseMove(Event: MouseEvent) {
     substitute.value.context = layoutResult[fromIndex.value].data.name
     substitute.value.y = clientY - containerPosition.value.y + 14;
     substitute.value.x = clientX - containerPosition.value.x;
+    substituteName.value = layoutResult[fromIndex.value].data.shape?.name
 }
 
 function itemOnHover(e: MouseEvent, index: number) {
@@ -557,7 +560,7 @@ function mouseUp() {
         toIndex.value = offsetOverhalf ? toIndex.value + 1 : toIndex.value
         const dragTarget = descend(fromIndex.value, toIndex.value);
         draging.value = false
-        emit('update-after-drag', { from: fromIndex.value, to: toIndex.value, dragTarget })
+        emit('update-after-drag', {shape: dragTarget?.data.shape, from: fromIndex.value, to: toIndex.value, dragTarget })
     }
 }
 // #endregion
@@ -603,7 +606,7 @@ onUnmounted(() => {
             <div class="substitute" v-if="substituteVisible" :style="{
                 top: `${substitute.y}px`,
                 left: `${substitute.x}px`
-            }">{{ substitute.context }}</div>
+            }">{{ substitute.context || substituteName }}</div>
         </div>
         <!-- scroll -->
         <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{

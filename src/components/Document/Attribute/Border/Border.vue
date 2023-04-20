@@ -235,7 +235,7 @@ onBeforeUpdate(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 68px;
+                    width: 92px;
                     margin-left: 10px;
                 }
 
@@ -248,6 +248,7 @@ onBeforeUpdate(() => {
                 flex: 0 0 auto;
                 display: flex;
                 align-items: center;
+                margin-left: 8px;
                 justify-content: center;
 
                 .delete {

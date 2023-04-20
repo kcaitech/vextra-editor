@@ -10,24 +10,38 @@ export interface ItemData {
     id: string
     selected: boolean
 }
-
 const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
     (e: "switchpage", id: string): void;
     (e: "rename", name: string, event?: KeyboardEvent): void;
+    (e: "onMouseDown", event: MouseEvent): void;
 }>();
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
 const esc = ref<boolean>(false)
-function onClick(e: MouseEvent) {
+const MOUSE_LEFT = 0;
+const MOUSE_RIGHT = 2;
+const pageMenu = ref<boolean>(false)
+function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
-    emit("switchpage", props.data.id);
+    
+    if(e.button === MOUSE_LEFT) {
+        document.addEventListener("mouseup", function onMouseUp() {
+            e.stopPropagation();
+            emit("switchpage", props.data.id);
+            document.removeEventListener('mouseup', onMouseUp)
+        });
+    }else if(e.button === MOUSE_RIGHT) {
+        emit('onMouseDown',e)
+    }
 }
 
-const onRename = () => {
+const onRename = (e: MouseEvent) => {
     isInput.value = true
+    e.stopPropagation()
     nextTick(() => {
-        if(nameInput.value) {            
+        if(nameInput.value) { 
+            (nameInput.value as HTMLInputElement).value = props.data.name;
             nameInput.value.focus();
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', saveInput);
@@ -65,17 +79,26 @@ const onInputBlur = (e: MouseEvent) => {
     }, 10)
   } 
 }
+
+// function pageMenuUnmount(e?: MouseEvent, item?: string) {
+//     pageMenu.value = false;
+//     if(item === 'rename') {
+//         e?.stopPropagation()
+//         onRename(e!)
+//     }  
+// }
+
 </script>
 
 <template>
     <div
         :class="{ container: true, selected: props.data.selected }"
-        @click="onClick"
+        @mousedown="onMouseDown"
     >
         <div class="ph"></div>
         <div class="item">
             <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : ''}">{{props.data.name}}</div>
-            <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput" :value="props.data.name">
+            <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput">
         </div>
     </div>
 </template>
@@ -137,5 +160,11 @@ div .rename {
     margin-right: 6px;
     outline-style: none;
     border: 1px solid var(--left-navi-button-select-color);
+}
+.items-wrap {
+    padding: 0 10px;
+    &:hover {
+        background-color: var(--active-color);
+    }
 }
 </style>

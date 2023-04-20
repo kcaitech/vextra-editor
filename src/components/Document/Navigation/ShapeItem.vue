@@ -17,6 +17,7 @@ const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<{ data: ItemData }>();
 const esc = ref<boolean>(false)
+const MOUSE_RIGHT = 2;
 const phWidth = computed(() => {
     return (props.data.level - 1) * 6;
 })
@@ -30,6 +31,7 @@ const emit = defineEmits<{
     (e: "isRead", isRead: boolean, shape: Shape): void;
     (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
     (e: "scrolltoview", shape: Shape): void;
+    (e: "onMouseDown", event: MouseEvent): void;
 }>();
 let showTriangle = ref<boolean>(false);
 function updater() {
@@ -78,7 +80,7 @@ const onRename = () => {
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
-            (nameInput.value as HTMLInputElement).value = props.data.shape.name;
+            (nameInput.value as HTMLInputElement).value = props.data.shape.name.trim();
             nameInput.value.focus();
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
@@ -90,6 +92,7 @@ const onRename = () => {
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
     if (esc.value) return
+    if(value.length === 0 || value.length > 40 || value.trim.length === 0) return  
     emit('rename', value, props.data.shape);
 }
 
@@ -98,7 +101,7 @@ const stopInput = () => {
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
-    if (e.code === 'Enter') {
+    if (e.key === 'Enter') {
         esc.value = false
         isInput.value = false
     } else if (e.code === 'Escape') {
@@ -117,6 +120,10 @@ const onInputBlur = (e: MouseEvent) => {
         }, 10)
     }
 }
+const onMouseDown = (e: MouseEvent) => {
+    e.stopPropagation();
+        emit('onMouseDown',e)
+}
 
 onBeforeMount(() => {
     updater();
@@ -129,14 +136,14 @@ onBeforeUpdate(() => {
 
 <template>
     <div class="contain" :class="{ container: true, selected: props.data.selected }" @click="selectShape"
-        @mouseover="hoverShape" @mouseleave="unHoverShape">
+        @mouseover="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
         <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
             <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
             </div>
         </div>
         <div class="containerSvg" @dblclick="toggleContainer">
-            <svg-icon class="svg" icon-class="pattern-rectangle"></svg-icon>
+            <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
         </div>
         <div class="text" :class="{ container: true, selected: props.data.selected }"
             :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
@@ -145,6 +152,9 @@ onBeforeUpdate(() => {
                 <div class="tool_lock tool" :class="{ 'visible': !isLock }" @click="onLock">
                     <svg-icon v-if="isLock" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="lock-lock"></svg-icon>
+                </div>
+                <div class="tool_lock tool" @click="toggleContainer">
+                    <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
                 <div class="tool_eye tool" :class="{ 'visible': !isRead }" @click="onRead">
                     <svg-icon v-if="isRead" class="svg" icon-class="eye-open"></svg-icon>

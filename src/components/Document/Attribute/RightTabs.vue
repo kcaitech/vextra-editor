@@ -22,7 +22,6 @@ type Tab = "Design" | "Inspect";
 
 
 const currentTab = ref<Tab>("Design");
-
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('attr.design'),
@@ -102,6 +101,5 @@ function toggle(id: Tab) {
         flex: 1 1 auto;
         box-sizing: border-box;
     }
-
 }
 </style>

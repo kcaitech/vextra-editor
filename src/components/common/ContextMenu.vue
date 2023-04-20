@@ -5,7 +5,7 @@ interface Props {
   x: number
   y: number
   width?: number,
-  site:{ x: number, y: number }
+  site?:{ x: number, y: number }
 }
 const surplusX = ref<number>(0)
 const menu = ref<HTMLDivElement>()
@@ -23,6 +23,7 @@ function handleClickOutside(event: MouseEvent) {
 }
 
  //二级菜单距离右侧的距离
+ if(props.site)
   surplusX.value = document.documentElement.clientWidth - props.site.x
  
 onMounted(() => {

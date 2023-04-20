@@ -13,7 +13,21 @@ export const system = {
     'bring_to_top': '置于顶层',
     'send_to_bottom': '置于底层',
     'visible': '显示/隐藏',
-    'Lock': '锁定/解锁'
+    'Lock': '锁定/解锁',
+    'select_all': '选择全部',
+    'fit_canvas': '适应画布',
+    'show_many_cursor': '显示多人光标',
+    'show_comment': '显示评论',
+    'show_ruler': '显示标尺',
+    'show_pixel_network': '显示像素网络',
+    'hide_operation_interface': '隐藏操作界面',
+    'creating_groups': '创建编组',
+    'create_container': '创建容器',
+    'un_group': '取消编组',
+    'create_component': '创建组件',
+    'unbind_instance': '解绑实例',
+    'reset_instance_roperties': '重置实例属性',
+    'edit_component': '编辑组件'
 }
 
 export const home = {
@@ -42,6 +56,13 @@ export const frame = {
     social_media : '社交媒体'
 }
 
+export const pageMenu = {
+    copy_link: '复制页面链接',
+    duplicate: '创建页面副本',
+    rename: '重命名',
+    delete: '删除页面'
+}
+
 export const attr: any = {
     design: '设计',
     prototype: '原型',
@@ -49,6 +70,7 @@ export const attr: any = {
     constraints: '相对容器位置',
     border: '边框',
     fill: '填充',
+    text: '文本',
     'follow_container_scaling': '跟随容器缩放',
     'advanced_stroke': '边框设置',
     position: '位置',

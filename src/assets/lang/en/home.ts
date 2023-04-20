@@ -42,6 +42,13 @@ export const frame = {
     social_media : 'Social media'
 }
 
+export const pageMenu = {
+    copy_link: 'Copy link to page',
+    duplicate: 'Duplicate page',
+    rename: 'Rename page',
+    delete: 'Delete page'
+}
+
 export const attr: any = {
     design: 'Design',
     prototype: 'Prototype',
@@ -49,6 +56,7 @@ export const attr: any = {
     constraints: 'Constraints',
     border: 'Border',
     fill: 'Fill',
+    text: 'Text',
     'follow_container_scaling': 'Follow container scaling',
     'advanced_stroke': 'Advanced stroke',
     position: 'Position',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, shallowRef, computed } from 'vue';
+import { defineProps, onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import { Document } from "@kcdesign/data/data/document";
@@ -12,12 +12,25 @@ import ColSplitView from './ColSplitView.vue';
 import { Repository } from '@kcdesign/data/data/transact';
 import { SCREEN_SIZE } from '@/utils/setting';
 import { WorkSpace } from '@/context/workspace';
-
 const props = defineProps<{ data: Document, repo: Repository }>();
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(props.data, props.repo));
 (window as any).__context = context.value;
 const workspace = computed<WorkSpace>(() => context.value.workspace);
+const middleWidth = ref<number>(0.8)
+const middleMinWidth = ref<number>(0.3)
+
+const Right = ref({
+    rightMin: 336,
+    rightMinWidth: 0.1,
+    rightWidth: 0.1
+})
+
+const Left = ref({
+    leftMin: 336,
+    leftWidth: 0.1,
+    leftMinWidth: 0.1
+})
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -51,6 +64,40 @@ function selectionWatcher(t: number) {
 function keyboardEventHandler(evevt: KeyboardEvent) {
     workspace.value.keyboardHandle(evevt)
 }
+const showRight = ref<boolean>(true)
+const showLeft = ref<boolean>(true)
+
+const showHiddenRight = () => {
+    if (showRight.value) {
+        Right.value.rightMin = 0
+        Right.value.rightWidth = 0
+        Right.value.rightMinWidth = 0
+        middleWidth.value = middleWidth.value + 0.1
+        showRight.value = false
+    } else {
+        Right.value.rightMin = 336
+        Right.value.rightWidth = 0.1
+        Right.value.rightMinWidth = 0.1
+        middleWidth.value = middleWidth.value - 0.1
+        showRight.value = true
+    }
+}
+
+const showHiddenLeft = () => {
+    if (showLeft.value) {
+        Left.value.leftMin = 0
+        Left.value.leftWidth = 0
+        Left.value.leftMinWidth = 0
+        middleWidth.value = middleWidth.value + 0.1
+        showLeft.value = false
+    } else {
+        Left.value.leftMin = 336
+        Left.value.leftWidth = 0.1
+        Left.value.leftMinWidth = 0.1
+        middleWidth.value = middleWidth.value - 0.1
+        showLeft.value = true
+    }
+}
 
 onMounted(() => {
     context.value.selection.watch(selectionWatcher);
@@ -72,12 +119,17 @@ onUnmounted(() => {
     <div id="top" @dblclick="screenSetting">
         <Toolbar :context="context" />
     </div>
-    <ColSplitView id="center" :left="{ width: 0.1, minWidth: 0.1, maxWidth: 0.5 }"
-        :middle="{ width: 0.8, minWidth: 0.3, maxWidth: 0.8 }" :right="{ width: 0.1, minWidth: 0.1, maxWidth: 0.5 }"
-        :right-min-width-in-px="336" :left-min-width-in-px="336">
+    <ColSplitView ref="colSplitView" id="center" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+        :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }" :right-min-width-in-px="Right.rightMin"
+        :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
                 :page="(curPage as Page)"></Navigation>
+                <div class="showHiddenL" @click="showHiddenLeft">
+                    <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
+                    <svg-icon v-else class="svg" icon-class="right"></svg-icon>
+                </div>
         </template>
         <template #slot2>
             <ContentView v-if="curPage !== undefined" data-area="content" id="content" :context="context"
@@ -86,6 +138,10 @@ onUnmounted(() => {
         </template>
         <template #slot3>
             <Attribute id="attributes" :context="context"></Attribute>
+            <div class="showHiddenR" @click="showHiddenRight">
+                <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
+                <svg-icon v-else class="svg" icon-class="left"></svg-icon>
+            </div>
         </template>
     </ColSplitView>
     <div id="bottom"></div>
@@ -142,6 +198,29 @@ onUnmounted(() => {
         height: 100%;
         background-color: var(--right-attr-bg-color);
         z-index: 1;
+    }
+
+    .showHiddenR {
+        position: absolute;
+        left: -18px;
+        top: 50%;
+        cursor: pointer;
+        >.svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
+    .showHiddenL {
+        position: absolute;
+        right: -18px;
+        top: 50%;
+        z-index: 1;
+        cursor: pointer;
+
+        >.svg {
+            width: 18px;
+            height: 18px;
+        }
     }
 }
 
