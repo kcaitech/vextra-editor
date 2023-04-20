@@ -71,7 +71,7 @@ function mouseleave(t: 'left' | 'right') {
         }
         clearTimeout(timer);
         timer = undefined;
-    }, 1500)
+    }, 2500)
 }
 function onWindowBlur() {
     // Window blur, Close the process that should be closed
