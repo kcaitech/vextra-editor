@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, reactive, onMounted, onUnmounted } from "vue";
+import { ref, defineProps, reactive, onMounted, onUnmounted, watchEffect } from "vue";
 import Sash from "@/components/common/Sash.vue";
 
 export interface SizeBound {
@@ -11,7 +11,6 @@ export interface SizeBound {
 interface SizeBoundEx extends SizeBound {
     userWidth: number // 用户调整的大小
 }
-
 const props = defineProps<{
     left: SizeBound, // .1 .05 .50
     middle: SizeBound, // .8 .3 .9
@@ -234,6 +233,7 @@ onMounted(() => {
 onUnmounted(() => {
     observer.disconnect();
 })
+watchEffect(initSizeBounds);
 </script>
 
 <template>
@@ -247,7 +247,7 @@ onUnmounted(() => {
         </div>
         <div class="column3" :style="`width:${sizeBounds.right.width}px; minWidth:${sizeBounds.right.width}px`">
             <slot name="slot3" />
-            <Sash side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" />
+            <Sash  side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" />
         </div>
     </div>
 </template>

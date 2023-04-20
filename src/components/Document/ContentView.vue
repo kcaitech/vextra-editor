@@ -321,7 +321,7 @@ function contextMenuMount(e: MouseEvent) {
     if (!shapes.length) {
         contextMenuItems = ['all', 'copy', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor','comment', 'ruler', 'pixel', 'operation'];
     } else if (shapes.length === 1) {
-        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom'];
+        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
         props.context.selection.selectShape(shapes[shapes.length - 1]);
     } else if (shapes.length > 1) {
         const isCommon = hasCommon(props.context.selection.selectedShapes, shapes);
@@ -330,7 +330,7 @@ function contextMenuMount(e: MouseEvent) {
         }
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
-        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers'];
+        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
     }
     contextMenu.value = true;
     document.addEventListener('keydown', esc);

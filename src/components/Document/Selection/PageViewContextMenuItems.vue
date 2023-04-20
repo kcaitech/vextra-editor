@@ -75,22 +75,27 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 协作 -->
     <div class="line" v-if="props.items.includes('cursor')"></div>
     <div class="item" v-if="props.items.includes('cursor')">
+      <div class="choose"></div>
       <span>{{ t('system.show_many_cursor') }}</span>
     </div>
     <div class="item" v-if="props.items.includes('comment')">
+      <div class="choose"></div>
       <span>{{ t('system.show_comment') }}</span>
       <span></span>
     </div>
     <!-- 界面显示 -->
     <div class="line" v-if="props.items.includes('ruler')"></div>
     <div class="item" v-if="props.items.includes('ruler')">
+      <div class="choose"></div>
       <span>{{ t('system.show_ruler') }}</span>
     </div>
     <div class="item" v-if="props.items.includes('pixel')">
+      <div class="choose"></div>
       <span>{{ t('system.show_pixel_network') }}</span>
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('operation')">
+      <div class="choose"></div>
       <span>{{ t('system.hide_operation_interface') }}</span>
       <span></span>
     </div>
@@ -111,13 +116,45 @@ function closeLayerSubMenu(e: MouseEvent) {
       <span>{{ t('system.send_to_bottom') }}</span>
       <span></span>
     </div>
+    <!-- 组合容器 -->
+    <div class="line" v-if="props.items.includes('groups')"></div>
+    <div class="item" v-if="props.items.includes('groups')">
+      <span>{{ t('system.creating_groups') }}</span>
+    </div>
+    <div class="item" v-if="props.items.includes('container')">
+      <span>{{ t('system.create_container') }}</span>
+      <span></span>
+    </div>
+    <div class="item" v-if="props.items.includes('un_group')">
+      <span>{{ t('system.un_group') }}</span>
+      <span></span>
+    </div>
+    <!-- 组件操作 -->
+    <div class="line" v-if="props.items.includes('component')"></div>
+    <div class="item" v-if="props.items.includes('component')">
+      <span>{{ t('system.create_component') }}</span>
+    </div>
+    <div class="item" v-if="props.items.includes('instance')">
+      <span>{{ t('system.unbind_instance') }}</span>
+      <span></span>
+    </div>
+    <div class="item" v-if="props.items.includes('reset')">
+      <span>{{ t('system.reset_instance_roperties') }}</span>
+      <span></span>
+    </div>
+    <div class="item" v-if="props.items.includes('edit')">
+      <span>{{ t('system.edit_component') }}</span>
+      <span></span>
+    </div>
     <!-- 隐藏/锁定 -->
     <div class="line" v-if="props.items.includes('visible')"></div>
     <div class="item" v-if="props.items.includes('visible')">
+      <div class="choose"></div>
       <span>{{ t('system.visible') }}</span>
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('visible')">
+      <div class="choose"></div>
       <span>{{ t('system.Lock') }}</span>
       <span></span>
     </div>
@@ -132,7 +169,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     position: relative;
     width: 100%;
     height: 28px;
-    padding: 0 var(--default-padding);
+    padding: 0 var(--default-padding) 0 20px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -165,5 +202,16 @@ function closeLayerSubMenu(e: MouseEvent) {
   .item:hover {
     background-color: var(--active-color);
   }
+  .choose {
+  position: absolute;
+  left: 7px;
+  box-sizing: border-box;
+  width: 10px;
+  height: 6px;
+  border-width: 0 0 2px 2px;
+  border-style: solid;
+  border-color: var(--theme-color-anti);
+  transform: rotate(-45deg) translateY(-30%);
+}
 }
 </style>

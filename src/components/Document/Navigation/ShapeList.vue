@@ -205,7 +205,7 @@ const MouseDown = (e: MouseEvent) => {
 const chartMenuMount = (e: MouseEvent) => {
     chartMenuPosition.value.x = e.clientX
     chartMenuPosition.value.y = e.clientY - props.pageHeight - ListBody.value!.offsetTop - 12
-    chartMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom']
+    chartMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit']
     chartMenu.value = true
     e.stopPropagation()
     document.addEventListener('keydown', Menuesc);
@@ -220,7 +220,7 @@ const chartMenuMount = (e: MouseEvent) => {
                     el.style.top = chartMenuPosition.value.y - top + 'px'
                 }
                 el.style.borderRadius = 4 + 'px'
-                el.style.width = 180 + 'px'
+                el.style.width = 200 + 'px'
             }
         }
     

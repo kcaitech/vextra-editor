@@ -20,7 +20,14 @@ export const system = {
     'show_comment': '显示评论',
     'show_ruler': '显示标尺',
     'show_pixel_network': '显示像素网络',
-    'hide_operation_interface': '隐藏操作界面'
+    'hide_operation_interface': '隐藏操作界面',
+    'creating_groups': '创建编组',
+    'create_container': '创建容器',
+    'un_group': '取消编组',
+    'create_component': '创建组件',
+    'unbind_instance': '解绑实例',
+    'reset_instance_roperties': '重置实例属性',
+    'edit_component': '编辑组件'
 }
 
 export const home = {

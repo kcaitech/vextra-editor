@@ -40,17 +40,17 @@ function toggle(id: Tab) {
 </script>
 
 <template>
-    <div class="tab-container">
-        <div class="tab-controller">
-            <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
-                @click="toggle(i.id)">{{ i.title }}</div>
+        <div class="tab-container">
+            <div class="tab-controller">
+                <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
+                    @click="toggle(i.id)">{{ i.title }}</div>
+            </div>
+            <div class="body">
+                <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"></ShapeTab>
+                <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
+                <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
+            </div>
         </div>
-        <div class="body">
-            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"></ShapeTab>
-            <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
-            <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
-        </div>
-    </div>
 </template>
 
 <style scoped lang="scss">
@@ -65,7 +65,6 @@ function toggle(id: Tab) {
         display: flex;
         flex-direction: row;
         margin-left: 13px;
-
         >.tab {
             font-weight: var(--font-default-bold);
             font-size: 10px;
@@ -81,8 +80,8 @@ function toggle(id: Tab) {
             border-radius: 4px 4px 0 0;
             background-color: var(--grey-dark);
         }
+        
     }
-
     .body {
         border-top: 1px solid var(--theme-color);
         width: 100%;
