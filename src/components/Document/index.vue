@@ -49,33 +49,42 @@ function screenSetting() {
 }
 const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
-let timer: any;
+let timerForLeft: any;
+let timeForRight: any;
 function mouseenter(t: 'left' | 'right') {
-    if (timer) {
-        clearTimeout(timer);
-        timer = undefined;
-    }
     if (t === 'left') {
+        if (timerForLeft) {
+            clearTimeout(timerForLeft);
+            timerForLeft = undefined;
+        }
         leftTriggleVisible.value = true;
     } else {
+        if (timeForRight) {
+            clearTimeout(timeForRight);
+            timeForRight = undefined;
+        }
         rightTriggleVisible.value = true;
     }
 }
 function mouseleave(t: 'left' | 'right') {
-    timer = setTimeout(() => {
-        if (!timer) return;
-        if (t === 'left') {
+    const delay = 2000;
+    if (t === 'left') {
+        timerForLeft = setTimeout(() => {
+            if (!timerForLeft) return;
             leftTriggleVisible.value = false;
-        } else {
+            clearTimeout(timerForLeft);
+            timerForLeft = undefined;
+        }, delay);
+    } else {
+        timeForRight = setTimeout(() => {
+            if (!timeForRight) return;
             rightTriggleVisible.value = false;
-        }
-        clearTimeout(timer);
-        timer = undefined;
-    }, 2500)
+            clearTimeout(timeForRight);
+            timeForRight = undefined;
+        }, delay);
+    }
 }
-function onWindowBlur() {
-    // Window blur, Close the process that should be closed
-}
+
 function switchPage(id?: string) {
     if (!id) return
     const ctx: Context = context.value;
@@ -164,12 +173,10 @@ onMounted(() => {
     if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
-    window.addEventListener('blur', onWindowBlur);
     document.addEventListener('keydown', keyboardEventHandler);
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
-    window.removeEventListener('blur', onWindowBlur);
     document.removeEventListener('keydown', keyboardEventHandler);
 })
 </script>
@@ -188,7 +195,8 @@ onUnmounted(() => {
                 @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
                 :page="(curPage as Page)">
             </Navigation>
-            <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible">
+            <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
+                :style="{ opacity: showLeft ? 1 : 0.6 }">
                 <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="right"></svg-icon>
             </div>
@@ -201,7 +209,8 @@ onUnmounted(() => {
         <template #slot3>
             <Attribute id="attributes" :context="context" @mouseenter="e => { mouseenter('right') }"
                 @mouseleave="() => { mouseleave('right') }"></Attribute>
-            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible">
+            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
+                :style="{ opacity: showRight ? 1 : 0.6 }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
             </div>
@@ -231,9 +240,9 @@ onUnmounted(() => {
     flex-flow: row nowrap;
     width: 100%;
     height: 40px;
-    min-height: 40px;
     background-color: var(--top-toolbar-bg-color);
     z-index: 1;
+    min-height: 40px;
 }
 
 #center {
@@ -304,6 +313,7 @@ onUnmounted(() => {
 }
 
 #bottom {
+    transition: 0.18s;
     flex-flow: row nowrap;
     width: 100%;
     height: 30px;

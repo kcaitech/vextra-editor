@@ -260,6 +260,10 @@ watchEffect(initSizeBounds);
     height: auto;
     position: relative;
 
+    >div {
+        transition: 0.1s;
+    }
+
     .column1 {
         position: relative;
     }
