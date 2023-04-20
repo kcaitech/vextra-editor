@@ -14,14 +14,13 @@ const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
     (e: "switchpage", id: string): void;
     (e: "rename", name: string, event?: KeyboardEvent): void;
-    (e: "onMouseDown", event: MouseEvent): void;
+    (e: "onMouseDown", id:string, event: MouseEvent): void;
 }>();
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
 const esc = ref<boolean>(false)
 const MOUSE_LEFT = 0;
 const MOUSE_RIGHT = 2;
-const pageMenu = ref<boolean>(false)
 function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
     
@@ -32,7 +31,7 @@ function onMouseDown(e: MouseEvent) {
             document.removeEventListener('mouseup', onMouseUp)
         });
     }else if(e.button === MOUSE_RIGHT) {
-        emit('onMouseDown',e)
+        emit('onMouseDown', props.data.id,e)
     }
 }
 

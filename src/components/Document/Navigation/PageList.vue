@@ -110,13 +110,15 @@ const rename = (value: string) => {
     editor.value.setName(value)
 }
 
-const MouseDown = (e: MouseEvent) => {
+const MouseDown = (e: MouseEvent, id: string) => {
     if(e.button === MOUSE_RIGHT) {
         e.stopPropagation()
         const menu = contextMenuEl.value?.menu?.className
         if(e.target instanceof Element && e.target.closest(`.${menu}`)) return
         pageMenuMount(e)
     }
+    
+    
 }
 const pageMenuMount = (e: MouseEvent) => {
     pageMenuPosition.value.x = e.clientX
@@ -144,7 +146,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
     pageMenu.value = false;
     if(item === 'rename') {
         e?.stopPropagation()
-        // onRename(e!)
+        
     }  
 }
 </script>

@@ -7,7 +7,7 @@ export interface ItemData {
     shape: Shape
     selected: boolean
     expand: boolean
-    level: number
+    level: number,
 }
 
 const isLock = ref<boolean>(true)
@@ -17,7 +17,6 @@ const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<{ data: ItemData }>();
 const esc = ref<boolean>(false)
-const MOUSE_RIGHT = 2;
 const phWidth = computed(() => {
     return (props.data.level - 1) * 6;
 })
@@ -54,6 +53,8 @@ const toggleContainer = (e: MouseEvent) => {
 
 function selectShape(e: MouseEvent) {
     e.stopPropagation();
+    console.log(props.data.shape);
+    
     const { ctrlKey, metaKey, shiftKey } = e;
     emit("selectshape", props.data, ctrlKey, metaKey, shiftKey);
 }
@@ -186,6 +187,9 @@ div.container {
 
 div.container.selected {
     background-color: var(--left-navi-button-select-color);
+}
+div.container.selected-child {
+    background-color: var(--left-navi-button-hover-color);
 }
 
 div.ph {

@@ -74,9 +74,15 @@ function notifySourceChange(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
-            const parent = item.parent
-            if(parent?.parent && parent.parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent.parent)) toggleExpand(parent.parent) //父级还有父级          
-            if (parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent)
+            let parent = item.parent
+            let parents = []
+            while(parent) {
+                parents.unshift(parent);
+                parent = parent.parent;
+            }
+            parents.forEach(p => {
+                p.type !== ShapeType.Page && !shapeDirList.isExpand(p) && toggleExpand(p);
+            })
             const indexItem = shapeDirList.indexOf(item)
             if (ListBody.value) {
                 ListH.value = ListBody.value.clientHeight //list可视高度

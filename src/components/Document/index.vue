@@ -202,24 +202,41 @@ onUnmounted(() => {
 
     .showHiddenR {
         position: absolute;
-        left: -18px;
+        left: -20px;
         top: 50%;
+        width: 20px;
+        height: 40px;
+        transform: translateY(50%);
+        background-color: #fff;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
         >.svg {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
         }
     }
     .showHiddenL {
         position: absolute;
-        right: -18px;
+        right: -20px;
         top: 50%;
+        width: 20px;
+        height: 40px;
+        transform: translateY(50%);
+        background-color: #fff;
         z-index: 1;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
 
         >.svg {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
+
         }
     }
 }
