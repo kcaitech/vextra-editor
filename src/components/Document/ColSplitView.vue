@@ -240,14 +240,14 @@ watchEffect(initSizeBounds);
     <div class="columnsplit" ref="refRoot">
         <div class="column1" :style="`width:${sizeBounds.left.width}px; minWidth:${sizeBounds.left.width}px`">
             <slot name="slot1" />
-            <Sash side="right" @dragStart="leftCtx.onDragStart" @offset="leftCtx.onDragOffset" />
+            <!-- <Sash side="right" @dragStart="leftCtx.onDragStart" @offset="leftCtx.onDragOffset" /> -->
         </div>
         <div class="column2" :style="`width:${sizeBounds.middle.width}px; minWidth:${sizeBounds.middle.width}px`">
             <slot name="slot2" />
         </div>
         <div class="column3" :style="`width:${sizeBounds.right.width}px; minWidth:${sizeBounds.right.width}px`">
             <slot name="slot3" />
-            <Sash  side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" />
+            <!-- <Sash  side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" /> -->
         </div>
     </div>
 </template>
@@ -259,6 +259,10 @@ watchEffect(initSizeBounds);
     width: 100%;
     height: auto;
     position: relative;
+
+    >div {
+        transition: 0.1s;
+    }
 
     .column1 {
         position: relative;

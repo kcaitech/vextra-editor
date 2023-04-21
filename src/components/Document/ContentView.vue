@@ -199,6 +199,7 @@ function newFrame(shape: Shape, point: XY) {
 async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {
         cursor.value = await cursorHandle(ct, rotate);
+        return;
     } else if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.value.matrix);
     } else if (t === WorkSpace.RESET_CURSOR) {
@@ -280,7 +281,7 @@ function contextMenuMount(e: MouseEvent) {
     const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
     contextMenuItems = ['paste', 'copy'];
     if (!shapes.length) {
-        contextMenuItems = ['all', 'copy', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor','comment', 'ruler', 'pixel', 'operation'];
+        contextMenuItems = ['all', 'copy', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'ruler', 'pixel', 'operation'];
     } else if (shapes.length === 1) {
         contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
         props.context.selection.selectShape(shapes[shapes.length - 1]);
@@ -436,8 +437,8 @@ renderinit().then(() => {
         @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
-        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @close="contextMenuUnmount"
-            :site="site" ref="contextMenuEl">
+        <ContextMenu v-if="contextMenu" :width="216" :x="contextMenuPosition.x" :y="contextMenuPosition.y"
+            @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>

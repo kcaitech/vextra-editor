@@ -164,9 +164,9 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
                 <div class="add" @click="addPage">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
-                <div class="file">
+                <!-- <div class="file">
                     <svg-icon icon-class="file"></svg-icon>
-                </div>
+                </div> -->
                 <div class="shrink" @click="toggle">
                     <svg-icon icon-class="down" :style="{transform: fold ? 'rotate(90deg)' : 'rotate(0deg)'}"></svg-icon>
                 </div>
@@ -204,14 +204,15 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
         width: 100%;
         display: flex;
         font-size: 10px;
-        padding: 0 13px;
         box-sizing: border-box;
         position: relative;
         align-items: center;
         > div:not(.space) {
             flex-shrink: 0;
         }
+        overflow: hidden;
         .title {
+            margin-left: 13px;
             height: 30px;
             font-weight: var(--font-default-bold);
             line-height: 36px;

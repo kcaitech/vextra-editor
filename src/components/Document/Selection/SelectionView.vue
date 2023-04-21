@@ -5,6 +5,7 @@ import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./CtrlRect";
 import { CtrlElementType } from "@/context/workspace";
+import { getHorizontalAngle } from "@/utils/common";
 export interface Point {
     x: number,
     y: number,
@@ -49,7 +50,7 @@ const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
 const controllerFrame = ref<Point[]>([]);
-
+const rotate = ref<number>(0);
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
         width: 0,
@@ -151,7 +152,7 @@ function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (!selection.length) return;
     const shape = selection[0];
-    const m = shape.matrix2Root();
+    const m = shape.matrix2Page();
     const frame = shape.frame;
     // p1 p2
     // p4 p3
@@ -167,6 +168,7 @@ function createController() {
         p.x = _p.x; p.y = _p.y;
         return p;
     });
+    rotate.value = getHorizontalAngle(points[0], points[1]);
     // const points = [{ x: 0, y: 0 }, { x: 0, y: 0 }].map((p) => matrix.inverseCoord(p.x, p.y)).map((p) => m.inverseCoord(p.x, p.y));
     controllerType.value = ControllerType.Rect;
 }
@@ -193,7 +195,7 @@ watchEffect(updater)
     }" :key="s.id" :reflush="reflush">
     </div>
     <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController"></component>
+        :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate"></component>
 </template>
 
 <style scoped lang="scss">

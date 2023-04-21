@@ -31,6 +31,10 @@ const Left = ref({
     leftWidth: 0.1,
     leftMinWidth: 0.1
 })
+const showRight = ref<boolean>(true);
+const showLeft = ref<boolean>(true);
+const showTop = ref<boolean>(true);
+const showBottom = ref<boolean>(true);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -43,10 +47,44 @@ function screenSetting() {
         localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
     }
 }
-
-function onWindowBlur() {
-    // Window blur, Close the process that should be closed
+const leftTriggleVisible = ref<boolean>(false);
+const rightTriggleVisible = ref<boolean>(false);
+let timerForLeft: any;
+let timeForRight: any;
+function mouseenter(t: 'left' | 'right') {
+    if (t === 'left') {
+        if (timerForLeft) {
+            clearTimeout(timerForLeft);
+            timerForLeft = undefined;
+        }
+        leftTriggleVisible.value = true;
+    } else {
+        if (timeForRight) {
+            clearTimeout(timeForRight);
+            timeForRight = undefined;
+        }
+        rightTriggleVisible.value = true;
+    }
 }
+function mouseleave(t: 'left' | 'right') {
+    const delay = 2000;
+    if (t === 'left') {
+        timerForLeft = setTimeout(() => {
+            if (!timerForLeft) return;
+            leftTriggleVisible.value = false;
+            clearTimeout(timerForLeft);
+            timerForLeft = undefined;
+        }, delay);
+    } else {
+        timeForRight = setTimeout(() => {
+            if (!timeForRight) return;
+            rightTriggleVisible.value = false;
+            clearTimeout(timeForRight);
+            timeForRight = undefined;
+        }, delay);
+    }
+}
+
 function switchPage(id?: string) {
     if (!id) return
     const ctx: Context = context.value;
@@ -62,11 +100,18 @@ function selectionWatcher(t: number) {
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
-    workspace.value.keyboardHandle(evevt)
-}
-const showRight = ref<boolean>(true)
-const showLeft = ref<boolean>(true)
+    const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
+    if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
 
+    workspace.value.keyboardHandle(evevt); // 编辑器相关的键盘事件
+
+    if (code === 'Backslash') {
+        if (ctrlKey || metaKey) {
+            shiftKey ? keyToggleTB() : keyToggleLR()
+        }
+    }
+
+}
 const showHiddenRight = () => {
     if (showRight.value) {
         Right.value.rightMin = 0
@@ -98,6 +143,29 @@ const showHiddenLeft = () => {
         showLeft.value = true
     }
 }
+function keyToggleLR() {
+    if (showRight.value !== showLeft.value) {
+        showHiddenLeft();
+    } else {
+        showHiddenLeft();
+        showHiddenRight();
+    }
+}
+function keyToggleTB() {
+    if (showRight.value !== showLeft.value) {
+        showHiddenLeft();
+        return;
+    }
+    if (showTop.value !== showLeft.value) {
+        showHiddenLeft();
+        showHiddenRight();
+        return;
+    }
+    showHiddenLeft();
+    showHiddenRight();
+    showBottom.value = !showBottom.value;
+    showTop.value = showBottom.value;
+}
 
 onMounted(() => {
     context.value.selection.watch(selectionWatcher);
@@ -105,31 +173,33 @@ onMounted(() => {
     if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
-    window.addEventListener('blur', onWindowBlur);
     document.addEventListener('keydown', keyboardEventHandler);
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
-    window.removeEventListener('blur', onWindowBlur);
     document.removeEventListener('keydown', keyboardEventHandler);
 })
 </script>
 
 <template>
-    <div id="top" @dblclick="screenSetting">
+    <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context" />
     </div>
-    <ColSplitView ref="colSplitView" id="center" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+    <ColSplitView ref="colSplitView" id="center"
+        :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }" :right-min-width-in-px="Right.rightMin"
-        :left-min-width-in-px="Left.leftMin">
+        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+        :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
-                :page="(curPage as Page)"></Navigation>
-                <div class="showHiddenL" @click="showHiddenLeft">
-                    <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
-                    <svg-icon v-else class="svg" icon-class="right"></svg-icon>
-                </div>
+                @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
+                :page="(curPage as Page)">
+            </Navigation>
+            <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
+                :style="{ opacity: showLeft ? 1 : 0.6 }">
+                <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
+                <svg-icon v-else class="svg" icon-class="right"></svg-icon>
+            </div>
         </template>
         <template #slot2>
             <ContentView v-if="curPage !== undefined" data-area="content" id="content" :context="context"
@@ -137,14 +207,16 @@ onUnmounted(() => {
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" :context="context"></Attribute>
-            <div class="showHiddenR" @click="showHiddenRight">
+            <Attribute id="attributes" :context="context" @mouseenter="e => { mouseenter('right') }"
+                @mouseleave="() => { mouseleave('right') }"></Attribute>
+            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
+                :style="{ opacity: showRight ? 1 : 0.6 }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
             </div>
         </template>
     </ColSplitView>
-    <div id="bottom"></div>
+    <div id="bottom" v-if="showBottom"></div>
 </template>
 <style>
 :root {
@@ -168,9 +240,9 @@ onUnmounted(() => {
     flex-flow: row nowrap;
     width: 100%;
     height: 40px;
-    min-height: 40px;
     background-color: var(--top-toolbar-bg-color);
     z-index: 1;
+    min-height: 40px;
 }
 
 #center {
@@ -202,46 +274,46 @@ onUnmounted(() => {
 
     .showHiddenR {
         position: absolute;
-        left: -20px;
+        left: -12px;
         top: 50%;
-        width: 20px;
-        height: 40px;
-        transform: translateY(50%);
-        background-color: #fff;
+        transform: translateY(-50%);
         cursor: pointer;
+        height: 60px;
+        background-color: var(--theme-color-anti);
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 15px;
+        border-radius: 4px 0px 0px 4px;
+
         >.svg {
-            width: 16px;
-            height: 16px;
+            width: 12px;
+            height: 12px;
         }
     }
+
     .showHiddenL {
         position: absolute;
-        right: -20px;
+        right: -12px;
         top: 50%;
-        width: 20px;
-        height: 40px;
-        transform: translateY(50%);
-        background-color: #fff;
+        transform: translateY(-50%);
         z-index: 1;
         cursor: pointer;
+        height: 60px;
+        background-color: var(--theme-color-anti);
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 15px;
+        border-radius: 0 4px 4px 0;
 
         >.svg {
-            width: 16px;
-            height: 16px;
-
+            width: 12px;
+            height: 12px;
         }
     }
 }
 
 #bottom {
+    transition: 0.18s;
     flex-flow: row nowrap;
     width: 100%;
     height: 30px;

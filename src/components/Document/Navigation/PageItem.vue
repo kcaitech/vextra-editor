@@ -4,7 +4,7 @@
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageItem.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, nextTick, InputHTMLAttributes } from "vue";
+import { defineProps, defineEmits, ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
 export interface ItemData {
     name: string
     id: string
@@ -23,8 +23,8 @@ const MOUSE_LEFT = 0;
 const MOUSE_RIGHT = 2;
 function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
-    
-    if(e.button === MOUSE_LEFT) {
+
+    if (e.button === MOUSE_LEFT) {
         document.addEventListener("mouseup", function onMouseUp() {
             e.stopPropagation();
             emit("switchpage", props.data.id);
@@ -39,7 +39,7 @@ const onRename = (e: MouseEvent) => {
     isInput.value = true
     e.stopPropagation()
     nextTick(() => {
-        if(nameInput.value) { 
+        if (nameInput.value) {
             (nameInput.value as HTMLInputElement).value = props.data.name;
             nameInput.value.focus();
             nameInput.value.select();
@@ -51,7 +51,7 @@ const onRename = (e: MouseEvent) => {
 }
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
-    if(esc.value) return
+    if (esc.value) return
     emit('rename', value);
 }
 const saveInput = () => {
@@ -59,24 +59,24 @@ const saveInput = () => {
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
-    if(e.code === 'Enter') {
+    if (e.code === 'Enter') {
         esc.value = false
         isInput.value = false
-    }else if(e.code === 'Escape') {
+    } else if (e.code === 'Escape') {
         esc.value = true
         isInput.value = false
     }
 }
 const onInputBlur = (e: MouseEvent) => {
-    if (e.target instanceof Element && !e.target.closest('.rename')) {  
-    var timer = setTimeout(() => {
-        if(nameInput.value) {
-            (nameInput.value).blur()
-        }
-      clearTimeout(timer)
-      document.removeEventListener('click', onInputBlur);
-    }, 10)
-  } 
+    if (e.target instanceof Element && !e.target.closest('.rename')) {
+        var timer = setTimeout(() => {
+            if (nameInput.value) {
+                (nameInput.value).blur()
+            }
+            clearTimeout(timer)
+            document.removeEventListener('click', onInputBlur);
+        }, 10)
+    }
 }
 
 // function pageMenuUnmount(e?: MouseEvent, item?: string) {
@@ -84,19 +84,17 @@ const onInputBlur = (e: MouseEvent) => {
 //     if(item === 'rename') {
 //         e?.stopPropagation()
 //         onRename(e!)
-//     }  
+//     }
 // }
-
+onMounted(() => {});
+onUnmounted(() => {});
 </script>
 
 <template>
-    <div
-        :class="{ container: true, selected: props.data.selected }"
-        @mousedown="onMouseDown"
-    >
+    <div :class="{ container: true, selected: props.data.selected }" @mousedown="onMouseDown">
         <div class="ph"></div>
         <div class="item">
-            <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : ''}">{{props.data.name}}</div>
+            <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : '' }">{{ props.data.name }}</div>
             <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput">
         </div>
     </div>
@@ -116,12 +114,14 @@ const onInputBlur = (e: MouseEvent) => {
     display: flex;
     flex-direction: row;
     position: relative;
+
     .item {
         display: flex;
         align-items: center;
         width: 100%;
         position: relative;
-        > .title {
+
+        >.title {
             width: 100%;
             height: 100%;
             font-size: 10px;
@@ -155,13 +155,15 @@ div .rename {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding-left:6px;
+    padding-left: 6px;
     margin-right: 6px;
     outline-style: none;
     border: 1px solid var(--left-navi-button-select-color);
 }
+
 .items-wrap {
     padding: 0 10px;
+
     &:hover {
         background-color: var(--active-color);
     }

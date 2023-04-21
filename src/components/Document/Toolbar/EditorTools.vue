@@ -15,7 +15,7 @@ import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
 import Rect from "./Buttons/Rect.vue";
 import Ellipse from "./Buttons/Ellipse.vue";
-import Line from "./Buttons/Line.vue";
+import Line from "./Buttons/Path.vue";
 import Arrow from "./Buttons/Arrow.vue";
 import { Action, WorkSpace } from "@/context/workspace";
 

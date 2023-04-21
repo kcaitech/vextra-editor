@@ -52,6 +52,7 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
   let cursor: string = 'auto';
   let img: any;
   let deg: number = 0;
+  rotate = Math.round(rotate % 360);  
   const hot: { x: number, y: number } = { x: 20, y: 20 };
   if ([CtrlElementType.RectRB, CtrlElementType.RectLT].includes(ct)) {
     img = scaleBase64;
@@ -82,6 +83,7 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
       cursor = getString(cr, 1.5, hot);
     }
   }, () => { })
+
   return cursor
 
   function getString(url: any, times: number, hotPosition: { x: number, y: number }) {
@@ -89,7 +91,7 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
     return `-webkit-image-set(url(${url})${times}x) ${x} ${y}, auto`
   }
 }
-
+(window as any).foooo = cursorHandle
 // 根据四个点生成一个矩形
 // p1 p2
 // p4 p3
@@ -98,7 +100,7 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
   const top = Math.min(y1, y2, y3, y4);
   const right = Math.max(x1, x2, x3, x4);
   const bottom = Math.max(y1, y2, y3, y4);
-  
+
   const width = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
   const height = Math.sqrt(Math.pow(x3 - x2, 2) + Math.pow(y3 - y2, 2));
 

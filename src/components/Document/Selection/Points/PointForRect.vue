@@ -10,10 +10,11 @@ interface Props {
   context: Context,
   axle: XY,
   point: Point,
+  rotate: number
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  (e: 'transform', type: CtrlElementType, p1: XY, p2: XY, deg: number): void
+  (e: 'transform', type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale'): void
 }>();
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
@@ -62,6 +63,8 @@ function getCtrlElementType(event: MouseEvent) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
+
+
     const ct = getCtrlElementType(event);
     if (ct) {
       event.stopPropagation();
@@ -80,6 +83,7 @@ function onMouseDown(event: MouseEvent) {
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
   const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
+  let aType: 'rotate' | 'scale' = 'scale';
   if (isDragging) {
     let deg = 0;
     if (rotating) {
@@ -87,9 +91,10 @@ function onMouseMove(event: MouseEvent) {
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-      // workspace.value.setCursor(clt, props.controllerFrame.rotate);
+      workspace.value.setCursor(clt, props.rotate);
+      aType = 'rotate';
     }
-    emit('transform', props.point.type, startPosition, mouseOnPage, deg);
+    emit('transform', props.point.type, mouseOnPage, deg, aType);
     props.context.repo.transactCtx.fireNotify();
     startPosition = { ...mouseOnPage };
   } else {
@@ -118,7 +123,7 @@ function mouseleave() {
 function mousemove(event: MouseEvent) {
   if (rotating || scaling) return;
   const ct = getCtrlElementType(event);
-  // workspace.value.setCursor(ct, props.controllerFrame.rotate);
+  workspace.value.setCursor(ct, props.rotate);
 }
 function windowBlur() {
   if (isDragging) {

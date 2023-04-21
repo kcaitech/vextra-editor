@@ -289,15 +289,15 @@ onUnmounted(() => {
         width: 100%;
         height: 64px;
         font-size: 10px;
-        padding: 0 13px;
         box-sizing: border-box;
         position: relative;
-
+        overflow: hidden;
         >div:not(.space) {
             flex-shrink: 0;
         }
 
         .title {
+            margin-left: 13px;
             font-weight: var(--font-default-bold);
             line-height: 30px;
             height: 30px;
