@@ -27,6 +27,7 @@ const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let pageMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
+const isRename = ref(false)
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -63,7 +64,8 @@ class Iter implements IDataIter<ItemData> {
         return {
             name: id.name,
             id: id.id,
-            selected: slectedPage !== undefined && slectedPage.id == id.id
+            selected: slectedPage !== undefined && slectedPage.id == id.id,
+            reName: isRename.value
         }
     }
 }
@@ -93,8 +95,11 @@ const addPage = () => {
     const pageMgr = props.context.editor4Doc();
     const pageName = props.context.data.pagesList.length + 1
     const page = pageMgr.create(`页面 ${pageName}`);
-    // const selectPage = props.context.selection.selectPage()
-    pageMgr.insert(0, page);
+    const id = props.context.selection.selectedPage?.id
+    const index = props.context.data.pagesList.findIndex((item) => item.id === id)
+    isRename.value = true
+    pageMgr.insert(index + 1, page);
+    props.context.selection.insertPage(page)
 }
 
 function toggle() {

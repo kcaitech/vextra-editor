@@ -9,6 +9,7 @@ export interface ItemData {
     name: string
     id: string
     selected: boolean
+    reName: boolean
 }
 const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
@@ -35,9 +36,9 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 
-const onRename = (e: MouseEvent) => {
+const onRename = (e?: MouseEvent) => {
     isInput.value = true
-    e.stopPropagation()
+    e?.stopPropagation()
     nextTick(() => {
         if (nameInput.value) {
             (nameInput.value as HTMLInputElement).value = props.data.name;
@@ -59,7 +60,7 @@ const saveInput = () => {
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
-    if (e.code === 'Enter') {
+    if (e.key === 'Enter') {
         esc.value = false
         isInput.value = false
     } else if (e.code === 'Escape') {
@@ -86,7 +87,11 @@ const onInputBlur = (e: MouseEvent) => {
 //         onRename(e!)
 //     }
 // }
-onMounted(() => {});
+onMounted(() => {
+    if(props.data.reName && props.data.selected) {
+        onRename()
+    }
+});
 onUnmounted(() => {});
 </script>
 
