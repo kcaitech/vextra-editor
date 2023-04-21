@@ -35,7 +35,8 @@ class Iter implements IDataIter<ItemData> {
             shape,
             selected: props.context.selection.isSelectedShape(shape),
             expand: !data.fold,
-            level
+            level,
+            context: props.context
         }
     }
 }

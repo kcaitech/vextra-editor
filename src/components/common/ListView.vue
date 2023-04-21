@@ -511,11 +511,11 @@ function mouseMove(Event: MouseEvent) {
         }
         destination.value.length = width;
         destination.value.x = x;
-        destination.value.y = offsetOverhalf ? (toIndex.value + 1) * props.itemHeight - 1 : toIndex.value * props.itemHeight - 1;
+        destination.value.y = offsetOverhalf ? ((toIndex.value + 1) * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30) : (toIndex.value * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);    
     }
     // 填充替身内容 && 计算替身位置
     substitute.value.context = layoutResult[fromIndex.value].data.name
-    substitute.value.y = clientY - containerPosition.value.y + 14;
+    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
     substitute.value.x = clientX - containerPosition.value.x;
     substituteName.value = layoutResult[fromIndex.value].data.shape?.name
 }

@@ -74,14 +74,12 @@ const onMouseMove = (e: MouseEvent) => {
 
 watch(scale, (newV, oldV) => {
     //input的值加上鼠标移动后的大小等于最终改变的值
-    // let result = Number(props.text)+ Number(newV.axleX)
     if(props.ticon) {
         emit("onchange", result.value.toString());
     }else {
-        let value = result.value
+        const value = Number(parseFloat(props.text as string)) + scale.value.degX
         emit("onchange", value.toString())
     }
-    
 },{deep:true})
 
 const onMouseUp = (e: MouseEvent) => {

@@ -90,7 +90,11 @@ const pageSource = new class implements IDataSource<ItemData> {
 }
 
 const addPage = () => {
-    
+    const pageMgr = props.context.editor4Doc();
+    const pageName = props.context.data.pagesList.length + 1
+    const page = pageMgr.create(`页面 ${pageName}`);
+    // const selectPage = props.context.selection.selectPage()
+    pageMgr.insert(0, page);
 }
 
 function toggle() {
