@@ -137,22 +137,15 @@ function mouseup(e: MouseEvent) {
         document.removeEventListener('mouseup', mouseup);
     }
 }
-function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg: number) {
+function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale') {
     shapes = props.context.selection.selectedShapes;
     shapes.forEach(item => {
-        if (deg !== 0) {
+        if (aType === 'rotate') {
             const newDeg = (item.rotation || 0) + deg;
             item.rotate(newDeg);
         } else {
-            const p1Onpage = matrix.inverseCoord(p1.x, p1.y);
             const p2Onpage = matrix.inverseCoord(p2.x, p2.y); // page
-            const p1OnItem = item.matrix2Page().inverseCoord(p1Onpage.x, p1Onpage.y);
-            const p2OnItem = item.matrix2Page().inverseCoord(p2Onpage.x, p2Onpage.y);
-
-            const dx = p2OnItem.x - p1OnItem.x;
-            const dy = p2OnItem.y - p1OnItem.y;
             if (type === CtrlElementType.RectLT) {
-                // adjustLT2, adjustLB2, adjustRT2, adjustRB2
                 adjustLT2(item, p2Onpage.x, p2Onpage.y);
             } else if (type === CtrlElementType.RectRT) {
                 adjustRT2(item, p2Onpage.x, p2Onpage.y);
