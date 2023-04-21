@@ -35,6 +35,10 @@ const selectionChange = (t: number) => {
 
 onMounted(() => {
     props.context.selection.watch(selectionChange);
+    props.context.data.pagesMgr.watch(() => {
+        console.log('add page');
+        
+    })
 });
 
 onUnmounted(() => {
@@ -90,7 +94,9 @@ const pageSource = new class implements IDataSource<ItemData> {
 }
 
 const addPage = () => {
-    
+    const pageMgr = props.context.editor4Doc();
+    const page = pageMgr.create('xxx');
+    pageMgr.insert(0, page);
 }
 
 function toggle() {
