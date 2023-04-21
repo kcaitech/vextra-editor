@@ -216,7 +216,7 @@ export class WorkSpace extends Watchable(Object) {
             WorkSpace.ESC_EVENT_POINTER = undefined;
         }
     }
-    setCursor(type: CtrlElementType, deg: number) {
+    setCursor(type: CtrlElementType, deg: number) {        
         this.notify(WorkSpace.CURSOR_CHANGE, type, deg);
     }
     resetCursor() {

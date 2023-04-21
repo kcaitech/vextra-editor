@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
-import { translateByClientSize, expandByClientSize } from "@kcdesign/data/editor/frame";
+import { translateByClientSize, translate, expand, adjustLT2, adjustLB2, adjustRT2, adjustRB2 } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
 import { Point } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
@@ -13,6 +13,7 @@ interface Props {
     context: Context,
     isController: boolean
     controllerFrame: Point[],
+    rotate: number
 }
 interface FramePosition {
     top: string,
@@ -143,18 +144,22 @@ function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg: number) {
             const newDeg = (item.rotation || 0) + deg;
             item.rotate(newDeg);
         } else {
-            const delX = p2.x - p1.x, delY = p2.y - p1.y;
+            const p1Onpage = matrix.inverseCoord(p1.x, p1.y);
+            const p2Onpage = matrix.inverseCoord(p2.x, p2.y); // page
+            const p1OnItem = item.matrix2Page().inverseCoord(p1Onpage.x, p1Onpage.y);
+            const p2OnItem = item.matrix2Page().inverseCoord(p2Onpage.x, p2Onpage.y);
+
+            const dx = p2OnItem.x - p1OnItem.x;
+            const dy = p2OnItem.y - p1OnItem.y;
             if (type === CtrlElementType.RectLT) {
-                translateByClientSize(item, matrix, delX, delY);
-                expandByClientSize(item, matrix, -delX, -delY);
+                // adjustLT2, adjustLB2, adjustRT2, adjustRB2
+                adjustLT2(item, p2Onpage.x, p2Onpage.y);
             } else if (type === CtrlElementType.RectRT) {
-                translateByClientSize(item, matrix, 0, delY);
-                expandByClientSize(item, matrix, delX, -delY);
+                adjustRT2(item, p2Onpage.x, p2Onpage.y);
             } else if (type === CtrlElementType.RectRB) {
-                expandByClientSize(item, matrix, delX, delY);
+                adjustRB2(item, p2Onpage.x, p2Onpage.y);
             } else if (type === CtrlElementType.RectLB) {
-                translateByClientSize(item, matrix, delX, 0);
-                expandByClientSize(item, matrix, -delX, delY);
+                adjustLB2(item, p2Onpage.x, p2Onpage.y);
             }
         }
     });
@@ -187,16 +192,16 @@ watchEffect(updater)
 </script>
 <template>
     <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
+        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point" :rotate="props.rotate"
             @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <!-- <div class="frame" :style="{
-                                                                                            top: framePosition.top,
-                                                                                            left: framePosition.left,
-                                                                                            transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
-                                                                                        }">
-                                                                                            <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
-                                                                                            }}</span>
-                                                                                        </div> -->
+                        top: framePosition.top,
+                        left: framePosition.left,
+                        transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
+                    }">
+                        <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+                        }}</span>
+                    </div> -->
     </div>
 </template>
 <style lang='scss' scoped>

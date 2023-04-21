@@ -10,6 +10,7 @@ interface Props {
   context: Context,
   axle: XY,
   point: Point,
+  rotate: number
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -62,6 +63,8 @@ function getCtrlElementType(event: MouseEvent) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
+
+
     const ct = getCtrlElementType(event);
     if (ct) {
       event.stopPropagation();
@@ -87,7 +90,7 @@ function onMouseMove(event: MouseEvent) {
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-      // workspace.value.setCursor(clt, props.controllerFrame.rotate);
+      workspace.value.setCursor(clt, props.rotate);
     }
     emit('transform', props.point.type, startPosition, mouseOnPage, deg);
     props.context.repo.transactCtx.fireNotify();
@@ -118,7 +121,7 @@ function mouseleave() {
 function mousemove(event: MouseEvent) {
   if (rotating || scaling) return;
   const ct = getCtrlElementType(event);
-  // workspace.value.setCursor(ct, props.controllerFrame.rotate);
+  workspace.value.setCursor(ct, props.rotate);
 }
 function windowBlur() {
   if (isDragging) {

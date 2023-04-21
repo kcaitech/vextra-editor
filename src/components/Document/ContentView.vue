@@ -199,6 +199,7 @@ function newFrame(shape: Shape, point: XY) {
 async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {
         cursor.value = await cursorHandle(ct, rotate);
+        return;
     } else if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.value.matrix);
     } else if (t === WorkSpace.RESET_CURSOR) {
