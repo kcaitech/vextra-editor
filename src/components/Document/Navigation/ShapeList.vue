@@ -91,10 +91,6 @@ function notifySourceChange(t?: number) {
                 }
             }
         })
-        // const positionsY = Math.min(...shapes.map(item => {
-        //         return shapeDirList.indexOf(item) * 30
-        //     }))
-        //     console.log(positionsY)
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE)
 }

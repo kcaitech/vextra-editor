@@ -48,7 +48,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
         this.notify(Selection.CHANGE_PAGE);
     }
-
+    insertPage() {
+        this.notify(Selection.CHANGE_PAGE);
+    }
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
