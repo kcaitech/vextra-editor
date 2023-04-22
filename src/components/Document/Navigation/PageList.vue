@@ -27,7 +27,6 @@ const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let pageMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
-const isRename = ref(false)
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -64,8 +63,7 @@ class Iter implements IDataIter<ItemData> {
         return {
             name: id.name,
             id: id.id,
-            selected: slectedPage !== undefined && slectedPage.id == id.id,
-            reName: isRename.value
+            selected: slectedPage !== undefined && slectedPage.id == id.id
         }
     }
 }
@@ -97,7 +95,6 @@ const addPage = () => {
     const page = pageMgr.create(`页面 ${pageName}`);
     const id = props.context.selection.selectedPage?.id
     const index = props.context.data.pagesList.findIndex((item) => item.id === id)
-    isRename.value = true
     pageMgr.insert(index + 1, page);
     props.context.selection.insertPage(page)
 }
@@ -119,7 +116,7 @@ const rename = (value: string) => {
     editor.value.setName(value)
 }
 
-const MouseDown = (e: MouseEvent, id: string) => {
+const MouseDown = (id: string, e: MouseEvent) => {
     if(e.button === MOUSE_RIGHT) {
         e.stopPropagation()
         const menu = contextMenuEl.value?.menu?.className
@@ -156,7 +153,16 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
     if(item === 'rename') {
         e?.stopPropagation()
         
-    }  
+    } else if(item === 'duplicate') {
+        e?.stopPropagation()
+        
+    } else if(item === 'copy_link') {
+        e?.stopPropagation()
+        
+    } else if(item === 'delete') {
+        e?.stopPropagation()
+        
+    }
 }
 </script>
     

@@ -9,7 +9,6 @@ export interface ItemData {
     name: string
     id: string
     selected: boolean
-    reName: boolean
 }
 const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
@@ -32,7 +31,7 @@ function onMouseDown(e: MouseEvent) {
             document.removeEventListener('mouseup', onMouseUp)
         });
     }else if(e.button === MOUSE_RIGHT) {
-        emit('onMouseDown', props.data.id,e)
+        emit('onMouseDown', props.data.id, e)
     }
 }
 
@@ -88,9 +87,7 @@ const onInputBlur = (e: MouseEvent) => {
 //     }
 // }
 onMounted(() => {
-    if(props.data.reName && props.data.selected) {
-        onRename()
-    }
+
 });
 onUnmounted(() => {});
 </script>
