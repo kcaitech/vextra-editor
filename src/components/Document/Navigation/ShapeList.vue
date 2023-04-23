@@ -49,6 +49,8 @@ const chartMenu = ref<boolean>(false)
 const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let chartMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
+const shapeList = ref<HTMLDivElement>()
+const shapeH = ref(0)
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
 
@@ -160,6 +162,9 @@ function getShapeRange(start: number, end: number): Shape[] {
 
 function hoverShape(shape: Shape) {
     props.context.selection.hoverShape(shape);
+    if(shapeList.value)
+    shapeH.value = shapeList.value.offsetHeight
+
 }
 
 function unHovershape() {
@@ -256,7 +261,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="shapelist-wrap">
+    <div class="shapelist-wrap" ref="shapeList">
         <div class="header">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
@@ -265,7 +270,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body" ref="ListBody">
-            <ListView ref="shapelist" location="shapelist" :allowDrag="true" :source="listviewSource" :item-view="ShapeItem"
+            <ListView ref="shapelist" location="shapelist" :allowDrag="true" :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem"
                 :item-height="itemHieght" :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
                 @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
                 @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"

@@ -437,8 +437,8 @@ renderinit().then(() => {
         @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
-        <ContextMenu v-if="contextMenu" :width="216" :x="contextMenuPosition.x" :y="contextMenuPosition.y"
-            @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
+        <ContextMenu v-if="contextMenu" :width="216" :x="contextMenuPosition.x" :y="contextMenuPosition.y" 
+            @close="contextMenuUnmount" :site="site" ref="contextMenuEl" @mousedown.stop>
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>

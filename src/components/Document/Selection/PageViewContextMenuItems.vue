@@ -98,13 +98,20 @@ function edit() {
 }
 function visible() {
   const visible = props.context.selection.selectedShapes;
-  // const editor = computed(() => {
-  //       return props.context.editor4Shape(visible);
-  //   });
-  //   editor.value.setVisible()
+  const editor = computed(() => {
+        return props.context.editor4Shape(visible[0]);
+    });
+    editor.value.setVisible()
+    
 }
 function lock() {
-
+  const lock = props.context.selection.selectedShapes;
+  const editor = computed(() => {
+        return props.context.editor4Shape(lock[0]);
+    });
+    editor.value.setLock()
+    console.log(props.context.selection.selectedShapes[0].isLocked);
+    
 }
 function closeLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = false;

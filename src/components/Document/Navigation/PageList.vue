@@ -172,7 +172,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
             <div class="title">{{ t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add" @click="addPage">
+                <div class="add" @click="addPage" :title="t('navi.add_page')">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <!-- <div class="file">
