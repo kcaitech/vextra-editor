@@ -66,7 +66,8 @@ class Iter implements IDataIter<ItemData> {
         return {
             name: id.name,
             id: id.id,
-            selected: slectedPage !== undefined && slectedPage.id == id.id
+            selected: slectedPage !== undefined && slectedPage.id == id.id,
+            context: props.context
         }
     }
 }
@@ -99,6 +100,7 @@ const addPage = () => {
     const index = props.context.data.pagesList.findIndex((item) => item.id === id)
     pageMgr.insert(index + 1, page);
     props.context.selection.insertPage(page)
+    props.context.selection.reName();
 }
 
 function toggle() {
@@ -153,7 +155,8 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     document.removeEventListener('keydown', Menuesc);
     pageMenu.value = false;
     if (item === 'rename') {
-        e?.stopPropagation()
+        e?.stopPropagation();
+        props.context.selection.reName();
 
     } else if (item === 'duplicate') {
         e?.stopPropagation()
@@ -162,7 +165,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         let name = `${pageName?.name}_副本`;
         const repeats = props.context.data.pagesList.filter(i => i.name.slice(0, -1) === name);
         if (repeats.length) {
-            name = `${name}${repeats.length + 1}`;
+            name = `${name}${!repeats[0] ? ' ' : repeats.length + 1}`;
         }
         const page = pageMgr.create(name);
         const index = props.context.data.pagesList.findIndex((item) => item.id === id)

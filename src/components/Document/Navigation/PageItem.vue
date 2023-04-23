@@ -5,16 +5,19 @@
 -->
 <script setup lang="ts">
 import { defineProps, defineEmits, ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
+import { Selection } from "@/context/selection";
+import { Context } from "@/context";
 export interface ItemData {
     name: string
     id: string
     selected: boolean
+    context: Context
 }
 const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
     (e: "switchpage", id: string): void;
-    (e: "rename", name: string, event?: KeyboardEvent): void;
-    (e: "onMouseDown", id:string, event: MouseEvent): void;
+    (e: "rename", event: MouseEvent, name?: string, t?: number): void;
+    (e: "onMouseDown", id: string, event: MouseEvent): void;
 }>();
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
@@ -30,14 +33,13 @@ function onMouseDown(e: MouseEvent) {
             emit("switchpage", props.data.id);
             document.removeEventListener('mouseup', onMouseUp)
         });
-    }else if(e.button === MOUSE_RIGHT) {
+    } else if (e.button === MOUSE_RIGHT) {
         emit('onMouseDown', props.data.id, e)
     }
 }
 
-const onRename = (e?: MouseEvent) => {
+const onRename = () => {
     isInput.value = true
-    e?.stopPropagation()
     nextTick(() => {
         if (nameInput.value) {
             (nameInput.value as HTMLInputElement).value = props.data.name;
@@ -86,10 +88,17 @@ const onInputBlur = (e: MouseEvent) => {
 //         onRename(e!)
 //     }
 // }
+function update(t: number) {
+    if (t === Selection.CHANGE_RENAME) {
+        onRename()
+    }
+}
 onMounted(() => {
-
+    props.data.context.selection.watch(update)
 });
-onUnmounted(() => {});
+onUnmounted(() => {
+    props.data.context.selection.unwatch(update)
+});
 </script>
 
 <template>

@@ -23,6 +23,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_PAGE = 1;
     static CHANGE_SHAPE = 2;
     static CHANGE_SHAPE_HOVER = 3;
+    static CHANGE_RENAME = 4;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -77,6 +78,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_cursorEnd = -1;
 
         this.notify(Selection.CHANGE_PAGE);
+    }
+    reName() {
+        this.notify(Selection.CHANGE_RENAME);
     }
 
     get selectedPage(): Page | undefined {
