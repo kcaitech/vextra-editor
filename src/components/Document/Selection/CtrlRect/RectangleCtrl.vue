@@ -107,7 +107,7 @@ function mousemove(e: MouseEvent) {
         if (isDragging) {
             workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
             props.context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
-            transform(shapes, matrix, startPosition, mousePosition);
+            transform(shapes, startPosition, mousePosition);
             startPosition = { ...mousePosition };
         } else {
             if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
@@ -117,10 +117,12 @@ function mousemove(e: MouseEvent) {
         }
     }
 }
-function transform(shapes: Shape[], matrix: Matrix, start: XY, end: XY) {
+function transform(shapes: Shape[], start: XY, end: XY) {
+    const ps = matrix.inverseCoord(start.x, start.y);
+    const pe = matrix.inverseCoord(end.x, end.y);
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
-        translateByClientSize(shapes[i], matrix, end.x - start.x, end.y - start.y);
+        translate(shapes[i], pe.x - ps.x, pe.y - ps.y);
     }
     props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
 }
