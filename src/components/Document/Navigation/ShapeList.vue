@@ -35,7 +35,8 @@ class Iter implements IDataIter<ItemData> {
             shape,
             selected: props.context.selection.isSelectedShape(shape),
             expand: !data.fold,
-            level
+            level,
+            context: props.context
         }
     }
 }
@@ -48,6 +49,8 @@ const chartMenu = ref<boolean>(false)
 const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let chartMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
+const shapeList = ref<HTMLDivElement>()
+const shapeH = ref(0)
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
 
@@ -74,9 +77,15 @@ function notifySourceChange(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
-            const parent = item.parent
-            if(parent?.parent && parent.parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent.parent)) toggleExpand(parent.parent) //父级还有父级          
-            if (parent && parent.type !== ShapeType.Page && !shapeDirList.isExpand(parent)) toggleExpand(parent)
+            let parent = item.parent
+            let parents = []
+            while(parent) {
+                parents.unshift(parent);
+                parent = parent.parent;
+            }
+            parents.forEach(p => {
+                p.type !== ShapeType.Page && !shapeDirList.isExpand(p) && toggleExpand(p);
+            })
             const indexItem = shapeDirList.indexOf(item)
             if (ListBody.value) {
                 ListH.value = ListBody.value.clientHeight //list可视高度
@@ -149,6 +158,9 @@ function getShapeRange(start: number, end: number): Shape[] {
 
 function hoverShape(shape: Shape) {
     props.context.selection.hoverShape(shape);
+    if(shapeList.value)
+    shapeH.value = shapeList.value.offsetHeight
+
 }
 
 function unHovershape() {
@@ -245,7 +257,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="shapelist-wrap">
+    <div class="shapelist-wrap" ref="shapeList">
         <div class="header">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
@@ -254,7 +266,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body" ref="ListBody">
-            <ListView ref="shapelist" location="shapelist" :allowDrag="true" :source="listviewSource" :item-view="ShapeItem"
+            <ListView ref="shapelist" location="shapelist" :allowDrag="true" :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem"
                 :item-height="itemHieght" :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
                 @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
                 @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"

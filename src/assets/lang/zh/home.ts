@@ -42,7 +42,8 @@ export const navi = {
     shape: '图层',
     comps: '组件',
     resource: '资源库',
-    page: '页面'
+    page: '页面',
+    add_page: '添加新页面'
 }
 
 export const frame = {

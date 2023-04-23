@@ -16,6 +16,9 @@ import { Document, PageListItem } from "@kcdesign/data/data/document";
 import ContextMenu from '@/components/common/ContextMenu.vue'
 const { t } = useI18n();
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
+interface MenuItem {
+    name: string, id: string
+}
 const props = defineProps<{ context: Context }>();
 const emit = defineEmits<{
     (e: "fold", fold: boolean): void;
@@ -25,7 +28,7 @@ const fold = ref<boolean>(false)
 const MOUSE_RIGHT = 2
 const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
-let pageMenuItems: string[] = [];
+let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
@@ -90,9 +93,12 @@ const pageSource = new class implements IDataSource<ItemData> {
 }
 const addPage = () => {
     const pageMgr = props.context.editor4Doc();
-    const page = pageMgr.create('xxx');
-    pageMgr.insert(0, page);
-    props.context.selection.insertPage();
+    const pageName = props.context.data.pagesList.length + 1
+    const page = pageMgr.create(`页面 ${pageName}`);
+    const id = props.context.selection.selectedPage?.id
+    const index = props.context.data.pagesList.findIndex((item) => item.id === id)
+    pageMgr.insert(index + 1, page);
+    props.context.selection.insertPage(page)
 }
 
 function toggle() {
@@ -112,18 +118,20 @@ const rename = (value: string) => {
     editor.value.setName(value)
 }
 
-const MouseDown = (e: MouseEvent) => {
+const MouseDown = (id: string, e: MouseEvent) => {
     if (e.button === MOUSE_RIGHT) {
         e.stopPropagation()
         const menu = contextMenuEl.value?.menu?.className
         if (e.target instanceof Element && e.target.closest(`.${menu}`)) return
-        pageMenuMount(e)
+        pageMenuMount(id, e)
     }
+
+
 }
-const pageMenuMount = (e: MouseEvent) => {
+const pageMenuMount = (id: string, e: MouseEvent) => {
     pageMenuPosition.value.x = e.clientX
     pageMenuPosition.value.y = e.clientY - 75
-    pageMenuItems = ['copy_link', 'duplicate', 'rename', 'delete']
+    pageMenuItems = [{ name: 'copy_link', id: id }, { name: 'duplicate', id: id }, { name: 'rename', id: id }, { name: 'delete', id: id }]
     pageMenu.value = true
     e.stopPropagation()
     document.addEventListener('keydown', Menuesc);
@@ -141,12 +149,33 @@ const pageMenuMount = (e: MouseEvent) => {
 function Menuesc(e: KeyboardEvent) {
     if (e.code === 'Escape') pageMenuUnmount();
 }
-function pageMenuUnmount(e?: MouseEvent, item?: string) {
+function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     document.removeEventListener('keydown', Menuesc);
     pageMenu.value = false;
     if (item === 'rename') {
         e?.stopPropagation()
-        // onRename(e!)
+
+    } else if (item === 'duplicate') {
+        e?.stopPropagation()
+        const pageMgr = props.context.editor4Doc();
+        const pageName = props.context.data.pagesList.find(p => p.id === id)
+        let name = `${pageName?.name}_副本`;
+        const repeats = props.context.data.pagesList.filter(i => i.name.slice(0, -1) === name);
+        if (repeats.length) {
+            name = `${name}${repeats.length + 1}`;
+        }
+        const page = pageMgr.create(name);
+        const index = props.context.data.pagesList.findIndex((item) => item.id === id)
+        pageMgr.insert(index + 1, page);
+        props.context.selection.insertPage(page)
+
+    } else if (item === 'copy_link') {
+        e?.stopPropagation()
+
+    } else if (item === 'delete') {
+        e?.stopPropagation()
+        id && props.context.selection.deletePage(id)
+        id && props.context.editor4Doc().delete(id)
     }
 }
 </script>
@@ -157,7 +186,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
             <div class="title">{{ t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add" @click="addPage">
+                <div class="add" @click="addPage" :title="t('navi.add_page')">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <!-- <div class="file">
@@ -176,8 +205,8 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
                 @close="pageMenuUnmount">
                 <div class="items-wrap" v-for="(item, index) in pageMenuItems" :key="index"
-                    @click="e => pageMenuUnmount(e, item)">
-                    <span>{{ t(`pageMenu.${item}`) }}</span>
+                    @click="e => pageMenuUnmount(e, item.name, item.id)">
+                    <span>{{ t(`pageMenu.${item.name}`) }}</span>
                 </div>
             </ContextMenu>
         </div>
@@ -268,5 +297,6 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
     &:hover {
         background-color: var(--active-color);
     }
-}</style>
+}
+</style>
     

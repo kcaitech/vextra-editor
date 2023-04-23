@@ -29,6 +29,7 @@ export const navi = {
     comps: 'Compnents',
     resource: 'Resource',
     page: 'Page',
+    add_page: 'Add new page'
 }
 
 export const frame = {

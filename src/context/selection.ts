@@ -2,6 +2,7 @@ import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape } from "@kcdesign/data/data/shape";
+import { PageListItem } from "@kcdesign/data/data/typesdefine";
 import { cloneDeep } from "lodash";
 
 interface Saved {
@@ -26,6 +27,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;
+    private m_document: Document;
 
     // todo
     private m_cursorStart: number = -1;
@@ -48,9 +50,35 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
         this.notify(Selection.CHANGE_PAGE);
     }
-    insertPage() {
+    insertPage(p: Page | undefined) {
+        this.m_selectPage = p;
+        this.m_selectShapes.length = 0;
+        this.m_cursorStart = -1;
+        this.m_cursorEnd = -1;
+
         this.notify(Selection.CHANGE_PAGE);
     }
+    async deletePage(id: string) {
+       if (id === this.m_selectPage?.id) {
+        // tode
+        const index = this.m_document.pagesList.findIndex((p: PageListItem) => p.id === id);
+        if(index === this.m_document.pagesList.length - 1) {
+            await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
+                this.m_selectPage = p;
+            });
+        }else {
+            await this.m_document.pagesMgr.get(this.m_document.pagesList[index + 1].id).then(p => {
+                this.m_selectPage = p;
+            });
+        }
+       }
+        this.m_selectShapes.length = 0;
+        this.m_cursorStart = -1;
+        this.m_cursorEnd = -1;
+
+        this.notify(Selection.CHANGE_PAGE);
+    }
+
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }

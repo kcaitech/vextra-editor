@@ -14,14 +14,13 @@ const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
     (e: "switchpage", id: string): void;
     (e: "rename", name: string, event?: KeyboardEvent): void;
-    (e: "onMouseDown", event: MouseEvent): void;
+    (e: "onMouseDown", id:string, event: MouseEvent): void;
 }>();
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
 const esc = ref<boolean>(false)
 const MOUSE_LEFT = 0;
 const MOUSE_RIGHT = 2;
-const pageMenu = ref<boolean>(false)
 function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
 
@@ -31,14 +30,14 @@ function onMouseDown(e: MouseEvent) {
             emit("switchpage", props.data.id);
             document.removeEventListener('mouseup', onMouseUp)
         });
-    } else if (e.button === MOUSE_RIGHT) {
-        emit('onMouseDown', e)
+    }else if(e.button === MOUSE_RIGHT) {
+        emit('onMouseDown', props.data.id, e)
     }
 }
 
-const onRename = (e: MouseEvent) => {
+const onRename = (e?: MouseEvent) => {
     isInput.value = true
-    e.stopPropagation()
+    e?.stopPropagation()
     nextTick(() => {
         if (nameInput.value) {
             (nameInput.value as HTMLInputElement).value = props.data.name;
@@ -60,7 +59,7 @@ const saveInput = () => {
     isInput.value = false
 }
 const keySaveInput = (e: KeyboardEvent) => {
-    if (e.code === 'Enter') {
+    if (e.key === 'Enter') {
         esc.value = false
         isInput.value = false
     } else if (e.code === 'Escape') {
@@ -87,7 +86,9 @@ const onInputBlur = (e: MouseEvent) => {
 //         onRename(e!)
 //     }
 // }
-onMounted(() => {});
+onMounted(() => {
+
+});
 onUnmounted(() => {});
 </script>
 

@@ -27,7 +27,8 @@ const props = defineProps<{
     firstIndex: number,
     orientation: "horizontal" | "vertical",
     location?: string,
-    allowDrag?: boolean
+    allowDrag?: boolean,
+    shapeHeight?: number
 }>();
 
 const emit = defineEmits<{
@@ -224,7 +225,7 @@ viewMeasure[Orientation.H] = () => {
 // 滚动到可见
 
 // let offset = 0;
-props.source.onChange((index: number, del: number, insert: number, modify: number): void => {
+props.source.onChange((index: number, del: number, insert: number, modify: number): void => {    
     if (props.orientation == Orientation.V) {
         measureHeight.value = props.source.length() * props.itemHeight;
         measureWidth.value = props.itemWidth;
@@ -494,12 +495,14 @@ function mouseDownOnItem(index: number, e: MouseEvent) {
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
 }
+let timer: any = null
 function mouseMove(Event: MouseEvent) {
     const { clientX, clientY } = Event;
+    if(timer) clearInterval(timer)
     if (Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y) < 10 && !draging.value) return;
     draging.value = true;
     if ((currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect) {
-        const { x, y, width, } = (currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect();
+        const { x, y, width } = (currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect();
         const offsetX: number = clientX - x;
         const offsetY: number = clientY - y;
         const offset = props.orientation === Orientation.H ? offsetX : offsetY;
@@ -509,13 +512,37 @@ function mouseMove(Event: MouseEvent) {
         } else if ((offset > itemRange / 2) && (offset <= itemRange)) {
             offsetOverhalf = true;
         }
+        
+        const shpaeTop = props.shapeHeight && document.documentElement.offsetHeight - props.shapeHeight
+        const shapeButtom = document.documentElement.offsetHeight - clientY
+        const scrollHeight = Math.abs(scroll.y) + props.shapeHeight! - container.value!.offsetTop
+            if(scroll.y < 0 && shpaeTop && clientY - shpaeTop < 60 && clientY - shpaeTop > 20) {
+                timer = setInterval(() => {
+                    scroll.y = scroll.y + 1   
+                    destination.value.y = offsetOverhalf ? ((toIndex.value + 1) * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30) : (toIndex.value * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30); 
+                    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
+                    clampScroll(0, scroll.y)
+                    layoutUp[props.orientation]();
+                    if(scroll.y === 0) clearInterval(timer)
+                }, 10)
+            }else if(scroll.y <= 0 && shapeButtom < 60 && shapeButtom > 20 && props.source.length() * props.itemHeight > scrollHeight) {
+                timer = setInterval(() => {
+                    scroll.y = scroll.y - 1   
+                    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
+                    destination.value.y = offsetOverhalf ? ((toIndex.value + 1) * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30) : (toIndex.value * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30); 
+                    clampScroll(0, scroll.y)
+                    layoutUp[props.orientation]();
+                    if(scroll.y === 0) clearInterval(timer)
+                }, 10)
+            }
+            
         destination.value.length = width;
         destination.value.x = x;
-        destination.value.y = offsetOverhalf ? (toIndex.value + 1) * props.itemHeight - 1 : toIndex.value * props.itemHeight - 1;
+        destination.value.y = offsetOverhalf ? ((toIndex.value + 1) * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30) : (toIndex.value * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);    
     }
     // 填充替身内容 && 计算替身位置
     substitute.value.context = layoutResult[fromIndex.value].data.name
-    substitute.value.y = clientY - containerPosition.value.y + 14;
+    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
     substitute.value.x = clientX - containerPosition.value.x;
     substituteName.value = layoutResult[fromIndex.value].data.shape?.name
 }
@@ -550,6 +577,7 @@ function descend(from: number, to: number) {
     return target;
 }
 function mouseUp() {
+    clearInterval(timer)
     if (!props.allowDrag) return;
     // close events && check descend port && descend
     mousedown.value = false;

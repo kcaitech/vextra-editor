@@ -2,12 +2,14 @@
 
 import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed, nextTick, InputHTMLAttributes } from "vue";
 import { Shape, GroupShape } from '@kcdesign/data/data/shape';
+import { Context } from "@/context";
 export interface ItemData {
     id: string
     shape: Shape
     selected: boolean
     expand: boolean
     level: number
+    context: Context
 }
 
 const isLock = ref<boolean>(true)
@@ -17,7 +19,6 @@ const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<{ data: ItemData }>();
 const esc = ref<boolean>(false)
-const MOUSE_RIGHT = 2;
 const phWidth = computed(() => {
     return (props.data.level - 1) * 6;
 })
@@ -120,9 +121,23 @@ const onInputBlur = (e: MouseEvent) => {
         }, 10)
     }
 }
+const selectedChild = () => {
+    let parent = props.data.shape.parent
+    let child
+    while(parent) {
+        if(parent.type === 'page') break
+        child = props.data.context.selection.isSelectedShape(parent)
+        parent = parent.parent        
+        if(child) {
+            return child
+        }
+    }
+    return child
+}
 const onMouseDown = (e: MouseEvent) => {
     e.stopPropagation();
         emit('onMouseDown',e)
+        selectedChild()
 }
 
 onBeforeMount(() => {
@@ -135,7 +150,7 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div class="contain" :class="{ container: true, selected: props.data.selected }" @click="selectShape"
+    <div class="contain" :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }" @click="selectShape"
         @mouseover="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
         <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
@@ -186,6 +201,9 @@ div.container {
 
 div.container.selected {
     background-color: var(--left-navi-button-select-color);
+}
+div.container.selectedChild {
+    background-color: var(--left-navi-button-hover-color);
 }
 
 div.ph {

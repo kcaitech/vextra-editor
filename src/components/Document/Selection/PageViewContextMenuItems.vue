@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, reactive, ref, defineEmits } from 'vue';
+import { defineProps, reactive, ref, defineEmits,computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
@@ -19,7 +19,8 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
-
+const isLock = ref<boolean>()
+const isVisible = ref<boolean>()
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
@@ -35,6 +36,82 @@ function paste() {
 }
 function selectAll() {
 
+}
+function half() {
+
+}
+function hundred() {
+
+}
+function double() {
+
+}
+function canvas() {
+
+}
+function cursor() {
+
+}
+function comment() {
+
+}
+function ruler() {
+
+}
+function pixel() {
+
+}
+function operation() {
+
+}
+function forward() {
+
+}
+function back() {
+
+}
+function top() {
+
+}
+function bottom() {
+
+}
+function groups() {
+
+}
+function container() {
+
+}
+function unGroup() {
+
+}
+function component() {
+
+}
+function instance() {
+
+}
+function reset() {
+
+}
+function edit() {
+
+}
+function visible() {
+  const visible = props.context.selection.selectedShapes;
+  const editor = computed(() => {
+        return props.context.editor4Shape(visible[0]);
+    });
+    editor.value.setVisible()
+    isVisible.value = props.context.selection.selectedShapes[0].isVisible
+}
+function lock() {
+  const lock = props.context.selection.selectedShapes;
+  const editor = computed(() => {
+        return props.context.editor4Shape(lock[0]);
+    });
+  editor.value.setLock()
+  isLock.value = props.context.selection.selectedShapes[0].isLocked
 }
 function closeLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = false;
@@ -54,107 +131,108 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 常用功能 -->
     <div class="item" v-if="props.items.includes('all')" @click="selectAll">
       <span>{{ t('system.select_all') }}</span>
-      <span class="shortkey">Ctrl + V</span>
-    </div>
-    <div class="item" v-if="props.items.includes('paste')" @click="paste">
-      <span>{{ t('system.paste') }}</span>
-      <span class="shortkey">Ctrl + V</span>
+      <span class="shortkey"></span>
     </div>
     <div class="item" v-if="props.items.includes('copy')" @click="copy">
       <span>{{ t('system.copy') }}</span>
       <span class="shortkey">Ctrl + C</span>
     </div>
+    <div class="item" v-if="props.items.includes('paste')" @click="paste">
+      <span>{{ t('system.paste') }}</span>
+      <span class="shortkey">Ctrl + V</span>
+    </div>
+    
       <!-- 视图比例 -->
     <div class="line" v-if="props.items.includes('half')"></div>
-    <div class="item" v-if="props.items.includes('half')"><span>50%</span></div>
-    <div class="item" v-if="props.items.includes('hundred')"><span>100%</span></div>
-    <div class="item" v-if="props.items.includes('double')"><span>200%</span></div>
-    <div class="item" v-if="props.items.includes('canvas')">
+    <div class="item" v-if="props.items.includes('half')" @click="half"><span>50%</span></div>
+    <div class="item" v-if="props.items.includes('hundred')" @click="hundred"><span>100%</span></div>
+    <div class="item" v-if="props.items.includes('double')" @click="double"><span>200%</span></div>
+    <div class="item" v-if="props.items.includes('canvas')" @click="canvas">
       <span>{{ t('system.fit_canvas') }}</span>
     </div>
     <!-- 协作 -->
     <div class="line" v-if="props.items.includes('cursor')"></div>
-    <div class="item" v-if="props.items.includes('cursor')">
+    <div class="item" v-if="props.items.includes('cursor')" @click="cursor">
       <div class="choose"></div>
       <span>{{ t('system.show_many_cursor') }}</span>
     </div>
-    <div class="item" v-if="props.items.includes('comment')">
+    <div class="item" v-if="props.items.includes('comment')" @click="comment">
       <div class="choose"></div>
       <span>{{ t('system.show_comment') }}</span>
       <span></span>
     </div>
     <!-- 界面显示 -->
     <div class="line" v-if="props.items.includes('ruler')"></div>
-    <div class="item" v-if="props.items.includes('ruler')">
+    <div class="item" v-if="props.items.includes('ruler')" @click="ruler">
       <div class="choose"></div>
       <span>{{ t('system.show_ruler') }}</span>
     </div>
-    <div class="item" v-if="props.items.includes('pixel')">
+    <div class="item" v-if="props.items.includes('pixel')" @click="pixel">
       <div class="choose"></div>
       <span>{{ t('system.show_pixel_network') }}</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('operation')">
+    <div class="item" v-if="props.items.includes('operation')" @click="operation">
       <div class="choose"></div>
       <span>{{ t('system.hide_operation_interface') }}</span>
       <span></span>
     </div>
     <!-- 顺序调整 -->
     <div class="line" v-if="props.items.includes('forward')"></div>
-    <div class="item" v-if="props.items.includes('forward')">
+    <div class="item" v-if="props.items.includes('forward')" @click="forward">
       <span>{{ t('system.bring_forward') }}</span>
     </div>
-    <div class="item" v-if="props.items.includes('back')">
+    <div class="item" v-if="props.items.includes('back')" @click="back">
       <span>{{ t('system.send_backward') }}</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('top')">
+    <div class="item" v-if="props.items.includes('top')" @click="top">
       <span>{{ t('system.bring_to_top') }}</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('bottom')">
+    <div class="item" v-if="props.items.includes('bottom')" @click="bottom">
       <span>{{ t('system.send_to_bottom') }}</span>
       <span></span>
     </div>
     <!-- 组合容器 -->
     <div class="line" v-if="props.items.includes('groups')"></div>
-    <div class="item" v-if="props.items.includes('groups')">
+    <div class="item" v-if="props.items.includes('groups')" @click="groups">
       <span>{{ t('system.creating_groups') }}</span>
     </div>
-    <div class="item" v-if="props.items.includes('container')">
+    <div class="item" v-if="props.items.includes('container')" @click="container">
       <span>{{ t('system.create_container') }}</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('un_group')">
+    <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
       <span>{{ t('system.un_group') }}</span>
       <span></span>
     </div>
     <!-- 组件操作 -->
     <div class="line" v-if="props.items.includes('component')"></div>
-    <div class="item" v-if="props.items.includes('component')">
+    <div class="item" v-if="props.items.includes('component')" @click="component">
       <span>{{ t('system.create_component') }}</span>
     </div>
-    <div class="item" v-if="props.items.includes('instance')">
+    <div class="item" v-if="props.items.includes('instance')" @click="instance">
       <span>{{ t('system.unbind_instance') }}</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('reset')">
+    <div class="item" v-if="props.items.includes('reset')" @click="reset">
       <span>{{ t('system.reset_instance_roperties') }}</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('edit')">
+    <div class="item" v-if="props.items.includes('edit')" @click="edit">
       <span>{{ t('system.edit_component') }}</span>
       <span></span>
     </div>
     <!-- 隐藏/锁定 -->
     <div class="line" v-if="props.items.includes('visible')"></div>
-    <div class="item" v-if="props.items.includes('visible')">
-      <div class="choose"></div>
+    <div class="item" v-if="props.items.includes('visible')" @click="visible">
+      <div class="choose" :style="{visibility: isVisible ? 'visible' : 'hidden'}"></div>
       <span>{{ t('system.visible') }}</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('visible')">
-      <div class="choose"></div>
+    <div class="item" v-if="props.items.includes('lock')" @click="lock">
+      <div class="choose" :style="{visibility: isLock ? 'visible' : 'hidden'}"></div>
       <span>{{ t('system.Lock') }}</span>
       <span></span>
     </div>

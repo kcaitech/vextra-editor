@@ -42,7 +42,7 @@ function calcFrame() {
     const frame = props.shape.frame;
     w.value = frame.width;
     h.value = frame.height;
-    rotate.value = props.shape.rotation || 0;
+    rotate.value = Number(props.shape.rotation?.toFixed(2)) || 0;
     shapeType.value = props.shape.type;
     showBgFlipH.value = props.shape.isFlippedHorizontal;
     showBgColorV.value = props.shape.isFlippedVertical;
@@ -125,7 +125,7 @@ const onChangeRadian = (value: string, type: 'rrt' | 'rlt' | 'rrb' | 'rlb') => {
 
 const onChangeRadianRT = (value: string,  type: 'rrt') => {
     value = Number.parseFloat(value).toFixed(fix);
-    const newRadian: number = Number.parseFloat(value);
+    const newRadian: number = Number.parseFloat(value) < Math.min(w.value, h.value) ? Number.parseFloat(value) :Math.min(w.value, h.value)
     if (!radius.value) return;
     const newR = cloneDeep(radius.value);
     newR[type] = newRadian;
