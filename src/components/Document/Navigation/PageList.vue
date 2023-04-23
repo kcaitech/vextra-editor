@@ -16,6 +16,9 @@ import { Document, PageListItem } from "@kcdesign/data/data/document";
 import ContextMenu from '@/components/common/ContextMenu.vue'
 const { t } = useI18n();
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
+interface MenuItem {
+    name: string, id: string
+}
 const props = defineProps<{ context: Context }>();
 const emit = defineEmits<{
     (e: "fold", fold: boolean): void;
@@ -25,7 +28,7 @@ const fold = ref<boolean>(false)
 const MOUSE_RIGHT = 2
 const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
-let pageMenuItems: string[] = [];
+let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
@@ -88,7 +91,6 @@ const pageSource = new class implements IDataSource<ItemData> {
         this.m_onchange && this.m_onchange(index, del, insert, modify);
     }
 }
-
 const addPage = () => {
     const pageMgr = props.context.editor4Doc();
     const pageName = props.context.data.pagesList.length + 1
@@ -107,9 +109,9 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
     const docEditor = props.context.editor4Doc();
     docEditor.move(params.dragTarget, params.to);
 }
-const rename = (value: string) => { 
+const rename = (value: string) => {
     const page = props.context.selection.selectedPage
-    if(!page) return
+    if (!page) return
     const editor = computed(() => {
         return props.context.editor4Page(page)
     });
@@ -117,19 +119,19 @@ const rename = (value: string) => {
 }
 
 const MouseDown = (id: string, e: MouseEvent) => {
-    if(e.button === MOUSE_RIGHT) {
+    if (e.button === MOUSE_RIGHT) {
         e.stopPropagation()
         const menu = contextMenuEl.value?.menu?.className
-        if(e.target instanceof Element && e.target.closest(`.${menu}`)) return
-        pageMenuMount(e)
+        if (e.target instanceof Element && e.target.closest(`.${menu}`)) return
+        pageMenuMount(id, e)
     }
-    
-    
+
+
 }
-const pageMenuMount = (e: MouseEvent) => {
+const pageMenuMount = (id: string, e: MouseEvent) => {
     pageMenuPosition.value.x = e.clientX
     pageMenuPosition.value.y = e.clientY - 75
-    pageMenuItems = ['copy_link','duplicate','rename','delete']
+    pageMenuItems = [{ name: 'copy_link', id: id }, { name: 'duplicate', id: id }, { name: 'rename', id: id }, { name: 'delete', id: id }]
     pageMenu.value = true
     e.stopPropagation()
     document.addEventListener('keydown', Menuesc);
@@ -141,27 +143,39 @@ const pageMenuMount = (e: MouseEvent) => {
                 el.style.width = 180 + 'px'
             }
         }
-    
+
     })
 }
 function Menuesc(e: KeyboardEvent) {
     if (e.code === 'Escape') pageMenuUnmount();
 }
-function pageMenuUnmount(e?: MouseEvent, item?: string) {
+function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     document.removeEventListener('keydown', Menuesc);
     pageMenu.value = false;
-    if(item === 'rename') {
+    if (item === 'rename') {
         e?.stopPropagation()
-        
-    } else if(item === 'duplicate') {
+
+    } else if (item === 'duplicate') {
         e?.stopPropagation()
-        
-    } else if(item === 'copy_link') {
+        const pageMgr = props.context.editor4Doc();
+        const pageName = props.context.data.pagesList.find(p => p.id === id)
+        let name = `${pageName?.name}_副本`;
+        const repeats = props.context.data.pagesList.filter(i => i.name.slice(0, -1) === name);
+        if (repeats.length) {
+            name = `${name}${repeats.length + 1}`;
+        }
+        const page = pageMgr.create(name);
+        const index = props.context.data.pagesList.findIndex((item) => item.id === id)
+        pageMgr.insert(index + 1, page);
+        props.context.selection.insertPage(page)
+
+    } else if (item === 'copy_link') {
         e?.stopPropagation()
-        
-    } else if(item === 'delete') {
+
+    } else if (item === 'delete') {
         e?.stopPropagation()
-        
+        id && props.context.selection.deletePage(id)
+        id && props.context.editor4Doc().delete(id)
     }
 }
 </script>
@@ -179,29 +193,20 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
                     <svg-icon icon-class="file"></svg-icon>
                 </div> -->
                 <div class="shrink" @click="toggle">
-                    <svg-icon icon-class="down" :style="{transform: fold ? 'rotate(90deg)' : 'rotate(0deg)'}"></svg-icon>
+                    <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(90deg)' : 'rotate(0deg)' }"></svg-icon>
                 </div>
             </div>
         </div>
-        <div class="body" :style="{height: fold ? 0 : 'calc(100% - 30px)'}">
-            <ListView
-                :source="pageSource"
-                :item-view="PageItem"
-                :item-width="0"
-                :item-height="30"
-                :first-index="0"
-                v-bind="$attrs"
-                orientation="vertical"
-                :allowDrag="true"
-                location="pagelist"
-                @update-after-drag="updateAfterDrag"
-                @rename="rename"
-                @onMouseDown="MouseDown"
-            >
+        <div class="body" :style="{ height: fold ? 0 : 'calc(100% - 30px)' }">
+            <ListView :source="pageSource" :item-view="PageItem" :item-width="0" :item-height="30" :first-index="0"
+                v-bind="$attrs" orientation="vertical" :allowDrag="true" location="pagelist"
+                @update-after-drag="updateAfterDrag" @rename="rename" @onMouseDown="MouseDown">
             </ListView>
-            <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y"  ref="contextMenuEl" @close="pageMenuUnmount">
-                <div class="items-wrap" v-for="(item, index) in pageMenuItems" :key="index" @click="e => pageMenuUnmount(e, item)">
-                    <span>{{ t(`pageMenu.${item}`) }}</span>
+            <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
+                @close="pageMenuUnmount">
+                <div class="items-wrap" v-for="(item, index) in pageMenuItems" :key="index"
+                    @click="e => pageMenuUnmount(e, item.name, item.id)">
+                    <span>{{ t(`pageMenu.${item.name}`) }}</span>
                 </div>
             </ContextMenu>
         </div>
@@ -211,6 +216,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
 <style scoped lang="scss">
 .pagelist-wrap {
     height: 100%;
+
     .header {
         width: 100%;
         display: flex;
@@ -218,61 +224,76 @@ function pageMenuUnmount(e?: MouseEvent, item?: string) {
         box-sizing: border-box;
         position: relative;
         align-items: center;
-        > div:not(.space) {
+
+        >div:not(.space) {
             flex-shrink: 0;
         }
+
         overflow: hidden;
+
         .title {
             margin-left: 13px;
             height: 30px;
             font-weight: var(--font-default-bold);
             line-height: 36px;
         }
+
         .btn {
             position: absolute;
             right: 13px;
             display: flex;
             flex-direction: row;
-            > div {
+
+            >div {
                 margin-left: 8px;
             }
+
             .add {
                 height: 14px;
                 width: 14px;
-                > svg {
+
+                >svg {
                     width: 80%;
                     height: 80%;
                 }
             }
+
             .file {
                 height: 14px;
                 width: 14px;
-                > svg {
+
+                >svg {
                     width: 80%;
                     height: 80%;
                 }
             }
+
             .shrink {
                 height: 14px;
                 width: 14px;
-                > svg {
+
+                >svg {
                     width: 80%;
                     height: 80%;
                 }
             }
         }
     }
+
     .body {
         height: calc(100% - 30px);
-        > .container {
+
+        >.container {
             height: 100%;
         }
     }
 }
+
 .items-wrap {
     font-size: var(--font-default-fontsize);
     line-height: 30px;
     padding: 0 10px;
+
     &:hover {
         background-color: var(--active-color);
     }

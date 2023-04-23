@@ -19,7 +19,8 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
-
+const isLock = ref<boolean>()
+const isVisible = ref<boolean>()
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
@@ -102,16 +103,15 @@ function visible() {
         return props.context.editor4Shape(visible[0]);
     });
     editor.value.setVisible()
-    
+    isVisible.value = props.context.selection.selectedShapes[0].isVisible
 }
 function lock() {
   const lock = props.context.selection.selectedShapes;
   const editor = computed(() => {
         return props.context.editor4Shape(lock[0]);
     });
-    editor.value.setLock()
-    console.log(props.context.selection.selectedShapes[0].isLocked);
-    
+  editor.value.setLock()
+  isLock.value = props.context.selection.selectedShapes[0].isLocked
 }
 function closeLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = false;
@@ -227,12 +227,12 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 隐藏/锁定 -->
     <div class="line" v-if="props.items.includes('visible')"></div>
     <div class="item" v-if="props.items.includes('visible')" @click="visible">
-      <div class="choose"></div>
+      <div class="choose" :style="{visibility: isVisible ? 'visible' : 'hidden'}"></div>
       <span>{{ t('system.visible') }}</span>
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('lock')" @click="lock">
-      <div class="choose"></div>
+      <div class="choose" :style="{visibility: isLock ? 'visible' : 'hidden'}"></div>
       <span>{{ t('system.Lock') }}</span>
       <span></span>
     </div>
