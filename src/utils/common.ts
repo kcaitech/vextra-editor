@@ -114,7 +114,6 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
     `top: ${top}px;` +
     `width: ${width}px;` +
     `height: ${height}px;` +
-    "border: 2px solid orange; " +
     `transform: translate(${transX}px, ${transY}px) rotate(${angle}deg);`;
 }
 // 根据矩形的四个点获取其中心轴

@@ -5,7 +5,8 @@ import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./CtrlRect";
 import { CtrlElementType } from "@/context/workspace";
-import { getHorizontalAngle } from "@/utils/common";
+import { getHorizontalAngle, createRect } from "@/utils/common";
+import { XY } from "@/context/selection";
 export interface Point {
     x: number,
     y: number,
@@ -50,7 +51,11 @@ const matrix = new Matrix();
 const borderWidth = 2;
 const halfBorderWidth = borderWidth / 2;
 const controllerFrame = ref<Point[]>([]);
+const tracing = ref<XY[]>([]);
+const tracingRotate = ref<number>(0);
 const rotate = ref<number>(0);
+let tracingStyle: string;
+let tracingPath: string;
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
         width: 0,
@@ -147,6 +152,8 @@ function updater() {
         }
         createController(); // 根据已选图层生成控制器
     }
+    createShapeTracing();
+
 }
 function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;
@@ -169,8 +176,39 @@ function createController() {
         return p;
     });
     rotate.value = getHorizontalAngle(points[0], points[1]);
-    // const points = [{ x: 0, y: 0 }, { x: 0, y: 0 }].map((p) => matrix.inverseCoord(p.x, p.y)).map((p) => m.inverseCoord(p.x, p.y));
     controllerType.value = ControllerType.Rect;
+}
+function createShapeTracing() {
+    const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
+    if (!hoveredShape) {
+        // todo
+        tracing.value.length = 0;
+    } else {
+        const selected = props.context.selection.selectedShapes;
+        if (selected.includes(hoveredShape)) {
+            tracing.value.length = 0;
+            return;
+        }
+        const m = hoveredShape.matrix2Page();
+        const frame = hoveredShape.frame;
+        // p1 p2
+        // p4 p3
+        const points = [
+            { x: 0, y: 0 },
+            { x: frame.width, y: 0 },
+            { x: frame.width, y: frame.height },
+            { x: 0, y: frame.height }
+        ];
+        tracing.value = points.map(p => {
+            let _s = m.computeCoord(p.x, p.y)
+            let _p = matrix.computeCoord(_s.x, _s.y);
+            p.x = _p.x; p.y = _p.y;
+            return p;
+        });
+        tracingRotate.value = getHorizontalAngle(points[0], points[1]);
+        tracingStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+        tracingPath = hoveredShape.getPath(true).toString();
+    }
 }
 // hooks
 onMounted(() => {
@@ -185,17 +223,14 @@ watchEffect(updater)
 </script>
 
 <template>
-    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
-        left: '' + s.x + 'px',
-        top: '' + s.y + 'px',
-        width: '' + s.width + 'px',
-        height: '' + s.height + 'px',
-        borderWidth: `${s.isSelected ? 0 : borderWidth}px`,
-        transform: `rotate(${s.rotate}deg)`
-    }" :key="s.id" :reflush="reflush">
-    </div>
+    <svg v-if="tracing.length" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :style="tracingStyle" :reflush="reflush !== 0 ? reflush : undefined">
+        <path :d="tracingPath" style="fill: transparent; stroke: #e4bf7a; stroke-width: 2;"></path>
+    </svg>
     <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate"></component>
+        :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate">
+    </component>
 </template>
 
 <style scoped lang="scss">

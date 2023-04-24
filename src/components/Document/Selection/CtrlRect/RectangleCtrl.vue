@@ -4,11 +4,11 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
-import { translateByClientSize, translate, expand, adjustLT2, adjustLB2, adjustRT2, adjustRB2 } from "@kcdesign/data/editor/frame";
+import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2 } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
 import { Point } from "../SelectionView.vue";
 import { Shape } from "@kcdesign/data/data/shape";
-import { createRect, getAxle, getRectWH } from "@/utils/common"
+import { createRect, getAxle, getRectWH } from "@/utils/common";
 interface Props {
     context: Context,
     isController: boolean
@@ -141,6 +141,7 @@ function mouseup(e: MouseEvent) {
 }
 function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale') {
     shapes = props.context.selection.selectedShapes;
+    matrix.reset(workspace.value.matrix);
     shapes.forEach(item => {
         if (aType === 'rotate') {
             const newDeg = (item.rotation || 0) + deg;
@@ -201,12 +202,10 @@ watchEffect(updater)
 </template>
 <style lang='scss' scoped>
 .ctrl-rect {
-    border-style: solid;
-    border-color: var(--active-color);
     position: absolute;
     box-sizing: border-box;
     background-color: transparent;
-
+    border: 2px solid #ffa500;
     >.frame {
         position: absolute;
         display: table;

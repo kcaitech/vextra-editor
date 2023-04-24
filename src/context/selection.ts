@@ -59,19 +59,19 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.notify(Selection.CHANGE_PAGE);
     }
     async deletePage(id: string) {
-       if (id === this.m_selectPage?.id) {
-        // tode
-        const index = this.m_document.pagesList.findIndex((p: PageListItem) => p.id === id);
-        if(index === this.m_document.pagesList.length - 1) {
-            await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
-                this.m_selectPage = p;
-            });
-        }else {
-            await this.m_document.pagesMgr.get(this.m_document.pagesList[index + 1].id).then(p => {
-                this.m_selectPage = p;
-            });
+        if (id === this.m_selectPage?.id) {
+            // tode
+            const index = this.m_document.pagesList.findIndex((p: PageListItem) => p.id === id);
+            if (index === this.m_document.pagesList.length - 1) {
+                await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
+                    this.m_selectPage = p;
+                });
+            } else {
+                await this.m_document.pagesMgr.get(this.m_document.pagesList[index + 1].id).then(p => {
+                    this.m_selectPage = p;
+                });
+            }
         }
-       }
         this.m_selectShapes.length = 0;
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
@@ -89,17 +89,22 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         const childs = page.childs;
         position.x -= page.frame.x;
         position.y -= page.frame.y;
+
         if (childs?.length) deep(childs, position);
         return shapes;
 
         function deep(source: Shape[], position: XY) {
             for (let i = 0; i < source.length; i++) {
+                const m = source[i].matrix2Page();
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
                 const suppos = { x: position.x - x, y: position.y - y };
                 if (source[i].childs?.length) deep(source[i].childs, suppos);
             }
         }
+    }
+    getShapeByXY(position: XY) {
+
     }
     getClosetContainer(position: XY): GroupShape {
         position = cloneDeep(position);
