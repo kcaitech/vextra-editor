@@ -52,7 +52,7 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
   let cursor: string = 'auto';
   let img: any;
   let deg: number = 0;
-  rotate = Math.round(rotate % 360);  
+  rotate = Math.round(rotate % 360);
   const hot: { x: number, y: number } = { x: 20, y: 20 };
   if ([CtrlElementType.RectRB, CtrlElementType.RectLT].includes(ct)) {
     img = scaleBase64;
@@ -141,4 +141,20 @@ export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, 
   const angleInDegrees = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
   const angle = (angleInDegrees + 360) % 360;
   return angle;
+}
+
+// 根据若干个点，确定最边界的四个点
+export function createHorizontalBox(points: [number, number][]) {
+  if (points.length < 4) return;
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = 0; i < points.length; i++) {
+    xs.push(points[i][0]);
+    ys.push(points[i][1]);
+  }
+  const top = Math.min(...ys);
+  const bottom = Math.max(...ys);
+  const left = Math.min(...xs);
+  const right = Math.max(...xs);
+  return { top, bottom, left, right };
 }

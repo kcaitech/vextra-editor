@@ -5,7 +5,7 @@ import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./CtrlRect";
 import { CtrlElementType } from "@/context/workspace";
-import { getHorizontalAngle, createRect } from "@/utils/common";
+import { getHorizontalAngle, createRect, createHorizontalBox } from "@/utils/common";
 import { XY } from "@/context/selection";
 export interface Point {
     x: number,
@@ -158,24 +158,56 @@ function updater() {
 function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (!selection.length) return;
-    const shape = selection[0];
-    const m = shape.matrix2Page();
-    const frame = shape.frame;
-    // p1 p2
-    // p4 p3
-    const points = [
-        { x: 0, y: 0, type: CtrlElementType.RectLT },
-        { x: frame.width, y: 0, type: CtrlElementType.RectRT },
-        { x: frame.width, y: frame.height, type: CtrlElementType.RectRB },
-        { x: 0, y: frame.height, type: CtrlElementType.RectLB }
-    ];
-    controllerFrame.value = points.map(p => {
-        let _s = m.computeCoord(p.x, p.y)
-        let _p = matrix.computeCoord(_s.x, _s.y);
-        p.x = _p.x; p.y = _p.y;
-        return p;
-    });
-    rotate.value = getHorizontalAngle(points[0], points[1]);
+    if (selection.length === 1) {
+        const shape = selection[0];
+        const m = shape.matrix2Page();
+        const frame = shape.frame;
+        // p1 p2
+        // p4 p3
+        const points = [
+            { x: 0, y: 0, type: CtrlElementType.RectLT },
+            { x: frame.width, y: 0, type: CtrlElementType.RectRT },
+            { x: frame.width, y: frame.height, type: CtrlElementType.RectRB },
+            { x: 0, y: frame.height, type: CtrlElementType.RectLB }
+        ];
+        controllerFrame.value = points.map(p => {
+            let _s = m.computeCoord(p.x, p.y)
+            let _p = matrix.computeCoord(_s.x, _s.y);
+            p.x = _p.x; p.y = _p.y;
+            return p;
+        });
+        rotate.value = getHorizontalAngle(points[0], points[1]);
+    } else {
+        const __points: [number, number][] = [];
+        selection.forEach(p => {
+            const m = p.matrix2Page();
+            const frame = p.frame;
+            let _ps: [number, number][] = [
+                [0, 0],
+                [frame.width, 0],
+                [frame.width, frame.height],
+                [0, frame.height]
+            ];
+            _ps = _ps.map(p => {
+                let _s = m.computeCoord(p[0], p[1])
+                let _p = matrix.computeCoord(_s.x, _s.y);
+
+                return [_p.x, _p.y];
+            })
+            __points.push(..._ps);
+            const bounding = createHorizontalBox(__points);
+            if (bounding) {
+                controllerFrame.value = [
+                    { x: bounding.left, y: bounding.top, type: CtrlElementType.RectLT },
+                    { x: bounding.right, y: bounding.top, type: CtrlElementType.RectRT },
+                    { x: bounding.right, y: bounding.bottom, type: CtrlElementType.RectRB },
+                    { x: bounding.left, y: bounding.bottom, type: CtrlElementType.RectLB }
+                ]
+            }
+            rotate.value = 0; // 多选时，rect为水平rect
+        });
+
+    }
     controllerType.value = ControllerType.Rect;
 }
 function createShapeTracing() {

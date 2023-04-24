@@ -153,6 +153,7 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
             props.context.repo.commit({});
             newShape = undefined;
             workspace.value.setAction(Action.AutoV);
+            workspace.value.creating(false);
         }
     } else {
         // 抬起之前未存在拖动
@@ -182,6 +183,7 @@ function pageEditOnMoving(e: MouseEvent) {
             const shapeFrame = new ShapeFrame(x, y, 3, 3);
             newShape = addShape(shapeFrame);
             props.context.repo.start('customFrameInsert', {});
+            workspace.value.creating(true);
         }
     }
 }
@@ -332,7 +334,7 @@ function contextMenuUnmount() {
 }
 
 // mouse event flow 
-function onMouseDown(e: MouseEvent) {    
+function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button === MOUSE_LEFT) { // 左键按下
         isMouseLeftDown = true;
