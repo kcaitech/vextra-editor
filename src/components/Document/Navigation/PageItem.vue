@@ -16,7 +16,7 @@ export interface ItemData {
 const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
     (e: "switchpage", id: string): void;
-    (e: "rename", event: MouseEvent, name?: string, t?: number): void;
+    (e: "rename", name: string, id: string): void;
     (e: "onMouseDown", id: string, event: MouseEvent): void;
 }>();
 const isInput = ref<boolean>(false)
@@ -38,23 +38,24 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 
-const onRename = () => {
+const onRename = () => {    
     isInput.value = true
     nextTick(() => {
-        if (nameInput.value) {
-            (nameInput.value as HTMLInputElement).value = props.data.name;
+        if (nameInput.value) {            
+            (nameInput.value as HTMLInputElement).value = props.data.name.trim();
             nameInput.value.focus();
             nameInput.value.select();
-            nameInput.value?.addEventListener('blur', saveInput);
             nameInput.value?.addEventListener('keydown', keySaveInput);
+            nameInput.value?.addEventListener('blur', saveInput);
         }
     })
-    document.addEventListener('click', onInputBlur)
+    document.addEventListener('click', onInputBlur);
 }
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
     if (esc.value) return
-    emit('rename', value);
+    if(value.length === 0 || value.length > 40 || value.trim().length === 0) return  
+    emit('rename', value, props.data.id);
 }
 const saveInput = () => {
     esc.value = false
@@ -71,26 +72,16 @@ const keySaveInput = (e: KeyboardEvent) => {
 }
 const onInputBlur = (e: MouseEvent) => {
     if (e.target instanceof Element && !e.target.closest('.rename')) {
-        var timer = setTimeout(() => {
-            if (nameInput.value) {
-                (nameInput.value).blur()
-            }
-            clearTimeout(timer)
-            document.removeEventListener('click', onInputBlur);
-        }, 10)
+        if (nameInput.value) {            
+            nameInput.value.blur();
+        }
+        document.removeEventListener('click', onInputBlur);
     }
 }
 
-// function pageMenuUnmount(e?: MouseEvent, item?: string) {
-//     pageMenu.value = false;
-//     if(item === 'rename') {
-//         e?.stopPropagation()
-//         onRename(e!)
-//     }
-// }
-function update(t: number) {
-    if (t === Selection.CHANGE_RENAME) {
-        onRename()
+function update(t: number, id?: string) {
+    if (t === Selection.CHANGE_RENAME && id === props.data.id) {
+        onRename();
     }
 }
 onMounted(() => {
@@ -102,7 +93,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div :class="{ container: true, selected: props.data.selected }" @mousedown="onMouseDown">
+    <!-- pageItem匹配listview拖拽线条 -->
+    <div class="pageItem" :class="{ container: true, selected: props.data.selected }" @mousedown="onMouseDown">
         <div class="ph"></div>
         <div class="item">
             <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : '' }">{{ props.data.name }}</div>

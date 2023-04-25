@@ -25,7 +25,7 @@ const invalid = computed(() => {
 </script>
 <style scoped>
 .tool-button {
-    padding: 4px;
+    padding: 4px 0;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -14,6 +14,8 @@ import { ResourceMgr } from "@kcdesign/data/data/basic";
 import { Page } from "@kcdesign/data/data/page";
 import { Document, PageListItem } from "@kcdesign/data/data/document";
 import ContextMenu from '@/components/common/ContextMenu.vue'
+import { cloneDeep } from "lodash";
+type List = InstanceType<typeof ListView>;
 const { t } = useI18n();
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 interface MenuItem {
@@ -23,7 +25,9 @@ const props = defineProps<{ context: Context }>();
 const emit = defineEmits<{
     (e: "fold", fold: boolean): void;
 }>();
-
+const pagelist = ref<List>();
+const ListBody = ref<HTMLDivElement>()
+const ListH = ref<number>(0)
 const fold = ref<boolean>(false)
 const MOUSE_RIGHT = 2
 const pageMenu = ref<boolean>(false)
@@ -32,6 +36,8 @@ let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
+        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
+    } else if (t === Selection.PAGE_RENAME) {        
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
@@ -99,10 +105,25 @@ const addPage = () => {
     const id = props.context.selection.selectedPage?.id
     const index = props.context.data.pagesList.findIndex((item) => item.id === id)
     pageMgr.insert(index + 1, page);
-    props.context.selection.insertPage(page)
-    props.context.selection.reName();
-}
+    if (ListBody.value) {
+        ListH.value = ListBody.value.clientHeight //list可视高度
+    }
+    if (pagelist.value && index + 1 >= 0) {
+        const itemScrollH = (index + 1) * 30  //page所在高度
+        if (itemScrollH + 29 >= ListH.value - pagelist.value.scroll.y) {
+            if ((itemScrollH) + pagelist.value.scroll.y < ListH.value) return
+            pagelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
+        } else if (itemScrollH + 29 < -(pagelist.value.scroll.y)) {
+            pagelist.value.clampScroll(0, -itemScrollH)
+            console.log(-itemScrollH);
+        }
+    }
+    props.context.selection.insertPage(page);
 
+    nextTick(() => {
+        props.context.selection.reName();
+    })
+}
 function toggle() {
     fold.value = !fold.value;
     emit('fold', fold.value)
@@ -111,13 +132,17 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
     const docEditor = props.context.editor4Doc();
     docEditor.move(params.dragTarget, params.to);
 }
-const rename = (value: string) => {
-    const page = props.context.selection.selectedPage
-    if (!page) return
-    const editor = computed(() => {
-        return props.context.editor4Page(page)
-    });
-    editor.value.setName(value)
+const rename = (value: string, id: string) => {
+    // const page = props.context.selection.selectedPage
+    props.context.data.pagesMgr.get(id).then((p: Page | undefined) => {
+        if (!p) return
+        const editor = computed(() => {
+            return props.context.editor4Page(p)
+        });
+        editor.value.setName(value)
+        props.context.selection.rename();
+    })
+    
 }
 
 const MouseDown = (id: string, e: MouseEvent) => {
@@ -156,40 +181,43 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     pageMenu.value = false;
     if (item === 'rename') {
         e?.stopPropagation();
-        props.context.selection.reName();
+        props.context.selection.reName(id);
 
     } else if (item === 'duplicate') {
         e?.stopPropagation()
         const pageMgr = props.context.editor4Doc();
         const pageName = props.context.data.pagesList.find(p => p.id === id)
-        let name = `${pageName?.name}_副本`;
+        let name = `${pageName?.name}_${t('navi.copy')}`;
         const repeats = props.context.data.pagesList.filter(i => i.name.slice(0, -1) === name);
         if (repeats.length) {
             name = `${name}${!repeats[0] ? ' ' : repeats.length + 1}`;
         }
-        const page = pageMgr.create(name);
-        const index = props.context.data.pagesList.findIndex((item) => item.id === id)
-        pageMgr.insert(index + 1, page);
+        let page
+        id && props.context.data.pagesMgr.get(id).then((p: Page | undefined) => {
+            page = p && pageMgr.copy(p, name)
+            const index = props.context.data.pagesList.findIndex((item) => item.id === id)
+            page && pageMgr.insert(index + 1, page);
+        })
         props.context.selection.insertPage(page)
-
     } else if (item === 'copy_link') {
         e?.stopPropagation()
 
     } else if (item === 'delete') {
         e?.stopPropagation()
-        id && props.context.selection.deletePage(id)
+        const index = props.context.data.pagesList.findIndex((item) => item.id === id)
         id && props.context.editor4Doc().delete(id)
+        id && props.context.selection.deletePage(id,index)
     }
 }
 </script>
     
 <template>
-    <div class="pagelist-wrap">
+    <div class="pagelist-wrap" ref="pageList">
         <div class="header">
             <div class="title">{{ t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add" @click="addPage" :title="t('navi.add_page')">
+                <div class="add" @click.stop="addPage" :title="t('navi.add_page')">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <!-- <div class="file">
@@ -200,8 +228,8 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
                 </div>
             </div>
         </div>
-        <div class="body" :style="{ height: fold ? 0 : 'calc(100% - 30px)' }">
-            <ListView :source="pageSource" :item-view="PageItem" :item-width="0" :item-height="30" :first-index="0"
+        <div class="body" ref="ListBody" :style="{ height: fold ? 0 : 'calc(100% - 30px)' }">
+            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0" :item-height="30" :first-index="0"
                 v-bind="$attrs" orientation="vertical" :allowDrag="true" location="pagelist"
                 @update-after-drag="updateAfterDrag" @rename="rename" @onMouseDown="MouseDown">
             </ListView>

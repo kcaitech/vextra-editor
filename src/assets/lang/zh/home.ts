@@ -43,7 +43,8 @@ export const navi = {
     comps: '组件',
     resource: '资源库',
     page: '页面',
-    add_page: '添加新页面'
+    add_page: '添加新页面',
+    copy: '副本'
 }
 
 export const frame = {
@@ -99,7 +100,8 @@ export const attr: any = {
     'follow_container': '跟随容器缩放',
     'fixed_bottom': '底部固定',
     'fixed_top': '顶部固定',
-    'fixed_top_bottom': '上下固定'
+    'fixed_top_bottom': '上下固定',
+    'adapt': '适应容器大小'
 }
 
 attr[BorderPosition.Inner] = '内部';

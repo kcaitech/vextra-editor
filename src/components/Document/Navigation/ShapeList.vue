@@ -79,7 +79,7 @@ function notifySourceChange(t?: number) {
         shapes.forEach(item => {
             let parent = item.parent
             let parents = []
-            while(parent) {
+            while (parent) {
                 parents.unshift(parent);
                 parent = parent.parent;
             }
@@ -90,12 +90,12 @@ function notifySourceChange(t?: number) {
             if (ListBody.value) {
                 ListH.value = ListBody.value.clientHeight //list可视高度
             }
-            if (shapelist.value && indexItem > 0) {
+            if (shapelist.value && indexItem >= 0) {
                 const itemScrollH = indexItem * 30
                 if (itemScrollH + 30 >= ListH.value - shapelist.value.scroll.y) {
-                    if((itemScrollH) + shapelist.value.scroll.y < ListH.value - 30) return
+                    if ((itemScrollH) + shapelist.value.scroll.y < ListH.value - 30) return
                     shapelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
-                }else if(itemScrollH < -(shapelist.value.scroll.y)){
+                } else if (itemScrollH < -(shapelist.value.scroll.y)) {
                     shapelist.value.clampScroll(0, -itemScrollH)
                 }
             }
@@ -158,8 +158,8 @@ function getShapeRange(start: number, end: number): Shape[] {
 
 function hoverShape(shape: Shape) {
     props.context.selection.hoverShape(shape);
-    if(shapeList.value)
-    shapeH.value = shapeList.value.offsetHeight
+    if (shapeList.value)
+        shapeH.value = shapeList.value.offsetHeight
 
 }
 
@@ -196,17 +196,18 @@ function shapeScrollToContentView(shape: Shape) {
     workspace.matrixTransformation();
 }
 
-function updateAfterDrag(params: { shape?:any, from: number, to: number, dragTarget: any }) {
-    // const docEditor = props.context.editor4Page(props.page);
-    // docEditor.move(params.shape, params.dragTarget, params.to);
+function updateAfterDrag(params: { from: number, to: number, dragTarget: any}) {
+    const docEditor = props.context.editor4Page(props.page);
+
+    // docEditor.move();
 }
 
 const MouseDown = (e: MouseEvent) => {
     chartMenu.value = false
-    if(e.button === MOUSE_RIGHT) {
+    if (e.button === MOUSE_RIGHT) {
         e.stopPropagation()
         const menu = contextMenuEl.value?.menu?.className
-        if(e.target instanceof Element && e.target.closest(`.${menu}`)) return
+        if (e.target instanceof Element && e.target.closest(`.${menu}`)) return
         chartMenuMount(e)
     }
 }
@@ -221,10 +222,10 @@ const chartMenuMount = (e: MouseEvent) => {
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
-            let sy =  document.documentElement.clientHeight - e.clientY //点击图形列表剩余的高度
+            let sy = document.documentElement.clientHeight - e.clientY //点击图形列表剩余的高度
             if (el) {
                 const height = el.offsetHeight //菜单高度
-                if(sy - 30 < height) {
+                if (sy - 30 < height) {
                     let top = height - sy + 30
                     el.style.top = chartMenuPosition.value.y - top + 'px'
                 }
@@ -232,7 +233,7 @@ const chartMenuMount = (e: MouseEvent) => {
                 el.style.width = 200 + 'px'
             }
         }
-    
+
     })
 }
 
@@ -266,16 +267,16 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body" ref="ListBody">
-            <ListView ref="shapelist" location="shapelist" :allowDrag="true" :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem"
-                :item-height="itemHieght" :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
-                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
-                @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"
-                @update-after-drag="updateAfterDrag" @onMouseDown="MouseDown" orientation="vertical">
+            <ListView ref="shapelist" location="shapelist" :allowDrag="true" draging="shapeList" :shapeHeight="shapeH" :source="listviewSource"
+                :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0" :context="props.context"
+                @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
+                @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
+                @isLock="isLock" @update-after-drag="updateAfterDrag" @onMouseDown="MouseDown" orientation="vertical">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount" ref="contextMenuEl">
-            <PageViewContextMenuItems :items="chartMenuItems"
-                :context="props.context">
-            </PageViewContextMenuItems>
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
+                ref="contextMenuEl">
+                <PageViewContextMenuItems :items="chartMenuItems" :context="props.context">
+                </PageViewContextMenuItems>
             </ContextMenu>
         </div>
     </div>
@@ -293,6 +294,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         position: relative;
         overflow: hidden;
+
         >div:not(.space) {
             flex-shrink: 0;
         }

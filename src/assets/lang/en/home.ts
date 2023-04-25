@@ -29,7 +29,8 @@ export const navi = {
     comps: 'Compnents',
     resource: 'Resource',
     page: 'Page',
-    add_page: 'Add new page'
+    add_page: 'Add new page',
+    copy: 'copy'
 }
 
 export const frame = {
@@ -85,7 +86,8 @@ export const attr: any = {
     'follow_container': 'Follow container',
     'fixed_bottom': 'Bottom fixed',
     'fixed_top': 'Top fixed',
-    'fixed_top_bottom': 'Fixed top and bottom'
+    'fixed_top_bottom': 'Fixed top and bottom',
+    'adapt': 'Resize to fit'
 }
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';

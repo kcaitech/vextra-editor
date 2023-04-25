@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import ToolButton from './ToolButton.vue';
 import UserAvatar from './UserAvatar.vue';
+import Share from './Share/index.vue';
 import Scale from './Scale.vue';
 import { defineProps } from 'vue';
 import { Context } from '@/context';
@@ -23,6 +24,7 @@ const props = defineProps<Props>();
                 <svg-icon icon-class="play"></svg-icon>
             </div>
         </ToolButton>
+        <Share></Share>
         <UserAvatar user="kc"></UserAvatar>
         <Scale :context="props.context"></Scale>
     </div>

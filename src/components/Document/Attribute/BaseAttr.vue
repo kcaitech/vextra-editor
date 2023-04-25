@@ -8,12 +8,13 @@ import { Context } from '@/context';
 import { computed } from '@vue/reactivity';
 import { RectRadius } from '@kcdesign/data/data/baseclasses'
 import { cloneDeep } from 'lodash';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{ context: Context, shape: Shape }>();
 const editor = computed(() => {
     return props.context.editor4Shape(props.shape);
 })
-
+const { t } = useI18n();
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -34,6 +35,7 @@ const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
 const showBgFlipH = ref<boolean>()
 const showBgColorV = ref<boolean>()
+const shwoAdapt = ref<boolean>(false)
 
 function calcFrame() {
     const xy = props.shape.realXY();
@@ -146,6 +148,13 @@ onUpdated(() => {
     } else {
         showRadian.value = true
     }
+    if(props.shape.typeId === 'artboard') {
+        shwoAdapt.value = true
+    }else {
+        shwoAdapt.value = false
+    }
+    
+    
 })
 
 // hooks
@@ -180,6 +189,9 @@ onUnmounted(() => {
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
             <IconText class="td frame" ticon="H" :text="h.toFixed(fix)" @onchange="onChangeH" />
+            <div class="adapt" v-if="shwoAdapt" :title="t('attr.adapt')">
+                <svg-icon icon-class="adapt"></svg-icon>
+            </div>
         </div>
         <div class="tr">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}°`" @onchange="onChangeRotate"
@@ -275,6 +287,22 @@ onUnmounted(() => {
             >svg {
                 width: 60%;
                 height: 60%;
+            }
+        }
+        .adapt {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            >svg {
+                transition: 0.3s;
+                width: 40%;
+                height: 40%;
+            }
+            >svg:hover {
+                transform: scale(1.25);
             }
         }
 

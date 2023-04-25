@@ -24,6 +24,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_SHAPE = 2;
     static CHANGE_SHAPE_HOVER = 3;
     static CHANGE_RENAME = 4;
+    static PAGE_RENAME = 5;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -56,19 +57,17 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_selectShapes.length = 0;
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
-
         this.notify(Selection.CHANGE_PAGE);
     }
-    async deletePage(id: string) {
+    async deletePage(id: string, index: number) {
        if (id === this.m_selectPage?.id) {
         // tode
-        const index = this.m_document.pagesList.findIndex((p: PageListItem) => p.id === id);
-        if(index === this.m_document.pagesList.length - 1) {
+        if(index === this.m_document.pagesList.length) {
             await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
                 this.m_selectPage = p;
             });
         }else {
-            await this.m_document.pagesMgr.get(this.m_document.pagesList[index + 1].id).then(p => {
+            await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
                 this.m_selectPage = p;
             });
         }
@@ -79,8 +78,15 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
         this.notify(Selection.CHANGE_PAGE);
     }
-    reName() {
-        this.notify(Selection.CHANGE_RENAME);
+    reName(id?: string) {
+        if(id) {
+            this.notify(Selection.CHANGE_RENAME, id);
+        }else {
+            this.notify(Selection.CHANGE_RENAME, this.selectedPage?.id);
+        }
+    }
+    rename() {
+        this.notify(Selection.PAGE_RENAME);
     }
 
     get selectedPage(): Page | undefined {
