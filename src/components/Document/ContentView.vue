@@ -382,6 +382,7 @@ function onMouseMove(e: MouseEvent) {
                 } else {
                     // todo 多选选区
                     createSelector(e);
+                    workspace.value.selecting(true);
                 }
             }
         } else {
@@ -402,6 +403,7 @@ function onMouseUp(e: MouseEvent) {
         isMouseLeftDown = false;
     }
     selector.value = false;
+    workspace.value.selecting(false);
 }
 function onMouseLeave() {
     props.context.selection.unHoverShape();

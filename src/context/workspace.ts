@@ -71,7 +71,8 @@ export class WorkSpace extends Watchable(Object) {
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
     private m_translating: boolean = false; // 编辑器是否正在移动图形
-    private m_creating: boolean = false; // 编辑器是否真正创建图形
+    private m_creating: boolean = false; // 编辑器是否正在创建图形
+    private m_selecting: boolean = false; // 编辑器是否正在选择图形
     constructor(context: Context) {
         super();
         this.context = context
@@ -158,6 +159,9 @@ export class WorkSpace extends Watchable(Object) {
     creating(v: boolean) {
         this.m_creating = v;
     }
+    selecting(v: boolean) {
+        this.m_selecting = v;
+    }
 
     // keyboard
     keydown_r() {
@@ -221,7 +225,7 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     setCursor(type: CtrlElementType, deg: number) {
-        if (this.m_creating) {
+        if (this.m_creating || this.m_selecting) {
             // todo
         } else {
             this.notify(WorkSpace.CURSOR_CHANGE, type, deg);
