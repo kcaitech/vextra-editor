@@ -1,0 +1,249 @@
+<script setup lang="ts">
+import { defineEmits, defineProps, ref,onMounted,onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
+const value1 = ref(true)
+const selectValue = ref('')
+const authority = ref(false)
+const index = ref(0)
+const editable = ref('可编辑')
+const readOnly = ref('只读')
+const remove = ref('移除')
+const authorityValue = ref('')
+const authorityRight = ref<HTMLDivElement>()
+const options = [
+  {
+    value: '需申请确认',
+    label: '需申请确认',
+  },
+  {
+    value: '任何人均可阅读',
+    label: '任何人均可阅读',
+  },
+  {
+    value: '任何人均可编辑',
+    label: '任何人均可编辑',
+  }
+]
+const closeShare = (e: MouseEvent) => {
+  e.stopPropagation()
+  emit('close')
+}
+const handleClick = (e: MouseEvent) => {
+  e.stopPropagation()
+  e.target instanceof Element && !e.target.closest('.box-card') && emit('close');
+  if(e.target instanceof Element && !e.target.closest('.popover')) {
+    authority.value = false
+  }
+ 
+}
+const selectAuthority = (i: number, e: Event) => {
+  console.log(i);
+  
+  e.stopPropagation()
+  if(authority.value) {
+    authority.value = false
+    return
+  }
+  index.value = i
+  authority.value = true
+  
+}
+onMounted(() => {
+  document.addEventListener('click', handleClick);
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClick);
+})
+
+</script>
+<template>
+  <el-card class="box-card" ref="card">
+    <!-- 标题 -->
+    <template #header>
+      <div class="card-header">
+        <span>文件分享</span>
+        <el-button class="button" text @click="closeShare">
+          <div class="close"> X </div>
+        </el-button>
+      </div>
+    </template>
+    <!-- 内容 -->
+    <div class="contain">
+      <!-- 开关 -->
+      <div class="share-switch">
+        <span>分享开关:</span>
+        <el-switch class="switch" size="small" v-model="value1" />
+      </div>
+      <!-- 文件名 -->
+      <div class="file-name">
+        <span>文件名:</span>
+        <p class="name">页面顺序调整</p>
+      </div>
+      <!-- 权限设置 -->
+      <div class="purview">
+        <span>权限设置:</span>
+        <el-select v-model="selectValue" style="width: 180px;" class="m-2" placeholder="Select">
+          <el-option style="font-size: 10px;" class="option"
+            v-for="item in options"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <el-button color="#0d99ff" size="small">复制链接</el-button>
+      </div>
+      <!-- 分享人 -->
+      <div>
+        <span>已加入分享的人 (分享限制人数5) :</span>
+        <el-scrollbar height="200px" class="shared-by">
+          <div v-for="(item, ids) in 5" :key="ids" class="scrollbar-demo-item">
+            <div class="item-left">
+              <div class="avatar"><img src="@/assets/avatar.png"></div>
+              <div class="name">hhhh</div>
+            </div>
+            <div class="item-right" ref="authorityRight" @click="e => selectAuthority(ids, e)">
+              <div class="authority">{{authorityValue || '只读'}}</div>
+              <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
+              <div class="popover" v-if="authority && index === ids">
+                <div>{{editable}}</div>
+                <div>{{readOnly}}</div>
+                <div>{{remove}}</div>
+              </div>
+            </div>
+          </div>
+        </el-scrollbar>
+      </div>
+    </div>
+  </el-card>
+  
+</template>
+  
+<style scoped lang="scss">
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  span {
+    font-weight: var(--font-default-bold);
+  }
+
+  .close {
+    font-size: 16px;
+    color: black;
+  }
+
+}
+
+::v-deep .el-card__header {
+  border-bottom: none;
+  padding: var(--default-padding)
+}
+::v-deep .el-card__body {
+  padding: var(--default-padding-half) var(--default-padding)
+}
+::v-deep .el-input {
+  font-size: var(--font-default-fontsize);
+}
+
+.contain {
+  font-size: var(--font-default-fontsize);
+  .share-switch {
+    margin: var(--default-margin-half) 0;
+  }
+  .switch {
+  --el-switch-on-color: var(--active-color);
+  margin-left: 10px;
+  
+}
+}
+.file-name {
+    margin: var(--default-margin-half) 0;
+    display: flex;
+    align-items: center;
+    .name {
+      margin-left: 10px;
+    }
+  }
+  .m-2 {
+    margin-left: 10px;
+    margin-right: 5px;
+  }
+  .scrollbar-demo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 35px;
+  .item-left {
+    display: flex;
+    align-items: center;
+    margin-left: var(--default-margin);
+    height: 100%;
+    .avatar{
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+      >img {
+        height: 100%;
+        width: 100%;
+      }
+    }
+  }
+  .item-right{
+    display: flex;
+    align-items: center;
+    height: 100%;
+    .svgBox {
+      height: 10px;
+      width: 10px;
+      display: flex;
+      margin-left: 8px;
+      margin-right: 30px;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      >.svg {
+        height: 10px;
+        width: 10px;
+      }
+    }
+  }
+}
+.purview {
+  margin: var(--default-margin-half) 0 var(--default-margin) 0
+}
+.shared-by {
+  margin: var(--default-margin-half) 0 var(--default-margin) 0;
+  border: 2px solid var(--theme-color-line);
+}
+.popover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  border: 1px solid var(--theme-color-line);
+  font-size: var(--font-default-fontsize);
+  background-color: #fff;
+  border-radius: 4px;
+  flex-direction: column;
+  width: 100px;
+  justify-content: space-around;
+  >div {
+    padding: var(--default-margin-quarter) var(--default-padding-half);
+  }
+  >div:hover {
+    background-color: #f5f7fa
+  }
+}
+.box-card {
+  width: 400px;
+  position: absolute;
+  top: 40px;
+  right: 0;
+}</style>
