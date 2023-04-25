@@ -175,10 +175,6 @@ onUnmounted(() => {
 watchEffect(updater)
 </script>
 <template>
-    <!-- <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
-            :rotate="props.rotate" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
-    </div> -->
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" class="ctrl-rect"
         @mousedown="mousedown" :style="rectStyle">
