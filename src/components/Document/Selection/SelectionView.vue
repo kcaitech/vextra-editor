@@ -2,7 +2,7 @@
 import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape, ShapeType } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./CtrlRect";
 import { CtrlElementType } from "@/context/workspace";
 import { getHorizontalAngle, createRect, createHorizontalBox } from "@/utils/common";
@@ -135,6 +135,11 @@ function createController() {
             return p;
         });
         rotate.value = getHorizontalAngle(points[0], points[1]);
+        if (selection[0].type === ShapeType.Line) {
+            controllerType.value = ControllerType.Line;
+        } else {
+            controllerType.value = ControllerType.Rect;
+        }
     } else { // 多选
         const __points: [number, number][] = [];
         selection.forEach(p => {
@@ -164,9 +169,8 @@ function createController() {
             }
             rotate.value = 0; // 多选时，rect只为水平状态
         });
-
+        controllerType.value = ControllerType.Rect;
     }
-    controllerType.value = ControllerType.Rect;
 }
 function createShapeTracing() { // 描边
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
