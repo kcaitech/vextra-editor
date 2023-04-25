@@ -15,7 +15,7 @@ const closeShare = () => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container" @dblclick.stop>
     <div class="share" @click.stop="onShare">
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>

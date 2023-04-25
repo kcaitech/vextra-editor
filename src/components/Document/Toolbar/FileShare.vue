@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { defineEmits, defineProps, ref,onMounted,onUnmounted } from 'vue'
+import { defineEmits, defineProps, ref,onMounted,onUnmounted,nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
 const value1 = ref(true)
-const selectValue = ref('')
+const selectValue = ref('需申请确认')
 const authority = ref(false)
 const index = ref(0)
 const editable = ref('可编辑')
 const readOnly = ref('只读')
 const remove = ref('移除')
 const authorityValue = ref('')
-const authorityRight = ref<HTMLDivElement>()
+const posi = ref({
+  top: 0,
+  left: 0
+})
+const popover = ref<HTMLDivElement>()
 const options = [
   {
     value: '需申请确认',
@@ -41,8 +45,6 @@ const handleClick = (e: MouseEvent) => {
  
 }
 const selectAuthority = (i: number, e: Event) => {
-  console.log(i);
-  
   e.stopPropagation()
   if(authority.value) {
     authority.value = false
@@ -50,7 +52,13 @@ const selectAuthority = (i: number, e: Event) => {
   }
   index.value = i
   authority.value = true
-  
+  const el = (e.target as HTMLDivElement)
+  nextTick(() => {
+    posi.value.top = Math.max(el.parentElement!.offsetHeight,35) * (i + 1)
+  })
+}
+const onEditable = (i: number, e: Event) => {
+  authorityValue.value = editable.value
 }
 onMounted(() => {
   document.addEventListener('click', handleClick);
@@ -87,7 +95,7 @@ onUnmounted(() => {
       <!-- 权限设置 -->
       <div class="purview">
         <span>权限设置:</span>
-        <el-select v-model="selectValue" style="width: 180px;" class="m-2" placeholder="Select">
+        <el-select v-model="selectValue" style="width: 180px;" class="m-2">
           <el-option style="font-size: 10px;" class="option"
             v-for="item in options"
             :key="item.value"
@@ -100,17 +108,17 @@ onUnmounted(() => {
       <!-- 分享人 -->
       <div>
         <span>已加入分享的人 (分享限制人数5) :</span>
-        <el-scrollbar height="200px" class="shared-by">
+        <el-scrollbar height="250px" class="shared-by">
           <div v-for="(item, ids) in 5" :key="ids" class="scrollbar-demo-item">
             <div class="item-left">
               <div class="avatar"><img src="@/assets/avatar.png"></div>
               <div class="name">hhhh</div>
             </div>
-            <div class="item-right" ref="authorityRight" @click="e => selectAuthority(ids, e)">
+            <div class="item-right" @click="e => selectAuthority(ids, e)">
               <div class="authority">{{authorityValue || '只读'}}</div>
               <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
-              <div class="popover" v-if="authority && index === ids">
-                <div>{{editable}}</div>
+              <div class="popover" v-if="authority && index === ids" ref="popover" :style="{top: posi.top + 'px',right: 30 + 'px'}">
+                <div @click="e => onEditable(ids, e)">{{editable}}</div>
                 <div>{{readOnly}}</div>
                 <div>{{remove}}</div>
               </div>
@@ -183,6 +191,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     margin-left: var(--default-margin);
+    position: relative;
     height: 100%;
     .avatar{
       height: 20px;
@@ -224,8 +233,6 @@ onUnmounted(() => {
 }
 .popover {
   position: absolute;
-  top: 0;
-  left: 0;
   display: flex;
   border: 1px solid var(--theme-color-line);
   font-size: var(--font-default-fontsize);
