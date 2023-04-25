@@ -10,11 +10,10 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
     const frame = shape.frame;
     // background
     if (shape.hasBackgroundColor) {
-        const color = shape.backgroundColor || defaultColor;
+        const color = shape.backgroundColor || defaultColor;        
         childs.push(h("rect", {
             x: 0, y: 0, width: frame.width, height: frame.height,
-            fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")",
-            "fill-opacity": color ? color.alpha : 1
+            fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
         }))
     }
     childs.push(...gR(h, shape, comsMap));

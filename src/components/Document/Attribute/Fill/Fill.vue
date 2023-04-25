@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref, nextTick } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data/data/shape';
+import { Shape, ShapeType } from '@kcdesign/data/data/shape';
 import { Color, Fill, ContextSettings } from "@kcdesign/data/data/style";
 import { FillType, BlendMode } from '@kcdesign/data/data/classes';
 import { Reg_HEX } from "@/utils/RegExp";
@@ -33,7 +33,6 @@ const editor = computed(() => {
 })
 
 const fills: FillItem[] = reactive([]);
-const showFill = ref<boolean>(false)
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -42,6 +41,25 @@ function toHex(r: number, g: number, b: number) {
 
 let shapeId: string = "";
 
+// function updateData() {
+//     shapeId = props.shape.id;
+//     fills.length = 0;
+//     if (props.shape?.type === ShapeType.Artboard) {
+//         const color = (props.shape as any).backgroundColor;
+//         const contextSettings = new ContextSettings(BlendMode.Normal, 1);
+//         const fill = new Fill(true, FillType.SolidColor, color, contextSettings);
+//         const f = { id: 0, fill };
+//         fills.push(f);
+//     } else {
+//         const style = props.shape.style;
+//         for (let i = 0, len = style.fills.length; i < len; i++) {
+//             const fill = style.fills[i];
+//             const f = { id: i, fill };
+//             fills.push(f);
+//         }
+//     }
+
+// }
 function updateData() {
     shapeId = props.shape.id;
     fills.length = 0;
@@ -130,8 +148,8 @@ const fillArr = ['line-shape']
 
 // hooks
 onUpdated(() => {
-    if(fillArr.includes(props.shape.typeId)) {
-       deleteFill(0)
+    if (fillArr.includes(props.shape.typeId)) {
+        deleteFill(0)
     }
 })
 
@@ -168,22 +186,15 @@ onBeforeUpdate(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="f.fill.color" @choosecolor="c => getColorFromPicker(c, idx)"></ColorPicker>
-                    <input
-                        :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
-                        :spellcheck ="false"
-                        @change="(e) => onColorChange(idx, e)"
-                    />
-                    <input
-                        style="text-align: center;"
-                        :value="f.fill.color.alpha"
-                        @change="(e) => onAlphaChange(idx, e)"
-                    />
+                    <input :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
+                        @change="(e) => onColorChange(idx, e)" />
+                    <input style="text-align: center;" :value="f.fill.color.alpha" @change="(e) => onAlphaChange(idx, e)" />
                 </div>
                 <div class="delete" @click="deleteFill(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>
-            
+
         </div>
     </div>
 </template>
@@ -195,18 +206,23 @@ onBeforeUpdate(() => {
     flex-direction: column;
     padding: 12px 24px;
     box-sizing: border-box;
+
     .add {
         width: 16px;
         height: 16px;
-        > svg {
+
+        >svg {
             width: 80%;
             height: 80%;
         }
+
         transition: .2s;
     }
+
     .add:hover {
         transform: scale(1.25);
     }
+
     .fills-container {
         .fill {
             height: 32px;
@@ -215,6 +231,7 @@ onBeforeUpdate(() => {
             flex-direction: row;
             align-items: center;
             margin-top: 4px;
+
             .visibility {
                 width: 16px;
                 height: 16px;
@@ -226,11 +243,13 @@ onBeforeUpdate(() => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                > svg {
+
+                >svg {
                     width: 80%;
                     height: 80%;
                 }
             }
+
             .hidden {
                 width: 16px;
                 height: 16px;
@@ -239,6 +258,7 @@ onBeforeUpdate(() => {
                 border: 1px solid #d8d8d8;
                 box-sizing: border-box;
             }
+
             .color {
                 background-color: rgba(#D8D8D8, 0.4);
                 height: 100%;
@@ -248,6 +268,7 @@ onBeforeUpdate(() => {
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
+
                 input {
                     outline: none;
                     border: none;
@@ -255,10 +276,12 @@ onBeforeUpdate(() => {
                     width: 92px;
                     margin-left: 10px;
                 }
-                input + input {
+
+                input+input {
                     width: 30px;
                 }
             }
+
             .delete {
                 display: flex;
                 justify-content: center;
@@ -267,12 +290,15 @@ onBeforeUpdate(() => {
                 height: 16px;
                 margin-left: 32px;
                 padding: 0 var(--default-padding-half);
-                > svg {
+
+                >svg {
                     width: 80%;
                     height: 80%;
                 }
+
                 transition: .2s;
             }
+
             .delete:hover {
                 color: #ff5555;
             }

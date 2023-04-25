@@ -358,7 +358,7 @@ function onMouseMove(e: MouseEvent) {
                 if (workspace.value.action !== Action.AutoV) {
                     pageEditOnMoving(e);
                 } else {
-                    // 单纯没什么事点着滑来滑去
+                    // todo 多选选区
                 }
             }
         } else {

@@ -4,10 +4,10 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
-import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2 } from "@kcdesign/data/editor/frame";
+import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
 import CtrlPoint from "../Points/PointForRect.vue";
 import { Point } from "../SelectionView.vue";
-import { Shape } from "@kcdesign/data/data/shape";
+import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
 interface Props {
     context: Context,
@@ -120,9 +120,14 @@ function mousemove(e: MouseEvent) {
 function transform(shapes: Shape[], start: XY, end: XY) {
     const ps = matrix.inverseCoord(start.x, start.y);
     const pe = matrix.inverseCoord(end.x, end.y);
+    const origin = props.context.selection.getClosetContainer(ps);
+    const targetParent = props.context.selection.getClosetContainer(pe);
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
         translate(shapes[i], pe.x - ps.x, pe.y - ps.y);
+        if (origin.id !== targetParent.id) {
+            shapeMoveNoTransaction(shapes[i], targetParent);
+        }
     }
     props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
 }
@@ -160,6 +165,17 @@ function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'r
         }
     });
 }
+// 自身不带事务的图形移动, 只能在事务开启之后调用
+function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
+    const origin: GroupShape = ((shape.parent || props.context.selection.selectedPage) as GroupShape);
+    origin.removeChild(shape);
+    const { x, y } = shape.frame2Page();
+    targetParent.addChild(shape);
+    translateTo(shape, x, y);
+}
+function getRect(points: Point[]) {
+    rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+}
 function windowBlur() {
     if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
         workspace.value.translating(false);
@@ -168,9 +184,6 @@ function windowBlur() {
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
     }
-}
-function getRect(points: Point[]) {
-    rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
 }
 onMounted(() => {
     props.context.selection.watch(updater);
@@ -188,8 +201,8 @@ watchEffect(updater)
 </script>
 <template>
     <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point" :rotate="props.rotate"
-            @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
+        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
+            :rotate="props.rotate" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <!-- <div class="frame" :style="{
                         top: framePosition.top,
                         left: framePosition.left,
@@ -206,6 +219,7 @@ watchEffect(updater)
     box-sizing: border-box;
     background-color: transparent;
     border: 2px solid #ffa500;
+
     >.frame {
         position: absolute;
         display: table;
