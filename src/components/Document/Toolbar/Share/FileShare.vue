@@ -12,7 +12,7 @@ const index = ref(0)
 const editable = ref('可编辑')
 const readOnly = ref('只读')
 const remove = ref('移除')
-const authorityValue = ref('')
+const founder = ref(false)
 const posi = ref({
   top: 0,
   left: 0
@@ -30,6 +30,28 @@ const options = [
   {
     value: '任何人均可编辑',
     label: '任何人均可编辑',
+  }
+]
+const permissions = [
+  {
+    avatar:'@/assets/avatar.png',
+    name: '张三',
+    permission: '只读'
+  },
+  {
+    avatar:'@/assets/avatar.png',
+    name: '李斯',
+    permission: '可编辑'
+  },
+  {
+    avatar:'@/assets/avatar.png',
+    name: '赵柳',
+    permission: '只读'
+  },
+  {
+    avatar:'@/assets/avatar.png',
+    name: '王武',
+    permission: '可编辑'
   }
 ]
 const closeShare = (e: MouseEvent) => {
@@ -57,8 +79,14 @@ const selectAuthority = (i: number, e: Event) => {
     posi.value.top = Math.max(el.parentElement!.offsetHeight,35) * (i + 1)
   })
 }
-const onEditable = (i: number, e: Event) => {
-  authorityValue.value = editable.value
+const onEditable = (i: number) => {
+  permissions[i].permission = editable.value
+}
+const onReadOnly = (i: number) => {
+  permissions[i].permission = readOnly.value
+}
+const onRemove = (i: number) => {
+  permissions.splice(i, 1)
 }
 onMounted(() => {
   document.addEventListener('click', handleClick);
@@ -70,7 +98,7 @@ onUnmounted(() => {
 
 </script>
 <template>
-  <el-card class="box-card" ref="card">
+  <el-card class="box-card" ref="card" :style="{width: founder? 300+ 'px': 400+'px'}">
     <!-- 标题 -->
     <template #header>
       <div class="card-header">
@@ -81,7 +109,7 @@ onUnmounted(() => {
       </div>
     </template>
     <!-- 内容 -->
-    <div class="contain">
+    <div class="contain" v-if="!founder">
       <!-- 开关 -->
       <div class="share-switch">
         <span>分享开关:</span>
@@ -109,22 +137,43 @@ onUnmounted(() => {
       <div>
         <span>已加入分享的人 (分享限制人数5) :</span>
         <el-scrollbar height="250px" class="shared-by">
-          <div v-for="(item, ids) in 5" :key="ids" class="scrollbar-demo-item">
+          <div v-for="(item, ids) in permissions" :key="ids" class="scrollbar-demo-item">
             <div class="item-left">
               <div class="avatar"><img src="@/assets/avatar.png"></div>
-              <div class="name">hhhh</div>
+              <div class="name">{{item.name}}</div>
             </div>
             <div class="item-right" @click="e => selectAuthority(ids, e)">
-              <div class="authority">{{authorityValue || '只读'}}</div>
+              <div class="authority">{{ item.permission }}</div>
               <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
               <div class="popover" v-if="authority && index === ids" ref="popover" :style="{top: posi.top + 'px',right: 30 + 'px'}">
-                <div @click="e => onEditable(ids, e)">{{editable}}</div>
-                <div>{{readOnly}}</div>
-                <div>{{remove}}</div>
+                <div @click="onEditable(ids)">{{editable}}</div>
+                <div @click="onReadOnly(ids)">{{readOnly}}</div>
+                <div @click="onRemove(ids)">{{remove}}</div>
               </div>
             </div>
           </div>
         </el-scrollbar>
+      </div>
+    </div>
+    <div class="contain" v-else>
+       <!-- 文件名 -->
+       <div class="unfounder">
+        <span>文件名:</span>
+        <p class="name">页面顺序调整</p>
+      </div>
+       <!-- 创建者 -->
+       <div class="unfounder">
+        <span>创建者:</span>
+        <p class="name">张三</p>
+      </div>
+       <!-- 文档权限 -->
+       <div class="unfounder">
+        <span>文档权限:</span>
+        <p class="name">任何人均可阅读</p>
+      </div>
+      <!-- 链接按钮 -->
+      <div class="button">
+        <el-button color="#0d99ff" size="small">复制链接</el-button>
       </div>
     </div>
   </el-card>
@@ -150,7 +199,8 @@ onUnmounted(() => {
 
 ::v-deep .el-card__header {
   border-bottom: none;
-  padding: var(--default-padding)
+  padding: var(--default-padding);
+  padding-bottom: 0;
 }
 ::v-deep .el-card__body {
   padding: var(--default-padding-half) var(--default-padding)
@@ -247,6 +297,18 @@ onUnmounted(() => {
   >div:hover {
     background-color: #f5f7fa
   }
+}
+.unfounder {
+  display: flex;
+  align-items: center;
+  >.name {
+    margin-left: 10px;
+  }
+}
+.button {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--default-margin);
 }
 .box-card {
   width: 400px;

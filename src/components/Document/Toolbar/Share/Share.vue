@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import FileShare from './FileShare.vue';
-const showFileShare = ref<boolean>(true);
+const showFileShare = ref<boolean>(false);
 const onShare = () => {
   if(showFileShare.value) {
     showFileShare.value = false

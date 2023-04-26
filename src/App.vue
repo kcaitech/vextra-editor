@@ -7,7 +7,7 @@ import { Zip } from "@pal/zip";
 import { LzDataLocal } from './basic/lzdatalocal'; // todo
 import { importRemote, importSketch } from '@kcdesign/data/io';
 import { Repository } from '@kcdesign/data/data/transact';
-
+import TempVue from '@/components/Temp/index.vue'
 const props = defineProps<{}>();
 // const dataReady = ref<boolean>(false);
 const curDoc = shallowRef<Document | undefined>(undefined);
@@ -44,8 +44,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" @openremotefile="openRemoteFile"/>
-    <DocumentVue v-if="curDoc != undefined && curRepo != undefined" :data="curDoc" :repo="curRepo" />
+    <!-- <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" @openremotefile="openRemoteFile"/>
+    <DocumentVue v-if="curDoc != undefined && curRepo != undefined" :data="curDoc" :repo="curRepo" /> -->
+    <TempVue></TempVue>
 </template>
 
 <style lang="scss">

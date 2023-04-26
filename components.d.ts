@@ -9,6 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']
     Arrow: typeof import('./src/components/Document/Toolbar/Buttons/Arrow.vue')['default']
     ArtboardView: typeof import('./src/components/Document/Content/ArtboardView.vue')['default']
     BaseAttr: typeof import('./src/components/Document/Attribute/BaseAttr.vue')['default']
@@ -34,7 +35,7 @@ declare module '@vue/runtime-core' {
     Examples: typeof import('./src/components/Home/Examples.vue')['default']
     ExportAttr: typeof import('./src/components/Document/Attribute/ExportAttr.vue')['default']
     FilePickButton: typeof import('./src/components/common/FilePickButton.vue')['default']
-    FileShare: typeof import('./src/components/Document/Toolbar/FileShare.vue')['default']
+    FileShare: typeof import('./src/components/Document/Toolbar/Share/FileShare.vue')['default']
     Fill: typeof import('./src/components/Document/Attribute/Fill/Fill.vue')['default']
     Frame: typeof import('./src/components/Document/Toolbar/Buttons/Frame.vue')['default']
     FrameChild: typeof import('./src/components/Document/Toolbar/Buttons/FrameChild.vue')['default']
@@ -82,10 +83,11 @@ declare module '@vue/runtime-core' {
     ShapeList: typeof import('./src/components/Document/Navigation/ShapeList.vue')['default']
     ShapePath: typeof import('./src/components/Document/Content/ShapePath.vue')['default']
     ShapeTab: typeof import('./src/components/Document/Navigation/ShapeTab.vue')['default']
-    Share: typeof import('./src/components/Document/Toolbar/Share.vue')['default']
+    Share: typeof import('./src/components/Document/Toolbar/Share/Share.vue')['default']
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
+    Temp: typeof import('./src/components/Temp/index.vue')['default']
     Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']
     TextView: typeof import('./src/components/Document/Content/TextView.vue')['default']
     Toolbar: typeof import('./src/components/Document/Toolbar/index.vue')['default']
