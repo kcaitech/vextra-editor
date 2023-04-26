@@ -33,19 +33,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg version="1.1" 
-        xmlns="http://www.w3.org/2000/svg" 
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" 
-        preserveAspectRatio="xMinYMin meet" 
-        :viewBox='"0 0 " + data.frame.width + " " + data.frame.height'
-        :width="data.frame.width"
-        :height="data.frame.height"
-        :style="{ transform: matrixWithFrame.toString() }"
-        overflow="visible"
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+        :viewBox='"0 0 " + data.frame.width + " " + data.frame.height' :width="data.frame.width" :height="data.frame.height"
+        :style="{ transform: matrixWithFrame.toString() }" overflow="visible"
         :reflush="reflush !== 0 ? reflush : undefined">
 
-        <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" :data="c" />
+        <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
+            :data="c" />
 
     </svg>
 </template>

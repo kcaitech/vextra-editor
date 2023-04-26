@@ -56,7 +56,7 @@ function updater() {
     matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
-    data.isSelect = selection.selectedShapes.length > 0;
+    data.isSelect = selection.selectedShapes.length > 0;    
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -111,7 +111,6 @@ function updater() {
         createController();
     }
     createShapeTracing();
-
 }
 function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;

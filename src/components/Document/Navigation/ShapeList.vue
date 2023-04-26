@@ -184,7 +184,10 @@ const isRead = (read: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    editor.value.setVisible()
+    editor.value.setVisible();
+    if (!read) {
+        props.context.selection.unSelectShape(shape);
+    }
 }
 function shapeScrollToContentView(shape: Shape) {
     const workspace = props.context.workspace;
@@ -196,7 +199,7 @@ function shapeScrollToContentView(shape: Shape) {
     workspace.matrixTransformation();
 }
 
-function updateAfterDrag(params: { from: number, to: number, dragTarget: any}) {
+function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
     const docEditor = props.context.editor4Page(props.page);
 
     // docEditor.move();
@@ -267,9 +270,9 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body" ref="ListBody">
-            <ListView ref="shapelist" location="shapelist" :allowDrag="true" draging="shapeList" :shapeHeight="shapeH" :source="listviewSource"
-                :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0" :context="props.context"
-                @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
+            <ListView ref="shapelist" location="shapelist" :allowDrag="true" draging="shapeList" :shapeHeight="shapeH"
+                :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
+                :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
                 @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
                 @isLock="isLock" @update-after-drag="updateAfterDrag" @onMouseDown="MouseDown" orientation="vertical">
             </ListView>

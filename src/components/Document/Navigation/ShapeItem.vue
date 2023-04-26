@@ -12,9 +12,9 @@ export interface ItemData {
     context: Context
 }
 
-const isLock = ref<boolean>(true)
-const isRead = ref<boolean>(true)
-const isVisible = ref<boolean>(false)
+const isLock = ref<boolean>()
+const isRead = ref<boolean>()
+const isVisible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<{ data: ItemData }>();
@@ -38,6 +38,8 @@ let showTriangle = ref<boolean>(false);
 function updater() {
     let shape = props.data.shape;
     showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0;
+    isLock.value = props.data.shape.isLocked;
+    isRead.value = props.data.shape.isVisible;
 }
 // const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 function toggleExpand(e: Event) {
@@ -69,11 +71,13 @@ function unHoverShape(e: MouseEvent) {
     emit("unhovershape");
     isVisible.value = false
 }
-const onLock = () => {
+const onLock = (e: MouseEvent) => {
+    e.stopPropagation();
     isLock.value = !isLock.value
     emit('isLock', isLock.value, props.data.shape)
 }
-const onRead = () => {
+const onRead = (e: MouseEvent) => {
+    e.stopPropagation();
     isRead.value = !isRead.value
     emit('isRead', isRead.value, props.data.shape)
 }
@@ -164,14 +168,14 @@ onBeforeUpdate(() => {
             :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
             <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}` }">
-                <div class="tool_lock tool" :class="{ 'visible': !isLock }" @click="onLock">
-                    <svg-icon v-if="isLock" class="svg-open" icon-class="lock-open"></svg-icon>
+                <div class="tool_lock tool" :class="{ 'visible': isLock }" @click="e => onLock(e)">
+                    <svg-icon v-if="!isLock" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="lock-lock"></svg-icon>
                 </div>
                 <div class="tool_lock tool" @click="toggleContainer">
                     <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
-                <div class="tool_eye tool" :class="{ 'visible': !isRead }" @click="onRead">
+                <div class="tool_eye tool" :class="{ 'visible': !isRead }" @click="e => onRead(e)">
                     <svg-icon v-if="isRead" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="eye-closed"></svg-icon>
                 </div>

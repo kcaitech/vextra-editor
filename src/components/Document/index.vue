@@ -92,7 +92,7 @@ function switchPage(id?: string) {
         if (page) ctx.selection.selectPage(page);
     })
 }
-function selectionWatcher(t: number) {
+function selectionWatcher(t: number) {    
     if (t === Selection.CHANGE_PAGE) {
         const ctx: Context = context.value as Context;
         curPage.value = ctx.selection.selectedPage;

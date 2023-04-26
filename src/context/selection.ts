@@ -2,9 +2,7 @@ import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape } from "@kcdesign/data/data/shape";
-import { PageListItem } from "@kcdesign/data/data/typesdefine";
 import { cloneDeep } from "lodash";
-
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -61,7 +59,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     async deletePage(id: string, index: number) {
         if (id === this.m_selectPage?.id) {
-            // todo
             if (index === this.m_document.pagesList.length) {
                 await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
                     this.m_selectPage = p;
@@ -111,9 +108,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             }
         }
     }
-    getShapeByXY(position: XY) {
-
-    }
     getClosetContainer(position: XY): GroupShape {
         position = cloneDeep(position);
         const page = this.m_selectPage!;
@@ -161,6 +155,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
         this.m_hoverShape = undefined;
+        this.notify(Selection.CHANGE_SHAPE);
+    }
+    unSelectShape(shape: Shape) {
+        if (!this.isSelectedShape(shape)) return;
+        this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
