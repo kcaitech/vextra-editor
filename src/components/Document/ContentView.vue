@@ -354,6 +354,7 @@ function createSelector(e: MouseEvent) {
     selectorFrame.value.height = bottom - top;
     selector.value = true;
 }
+
 // mouse event flow 
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
@@ -379,7 +380,6 @@ function onMouseMove(e: MouseEvent) {
                 if (workspace.value.action !== Action.AutoV) {
                     pageEditOnMoving(e);
                 } else {
-                    // todo 多选选区
                     createSelector(e);
                     workspace.value.selecting(true);
                 }
@@ -419,6 +419,7 @@ function windowBlur() {
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
 }
+
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id)

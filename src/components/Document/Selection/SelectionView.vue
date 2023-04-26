@@ -136,6 +136,7 @@ function createController() {
         rotate.value = getHorizontalAngle(points[0], points[1]);
         if (selection[0].type === ShapeType.Line) {
             controllerType.value = ControllerType.Line;
+            // controllerType.value = ControllerType.Rect;
         } else {
             controllerType.value = ControllerType.Rect;
         }

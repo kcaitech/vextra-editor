@@ -1,15 +1,13 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
+import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
 import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
-import CtrlPoint from "../Points/PointForRect.vue";
 import { Point } from "../SelectionView.vue";
 import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
-import { LTR } from "element-plus/es/components/virtual-list/src/defaults";
 interface Props {
     context: Context,
     isController: boolean
@@ -28,6 +26,7 @@ let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 let rectStyle: string;
 let path: string;
+const reflush = ref<number>(0);
 const points = computed<Point[]>(() => {
     const [lt, rt, rb] = props.controllerFrame;
     const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y);
@@ -177,8 +176,16 @@ watchEffect(updater)
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" class="ctrl-rect"
-        @mousedown="mousedown" :style="rectStyle">
+        @mousedown="mousedown" :style="rectStyle" :reflush="reflush">
         <path :d="path" style="fill: transparent; stroke: #ffa500; stroke-width: 2;"></path>
+        <g @mousedown.stop>
+            <rect width="8" height="8"
+                :style="`fill: #ffffff; stroke: rgb(255, 165, 0); stroke-width: 1; transform: translate(-4px, -4px) rotate(${props.rotate}deg)`">
+            </rect>
+            <rect width="8" height="8"
+                :style="`fill: #ffffff; stroke: rgb(255, 165, 0); stroke-width: 1; transform: translate(100%, 100%) translate(-4px, -4px) rotate(${props.rotate}deg)`">
+            </rect>
+        </g>
     </svg>
 </template>
 <style lang='scss' scoped>
