@@ -238,7 +238,6 @@ function hoveredShape(e: MouseEvent) {
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    props.context.selection.getShapeByXY(xy);
     const shapes = props.context.selection.getShapesByXY(xy);
     const hoveredShape = shapes.reverse().find(s => s.type && s.type !== ShapeType.Artboard);
     if (hoveredShape) {
