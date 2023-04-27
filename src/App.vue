@@ -8,7 +8,7 @@ import { LzDataLocal } from './basic/lzdatalocal'; // todo
 import { importRemote, importSketch } from '@kcdesign/data/io';
 import { Repository } from '@kcdesign/data/data/transact';
 import TempVue from '@/components/Temp/index.vue'
-const props = defineProps<{}>();
+// const props = defineProps<{}>();
 // const dataReady = ref<boolean>(false);
 
 const curDoc = shallowRef<Document | undefined>(undefined);

@@ -17,7 +17,7 @@ import { ref } from 'vue'
     <div class="contain">
         <el-scrollbar height="400px" style="padding-right: 10px;">
             <div class="inform-item" v-for="i in 10" :key="i">
-                <div class="avatar"><img src="@/assets/avatar.png" alt=""></div>
+                <div class="avatar"><img src="" alt=""></div>
                 <div class="item-container">
                     <div class="item-title">
                         <span>张三</span>

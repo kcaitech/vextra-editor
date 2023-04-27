@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import {ref, watch} from 'vue'
-import avatar from '@/assets/avatar.png';
 import { ElMessage } from 'element-plus'
 const radio = ref('1')
 const textarea = ref('')
@@ -58,7 +57,7 @@ watch(noPass, () => {
                 <svg-icon class="svg" icon-class="home"></svg-icon>
             </div>
             <div class="user-avatar">
-                <img :src="avatar">
+                <img src="">
             </div>
         </div>
         <div class="context">

@@ -34,22 +34,22 @@ const options = [
 ]
 const permissions = [
   {
-    avatar:'@/assets/avatar.png',
+    avatar:'',
     name: '张三',
     permission: '只读'
   },
   {
-    avatar:'@/assets/avatar.png',
+    avatar:'',
     name: '李斯',
     permission: '可编辑'
   },
   {
-    avatar:'@/assets/avatar.png',
+    avatar:'',
     name: '赵柳',
     permission: '只读'
   },
   {
-    avatar:'@/assets/avatar.png',
+    avatar:'',
     name: '王武',
     permission: '可编辑'
   }
@@ -139,7 +139,7 @@ onUnmounted(() => {
         <el-scrollbar height="250px" class="shared-by">
           <div v-for="(item, ids) in permissions" :key="ids" class="scrollbar-demo-item">
             <div class="item-left">
-              <div class="avatar"><img src="@/assets/avatar.png"></div>
+              <div class="avatar"><img src=""></div>
               <div class="name">{{item.name}}</div>
             </div>
             <div class="item-right" @click="e => selectAuthority(ids, e)">
