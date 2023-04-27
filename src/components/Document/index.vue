@@ -92,7 +92,7 @@ function switchPage(id?: string) {
         if (page) ctx.selection.selectPage(page);
     })
 }
-function selectionWatcher(t: number) {    
+function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         const ctx: Context = context.value as Context;
         curPage.value = ctx.selection.selectedPage;
@@ -206,7 +206,7 @@ onUnmounted(() => {
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" :context="context" @mouseenter="e => { mouseenter('right') }"
+            <Attribute id="attributes" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
                 @mouseleave="() => { mouseleave('right') }"></Attribute>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
                 :style="{ opacity: showRight ? 1 : 0.6 }">

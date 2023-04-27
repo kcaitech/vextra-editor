@@ -97,7 +97,7 @@ const onRename = () => {
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
     if (esc.value) return
-    if(value.length === 0 || value.length > 40 || value.trim.length === 0) return  
+    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
     emit('rename', value, props.data.shape);
 }
 
@@ -128,11 +128,11 @@ const onInputBlur = (e: MouseEvent) => {
 const selectedChild = () => {
     let parent = props.data.shape.parent
     let child
-    while(parent) {
-        if(parent.type === 'page') break
+    while (parent) {
+        if (parent.type === 'page') break
         child = props.data.context.selection.isSelectedShape(parent)
-        parent = parent.parent        
-        if(child) {
+        parent = parent.parent
+        if (child) {
             return child
         }
     }
@@ -140,8 +140,8 @@ const selectedChild = () => {
 }
 const onMouseDown = (e: MouseEvent) => {
     e.stopPropagation();
-        emit('onMouseDown',e)
-        selectedChild()
+    emit('onMouseDown', e)
+    selectedChild()
 }
 
 onBeforeMount(() => {
@@ -154,8 +154,8 @@ onBeforeUpdate(() => {
 </script>
 
 <template>
-    <div class="contain" :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }" @click="selectShape"
-        @mouseover="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
+    <div class="contain" :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }"
+        @click="selectShape" @mouseover="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
         <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
             <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
@@ -168,14 +168,14 @@ onBeforeUpdate(() => {
             :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
             <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}` }">
-                <div class="tool_lock tool" :class="{ 'visible': isLock }" @click="e => onLock(e)">
+                <div class="tool_lock tool" :class="{ 'visible': isLock }" @click="(e: MouseEvent) => onLock(e)">
                     <svg-icon v-if="!isLock" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="lock-lock"></svg-icon>
                 </div>
                 <div class="tool_lock tool" @click="toggleContainer">
                     <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
-                <div class="tool_eye tool" :class="{ 'visible': !isRead }" @click="e => onRead(e)">
+                <div class="tool_eye tool" :class="{ 'visible': !isRead }" @click="(e: MouseEvent) => onRead(e)">
                     <svg-icon v-if="isRead" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="eye-closed"></svg-icon>
                 </div>
@@ -206,6 +206,7 @@ div.container {
 div.container.selected {
     background-color: var(--left-navi-button-select-color);
 }
+
 div.container.selectedChild {
     background-color: var(--left-navi-button-hover-color);
 }

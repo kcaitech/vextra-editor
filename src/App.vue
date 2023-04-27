@@ -23,7 +23,6 @@ function openLocalFile(file?: File) {
         (window as any).sketchDocument = document;
     })
 }
-
 function openRemoteFile(name: string, fid: string) {
     const repo = new Repository();
     importRemote('http://localhost:8000/', fid, "0", name, repo).then((document) => {

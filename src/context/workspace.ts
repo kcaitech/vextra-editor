@@ -63,6 +63,7 @@ export class WorkSpace extends Watchable(Object) {
     static CURSOR_CHANGE = 2;
     static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
+    static SELECTING = 5;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -107,6 +108,10 @@ export class WorkSpace extends Watchable(Object) {
     get transforming() {
         return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating;
     }
+    get select() {
+        return this.m_selecting;
+    }
+
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (event.code === KeyboardKeys.R) {
@@ -159,8 +164,9 @@ export class WorkSpace extends Watchable(Object) {
     creating(v: boolean) {
         this.m_creating = v;
     }
-    selecting(v: boolean) {
-        this.m_selecting = v;
+    selecting(v: boolean) {        
+        this.m_selecting = v;        
+        this.notify(WorkSpace.SELECTING);
     }
 
     // keyboard

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
 import { GroupShape, Shape } from '@kcdesign/data/data/shape';
-import { defineProps, watchEffect } from 'vue';
+import { defineProps, watchEffect, onMounted, onUnmounted } from 'vue';
 export interface SelectorFrame {
     top: number,
     left: number,
@@ -13,6 +14,7 @@ interface Props {
     context: Context
 }
 const props = defineProps<Props>();
+const selectedShapes: Shape[] = [];
 function select() {
     const pageMatirx = props.context.workspace.matrix;
     const page = props.context.selection.selectedPage;
@@ -58,7 +60,19 @@ function select() {
         }
     }
 }
-watchEffect(select)
+function reset(t?: number) {
+    if (t === WorkSpace.SELECTING) {
+        selectedShapes.length = 0;
+    }
+}
+watchEffect(select);
+onMounted(() => {
+    props.context.workspace.watch(reset);
+    selectedShapes.length = 0;
+})
+onUnmounted(() => {
+    props.context.workspace.unwatch(reset);
+})
 </script>
 <template>
     <div class="selector"

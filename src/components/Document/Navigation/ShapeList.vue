@@ -5,12 +5,15 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data/data/page";
 import { ShapeDirListIter, ShapeDirList } from "@kcdesign/data/service/shapedirlist";
-import { Shape } from "@kcdesign/data/data/shape";
+import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from "../Selection/PageViewContextMenuItems.vue";
+import { Artboard } from "@kcdesign/data/data/artboard";
+import { cloneDeep } from "lodash";
+import { translateTo } from "@kcdesign/data/editor/frame";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -200,18 +203,22 @@ function shapeScrollToContentView(shape: Shape) {
 }
 
 function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
-    const docEditor = props.context.editor4Page(props.page);
-
-    // docEditor.move();
+    const { from, to } = params;
+    const f = listviewSource.iterAt(from).next().shape;
+    const t = listviewSource.iterAt(to).next().shape;
+    if (f.id !== t.parent?.id) {
+        // console.log('f', from, f);
+        // console.log('t', to, t);
+    }
 }
 
 const MouseDown = (e: MouseEvent) => {
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
-        e.stopPropagation()
-        const menu = contextMenuEl.value?.menu?.className
-        if (e.target instanceof Element && e.target.closest(`.${menu}`)) return
-        chartMenuMount(e)
+        e.stopPropagation();
+        const menu = contextMenuEl.value?.menu?.className;
+        if (e.target instanceof Element && e.target.closest(`.${menu}`)) return;
+        chartMenuMount(e);
     }
 }
 
@@ -236,10 +243,21 @@ const chartMenuMount = (e: MouseEvent) => {
                 el.style.width = 200 + 'px'
             }
         }
-
     })
 }
+function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
+    const selection = props.context.selection;
+    const page = selection.selectedPage;
+    if (page) {
+        const wanderer = selection.getShapeById(wandererId);
+        const host = selection.getShapeById(hostId);
+        if (wanderer && host) {
+            const editor = props.context.editor4Page(page);
+            editor.shapeListDrag(wanderer, host, offsetOverhalf);
+        }
 
+    }
+}
 function Menuesc(e: KeyboardEvent) {
     if (e.code === 'Escape') chartMenuUnmount();
 }
@@ -266,7 +284,7 @@ onUnmounted(() => {
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" @change="e => search(e)">
+                <input type="text" @change="(e: MouseEvent) => search(e)">
             </div>
         </div>
         <div class="body" ref="ListBody">
@@ -274,7 +292,8 @@ onUnmounted(() => {
                 :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
                 :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
                 @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
-                @isLock="isLock" @update-after-drag="updateAfterDrag" @onMouseDown="MouseDown" orientation="vertical">
+                @isLock="isLock" @update-after-drag="updateAfterDrag" @onMouseDown="MouseDown" orientation="vertical"
+                @after-drag="afterDrag">
             </ListView>
             <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
                 ref="contextMenuEl">

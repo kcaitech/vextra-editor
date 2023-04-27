@@ -217,6 +217,25 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE_HOVER);
     }
+    // 通过id获取shape
+    getShapeById(id: string): Shape | undefined {
+        const page = this.m_selectPage;
+        let shape: Shape | undefined;
+        if (page) {
+            const childs = page.childs;
+            deep(childs);
+            return shape;
+        }
+
+        function deep(cs: Shape[]) {
+            for (let i = 0; i < cs.length; i++) {
+                if (cs[i].id === id) shape = cs[i];
+                if ((cs[i] as GroupShape)?.childs?.length) {
+                    deep((cs[i] as GroupShape).childs);
+                }
+            }
+        }
+    }
 
     save(): Saved {
         const saved = {

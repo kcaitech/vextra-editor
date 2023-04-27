@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, defineProps, defineExpose, defineEmits, reactive, ref, computed, onUnmounted } from "vue";
 import { Context } from "@/context";
-import { Shape } from "@kcdesign/data/data/typesdefine";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -34,7 +33,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: "update-after-drag", params: { from: number, to: number, dragTarget: any}): void;
+    (e: "update-after-drag", params: { from: number, to: number, dragTarget: any }): void;
+    (e: "after-drag", wandererId: string, hostId: string, isOverHalf: boolean): void;
 }>();
 
 const contents = ref<HTMLDivElement>();
@@ -227,7 +227,7 @@ viewMeasure[Orientation.H] = () => {
 // 滚动到可见
 
 // let offset = 0;
-props.source.onChange((index: number, del: number, insert: number, modify: number): void => {    
+props.source.onChange((index: number, del: number, insert: number, modify: number): void => {
     if (props.orientation == Orientation.V) {
         measureHeight.value = props.source.length() * props.itemHeight;
         measureWidth.value = props.itemWidth;
@@ -473,6 +473,7 @@ const currentHoverTarget = ref<HTMLDivElement | EventTarget | null>();
 const mousedown = ref<boolean>(false);
 const fromIndex = ref<number>(0);
 const toIndex = ref<number>(0);
+const wandererId = ref<string>('');
 let offsetOverhalf: boolean = false; // 过半，在hover节点下面插入被拖动节点，反则上面
 const draging = ref<boolean>(false);
 const mouseBegin: { x: number, y: number } = { x: 0, y: 0 };
@@ -489,10 +490,11 @@ const destinationVisible = computed(() => {
 const substituteVisible = computed(() => {
     return draging.value
 })
-function mouseDownOnItem(index: number, e: MouseEvent) {    
+function mouseDownOnItem(index: number, e: MouseEvent) {
     if (!props.allowDrag) return;
     // record fromIndex && pre to take off
     fromIndex.value = index;
+    wandererId.value = layoutResult[fromIndex.value].id;
     toIndex.value = index;
     mousedown.value = true;
     mouseBegin.x = e.clientX;
@@ -506,11 +508,11 @@ function mouseDownOnItem(index: number, e: MouseEvent) {
 let timer: any = null
 function mouseMove(Event: MouseEvent) {
     const { clientX, clientY } = Event;
-    if(timer) clearInterval(timer)
+    if (timer) clearInterval(timer)
     if (Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y) < 6 && !draging.value) return;
     draging.value = true;
     if ((currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect) {
-        let {x, y, width} = (currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect();
+        let { x, y } = (currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect();
         const offsetX: number = clientX - x;
         const offsetY: number = clientY - y; //相对于鼠标在列表移动的距离
         const offset = props.orientation === Orientation.H ? offsetX : offsetY; //0-30px
@@ -520,41 +522,41 @@ function mouseMove(Event: MouseEvent) {
         } else if ((offset > itemRange / 2) && (offset <= itemRange)) {
             offsetOverhalf = true;
         }
-        if(props.shapeHeight && props.draging === 'shapeList') {
+        if (props.shapeHeight && props.draging === 'shapeList') {
             listTop.value = document.documentElement.offsetHeight - props.shapeHeight
             scrollHeight.value = Math.abs(scroll.y) + props.shapeHeight - container.value!.offsetTop
         }
         listBottom.value = document.documentElement.offsetHeight - clientY
-            if(scroll.y < 0 && clientY - listTop.value < 60 && clientY - listTop.value > 20) {
-                timer = setInterval(() => {
-                    scroll.y = scroll.y + 1   
-                    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
-                    clampScroll(0, scroll.y)
-                    layoutUp[props.orientation]();
-                    if(scroll.y === 0) clearInterval(timer)
-                }, 10)
-            }else if(scroll.y <= 0 && listBottom.value < 60 && listBottom.value > 20 && props.source.length() * props.itemHeight > scrollHeight.value) {
-                timer = setInterval(() => {
-                    scroll.y = scroll.y - 1   
-                    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
-                    clampScroll(0, scroll.y)
-                    layoutUp[props.orientation]();
-                    if(scroll.y === 0) clearInterval(timer)
-                }, 10)
-            }
+        if (scroll.y < 0 && clientY - listTop.value < 60 && clientY - listTop.value > 20) {
+            timer = setInterval(() => {
+                scroll.y = scroll.y + 1
+                substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
+                clampScroll(0, scroll.y)
+                layoutUp[props.orientation]();
+                if (scroll.y === 0) clearInterval(timer)
+            }, 10)
+        } else if (scroll.y <= 0 && listBottom.value < 60 && listBottom.value > 20 && props.source.length() * props.itemHeight > scrollHeight.value) {
+            timer = setInterval(() => {
+                scroll.y = scroll.y - 1
+                substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
+                clampScroll(0, scroll.y)
+                layoutUp[props.orientation]();
+                if (scroll.y === 0) clearInterval(timer)
+            }, 10)
+        }
         const text = (currentHoverTarget.value as Element).closest('.contain')?.children
         const shapew = text && text[3].clientWidth
-        if(shapew && props.draging === 'shapeList') {
+        if (shapew && props.draging === 'shapeList') {
             destination.value.length = shapew
-        } else if(props.draging === 'pageList') {
+        } else if (props.draging === 'pageList') {
             const text = (currentHoverTarget.value as Element).closest('.pageItem')?.children
             const pagew = text && text[1].clientWidth
             destination.value.length = pagew!
         }
-        destination.value.y = offsetOverhalf ? ((toIndex.value + 1) * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30) : (toIndex.value * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);   
+        destination.value.y = offsetOverhalf ? ((toIndex.value + 1) * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30) : (toIndex.value * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
     }
     // 填充替身内容 && 计算替身位置
-    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
+    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
     substitute.value.x = clientX - containerPosition.value.x;
 }
 
@@ -569,22 +571,6 @@ function itemOnHover(e: MouseEvent, index: number) {
 function descend(from: number, to: number) {
     if (from === to) return;
     const target = layoutResult[from];
-    const descendIndex = from > to ? to : to - 1;
-    layoutResult.splice(from, 1);
-    layoutResult.splice(descendIndex, 0, target);
-    resort(layoutResult, props.orientation)
-
-    function resort(arr: { x: number, y: number, id: string, data: any }[], orientation: 'horizontal' | 'vertical') {
-        if (orientation === Orientation.V) {
-            arr.forEach((item, index) => {
-                item.y = index * props.itemHeight
-            })
-        } else if (orientation === Orientation.H) {
-            arr.forEach((item, index) => {
-                item.x = index * props.itemWidth
-            })
-        }
-    }
     return target;
 }
 function mouseUp() {
@@ -596,10 +582,13 @@ function mouseUp() {
     document.removeEventListener('mousemove', mouseMove);
     document.removeEventListener('mouseup', mouseUp);
     if (draging.value) {
-        toIndex.value = offsetOverhalf ? toIndex.value + 1 : toIndex.value
         const dragTarget = descend(fromIndex.value, toIndex.value);
-        draging.value = false
-        emit('update-after-drag', {from: fromIndex.value, to: toIndex.value, dragTarget })
+        if (dragTarget) {
+            // emit('update-after-drag', { from: fromIndex.value, to: toIndex.value, dragTarget });
+            const hostId: string = layoutResult[toIndex.value].id;
+            emit('after-drag', wandererId.value, hostId, offsetOverhalf);
+        }
+        draging.value = false;
     }
 }
 // #endregion
@@ -630,31 +619,31 @@ onUnmounted(() => {
     <div class="container" @wheel.prevent="onMouseWheel" @mouseenter="mouseenter" @mouseleave="mouseleave" ref="container">
         <!-- items container -->
         <div :class="orientation" :style="{
-            transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
-            width: orientation === 'horizontal' ? measureWidth + 'px' : 'auto',
-            height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
-        }" ref="contents">
+                transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
+                width: orientation === 'horizontal' ? measureWidth + 'px' : 'auto',
+                height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
+            }" ref="contents">
             <component class="listitem" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
                 v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
                 @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)" :style="{ left: c.x + 'px', top: c.y + 'px' }" />
             <div class="port" v-if="destinationVisible" :style="{
-                top: destination.y + 'px',
-                width: destination.length + 'px',
-            }"></div>
+                    top: destination.y + 'px',
+                    width: destination.length + 'px',
+                }"></div>
             <div class="substitute" v-if="substituteVisible" :style="{
-                top: `${substitute.y}px`,
-                left: `${substitute.x}px`
-            }">{{ substitute.context || substituteName }}</div>
+                    top: `${substitute.y}px`,
+                    left: `${substitute.x}px`
+                }">{{ substitute.context || substituteName }}</div>
         </div>
         <!-- scroll -->
         <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{
             opacity: scrollBar.mount && (listMouseOver || scrolling) ? 1 : 0,
         }">
             <div ref="bar" @mousedown.stop="onScrollBarMouseDown" class="scroll-bar" :style="{
-                top: scrollBar.y + 'px',
-                left: scrollBar.x + 'px',
-                height: scrollBar.length + 'px'
-            }"></div>
+                    top: scrollBar.y + 'px',
+                    left: scrollBar.x + 'px',
+                    height: scrollBar.length + 'px'
+                }"></div>
         </div>
     </div>
 </template>

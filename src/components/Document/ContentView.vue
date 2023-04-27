@@ -101,10 +101,9 @@ function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         const repeats: number = brothers.length;
         name = (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
-        const insertSuccess = editor.insert(parent, 0, shape);
-        if (insertSuccess) {
-            props.context.selection.selectShape(shape);
-            return shape;
+        const s = editor.insert(parent, parent.childs.length, shape);
+        if (s) {
+            return s;
         }
     }
 }
@@ -157,6 +156,7 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
         // 抬起之前存在拖动
         if (newShape) {
             props.context.repo.commit({});
+            props.context.selection.selectShape(newShape);
             newShape = undefined;
             workspace.value.setAction(Action.AutoV);
             workspace.value.creating(false);
@@ -339,6 +339,23 @@ function contextMenuUnmount() {
     document.removeEventListener('keydown', esc);
     contextMenu.value = false;
 }
+function select(e: MouseEvent) {
+    if (props.context.workspace.select) {
+        createSelector(e);
+    } else {
+        const { clientX, clientY } = e;
+        const root = offset2Root();
+        const { x: cx, y: cy } = { x: clientX - root.x, y: clientY - root.y };
+        const { x: sx, y: sy } = mousedownOnClientXY;
+        const dx = cx - sx;
+        const dy = cy - sy;
+        const diff = Math.hypot(dx, dy);
+        if (diff > 3 * dragActiveDis) {
+            props.context.workspace.selecting(true);
+        }
+    }
+
+}
 function createSelector(e: MouseEvent) {
     const { clientX, clientY } = e;
     const { x: rx, y: ry } = offset2Root();
@@ -375,13 +392,12 @@ function onMouseMove(e: MouseEvent) {
     if (e.button === MOUSE_LEFT) {
         if (isMouseLeftDown) {
             if (spacePressed.value) {
-                pageViewDragging(e);
+                pageViewDragging(e); // 拖拽页面
             } else {
                 if (workspace.value.action !== Action.AutoV) {
-                    pageEditOnMoving(e);
+                    pageEditOnMoving(e); // 新增图形、切片
                 } else {
-                    createSelector(e);
-                    workspace.value.selecting(true);
+                    select(e); // 选区
                 }
             }
         } else {
@@ -390,19 +406,20 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 function onMouseUp(e: MouseEvent) {
-    // 现有情况，不是拖动pageview，便是操作图层
     if (e.button === MOUSE_LEFT) {
         if (spacePressed.value) {
             pageViewDragEnd();
         } else {
             pageEditorOnMoveEnd(e);
+            if (props.context.workspace.select) {
+                props.context.workspace.selecting(false);
+                selector.value = false;
+            }
         }
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         isMouseLeftDown = false;
     }
-    selector.value = false;
-    workspace.value.selecting(false);
 }
 function onMouseLeave() {
     props.context.selection.unHoverShape();
@@ -415,6 +432,9 @@ function windowBlur() {
         props.context.repo.commit({});
         newShape = undefined;
         workspace.value.setAction(Action.AutoV);
+    }
+    if (props.context.workspace.select) {
+        props.context.workspace.selecting(false);
     }
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
@@ -441,7 +461,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     initMatrix(cur)
 })
 onMounted(() => {
-    initMatrix(props.page)
+    initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
     document.addEventListener("keydown", onKeyDown);
