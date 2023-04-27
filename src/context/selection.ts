@@ -2,9 +2,7 @@ import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape } from "@kcdesign/data/data/shape";
-import { PageListItem } from "@kcdesign/data/data/typesdefine";
 import { cloneDeep } from "lodash";
-
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -60,28 +58,26 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.notify(Selection.CHANGE_PAGE);
     }
     async deletePage(id: string, index: number) {
-       if (id === this.m_selectPage?.id) {
-        // tode
-        if(index === this.m_document.pagesList.length) {
-            await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
-                this.m_selectPage = p;
-            });
-        }else {
-            await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
-                this.m_selectPage = p;
-            });
+        if (id === this.m_selectPage?.id) {
+            if (index === this.m_document.pagesList.length) {
+                await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
+                    this.m_selectPage = p;
+                });
+            } else {
+                await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
+                    this.m_selectPage = p;
+                });
+            }
         }
-       }
         this.m_selectShapes.length = 0;
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
-
         this.notify(Selection.CHANGE_PAGE);
     }
     reName(id?: string) {
-        if(id) {
+        if (id) {
             this.notify(Selection.CHANGE_RENAME, id);
-        }else {
+        } else {
             this.notify(Selection.CHANGE_RENAME, this.selectedPage?.id);
         }
     }
@@ -99,6 +95,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         const childs = page.childs;
         position.x -= page.frame.x;
         position.y -= page.frame.y;
+
         if (childs?.length) deep(childs, position);
         return shapes;
 
@@ -160,6 +157,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
     }
+    unSelectShape(shape: Shape) {
+        if (!this.isSelectedShape(shape)) return;
+        this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
+        this.notify(Selection.CHANGE_SHAPE);
+    }
 
     rangeSelectShape(shapes: Shape[]) {
         this.m_selectShapes.length = 0;
@@ -214,6 +216,25 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     unHoverShape() {
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE_HOVER);
+    }
+    // 通过id获取shape
+    getShapeById(id: string): Shape | undefined {
+        const page = this.m_selectPage;
+        let shape: Shape | undefined;
+        if (page) {
+            const childs = page.childs;
+            deep(childs);
+            return shape;
+        }
+
+        function deep(cs: Shape[]) {
+            for (let i = 0; i < cs.length; i++) {
+                if (cs[i].id === id) shape = cs[i];
+                if ((cs[i] as GroupShape)?.childs?.length) {
+                    deep((cs[i] as GroupShape).childs);
+                }
+            }
+        }
     }
 
     save(): Saved {

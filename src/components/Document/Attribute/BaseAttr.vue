@@ -133,6 +133,9 @@ const onChangeRadianRT = (value: string,  type: 'rrt') => {
     newR[type] = newRadian;
     editor.value.setRadius(newR);
 }
+function adapt() {
+    editor.value.adapt();
+}
 
 const radiusArr = ['rect-shape', 'artboard']
 const radianArr = ['line-shape', 'oval-shape']
@@ -189,7 +192,7 @@ onUnmounted(() => {
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
             <IconText class="td frame" ticon="H" :text="h.toFixed(fix)" @onchange="onChangeH" />
-            <div class="adapt" v-if="shwoAdapt" :title="t('attr.adapt')">
+            <div class="adapt" v-if="shwoAdapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
         </div>

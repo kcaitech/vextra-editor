@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
-import { Document } from "@kcdesign/data/data/document";
 import Navigation from './Navigation/index.vue';
 import { Page } from '@kcdesign/data/data/page';
 import { Selection } from '@/context/selection'
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
-import { Repository } from '@kcdesign/data/data/transact';
 import { SCREEN_SIZE } from '@/utils/setting';
 import { WorkSpace } from '@/context/workspace';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-const props = defineProps<{ data: Document, repo: Repository }>();
+import { Document } from '@kcdesign/data/data/document';
+import { Repository } from '@kcdesign/data/data/transact';
 const curPage = shallowRef<Page | undefined>(undefined);
-const context = shallowRef<Context>(new Context(props.data, props.repo));
+const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
 (window as any).__context = context.value;
 const workspace = computed<WorkSpace>(() => context.value.workspace);
 const middleWidth = ref<number>(0.8)
@@ -195,7 +194,7 @@ function keyToggleTB() {
 
 onMounted(() => {
     context.value.selection.watch(selectionWatcher);
-    switchPage(props.data.pagesList[0]?.id);
+    switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
     if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
@@ -238,7 +237,7 @@ onUnmounted(() => {
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" :context="context" @mouseenter="e => { mouseenter('right') }"
+            <Attribute id="attributes" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
                 @mouseleave="() => { mouseleave('right') }"></Attribute>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
                 :style="{ opacity: showRight ? 1 : 0.6 }">

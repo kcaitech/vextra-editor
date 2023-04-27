@@ -2,10 +2,11 @@
 import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape, ShapeType } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./CtrlRect";
 import { CtrlElementType } from "@/context/workspace";
-import { getHorizontalAngle } from "@/utils/common";
+import { getHorizontalAngle, createRect, createHorizontalBox } from "@/utils/common";
+import { XY } from "@/context/selection";
 export interface Point {
     x: number,
     y: number,
@@ -22,17 +23,7 @@ const props = defineProps<{
     isController: boolean,
 }>();
 interface ShapeSelectData {
-    width: number,
-    height: number,
-    x: number,
-    y: number,
-    radius: number[],
     id: string,
-    rotate: number,
-    axle: {
-        x: number,
-        y: number
-    },
     isSelected: boolean
 }
 const data = reactive<{
@@ -47,53 +38,25 @@ const data = reactive<{
 const shapes: Array<Shape> = [];
 const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
-const borderWidth = 2;
-const halfBorderWidth = borderWidth / 2;
 const controllerFrame = ref<Point[]>([]);
+const tracing = ref<XY[]>([]);
 const rotate = ref<number>(0);
+let tracingStyle: string;
+let tracingPath: string;
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
-        width: 0,
-        height: 0,
-        x: 0,
-        y: 0,
-        radius: [5, 5, 5, 5],
         id: "",
-        rotate: 0,
-        axle: {
-            x: 0,
-            y: 0
-        },
         isSelected: false
     };
     data.id = shape.id;
-
-    const frame = shape.frame;
-    const width = frame.width;
-    const height = frame.height;
-    const rXY = shape.realXY();
-    let x = rXY.x;
-    let y = rXY.y;
-
-    const xy0 = matrix.computeCoord(x, y);
-    const xy1 = matrix.computeCoord(x + width, y + height);
-    data.axle = {
-        x: (xy0.x + xy1.x) / 2,
-        y: (xy0.y + xy1.y) / 2
-    }
-    data.x = xy0.x - halfBorderWidth;
-    data.y = xy0.y - halfBorderWidth;
-    data.width = xy1.x - xy0.x - borderWidth;
-    data.height = xy1.y - xy0.y - borderWidth;
-    data.rotate = shape.rotation || 0;
-    data.isSelected = props.context.selection.isSelectedShape(shape)
+    data.isSelected = props.context.selection.isSelectedShape(shape);
     return data;
 }
 function updater() {
     matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
-    data.isSelect = selection.selectedShapes.length > 0;
+    data.isSelect = selection.selectedShapes.length > 0;    
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -120,7 +83,7 @@ function updater() {
             shapes[0].watch(watcher);
         }
         data.shapes[0] = updateShape(data.shapes[0], selection.hoveredShape as Shape);
-        createController();
+        createController(); // 根据已选图层生成控制器
     }
     else if (data.isSelect) {
         data.shapes.length = selection.selectedShapes.length;
@@ -145,32 +108,100 @@ function updater() {
                 // do nothing
             }
         }
-        createController(); // 根据已选图层生成控制器
+        createController();
     }
+    createShapeTracing();
 }
 function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (!selection.length) return;
-    const shape = selection[0];
-    const m = shape.matrix2Page();
-    const frame = shape.frame;
-    // p1 p2
-    // p4 p3
-    const points = [
-        { x: 0, y: 0, type: CtrlElementType.RectLT },
-        { x: frame.width, y: 0, type: CtrlElementType.RectRT },
-        { x: frame.width, y: frame.height, type: CtrlElementType.RectRB },
-        { x: 0, y: frame.height, type: CtrlElementType.RectLB }
-    ];
-    controllerFrame.value = points.map(p => {
-        let _s = m.computeCoord(p.x, p.y)
-        let _p = matrix.computeCoord(_s.x, _s.y);
-        p.x = _p.x; p.y = _p.y;
-        return p;
-    });
-    rotate.value = getHorizontalAngle(points[0], points[1]);
-    // const points = [{ x: 0, y: 0 }, { x: 0, y: 0 }].map((p) => matrix.inverseCoord(p.x, p.y)).map((p) => m.inverseCoord(p.x, p.y));
-    controllerType.value = ControllerType.Rect;
+    if (selection.length === 1) { // 单选
+        const shape = selection[0];
+        const m = shape.matrix2Page();
+        const frame = shape.frame;
+        // p1 p2
+        // p4 p3
+        const points = [
+            { x: 0, y: 0, type: CtrlElementType.RectLT },
+            { x: frame.width, y: 0, type: CtrlElementType.RectRT },
+            { x: frame.width, y: frame.height, type: CtrlElementType.RectRB },
+            { x: 0, y: frame.height, type: CtrlElementType.RectLB }
+        ];
+        controllerFrame.value = points.map(p => {
+            let _s = m.computeCoord(p.x, p.y);
+            let _p = matrix.computeCoord(_s.x, _s.y);
+            p.x = _p.x; p.y = _p.y;
+            return p;
+        });
+        rotate.value = getHorizontalAngle(points[0], points[1]);
+        if (selection[0].type === ShapeType.Line) {
+            controllerType.value = ControllerType.Line;
+            // controllerType.value = ControllerType.Rect;
+        } else {
+            controllerType.value = ControllerType.Rect;
+        }
+    } else { // 多选
+        const __points: [number, number][] = [];
+        selection.forEach(p => {
+            const m = p.matrix2Page();
+            const frame = p.frame;
+            let _ps: [number, number][] = [
+                [0, 0],
+                [frame.width, 0],
+                [frame.width, frame.height],
+                [0, frame.height]
+            ];
+            _ps = _ps.map(p => {
+                let _s = m.computeCoord(p[0], p[1])
+                let _p = matrix.computeCoord(_s.x, _s.y);
+
+                return [_p.x, _p.y];
+            });
+            __points.push(..._ps);
+            const bounding = createHorizontalBox(__points);
+            if (bounding) {
+                controllerFrame.value = [
+                    { x: bounding.left, y: bounding.top, type: CtrlElementType.RectLT },
+                    { x: bounding.right, y: bounding.top, type: CtrlElementType.RectRT },
+                    { x: bounding.right, y: bounding.bottom, type: CtrlElementType.RectRB },
+                    { x: bounding.left, y: bounding.bottom, type: CtrlElementType.RectLB }
+                ]
+            }
+            rotate.value = 0; // 多选时，rect只为水平状态
+        });
+        controllerType.value = ControllerType.Rect;
+    }
+}
+function createShapeTracing() { // 描边
+    const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
+    if (!hoveredShape) {
+        // todo
+        tracing.value.length = 0;
+    } else {
+        const selected = props.context.selection.selectedShapes;
+        if (selected.includes(hoveredShape)) {
+            tracing.value.length = 0;
+            return;
+        }
+        const m = hoveredShape.matrix2Page();
+        const frame = hoveredShape.frame;
+        // p1 p2
+        // p4 p3
+        const points = [
+            { x: 0, y: 0 },
+            { x: frame.width, y: 0 },
+            { x: frame.width, y: frame.height },
+            { x: 0, y: frame.height }
+        ];
+        tracing.value = points.map(p => {
+            let _s = m.computeCoord(p.x, p.y)
+            let _p = matrix.computeCoord(_s.x, _s.y);
+            p.x = _p.x; p.y = _p.y;
+            return p;
+        });
+        tracingStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+        tracingPath = hoveredShape.getPath(true).toString();
+    }
 }
 // hooks
 onMounted(() => {
@@ -185,32 +216,14 @@ watchEffect(updater)
 </script>
 
 <template>
-    <div v-for="s in data.shapes" :class="{ selectrect: data.isSelect, hoverrect: data.isHover }" :style="{
-        left: '' + s.x + 'px',
-        top: '' + s.y + 'px',
-        width: '' + s.width + 'px',
-        height: '' + s.height + 'px',
-        borderWidth: `${s.isSelected ? 0 : borderWidth}px`,
-        transform: `rotate(${s.rotate}deg)`
-    }" :key="s.id" :reflush="reflush">
-    </div>
+    <!-- 描边 -->
+    <svg v-if="tracing.length" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :style="tracingStyle" :reflush="reflush !== 0 ? reflush : undefined">
+        <path :d="tracingPath" style="fill: transparent; stroke: #e4bf7a; stroke-width: 2;"></path>
+    </svg>
+    <!-- 控制 -->
     <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate"></component>
+        :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate">
+    </component>
 </template>
-
-<style scoped lang="scss">
-.selectrect {
-    border-radius: 0px;
-    border-style: solid;
-    border-color: var(--active-color);
-    position: absolute;
-}
-
-.hoverrect {
-    background-color: none;
-    border-radius: 0px;
-    border-style: solid;
-    border-color: var(--active-color);
-    position: absolute;
-}
-</style>

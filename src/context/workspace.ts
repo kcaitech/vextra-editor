@@ -63,6 +63,7 @@ export class WorkSpace extends Watchable(Object) {
     static CURSOR_CHANGE = 2;
     static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
+    static SELECTING = 5;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -71,6 +72,8 @@ export class WorkSpace extends Watchable(Object) {
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
     private m_translating: boolean = false; // 编辑器是否正在移动图形
+    private m_creating: boolean = false; // 编辑器是否正在创建图形
+    private m_selecting: boolean = false; // 编辑器是否正在选择图形
     constructor(context: Context) {
         super();
         this.context = context
@@ -103,8 +106,12 @@ export class WorkSpace extends Watchable(Object) {
         return this.m_frame_size;
     }
     get transforming() {
-        return this.m_scaling || this.m_rotating || this.m_translating;
+        return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating;
     }
+    get select() {
+        return this.m_selecting;
+    }
+
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (event.code === KeyboardKeys.R) {
@@ -153,6 +160,13 @@ export class WorkSpace extends Watchable(Object) {
     }
     translating(v: boolean) {
         this.m_translating = v;
+    }
+    creating(v: boolean) {
+        this.m_creating = v;
+    }
+    selecting(v: boolean) {        
+        this.m_selecting = v;        
+        this.notify(WorkSpace.SELECTING);
     }
 
     // keyboard
@@ -216,8 +230,12 @@ export class WorkSpace extends Watchable(Object) {
             WorkSpace.ESC_EVENT_POINTER = undefined;
         }
     }
-    setCursor(type: CtrlElementType, deg: number) {        
-        this.notify(WorkSpace.CURSOR_CHANGE, type, deg);
+    setCursor(type: CtrlElementType, deg: number) {
+        if (this.m_creating || this.m_selecting) {
+            // todo
+        } else {
+            this.notify(WorkSpace.CURSOR_CHANGE, type, deg);
+        }
     }
     resetCursor() {
         !this.transforming && this.notify(WorkSpace.RESET_CURSOR);

@@ -10,6 +10,7 @@ import { init as renderinit } from '@/render';
 import { Action, CtrlElementType, CursorType, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from './Selection/PageViewContextMenuItems.vue';
+import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
@@ -22,16 +23,16 @@ const props = defineProps<{
     context: Context,
     page: Page,
 }>();
-const workspace = computed(() => props.context.workspace);
-const scale_delta = 1.02;
-const scale_delta_ = 1 / scale_delta;
-const wheel_step = 10;
-const spacePressed = ref<boolean>(false);
 const STATE_NONE = 0;
 const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
 const MOUSE_LEFT = 0;
 const MOUSE_RIGHT = 2;
+const workspace = computed(() => props.context.workspace);
+const scale_delta = 1.02;
+const scale_delta_ = 1 / scale_delta;
+const wheel_step = 10;
+const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: XY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
@@ -46,6 +47,7 @@ const watcher = () => {
 const cursor = ref<string>(CursorType.Auto);
 const inited = ref(false);
 const root = ref<HTMLDivElement>();
+const mousedownOnClientXY: XY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
 const mousedownOnPageXY: XY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
@@ -55,6 +57,8 @@ let newShape: Shape | undefined;
 const contextMenuEl = ref<ContextMenuEl>();
 const surplusY = ref<number>(0);
 const site: { x: number, y: number } = { x: 0, y: 0 };
+const selector = ref<boolean>(false);
+const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0 });
 
 function offset2Root() { // === props.context.workspace.root
     let el = root.value as HTMLElement;
@@ -74,6 +78,8 @@ function setMousedownOnPageXY(e: MouseEvent) { // 记录鼠标在页面上的点
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x;
     mousedownOnPageXY.y = xy.y;
+    mousedownOnClientXY.x = clientX - x;
+    mousedownOnClientXY.y = clientY - y;
 }
 function getMouseOnPageXY(e: MouseEvent): XY { // 获取鼠标在页面上的点击位置
     const { clientX, clientY } = e;
@@ -95,10 +101,9 @@ function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         const repeats: number = brothers.length;
         name = (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
-        const insertSuccess = editor.insert(parent, 0, shape);
-        if (insertSuccess) {
-            props.context.selection.selectShape(shape);
-            return shape;
+        const s = editor.insert(parent, parent.childs.length, shape);
+        if (s) {
+            return s;
         }
     }
 }
@@ -151,8 +156,12 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
         // 抬起之前存在拖动
         if (newShape) {
             props.context.repo.commit({});
+            props.context.selection.selectShape(newShape);
             newShape = undefined;
             workspace.value.setAction(Action.AutoV);
+            workspace.value.creating(false);
+        } else {
+            selector.value = false;
         }
     } else {
         // 抬起之前未存在拖动
@@ -182,6 +191,7 @@ function pageEditOnMoving(e: MouseEvent) {
             const shapeFrame = new ShapeFrame(x, y, 3, 3);
             newShape = addShape(shapeFrame);
             props.context.repo.start('customFrameInsert', {});
+            workspace.value.creating(true);
         }
     }
 }
@@ -194,7 +204,7 @@ function newFrame(shape: Shape, point: XY) {
     const width = x2.x - x1.x;
     expandTo(shape, width, height);
     translateTo(shape, x1.x, x1.y);
-    props.context.repo?.transactCtx.fireNotify();
+    props.context.repo.transactCtx.fireNotify();
 }
 async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {
@@ -329,9 +339,41 @@ function contextMenuUnmount() {
     document.removeEventListener('keydown', esc);
     contextMenu.value = false;
 }
+function select(e: MouseEvent) {
+    if (props.context.workspace.select) {
+        createSelector(e);
+    } else {
+        const { clientX, clientY } = e;
+        const root = offset2Root();
+        const { x: cx, y: cy } = { x: clientX - root.x, y: clientY - root.y };
+        const { x: sx, y: sy } = mousedownOnClientXY;
+        const dx = cx - sx;
+        const dy = cy - sy;
+        const diff = Math.hypot(dx, dy);
+        if (diff > 3 * dragActiveDis) {
+            props.context.workspace.selecting(true);
+        }
+    }
+
+}
+function createSelector(e: MouseEvent) {
+    const { clientX, clientY } = e;
+    const { x: rx, y: ry } = offset2Root();
+    const { x: mx, y: my } = { x: clientX - rx, y: clientY - ry };
+    const { x: sx, y: sy } = mousedownOnClientXY;
+    const left = Math.min(sx, mx);
+    const right = Math.max(mx, sx);
+    const top = Math.min(my, sy);
+    const bottom = Math.max(my, sy);
+    selectorFrame.value.top = top;
+    selectorFrame.value.left = left;
+    selectorFrame.value.width = right - left;
+    selectorFrame.value.height = bottom - top;
+    selector.value = true;
+}
 
 // mouse event flow 
-function onMouseDown(e: MouseEvent) {    
+function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button === MOUSE_LEFT) { // 左键按下
         isMouseLeftDown = true;
@@ -350,12 +392,12 @@ function onMouseMove(e: MouseEvent) {
     if (e.button === MOUSE_LEFT) {
         if (isMouseLeftDown) {
             if (spacePressed.value) {
-                pageViewDragging(e);
+                pageViewDragging(e); // 拖拽页面
             } else {
                 if (workspace.value.action !== Action.AutoV) {
-                    pageEditOnMoving(e);
+                    pageEditOnMoving(e); // 新增图形、切片
                 } else {
-                    // 单纯没什么事点着滑来滑去
+                    select(e); // 选区
                 }
             }
         } else {
@@ -364,12 +406,15 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 function onMouseUp(e: MouseEvent) {
-    // 现有情况，不是拖动pageview，便是操作图层
     if (e.button === MOUSE_LEFT) {
         if (spacePressed.value) {
             pageViewDragEnd();
         } else {
             pageEditorOnMoveEnd(e);
+            if (props.context.workspace.select) {
+                props.context.workspace.selecting(false);
+                selector.value = false;
+            }
         }
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
@@ -388,9 +433,13 @@ function windowBlur() {
         newShape = undefined;
         workspace.value.setAction(Action.AutoV);
     }
+    if (props.context.workspace.select) {
+        props.context.workspace.selecting(false);
+    }
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
 }
+
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id)
@@ -412,7 +461,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     initMatrix(cur)
 })
 onMounted(() => {
-    initMatrix(props.page)
+    initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
     document.addEventListener("keydown", onKeyDown);
@@ -443,6 +492,7 @@ renderinit().then(() => {
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
+        <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
     </div>
 </template>
 

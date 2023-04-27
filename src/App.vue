@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
+import { onMounted, onUnmounted, shallowRef } from 'vue';
 import { Document } from "@kcdesign/data/data/document";
 import DocumentVue from "@/components/Document/index.vue"
 import HomeVue from "@/components/Home/index.vue"
@@ -10,10 +10,11 @@ import { Repository } from '@kcdesign/data/data/transact';
 import TempVue from '@/components/Temp/index.vue'
 const props = defineProps<{}>();
 // const dataReady = ref<boolean>(false);
+
 const curDoc = shallowRef<Document | undefined>(undefined);
 const curRepo = shallowRef<Repository | undefined>(undefined);
 
-function openLocalFile(file?: File) {
+function openLocalFile(file?: File) {    
     if (!file) return;
     const lzdata = new LzDataLocal(new Zip(file));
     const repo = new Repository();
@@ -21,9 +22,10 @@ function openLocalFile(file?: File) {
         curRepo.value = repo;
         curDoc.value = document;
         window.document.title = document.name;
+        (window as any).skrepo = repo;
+        (window as any).sketchDocument = document;
     })
 }
-
 function openRemoteFile(name: string, fid: string) {
     const repo = new Repository();
     importRemote('http://localhost:8000/', fid, "0", name, repo).then((document) => {
@@ -53,14 +55,16 @@ onUnmounted(() => {
 html {
     width: 100%;
     height: 100%;
-    > body {
+
+    >body {
         font-family: var(--font-family);
         overflow: hidden;
         margin: 0px;
         width: 100%;
         height: 100%;
         user-select: none;
-        > #app {
+
+        >#app {
             display: flex;
             flex-flow: column nowrap;
             width: 100%;
@@ -68,5 +72,4 @@ html {
         }
     }
 }
-    
 </style>

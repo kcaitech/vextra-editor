@@ -77,6 +77,7 @@ declare module '@vue/runtime-core' {
     Scale: typeof import('./src/components/Document/Toolbar/Scale.vue')['default']
     Select: typeof import('./src/components/common/Select.vue')['default']
     SelectionView: typeof import('./src/components/Document/Selection/SelectionView.vue')['default']
+    Selector: typeof import('./src/components/Document/Selection/Selector.vue')['default']
     Shadow: typeof import('./src/components/Document/Attribute/Shadow.vue')['default']
     ShapeGroup: typeof import('./src/components/Document/Content/ShapeGroup.vue')['default']
     ShapeGroupShape: typeof import('./src/components/Document/Content/ShapeGroupShape.vue')['default']

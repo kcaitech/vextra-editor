@@ -178,7 +178,7 @@ onUnmounted(() => {
       width: 8px;
       height: 8px;
       box-sizing: border-box;
-      border: 1px solid orange;
+      border: 1px solid #ffa500;
       background-color: var(--theme-color-anti);
     }
   }
