@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, ref, defineProps } from 'vue'
+import { defineEmits, ref, defineProps, onMounted, defineExpose } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const props = defineProps<{
@@ -12,16 +12,21 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close', index: number): void
 }>()
-const card = ref<HTMLDivElement>()
+const container = ref<HTMLDivElement>()
 const posi = ref({
   top: 5,
   right: 10
 })
 
+
 const closeShare = (index: number) => {
   emit('close', index)
 }
 
+
+onMounted(() => {
+  const par = container.value?.parentElement?.parentElement
+})
 </script>
 <template>
   <el-card class="box-card" ref="card" :style="{top:posi.top + (250 * props.index) + 'px', right: posi.right + 'px'}">
@@ -34,7 +39,7 @@ const closeShare = (index: number) => {
         </el-button>
       </div>
     </template>
-    <div class="contain">
+    <div class="contain" ref="container">
        <!-- 文件名 -->
        <div class="unfounder">
         <span>申请人:</span>
@@ -56,7 +61,7 @@ const closeShare = (index: number) => {
       </div>
       <!-- 链接按钮 -->
       <div class="button">
-        <el-button size="small">同意</el-button>
+        <el-button plain size="small">同意</el-button>
         <el-button color="#0d99ff" size="small">拒绝</el-button>
       </div>
     </div>
@@ -132,7 +137,6 @@ const closeShare = (index: number) => {
 
 .box-card {
   width: 300px;
-  position: absolute;
-  top: 5px;
-  right: 10px;
-}</style>
+  margin-bottom: 10px;
+}
+</style>

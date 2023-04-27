@@ -276,9 +276,9 @@ onUnmounted(() => {
     min-height: 40px;
 }
 #visit {
-    position: relative;
-    top: 0;
-    right: 0;
+    position: absolute;
+    top: 45px;
+    right: 10px;
     z-index: 99;
 }
 

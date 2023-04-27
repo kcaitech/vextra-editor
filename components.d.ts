@@ -45,6 +45,7 @@ declare module '@vue/runtime-core' {
     Icon: typeof import('./src/components/common/Icon.vue')['default']
     IconText: typeof import('./src/components/common/IconText.vue')['default']
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
+    Inform: typeof import('./src/components/Document/Toolbar/Share/Inform.vue')['default']
     Layers: typeof import('./src/components/Document/Selection/Layers.vue')['default']
     LeftTabs: typeof import('./src/components/Document/Navigation/LeftTabs.vue')['default']
     Line: typeof import('./src/components/Document/Content/Line.vue')['default']

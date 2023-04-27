@@ -20,7 +20,7 @@ const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<{ data: ItemData }>();
 const esc = ref<boolean>(false)
 const phWidth = computed(() => {
-    return (props.data.level - 1) * 6;
+    return (props.data.level - 1) * 10;
 })
 
 const emit = defineEmits<{
@@ -93,7 +93,7 @@ const onRename = () => {
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
     if (esc.value) return
-    if(value.length === 0 || value.length > 40 || value.trim.length === 0) return  
+    if(value.length === 0 || value.length > 40 || value.trim().length === 0) return  
     emit('rename', value, props.data.shape);
 }
 
@@ -211,17 +211,17 @@ div.ph {
 }
 
 div.triangle {
-    width: 8px;
-    min-width: 8px;
+    width: 12px;
+    min-width: 12px;
     height: 100%;
-    padding-right: 2px;
+    display: flex;
+    justify-content: center;
 }
 
 div.slot {
-    width: 8px;
-    min-width: 8px;
+    width: 15px;
+    min-width: 15px;
     height: 100%;
-    padding-right: 2px;
 }
 
 div.triangle:hover {
@@ -243,7 +243,7 @@ div.triangle-right {
 div.triangle-down {
     width: 0;
     height: 0;
-    border-top: 5px solid gray;
+    border-top: 6px solid gray;
     border-left: 3px solid transparent;
     border-right: 3px solid transparent;
     position: relative;
@@ -253,10 +253,10 @@ div.triangle-down {
 
 div.containerSvg {
     display: flex;
-    width: 16px;
+    width: 10px;
     justify-content: center;
     align-items: center;
-
+    margin-left: 2px;
     .svg {
         width: 10px;
         height: 10px;

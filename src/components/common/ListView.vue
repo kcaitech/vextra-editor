@@ -30,6 +30,7 @@ const props = defineProps<{
     location?: string,
     allowDrag?: boolean,
     shapeHeight?: number,
+    pageHeight?:number,
     draging: "shapeList" | "pageList"
 }>();
 
@@ -523,8 +524,15 @@ function mouseMove(Event: MouseEvent) {
         if(props.shapeHeight && props.draging === 'shapeList') {
             listTop.value = document.documentElement.offsetHeight - props.shapeHeight
             scrollHeight.value = Math.abs(scroll.y) + props.shapeHeight - container.value!.offsetTop
+            console.log(container.value!.offsetTop);
+            
+            listBottom.value = document.documentElement.offsetHeight - clientY
+        }else if(props.pageHeight && props.draging === 'pageList') {
+            const top = container.value?.getBoundingClientRect()
+            listTop.value = top?.top! - 45
+            listBottom.value = clientY - (props.pageHeight + top?.top! - 45)
+            scrollHeight.value = Math.abs(scroll.y) + props.pageHeight
         }
-        listBottom.value = document.documentElement.offsetHeight - clientY
             if(scroll.y < 0 && clientY - listTop.value < 60 && clientY - listTop.value > 20) {
                 timer = setInterval(() => {
                     scroll.y = scroll.y + 1   

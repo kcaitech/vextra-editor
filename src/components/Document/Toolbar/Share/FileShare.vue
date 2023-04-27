@@ -172,7 +172,7 @@ onUnmounted(() => {
         <p class="name">任何人均可阅读</p>
       </div>
       <!-- 链接按钮 -->
-      <div class="button">
+      <div class="button bottom">
         <el-button color="#0d99ff" size="small">复制链接</el-button>
       </div>
     </div>
@@ -218,6 +218,9 @@ onUnmounted(() => {
   --el-switch-on-color: var(--active-color);
   margin-left: 10px;
   
+}
+.bottom {
+  margin: 5px 0 var(--default-margin) 0;
 }
 }
 .file-name {
@@ -307,8 +310,8 @@ onUnmounted(() => {
 }
 .button {
   display: flex;
+  align-items: center;
   justify-content: center;
-  margin-bottom: var(--default-margin);
 }
 .box-card {
   width: 400px;

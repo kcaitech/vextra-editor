@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import FileShare from './FileShare.vue';
+import Inform from './Inform.vue';
 const showFileShare = ref<boolean>(false);
 const onShare = () => {
   if(showFileShare.value) {
@@ -20,6 +21,7 @@ const closeShare = () => {
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
     <FileShare v-if="showFileShare" @close="closeShare"></FileShare>
+    <!-- <Inform></Inform> -->
   </div>
 </template>
 

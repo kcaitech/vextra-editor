@@ -28,6 +28,7 @@ const emit = defineEmits<{
 const pagelist = ref<List>();
 const ListBody = ref<HTMLDivElement>()
 const ListH = ref<number>(0)
+const pageH = ref<number>(0)
 const fold = ref<boolean>(false)
 const MOUSE_RIGHT = 2
 const pageMenu = ref<boolean>(false)
@@ -44,6 +45,9 @@ const selectionChange = (t: number) => {
 
 onMounted(() => {
     props.context.selection.watch(selectionChange);
+    if (ListBody.value) {
+        pageH.value = ListBody.value.clientHeight //list可视高度
+    }
 });
 
 onUnmounted(() => {
@@ -229,7 +233,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
             </div>
         </div>
         <div class="body" ref="ListBody" :style="{ height: fold ? 0 : 'calc(100% - 30px)' }">
-            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0" :item-height="30" :first-index="0"
+            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :pageHeight="pageH" :item-width="0" :item-height="30" :first-index="0"
                 v-bind="$attrs" orientation="vertical" :allowDrag="true" location="pagelist"
                 @update-after-drag="updateAfterDrag" @rename="rename" @onMouseDown="MouseDown">
             </ListView>

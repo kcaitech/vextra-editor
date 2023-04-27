@@ -44,9 +44,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" @openremotefile="openRemoteFile"/>
-    <DocumentVue v-if="curDoc != undefined && curRepo != undefined" :data="curDoc" :repo="curRepo" /> -->
-    <TempVue></TempVue>
+    <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" @openremotefile="openRemoteFile"/>
+    <DocumentVue v-if="curDoc != undefined && curRepo != undefined" :data="curDoc" :repo="curRepo" />
+    <!-- <TempVue></TempVue> -->
 </template>
 
 <style lang="scss">
