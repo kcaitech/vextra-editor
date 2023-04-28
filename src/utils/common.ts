@@ -14,12 +14,14 @@ export function genOptions(items: string[][]) {
     }
   })
 }
+
 export function getAngle(line1: [number, number, number, number], line2: [number, number, number, number]): number {
   const slope1 = Math.abs((line1[3] - line1[1]) / (line1[2] - line1[0])) === Infinity ? 0 : (line1[3] - line1[1]) / (line1[2] - line1[0]);
   const slope2 = Math.abs((line2[3] - line2[1]) / (line2[2] - line2[0])) === Infinity ? 0 : (line2[3] - line2[1]) / (line2[2] - line2[0]);
   const angleRad = Math.atan((slope2 - slope1) / (1 + slope1 * slope2));
   return angleRad * (180 / Math.PI);
 }
+
 export function rotateBase64Image(base64Image: any, angle: number) {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -91,7 +93,7 @@ export async function cursorHandle(ct: CtrlElementType, rotate: number) {
     return `-webkit-image-set(url(${url})${times}x) ${x} ${y}, auto`
   }
 }
-(window as any).foooo = cursorHandle
+
 // 根据四个点生成一个矩形
 // p1 p2
 // p4 p3
@@ -108,13 +110,13 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
 
   const transX = ((right - left) - width) / 2;
   const transY = ((bottom - top) - height) / 2;
-
+  const transform = `transform: translate(${transX}px, ${transY}px) rotate(${angle}deg);`
   return "position: absolute; " +
     `left: ${left}px; ` +
-    `top: ${top}px;` +
-    `width: ${width}px;` +
-    `height: ${height}px;` +
-    `transform: translate(${transX}px, ${transY}px) rotate(${angle}deg);`;
+    `top: ${top}px; ` +
+    `width: ${width}px; ` +
+    `height: ${height}px; ` +
+    transform;
 }
 // 根据矩形的四个点获取其中心轴
 // p1 p2

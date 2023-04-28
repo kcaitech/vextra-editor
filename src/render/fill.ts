@@ -57,7 +57,7 @@ handler[types.FillType.Gradient] = function (h: Function, shape: Shape, fill: Fi
 export function render(h: Function, shape: Shape, path?: string): Array<any> {
     const style = shape.style;
     const fillsCount = style.fills.length;
-    const elArr = new Array();
+    const elArr = new Array();    
     path = path || shape.getPath(true).toString();
 
     for (let i = 0; i < fillsCount; i++) {

@@ -219,7 +219,7 @@ watchEffect(updater)
     box-sizing: border-box;
     background-color: transparent;
     border: 2px solid #ffa500;
-
+    opacity: 1;
     >.frame {
         position: absolute;
         display: table;

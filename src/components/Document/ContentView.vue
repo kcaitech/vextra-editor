@@ -156,7 +156,6 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
         // 抬起之前存在拖动
         if (newShape) {
             props.context.repo.commit({});
-            props.context.selection.selectShape(newShape);
             newShape = undefined;
             workspace.value.setAction(Action.AutoV);
             workspace.value.creating(false);
@@ -190,20 +189,48 @@ function pageEditOnMoving(e: MouseEvent) {
         if (diff > dragActiveDis) {
             const shapeFrame = new ShapeFrame(x, y, 3, 3);
             newShape = addShape(shapeFrame);
+            props.context.selection.selectShape(newShape);
             props.context.repo.start('customFrameInsert', {});
             workspace.value.creating(true);
         }
     }
 }
 function newFrame(shape: Shape, point: XY) {
-    const { x: sx, y: sy } = mousedownOnPageXY;
-    const { x: px, y: py } = point;
-    const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
-    const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
-    const height = x2.y - x1.y;
-    const width = x2.x - x1.x;
-    expandTo(shape, width, height);
-    translateTo(shape, x1.x, x1.y);
+    if (shape.type === ShapeType.Line) {
+        const { x: sx, y: sy } = mousedownOnPageXY;
+        const { x: px, y: py } = point;
+        if (shape.isFlippedHorizontal) {
+            if ((px - sx) > 0) {
+                shape.flipHorizontal();
+            }
+        } else {
+            if ((px - sx) < 0) {
+                shape.flipHorizontal()
+            }
+        }
+        if (shape.isFlippedVertical) {
+            if ((py - sy) > 0) {
+                shape.flipVertical();
+            }
+        } else {
+            if ((py - sy) < 0) {
+                shape.flipVertical();
+            }
+        }
+        const height = Math.abs(py - sy);
+        const width = Math.abs(px - sx);
+        expandTo(shape, width, height);
+    } else {
+        const { x: sx, y: sy } = mousedownOnPageXY;
+        const { x: px, y: py } = point;
+        const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
+        const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
+        const height = x2.y - x1.y;
+        const width = x2.x - x1.x;
+        expandTo(shape, width, height);
+        translateTo(shape, x1.x, x1.y);
+    }
+
     props.context.repo.transactCtx.fireNotify();
 }
 async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换

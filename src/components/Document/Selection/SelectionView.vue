@@ -56,7 +56,7 @@ function updater() {
     matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
-    data.isSelect = selection.selectedShapes.length > 0;    
+    data.isSelect = selection.selectedShapes.length > 0;
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -136,7 +136,7 @@ function createController() {
         rotate.value = getHorizontalAngle(points[0], points[1]);
         if (selection[0].type === ShapeType.Line) {
             controllerType.value = ControllerType.Line;
-            // controllerType.value = ControllerType.Rect;
+            controllerType.value = ControllerType.Rect;
         } else {
             controllerType.value = ControllerType.Rect;
         }
@@ -175,7 +175,6 @@ function createController() {
 function createShapeTracing() { // 描边
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
     if (!hoveredShape) {
-        // todo
         tracing.value.length = 0;
     } else {
         const selected = props.context.selection.selectedShapes;
@@ -194,12 +193,13 @@ function createShapeTracing() { // 描边
             { x: 0, y: frame.height }
         ];
         tracing.value = points.map(p => {
-            let _s = m.computeCoord(p.x, p.y)
+            let _s = m.computeCoord(p.x, p.y);
             let _p = matrix.computeCoord(_s.x, _s.y);
             p.x = _p.x; p.y = _p.y;
             return p;
         });
-        tracingStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+        const [p0, p1, p2, p3] = tracing.value;
+        tracingStyle = createRect(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
         tracingPath = hoveredShape.getPath(true).toString();
     }
 }

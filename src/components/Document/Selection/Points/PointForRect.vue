@@ -63,8 +63,6 @@ function getCtrlElementType(event: MouseEvent) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
-
-
     const ct = getCtrlElementType(event);
     if (ct) {
       event.stopPropagation();
