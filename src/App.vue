@@ -1,54 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef } from 'vue';
-import { Document } from "@kcdesign/data/data/document";
-import DocumentVue from "@/components/Document/index.vue"
-import HomeVue from "@/components/Home/index.vue"
-import { Zip } from "@pal/zip";
-import { LzDataLocal } from './basic/lzdatalocal'; // todo
-import { importRemote, importSketch } from '@kcdesign/data/io';
-import { Repository } from '@kcdesign/data/data/transact';
-import TempVue from '@/components/Temp/index.vue'
-// const props = defineProps<{}>();
-// const dataReady = ref<boolean>(false);
-
-const curDoc = shallowRef<Document | undefined>(undefined);
-const curRepo = shallowRef<Repository | undefined>(undefined);
-
-function openLocalFile(file?: File) {    
-    if (!file) return;
-    const lzdata = new LzDataLocal(new Zip(file));
-    const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document) => {
-        curRepo.value = repo;
-        curDoc.value = document;
-        window.document.title = document.name;
-        (window as any).skrepo = repo;
-        (window as any).sketchDocument = document;
-    })
-}
-function openRemoteFile(name: string, fid: string) {
-    const repo = new Repository();
-    importRemote('http://localhost:8000/', fid, "0", name, repo).then((document) => {
-        curRepo.value = repo;
-        curDoc.value = document;
-        window.document.title = document.name;
-    })
-}
-
-onMounted(() => {
-
-})
-
-onUnmounted(() => {
-
-})
-
+import { RouterView } from 'vue-router';
 </script>
 
 <template>
-    <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" @openremotefile="openRemoteFile"/>
-    <DocumentVue v-if="curDoc != undefined && curRepo != undefined" :data="curDoc" :repo="curRepo" />
-    <!-- <TempVue></TempVue> -->
+    <RouterView></RouterView>
 </template>
 
 <style lang="scss">

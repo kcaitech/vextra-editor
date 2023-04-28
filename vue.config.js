@@ -16,10 +16,10 @@ var configureWebpack = (config) => {
     //   // 为开发环境修改配置...
     // }
     if (run_env === 'browser') {
-        config.entry.app = [ './src/web.main.ts' ]
+        config.entry.app = ['./src/web.main.ts']
         config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
     } else {
-        config.entry.app = [ './src/electron.main.ts' ]
+        config.entry.app = ['./src/electron.main.ts']
         config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/nodejs')
     }
 
@@ -51,7 +51,7 @@ var configureWebpack = (config) => {
             test: /\.svg?$/,
             use: [
                 {
-                    loader: 'svg-sprite-loader', 
+                    loader: 'svg-sprite-loader',
                     options: {
                         symbolId: "icon-[name]",
                     },
@@ -60,10 +60,10 @@ var configureWebpack = (config) => {
                     loader: 'svgo-loader',
                     options: {
                         plugins: [
-                        {
-                            name: 'convertColors',
-                            params: { currentColor: true },
-                        },
+                            {
+                                name: 'convertColors',
+                                params: { currentColor: true },
+                            },
                         ],
                     },
                 }
@@ -94,7 +94,24 @@ var exports = defineConfig({
             nodeIntegration: true,
             //contextIsolation: false
         }
-    }
-})
+    },
 
-module.exports = exports;
+    devServer: {
+        port: 8080,
+        open: true,
+        proxy: {
+            '/api':{
+                target: 'https://mock.apifox.cn/m1/2612240-0-1d5a81b5',
+                // target: 'http://192.168.0.10:10000',
+                changeOrigin: true,
+                //ws: true,
+                pathRewrite: {
+                    '^/api/v1': '/' 
+               }
+
+        }
+    }
+    }
+
+})
+module.exports = exports

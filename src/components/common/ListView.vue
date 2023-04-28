@@ -526,8 +526,6 @@ function mouseMove(Event: MouseEvent) {
         if (props.shapeHeight && props.draging === 'shapeList') {
             listTop.value = document.documentElement.offsetHeight - props.shapeHeight
             scrollHeight.value = Math.abs(scroll.y) + props.shapeHeight - container.value!.offsetTop
-            console.log(container.value!.offsetTop);
-            
             listBottom.value = document.documentElement.offsetHeight - clientY
         }else if(props.pageHeight && props.draging === 'pageList') {
             const top = container.value?.getBoundingClientRect()

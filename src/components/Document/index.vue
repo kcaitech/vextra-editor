@@ -36,7 +36,7 @@ const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
 // 模拟申请人
-const applicant:any = [
+const applicant: any = [
     // {
     //     name: '张三',
     //     file: '图形页面',
@@ -153,6 +153,7 @@ const showHiddenRight = () => {
     }
 }
 
+
 const showHiddenLeft = () => {
     if (showLeft.value) {
         Left.value.leftMin = 0
@@ -192,7 +193,7 @@ function keyToggleTB() {
     showTop.value = showBottom.value;
 }
 
-onMounted(() => {
+onMounted(() => {    
     context.value.selection.watch(selectionWatcher);
     switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
     if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
@@ -211,8 +212,8 @@ onUnmounted(() => {
         <Toolbar :context="context" />
     </div>
     <div id="visit" v-if="applicant.length">
-        <ApplyFor v-for="(item, index) in applicant" :key="index" :index="index" :name="item.name" 
-            :authority=item.authority :file="item.file" :remarks="item.remarks" @close="closeApplyFor">
+        <ApplyFor v-for="(item, index) in applicant" :key="index" :index="index" :name="item.name" :authority=item.authority
+            :file="item.file" :remarks="item.remarks" @close="closeApplyFor">
         </ApplyFor>
     </div>
     <ColSplitView ref="colSplitView" id="center"
@@ -274,6 +275,7 @@ onUnmounted(() => {
     z-index: 2;
     min-height: 40px;
 }
+
 #visit {
     position: absolute;
     top: 45px;
