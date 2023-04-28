@@ -1,30 +1,78 @@
 import { createRouter, createWebHashHistory } from "vue-router";
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import { ref } from 'vue';
 // import { Document } from "@kcdesign/data/document";
-// const AppVue = () => import("@/App.vue");
-// const HomeVue = () => import("@/components/Home/index.vue");
+const AppVue = () => import("@/App.vue");
+const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
+const AppHome = () => import("@/components/AppHome/AppHome.vue");
+const Login = () => import("@/components/Login/Login.vue");
+const Recently = () => import("@/components/AppHome/Main/Recently.vue");
+const StarFile = () => import("@/components/AppHome/Main/StarFile.vue");
+const ShareMe = () => import("@/components/AppHome/Main/ShareMe.vue");
+const MeShare = () => import("@/components/AppHome/Main/MeShare.vue");
+const RecycleBin = () => import("@/components/AppHome/Main/RecycleBin.vue");
+
+
 
 const routes = [
-    // { path: "/", redirect: "/home" },
-    // {
-    //     path: "/",
-    //     name: "app",
-    //     component: AppVue
-    // },
-    // {
-    //     path: "/home",
-    //     name: "home",
-    //     component: HomeVue,
-    //     props: true,
-    // },
     {
-        path: "/document/:id",
+        path: '/',
+        redirect: '/login'
+    },
+    {
+        path: "/login",
+        name: "login",
+        component: Login
+    },
+    {
+        path: "/home",
+        name: "home",
+        component: HomeVue,
+        props: true,
+    },
+    {
+        path: "/document/",
         name: "document",
-        component: DocumentVue,
+        component: DocumentVue
+    },
+    {
+        path: "/apphome",
+        name: "apphome",
+        component: AppHome,
+        redirect: '/apphome/recently',
+        children: [
+            {
+                path: 'recently',
+                name: 'recently',
+                component: Recently
+            },
+            {
+                path: 'starfile',
+                name: 'starfile',
+                component: StarFile
+            },
+            {
+                path: 'meshare',
+                name: 'meshare',
+                component: MeShare
+            },
+            {
+                path: 'shareme',
+                name: 'shareme',
+                component: ShareMe
+            },
+            {
+                path: 'recyclebin',
+                name: 'recyclebin',
+                component: RecycleBin
+            }
+        ]
     }
 ]
 
 export const router = createRouter({
     history: createWebHashHistory(),
     routes: routes
+
 })

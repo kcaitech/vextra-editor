@@ -1,23 +1,39 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, shallowRef, computed } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
-import { Document } from "@kcdesign/data/data/document";
 import Navigation from './Navigation/index.vue';
 import { Page } from '@kcdesign/data/data/page';
 import { Selection } from '@/context/selection'
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
-import { Repository } from '@kcdesign/data/data/transact';
 import { SCREEN_SIZE } from '@/utils/setting';
-import { KeyboardKeys, WorkSpace } from '@/context/workspace';
-
-const props = defineProps<{ data: Document, repo: Repository }>();
+import { WorkSpace } from '@/context/workspace';
+import { Document } from '@kcdesign/data/data/document';
+import { Repository } from '@kcdesign/data/data/transact';
 const curPage = shallowRef<Page | undefined>(undefined);
-const context = shallowRef<Context>(new Context(props.data, props.repo));
+const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
 (window as any).__context = context.value;
 const workspace = computed<WorkSpace>(() => context.value.workspace);
+const middleWidth = ref<number>(0.8)
+const middleMinWidth = ref<number>(0.3)
+
+const Right = ref({
+    rightMin: 336,
+    rightMinWidth: 0.1,
+    rightWidth: 0.1
+})
+
+const Left = ref({
+    leftMin: 336,
+    leftWidth: 0.1,
+    leftMinWidth: 0.1
+})
+const showRight = ref<boolean>(true);
+const showLeft = ref<boolean>(true);
+const showTop = ref<boolean>(true);
+const showBottom = ref<boolean>(true);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -30,10 +46,44 @@ function screenSetting() {
         localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
     }
 }
-
-function onWindowBlur() {
-    // Window blur, Close the process that should be closed
+const leftTriggleVisible = ref<boolean>(false);
+const rightTriggleVisible = ref<boolean>(false);
+let timerForLeft: any;
+let timeForRight: any;
+function mouseenter(t: 'left' | 'right') {
+    if (t === 'left') {
+        if (timerForLeft) {
+            clearTimeout(timerForLeft);
+            timerForLeft = undefined;
+        }
+        leftTriggleVisible.value = true;
+    } else {
+        if (timeForRight) {
+            clearTimeout(timeForRight);
+            timeForRight = undefined;
+        }
+        rightTriggleVisible.value = true;
+    }
 }
+function mouseleave(t: 'left' | 'right') {
+    const delay = 2000;
+    if (t === 'left') {
+        timerForLeft = setTimeout(() => {
+            if (!timerForLeft) return;
+            leftTriggleVisible.value = false;
+            clearTimeout(timerForLeft);
+            timerForLeft = undefined;
+        }, delay);
+    } else {
+        timeForRight = setTimeout(() => {
+            if (!timeForRight) return;
+            rightTriggleVisible.value = false;
+            clearTimeout(timeForRight);
+            timeForRight = undefined;
+        }, delay);
+    }
+}
+
 function switchPage(id?: string) {
     if (!id) return
     const ctx: Context = context.value;
@@ -48,59 +98,126 @@ function selectionWatcher(t: number) {
         curPage.value = ctx.selection.selectedPage;
     }
 }
-function keyboardEventHandler(e: KeyboardEvent) {
-    const { ctrlKey, shiftKey, metaKey } = e;
-    if (e.code === KeyboardKeys.R) {
-        workspace.value.keydown_r();
-    } else if (e.code === KeyboardKeys.V) {
-        workspace.value.keydown_v();
-    } else if (e.code === KeyboardKeys.L) {
-        workspace.value.keydown_l();
-    } else if (e.code === KeyboardKeys.Z) {
-        workspace.value.keydown_z(props.repo, ctrlKey, shiftKey, metaKey);
-    } else if ([KeyboardKeys.Up, KeyboardKeys.Right, KeyboardKeys.Down, KeyboardKeys.Left].includes(e.code as KeyboardKeys)) {
-        workspace.value.keydown_arrow(e.code as KeyboardKeys, shiftKey);
-    } else if (e.code === KeyboardKeys.K) {
-        workspace.value.keydown_K();
+function keyboardEventHandler(evevt: KeyboardEvent) {
+    const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
+    if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
+
+    workspace.value.keyboardHandle(evevt); // 编辑器相关的键盘事件
+
+    if (code === 'Backslash') {
+        if (ctrlKey || metaKey) {
+            shiftKey ? keyToggleTB() : keyToggleLR()
+        }
+    }
+
+}
+const showHiddenRight = () => {
+    if (showRight.value) {
+        Right.value.rightMin = 0
+        Right.value.rightWidth = 0
+        Right.value.rightMinWidth = 0
+        middleWidth.value = middleWidth.value + 0.1
+        showRight.value = false
+    } else {
+        Right.value.rightMin = 336
+        Right.value.rightWidth = 0.1
+        Right.value.rightMinWidth = 0.1
+        middleWidth.value = middleWidth.value - 0.1
+        showRight.value = true
     }
 }
 
+const showHiddenLeft = () => {
+    if (showLeft.value) {
+        Left.value.leftMin = 0
+        Left.value.leftWidth = 0
+        Left.value.leftMinWidth = 0
+        middleWidth.value = middleWidth.value + 0.1
+        showLeft.value = false
+    } else {
+        Left.value.leftMin = 336
+        Left.value.leftWidth = 0.1
+        Left.value.leftMinWidth = 0.1
+        middleWidth.value = middleWidth.value - 0.1
+        showLeft.value = true
+    }
+}
+function keyToggleLR() {
+    if (showRight.value !== showLeft.value) {
+        showHiddenLeft();
+    } else {
+        showHiddenLeft();
+        showHiddenRight();
+    }
+}
+function keyToggleTB() {
+    if (showRight.value !== showLeft.value) {
+        showHiddenLeft();
+        return;
+    }
+    if (showTop.value !== showLeft.value) {
+        showHiddenLeft();
+        showHiddenRight();
+        return;
+    }
+    showHiddenLeft();
+    showHiddenRight();
+    showBottom.value = !showBottom.value;
+    showTop.value = showBottom.value;
+}
+
 onMounted(() => {
+    console.log('--', ((window as any).sketchDocument as Document));
+    
     context.value.selection.watch(selectionWatcher);
-    switchPage(props.data.pagesList[0]?.id);
+    switchPage(context.value.data.pagesList[0]?.id);
     if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
-    window.addEventListener('blur', onWindowBlur);
     document.addEventListener('keydown', keyboardEventHandler);
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
-    window.removeEventListener('blur', onWindowBlur);
     document.removeEventListener('keydown', keyboardEventHandler);
 })
 </script>
 
 <template>
-    <div id="top" @dblclick="screenSetting">
+    <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context" />
     </div>
-    <ColSplitView id="center" :left="{ width: 0.1, minWidth: 0.1, maxWidth: 0.5 }"
-        :middle="{ width: 0.8, minWidth: 0.3, maxWidth: 0.8 }" :right="{ width: 0.1, minWidth: 0.1, maxWidth: 0.5 }"
-        :right-min-width-in-px="336" :left-min-width-in-px="336">
+    <ColSplitView ref="colSplitView" id="center"
+        :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+        :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+        :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
-                :page="(curPage as Page)"></Navigation>
+                @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
+                :page="(curPage as Page)">
+            </Navigation>
+            <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
+                :style="{ opacity: showLeft ? 1 : 0.6 }">
+                <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
+                <svg-icon v-else class="svg" icon-class="right"></svg-icon>
+            </div>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined" data-area="content" id="content" :context="context"
+                :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" :context="context"></Attribute>
+            <Attribute id="attributes" :context="context" @mouseenter="e => { mouseenter('right') }"
+                @mouseleave="() => { mouseleave('right') }"></Attribute>
+            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
+                :style="{ opacity: showRight ? 1 : 0.6 }">
+                <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
+                <svg-icon v-else class="svg" icon-class="left"></svg-icon>
+            </div>
         </template>
     </ColSplitView>
-    <div id="bottom"></div>
+    <div id="bottom" v-if="showBottom"></div>
 </template>
 <style>
 :root {
@@ -124,9 +241,9 @@ onUnmounted(() => {
     flex-flow: row nowrap;
     width: 100%;
     height: 40px;
-    min-height: 40px;
     background-color: var(--top-toolbar-bg-color);
     z-index: 1;
+    min-height: 40px;
 }
 
 #center {
@@ -155,9 +272,49 @@ onUnmounted(() => {
         background-color: var(--right-attr-bg-color);
         z-index: 1;
     }
+
+    .showHiddenR {
+        position: absolute;
+        left: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        height: 60px;
+        background-color: var(--theme-color-anti);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px 0px 0px 4px;
+
+        >.svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+    .showHiddenL {
+        position: absolute;
+        right: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+        cursor: pointer;
+        height: 60px;
+        background-color: var(--theme-color-anti);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0 4px 4px 0;
+
+        >.svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
 }
 
 #bottom {
+    transition: 0.18s;
     flex-flow: row nowrap;
     width: 100%;
     height: 30px;

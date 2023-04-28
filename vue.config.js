@@ -15,10 +15,10 @@ var configureWebpack = (config) => {
     //   // 为开发环境修改配置...
     // }
     if (run_env === 'browser') {
-        config.entry.app = [ './src/web.main.ts' ]
+        config.entry.app = ['./src/web.main.ts']
         config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
     } else {
-        config.entry.app = [ './src/electron.main.ts' ]
+        config.entry.app = ['./src/electron.main.ts']
         config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/nodejs')
     }
 
@@ -50,7 +50,7 @@ var configureWebpack = (config) => {
             test: /\.svg?$/,
             use: [
                 {
-                    loader: 'svg-sprite-loader', 
+                    loader: 'svg-sprite-loader',
                     options: {
                         symbolId: "icon-[name]",
                     },
@@ -59,10 +59,10 @@ var configureWebpack = (config) => {
                     loader: 'svgo-loader',
                     options: {
                         plugins: [
-                        {
-                            name: 'convertColors',
-                            params: { currentColor: true },
-                        },
+                            {
+                                name: 'convertColors',
+                                params: { currentColor: true },
+                            },
                         ],
                     },
                 }
@@ -73,8 +73,8 @@ var configureWebpack = (config) => {
     )
 
     config.plugins = [
-        AutoImport({resolvers: [ElementPlusResolver()]}),
-        Components({resolvers: [ElementPlusResolver()]}),
+        AutoImport({ resolvers: [ElementPlusResolver()] }),
+        Components({ resolvers: [ElementPlusResolver()] }),
         ...config.plugins
     ]
 }
@@ -90,7 +90,23 @@ var exports = defineConfig({
             nodeIntegration: true,
             //contextIsolation: false
         }
-    }
-})
+    },
 
-module.exports = exports;
+    devServer: {
+        port: 8080,
+        open: true,
+        proxy: {
+            '/api':{
+                target: 'http://192.168.0.10:10000',
+                changeOrigin: true,
+                //ws: true,
+                pathRewrite: {
+                    '^/api': '/api' 
+               }
+
+        }
+    }
+    }
+
+})
+module.exports = exports
