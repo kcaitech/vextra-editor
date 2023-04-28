@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, defineProps, ref,onMounted,onUnmounted,nextTick } from 'vue'
+import { defineEmits, ref,onMounted,onUnmounted,nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const emit = defineEmits<{
