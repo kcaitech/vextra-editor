@@ -17,6 +17,7 @@ import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
 import { cursorHandle } from "@/utils/common";
 import { expandTo, translateTo } from "@kcdesign/data/editor/frame";
+import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -59,7 +60,8 @@ const surplusY = ref<number>(0);
 const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector = ref<boolean>(false);
 const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0 });
-
+const cursorClass = ref<string>('');
+const styler = ref<StyleSheetController>(styleSheetController());
 function offset2Root() { // === props.context.workspace.root
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
@@ -233,14 +235,16 @@ function newFrame(shape: Shape, point: XY) {
 
     props.context.repo.transactCtx.fireNotify();
 }
-async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
-    if (t === WorkSpace.CURSOR_CHANGE && ct && rotate !== undefined) {
-        cursor.value = await cursorHandle(ct, rotate);
+function workspaceUpdate(t?: number, name?: string) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
+    if (t === WorkSpace.CURSOR_CHANGE) {
+        if (name !== undefined) {
+            setClass(name);
+        }
         return;
     } else if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.value.matrix);
     } else if (t === WorkSpace.RESET_CURSOR) {
-        cursor.value = CursorType.Auto;
+        setClass('auto-0');
     } else if (t === WorkSpace.INSERT_FRAME) {
         insertFrame();
     }
@@ -250,6 +254,10 @@ async function workspaceUpdate(t?: number, ct?: CtrlElementType, rotate?: number
     } else {
         cursor.value = CursorType.Auto;
     }
+}
+async function setClass(name: string) {
+    const _n = await styler.value.getClass(name);
+    cursorClass.value = _n;
 }
 function insertFrame() {
     const x = 600
@@ -398,7 +406,6 @@ function createSelector(e: MouseEvent) {
     selectorFrame.value.height = bottom - top;
     selector.value = true;
 }
-
 // mouse event flow 
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
@@ -487,13 +494,15 @@ const stopWatch = watch(() => props.page, (cur, old) => {
 
     initMatrix(cur)
 })
-onMounted(() => {
+onMounted(async () => {
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
     window.addEventListener('blur', windowBlur);
+    await styler.value.setup();
+    cursorClass.value = await styler.value.getClass('auto-0');
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
@@ -501,6 +510,7 @@ onUnmounted(() => {
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("keyup", onKeyUp);
     window.removeEventListener('blur', windowBlur);
+    styler.value.remove();
     stopWatch();
 })
 renderinit().then(() => {
@@ -509,7 +519,7 @@ renderinit().then(() => {
 </script>
 
 <template>
-    <div v-if="inited" ref="root" :style="{ cursor }" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
+    <div v-if="inited" :class="cursorClass" ref="root" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
         @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />

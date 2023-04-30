@@ -164,8 +164,8 @@ export class WorkSpace extends Watchable(Object) {
     creating(v: boolean) {
         this.m_creating = v;
     }
-    selecting(v: boolean) {        
-        this.m_selecting = v;        
+    selecting(v: boolean) {
+        this.m_selecting = v;
         this.notify(WorkSpace.SELECTING);
     }
 
@@ -234,7 +234,21 @@ export class WorkSpace extends Watchable(Object) {
         if (this.m_creating || this.m_selecting) {
             // todo
         } else {
-            this.notify(WorkSpace.CURSOR_CHANGE, type, deg);
+            let name = 'auto-0';
+            if (type === CtrlElementType.RectRBR) {
+                name = `rotate-${0 + deg}`;
+            } else if (type === CtrlElementType.RectLBR) {
+                name = `rotate-${90 + deg}`;
+            } else if (type === CtrlElementType.RectLTR) {
+                name = `rotate-${180 + deg}`;
+            } else if (type === CtrlElementType.RectRTR) {
+                name = `rotate-${270 + deg}`;
+            } else if (type === CtrlElementType.RectLT || type === CtrlElementType.RectRB) {
+                name = `scale-${45 + deg}`;
+            } else if (type === CtrlElementType.RectRT || type === CtrlElementType.RectLB) {
+                name = `scale-${135 + deg}`;
+            }
+            this.notify(WorkSpace.CURSOR_CHANGE, name);
         }
     }
     resetCursor() {

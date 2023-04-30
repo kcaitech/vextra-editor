@@ -25,6 +25,8 @@ export function getAngle(line1: [number, number, number, number], line2: [number
 export function rotateBase64Image(base64Image: any, angle: number) {
   return new Promise((resolve, reject) => {
     const image = new Image();
+    image.src = base64Image;
+
     image.onload = function () {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -46,7 +48,6 @@ export function rotateBase64Image(base64Image: any, angle: number) {
     image.onerror = function () {
       reject('Invalid base64 image');
     }
-    image.src = base64Image;
   });
 }
 
