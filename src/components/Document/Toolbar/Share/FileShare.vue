@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, ref,onMounted,onUnmounted,nextTick } from 'vue'
+import { defineEmits, ref,onMounted,onUnmounted,nextTick, reactive, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { User } from '@/context/user'
 import * as share_api from '@/apis/share'
@@ -24,34 +24,43 @@ const readOnly = ref('只读')
 const remove = ref('移除')
 const founder = ref(false)
 const userInfo = ref<User>()
-let shareList: any = ref([{
-  data: []
-}])
+let shareList: any = ref([])
 const posi = ref({
   top: 0,
   left: 0
 })
+enum docType  {
+  Private,
+  Share,
+  Read,
+  Critical,
+  Edit
+}
 const popover = ref<HTMLDivElement>()
 const options = [
   {
     value: '需申请确认',
-    label: '需申请确认',
+    label: '需申请确认'
   },
   {
     value: '任何人均可阅读',
-    label: '任何人均可阅读',
+    label: '任何人均可阅读'
   },
   {
     value: '任何人均可编辑',
-    label: '任何人均可编辑',
+    label: '任何人均可编辑'
+  },
+  {
+    value: '任何人可评论',
+    label: '任何人可评论'
   }
 ]
-const permission = ref(['无权限', '只读', '可评论','可编辑'])
+const DocType = reactive(['需申请确认','可分享','任何人均可阅读','任何人可评论','任何人均可编辑'])
+const permission = reactive(['无权限', '只读', '可评论','可编辑'])
 const closeShare = (e: MouseEvent) => {
   e.stopPropagation()
   emit('close')
 }
-const refersh = ref(false)
 const handleClick = (e: MouseEvent) => {
   e.stopPropagation()
   e.target instanceof Element && !e.target.closest('.box-card') && emit('close');
@@ -73,35 +82,51 @@ const selectAuthority = (i: number, e: Event) => {
     posi.value.top = Math.max(el.parentElement!.offsetHeight,35) * (i + 2)
   })
 }
-const onEditable = (id: number, type: number) => {
+const onEditable = (id: number, type: number, index: number) => {
   putShareAuthority(id, type)
-  shareList.value.data.perm_type = type;
-  refersh.value = !refersh.value
-  setTimeout(() => {
-    refersh.value = !refersh.value
-  })
-
-
-  
+  shareList.value[index].perm_type = type;
 }
-const onReadOnly = (id: number, type: number) => {
+const onReadOnly = (id: number, type: number, index: number) => {
   putShareAuthority(id, type)
+  shareList.value[index].perm_type = type;
 }
-const onRemove = (i: number) => {
+const onRemove = (id: number, i: number) => {
+  delShare(id)
+  shareList.value.splice(i, 1)
 }
 const getShareList = async() => {
   const {data} = await share_api.getShareListAPI({doc_id: docID})
-  shareList.value.data = data
-  console.log(shareList.value.data);
-  
+  shareList.value = data
+  console.log(shareList.value);
+}
+const delShare = async (id: number) => {
+  await share_api.delShareAuthorityAPI({share_id: id})
 }
 const putShareAuthority = async(id: number, type: number) => {
   await share_api.putShareAuthorityAPI({share_id:id, perm_type: type}) 
 }
-
+const setShateType = async (type: number) => {
+  await share_api.setShateTypeAPI({doc_id: docID, doc_type: type})
+}
+watch(selectValue, (nVal, oVal) => {
+  if (nVal == DocType[docType.Critical]) {
+    setShateType(docType.Critical)
+  } else if (nVal == DocType[docType.Edit]) {
+    setShateType(docType.Edit)
+  }else if (nVal == DocType[docType.Private]) {
+    setShateType(docType.Private)
+  }else if (nVal == DocType[docType.Read]) {
+    setShateType(docType.Read)
+  }else if (nVal == DocType[docType.Share]) {
+    setShateType(docType.Share)
+  }
+})
+watchEffect(() => {
+  setShateType(docType.Private)
+})
 userInfo.value = ((window as any).skuser as User);
+getShareList()
 onMounted(() => {
-  getShareList()
   document.addEventListener('click', handleClick);
 })
 
@@ -159,18 +184,18 @@ onUnmounted(() => {
               <div class="founder">创建者</div>
             </div>
           </div>
-          <div v-for="(item, ids) in shareList.data" :key="ids" class="scrollbar-demo-item">
+          <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
             <div class="item-left">
               <div class="avatar"><img :src="item.user.avatar"></div>
               <div class="name">{{item.user.nickname}}</div>
             </div>
             <div class="item-right" @click="e => selectAuthority(ids, e)">
-              <div class="authority" v-if="!refersh">{{permission[item.perm_type] }}</div>
+              <div class="authority">{{permission[item.perm_type] }}</div>
               <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
               <div class="popover" v-if="authority && index === ids" ref="popover" :style="{top: posi.top + 'px',right: 30 + 'px'}">
-                <div @click="onEditable(item.id, permissions.editable)">{{editable}}</div>
-                <div @click="onReadOnly(item.id, permissions.readOnly)">{{readOnly}}</div>
-                <div @click="onRemove(ids)">{{remove}}</div>
+                <div @click="onEditable(item.id, permissions.editable,ids)">{{editable}}</div>
+                <div @click="onReadOnly(item.id, permissions.readOnly,ids)">{{readOnly}}</div>
+                <div @click="onRemove(item.id, ids)">{{remove}}</div>
               </div>
             </div>
           </div>

@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import {ref, watch} from 'vue'
 import { ElMessage } from 'element-plus'
+import { router } from '../../router'
+import * as share_api from '../../apis/share'
 const radio = ref('1')
 const textarea = ref('')
 const disabled = ref(false)
@@ -8,6 +10,8 @@ const noPass = ref(false)
 const maxShare = ref(0)
 const idRead = ref(0)
 const idEdit = ref(0)
+const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
+const docInfo: any = ref({})
 const onSave = () => {
     disabled.value = true
     if(maxShare.value >= 5) {
@@ -35,7 +39,8 @@ const onSave = () => {
     if(num) {
         noPass.value = true
         disabled.value = false
-    }    
+    }  
+    postDocumentAuthority({doc_id: docID, perm_type: Number(radio.value), remarks: textarea})
 }
 watch(radio, () => {
     disabled.value = false
@@ -48,20 +53,30 @@ watch(noPass, () => {
         message: '申请未通过，请修改信息或联系创建者后重新申请'
     })
 })
+const getDocumentInfo = async() => {
+    const { data } = await share_api.getDocumentInfoAPI({doc_ic: docID})
+    docInfo.value = data
+    console.log(docInfo.value,'doc');
+    
+}
+getDocumentInfo()
+const postDocumentAuthority = async (data) => {
+    await share_api.postDocumentAuthorityAPI(data)
+}
 </script>
 
 <template>
     <div class="container">
         <div class="header">
-            <div class="svgBox">
+            <div class="svgBox" @click="router.push({name: 'apphome'})">
                 <svg-icon class="svg" icon-class="home"></svg-icon>
             </div>
             <div class="user-avatar">
-                <img src="">
+                <img src="../../assets/pd-logo-svg.svg">
             </div>
         </div>
         <div class="context">
-            <span style="font-weight: bold;">页面图层多选</span>
+            <span style="font-weight: bold;">{{docInfo.name}}</span>
             <div class="svg-file">
                 <svg-icon class="svg" icon-class="file-rectangle"></svg-icon>
             </div>
@@ -76,7 +91,7 @@ watch(noPass, () => {
                     <div class="my-4 flex items-center text-sm">
                         <el-radio-group v-model="radio" class="ml-4">
                         <el-radio label="1" size="small">仅阅读</el-radio>
-                        <el-radio label="2" size="small">可编辑</el-radio>
+                        <el-radio label="3" size="small">可编辑</el-radio>
                         </el-radio-group>
                     </div>
                 </div>

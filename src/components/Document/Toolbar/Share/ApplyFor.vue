@@ -1,71 +1,89 @@
 <script setup lang="ts">
-import { defineEmits, ref, defineProps, onMounted, defineExpose } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import * as share_api from '@/apis/share'
 const { t } = useI18n()
-const props = defineProps<{
-    index: number,
-    name: string,
-    file: string,
-    authority: string,
-    remarks: string
-}>()
-const emit = defineEmits<{
-  (e: 'close', index: number): void
-}>()
+
+const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
+const applyList: any = ref([])
 const container = ref<HTMLDivElement>()
 const posi = ref({
   top: 5,
   right: 10
 })
-
-
-const closeShare = (index: number) => {
-  emit('close', index)
+enum Audit {
+  Pass,
+  unPass
 }
-
-
-onMounted(() => {
-  const par = container.value?.parentElement?.parentElement
+const permission = ref(['无权限', '只读', '可评论','可编辑'])
+const getApplyList = async () => {
+    const { data } = await share_api.getApplyListAPI({ doc_id: docID })
+    applyList.value = data
+    console.log( applyList.value,'apply');
+}
+const consent = (id: number, index: number) => {
+  promissionApplyAudit(id, Audit.Pass)
+  applyList.value.splice(index, 1)
+}
+const refuse = (id: number, index: number) => {
+  promissionApplyAudit(id, Audit.unPass)
+  applyList.value.splice(index, 1)
+}
+const promissionApplyAudit = async (id: number, type: number) => {
+  await share_api.promissionApplyAuditAPI({apply_id: id, approval_code: type})
+}
+let timer: any = null
+getApplyList()
+onMounted(() => {    
+    timer = setInterval(() => {
+        getApplyList()
+    }, 60000)
+})
+onUnmounted(() => {
+    clearInterval(timer)
 })
 </script>
 <template>
-  <el-card class="box-card" ref="card" :style="{top:posi.top + (250 * props.index) + 'px', right: posi.right + 'px'}">
-    <!-- 标题 -->
-    <template #header>
-      <div class="card-header">
-        <span>文件访问申请</span>
-        <el-button class="button" text @click="closeShare(props.index)">
-          <div class="close"> X </div>
-        </el-button>
+  <div v-for="(item, index) in applyList" :key="index">
+
+    <el-card class="box-card" ref="card" :style="{top:posi.top + (250 * index) + 'px', right: posi.right + 'px'}">
+      <!-- 标题 -->
+      <template #header>
+        <div class="card-header">
+          <span>文件访问申请</span>
+          <el-button class="button" text>
+            <div class="close"> X </div>
+          </el-button>
+        </div>
+      </template>
+      <div class="contain" ref="container">
+         <!-- 文件名 -->
+         <div class="unfounder">
+          <span>申请人:</span>
+          <p class="name bold">{{ item.user.nickname }}</p>
+        </div>
+         <!-- 创建者 -->
+         <div class="unfounder">
+          <span>访问文件:</span>
+          <p class="name bold">{{ item.document.name }}</p>
+        </div>
+         <!-- 文档权限 -->
+         <div class="unfounder">
+          <span>权限:</span>
+          <p class="name bold">{{permission[item.perm_type]}}</p>
+        </div>
+        <!-- <div class="textarea" v-if="props.remarks.trim().length">
+          <span>备注:</span>
+          <p class="text">{{props.remarks}}</p>
+        </div> -->
+        <!-- 链接按钮 -->
+        <div class="button">
+          <el-button color="#0d99ff" size="small" @click="consent(item.id, index)">同意</el-button>
+          <el-button plain size="small" @click="refuse(item.id, index)">拒绝</el-button>
+        </div>
       </div>
-    </template>
-    <div class="contain" ref="container">
-       <!-- 文件名 -->
-       <div class="unfounder">
-        <span>申请人:</span>
-        <p class="name bold">{{props.name}}</p>
-      </div>
-       <!-- 创建者 -->
-       <div class="unfounder">
-        <span>访问文件:</span>
-        <p class="name bold">{{props.file}}</p>
-      </div>
-       <!-- 文档权限 -->
-       <div class="unfounder">
-        <span>权限:</span>
-        <p class="name bold">{{props.authority}}</p>
-      </div>
-      <div class="textarea" v-if="props.remarks.trim().length">
-        <span>备注:</span>
-        <p class="text">{{props.remarks}}</p>
-      </div>
-      <!-- 链接按钮 -->
-      <div class="button">
-        <el-button plain size="small">同意</el-button>
-        <el-button color="#0d99ff" size="small">拒绝</el-button>
-      </div>
-    </div>
-  </el-card>
+    </el-card>
+  </div>
   
 </template>
   

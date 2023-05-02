@@ -10,6 +10,7 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     AppHome: typeof import('./src/components/AppHome/AppHome.vue')['default']
+    Apply: typeof import('./src/components/Apply/index.vue')['default']
     ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']
     Arrow: typeof import('./src/components/Document/Toolbar/Buttons/Arrow.vue')['default']
     ArtboardView: typeof import('./src/components/Document/Content/ArtboardView.vue')['default']
@@ -101,7 +102,6 @@ declare module '@vue/runtime-core' {
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
-    Temp: typeof import('./src/components/Temp/index.vue')['default']
     Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']
     TextView: typeof import('./src/components/Document/Content/TextView.vue')['default']
     Toolbar: typeof import('./src/components/Document/Toolbar/index.vue')['default']

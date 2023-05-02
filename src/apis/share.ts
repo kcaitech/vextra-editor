@@ -22,22 +22,22 @@ export function getDoucmentListAPI() {
 }
 
 //获取文档信息
-export function getDocumentInfoAPI(id: string) {
+export function getDocumentInfoAPI(params = {}, opts = {}) {
     return httpRequest({
-        url: `/documents/info/${id}`,
-        method: 'get'
+        url: `/documents/info`,
+        method: 'get',
+        params: params,
+        ...opts
     })
 }
 
 //设置分享类型
-export function setShateTypeAPI(id: string, type: number) {
+export function setShateTypeAPI(params = {}, opts = {}) {
     return httpRequest({
         url: '/documents/shares/set',
         method: 'post',
-        data: {
-            doc_id: id,
-            doc_type: type
-        }
+        data: params,
+        ...opts
     })
 }
 
@@ -52,41 +52,41 @@ export function putShareAuthorityAPI(params = {}, opts = {}) {
 }
 
 //移除分享权限
-export function delShareAuthorityAPI(id: number) {
+export function delShareAuthorityAPI(params = {}, opts = {}) {
     return httpRequest({
-        url: `/documents/shares/${id}`,
-        method: 'delete'
+        url: `/documents/shares`,
+        method: 'delete',
+        params: params,
+        ...opts
     })
 }
 
 // 申请文档权限
-export function postDocumentAuthorityAPI(id: string, type: number) {
+export function postDocumentAuthorityAPI(params = {}, opts = {}) {
     return httpRequest({
         url: '/documents/shares/apply',
         method: 'post',
-        data: {
-            doc_id: id,
-            perm_type: type
-        }
+        data: params,
+        ...opts
     })
 }
 
 // 获取申请列表
-export function getApplyListAPI(id: string) {
+export function getApplyListAPI(params = {}, opts = {}) {
     return httpRequest({
-        url: `/documents/shares/apply/${id}`,
-        method: 'get'
+        url: `/documents/shares/apply`,
+        method: 'get',
+        params: params,
+        ...opts
     })
 }
 
 // 权限申请审核
-export function promissionApplyAudit(id: number, code: number) {
+export function promissionApplyAuditAPI(params = {}, opts = {}) {
     return httpRequest({
         url: '/documents/shares/apply/audit',
         method: 'post',
-        data: {
-            apply_id: id,
-            approval_code: code
-        }
+        data: params,
+        ...opts
     })
 }

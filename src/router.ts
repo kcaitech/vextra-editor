@@ -12,7 +12,7 @@ const StarFile = () => import("@/components/AppHome/Main/StarFile.vue");
 const ShareMe = () => import("@/components/AppHome/Main/ShareMe.vue");
 const MeShare = () => import("@/components/AppHome/Main/MeShare.vue");
 const RecycleBin = () => import("@/components/AppHome/Main/RecycleBin.vue");
-
+const Apply = () => import("@/components/Apply/index.vue")
 
 
 const routes = [
@@ -68,6 +68,11 @@ const routes = [
                 component: RecycleBin
             }
         ]
+    },
+    {
+        path: "/apply",
+        name: "apply",
+        component: Apply
     }
 ]
 

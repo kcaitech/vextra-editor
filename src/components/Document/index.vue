@@ -35,31 +35,7 @@ const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
-// 模拟申请人
-const applicant: any = [
-    // {
-    //     name: '张三',
-    //     file: '图形页面',
-    //     authority: '只读',
-    //     remarks: ''
-    // },
-    // {
-    //     name: '唐三',
-    //     file: '矩形容器',
-    //     authority: '可编辑',
-    //     remarks: '麻溜的'
-    // },
-    // {
-    //     name: '陈三',
-    //     file: '文字图片',
-    //     authority: '只读',
-    //     remarks: '别让我久等'
-    // }
-]
 
-const closeApplyFor = (index: number) => {
-    // applicant.splice(index, 1)
-}
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -211,10 +187,8 @@ onUnmounted(() => {
     <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context" />
     </div>
-    <div id="visit" v-if="applicant.length">
-        <ApplyFor v-for="(item, index) in applicant" :key="index" :index="index" :name="item.name" :authority=item.authority
-            :file="item.file" :remarks="item.remarks" @close="closeApplyFor">
-        </ApplyFor>
+    <div id="visit">
+        <ApplyFor></ApplyFor>
     </div>
     <ColSplitView ref="colSplitView" id="center"
         :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
