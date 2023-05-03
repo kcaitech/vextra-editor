@@ -14,7 +14,6 @@ import { ResourceMgr } from "@kcdesign/data/data/basic";
 import { Page } from "@kcdesign/data/data/page";
 import { Document, PageListItem } from "@kcdesign/data/data/document";
 import ContextMenu from '@/components/common/ContextMenu.vue'
-import { cloneDeep } from "lodash";
 type List = InstanceType<typeof ListView>;
 const { t } = useI18n();
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -37,7 +36,7 @@ const contextMenuEl = ref<ContextMenuEl>();
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
-    } else if (t === Selection.PAGE_RENAME) {        
+    } else if (t === Selection.PAGE_RENAME) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
@@ -128,9 +127,10 @@ function toggle() {
     fold.value = !fold.value;
     emit('fold', fold.value)
 }
-function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
+function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
     const docEditor = props.context.editor4Doc();
-    docEditor.move(params.dragTarget, params.to);
+    docEditor.pageListDrag(wandererId, hostId, offsetOverhalf);
+    pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 const rename = (value: string, id: string) => {
     // const page = props.context.selection.selectedPage
@@ -142,7 +142,7 @@ const rename = (value: string, id: string) => {
         editor.value.setName(value)
         props.context.selection.rename();
     })
-    
+
 }
 
 const MouseDown = (id: string, e: MouseEvent) => {
@@ -192,21 +192,20 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         if (repeats.length) {
             name = `${name}${!repeats[0] ? ' ' : repeats.length + 1}`;
         }
-        let page
+        let page: Page | undefined;
         id && props.context.data.pagesMgr.get(id).then((p: Page | undefined) => {
-            page = p && pageMgr.copy(p, name)
-            const index = props.context.data.pagesList.findIndex((item) => item.id === id)
+            page = p && pageMgr.copy(p, name);
+            const index = props.context.data.pagesList.findIndex((item) => item.id === id);
             page && pageMgr.insert(index + 1, page);
+            props.context.selection.insertPage(page);
         })
-        props.context.selection.insertPage(page)
     } else if (item === 'copy_link') {
         e?.stopPropagation()
-
     } else if (item === 'delete') {
         e?.stopPropagation()
         const index = props.context.data.pagesList.findIndex((item) => item.id === id)
         id && props.context.editor4Doc().delete(id)
-        id && props.context.selection.deletePage(id,index)
+        id && props.context.selection.deletePage(id, index)
     }
 }
 </script>
@@ -229,9 +228,9 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
             </div>
         </div>
         <div class="body" ref="ListBody" :style="{ height: fold ? 0 : 'calc(100% - 30px)' }">
-            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0" :item-height="30" :first-index="0"
-                v-bind="$attrs" orientation="vertical" :allowDrag="true" location="pagelist"
-                @update-after-drag="updateAfterDrag" @rename="rename" @onMouseDown="MouseDown">
+            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0"
+                :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical" :allowDrag="true"
+                location="pagelist" @rename="rename" @onMouseDown="MouseDown" @after-drag="afterDrag">
             </ListView>
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
                 @close="pageMenuUnmount">

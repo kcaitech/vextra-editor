@@ -1,10 +1,11 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
+import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
 import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
+import CtrlPoint from "./Points/CtrlPoint.vue";
 import { Point } from "../SelectionView.vue";
 import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
@@ -12,6 +13,13 @@ interface Props {
     context: Context,
     isController: boolean
     controllerFrame: Point[],
+    rotate: number
+}
+interface FramePosition {
+    top: string,
+    left: string,
+    transX: number,
+    transY: number,
     rotate: number
 }
 const props = defineProps<Props>();
@@ -25,15 +33,14 @@ let startPosition: XY = { x: 0, y: 0 };
 let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 let rectStyle: string;
-let path: string;
-const reflush = ref<number>(0);
 const points = computed<Point[]>(() => {
     const [lt, rt, rb] = props.controllerFrame;
     const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y);
     const p1: Point = { x: 0, y: 0, type: CtrlElementType.RectLT };
+    const p2: Point = { x: width - borderWidth, y: 0, type: CtrlElementType.RectRT };
     const p3: Point = { x: width - borderWidth, y: height - borderWidth, type: CtrlElementType.RectRB };
-
-    const ps: Point[] = [p1, p3];
+    const p4: Point = { x: 0, y: height - borderWidth, type: CtrlElementType.RectLB };
+    const ps: Point[] = [p1, p2, p4, p3];
     ps.forEach(p => {
         p.x -= offset;
         p.y -= offset;
@@ -44,9 +51,28 @@ const axle = computed<XY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
+// let framePosition: FramePosition = {
+//     top: `${props.controllerFrame.height}px`,
+//     left: '50%',
+//     transX: -50,
+//     transY: 0,
+//     rotate: 0
+// }
 function updater() {
-    const [lt, _, rb] = props.controllerFrame;
-    path = `M 0 0 l ${rb.x - lt.x} ${rb.y - lt.y}`;
+    // let rotate = (props.controllerFrame.rotate || 0) % 360;
+    // rotate = rotate < 0 ? rotate + 360 : rotate;
+    // const { width, height } = props.controllerFrame;
+    // if (0 <= rotate && rotate < 45) {
+    //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+    // } else if (45 <= rotate && rotate < 135) {
+    //     framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
+    // } else if (135 <= rotate && rotate < 225) {
+    //     framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
+    // } else if (225 <= rotate && rotate < 315) {
+    //     framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
+    // } else if (315 <= rotate && rotate < 360) {
+    //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
+    // }    
     getRect(props.controllerFrame);
 }
 function getShapesByXY() {
@@ -98,6 +124,7 @@ function transform(shapes: Shape[], start: XY, end: XY) {
     const targetParent = props.context.selection.getClosetContainer(pe);
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].isLocked) continue; // 🔒住不让动
         translate(shapes[i], pe.x - ps.x, pe.y - ps.y);
         if (origin.id !== targetParent.id) {
             shapeMoveNoTransaction(shapes[i], targetParent);
@@ -121,7 +148,9 @@ function mouseup(e: MouseEvent) {
 function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale') {
     shapes = props.context.selection.selectedShapes;
     matrix.reset(workspace.value.matrix);
-    shapes.forEach(item => {
+    for (let i = 0; i < shapes.length; i++) {
+        let item = shapes[i];
+        if (item.isLocked) continue; // 🔒住不让动
         if (aType === 'rotate') {
             const newDeg = (item.rotation || 0) + deg;
             item.rotate(newDeg);
@@ -137,7 +166,7 @@ function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'r
                 adjustLB2(item, p2Onpage.x, p2Onpage.y);
             }
         }
-    });
+    }
 }
 // 自身不带事务的图形移动, 只能在事务开启之后调用
 function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
@@ -146,6 +175,26 @@ function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
     const { x, y } = shape.frame2Page();
     targetParent.addChild(shape);
     translateTo(shape, x, y);
+}
+function keyboardHandle(e: KeyboardEvent) {
+    if (!shapes.length) return;
+    const step = e.shiftKey ? 10 : 1;
+    let dx: number = 0, dy: number = 0, transform: boolean = false;
+    if (e.code === 'ArrowRight') {
+        dx = step, dy = 0, transform = true;
+    } else if (e.code === 'ArrowLeft') {
+        dx = -step, dy = 0, transform = true;
+    } else if (e.code === 'ArrowUp') {
+        dx = 0, dy = -step, transform = true;
+    } else if (e.code === 'ArrowDown') {
+        dx = 0, dy = step, transform = true;
+    }
+    if (transform) {
+        for (let i = 0; i < shapes.length; i++) {
+            const editor = props.context.editor4Shape(shapes[i]);
+            editor.translate(dx, dy)
+        }
+    }
 }
 function getRect(points: Point[]) {
     rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
@@ -162,6 +211,7 @@ function windowBlur() {
 onMounted(() => {
     props.context.selection.watch(updater);
     window.addEventListener('blur', windowBlur);
+    document.addEventListener('keydown', keyboardHandle);
     getRect(props.controllerFrame);
 })
 
@@ -169,29 +219,49 @@ onUnmounted(() => {
     props.context.selection.unwatch(updater);
     shapes.length = 0;
     window.removeEventListener('blur', windowBlur);
+    document.removeEventListener('keydown', keyboardHandle);
 })
 
 watchEffect(updater)
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" class="ctrl-rect"
-        @mousedown="mousedown" :style="rectStyle" :reflush="reflush">
-        <path :d="path" style="fill: transparent; stroke: #ffa500; stroke-width: 2;"></path>
-        <g @mousedown.stop>
-            <rect width="8" height="8"
-                :style="`fill: #ffffff; stroke: rgb(255, 165, 0); stroke-width: 1; transform: translate(-4px, -4px) rotate(${props.rotate}deg)`">
-            </rect>
-            <rect width="8" height="8"
-                :style="`fill: #ffffff; stroke: rgb(255, 165, 0); stroke-width: 1; transform: translate(100%, 100%) translate(-4px, -4px) rotate(${props.rotate}deg)`">
-            </rect>
-        </g>
-    </svg>
+    <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
+        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
+            :rotate="props.rotate" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
+        <!-- <div class="frame" :style="{
+                        top: framePosition.top,
+                        left: framePosition.left,
+                        transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
+                    }">
+                        <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+                        }}</span>
+                    </div> -->
+    </div>
 </template>
 <style lang='scss' scoped>
 .ctrl-rect {
     position: absolute;
     box-sizing: border-box;
     background-color: transparent;
+    border: 2px solid #2561D9;
+    opacity: 1;
+
+    >.frame {
+        position: absolute;
+        display: table;
+        text-align: center;
+        height: 20px;
+        padding: 0 var(--default-padding-quarter);
+        font-size: var(--font-default-fontsize);
+        line-height: 20px;
+        color: var(--theme-color-anti);
+        background-color: var(--active-color);
+        border-radius: 2px;
+
+        >span {
+            display: table-cell;
+            white-space: nowrap;
+        }
+    }
 }
 </style>

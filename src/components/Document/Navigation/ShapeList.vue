@@ -5,15 +5,12 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data/data/page";
 import { ShapeDirListIter, ShapeDirList } from "@kcdesign/data/service/shapedirlist";
-import { GroupShape, Shape } from "@kcdesign/data/data/shape";
+import { Shape } from "@kcdesign/data/data/shape";
 import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from "../Selection/PageViewContextMenuItems.vue";
-import { Artboard } from "@kcdesign/data/data/artboard";
-import { cloneDeep } from "lodash";
-import { translateTo } from "@kcdesign/data/editor/frame";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -33,7 +30,7 @@ class Iter implements IDataIter<ItemData> {
             level++
             p = p.parent;
         }
-        return {
+        const item = {
             id: shape.id,
             shape,
             selected: props.context.selection.isSelectedShape(shape),
@@ -41,12 +38,13 @@ class Iter implements IDataIter<ItemData> {
             level,
             context: props.context
         }
+        return item;
     }
 }
 const props = defineProps<{ context: Context, page: Page, pageHeight: number }>();
 const { t } = useI18n();
 const itemHieght = 30;
-const MOUSE_RIGHT = 2
+const MOUSE_RIGHT = 2;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 const chartMenu = ref<boolean>(false)
 const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
@@ -194,22 +192,25 @@ const isRead = (read: boolean, shape: Shape) => {
 }
 function shapeScrollToContentView(shape: Shape) {
     const workspace = props.context.workspace;
-    const { x: sx, y: sy, height, width } = shape.realXY();
+    const { x: sx, y: sy, height, width } = shape.frame2Page();
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
-    workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
-    workspace.matrixTransformation();
-}
-
-function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) {
-    const { from, to } = params;
-    const f = listviewSource.iterAt(from).next().shape;
-    const t = listviewSource.iterAt(to).next().shape;
-    if (f.id !== t.parent?.id) {
-        // console.log('f', from, f);
-        // console.log('t', to, t);
+    props.context.selection.unHoverShape();
+    props.context.selection.selectShape();
+    const pageViewEl = props.context.workspace.pageView;
+    if (pageViewEl) {
+        pageViewEl.classList.add('transition-600');
+        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
+        const timer = setTimeout(() => {
+            props.context.selection.selectShape(shape);
+            pageViewEl.classList.remove('transition-600');
+            clearTimeout(timer);
+        }, 600);
+    } else {
+        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
     }
+    workspace.matrixTransformation();
 }
 
 const MouseDown = (e: MouseEvent) => {
@@ -255,7 +256,6 @@ function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) 
             const editor = props.context.editor4Page(page);
             editor.shapeListDrag(wanderer, host, offsetOverhalf);
         }
-
     }
 }
 function Menuesc(e: KeyboardEvent) {
@@ -284,7 +284,7 @@ onUnmounted(() => {
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" @change="(e: MouseEvent) => search(e)">
+                <input type="text" @change="(e: Event) => search(e)">
             </div>
         </div>
         <div class="body" ref="ListBody">
@@ -292,8 +292,7 @@ onUnmounted(() => {
                 :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
                 :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
                 @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
-                @isLock="isLock" @update-after-drag="updateAfterDrag" @onMouseDown="MouseDown" orientation="vertical"
-                @after-drag="afterDrag">
+                @isLock="isLock" @onMouseDown="MouseDown" orientation="vertical" @after-drag="afterDrag">
             </ListView>
             <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
                 ref="contextMenuEl">

@@ -5,7 +5,7 @@ import { CtrlElementType } from '@/context/workspace';
 import { XY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
-import { Point } from '../SelectionView.vue';
+import { Point } from '../../SelectionView.vue';
 interface Props {
   context: Context,
   axle: XY,
@@ -156,7 +156,6 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  // background-color: rgb(43, 144, 226);
   overflow: hidden;
 
   >.scale {
@@ -166,7 +165,6 @@ onUnmounted(() => {
     transform: translate(-50%, -50%);
     width: 16px;
     height: 16px;
-    // background-color: rgb(255, 228, 196);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -176,7 +174,7 @@ onUnmounted(() => {
       width: 8px;
       height: 8px;
       box-sizing: border-box;
-      border: 1px solid #ffa500;
+      border: 1px solid #2561D9;
       background-color: var(--theme-color-anti);
     }
   }
@@ -185,7 +183,6 @@ onUnmounted(() => {
     position: absolute;
     width: 20px;
     height: 20px;
-    // background-color: rgba(137, 43, 226, 0.673);
   }
 
   >.lt {

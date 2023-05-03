@@ -33,7 +33,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: "update-after-drag", params: { from: number, to: number, dragTarget: any }): void;
+    // wanderer：被拖拽的项目；host：目的地处的项目； isOverHalf：落地在目的地是否上下过半，影响插入位置在目的地的上下位置。
     (e: "after-drag", wandererId: string, hostId: string, isOverHalf: boolean): void;
 }>();
 

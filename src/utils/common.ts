@@ -119,6 +119,34 @@ export function createRect(x1: number, y1: number, x2: number, y2: number, x3: n
     `height: ${height}px; ` +
     transform;
 }
+// 根据四个点生成一条线
+// p1 p2
+// p4 p3
+export function createLine(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number) {
+  const left = Math.min(x1, x2, x3, x4);
+  const top = Math.min(y1, y2, y3, y4);
+  const right = Math.max(x1, x2, x3, x4);
+  const bottom = Math.max(y1, y2, y3, y4);
+
+  const lineThick = 14; // 线条控件实际宽度
+
+  const width = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  const height = Math.sqrt(Math.pow(x3 - x2, 2) + Math.pow(y3 - y2, 2));
+
+  const length = Math.sqrt(Math.pow(x3 - x1, 2) + Math.pow(y3 - y1, 2));
+
+  const angle = getHorizontalAngle({ x: x1, y: y1 }, { x: x3, y: y3 });
+
+  const transY = (((bottom - top) - height) + (height - lineThick)) / 2;
+  const transX = (((right - left) - width) + (width - length)) / 2;
+  const transform = `transform: translate(${transX}px, ${transY}px) rotate(${angle}deg);`
+  return "position: absolute; " +
+    `left: ${left}px; ` +
+    `top: ${top}px; ` +
+    `width: ${length}px; ` +
+    `height: ${lineThick}px; ` +
+    transform;
+}
 // 根据矩形的四个点获取其中心轴
 // p1 p2
 // p4 p3
@@ -148,12 +176,25 @@ export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, 
 
 // 根据若干个点，确定最边界的四个点
 export function createHorizontalBox(points: [number, number][]) {
-  if (points.length < 4) return;
   const xs: number[] = [];
   const ys: number[] = [];
   for (let i = 0; i < points.length; i++) {
     xs.push(points[i][0]);
     ys.push(points[i][1]);
+  }
+  const top = Math.min(...ys);
+  const bottom = Math.max(...ys);
+  const left = Math.min(...xs);
+  const right = Math.max(...xs);
+  return { top, bottom, left, right };
+}
+// 根据若干个点，确定最边界的四个点
+export function XYsBounding(points: XY[]) {
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = 0; i < points.length; i++) {
+    xs.push(points[i].x);
+    ys.push(points[i].y);
   }
   const top = Math.min(...ys);
   const bottom = Math.max(...ys);

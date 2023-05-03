@@ -7,7 +7,7 @@ import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import { XY } from '@/context/selection';
 import { init as renderinit } from '@/render';
-import { Action, CtrlElementType, CursorType, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
+import { Action, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from './Selection/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
@@ -15,9 +15,10 @@ import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
-import { cursorHandle } from "@/utils/common";
 import { expandTo, translateTo } from "@kcdesign/data/editor/frame";
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
+import { v4 as uuid } from "uuid";
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -45,7 +46,6 @@ const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
 }
-const cursor = ref<string>(CursorType.Auto);
 const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnClientXY: XY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
@@ -62,6 +62,7 @@ const selector = ref<boolean>(false);
 const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0 });
 const cursorClass = ref<string>('');
 const styler = ref<StyleSheetController>(styleSheetController());
+const rootId = ref<string>('content');
 function offset2Root() { // === props.context.workspace.root
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
@@ -73,6 +74,15 @@ function offset2Root() { // === props.context.workspace.root
         el = el.offsetParent as HTMLElement;
     }
     return { x, y }
+}
+function rootRegister(mount: boolean) {
+    if (mount) {
+        const id = (uuid().split('-').at(-1)) || 'content';
+        rootId.value = id;
+    } else {
+        rootId.value = 'content';
+    }
+    workspace.value.setRootId(rootId.value);
 }
 function setMousedownOnPageXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
     const { clientX, clientY } = e;
@@ -131,17 +141,14 @@ function onMouseWheel(e: WheelEvent) {
 
 function onKeyDown(e: KeyboardEvent) {
     spacePressed.value = e.code === KeyboardKeys.Space;
-    if (spacePressed.value && cursor.value === CursorType.Auto) {
-        cursor.value = CursorType.Grab;
-    }
 }
 function onKeyUp(e: KeyboardEvent) {
     if (spacePressed.value && e.code == KeyboardKeys.Space) {
         const action: Action = props.context.workspace.action;
         if (action.startsWith('add')) {
-            cursor.value = CursorType.Crosshair
+            setClass('cross-0');
         } else {
-            cursor.value = CursorType.Auto
+            setClass('auto-0');
         }
         spacePressed.value = false;
     }
@@ -178,7 +185,7 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
             getShapesByXY(); // 获取与鼠标点击位置相交的所有图层，并选择最上层的图层
         }
     }
-    cursor.value = CursorType.Auto;
+    setClass('auto-0');
 }
 function pageEditOnMoving(e: MouseEvent) {
     const { x, y } = getMouseOnPageXY(e);
@@ -250,9 +257,9 @@ function workspaceUpdate(t?: number, name?: string) { // 更新编辑器状态�
     }
     const action: Action = props.context.workspace.action;
     if (action.startsWith('add')) {
-        cursor.value = CursorType.Crosshair;
+        setClass('cross-0');
     } else {
-        cursor.value = CursorType.Auto;
+        setClass('auto-0');
     }
 }
 async function setClass(name: string) {
@@ -282,7 +289,7 @@ function hoveredShape(e: MouseEvent) {
     }
 }
 function pageViewDragStart(e: MouseEvent) {
-    cursor.value = CursorType.Grabbing;
+    // setClass('grabbing-0');
     state = STATE_CHECKMOVE;
     prePt.x = e.screenX;
     prePt.y = e.screenY;
@@ -305,7 +312,7 @@ function pageViewDragging(e: MouseEvent) {
     }
 }
 function pageViewDragEnd() {
-    cursor.value = CursorType.Grab;
+    // setClass('grab-0');
     state = STATE_NONE;
 }
 function getShapesByXY() {
@@ -369,6 +376,10 @@ function contextMenuMount(e: MouseEvent) {
 }
 function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') contextMenuUnmount();
+}
+async function stylerForCursorMount() {
+    await styler.value.setup();
+    cursorClass.value = await styler.value.getClass('auto-0');
 }
 function contextMenuUnmount() {
     document.removeEventListener('keydown', esc);
@@ -494,15 +505,15 @@ const stopWatch = watch(() => props.page, (cur, old) => {
 
     initMatrix(cur)
 })
-onMounted(async () => {
+onMounted(() => { // 身负重担的content view
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("keyup", onKeyUp);
     window.addEventListener('blur', windowBlur);
-    await styler.value.setup();
-    cursorClass.value = await styler.value.getClass('auto-0');
+    stylerForCursorMount();
+    rootRegister(true);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
@@ -511,6 +522,7 @@ onUnmounted(() => {
     document.removeEventListener("keyup", onKeyUp);
     window.removeEventListener('blur', windowBlur);
     styler.value.remove();
+    rootRegister(false);
     stopWatch();
 })
 renderinit().then(() => {
@@ -519,8 +531,8 @@ renderinit().then(() => {
 </script>
 
 <template>
-    <div v-if="inited" :class="cursorClass" ref="root" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
-        @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
+    <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
+        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :width="216" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop

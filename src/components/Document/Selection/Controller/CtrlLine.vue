@@ -4,76 +4,35 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
-import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
-import CtrlPoint from "../Points/PointForRect.vue";
+import { translate, adjustLT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
 import { Point } from "../SelectionView.vue";
 import { GroupShape, Shape } from "@kcdesign/data/data/shape";
-import { createRect, getAxle, getRectWH } from "@/utils/common";
+import { createLine, getAxle } from "@/utils/common";
+import CtrlPoint from "./Points/CtrlPointForStraightLine.vue"
 interface Props {
     context: Context,
     isController: boolean
     controllerFrame: Point[],
     rotate: number
 }
-interface FramePosition {
-    top: string,
-    left: string,
-    transX: number,
-    transY: number,
-    rotate: number
-}
+
 const props = defineProps<Props>();
 const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
-const borderWidth = 2;
-const offset = 17;
 let isDragging = false;
 let startPosition: XY = { x: 0, y: 0 };
 let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
-let rectStyle: string;
-const points = computed<Point[]>(() => {
-    const [lt, rt, rb] = props.controllerFrame;
-    const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y);
-    const p1: Point = { x: 0, y: 0, type: CtrlElementType.RectLT };
-    const p2: Point = { x: width - borderWidth, y: 0, type: CtrlElementType.RectRT };
-    const p3: Point = { x: width - borderWidth, y: height - borderWidth, type: CtrlElementType.RectRB };
-    const p4: Point = { x: 0, y: height - borderWidth, type: CtrlElementType.RectLB };
-    const ps: Point[] = [p1, p2, p4, p3];
-    ps.forEach(p => {
-        p.x -= offset;
-        p.y -= offset;
-    })
-    return ps;
-});
+let lineStyle: string;
+
 const axle = computed<XY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
-// let framePosition: FramePosition = {
-//     top: `${props.controllerFrame.height}px`,
-//     left: '50%',
-//     transX: -50,
-//     transY: 0,
-//     rotate: 0
-// }
+
 function updater() {
-    // let rotate = (props.controllerFrame.rotate || 0) % 360;
-    // rotate = rotate < 0 ? rotate + 360 : rotate;
-    // const { width, height } = props.controllerFrame;
-    // if (0 <= rotate && rotate < 45) {
-    //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-    // } else if (45 <= rotate && rotate < 135) {
-    //     framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
-    // } else if (135 <= rotate && rotate < 225) {
-    //     framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
-    // } else if (225 <= rotate && rotate < 315) {
-    //     framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
-    // } else if (315 <= rotate && rotate < 360) {
-    //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-    // }    
-    getRect(props.controllerFrame);
+    getLine(props.controllerFrame);
 }
 function getShapesByXY() {
     const shapes = props.context.selection.getShapesByXY(startPosition);
@@ -124,6 +83,7 @@ function transform(shapes: Shape[], start: XY, end: XY) {
     const targetParent = props.context.selection.getClosetContainer(pe);
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].isLocked) continue;
         translate(shapes[i], pe.x - ps.x, pe.y - ps.y);
         if (origin.id !== targetParent.id) {
             shapeMoveNoTransaction(shapes[i], targetParent);
@@ -147,23 +107,39 @@ function mouseup(e: MouseEvent) {
 function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale') {
     shapes = props.context.selection.selectedShapes;
     matrix.reset(workspace.value.matrix);
-    shapes.forEach(item => {
+    for (let i = 0; i < shapes.length; i++) {
+        let item = shapes[i];
+        if (item.isLocked) continue;
         if (aType === 'rotate') {
             const newDeg = (item.rotation || 0) + deg;
             item.rotate(newDeg);
         } else {
             const p2Onpage = matrix.inverseCoord(p2.x, p2.y); // page
-            if (type === CtrlElementType.RectLT) {
+            if (type === CtrlElementType.LineStart) {
                 adjustLT2(item, p2Onpage.x, p2Onpage.y);
-            } else if (type === CtrlElementType.RectRT) {
-                adjustRT2(item, p2Onpage.x, p2Onpage.y);
-            } else if (type === CtrlElementType.RectRB) {
+            } else if (type === CtrlElementType.LineEnd) {
                 adjustRB2(item, p2Onpage.x, p2Onpage.y);
-            } else if (type === CtrlElementType.RectLB) {
-                adjustLB2(item, p2Onpage.x, p2Onpage.y);
             }
         }
-    });
+    }
+}
+function keyboardHandle(e: KeyboardEvent) {
+    if (!shapes.length) return;
+    const step = e.shiftKey ? 10 : 1;
+    let dx: number = 0, dy: number = 0;
+    if (e.code === 'ArrowRight') {
+        dx = step, dy = 0;
+    } else if (e.code === 'ArrowLeft') {
+        dx = -step, dy = 0;
+    } else if (e.code === 'ArrowUp') {
+        dx = 0, dy = -step;
+    } else if (e.code === 'ArrowDown') {
+        dx = 0, dy = step;
+    }
+    for (let i = 0; i < shapes.length; i++) {
+        const editor = props.context.editor4Shape(shapes[i]);
+        editor.translate(dx, dy)
+    }
 }
 // 自身不带事务的图形移动, 只能在事务开启之后调用
 function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
@@ -173,8 +149,8 @@ function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
     targetParent.addChild(shape);
     translateTo(shape, x, y);
 }
-function getRect(points: Point[]) {
-    rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+function getLine(points: Point[]) {
+    lineStyle = createLine(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
 }
 function windowBlur() {
     if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
@@ -188,54 +164,40 @@ function windowBlur() {
 onMounted(() => {
     props.context.selection.watch(updater);
     window.addEventListener('blur', windowBlur);
-    getRect(props.controllerFrame);
+    document.addEventListener('keydown', keyboardHandle);
+    getLine(props.controllerFrame);
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     shapes.length = 0;
     window.removeEventListener('blur', windowBlur);
+    document.removeEventListener('keydown', keyboardHandle);
 })
 
 watchEffect(updater)
 </script>
 <template>
-    <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
-        <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
-            :rotate="props.rotate" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
-        <!-- <div class="frame" :style="{
-                        top: framePosition.top,
-                        left: framePosition.left,
-                        transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
-                    }">
-                        <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
-                        }}</span>
-                    </div> -->
+    <div class="ctrl-line" @mousedown="mousedown" :style="lineStyle">
+        <div class="display"></div>
+        <CtrlPoint :context="props.context" :axle="axle" :rotate="rotate" :pointType="CtrlElementType.LineStart"
+            @transform="handlePointAction"></CtrlPoint>
+        <CtrlPoint :context="props.context" :axle="axle" :rotate="rotate" :pointType="CtrlElementType.LineEnd"
+            @transform="handlePointAction"></CtrlPoint>
     </div>
 </template>
 <style lang='scss' scoped>
-.ctrl-rect {
-    position: absolute;
+.ctrl-line {
     box-sizing: border-box;
-    background-color: transparent;
-    border: 2px solid #ffa500;
     opacity: 1;
-    >.frame {
-        position: absolute;
-        display: table;
-        text-align: center;
-        height: 20px;
-        padding: 0 var(--default-padding-quarter);
-        font-size: var(--font-default-fontsize);
-        line-height: 20px;
-        color: var(--theme-color-anti);
-        background-color: var(--active-color);
-        border-radius: 2px;
+    overflow: visible;
 
-        >span {
-            display: table-cell;
-            white-space: nowrap;
-        }
+    .display {
+        width: 100%;
+        height: 2px;
+        background-color: #2561D9;
+        position: absolute;
+        top: 6px;
     }
 }
 </style>

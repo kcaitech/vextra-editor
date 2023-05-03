@@ -3,7 +3,7 @@ import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from 
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape, ShapeType } from "@kcdesign/data/data/shape";
-import { ControllerType, ctrlMap } from "./CtrlRect";
+import { ControllerType, ctrlMap } from "./Controller";
 import { CtrlElementType } from "@/context/workspace";
 import { getHorizontalAngle, createRect, createHorizontalBox } from "@/utils/common";
 import { XY } from "@/context/selection";
@@ -133,12 +133,13 @@ function createController() {
             p.x = _p.x; p.y = _p.y;
             return p;
         });
-        rotate.value = getHorizontalAngle(points[0], points[1]);
+        // rotate.value = getHorizontalAngle(points[0], points[1]);
         if (selection[0].type === ShapeType.Line) {
             controllerType.value = ControllerType.Line;
-            controllerType.value = ControllerType.Rect;
+            rotate.value = getHorizontalAngle(points[0], points[2]);
         } else {
             controllerType.value = ControllerType.Rect;
+            rotate.value = getHorizontalAngle(points[0], points[1]);
         }
     } else { // 多选
         const __points: [number, number][] = [];
@@ -220,7 +221,7 @@ watchEffect(updater)
     <svg v-if="tracing.length" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :style="tracingStyle" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #e4bf7a; stroke-width: 2;"></path>
+        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 2;"></path>
     </svg>
     <!-- 控制 -->
     <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"

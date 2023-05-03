@@ -28,6 +28,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;
     private m_document: Document;
+    private m_search_keyword: string | undefined;
 
     // todo
     private m_cursorStart: number = -1;
