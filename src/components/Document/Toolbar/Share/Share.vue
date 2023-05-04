@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import FileShare from './FileShare.vue';
-import Inform from './Inform.vue';
+import * as share_api from '@/apis/share'
+const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
 const showFileShare = ref<boolean>(false);
+const docInfo: any = ref({})
 const onShare = () => {
   if(showFileShare.value) {
     showFileShare.value = false
@@ -13,6 +15,15 @@ const onShare = () => {
 const closeShare = () => {
   showFileShare.value = false
 }
+const getDocumentInfo = async() => {
+  try {
+    const {data} = await share_api.getDocumentInfoAPI({doc_id: docID})
+    docInfo.value = data
+  }catch(err) {
+    console.log(err);
+  }
+} 
+getDocumentInfo()
 </script>
 
 <template>
@@ -20,8 +31,7 @@ const closeShare = () => {
     <div class="share" @click.stop="onShare">
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
-    <FileShare v-if="showFileShare" @close="closeShare"></FileShare>
-    <!-- <Inform></Inform> -->
+    <FileShare v-if="showFileShare" @close="closeShare" :docInfo="docInfo"></FileShare>
   </div>
 </template>
 

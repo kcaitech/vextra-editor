@@ -15,11 +15,11 @@ enum Audit {
   Pass,
   unPass
 }
+const timestamp  = Date.now()
 const permission = ref(['无权限', '只读', '可评论','可编辑'])
-const getApplyList = async () => {
-    const { data } = await share_api.getApplyListAPI({ doc_id: docID })
+const getApplyList = async (time: number) => {
+    const { data } = await share_api.getApplyListAPI({ doc_id: docID, start_time: time })
     applyList.value = data
-    console.log( applyList.value,'apply');
 }
 const consent = (id: number, index: number) => {
   promissionApplyAudit(id, Audit.Pass)
@@ -32,11 +32,14 @@ const refuse = (id: number, index: number) => {
 const promissionApplyAudit = async (id: number, type: number) => {
   await share_api.promissionApplyAuditAPI({apply_id: id, approval_code: type})
 }
+const close = (index: number) => {
+  applyList.value.splice(index, 1)
+}
 let timer: any = null
-getApplyList()
+getApplyList(timestamp)
 onMounted(() => {    
     timer = setInterval(() => {
-        getApplyList()
+        getApplyList(timestamp)
     }, 60000)
 })
 onUnmounted(() => {
@@ -51,7 +54,7 @@ onUnmounted(() => {
       <template #header>
         <div class="card-header">
           <span>文件访问申请</span>
-          <el-button class="button" text>
+          <el-button class="button" text @click="close(index)">
             <div class="close"> X </div>
           </el-button>
         </div>
@@ -72,10 +75,10 @@ onUnmounted(() => {
           <span>权限:</span>
           <p class="name bold">{{permission[item.perm_type]}}</p>
         </div>
-        <!-- <div class="textarea" v-if="props.remarks.trim().length">
+        <div class="textarea" v-if="item.remarks.trim().length">
           <span>备注:</span>
-          <p class="text">{{props.remarks}}</p>
-        </div> -->
+          <p class="text">{{item.remarks}}</p>
+        </div>
         <!-- 链接按钮 -->
         <div class="button">
           <el-button color="#0d99ff" size="small" @click="consent(item.id, index)">同意</el-button>

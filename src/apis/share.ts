@@ -21,6 +21,16 @@ export function getDoucmentListAPI() {
     })
 }
 
+//获取文档权限
+export function getDocumentAuthorityAPI(params = {}, opts = {}) {
+    return httpRequest({
+        url: `/documents/permission`,
+        method: 'get',
+        params: params,
+        ...opts
+    })
+}
+
 //获取文档信息
 export function getDocumentInfoAPI(params = {}, opts = {}) {
     return httpRequest({

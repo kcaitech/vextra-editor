@@ -1,10 +1,36 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { reactive, toRefs } from 'vue'
+import Inform from './Inform.vue'
+import * as share_api from '@/apis/share'
+const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
 const input = ref('')
-
-
+const num = ref(0)
+const showInForm = ref(false)
+const applyList: any = ref([])
+const closeInForm = () => {
+    showInForm.value = false
+}
+const getApplyList = async () => {
+    try {
+        const { data } = await share_api.getApplyListAPI({ doc_id: docID })
+        num.value = data.length
+        applyList.value = data
+    }catch(err) {
+        console.log(err)
+    }
+}
+let timer: any = null
+getApplyList()
+onMounted(() => {    
+    timer = setInterval(() => {
+        getApplyList()
+    }, 60000)
+})
+onUnmounted(() => {
+    clearInterval(timer)
+})
 </script>
 
 <template>
@@ -15,6 +41,10 @@ const input = ref('')
             </el-icon><input class="input" type="search" placeholder="搜索文件" />
         </div>
         <div class="right">
+            <div class="notice" @click="showInForm = true">
+                <svg-icon class="svg" icon-class="notice"></svg-icon>
+                <div class="num" v-if="num > 0" :class="{after: num > 99}" :style="{paddingRight: num>99 ? 9+'px': 4+ 'px'}">{{ num > 99 ? 99 : num }}</div>
+            </div>
             <div class="about">
                 <span>关于</span>
                 <div class="about-items">
@@ -26,6 +56,7 @@ const input = ref('')
             <div>
                 <el-avatar src="https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png" />
             </div>
+            <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
         </div>
     </div>
 </template>
@@ -64,8 +95,42 @@ const input = ref('')
 
     .right {
         display: flex;
+        position: relative;
         flex-direction: row;
         align-items: center;
+        .notice {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            >.svg {
+                width: 100%;
+                height: 100%;
+            }
+            >.num {
+                position: absolute;
+                font-size: var(--font-default-fontsize);
+                top: 0;
+                left: 8px;
+                min-width: 8px;
+                padding: 0 4px 0 4px;
+                height: 14px;
+                background-color: red;
+                color: #fff;
+                border-radius: 7px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                
+            }
+            .after::after {
+                    content: '+';
+                    position: absolute;
+                    display: block;
+                    top: -4px;
+                    left: 16px;
+                    color: #fff;
+                }
+        }
 
         .about {
             margin-right: 10px;

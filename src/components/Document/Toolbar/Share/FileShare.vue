@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { defineEmits, ref,onMounted,onUnmounted,nextTick, reactive, watch, watchEffect } from 'vue'
+import { defineEmits, ref,onMounted,onUnmounted,nextTick, reactive, watch, watchEffect, defineProps } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { User } from '@/context/user'
 import * as share_api from '@/apis/share'
-import { cloneDeep } from 'lodash'
+import { ElMessage } from 'element-plus'
 const { t } = useI18n()
+const props = defineProps<{
+  docInfo: any
+}>()
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
@@ -14,6 +17,7 @@ enum permissions {
   reviewable,
   editable
 }
+const url = `http://localhost:8080/#/apply?id=${props.docInfo.document.id}`
 const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
 const value1 = ref(true)
 const selectValue = ref('需申请确认')
@@ -97,7 +101,6 @@ const onRemove = (id: number, i: number) => {
 const getShareList = async() => {
   const {data} = await share_api.getShareListAPI({doc_id: docID})
   shareList.value = data
-  console.log(shareList.value);
 }
 const delShare = async (id: number) => {
   await share_api.delShareAuthorityAPI({share_id: id})
@@ -126,6 +129,20 @@ watchEffect(() => {
 })
 userInfo.value = ((window as any).skuser as User);
 getShareList()
+const copyLink = () => {
+  navigator.clipboard.writeText(url).then(() => {
+    ElMessage({
+    message: '复制成功',
+    type: 'success',
+  })
+  },() => {
+      ElMessage({
+        message: '复制失败',
+        type: 'success',
+      })
+  })
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClick);
 })
@@ -169,7 +186,7 @@ onUnmounted(() => {
             :value="item.value"
           />
         </el-select>
-        <el-button color="#0d99ff" size="small">复制链接</el-button>
+        <el-button color="#0d99ff" size="small" @click="copyLink">复制链接</el-button>
       </div>
       <!-- 分享人 -->
       <div>
