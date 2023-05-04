@@ -1,0 +1,71 @@
+import { XY } from '@/context/selection';
+import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Shape } from '@kcdesign/data/data/shape';
+import { isTarget } from './common';
+import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
+
+// 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
+// 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
+// 直到没有🍌为止，得到最后的XY;
+// 寻找一块空白的区域
+export function landFinderOnPage(pageMatrix: Matrix, center: XY, width: number, height: number, shapes: Shape[]): XY {
+    center = pageMatrix.inverseCoord(center.x, center.y);
+    const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point
+    const offset = 40;
+    let pure: boolean = false;
+
+    while (!pure) {
+        pure = true;
+        const { x: sx, y: sy } = start, w = width, h = height;
+        const selectorPoints: [XY, XY, XY, XY, XY] = [
+            { x: sx, y: sy },
+            { x: sx + w, y: sy },
+            { x: sx + w, y: sy + h },
+            { x: sx, y: sy + h },
+            { x: sx, y: sy },
+        ];
+
+        for (let i = 0; i < shapes.length; i++) {
+            const m = shapes[i].matrix2Page();
+            const { width: w, height: h } = shapes[i].frame;
+            const ps: XY[] = [
+                { x: 0, y: 0 },
+                { x: w, y: 0 },
+                { x: w, y: h },
+                { x: 0, y: h },
+                { x: 0, y: 0 },
+            ].map(p => m.computeCoord(p.x, p.y));
+
+            if (isTarget(selectorPoints, ps)) {
+                pure = false; // 存在🍌，不是净土！
+            }
+        }
+
+        !pure && (start.x += offset); // 不是净土，挪一下，再找。
+    }
+    return start; // 找到了净土的起点
+}
+
+// 使容器滚动到可视区域
+export function scrollToContentView(shape: Shape, selection: Selection, workspace: WorkSpace) {
+    const { x: sx, y: sy, height, width } = shape.frame2Page();
+    const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2);
+    const { x, y, bottom, right } = workspace.root;
+    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 };
+    selection.unHoverShape();
+    selection.selectShape();
+    const pageViewEl = workspace.pageView;
+    if (pageViewEl) {
+        pageViewEl.classList.add('transition-600');
+        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
+        const timer = setTimeout(() => {
+            selection.selectShape(shape);
+            pageViewEl.classList.remove('transition-600');
+            clearTimeout(timer);
+        }, 600);
+    } else {
+        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
+    }
+    workspace.matrixTransformation();
+}

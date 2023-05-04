@@ -84,7 +84,7 @@ export class WorkSpace extends Watchable(Object) {
         content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
         if (content) {
             const { x, y, bottom, right } = content.getBoundingClientRect();
-            root.center = { x: (x + right) / 2, y: (y + bottom) / 2 };
+            root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
             root.x = x;
             root.y = y;
             root.bottom = bottom;

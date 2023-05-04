@@ -9,6 +9,9 @@ import CtrlPoint from "./Points/CtrlPoint.vue";
 import { Point } from "../SelectionView.vue";
 import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
+
+let scrollX: number = 0, scrollY: number = 0, scrollTimer: any = null;
+
 interface Props {
     context: Context,
     isController: boolean

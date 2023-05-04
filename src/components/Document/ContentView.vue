@@ -18,6 +18,8 @@ import { useI18n } from 'vue-i18n';
 import { expandTo, translateTo } from "@kcdesign/data/editor/frame";
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
+import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
+import { process } from '@/utils/mouse';
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
@@ -63,6 +65,18 @@ const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0 
 const cursorClass = ref<string>('');
 const styler = ref<StyleSheetController>(styleSheetController());
 const rootId = ref<string>('content');
+let scrollX: number = 0, scrollY: number = 0, scrollTimer: any = null;
+function scroller() {
+    scrollTimer = setInterval(() => {
+        matrix.trans(scrollX, scrollY);
+    }, 5)
+}
+function shutDownScroller() {
+    if (scrollTimer) {
+        clearInterval(scrollTimer);
+        scrollX = 0, scrollY = 0, scrollTimer = null;
+    }
+}
 function offset2Root() { // === props.context.workspace.root
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
@@ -101,8 +115,11 @@ function getMouseOnPageXY(e: MouseEvent): XY { // 获取鼠标在页面上的点
 function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增图形
     const type = ResultByAction(workspace.value.action);
     if (type === ShapeType.Artboard) {
-        frame.width = workspace.value.frameSize.width
-        frame.height = workspace.value.frameSize.height
+        frame.width = workspace.value.frameSize.width;
+        frame.height = workspace.value.frameSize.height;
+        const { x, y } = landFinderOnPage(matrix as Matrix, workspace.value.root.center, frame.width, frame.height, props.context.selection.selectedPage?.childs as Shape[]);
+        frame.x = x;
+        frame.y = y;
     }
     const page = props.context.selection.selectedPage;
     const parent = getCloestContainer();
@@ -136,7 +153,6 @@ function onMouseWheel(e: WheelEvent) {
     } else {
         matrix.trans(0, e.deltaY > 0 ? -wheel_step : wheel_step);
     }
-    props.context.workspace.matrixTransformation();
 }
 
 function onKeyDown(e: KeyboardEvent) {
@@ -272,7 +288,9 @@ function insertFrame() {
     const width = 100;
     const height = 100;
     const shapeFrame = new ShapeFrame(x, y, width, height);
-    addShape(shapeFrame);
+    const artboard = addShape(shapeFrame);
+    // 新增容器之后使容器在可视区域
+    if (artboard) nextTick(() => { scrollToContentView(artboard, props.context.selection, props.context.workspace) });
     workspace.value.setAction(Action.AutoV);
 }
 function hoveredShape(e: MouseEvent) {
@@ -434,7 +452,7 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 function onMouseMove(e: MouseEvent) {
-    if (e.button === MOUSE_LEFT) {
+    if (e.button === MOUSE_LEFT) { // 这里应该有问题，后期观察，不用按下也会触发？
         if (isMouseLeftDown) {
             if (spacePressed.value) {
                 pageViewDragging(e); // 拖拽页面
@@ -444,6 +462,10 @@ function onMouseMove(e: MouseEvent) {
                 } else {
                     select(e); // 选区
                 }
+                const { x, y, right, bottom } = workspace.value.root;
+                const offset = process({ x, y, right, bottom }, e);
+                scrollX = offset.dx;
+                scrollY = offset.dy;
             }
         } else {
             hoveredShape(e);
@@ -464,10 +486,15 @@ function onMouseUp(e: MouseEvent) {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         isMouseLeftDown = false;
+        shutDownScroller();
     }
 }
 function onMouseLeave() {
     props.context.selection.unHoverShape();
+    scroller();
+}
+function mouseenter() {
+    shutDownScroller();
 }
 function windowBlur() {
     if (isMouseLeftDown) {
@@ -532,7 +559,8 @@ renderinit().then(() => {
 
 <template>
     <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
+        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave"
+        @mouseenter="mouseenter">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :width="216" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
