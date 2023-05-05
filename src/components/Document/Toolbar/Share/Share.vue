@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import FileShare from './FileShare.vue';
 import * as share_api from '@/apis/share'
-const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
+const docID = '1672502400000'
 const showFileShare = ref<boolean>(false);
 const docInfo: any = ref({})
 const onShare = () => {

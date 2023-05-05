@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { router } from '../../router'
 import { useRoute } from 'vue-router'
@@ -10,7 +10,6 @@ const disabled = ref(false)
 const maxShare = ref(0)
 const idRead = ref(0)
 const idEdit = ref(0)
-const docID = ''
 const docInfo: any = ref({})
 const route = useRoute()
 const onSave = () => {
@@ -36,7 +35,7 @@ const onSave = () => {
             })
         }
     }
-    postDocumentAuthority({ doc_id: docID, perm_type: Number(radio.value), remarks: textarea })
+    postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), remarks: textarea })
 }
 watch(radio, () => {
     disabled.value = false
@@ -44,23 +43,24 @@ watch(radio, () => {
 watch(textarea, () => {
     disabled.value = false
 })
-const getDocumentAuthority = async () => {
-    const { data } = await share_api.getDocumentAuthorityAPI({ doc_ic: docID })
-}
-getDocumentAuthority()
 const getDocumentInfo = async () => {
-    const data = await share_api.getDocumentInfoAPI({ doc_ic: docID })
+    const data = await share_api.getDocumentInfoAPI({ doc_ic: route.query.id })
     docInfo.value = data.data
 }
 getDocumentInfo()
-const postDocumentAuthority = async (data: { doc_id: string, perm_type: number, remarks: any }) => {
+const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, remarks: any }) => {
     await share_api.postDocumentAuthorityAPI(data)
 }
-const getShareList = async () => {
-    const { data } = await share_api.getShareListAPI({ doc_id: docID })
-    maxShare.value = data.length
-}
-getShareList()
+onMounted(() => {
+    if(docInfo.value.perm_type !== 0) {
+        router.push({
+            name: 'document',
+            query: {
+                id: route.query.id
+            }
+        })
+    }    
+})
 </script>
 
 <template>

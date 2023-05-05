@@ -18,7 +18,7 @@ enum permissions {
   editable
 }
 const url = `http://localhost:8080/#/apply?id=${props.docInfo.document.id}`
-const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
+const docID = '1672502400000'
 const value1 = ref(true)
 const selectValue = ref('需申请确认')
 const authority = ref(false)

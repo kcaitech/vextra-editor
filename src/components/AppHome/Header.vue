@@ -4,7 +4,7 @@ import { Search } from '@element-plus/icons-vue'
 import { reactive, toRefs } from 'vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
-const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
+const docID = '1672502400000'
 const input = ref('')
 const num = ref(0)
 const showInForm = ref(false)

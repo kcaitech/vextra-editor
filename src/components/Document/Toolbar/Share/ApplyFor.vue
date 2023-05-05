@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import * as share_api from '@/apis/share'
 const { t } = useI18n()
 
-const docID = '7974d5b3-273f-4364-82e3-2aba93d6ac92'
+const docID = '1672502400000'
 const applyList: any = ref([])
 const container = ref<HTMLDivElement>()
 const posi = ref({
