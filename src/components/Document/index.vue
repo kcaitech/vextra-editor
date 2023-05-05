@@ -275,6 +275,7 @@ onUnmounted(() => {
         left: -12px;
         top: 50%;
         transform: translateY(-50%);
+        z-index: 1;
         cursor: pointer;
         height: 60px;
         background-color: var(--theme-color-anti);
@@ -282,6 +283,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
         border-radius: 4px 0px 0px 4px;
+        box-shadow: -4px 0px 8px var(--grey-dark);
 
         >.svg {
             width: 12px;
@@ -302,6 +304,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
         border-radius: 0 4px 4px 0;
+        box-shadow: 4px 0px 4px var(--grey-dark);
 
         >.svg {
             width: 12px;

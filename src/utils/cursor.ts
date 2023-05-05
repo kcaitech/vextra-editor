@@ -33,7 +33,7 @@ function styleSheetController(): StyleSheetController {
   async function appendStyleSheetForCursor() {
     style = document.createElement('style');
     style.type = 'text/css';
-    styleSheetId = (uuid().split('-').at(-1)) || 'cursor'; // at() 可能存在浏览器兼容问题，后期观察👀
+    styleSheetId = (uuid().split('-').at(-1)) || 'cursor'; // at() 可能存在浏览器兼容问题，后期观察👀；
     style.id = styleSheetId;
     // 预设一个auto
     style.innerHTML += await getClassString('auto', 0, styleSheetId);
@@ -112,7 +112,8 @@ function rotateBase64Image(base64Image: string, angle: number) {
       context?.rotate(radians);
       context?.drawImage(image, -image.width / 2, -image.height / 2);
 
-      const rotatedBase64Image = canvas.toDataURL('image/svg+xml');
+      const rotatedBase64Image = canvas.toDataURL('image/png');
+      // const rotatedBase64Image = canvas.toDataURL('image/svg+xml');
       resolve(rotatedBase64Image);
     };
     image.onerror = function () {
