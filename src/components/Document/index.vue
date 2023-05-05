@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref, watch } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -13,13 +13,15 @@ import { WorkSpace } from '@/context/workspace';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document } from '@kcdesign/data/data/document';
 import { Repository } from '@kcdesign/data/data/transact';
+import * as share_api from '@/apis/share'
+import { useRoute } from 'vue-router'
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
 (window as any).__context = context.value;
 const workspace = computed<WorkSpace>(() => context.value.workspace);
 const middleWidth = ref<number>(0.8)
 const middleMinWidth = ref<number>(0.3)
-
+const route = useRoute()
 const Right = ref({
     rightMin: 336,
     rightMinWidth: 0.1,
@@ -35,7 +37,7 @@ const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
-
+const permType = ref(1)
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -168,7 +170,13 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
+const getDocumentAuthority = async () => {
+    const { data } = await share_api.getDocumentAuthorityAPI({ doc_ic: route.query.id })
+    permType.value = data.perm_type
+}
+getDocumentAuthority()
 
+let timer: any = null
 onMounted(() => {    
     context.value.selection.watch(selectionWatcher);
     switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
@@ -176,11 +184,16 @@ onMounted(() => {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
     }
     document.addEventListener('keydown', keyboardEventHandler);
+    timer = setInterval(() => {
+    getDocumentAuthority()
+    }, 60000) 
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
+    clearInterval(timer)
 })
+
 </script>
 
 <template>

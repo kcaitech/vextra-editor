@@ -38,7 +38,7 @@ const contextMenuEl = ref<ContextMenuEl>();
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
-    } else if (t === Selection.PAGE_RENAME) {        
+    } else if (t === Selection.PAGE_RENAME) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
@@ -146,20 +146,21 @@ const rename = (value: string, id: string) => {
         editor.value.setName(value)
         props.context.selection.rename();
     })
-    
+
 }
 
 const MouseDown = (id: string, e: MouseEvent) => {
+    const workspace = props.context.workspace
+    workspace.menuMount(false);
     if (e.button === MOUSE_RIGHT) {
         e.stopPropagation()
-        const menu = contextMenuEl.value?.menu?.className
-        if (e.target instanceof Element && e.target.closest(`.${menu}`)) return
+        if (e.target instanceof Element && e.target.closest(`.Menu`)) return
         pageMenuMount(id, e)
     }
-
-
 }
 const pageMenuMount = (id: string, e: MouseEvent) => {
+    const workspace = props.context.workspace
+    workspace.menuMount(false);
     pageMenuPosition.value.x = e.clientX
     pageMenuPosition.value.y = e.clientY - 75
     pageMenuItems = [{ name: 'copy_link', id: id }, { name: 'duplicate', id: id }, { name: 'rename', id: id }, { name: 'delete', id: id }]
@@ -210,7 +211,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         e?.stopPropagation()
         const index = props.context.data.pagesList.findIndex((item) => item.id === id)
         id && props.context.editor4Doc().delete(id)
-        id && props.context.selection.deletePage(id,index)
+        id && props.context.selection.deletePage(id, index)
     }
 }
 </script>
@@ -233,12 +234,12 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
             </div>
         </div>
         <div class="body" ref="ListBody" :style="{ height: fold ? 0 : 'calc(100% - 30px)' }">
-            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :pageHeight="pageH" :item-width="0" :item-height="30" :first-index="0"
-                v-bind="$attrs" orientation="vertical" :allowDrag="true" location="pagelist"
-                @update-after-drag="updateAfterDrag" @rename="rename" @onMouseDown="MouseDown">
+            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :pageHeight="pageH"
+                :item-width="0" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical" :allowDrag="true"
+                location="pagelist" @update-after-drag="updateAfterDrag" @rename="rename" @onMouseDown="MouseDown">
             </ListView>
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
-                @close="pageMenuUnmount">
+                :context="props.context" @close="pageMenuUnmount">
                 <div class="items-wrap" v-for="(item, index) in pageMenuItems" :key="index"
                     @click="e => pageMenuUnmount(e, item.name, item.id)">
                     <span>{{ t(`pageMenu.${item.name}`) }}</span>

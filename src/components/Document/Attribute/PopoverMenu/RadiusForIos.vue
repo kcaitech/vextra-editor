@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue';
+import { nextTick, ref, defineProps } from 'vue';
 import Popover from '@/components/common/Popover.vue';
+import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 
+const props = defineProps<{
+  context: Context
+}>();
 const popover = ref();
 const progressBar = ref<HTMLDivElement>()
 const progress = ref<HTMLDivElement>()
@@ -11,6 +16,8 @@ const progressBtn = ref<HTMLDivElement>()
 let isDragging = false
 const text = ref<number>(0)
 function showMenu() {
+  const workspace = props.context.workspace
+  workspace.popoverVisible(false);
   popover.value?.show();
 }
 const onMouseDown = (e: MouseEvent) => {
@@ -53,6 +60,7 @@ function updateProgress(x: number) {
 <template>
   <div class="radius-for-ios-container">
     <Popover
+      :context="props.context"
       :left="-516"
       :width="240"
       :height="100"

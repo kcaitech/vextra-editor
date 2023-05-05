@@ -38,9 +38,9 @@ const close = (index: number) => {
 let timer: any = null
 getApplyList(timestamp)
 onMounted(() => {    
-    timer = setInterval(() => {
-        getApplyList(timestamp)
-    }, 60000)
+    // timer = setInterval(() => {
+    //     getApplyList(timestamp)
+    // }, 60000)
 })
 onUnmounted(() => {
     clearInterval(timer)

@@ -213,12 +213,16 @@ function updateAfterDrag(params: { from: number, to: number, dragTarget: any }) 
 }
 
 const MouseDown = (e: MouseEvent) => {
+    const workspace = props.context.workspace
+    workspace.menuMount(false);
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
+        const workspace = props.context.workspace
+        workspace.menuMount(false);
         e.stopPropagation();
-        const menu = contextMenuEl.value?.menu?.className;
-        if (e.target instanceof Element && e.target.closest(`.${menu}`)) return;
+        if (e.target instanceof Element && e.target.closest(`.Menu`)) return;
         chartMenuMount(e);
+        e.stopPropagation()
     }
 }
 
@@ -284,7 +288,7 @@ onUnmounted(() => {
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" @change="(e: MouseEvent) => search(e)">
+                <input type="text" @change="(e: Event) => search(e)">
             </div>
         </div>
         <div class="body" ref="ListBody">
@@ -295,7 +299,7 @@ onUnmounted(() => {
                 @isLock="isLock" @update-after-drag="updateAfterDrag" @onMouseDown="MouseDown" orientation="vertical"
                 @after-drag="afterDrag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount" :context="props.context"
                 ref="contextMenuEl">
                 <PageViewContextMenuItems :items="chartMenuItems" :context="props.context">
                 </PageViewContextMenuItems>

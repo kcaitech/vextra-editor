@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { router } from '../../router'
 import { useRoute } from 'vue-router'
@@ -12,6 +12,8 @@ const idRead = ref(0)
 const idEdit = ref(0)
 const docInfo: any = ref({})
 const route = useRoute()
+const linkValid = ref(true)
+let permType = undefined
 const onSave = () => {
     disabled.value = true
     if (maxShare.value >= 5) {
@@ -43,23 +45,37 @@ watch(radio, () => {
 watch(textarea, () => {
     disabled.value = false
 })
+const getDocumentAuthority = async () => {
+    const { data } = await share_api.getDocumentAuthorityAPI({ doc_ic: route.query.id })
+    permType = data.perm_type
+}
+getDocumentAuthority()
 const getDocumentInfo = async () => {
     const data = await share_api.getDocumentInfoAPI({ doc_ic: route.query.id })
     docInfo.value = data.data
 }
+
 getDocumentInfo()
 const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, remarks: any }) => {
     await share_api.postDocumentAuthorityAPI(data)
 }
+let timer: any = null
+
 onMounted(() => {
-    if(docInfo.value.perm_type !== 0) {
+    if(docInfo.value.perm_type === 0) {
         router.push({
             name: 'document',
             query: {
                 id: route.query.id
             }
         })
-    }    
+    }   
+    timer = setInterval(() => {
+    getDocumentAuthority()
+    }, 60000) 
+})
+onUnmounted(() => {
+    clearInterval(timer)
 })
 </script>
 
@@ -73,7 +89,7 @@ onMounted(() => {
                 <img src="../../assets/pd-logo-svg.svg">
             </div>
         </div>
-        <div class="context">
+        <div class="context" v-if="linkValid">
             <span style="font-weight: bold;">{{ docInfo.document.name }}</span>
             <div class="svg-file">
                 <svg-icon class="svg" icon-class="file-rectangle"></svg-icon>
@@ -101,6 +117,13 @@ onMounted(() => {
                 <div class="button"><el-button :disabled="disabled" color="#0d99ff" size="small"
                         @click="onSave">申请权限</el-button></div>
             </div>
+        </div>
+        <div v-else class="context">
+            <div class="svg-file">
+                <svg-icon class="svg" icon-class="file-void"></svg-icon>
+            </div>
+            <span>无文件访问权限</span>
+            <span class="text">文件已被删除，或创建者已关闭分享</span>
         </div>
     </div>
 </template>
@@ -149,6 +172,9 @@ onMounted(() => {
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        >.text {
+            margin-top: 10px;
+        }
 
         .svg-file {
             margin: var(--default-margin);

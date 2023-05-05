@@ -221,7 +221,7 @@ onUnmounted(() => {
                 @onchange="e => onChangeRadian(e, 'rlb')" />
             <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rrb || 0" :frame="{ width: 12, height: 12, rotate: 180 }"
                 @onchange="e => onChangeRadian(e, 'rrb')" />
-            <RadiusForIos></RadiusForIos>
+            <RadiusForIos :context="props.context"></RadiusForIos>
         </div>
         <!-- <div class="tr" v-if="shapeType === 'rectangle'">
                 <IconText

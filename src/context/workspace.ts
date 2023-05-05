@@ -64,6 +64,8 @@ export class WorkSpace extends Watchable(Object) {
     static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
+    static SHUTDOWN_MENU = 6;
+    static SHUTDOWN_POPOVER = 7;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -74,6 +76,8 @@ export class WorkSpace extends Watchable(Object) {
     private m_translating: boolean = false; // 编辑器是否正在移动图形
     private m_creating: boolean = false; // 编辑器是否正在创建图形
     private m_selecting: boolean = false; // 编辑器是否正在选择图形
+    private m_menu_mount: boolean = false;
+    private m_popover: boolean = false;
     constructor(context: Context) {
         super();
         this.context = context
@@ -111,7 +115,24 @@ export class WorkSpace extends Watchable(Object) {
     get select() {
         return this.m_selecting;
     }
-
+    get isMenuMount() {
+        return this.m_menu_mount;
+    }
+    get ispopover() {
+        return this.m_popover;
+    }
+    menuMount(mount: boolean) {
+        this.m_menu_mount = mount;
+        if (!mount) {
+            this.notify(WorkSpace.SHUTDOWN_MENU);
+        }
+    }
+    popoverVisible(visible: boolean) {
+        this.m_popover = visible;
+        if (!visible) {
+            this.notify(WorkSpace.SHUTDOWN_POPOVER);
+        }
+    }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (event.code === KeyboardKeys.R) {
