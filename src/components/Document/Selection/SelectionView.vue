@@ -12,6 +12,11 @@ export interface Point {
     y: number,
     type: CtrlElementType
 }
+export interface Bar {
+    width: number,
+    height: number,
+    type: CtrlElementType
+}
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;

@@ -29,10 +29,10 @@ export enum KeyboardKeys { // 键盘按键类型
     Digit0 = 'Digit0'
 }
 export enum CtrlElementType { // 控制元素类型
-    RectL = 'rect-left',
-    RectR = 'rect-top',
-    RectB = 'rect-bottom',
-    RectT = 'rect-top',
+    RectLeft = 'rect-left',
+    RectRight = 'rect-right',
+    RectBottom = 'rect-bottom',
+    RectTop = 'rect-top',
     RectLT = 'rect-left-top',
     RectRT = 'rect-right-top',
     RectRB = 'rect-right-bottom',
@@ -264,6 +264,10 @@ export class WorkSpace extends Watchable(Object) {
                 name = `rotate-${135 + deg}`;
             } else if (type === CtrlElementType.LineEndR) {
                 name = `rotate-${315 + deg}`;
+            } else if (type === CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
+                name = `scale-${90 + deg}`
+            } else if (type === CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
+                name = `scale-${0 + deg}`
             }
             this.notify(WorkSpace.CURSOR_CHANGE, name);
         }

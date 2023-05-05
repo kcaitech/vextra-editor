@@ -110,12 +110,12 @@ function transform(shapes: Shape[], start: XY, end: XY) {
   props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
 }
 
-function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale') {
+function handlePointAction(type: CtrlElementType, p2: XY, deg?: number, aType?: 'rotate' | 'scale') {
   shapes = props.context.selection.selectedShapes;
   matrix.reset(workspace.value.matrix);
   shapes.forEach(item => {
     if (aType === 'rotate') {
-      const newDeg = (item.rotation || 0) + deg;
+      const newDeg = (item.rotation || 0) + (deg || 0);
       item.rotate(newDeg);
     } else {
       const p2Onpage = matrix.inverseCoord(p2.x, p2.y); // page
