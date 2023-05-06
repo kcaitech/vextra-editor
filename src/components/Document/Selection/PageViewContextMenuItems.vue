@@ -119,8 +119,8 @@ function closeLayerSubMenu(e: MouseEvent) {
 </script>
 <template>
   <div class="items-wrap">
-    <div v-if="props.items.includes('layers')" class="item layer-select" @mouseenter="e => showLayerSubMenu(e)"
-      @mouseleave="e => closeLayerSubMenu(e)">
+    <div v-if="props.items.includes('layers')" class="item layer-select" @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)"
+      @mouseleave="(e: MouseEvent) => closeLayerSubMenu(e)">
       <span>{{ t('system.select_layer') }}</span>
       <div class="triangle"></div>
       <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site" :context="props.context">

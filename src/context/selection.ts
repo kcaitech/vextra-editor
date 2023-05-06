@@ -28,6 +28,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;
     private m_document: Document;
+    private m_search_keyword: string | undefined;
 
     // todo
     private m_cursorStart: number = -1;
@@ -102,7 +103,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         function deep(source: Shape[], position: XY) {
             for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
-                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
+                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height && source[i].isVisible) shapes.push(source[i]);
                 const suppos = { x: position.x - x, y: position.y - y };
                 if (source[i].childs?.length) deep(source[i].childs, suppos);
             }

@@ -67,6 +67,7 @@ function toggle(id: Tab) {
 .tab-container {
     position: relative;
     width: 100%;
+    box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
     .controller {
         height: 36px;

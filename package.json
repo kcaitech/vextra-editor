@@ -15,7 +15,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@kcdesign/data": "^0.1.5-dev.zrx.41",
+    "@kcdesign/data": "^0.1.6-dev.zrx.2",
     "axios": "^1.3.6",
     "canvaskit-wasm": "^0.38.0",
     "element-plus": "^2.3.0",

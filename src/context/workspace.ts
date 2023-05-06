@@ -28,17 +28,11 @@ export enum KeyboardKeys { // 键盘按键类型
     F = 'KeyF',
     Digit0 = 'Digit0'
 }
-export enum CursorType { // 光标类型
-    Crosshair = '-webkit-image-set(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABClJREFUaEPtVztMFFEUvbuAgmJ0F+gQlGQmULCAEFDooGGmobGxIEKMITYqiRpBrfxGTVAbQ4whhsLGhoalgQ4UAll2KCAzCQrSgaBR8QO7a874Ho7IZ5Z54JLMS17e/Oee+znnPg/t8uHZ5faTC+B/R9CNgBsBhx5wU8ihAx2/7kbAsQsdfkB0BLxEpjjyFebFiChqWR2a/PfrIgHA6GQiSmEzif0qQkRLbC4zMMJAiAKA78Dw1NnZ2RuZmZmXrBbOzc09zMrKuklE3xkQREXIEAkglYjSp6amrufk5Jzv6OgIeTyeWENDw7Hp6eknubm5t4joCwORcACQPvuI6JCu662SJJ1TVXUSLu7u7s4zDOOpLMt3iOgjES2KTCNREUC+7yeiDE3TWgoLC8+qqvqOATgyNjb2LBAI3CWiD0T0lYhQF0KGSAAHACAcDrcEAoEzqqpOMwA5mqY9Lyoq4gA+7woAiqJMAUAwGMxNJACreR4RxEQKpRORPxQKXS4uLm60RmB0dLSjpKTkARHNs0JGCqGQ+dyyTsSTQqt5HpzPAQEAivjg4ODghfLy8norgKGhoc6KiorHRPSJFTEHAMOhDVvWCbsANuT5tapRUZT3LIUOb1atTnQiHgD/8Hw0GkUEMDyxWMzDzr1Yu7q6EBGqq6tb9Hq98HQUK7SBpQ7hvLGxscSJTtgFsCbPB4PBvM28u9F9RVEmnepEPADA877x8fHW/Pz8JsMw3loiQIiA2bmxtbm52Txva2szVZd5fmXFNURAkqSjExMT7QUFBRC6BaYTiJitEQ8As0h1Xb/m9/uPLy0tJcNYbnA0iuzwmOfZ2dn5tbW1M7Cgp6cne2ZmZuL3rVjM6/WuAMK1lJSU5fn5+TeyLN+2FLlwAACKGkAUIFigTADaw2gU93Gc1tvbW19dXX3SWsR9fX2vampqOonoGxH9tNAnjtFaoEeCwEGl0fDZ7pXsRgDPgTYBgs+9jP95/58GYP39/U2VlZWnrAAGBgZeVlVVtTNDAYLzPuj0BzMahmOCVoUDMFOWgQAQTHC/VcjMZm54ePhiaWnpaasOjIyMvCgrK3tkaeasQoZjGM2n7fQxa8tWpfx5iBts3XHhLgAhrTJCodCVdZT4PmvmkC4wlg/rjs225/nL8QJYDy+igdrIDIfDV9dp5u4R0RzL9YTsRhEBADC70XWaOQBABBISABjKr2laK/YDuq6b+wFZlvl+ADyPZi4h9wNcqQ8ahtHq8/lORCIRc1OflJQUWVhYeC1JEgDwZi6uQt2oTkXVwFo6AVrFAG1umec3IxmRAFbrBIQNA2LFOT5unt8pAGvpBO9Uec+/JZ7fSQBcV7gyW//NlTdunt9pAJv9T/h9UTUg3DC7H3QB2PXUdj3nRmC7PGv3u24E7Hpqu55zI7BdnrX73V/2V8NA1VQ9gwAAAABJRU5ErkJggg==)1.5x)13 13, crosshair',
-    Auto = '-webkit-image-set(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABjFJREFUaEPtWGtMU2cYfgSHXBzOcpGFH4TEQKMhi4oUL2dgUkKImgE/GkgaNp0okkB0DDGTHyYakzmQotWGkOE6AktjtlYXFgcjm40XcBswGRDS0mgDXUY3Wmi5TtjynpyzICu00Au68CUnJz185zvv877P8z3vxzq84mPdKx4/1gCsdgX/lxUgUPzFJ3gOwN+rnW1H33dUAX8A661W67symUxz/vz5cQCzAJ5z95cKiCMArwHYYDKZ8iMiIj4YHh6ui46Ovg5gmrv+AvDSVGQhAPodACBErVaLMjMzv6Gy2Wy2Hzs7O6+npKTQ70kAM1xFCMiqDkcVCATwOoDNs7Ozfbdv3/bLyspigzSZTA03b96UlZeXGwBMcUCIXqtGK0cANgDYBCB8ZGTkls1mE+bm5vpVVFRgz549mJqaMun1+hsJCQmfApjgaMXrw+fVcASAKEQAIvr6+i4IhcLsuLg46HQ6FBYWgoAEBQXBYrF8//DhQ/mhQ4e082hF1fAprRwBWM9RKPLOnTt5hw8f/ignJwcqlYrNbnBwMGQyGfLz8+nn3NOnT2vPnj17RaVSmTlakch9RitHAPwAbCQKlZSUiCoqKhovX76MsrKyF+ixf/9+VFZWIikpCZOTk/29vb03EhMTCSXRikTO71ZepZUjAPQsGIAAwJvT09P3tFptYFpamsNAioqKWFoFBATAbDZ/3dzcXC2VSrvmiZz04TWRL9ZK0E70BoAok8n0WWBgYIJAIKDKOBwUvEKhwNGjRzEzMzP+7NkzRVxcXBUAMkHyD695x2IAyMxIyFs6OjrKd+zYkbNz5050dnYuSYfk5GTI5XLs2rULY2NjHU+ePJEzDNPEiZyAUDU8KvLFAFA7QV4QqVKpJBKJ5MLx48dRW1vrEp9pt7p69Sr8/f0xODj4RWNjo6ysrEzvDe9YDADRJYSELJVK36qvr1cTRSgwV4efnx9qampw7Ngx2O12s9FolG/fvp0ywHuHR2i1GAB6HsQLeXx8vKW7u3sTUWS5IzExkQVCFLRarfe6urpkBw4c+GHBlrvcZf+dv9R5gBx5M+nAaDTWREVFJYWGhq6bmqIOwrUhEAiQkpKCvXv3gmGY5yKRiDyG3PzbBw8eFIrFYiOnC9cWdDBrKQAk5FAC0NbWVioSid5jGAb3799f8mMikQgZGRls27Fv3765kJAQdvcaHh7uN5vN7UNDQ1qFQtGq0Wj+4KpAwl7xWAoAL+SIurq6d44cOfLJ6dOnWRdeOFJTU1mup6WlzUVGRrIBj42NWQcHB3/t6enpbmpq+lmpVOroMXfZFvRRXgFAgZChhYvF4viWlpa7DQ0NkEql//mYWq1GZmYmjEZj/8DAQE9bW9svFy9e7JiYmOAFS7yji1pxekZ33h+o7VjxcHYmJgCkg6jR0dGmoaGhLdu2bXvhY6dOnUJVVRXUavXn2dnZXwKwc0FSwPwhiFoLvr3gzxK8J7jl0s4AkJDJkbcYDIbq2NjY1LCwMIyMjLAg4uPj8fjx41mr1dobExNzBoCFowjfD/FB8+02361S0G4FzmfRGQBeyJFarbaIYZiT6enpaG5uZt/nqVNcXFxw7dq1nwAQMuL3fHqQ83rtCOoMAAmZOtOI6urq9OLiYvm5c+dw6dIlFBQUsP1Pa2trnVgsrgFA7bSVo49POlFKojMA9Hdy5LDY2NgYg8Fwj7J+4sQJ6PX6Wbvd3h8dHV0A4HcAf3L8J9p4hB6uKNsZAFqDHJkVssVi+cpms8U8evQIEomE2uiS0tLS77js0xZJu4tHmzVnIFwBQEdMVsg6ne7jrVu3ZtCi7e3tquTk5CvkUZx4SbhEHZ8OVwCQ/ZMjh2u12vcZhjljsVj6d+/efXJgYOA3AOSotHWScH1GHVd3IZrHd6ablUrl23l5efUajebDrKysu1zmRzmTcsuQVlo2VypAc+iEtvHgwYPhlZWVuUKhUMkFTScuunxOneVUgOaSDsjU6M4fLWm3IdrQ3afCnV8tVyrA04i0QL7AvzP/H74rZYDb77kKgAcxfz4JdtUyv1wKuZ0pby2wnAp4Kwa31l0D4Fb6PPDyWgU8kES3llirgFvp88DLaxXwQBLdWuKVr8A/6vRMT3FYsmIAAAAASUVORK5CYII=)1.5x)4 4, auto',
-    Grab = 'grab',
-    Grabbing = 'grabbing'
-}
 export enum CtrlElementType { // 控制元素类型
-    RectL = 'rect-left',
-    RectR = 'rect-top',
-    RectB = 'rect-bottom',
-    RectT = 'rect-top',
+    RectLeft = 'rect-left',
+    RectRight = 'rect-right',
+    RectBottom = 'rect-bottom',
+    RectTop = 'rect-top',
     RectLT = 'rect-left-top',
     RectRT = 'rect-right-top',
     RectRB = 'rect-right-bottom',
@@ -46,7 +40,11 @@ export enum CtrlElementType { // 控制元素类型
     RectLTR = 'rect-left-top-rotate',
     RectRTR = 'rect-right-top-rotate',
     RectRBR = 'rect-right-bottom-rotate',
-    RectLBR = 'rect-left-bottom-rotate'
+    RectLBR = 'rect-left-bottom-rotate',
+    LineStart = 'line-start',
+    LineEnd = 'line-end',
+    LineStartR = 'line-start-rotate',
+    LineEndR = 'line-end-rotate',
 }
 
 const A2R = new Map([
@@ -78,6 +76,8 @@ export class WorkSpace extends Watchable(Object) {
     private m_selecting: boolean = false; // 编辑器是否正在选择图形
     private m_menu_mount: boolean = false;
     private m_popover: boolean = false;
+    private m_rootId: string = 'content';
+    private m_pageViewId: string = 'pageview';
     constructor(context: Context) {
         super();
         this.context = context
@@ -85,10 +85,10 @@ export class WorkSpace extends Watchable(Object) {
     get root() { //return contentView HTMLElement
         const root = { x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
         let content: any = document.querySelectorAll('#content');
-        content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === 'content');
+        content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
         if (content) {
             const { x, y, bottom, right } = content.getBoundingClientRect();
-            root.center = { x: (x + right) / 2, y: (y + bottom) / 2 };
+            root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
             root.x = x;
             root.y = y;
             root.bottom = bottom;
@@ -96,6 +96,12 @@ export class WorkSpace extends Watchable(Object) {
             root.element = content;
         }
         return root;
+    }
+    get pageView() {//return pageView HTMLElement
+        const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
+        if (pageView) {
+            return pageView as Element;
+        }
     }
     get action() {
         return this.m_current_action;
@@ -132,6 +138,12 @@ export class WorkSpace extends Watchable(Object) {
         if (!visible) {
             this.notify(WorkSpace.SHUTDOWN_POPOVER);
         }
+    }
+    setRootId(id: string) {
+        this.m_rootId = id;
+    }
+    setPageViewId(id: string) {
+        this.m_pageViewId = id
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
@@ -185,8 +197,8 @@ export class WorkSpace extends Watchable(Object) {
     creating(v: boolean) {
         this.m_creating = v;
     }
-    selecting(v: boolean) {        
-        this.m_selecting = v;        
+    selecting(v: boolean) {
+        this.m_selecting = v;
         this.notify(WorkSpace.SELECTING);
     }
 
@@ -255,7 +267,31 @@ export class WorkSpace extends Watchable(Object) {
         if (this.m_creating || this.m_selecting) {
             // todo
         } else {
-            this.notify(WorkSpace.CURSOR_CHANGE, type, deg);
+            let name = 'auto-0';
+            if (type === CtrlElementType.RectRBR) {
+                name = `rotate-${0 + deg}`;
+            } else if (type === CtrlElementType.RectLBR) {
+                name = `rotate-${90 + deg}`;
+            } else if (type === CtrlElementType.RectLTR) {
+                name = `rotate-${180 + deg}`;
+            } else if (type === CtrlElementType.RectRTR) {
+                name = `rotate-${270 + deg}`;
+            } else if (type === CtrlElementType.RectLT || type === CtrlElementType.RectRB) {
+                name = `scale-${45 + deg}`;
+            } else if (type === CtrlElementType.RectRT || type === CtrlElementType.RectLB) {
+                name = `scale-${135 + deg}`;
+            } else if (type === CtrlElementType.LineStart || type === CtrlElementType.LineEnd) {
+                name = 'extend-0';
+            } else if (type === CtrlElementType.LineStartR) {
+                name = `rotate-${135 + deg}`;
+            } else if (type === CtrlElementType.LineEndR) {
+                name = `rotate-${315 + deg}`;
+            } else if (type === CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
+                name = `scale-${90 + deg}`
+            } else if (type === CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
+                name = `scale-${0 + deg}`
+            }
+            this.notify(WorkSpace.CURSOR_CHANGE, name);
         }
     }
     resetCursor() {

@@ -3,13 +3,18 @@ import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from 
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape, ShapeType } from "@kcdesign/data/data/shape";
-import { ControllerType, ctrlMap } from "./CtrlRect";
+import { ControllerType, ctrlMap } from "./Controller";
 import { CtrlElementType } from "@/context/workspace";
 import { getHorizontalAngle, createRect, createHorizontalBox } from "@/utils/common";
 import { XY } from "@/context/selection";
 export interface Point {
     x: number,
     y: number,
+    type: CtrlElementType
+}
+export interface Bar {
+    width: number,
+    height: number,
     type: CtrlElementType
 }
 const reflush = ref(0);
@@ -43,6 +48,11 @@ const tracing = ref<XY[]>([]);
 const rotate = ref<number>(0);
 let tracingStyle: string;
 let tracingPath: string;
+let tracingViewBox: string;
+let tracingHeight: number;
+let tracingWidth: number;
+let tracingX: number;
+let tracingY: number;
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
         id: "",
@@ -56,7 +66,7 @@ function updater() {
     matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
-    data.isSelect = selection.selectedShapes.length > 0;    
+    data.isSelect = selection.selectedShapes.length > 0;
     if (!data.isHover && !data.isSelect) {
         shapes.forEach((s) => {
             s.unwatch(watcher);
@@ -133,12 +143,13 @@ function createController() {
             p.x = _p.x; p.y = _p.y;
             return p;
         });
-        rotate.value = getHorizontalAngle(points[0], points[1]);
+        // rotate.value = getHorizontalAngle(points[0], points[1]);
         if (selection[0].type === ShapeType.Line) {
             controllerType.value = ControllerType.Line;
-            // controllerType.value = ControllerType.Rect;
+            rotate.value = getHorizontalAngle(points[0], points[2]);
         } else {
             controllerType.value = ControllerType.Rect;
+            rotate.value = getHorizontalAngle(points[0], points[1]);
         }
     } else { // 多选
         const __points: [number, number][] = [];
@@ -175,7 +186,6 @@ function createController() {
 function createShapeTracing() { // 描边
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
     if (!hoveredShape) {
-        // todo
         tracing.value.length = 0;
     } else {
         const selected = props.context.selection.selectedShapes;
@@ -194,13 +204,25 @@ function createShapeTracing() { // 描边
             { x: 0, y: frame.height }
         ];
         tracing.value = points.map(p => {
-            let _s = m.computeCoord(p.x, p.y)
+            let _s = m.computeCoord(p.x, p.y);
             let _p = matrix.computeCoord(_s.x, _s.y);
             p.x = _p.x; p.y = _p.y;
             return p;
         });
-        tracingStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
-        tracingPath = hoveredShape.getPath(true).toString();
+        const [p0, p1, p2, p3] = tracing.value;
+        tracingStyle = createRect(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+        const path = hoveredShape.getPath(true);
+        const m2page = hoveredShape.matrix2Page();
+        path.transform(m2page);
+        path.transform(matrix);
+        const bounds = path.bounds;
+        const { minX, maxX, minY, maxY } = bounds;
+        tracingX = minX;
+        tracingY = minY;
+        tracingWidth = maxX - minX;
+        tracingHeight = maxY - minY;
+        tracingViewBox = `${minX} ${minY} ${tracingWidth} ${tracingHeight}`;
+        tracingPath = path.toString();
     }
 }
 // hooks
@@ -219,8 +241,9 @@ watchEffect(updater)
     <!-- 描边 -->
     <svg v-if="tracing.length" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :style="tracingStyle" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #e4bf7a; stroke-width: 2;"></path>
+        :width="tracingWidth" :height="tracingHeight" :viewBox="tracingViewBox"
+        :style="`transform: translate(${tracingX}px, ${tracingY}px)`" :reflush="reflush !== 0 ? reflush : undefined">
+        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;"></path>
     </svg>
     <!-- 控制 -->
     <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"

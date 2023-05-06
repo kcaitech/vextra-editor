@@ -13,7 +13,21 @@ export const system = {
     'bring_to_top': 'Bring to top',
     'send_to_bottom': 'Send to bottom',
     'visible': 'Visible/Hidden',
-    'Lock': 'Lock/Unlock'
+    'Lock': 'Lock/Unlock',
+    'select_all': 'Select all',
+    'fit_canvas': 'Adapt to artboard',
+    'show_many_cursor': 'Show others cursor',
+    'show_comment': 'Show comment',
+    'show_ruler': 'show ruler',
+    'show_pixel_network': 'Show grid',
+    'hide_operation_interface': 'Hide UI',
+    'creating_groups': 'Create group',
+    'create_container': 'Create artboard',
+    'un_group': 'Dissolve the group',
+    'create_component': 'Create component',
+    'unbind_instance': 'Unbind',
+    'reset_instance_roperties': 'Reset',
+    'edit_component': 'Edit component'
 }
 
 export const home = {
@@ -41,7 +55,7 @@ export const frame = {
     presentation: 'Presentation',
     watch: 'Watch',
     paper: 'Paper',
-    social_media : 'Social media'
+    social_media: 'Social media'
 }
 
 export const pageMenu = {

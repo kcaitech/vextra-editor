@@ -5,12 +5,11 @@ import { CtrlElementType } from '@/context/workspace';
 import { XY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
-import { Point } from '../SelectionView.vue';
 interface Props {
   context: Context,
   axle: XY,
-  point: Point,
   rotate: number
+  pointType: CtrlElementType
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -28,16 +27,16 @@ let rotating: boolean = false;
 let clt: CtrlElementType;
 const rotatePositon = computed(() => {
   const map = new Map([
-    [CtrlElementType.RectLT, 'lt'],
+    [CtrlElementType.LineStart, 'lt'],
     [CtrlElementType.RectRT, 'rt'],
-    [CtrlElementType.RectRB, 'rb'],
+    [CtrlElementType.LineEnd, 'rb'],
     [CtrlElementType.RectLB, 'lb']
   ])
-  return map.get(props.point.type) || ''
+  return map.get(props.pointType) || ''
 })
 const positionToCtrlElementType = new Map([
-  ['rotate', props.point.type + '-rotate'],
-  ['scale', props.point.type]
+  ['rotate', props.pointType + '-rotate'],
+  ['scale', props.pointType]
 ])
 function setStatus(ct?: CtrlElementType) {
   if (!ct) {
@@ -63,8 +62,6 @@ function getCtrlElementType(event: MouseEvent) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
-
-
     const ct = getCtrlElementType(event);
     if (ct) {
       event.stopPropagation();
@@ -94,7 +91,7 @@ function onMouseMove(event: MouseEvent) {
       workspace.value.setCursor(clt, props.rotate);
       aType = 'rotate';
     }
-    emit('transform', props.point.type, mouseOnPage, deg, aType);
+    emit('transform', props.pointType, mouseOnPage, deg, aType);
     props.context.repo.transactCtx.fireNotify();
     startPosition = { ...mouseOnPage };
   } else {
@@ -143,8 +140,9 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <div ref="pointContainer" class="point-container" @mousedown="onMouseDown" @mousemove="mousemove"
-    @mouseleave="mouseleave" :style="{ left: `${props.point.x}px`, top: `${props.point.y}px` }">
+  <div ref="pointContainer" class="point-container"
+    :style="`top: -9px; ${props.pointType === CtrlElementType.LineStart ? 'left: -16px' : 'right: -16px'}`"
+    @mousedown="onMouseDown" @mousemove="mousemove" @mouseleave="mouseleave">
     <div data-point-id="rotate" :class="`rotate ${rotatePositon}`"></div>
     <div data-point-id="scale" class="scale">
       <div data-point-id="scale"></div>
@@ -158,7 +156,6 @@ onUnmounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  // background-color: rgb(43, 144, 226);
   overflow: hidden;
 
   >.scale {
@@ -168,7 +165,6 @@ onUnmounted(() => {
     transform: translate(-50%, -50%);
     width: 16px;
     height: 16px;
-    // background-color: rgb(255, 228, 196);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -178,7 +174,7 @@ onUnmounted(() => {
       width: 8px;
       height: 8px;
       box-sizing: border-box;
-      border: 1px solid #ffa500;
+      border: 1px solid #2561D9;
       background-color: var(--theme-color-anti);
     }
   }
@@ -187,27 +183,20 @@ onUnmounted(() => {
     position: absolute;
     width: 20px;
     height: 20px;
-    // background-color: rgba(137, 43, 226, 0.673);
   }
 
   >.lt {
     top: 0px;
     left: 0px;
-  }
-
-  >.rt {
-    right: 0px;
-    top: 0px;
+    transform-origin: bottom right;
+    transform: rotate(335deg);
   }
 
   >.rb {
     right: 0px;
     bottom: 0px;
-  }
-
-  >.lb {
-    left: 0px;
-    bottom: 0px;
+    transform-origin: left top;
+    transform: rotate(315deg);
   }
 }
 </style>
