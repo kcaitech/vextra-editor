@@ -2,12 +2,10 @@
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
 import * as user_api from '@/apis/users'
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { router } from '@/router'
 import { ElLoading } from 'element-plus'
 import { ElMessage } from 'element-plus'
-
-const isLife = ref(false)
 const loading = ref(false)
 const svg = `
         <path class="path" d="
@@ -20,66 +18,51 @@ const svg = `
         " style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>
       `
 
-async function getUserItems() {
-    // fullscreenLoading.value = true
-    // const param = {
-    //     nickname: '1'
-    // }    
-    loading.value = true
-    try {
-        const res = await user_api.PostLogin();
-        loading.value = false
-        const token: any = res.data.token
-        localStorage.setItem('token', token)
-        ElMessage('登录成功')
+async function onmessage(e: any) {
+    if (e.data?.type !== "GetWxCode") {
+        return
+    }
+    let code = e.data.code
+    const linfo: any = await user_api.PostLogin({ code: code });
+    if (linfo.code === 0 && linfo.data.token !== '') {
+        localStorage.setItem('token', linfo.data.token)
         router.push({ name: 'apphome' })
-    } catch (error) {
-        loading.value = false
-        ElMessage.error('访问失败，请检测网络')
     }
 }
 
-async function getUserInfo() {
-    try {
-        const res1 = await user_api.GetDocumentsList();
-        console.log(res1);
+onMounted(() => {
+    setTimeout(() => {
+        new (window as any).WxLogin({
+            self_redirect: true,
+            id: "login_container",
+            appid: "wx42bb87f7f2e86a6e",
+            scope: "snsapi_login",
+            redirect_uri: encodeURIComponent("http://protodesign.cn/html/GetCode.html"),
+            state: "STATE",
+            style: "",
+            href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAzMDBweDtoZWlnaHQ6IDMwMHB4O30=',
+        })
+    }, 1000);
 
-    } catch (error) {
-        // 
-    }
-}
-// console.log(res);
-// console.log(res.code);
+    window.addEventListener('message', onmessage, false)
+})
 
-// if (res.code === 0) {
-
-//     fullscreenLoading.value = false
-//     router.push({ name: 'apphome' })
-// }
-
-
-
-
-
-    // const res2 = await user_api.GetDocumentsList()
-
-    // console.log(res2)
+onBeforeUnmount(() => {
+    window.removeEventListener('message', onmessage)
+})
 
 </script>
 
 <template>
     <html>
     <Describes></Describes>
-    <div class="login" v-loading="loading" :element-loading-svg="svg" element-loading-svg-view-box="-10, -10, 50, 50">
-        <div>
-            <button type="button" id="button1" @click="getUserItems">手机登录</button>
-            <button type="button" id="button2" @click="getUserInfo">微信登录</button>
-        </div>
-        <div v-if="isLife = !isLife" id="login-container"> 我是手机登录</div>
-        <div v-if="isLife = !isLife" id="login-container"> 我是微信登录</div>
+    <div class="login">
+        <span>微信登录</span>
+        <div id="login_container"></div>
         <p>扫码表示已阅读并同意<a href="">《使用协议》</a>及<a href="">《隐私政策》</a></p>
     </div>
     <Footer></Footer>
+
     </html>
 </template>
 
@@ -94,6 +77,7 @@ html {
     background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0.00) -113deg, #542FDB 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0.00) 247deg, #542FDB 453deg);
     background-blend-mode: color-dodge;
 }
+
 .login {
     display: flex;
     flex-direction: column;
@@ -109,55 +93,27 @@ html {
     box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
     animation: myfirst 2s;
 
-    div {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        justify-content: space-evenly;
-        align-items: center;
-
-        button {
-            width: 80%;
-            width: 100px;
-            height: 40px;
-            background: none;
-            border: none;
-            box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
-            color: black;
-            font-weight: bold;
-            letter-spacing: 2px;
-            padding: 5px;
-            margin-left: 20px;
-            margin-right: 20px;
-            margin-bottom: 40px;
-            &:hover {
-                background-color: rgb(72, 72, 240);
-                color: white;
-                cursor: pointer;
-            }
-
-
-        }
-
-
-
+    span {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        letter-spacing: 2px;
     }
 
-
-    >img {
-        width: 50%;
-        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
-    }
-
-    >p {
+    p {
         font-size: 80%;
         font-weight: bold;
         letter-spacing: 2px;
         color: rgb(152, 148, 148);
-        margin-top: 60px;
+        margin-top: 20px;
+
     }
+
+
 }
+
+
 
 @keyframes myfirst {
     0% {

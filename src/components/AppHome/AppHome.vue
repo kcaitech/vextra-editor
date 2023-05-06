@@ -1,13 +1,19 @@
 <template>
-    <div class="common-layout">
+  <div class="common-layout">
+    <el-container>
+      <el-aside width="381px">
+        <Aside />
+      </el-aside>
       <el-container>
-        <el-aside width="381px"><Aside/></el-aside>
-        <el-container>
-          <el-header><Header/></el-header>
-          <el-main><Main/></el-main>
-        </el-container>
+        <el-header>
+          <Header />
+        </el-header>
+        <el-main>
+          <Main />
+        </el-main>
       </el-container>
-    </div>
+    </el-container>
+  </div>
 </template>
   
 
@@ -15,11 +21,16 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import { defineProps, ref, nextTick, reactive, defineEmits } from 'vue';
+import {onMounted } from 'vue';
+import * as user_api from '@/apis/users'
+
+onMounted (async () => {
+  const resavatar = await user_api.GetInfo()
+  localStorage.setItem('avatar',resavatar.data.avatar)
+  localStorage.setItem('nickname',resavatar.data.nickname) 
+})
 
 
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>
