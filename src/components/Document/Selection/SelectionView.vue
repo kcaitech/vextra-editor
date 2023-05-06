@@ -226,7 +226,7 @@ watchEffect(updater)
     <svg v-if="tracing.length" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :style="tracingStyle" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 2;"></path>
+        <path :d="tracingPath" :style="`fill: transparent; stroke: #2561D9; stroke-width: 1; transform-origin: left top; transform: scale(${matrix.m00});`"></path>
     </svg>
     <!-- 控制 -->
     <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"

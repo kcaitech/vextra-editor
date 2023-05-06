@@ -10,7 +10,8 @@ import CtrlPoint from "./Points/CtrlPoint.vue";
 import { Point, Bar } from "../SelectionView.vue";
 import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
-import { fourWayWheel, Wheel } from "@/utils/contentFn";
+import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/contentFn";
+import { keyboardHandle as handle } from "@/utils/controllerFn"
 interface Props {
     context: Context,
     isController: boolean
@@ -98,7 +99,7 @@ function getShapesByXY() {
 
 function mousedown(e: MouseEvent) {
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
-        wheel = fourWayWheel(props.context);
+        wheel = fourWayWheel(props.context, { rolling: forCtrlRect });
         const action = workspace.value.action;
         if (action === Action.AutoV && props.isController) {
             e.stopPropagation(); // props.isController 当控制权在selection时，不要冒泡出去, 否则父节点也会被控制
@@ -223,24 +224,7 @@ function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
     translateTo(shape, x, y);
 }
 function keyboardHandle(e: KeyboardEvent) {
-    if (!shapes.length) return;
-    const step = e.shiftKey ? 10 : 1;
-    let dx: number = 0, dy: number = 0, transform: boolean = false;
-    if (e.code === 'ArrowRight') {
-        dx = step, dy = 0, transform = true;
-    } else if (e.code === 'ArrowLeft') {
-        dx = -step, dy = 0, transform = true;
-    } else if (e.code === 'ArrowUp') {
-        dx = 0, dy = -step, transform = true;
-    } else if (e.code === 'ArrowDown') {
-        dx = 0, dy = step, transform = true;
-    }
-    if (transform) {
-        for (let i = 0; i < shapes.length; i++) {
-            const editor = props.context.editor4Shape(shapes[i]);
-            editor.translate(dx, dy)
-        }
-    }
+    handle(e, props.context);
 }
 function getRect(points: Point[]) {
     rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
