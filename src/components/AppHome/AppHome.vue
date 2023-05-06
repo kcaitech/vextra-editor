@@ -1,13 +1,19 @@
 <template>
-    <div class="common-layout">
+  <div class="common-layout">
+    <el-container>
+      <el-aside width="381px">
+        <Aside />
+      </el-aside>
       <el-container>
-        <el-aside width="381px"><Aside/></el-aside>
-        <el-container>
-          <el-header><Header/></el-header>
-          <el-main><Main/></el-main>
-        </el-container>
+        <el-header>
+          <Header />
+        </el-header>
+        <el-main>
+          <Main />
+        </el-main>
       </el-container>
-    </div>
+    </el-container>
+  </div>
 </template>
   
 
@@ -17,18 +23,19 @@ import Header from './Header.vue';
 import Main from './Main.vue';
 import * as user_api from '@/apis/users'
 import { User } from '@/context/user'
-import { defineProps, ref, nextTick, reactive, defineEmits,onMounted } from 'vue';
-const getUserInfo = async() => {
+import { defineProps, ref, nextTick, reactive, defineEmits, onMounted } from 'vue';
+const getUserInfo = async () => {
   const result = await user_api.GetInfo()
   const user = new User(result.data);
   (window as any).skuser = user;
 }
 
-onMounted(() => {
+onMounted(async () => {
   getUserInfo()
+  const resavatar = await user_api.GetInfo()
+  localStorage.setItem('avatar', resavatar.data.avatar)
+  localStorage.setItem('nickname', resavatar.data.nickname)
 })
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

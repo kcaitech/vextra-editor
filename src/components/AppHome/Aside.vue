@@ -7,13 +7,11 @@ import {
     BottomLeft,
     Menu as IconMenu,
 } from '@element-plus/icons-vue'
-import { ref, defineEmits } from 'vue'
-import {router} from '@/router'
+import { router } from '@/router'
 import { FilePicker } from '../common/filepicker';
-import { Document } from "@kcdesign/data/data/document";
 import { Repository } from '@kcdesign/data/data/transact';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
-import { importRemote, importSketch } from '@kcdesign/data/io';
+import { importSketch } from '@kcdesign/data/io';
 import { Zip } from "@pal/zip";
 
 const picker = new FilePicker((file) => {
@@ -27,6 +25,12 @@ const picker = new FilePicker((file) => {
         router.push({ name: 'document' });
     })
 });
+
+function Setindex(a: any) {
+    let x: any = a
+    localStorage.setItem('index', x)
+}
+const x = localStorage.getItem('index')
 
 </script>
 
@@ -43,32 +47,32 @@ const picker = new FilePicker((file) => {
                 <button class="newfile">新建文件</button>
                 <button class="openfile" @click="picker.invoke()">打开文件</button>
             </div>
-            <el-menu default-active="1" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
-                <router-link to="/apphome/recently"><el-menu-item index="1">
+            <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
+                <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1)">
                         <el-icon>
                             <Clock />
                         </el-icon>
                         <span>最近打开</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/starfile"><el-menu-item index="2">
+                <router-link to="/apphome/starfile"><el-menu-item index="2"  @click="Setindex(2)">
                         <el-icon>
                             <Star />
                         </el-icon>
                         <span>标星文件</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/meshare"><el-menu-item index="3">
+                <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3)">
                         <el-icon>
                             <Share />
                         </el-icon>
                         <span>我共享的文件</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/shareme"><el-menu-item index="4">
+                <router-link to="/apphome/shareme"><el-menu-item index="4" @click="Setindex(4)">
                         <el-icon>
                             <BottomLeft />
                         </el-icon>
                         <span>收到的共享文件</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/recyclebin"><el-menu-item index="5">
+                <router-link to="/apphome/recyclebin"><el-menu-item index="5" @click="Setindex(5)">
                         <el-icon>
                             <Delete />
                         </el-icon>

@@ -98,20 +98,20 @@ var exports = defineConfig({
 
     devServer: {
         port: 8080,
-        open: true,
+        https: false,
         proxy: {
             '/api':{
-                target: 'https://mock.apifox.cn/m1/2612240-0-1d5a81b5',
-                // target: 'http://192.168.0.10:10000',
+                target: 'http://192.168.0.8:10000',
+                // target: 'http://mock.apifox.cn/m1/2612240-0-1d5a81b5',
                 changeOrigin: true,
                 disableHostCheck: true,
                 //ws: true,
                 pathRewrite: {
-                    '^/api/v1': '/' 
+                    '^/api': '/api' 
+                    // '^/api/v1': '/' 
                }
-
+            }
         }
-    }
     }
 
 })

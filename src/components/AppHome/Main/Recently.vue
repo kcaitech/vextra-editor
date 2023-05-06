@@ -1,73 +1,41 @@
 
 <template>
-    <el-table :data="tableData" height="83vh" style="width: 100%" v-if="viewmodel">
-        <el-table-column prop="filename" label="文件名称" />
-        <el-table-column prop="modtime" label="修改时间" />
+    <el-table :data="documentsList" height="83vh" style="width: 100%" v-if="viewmodel" v-loading="isLoading">
+        <el-table-column prop="name" label="文件名称" />
+        <el-table-column prop="updated_at" label="修改时间" />
         <el-table-column prop="size" label="大小" />
-        <el-table-column class="operation" label="操作" type="index" width="180" #default="scope">
-            <a href="#" @click.prevent="starclick">标星</a>&nbsp;
-            <a href="#" @click.prevent="dialogFormVisible = true">分享</a>&nbsp;
-            <a href="#" @click.prevent="datefile(scope.$index)" :plain="true">删除</a>
+        <el-table-column class="operation" label="操作" type="index" width="180">
+            <a href="#">标星</a>&nbsp;
+            <a href="#">分享</a>&nbsp;
+            <a href="#">删除</a>
         </el-table-column>
+    </el-table>
 
-        
-</el-table>
-<template v-else>
-    <el-row >
-    <el-col
-      v-for="(o, index) in 2"
-      :key="o"
-      :span="8"
-      :offset="index > 0 ? 2 : 0"
-    >
-      <el-card :body-style="{ padding: '0px'}" shadow="hover" >
-        <img
-          src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
-          class="image"
-        />
-        <div style="padding: 14px">
-          <span>Yummy hamburger</span>
-          <div class="bottom">
-            <time class="time">{{  }}</time>
-            <el-button text class="button">Operating</el-button>
-          </div>
-        </div>
-      </el-card>
-    </el-col>
-  </el-row>
-        </template>
-    <button @click="viewmodel =! viewmodel">测试</button>
 
-    <el-dialog v-model="dialogFormVisible" header="Shipping address" width="20%" :align-center="true">
-        <el-form :model="form">
-            <el-form-item label="Promotion name" :label-:width=formLabelWidth>
-                <el-input v-model="form.name" autocomplete="off" />
-            </el-form-item>
-            <el-form-item label="Zones" :label-:width=formLabelWidth>
-                <el-select v-model="form.region" placeholder="Please select a zone">
-                    <el-option label="Zone No.1" value="shanghai" />
-                    <el-option label="Zone No.2" value="beijing" />
-                </el-select>
-            </el-form-item>
-        </el-form>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button @click="dialogFormVisible = false">Cancel</el-button>
-                <el-button type="primary" @click="dialogFormVisible = false">
-                    Confirm
-                </el-button>
-            </span>
-        </template>
-    </el-dialog>
+    <el-row v-else>
+        <el-col v-for="(item) in documentsList" :key="item.id" :span="3"  style="margin:0px 20px 20px 0px;"  >
+            <el-card :body-style="{ padding: '0px' }" shadow="hover">
+                <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
+                    class="image" />
+                <div style="padding: 14px">
+                    <span>{{ item.name }}</span>
+                    <div class="bottom">
+                        <time class="time">{{ item.updated_at }}</time>
+                    </div>
+                </div>
+            </el-card>
+        </el-col>
+    </el-row>
+    <button @click="viewmodel = !viewmodel">测试</button>
 </template>
 
 <script setup lang="ts">
+import * as user_api from '@/apis/users'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { pushScopeId, reactive, ref, onMounted } from 'vue'
 import * as share_api from "@/apis/share"
 
 
-var stardata = [{}]
 
 const form = reactive({
     name: '',
@@ -80,25 +48,25 @@ const form = reactive({
     desc: '',
 })
 
-
 const dialogVisible = ref(false)
 const dialogFormVisible = ref(false)
 const formLabelWidth = '140px'
-const viewmodel = ref(true)
+const viewmodel = ref(true);
+const isLoading = ref(false);
 
-function datefile(index: number) {
-    const x = tableData.value
-    stardata = tableData.value.splice(index, 1)
-    if (x.length != stardata.length && x.length != 0) {
-        ElMessage({
-            message: '文件已成功移至回收站！',
-            type: 'success',
-        })
-    }
+// function datefile(index: number) {
+//     const x = tableData.value
+//     stardata = tableData.value.splice(index, 1)
+//     if (x.length != stardata.length && x.length != 0) {
+//         ElMessage({
+//             message: '文件已成功移至回收站！',
+//             type: 'success',
+//         })
+//     }
 
-    //需要判断文件是否已经从数据中移除
+//     //需要判断文件是否已经从数据中移除
 
-}
+// }
 
 function starclick() {
     //需要判断文件是否已经存在与标星数据中
@@ -108,6 +76,23 @@ function starclick() {
     })
 }
 
+let documentsList = ref<any[]>([]);
+
+async function getUserdata() {
+    // loading
+    isLoading.value = true;
+    documentsList.value = (await user_api.GetDocumentsList()).data;
+    for (let i = 0; i < documentsList.value.length; i++) {
+        const updated = documentsList.value[i].updated_at.slice(0, 19)
+        const size = Math.round(documentsList.value[i].size / 1024)
+        documentsList.value[i].size = size + " KB"
+        documentsList.value[i].updated_at = updated
+
+    }
+    // process();  
+    // unloading  
+    isLoading.value = false;
+}
 
 
 
@@ -121,40 +106,33 @@ const handleClose = (done: () => void) => {
         })
 }
 
+// const tableData = ref([
+//     {
+//         filename: '第一个文档',
+//         modtime: '2023-01-23',
+//         size: '1MB',
 
-const tableData = ref([
-    {
-        filename: '第一个文档',
-        modtime: '2023-01-23',
-        size: '1MB',
+//     },
+//     {
+//         filename: '第二个文档',
+//         modtime: '2023-01-23',
+//         size: '1MB',
 
-    },
-    {
-        filename: '第二个文档',
-        modtime: '2023-01-23',
-        size: '1MB',
+//     },
+//     {
+//         filename: '第三个文档',
+//         modtime: '2023-01-23',
+//         size: '1MB',
+//     },
+//     {
+//         filename: '第四个文档',
+//         modtime: '2023-01-23',
+//         size: '1MB',
+//     },
 
-    },
-    {
-        filename: '第三个文档',
-        modtime: '2023-01-23',
-        size: '1MB',
-    },
-    {
-        filename: '第四个文档',
-        modtime: '2023-01-23',
-        size: '1MB',
-    },
-
-])
-const getDoucmentList = async() => {
-  const result = await share_api.getDoucmentListAPI()
-    console.log(result,'result');
-}
-
+// ])
 onMounted(() => {
-// getDoucmentList()
-
+    getUserdata();
 })
 </script>
 <style lang="scss">
@@ -181,9 +159,32 @@ a {
 :deep(.el-table_1_column_4 .cell) {
     text-align: center;
 }
-:deep(.el-card .el-col .el-row
-){
+
+:deep(.el-card .el-col .el-row) {
     width: 250px;
     height: auto;
+}
+
+.time {
+    font-size: 12px;
+    color: #999;
+}
+
+.bottom {
+    margin-top: 13px;
+    line-height: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.button {
+    padding: 0;
+    min-height: auto;
+}
+
+.image {
+    width: 100%;
+    display: block;
 }
 </style>

@@ -6,7 +6,7 @@
   "author": "kcaisoft.com",
   "main": "background.js",
   "scripts": {
-    "dev:web": "vue-cli-service serve",
+    "dev:web": "vue-cli-service --public=protodesign.cn serve",
     "build:web": "vue-cli-service build",
     "install-electron-deps": "electron-builder install-app-deps",
     "dev:electron": "vue-cli-service electron:serve",

@@ -7,7 +7,6 @@ import { RouterView } from 'vue-router';
     <div class="title">
         <div>
             <span>最近打开</span>
-            
         </div>
         <div>
             <el-icon size="25">
@@ -25,12 +24,13 @@ import { RouterView } from 'vue-router';
 </template>
 
 <style lang="scss" scoped>
-.main .title{
+.main .title {
     width: calc(100vw - 381px);
     height: 100vh;
     overflow: scroll;
 
 }
+
 .title {
     display: flex;
     flex-direction: row;
@@ -51,6 +51,4 @@ import { RouterView } from 'vue-router';
         letter-spacing: 2px;
     }
 }
-
-
 </style>

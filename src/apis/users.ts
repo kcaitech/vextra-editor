@@ -2,43 +2,36 @@
 import httpRequest from '@/request/index'
 
 
-const data = JSON.stringify({
-    "nickname": "1"
- });
 
 // 登录请求
-export function PostLogin() {
+export function PostLogin(params = {}, ops = {}) {
     return httpRequest({
-        url: '/auth/login/wx',
+        url: 'auth/login/wx',
         method: 'post',
-        data:data,
-        headers: {
-            
-        },
-
+        data: params,
+        ...ops
     })
 
 }
 
 
 // 获取用户信息
-export function GetInfo() {
+export function GetInfo(params = {}, ops = {}) {
     return httpRequest({
-        url: '/users/info',
+        url: 'users/info',
         method: 'get',
-        headers: {
-
-        }
+        params: params,
+        ...ops
     })
 }
 
 //获取用户文档
-export function GetDocumentsList() {
+// 获取用户信息
+export function GetDocumentsList(params = {}, ops = {}) {
     return httpRequest({
-        url: '/documents',
+        url: '/documents/access_records',
         method: 'get',
-        headers: {
-
-        }
+        params:params,
+        ...ops
     })
 }
