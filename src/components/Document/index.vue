@@ -206,7 +206,7 @@ onUnmounted(() => {
     <ColSplitView ref="colSplitView" id="center"
         :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.1 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
@@ -345,6 +345,6 @@ onUnmounted(() => {
     min-height: 30px;
     align-self: flex-end;
     background-color: var(--theme-color);
-    z-index: 1;
+    z-index: 99;
 }
 </style>

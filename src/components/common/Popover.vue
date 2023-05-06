@@ -12,7 +12,8 @@ const props = defineProps<{
 }>();
 defineExpose({
   show,
-  focus
+  focus,
+  popoverClose
 })
 
 const popoverVisible = ref<boolean>(false);

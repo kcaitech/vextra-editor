@@ -69,9 +69,16 @@ const close = () => {
               <span>{{ item.user.nickname }}</span>
               <span>{{ formatDate(item.created_at) }}</span>
             </div>
+            <el-tooltip
+              class="box-item"
+              effect="light"
+              placement="bottom-end"
+            >
+            <template #content><div class="custom-tooltip">申请文档："{{item.document.name}}"权限：{{permission[item.perm_type]}}，【备注】{{item.remarks}}</div></template>
             <div class="item-text">
-              {{ '申请文档:' + '"' + item.document.name +'"权限：'+permission[item.perm_type] + ', 【备注】' + item.remarks }}
+              {{ '申请文档：' + '"' + item.document.name +'"权限：'+permission[item.perm_type] + '， 【备注】' + item.remarks }}
             </div>
+            </el-tooltip>
           </div>
           <div class="botton" v-if="item.approval_result === 0">
             <el-button color="#0d99ff" size="small" @click="consent(item.id, i)">同意</el-button>
@@ -118,6 +125,15 @@ const close = () => {
     color: black;
   }
 
+}
+.tooltip-base-box .box-item {
+  margin-top: 10px;
+  width: 180px;
+  background-color: #fff;
+}
+.custom-tooltip {
+  max-width: 200px; /* 设置最大宽度 */
+  word-wrap: break-word; /* 设置自动换行 */
 }
 
 .contain {

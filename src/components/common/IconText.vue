@@ -21,12 +21,32 @@ const scale = ref<Scale>({
     axleX: 0,
     degX: 0
 })
-const result = ref<number | string>(props.text)
 const isDrag = ref(false)
 const input = ref<HTMLInputElement>();
 
 function onChange(e: Event) {
-    const value = (e.currentTarget as any)['value']
+    let value = (e.currentTarget as any)['value']
+    if(props.svgicon !== 'angle') {
+        if(isNaN(Number(input.value!.value))){
+            return input.value!.value = String(props.text) 
+        }
+    }else if(props.svgicon === 'angle') {
+        if(input.value!.value.slice(-1) === '°' && isNaN(Number(input.value!.value.slice(0, -1)))){
+            return input.value!.value = String(props.text) 
+        }else if(isNaN(Number(input.value!.value))) {
+            return input.value!.value = String(props.text) 
+        }
+    }
+    if(Number(input.value!.value) < 1 && props.ticon === 'W') {
+        input.value!.value = '1' 
+    } else if(Number(input.value!.value) < 1 && props.ticon === 'H') {
+        input.value!.value = '1' 
+    }
+    if(value < 1 && props.ticon === 'W') {
+        value = 1
+    }else if(value < 1 && props.ticon === 'H') {
+        value = 1
+    }
     emit("onchange", value);
 }
 const onBlur = (e: MouseEvent) => {
@@ -64,10 +84,10 @@ const onMouseMove = (e: MouseEvent) => {
         curpt.x = e.screenX
     }
     //坐标移动的大小
-    scale.value.axleX = scale.value.axleX + Number((mx / 2).toFixed(2));
+    scale.value.axleX = Number((mx).toFixed(2))
     //角度移动的大小
-    scale.value.degX = scale.value.degX + Number((mx / 10).toFixed(2))
-    result.value = Number(parseFloat(props.text as string)) + scale.value.axleX
+    scale.value.degX = Number((mx / 5).toFixed(2))
+    
 }
 const onMouseUp = (e: MouseEvent) => {
     document.removeEventListener('mousemove', onMouseMove)
@@ -78,10 +98,26 @@ const onMouseUp = (e: MouseEvent) => {
 watch(scale, () => {
     //input的值加上鼠标移动后的大小等于最终改变的值
     if (props.ticon) {
-        emit("onchange", result.value.toString());
+        input.value!.value = String(Number(input.value!.value) + scale.value.axleX)
+        if(props.ticon === 'W' || props.ticon === 'H') {
+            if(Number(input.value!.value) <= 1) {
+                input.value!.value = '1'
+            }
+        }
+        emit("onchange",input.value!.value);
     } else {
-        const value = Number(parseFloat(props.text as string)) + scale.value.degX
-        emit("onchange", value.toString())
+        if(props.svgicon === 'angle') {
+            if(input.value!.value.slice(-1) && input.value!.value.slice(-1) === '°') {
+                input.value!.value = input.value!.value.slice(0, -1)     
+            }
+        }
+        input.value!.value = (Number(input.value!.value) + scale.value.degX).toFixed(2)
+        if(props.svgicon === 'radius') {
+            if(Number(input.value!.value) <= 0) {
+                input.value!.value = '0'
+            }
+        }
+        emit("onchange",Number(input.value!.value).toFixed(2))
     }
 }, { deep: true });
 </script>

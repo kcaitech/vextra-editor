@@ -42,8 +42,8 @@ function calcFrame() {
     x.value = xy.x;
     y.value = xy.y;
     const frame = props.shape.frame;
-    w.value = frame.width;
-    h.value = frame.height;
+    w.value = Math.max(frame.width, 1);
+    h.value = Math.max(frame.height, 1);
     rotate.value = Number(props.shape.rotation?.toFixed(2)) || 0;
     shapeType.value = props.shape.type;
     showBgFlipH.value = props.shape.isFlippedHorizontal;
@@ -117,22 +117,23 @@ function onChangeRotate(value: string) {
 }
 
 const onChangeRadian = (value: string, type: 'rrt' | 'rlt' | 'rrb' | 'rlb') => {
-    value = Number.parseFloat(value).toFixed(fix);
-    const newRadian: number = Number.parseFloat(value) < Math.min(w.value, h.value) ? Number.parseFloat(value) :Math.min(w.value, h.value)
-    if (!radius.value) return;
-    const newR = cloneDeep(radius.value);
-    newR[type] = newRadian > 0 ? newRadian : 0;
-    editor.value.setRadius(newR);
+    if(isMoreForRadius.value) {
+        value = Number.parseFloat(value).toFixed(fix);
+        const newRadian: number = Number.parseFloat(value) < Math.min(w.value, h.value) ? Number.parseFloat(value) :Math.min(w.value, h.value)
+        if (!radius.value) return;
+        const newR = cloneDeep(radius.value);
+        newR[type] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+        editor.value.setRadius(newR);
+    }else {
+        value = Number.parseFloat(value).toFixed(fix);
+        const newRadian: number = Number.parseFloat(value) < (Math.min(w.value, h.value) / 2) ? Number.parseFloat(value) :Math.min(w.value, h.value) / 2
+        if (!radius.value) return;
+        const newR = cloneDeep(radius.value);
+        newR[type] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+        editor.value.setRadius(newR);
+    }
 }
 
-const onChangeRadianRT = (value: string,  type: 'rrt') => {
-    value = Number.parseFloat(value).toFixed(fix);
-    const newRadian: number = Number.parseFloat(value) < Math.min(w.value, h.value) ? Number.parseFloat(value) :Math.min(w.value, h.value)
-    if (!radius.value) return;
-    const newR = cloneDeep(radius.value);
-    newR[type] = newRadian;
-    editor.value.setRadius(newR);
-}
 function adapt() {
     editor.value.adapt();
 }
@@ -197,7 +198,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="tr">
-            <IconText class="td angle" svgicon="angle" :text="`${rotate}°`" @onchange="onChangeRotate"
+            <IconText class="td angle" svgicon="angle" :text="`${rotate}`+'°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
             <div class="flip ml-24" @click="fliph" :class="{ bgColor: showBgFlipH }">
                 <svg-icon icon-class="fliph"></svg-icon>
@@ -211,7 +212,7 @@ onUnmounted(() => {
                 @onchange="e => onChangeRadian(e, 'rlt')" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rrt || 0" :frame="{ width: 12, height: 12, rotate: 90 }"
-                 @onchange="e => onChangeRadianRT(e, 'rrt')" />
+                 @onchange="e => onChangeRadian(e, 'rrt')" />
             <div class="more-for-radius" @click="radiusToggle" v-if="showRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
