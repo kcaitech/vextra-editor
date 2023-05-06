@@ -129,7 +129,10 @@ const onChangeRadian = (value: string, type: 'rrt' | 'rlt' | 'rrb' | 'rlb') => {
         const newRadian: number = Number.parseFloat(value) < (Math.min(w.value, h.value) / 2) ? Number.parseFloat(value) :Math.min(w.value, h.value) / 2
         if (!radius.value) return;
         const newR = cloneDeep(radius.value);
-        newR[type] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+        newR['rrt'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+        newR['rlt'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+        newR['rrb'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+        // newR['rlb'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
         editor.value.setRadius(newR);
     }
 }
