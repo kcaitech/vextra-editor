@@ -221,7 +221,7 @@ function createShapeTracing() { // 描边
         tracingY = minY;
         tracingWidth = maxX - minX;
         tracingHeight = maxY - minY;
-        tracingViewBox = `${minX} ${minY} ${tracingWidth} ${tracingHeight}`;
+        tracingViewBox = `0 0 ${tracingWidth} ${tracingHeight}`;
         tracingPath = path.toString();
     }
 }
