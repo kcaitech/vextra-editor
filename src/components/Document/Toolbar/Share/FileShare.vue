@@ -17,7 +17,7 @@ enum permissions {
   reviewable,
   editable
 }
-const url = `http://localhost:8080/#/apply?id=${props.docInfo.document.id}`
+const url = location.href
 const docID = '1672502400000'
 const value1 = ref(true)
 const selectValue = ref('需申请确认')
@@ -129,18 +129,29 @@ watchEffect(() => {
 })
 userInfo.value = ((window as any).skuser as User);
 getShareList()
-const copyLink = () => {
-  navigator.clipboard.writeText(url).then(() => {
-    ElMessage({
-    message: '复制成功',
-    type: 'success',
-  })
-  },() => {
-      ElMessage({
-        message: '复制失败',
-        type: 'success',
-      })
-  })
+const copyLink = async() => {
+  if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(url).then(() => {
+        ElMessage({
+          message: '复制成功',
+          type: 'success',
+        })
+        },() => {
+            ElMessage({
+              message: '复制失败',
+              type: 'success',
+            })
+        })
+  }else {
+        const textArea = document.createElement('textarea')
+        textArea.value = url
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        textArea.remove()
+      }
+ 
 }
 
 onMounted(() => {
@@ -191,7 +202,7 @@ onUnmounted(() => {
       <!-- 分享人 -->
       <div>
         <span>已加入分享的人 (分享限制人数5) :</span>
-        <el-scrollbar height="250px" class="shared-by">
+        <el-scrollbar height="285px" class="shared-by">
           <div class="scrollbar-demo-item">
             <div class="item-left">
               <div class="avatar"><img :src="userInfo?.userInfo.avatar"></div>

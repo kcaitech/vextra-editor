@@ -177,16 +177,23 @@ const getDocumentAuthority = async () => {
 getDocumentAuthority()
 
 let timer: any = null
-onMounted(() => {    
-    context.value.selection.watch(selectionWatcher);
-    switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
-    if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
-        document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+onMounted(() => {
+    if(((window as any).sketchDocument as Document)) {
+        context.value.selection.watch(selectionWatcher);
+        switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+        if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
+            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        }
+        document.addEventListener('keydown', keyboardEventHandler);
+        timer = setInterval(() => {
+        getDocumentAuthority()
+        }, 60000) 
+        return
     }
-    document.addEventListener('keydown', keyboardEventHandler);
-    timer = setInterval(() => {
-    getDocumentAuthority()
-    }, 60000) 
+    
+    // if(!route.query.id) {
+
+    // }
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);

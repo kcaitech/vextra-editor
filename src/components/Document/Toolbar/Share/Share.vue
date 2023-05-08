@@ -38,7 +38,6 @@ getDocumentInfo()
 <style scoped lang="scss">
 .container {
   position: relative;
-
   .share {
     cursor: pointer;
     width: 28px;

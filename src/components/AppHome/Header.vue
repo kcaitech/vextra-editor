@@ -149,11 +149,12 @@ onMounted(() => {
     }
 
     .right {
-        display: flex;
         position: relative;
+        display: flex;
         flex-direction: row;
         align-items: center;
         .notice {
+            position: relative;
             width: 20px;
             height: 20px;
             margin-right: 10px;
@@ -164,8 +165,8 @@ onMounted(() => {
             >.num {
                 position: absolute;
                 font-size: var(--font-default-fontsize);
-                top: 0;
-                left: 8px;
+                top: -10px;
+                left: 10px;
                 min-width: 8px;
                 padding: 0 4px 0 4px;
                 height: 14px;

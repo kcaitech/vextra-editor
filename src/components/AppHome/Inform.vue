@@ -216,6 +216,6 @@ const close = () => {
   width: 300px;
   z-index: 9;
   position: absolute;
-  top: 40px;
+  top: 50px;
   right: 90px;
 }</style>

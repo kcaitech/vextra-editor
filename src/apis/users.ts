@@ -29,7 +29,7 @@ export function GetInfo(params = {}, ops = {}) {
 // 获取用户信息
 export function GetDocumentsList(params = {}, ops = {}) {
     return httpRequest({
-        url: '/documents/access_records',
+        url: 'documents/access_records',
         method: 'get',
         params:params,
         ...ops
