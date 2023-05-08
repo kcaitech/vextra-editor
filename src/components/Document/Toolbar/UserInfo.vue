@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import ToolButton from './ToolButton.vue';
 import UserAvatar from './UserAvatar.vue';
-import Share from './Share/index.vue';
+import Share from './Share/Share.vue';
 import Scale from './Scale.vue';
 import { defineProps } from 'vue';
 import { Context } from '@/context';

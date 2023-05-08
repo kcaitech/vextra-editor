@@ -214,12 +214,16 @@ function shapeScrollToContentView(shape: Shape) {
 }
 
 const MouseDown = (e: MouseEvent) => {
+    const workspace = props.context.workspace
+    workspace.menuMount(false);
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
+        const workspace = props.context.workspace
+        workspace.menuMount(false);
         e.stopPropagation();
-        const menu = contextMenuEl.value?.menu?.className;
-        if (e.target instanceof Element && e.target.closest(`.${menu}`)) return;
+        if (e.target instanceof Element && e.target.closest(`.Menu`)) return;
         chartMenuMount(e);
+        e.stopPropagation()
     }
 }
 
@@ -294,7 +298,7 @@ onUnmounted(() => {
                 @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
                 @isLock="isLock" @onMouseDown="MouseDown" orientation="vertical" @after-drag="afterDrag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount" :context="props.context"
                 ref="contextMenuEl">
                 <PageViewContextMenuItems :items="chartMenuItems" :context="props.context">
                 </PageViewContextMenuItems>

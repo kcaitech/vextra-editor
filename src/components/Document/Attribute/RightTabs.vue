@@ -51,7 +51,7 @@ function toggle(id: Tab) {
 
 <template>
     <div class="tab-container">
-        <div class="tab-controller">
+        <div class="controller">
             <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
                 @click="toggle(i.id)">{{ i.title }}</div>
         </div>
@@ -69,7 +69,7 @@ function toggle(id: Tab) {
     width: 100%;
     box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
-    .tab-controller {
+    .controller {
         height: 36px;
         width: 100%;
         flex: 0 0 auto;

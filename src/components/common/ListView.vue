@@ -29,6 +29,7 @@ const props = defineProps<{
     location?: string,
     allowDrag?: boolean,
     shapeHeight?: number,
+    pageHeight?:number,
     draging: "shapeList" | "pageList"
 }>();
 
@@ -525,25 +526,30 @@ function mouseMove(Event: MouseEvent) {
         if (props.shapeHeight && props.draging === 'shapeList') {
             listTop.value = document.documentElement.offsetHeight - props.shapeHeight
             scrollHeight.value = Math.abs(scroll.y) + props.shapeHeight - container.value!.offsetTop
+            listBottom.value = document.documentElement.offsetHeight - clientY
+        }else if(props.pageHeight && props.draging === 'pageList') {
+            const top = container.value?.getBoundingClientRect()
+            listTop.value = top?.top! - 45
+            listBottom.value = clientY - (props.pageHeight + top?.top! - 45)
+            scrollHeight.value = Math.abs(scroll.y) + props.pageHeight
         }
-        listBottom.value = document.documentElement.offsetHeight - clientY
-        if (scroll.y < 0 && clientY - listTop.value < 60 && clientY - listTop.value > 20) {
-            timer = setInterval(() => {
-                scroll.y = scroll.y + 1
-                substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
-                clampScroll(0, scroll.y)
-                layoutUp[props.orientation]();
-                if (scroll.y === 0) clearInterval(timer)
-            }, 10)
-        } else if (scroll.y <= 0 && listBottom.value < 60 && listBottom.value > 20 && props.source.length() * props.itemHeight > scrollHeight.value) {
-            timer = setInterval(() => {
-                scroll.y = scroll.y - 1
-                substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
-                clampScroll(0, scroll.y)
-                layoutUp[props.orientation]();
-                if (scroll.y === 0) clearInterval(timer)
-            }, 10)
-        }
+            if(scroll.y < 0 && clientY - listTop.value < 60 && clientY - listTop.value > 20) {
+                timer = setInterval(() => {
+                    scroll.y = scroll.y + 1   
+                    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
+                    clampScroll(0, scroll.y)
+                    layoutUp[props.orientation]();
+                    if(scroll.y === 0) clearInterval(timer)
+                }, 10)
+            }else if(scroll.y <= 0 && listBottom.value < 60 && listBottom.value > 20 && props.source.length() * props.itemHeight > scrollHeight.value) {
+                timer = setInterval(() => {
+                    scroll.y = scroll.y - 1   
+                    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
+                    clampScroll(0, scroll.y)
+                    layoutUp[props.orientation]();
+                    if(scroll.y === 0) clearInterval(timer)
+                }, 10)
+            }
         const text = (currentHoverTarget.value as Element).closest('.contain')?.children
         const shapew = text && text[3].clientWidth
         if (shapew && props.draging === 'shapeList') {

@@ -354,6 +354,8 @@ function getShapesByXY() { // 判断一个点在多少个图形上面
 }
 
 function contextMenuMount(e: MouseEvent) {
+    const workspace = props.context.workspace
+    workspace.menuMount(false);
     site.x = e.clientX
     site.y = e.clientY
     const { x, y } = offset2Root();
@@ -463,6 +465,7 @@ function onMouseDown(e: MouseEvent) {
         isMouseLeftDown = true;
     } else if (e.button === MOUSE_RIGHT) { // 右键按下
         contextMenuMount(e);
+        e.stopPropagation()
     }
 }
 function onMouseMove(e: MouseEvent) {
@@ -570,8 +573,8 @@ renderinit().then(() => {
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseleave="onMouseLeave">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :is-controller="selectionIsCtrl" :context="props.context" :matrix="matrix.toArray()" />
-        <ContextMenu v-if="contextMenu" :width="216" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
-            @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
+        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
+            :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
