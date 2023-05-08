@@ -7,9 +7,12 @@ import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import '@/style/constant.scss';
 import '@/style/app.scss';
+import { router } from "./router" ;
+
 
 const app = createApp(App)
 app.use(i18n);
 app.component('svg-icon', SvgIcon);
 app.use(ElementPlus)
+app.use(router);
 app.mount("#app");

@@ -8,7 +8,10 @@ import { translate, adjustLT2, adjustRB2, translateTo } from "@kcdesign/data/edi
 import { Point } from "../SelectionView.vue";
 import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { createLine, getAxle } from "@/utils/common";
-import CtrlPoint from "./Points/CtrlPointForStraightLine.vue"
+import CtrlPoint from "./Points/CtrlPointForStraightLine.vue";
+import { keyboardHandle as handle } from "@/utils/controllerFn";
+import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/contentFn";
+
 interface Props {
     context: Context,
     isController: boolean
@@ -25,6 +28,7 @@ let startPosition: XY = { x: 0, y: 0 };
 let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 let lineStyle: string;
+let wheel: Wheel | undefined = undefined;
 
 const axle = computed<XY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -35,7 +39,8 @@ function updater() {
     getLine(props.controllerFrame);
 }
 function getShapesByXY() {
-    const shapes = props.context.selection.getShapesByXY(startPosition);
+    const startPositionOnPage = workspace.value.matrix.inverseCoord(startPosition.x, startPosition.y);
+    const shapes = props.context.selection.getShapesByXY(startPositionOnPage);
     if (shapes.length) {
         props.context.selection.selectShape(shapes.at(-1));
     } else {
@@ -45,6 +50,7 @@ function getShapesByXY() {
 
 function mousedown(e: MouseEvent) {
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        wheel = fourWayWheel(props.context, { rolling: forCtrlRect });
         const action = workspace.value.action;
         if (action === Action.AutoV && props.isController) {
             e.stopPropagation(); // props.isController 当控制权在selection时，不要冒泡出去, 否则父节点也会被控制
@@ -62,6 +68,9 @@ function mousedown(e: MouseEvent) {
 function mousemove(e: MouseEvent) {
     if (e.button === 0) { //只处理鼠标左键按下时的移动
         const { clientX, clientY } = e;
+        if (wheel) {
+            wheel.moving(e);
+        }
         const mousePosition = { x: clientX - root.x, y: clientY - root.y };
         if (isDragging) {
             workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
@@ -93,6 +102,7 @@ function transform(shapes: Shape[], start: XY, end: XY) {
 }
 function mouseup(e: MouseEvent) {
     if (e.button === 0) { // 只处理鼠标左键按下时的抬起
+        if (wheel) wheel = wheel.remove();
         if (isDragging) {
             props.context.repo.commit({}); // 如果触发了拖拽状态,必定开启了事务 ---end transaction---
         } else {
@@ -124,22 +134,7 @@ function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'r
     }
 }
 function keyboardHandle(e: KeyboardEvent) {
-    if (!shapes.length) return;
-    const step = e.shiftKey ? 10 : 1;
-    let dx: number = 0, dy: number = 0;
-    if (e.code === 'ArrowRight') {
-        dx = step, dy = 0;
-    } else if (e.code === 'ArrowLeft') {
-        dx = -step, dy = 0;
-    } else if (e.code === 'ArrowUp') {
-        dx = 0, dy = -step;
-    } else if (e.code === 'ArrowDown') {
-        dx = 0, dy = step;
-    }
-    for (let i = 0; i < shapes.length; i++) {
-        const editor = props.context.editor4Shape(shapes[i]);
-        editor.translate(dx, dy)
-    }
+    handle(e, props.context);
 }
 // 自身不带事务的图形移动, 只能在事务开启之后调用
 function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
@@ -160,6 +155,7 @@ function windowBlur() {
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
     }
+    if (wheel) wheel = wheel.remove();
 }
 onMounted(() => {
     props.context.selection.watch(updater);

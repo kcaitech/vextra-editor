@@ -92,7 +92,7 @@ onUpdated(()=> {
 
 <style scoped lang="scss">
 .svg-container {
-  width: 32px;
+  width: 30px;
   height: 32px;
   display: flex;
   justify-content: center;
@@ -107,13 +107,14 @@ onUpdated(()=> {
   width: 10px;
   height: 32px;
   display: flex;
+  padding-right: 2px;
   justify-content: center;
   align-items: center;
   color: #ffffff;
   transition: 0.3s;
   > svg {
-    width: 100%;
-    height: 80%;
+    width: 80%;
+    height: 60%;
   }
 }
 .menu:hover {

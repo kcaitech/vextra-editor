@@ -12,6 +12,11 @@ export interface Point {
     y: number,
     type: CtrlElementType
 }
+export interface Bar {
+    width: number,
+    height: number,
+    type: CtrlElementType
+}
 const reflush = ref(0);
 const watcher = () => {
     reflush.value++;
@@ -43,6 +48,11 @@ const tracing = ref<XY[]>([]);
 const rotate = ref<number>(0);
 let tracingStyle: string;
 let tracingPath: string;
+let tracingViewBox: string;
+let tracingHeight: number;
+let tracingWidth: number;
+let tracingX: number;
+let tracingY: number;
 function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
     const data = shapeData ? shapeData : {
         id: "",
@@ -201,7 +211,18 @@ function createShapeTracing() { // 描边
         });
         const [p0, p1, p2, p3] = tracing.value;
         tracingStyle = createRect(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-        tracingPath = hoveredShape.getPath(true).toString();
+        const path = hoveredShape.getPath(true);
+        const m2page = hoveredShape.matrix2Page();
+        path.transform(m2page);
+        path.transform(matrix);
+        const bounds = path.bounds;
+        const { minX, maxX, minY, maxY } = bounds;
+        tracingX = minX;
+        tracingY = minY;
+        tracingWidth = maxX - minX;
+        tracingHeight = maxY - minY;
+        tracingViewBox = `${minX} ${minY} ${tracingWidth} ${tracingHeight}`;
+        tracingPath = path.toString();
     }
 }
 // hooks
@@ -220,8 +241,9 @@ watchEffect(updater)
     <!-- 描边 -->
     <svg v-if="tracing.length" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :style="tracingStyle" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 2;"></path>
+        :width="tracingWidth" :height="tracingHeight" :viewBox="tracingViewBox"
+        :style="`transform: translate(${tracingX}px, ${tracingY}px)`" :reflush="reflush !== 0 ? reflush : undefined">
+        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;"></path>
     </svg>
     <!-- 控制 -->
     <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"

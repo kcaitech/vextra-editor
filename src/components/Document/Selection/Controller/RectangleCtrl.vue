@@ -5,10 +5,13 @@ import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
 import { XY } from "@/context/selection";
 import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
+import CtrlBar from "./Bars/CtrlBar.vue";
 import CtrlPoint from "./Points/CtrlPoint.vue";
-import { Point } from "../SelectionView.vue";
+import { Point, Bar } from "../SelectionView.vue";
 import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
+import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/contentFn";
+import { keyboardHandle as handle } from "@/utils/controllerFn"
 interface Props {
     context: Context,
     isController: boolean
@@ -26,26 +29,36 @@ const props = defineProps<Props>();
 const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
-const borderWidth = 2;
-const offset = 17;
+const offset = 16;
 let isDragging = false;
 let startPosition: XY = { x: 0, y: 0 };
 let root: XY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 let rectStyle: string;
+let wheel: Wheel | undefined = undefined;
 const points = computed<Point[]>(() => {
     const [lt, rt, rb] = props.controllerFrame;
     const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y);
     const p1: Point = { x: 0, y: 0, type: CtrlElementType.RectLT };
-    const p2: Point = { x: width - borderWidth, y: 0, type: CtrlElementType.RectRT };
-    const p3: Point = { x: width - borderWidth, y: height - borderWidth, type: CtrlElementType.RectRB };
-    const p4: Point = { x: 0, y: height - borderWidth, type: CtrlElementType.RectLB };
+    const p2: Point = { x: width, y: 0, type: CtrlElementType.RectRT };
+    const p3: Point = { x: width, y: height, type: CtrlElementType.RectRB };
+    const p4: Point = { x: 0, y: height, type: CtrlElementType.RectLB };
     const ps: Point[] = [p1, p2, p4, p3];
     ps.forEach(p => {
         p.x -= offset;
         p.y -= offset;
     })
     return ps;
+});
+const bars = computed<Bar[]>(() => {
+    const [lt, rt, rb] = props.controllerFrame;
+    const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y);
+    const b1: Bar = { width, height, type: CtrlElementType.RectTop };
+    const b2: Bar = { width, height, type: CtrlElementType.RectRight };
+    const b3: Bar = { width, height, type: CtrlElementType.RectBottom };
+    const b4: Bar = { width, height, type: CtrlElementType.RectLeft };
+    const bs: Bar[] = [b1, b2, b3, b4];
+    return bs;
 });
 const axle = computed<XY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -76,7 +89,8 @@ function updater() {
     getRect(props.controllerFrame);
 }
 function getShapesByXY() {
-    const shapes = props.context.selection.getShapesByXY(startPosition);
+    const startPositionOnPage = workspace.value.matrix.inverseCoord(startPosition.x, startPosition.y);
+    const shapes = props.context.selection.getShapesByXY(startPositionOnPage);
     if (shapes.length) {
         props.context.selection.selectShape(shapes.at(-1));
     } else {
@@ -86,6 +100,7 @@ function getShapesByXY() {
 
 function mousedown(e: MouseEvent) {
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        wheel = fourWayWheel(props.context, { rolling: forCtrlRect });
         const action = workspace.value.action;
         if (action === Action.AutoV && props.isController) {
             e.stopPropagation(); // props.isController 当控制权在selection时，不要冒泡出去, 否则父节点也会被控制
@@ -103,6 +118,9 @@ function mousedown(e: MouseEvent) {
 function mousemove(e: MouseEvent) {
     if (e.button === 0) { //只处理鼠标左键按下时的移动
         const { clientX, clientY } = e;
+        if (wheel) {
+            wheel.moving(e);
+        }
         const mousePosition = { x: clientX - root.x, y: clientY - root.y };
         if (isDragging) {
             workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
@@ -143,19 +161,21 @@ function mouseup(e: MouseEvent) {
         workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
+        if (wheel) wheel = wheel.remove();
     }
 }
-function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale') {
+function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg?: number, aType?: 'rotate' | 'scale') {
     shapes = props.context.selection.selectedShapes;
     matrix.reset(workspace.value.matrix);
     for (let i = 0; i < shapes.length; i++) {
         let item = shapes[i];
         if (item.isLocked) continue; // 🔒住不让动
         if (aType === 'rotate') {
-            const newDeg = (item.rotation || 0) + deg;
+            const newDeg = (item.rotation || 0) + (deg || 0);
             item.rotate(newDeg);
         } else {
-            const p2Onpage = matrix.inverseCoord(p2.x, p2.y); // page
+            const p1OnPage = matrix.inverseCoord(p1.x, p1.y); // page
+            const p2Onpage = matrix.inverseCoord(p2.x, p2.y);
             if (type === CtrlElementType.RectLT) {
                 adjustLT2(item, p2Onpage.x, p2Onpage.y);
             } else if (type === CtrlElementType.RectRT) {
@@ -164,6 +184,34 @@ function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'r
                 adjustRB2(item, p2Onpage.x, p2Onpage.y);
             } else if (type === CtrlElementType.RectLB) {
                 adjustLB2(item, p2Onpage.x, p2Onpage.y);
+            } else if (type === CtrlElementType.RectTop) {
+                const m = item.matrix2Page();
+                const p1 = m.inverseCoord(p1OnPage.x, p1OnPage.y);
+                const p2 = m.inverseCoord(p2Onpage.x, p2Onpage.y);
+                const dy = p2.y - p1.y;
+                const { x, y } = m.computeCoord(0, dy);
+                adjustLT2(item, x, y);
+            } else if (type === CtrlElementType.RectRight) {
+                const m = item.matrix2Page();
+                const p1 = m.inverseCoord(p1OnPage.x, p1OnPage.y);
+                const p2 = m.inverseCoord(p2Onpage.x, p2Onpage.y);
+                const dx = p2.x - p1.x;
+                const { x, y } = m.computeCoord(item.frame.width + dx, 0);
+                adjustRT2(item, x, y);
+            } else if (type === CtrlElementType.RectBottom) {
+                const m = item.matrix2Page();
+                const p1 = m.inverseCoord(p1OnPage.x, p1OnPage.y);
+                const p2 = m.inverseCoord(p2Onpage.x, p2Onpage.y);
+                const dy = p2.y - p1.y;
+                const { x, y } = m.computeCoord(item.frame.width, item.frame.height + dy);
+                adjustRB2(item, x, y);
+            } else if (type === CtrlElementType.RectLeft) {
+                const m = item.matrix2Page();
+                const p1 = m.inverseCoord(p1OnPage.x, p1OnPage.y);
+                const p2 = m.inverseCoord(p2Onpage.x, p2Onpage.y);
+                const dx = p2.x - p1.x;
+                const { x, y } = m.computeCoord(dx, item.frame.height);
+                adjustLB2(item, x, y);
             }
         }
     }
@@ -177,24 +225,7 @@ function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
     translateTo(shape, x, y);
 }
 function keyboardHandle(e: KeyboardEvent) {
-    if (!shapes.length) return;
-    const step = e.shiftKey ? 10 : 1;
-    let dx: number = 0, dy: number = 0, transform: boolean = false;
-    if (e.code === 'ArrowRight') {
-        dx = step, dy = 0, transform = true;
-    } else if (e.code === 'ArrowLeft') {
-        dx = -step, dy = 0, transform = true;
-    } else if (e.code === 'ArrowUp') {
-        dx = 0, dy = -step, transform = true;
-    } else if (e.code === 'ArrowDown') {
-        dx = 0, dy = step, transform = true;
-    }
-    if (transform) {
-        for (let i = 0; i < shapes.length; i++) {
-            const editor = props.context.editor4Shape(shapes[i]);
-            editor.translate(dx, dy)
-        }
-    }
+    handle(e, props.context);
 }
 function getRect(points: Point[]) {
     rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
@@ -207,6 +238,7 @@ function windowBlur() {
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
     }
+    if (wheel) wheel = wheel.remove();
 }
 onMounted(() => {
     props.context.selection.watch(updater);
@@ -226,6 +258,8 @@ watchEffect(updater)
 </script>
 <template>
     <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
+        <CtrlBar v-for="(bar, index) in  bars" :key="index" :context="props.context" :width="bar.width" :height="bar.height"
+            :ctrl-type="bar.type" :rotate="props.rotate" @transform="handlePointAction"></CtrlBar>
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
             :rotate="props.rotate" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <!-- <div class="frame" :style="{
@@ -243,7 +277,6 @@ watchEffect(updater)
     position: absolute;
     box-sizing: border-box;
     background-color: transparent;
-    border: 2px solid #2561D9;
     opacity: 1;
 
     >.frame {

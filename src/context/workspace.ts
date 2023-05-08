@@ -29,10 +29,10 @@ export enum KeyboardKeys { // 键盘按键类型
     Digit0 = 'Digit0'
 }
 export enum CtrlElementType { // 控制元素类型
-    RectL = 'rect-left',
-    RectR = 'rect-top',
-    RectB = 'rect-bottom',
-    RectT = 'rect-top',
+    RectLeft = 'rect-left',
+    RectRight = 'rect-right',
+    RectBottom = 'rect-bottom',
+    RectTop = 'rect-top',
     RectLT = 'rect-left-top',
     RectRT = 'rect-right-top',
     RectRB = 'rect-right-bottom',
@@ -62,6 +62,8 @@ export class WorkSpace extends Watchable(Object) {
     static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
+    static SHUTDOWN_MENU = 6;
+    static SHUTDOWN_POPOVER = 7;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -72,6 +74,8 @@ export class WorkSpace extends Watchable(Object) {
     private m_translating: boolean = false; // 编辑器是否正在移动图形
     private m_creating: boolean = false; // 编辑器是否正在创建图形
     private m_selecting: boolean = false; // 编辑器是否正在选择图形
+    private m_menu_mount: boolean = false;
+    private m_popover: boolean = false;
     private m_rootId: string = 'content';
     private m_pageViewId: string = 'pageview';
     constructor(context: Context) {
@@ -84,7 +88,7 @@ export class WorkSpace extends Watchable(Object) {
         content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
         if (content) {
             const { x, y, bottom, right } = content.getBoundingClientRect();
-            root.center = { x: (x + right) / 2, y: (y + bottom) / 2 };
+            root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
             root.x = x;
             root.y = y;
             root.bottom = bottom;
@@ -116,6 +120,24 @@ export class WorkSpace extends Watchable(Object) {
     }
     get select() {
         return this.m_selecting;
+    }
+    get isMenuMount() {
+        return this.m_menu_mount;
+    }
+    get ispopover() {
+        return this.m_popover;
+    }
+    menuMount(mount: boolean) {
+        this.m_menu_mount = mount;
+        if (!mount) {
+            this.notify(WorkSpace.SHUTDOWN_MENU);
+        }
+    }
+    popoverVisible(visible: boolean) {
+        this.m_popover = visible;
+        if (!visible) {
+            this.notify(WorkSpace.SHUTDOWN_POPOVER);
+        }
     }
     setRootId(id: string) {
         this.m_rootId = id;
@@ -264,6 +286,10 @@ export class WorkSpace extends Watchable(Object) {
                 name = `rotate-${135 + deg}`;
             } else if (type === CtrlElementType.LineEndR) {
                 name = `rotate-${315 + deg}`;
+            } else if (type === CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
+                name = `scale-${90 + deg}`
+            } else if (type === CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
+                name = `scale-${0 + deg}`
             }
             this.notify(WorkSpace.CURSOR_CHANGE, name);
         }

@@ -123,7 +123,7 @@ function closeLayerSubMenu(e: MouseEvent) {
       @mouseleave="(e: MouseEvent) => closeLayerSubMenu(e)">
       <span>{{ t('system.select_layer') }}</span>
       <div class="triangle"></div>
-      <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site">
+      <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site" :context="props.context">
         <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
       </ContextMenu>
     </div>

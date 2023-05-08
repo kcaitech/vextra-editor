@@ -33,9 +33,9 @@ function onMouseDown(e: MouseEvent) {
             emit("switchpage", props.data.id);
             document.removeEventListener('mouseup', onMouseUp)
         });
-    } else if (e.button === MOUSE_RIGHT) {
-        emit('onMouseDown', props.data.id, e)
-    }
+    } 
+    emit('onMouseDown', props.data.id, e)
+    
 }
 
 const onRename = () => {    

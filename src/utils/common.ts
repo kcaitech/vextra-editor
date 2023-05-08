@@ -1,8 +1,6 @@
-import { CtrlElementType } from '@/context/workspace';
-import scaleBase64 from "@/assets/cursor/scale.png";
-import rotateBase64 from '@/assets/cursor/rotate.png';
 import { XY } from '@/context/selection';
 
+// 获取Select的options
 export function genOptions(items: string[][]) {
   return items.map((item: string[], index: number) => {
     return {
@@ -15,86 +13,13 @@ export function genOptions(items: string[][]) {
   })
 }
 
+// 获取两条直线的夹角
 export function getAngle(line1: [number, number, number, number], line2: [number, number, number, number]): number {
   const slope1 = Math.abs((line1[3] - line1[1]) / (line1[2] - line1[0])) === Infinity ? 0 : (line1[3] - line1[1]) / (line1[2] - line1[0]);
   const slope2 = Math.abs((line2[3] - line2[1]) / (line2[2] - line2[0])) === Infinity ? 0 : (line2[3] - line2[1]) / (line2[2] - line2[0]);
   const angleRad = Math.atan((slope2 - slope1) / (1 + slope1 * slope2));
   return angleRad * (180 / Math.PI);
 }
-
-export function rotateBase64Image(base64Image: any, angle: number) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.src = base64Image;
-
-    image.onload = function () {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      const radians = angle * Math.PI / 180;
-      const cos = Math.abs(Math.cos(radians));
-      const sin = Math.abs(Math.sin(radians));
-      const width = image.width * cos + image.height * sin;
-      const height = image.width * sin + image.height * cos;
-
-      canvas.width = width;
-      canvas.height = height;
-      context?.translate(width / 2, height / 2);
-      context?.rotate(radians);
-      context?.drawImage(image, -image.width / 2, -image.height / 2);
-
-      const rotatedBase64Image = canvas.toDataURL('image/png');
-      resolve(rotatedBase64Image);
-    };
-    image.onerror = function () {
-      reject('Invalid base64 image');
-    }
-  });
-}
-
-export async function cursorHandle(ct: CtrlElementType, rotate: number) {
-  let cursor: string = 'auto';
-  let img: any;
-  let deg: number = 0;
-  rotate = Math.round(rotate % 360);
-  const hot: { x: number, y: number } = { x: 20, y: 20 };
-  if ([CtrlElementType.RectRB, CtrlElementType.RectLT].includes(ct)) {
-    img = scaleBase64;
-    deg = 45;
-  } else if ([CtrlElementType.RectRT, CtrlElementType.RectLB].includes(ct)) {
-    img = scaleBase64;
-    deg = 135;
-    hot.x = 32;
-    hot.y = 20;
-  } else if (ct === CtrlElementType.RectLBR) {
-    img = rotateBase64;
-    deg = 270;
-    hot.x = 18;
-    hot.y = 12;
-  } else if (ct === CtrlElementType.RectLTR) {
-    img = rotateBase64;
-    deg = 0;
-  } else if (ct === CtrlElementType.RectRBR) {
-    img = rotateBase64;
-    deg = 180;
-  } else if (ct === CtrlElementType.RectRTR) {
-    img = rotateBase64;
-    deg = 90;
-  }
-  if (!img) return cursor;
-  await rotateBase64Image(img, deg + rotate).then(cr => {
-    if (cr) {
-      cursor = getString(cr, 1.5, hot);
-    }
-  }, () => { })
-
-  return cursor
-
-  function getString(url: any, times: number, hotPosition: { x: number, y: number }) {
-    const { x, y } = hotPosition;
-    return `-webkit-image-set(url(${url})${times}x) ${x} ${y}, auto`
-  }
-}
-
 // 根据四个点生成一个矩形
 // p1 p2
 // p4 p3
@@ -147,6 +72,7 @@ export function createLine(x1: number, y1: number, x2: number, y2: number, x3: n
     `height: ${lineThick}px; ` +
     transform;
 }
+
 // 根据矩形的四个点获取其中心轴
 // p1 p2
 // p4 p3
@@ -157,6 +83,7 @@ export function getAxle(x1: number, y1: number, x2: number, y2: number, x3: numb
   const bottom = Math.max(y1, y2, y3, y4);
   return { x: (left + right) / 2, y: (top + bottom) / 2 };
 }
+
 // 根据矩形的三个点，获取矩形宽高
 // p1 p2
 // p4 p3
@@ -166,6 +93,7 @@ export function getRectWH(x1: number, y1: number, x2: number, y2: number, x3: nu
   return { width, height }
 }
 
+// 获取直线的水平夹角
 export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, y: number }) {
   const deltaX = B.x - A.x;
   const deltaY = B.y - A.y;
@@ -174,7 +102,7 @@ export function getHorizontalAngle(A: { x: number, y: number }, B: { x: number, 
   return angle;
 }
 
-// 根据若干个点，确定最边界的四个点
+// 根据若干个点[x, y]，确定最边界的四个点
 export function createHorizontalBox(points: [number, number][]) {
   const xs: number[] = [];
   const ys: number[] = [];
@@ -188,7 +116,8 @@ export function createHorizontalBox(points: [number, number][]) {
   const right = Math.max(...xs);
   return { top, bottom, left, right };
 }
-// 根据若干个点，确定最边界的四个点
+
+// 根据若干个点{x, y}，确定最边界的四个点
 export function XYsBounding(points: XY[]) {
   const xs: number[] = [];
   const ys: number[] = [];
@@ -202,3 +131,78 @@ export function XYsBounding(points: XY[]) {
   const right = Math.max(...xs);
   return { top, bottom, left, right };
 }
+
+// 判断线段p1q1与线段p2q2是否🍌
+export function isIntersect(p1: XY, q1: XY, p2: XY, q2: XY): boolean {
+  const orientation1 = pointOrientation(p1, q1, p2);
+  const orientation2 = pointOrientation(p1, q1, q2);
+  const orientation3 = pointOrientation(p2, q2, p1);
+  const orientation4 = pointOrientation(p2, q2, q1);
+
+  if (orientation1 !== orientation2 && orientation3 !== orientation4) {
+    return true;
+  }
+  if (orientation1 === 0 && isOnSegment(p1, p2, q1)) {
+    return true;
+  }
+  if (orientation2 === 0 && isOnSegment(p1, q2, q1)) {
+    return true;
+  }
+  if (orientation3 === 0 && isOnSegment(p2, p1, q2)) {
+    return true;
+  }
+  if (orientation4 === 0 && isOnSegment(p2, q1, q2)) {
+    return true;
+  }
+  return false;
+
+  function pointOrientation(p1: XY, p2: XY, p3: XY) {
+    const val = (p2.y - p1.y) * (p3.x - p2.x) - (p2.x - p1.x) * (p3.y - p2.y);
+    if (val == 0) {
+      return 0;
+    }
+    return (val > 0) ? 1 : 2;
+
+  }
+  function isOnSegment(p: XY, q: XY, r: XY) {
+    if (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
+      q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y)) {
+      return true;
+    }
+    return false;
+  }
+}
+
+// 判断形状是否被包涵
+export function isIncluded(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]): boolean {
+  const left = selectorPoints[0].x, top = selectorPoints[0].y, right = selectorPoints[2].x, bottom = selectorPoints[2].y;
+  const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
+  return l > left && r < right && t > top && b < bottom;
+}
+
+// 两个形状既不🍌也没有包含关系，返回false
+export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]) {
+  if (isIncluded(selectorPoints, shapePoints)) {
+    return true
+  }
+  let s = 0;
+  while (s < selectorPoints.length - 1) {
+    const p1 = selectorPoints[s], q1 = selectorPoints[s + 1];
+
+    if (shapePoints.length === 2) { // 线条
+      if (isIntersect(p1, q1, shapePoints[0], selectorPoints[1])) {
+        return true;
+      }
+    } else {
+      for (let i = 0; i < shapePoints.length - 1; i++) {
+        const p2 = shapePoints[i], q2 = shapePoints[i + 1];
+        if (isIntersect(p1, q1, p2, q2)) {
+          return true;
+        }
+      }
+    }
+    s++;
+  }
+  return false;
+}
+

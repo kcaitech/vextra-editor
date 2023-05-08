@@ -94,6 +94,11 @@ function addFill(): void {
     const fill = new Fill(true, FillType.SolidColor, color, contextSettings);
     editor.value.addFill(fill);
 }
+const isNoFile = () => {
+    if(fills.length === 0) {
+        addFill()
+    }    
+}
 
 function deleteFill(idx: number) {
     editor.value.deleteFill(idx);
@@ -168,11 +173,12 @@ onBeforeUpdate(() => {
     if (shapeId != props.shape.id) updateData();
     setupWatcher();
 })
+
 </script>
 
 <template>
     <div class="fill-panel">
-        <TypeHeader :title="t('attr.fill')" class="mt-24">
+        <TypeHeader :title="t('attr.fill')" class="mt-24" @click="isNoFile">
             <template #tool>
                 <div class="add" @click="addFill">
                     <svg-icon icon-class="add"></svg-icon>

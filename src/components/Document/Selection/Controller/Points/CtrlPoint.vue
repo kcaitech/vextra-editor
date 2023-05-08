@@ -14,7 +14,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  (e: 'transform', type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale'): void
+  (e: 'transform', type: CtrlElementType, p1: XY, p2: XY, deg: number, aType: 'rotate' | 'scale'): void
 }>();
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
@@ -92,7 +92,7 @@ function onMouseMove(event: MouseEvent) {
       workspace.value.setCursor(clt, props.rotate);
       aType = 'rotate';
     }
-    emit('transform', props.point.type, mouseOnPage, deg, aType);
+    emit('transform', props.point.type, startPosition, mouseOnPage, deg, aType);
     props.context.repo.transactCtx.fireNotify();
     startPosition = { ...mouseOnPage };
   } else {
@@ -176,6 +176,7 @@ onUnmounted(() => {
       box-sizing: border-box;
       border: 1px solid #2561D9;
       background-color: var(--theme-color-anti);
+      border-radius: 2px;
     }
   }
 
