@@ -91,7 +91,6 @@ html {
     background: #FFFFFF;
     border-radius: 5px;
     box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
-    animation: myfirst 2s;
 
     span {
         font-size: 18px;
@@ -109,37 +108,6 @@ html {
         margin-top: 20px;
 
     }
-
-
-}
-
-
-
-@keyframes myfirst {
-    0% {
-        opacity: 0;
-        width: 240px;
-        height: 280px;
-    }
-
-    25% {
-        opacity: 0;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-
-    75% {
-        opacity: 0.8;
-    }
-
-    100% {
-        opacity: 1;
-        width: 480px;
-        height: 560px;
-    }
-}
 
 @media screen and (max-width: 800px) {
     .login {
@@ -163,6 +131,7 @@ html {
         display: none;
     }
 
+}
 }
 </style>
 

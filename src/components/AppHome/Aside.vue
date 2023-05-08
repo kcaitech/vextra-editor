@@ -145,12 +145,6 @@ a {
             .el-menu-item {
                 border-radius: 5px;
                 margin: 20px;
-
-                .el-icon {}
-
-                span {}
-
-
                 &:hover {
                     background: rgb(70, 76, 248);
                     color: white
