@@ -89,7 +89,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
-    getShapesByXY(position: XY): Shape[] {
+    getShapesByXY(position: XY, force?: boolean): Shape[] { // force 暴力矿工，深度搜索。
+        // 在项目中，有三种检索需求：hover、左键、右键
+        // hover：检索窗口可视图形，被裁剪的、unVisiable不检索。检索过程中，在遇见编组、容器的时候有额外处理
+            // 遇见编组：
+            // 遇见容器：
+        // click left：类似hover，额外有双击操作，双击操作只检索当前hover对象的子对象
+        // click right：检索窗口可视、被裁减的图形，unVisiable不检索
         position = cloneDeep(position);
         const shapes: Shape[] = [];
         const page = this.m_selectPage!;
@@ -123,7 +129,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {
-                    if (['group-shape', 'artboard'].includes(source[i].typeId)) {
+                    if (['artboard'].includes(source[i].typeId)) {
                         groups.unshift(source[i] as GroupShape);
                     }
                 }
@@ -225,12 +231,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         if (page) {
             const childs = page.childs;
             deep(childs);
-            return shape;
         }
+        return shape;
 
         function deep(cs: Shape[]) {
             for (let i = 0; i < cs.length; i++) {
                 if (cs[i].id === id) shape = cs[i];
+                if (shape) return;
                 if ((cs[i] as GroupShape)?.childs?.length) {
                     deep((cs[i] as GroupShape).childs);
                 }

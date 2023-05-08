@@ -13,6 +13,10 @@ import { Repository } from '@kcdesign/data/data/transact';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
 import { importSketch } from '@kcdesign/data/io';
 import { Zip } from "@pal/zip";
+import { newDocument } from '@kcdesign/data/editor/creator';
+import { useI18n } from 'vue-i18n';
+import { DocEditor } from '@kcdesign/data/editor';
+const { t } = useI18n();
 
 const picker = new FilePicker((file) => {
     if (!file) return;
@@ -25,6 +29,18 @@ const picker = new FilePicker((file) => {
         router.push({ name: 'document' });
     })
 });
+
+function newFile() {
+    const repo = new Repository();
+    const nd = newDocument(t('system.new_file'), repo);
+    const editor = new DocEditor(nd, repo);
+    const page = editor.create(t('system.page1'));
+    editor.insert(0, page);
+    window.document.title = nd.name;
+    (window as any).skrepo = repo;
+    (window as any).sketchDocument = nd;
+    router.push({ name: 'document' });
+}
 
 function Setindex(a: any) {
     let x: any = a
@@ -44,7 +60,7 @@ const x = localStorage.getItem('index')
                 <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
             </div>
             <div class="new">
-                <button class="newfile">新建文件</button>
+                <button class="newfile" @click="newFile">新建文件</button>
                 <button class="openfile" @click="picker.invoke()">打开文件</button>
             </div>
             <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
@@ -54,7 +70,7 @@ const x = localStorage.getItem('index')
                         </el-icon>
                         <span>最近打开</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/starfile"><el-menu-item index="2"  @click="Setindex(2)">
+                <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2)">
                         <el-icon>
                             <Star />
                         </el-icon>

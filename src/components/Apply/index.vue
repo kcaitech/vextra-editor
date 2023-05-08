@@ -83,7 +83,7 @@ onUnmounted(() => {
     <div class="container">
         <div class="header">
             <div class="svgBox" @click="() => { router.push({ name: 'apphome' }) }">
-                <svg-icon class="svg" icon-class="home"></svg-icon>
+                <svg-icon class="svg" icon-class="home_0508"></svg-icon>
             </div>
             <div class="user-avatar">
                 <img src="../../assets/pd-logo-svg.svg">
