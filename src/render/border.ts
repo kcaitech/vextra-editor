@@ -18,7 +18,7 @@ angularHandler[BorderPosition.Inner] = function (h: Function, shape: Shape, bord
     const height = frame.height;
     const g_ = renderGradient(h, border.gradient as Gradient, frame);
 
-    return h("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
+    return h("g", [
 
         h("mask", {
             id: maskId,
@@ -66,7 +66,7 @@ angularHandler[BorderPosition.Center] = function (h: Function, shape: Shape, bor
     const width = frame.width + thickness;
     const height = frame.height + thickness;
 
-    return h("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
+    return h("g", [
         h("mask", {
             id: maskId,
             maskContentUnits: "userSpaceOnUse",
@@ -103,7 +103,7 @@ angularHandler[BorderPosition.Outer] = function (h: Function, shape: Shape, bord
     const mask1Id = "mask1-border" + objectId(border);
     const mask2Id = "mask2-border" + objectId(border);
 
-    return h("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, [
+    return h("g", [
         h("mask", {
             id: mask2Id,
             width,
@@ -151,8 +151,6 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
         g_ = renderGradient(h, border.gradient as Gradient, frame);
         stroke = "url(#" + g_.id + ")";
     }
-    const x = frame.x;
-    const y = frame.y;
 
     const elArr = [];
     if (g_ && g_.node) {
@@ -170,7 +168,7 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
             "clip-path": "url(#" + clipId + ")"
         })
     );
-    return h("g", { transform: "translate(" + x + " " + y + ")" }, elArr);
+    return h("g", elArr);
 }
 
 handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Border, path: string): any {
@@ -187,12 +185,10 @@ handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Bo
         g_ = renderGradient(h, border.gradient as Gradient, frame);
         stroke = "url(#" + g_.id + ")";
     }
-    const x = frame.x;
-    const y = frame.y;
 
     if (g_ && g_.node) {
         // elArr.push(g_.node);
-        return h("g", { transform: "translate(" + x + " " + y + ")" }, [
+        return h("g", [
             g_.node,
             h('path', {
                 d: path,
@@ -207,8 +203,7 @@ handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Bo
             d: path,
             fill: "none",
             stroke,
-            'stroke-width': thickness,
-            transform: "translate(" + x + " " + y + ")"
+            'stroke-width': thickness
         });
     }
 }
@@ -249,13 +244,13 @@ handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Bor
             mask: "url(#" + maskId + ")"
         }))
 
-    return (h("g", { transform: "translate(" + frame.x + " " + frame.y + ")" }, elArr));
+    return (h("g", elArr));
 }
 
 export function render(h: Function, shape: Shape, path?:string): Array<any> {
     const style = shape.style;
     const bc = style.borders.length;
-    path = path || shape.getPath(true);
+    path = path || shape.getPath(true).toString();
 
     const elArr = new Array();
     for (let i = 0; i < bc; i++) {

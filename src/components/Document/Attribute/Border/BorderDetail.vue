@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Popover from '@/components/common/Popover.vue';
-import { ref, defineProps, computed, watch } from 'vue';
+import { ref, defineProps, computed, watch, onUpdated, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderPositonItem from './BorderPositionItem.vue';
@@ -10,6 +10,7 @@ import BorderApexStyleItem from './BorderApexStyleItem.vue';
 import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue'
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
+import { ShapeType } from "@kcdesign/data/data/classes"
 import { Border, BorderPosition, BorderStyle, MarkerType } from "@kcdesign//data/data/style";
 import { genOptions } from '@/utils/common';
 
@@ -61,7 +62,12 @@ const borderEndStyleOptionsSource: SelectSource[] = genOptions([
   [MarkerType.FallT, `end-${MarkerType.FallT}`],
 ]);
 
+const showStartStyle = ref<boolean>(false)
+const showEndStyle = ref<boolean>(false)
+
 function showMenu() {
+  const workspace = props.context.workspace
+  workspace.popoverVisible(false);
   popover.value.show();
   initValue();
 }
@@ -111,11 +117,31 @@ function borderApexStyleSelect(selected: SelectItem) {
 watch(() => props.border, () => {
   initValue();  
 }, { deep: true })
+
+const startArr = ['line-shape']
+onMounted(() => {
+  if(startArr.includes(props.shape.typeId)) {
+    showStartStyle.value = true
+    showEndStyle.value = true
+  }else {
+    showStartStyle.value = false
+    showEndStyle.value = false
+  }
+})
+onUpdated(() => {
+  if(startArr.includes(props.shape.typeId)) {
+    showStartStyle.value = true
+    showEndStyle.value = true
+  }else {
+    showStartStyle.value = false
+    showEndStyle.value = false
+  }
+})
 </script>
 
 <template>
   <div class="border-detail-container">
-    <Popover class="popover" ref="popover" :width="240" :left="-460" :height="256" :title="t('attr.advanced_stroke')">
+    <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="-490" :title="t('attr.advanced_stroke')">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
@@ -155,7 +181,7 @@ watch(() => props.border, () => {
             ></Select>
           </div>
           <!-- 起点样式 -->
-          <div>
+          <div v-if="showStartStyle">
             <label>{{ t('attr.startMarkerType') }}</label>
             <Select
               :selected="borderFrontStyle"
@@ -167,7 +193,7 @@ watch(() => props.border, () => {
             ></Select>
           </div>
           <!-- 终点样式 -->
-          <div>
+          <div v-if="showEndStyle">
             <label>{{ t('attr.endMarkerType') }}</label>
             <Select
               :selected="borderEndStyle"
@@ -214,6 +240,7 @@ watch(() => props.border, () => {
         > div {
           display: flex;
           align-items: center;
+          margin: 4px 0;
           > label {
             flex: 0 0 72px;
             text-align: left;
@@ -229,6 +256,7 @@ watch(() => props.border, () => {
             border-radius: var(--default-radius);
             display: flex;
             align-items: center;
+            cursor: ew-resize;
             > svg {
               flex: 0 0 24px;
               height: 24px;

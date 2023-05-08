@@ -12,3 +12,4 @@ declare module '*.vue' {
 // 声明静态资源作为模块
 declare module "lodash";
 declare module "*.png";
+declare module "*.svg";

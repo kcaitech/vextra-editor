@@ -6,7 +6,7 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\UserAvatar.vue
 -->
 <script setup lang="ts">
-import avatar from '@/assets/avatar.png';
+import avatar from '@/assets/pd-logo-svg.svg';
 import { defineProps } from "vue";
 
 const props = defineProps<{ user: string }>();
@@ -20,16 +20,17 @@ const props = defineProps<{ user: string }>();
 </template>
 
 <style scoped lang="scss">
-    .user-avatar {
-        cursor: pointer;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background-color: #fff;
-        text-align: center;
-        > img {
-            width: 90%;
-            height: 90%;
-        }
+.user-avatar {
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #fff;
+    text-align: center;
+
+    >img {
+        width: 90%;
+        height: 90%;
     }
+}
 </style>

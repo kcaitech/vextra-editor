@@ -10,15 +10,16 @@ import { useI18n } from 'vue-i18n';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
+import Text from './Text/Text.vue';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 
 const shape = shallowRef<Shape>();
 
-const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text];
+const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
 const shapeType = ref();
 
-function selectionChange(t: number) {    
+function selectionChange(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         shape.value = undefined;
     }
@@ -32,7 +33,7 @@ function selectionChange(t: number) {
         }
     }
 }
-
+const backgroundColor = new Color(1, 239, 239, 239);
 onMounted(() => {
     props.context.selection.watch(selectionChange);
 })
@@ -43,22 +44,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-<section>
-    <div v-if="shape">
-        <ShapeBaseAttr :shape="shape" :context="props.context"></ShapeBaseAttr>
-        <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shape" :context="props.context"></Fill>
-        <Border :shape="shape" :context="props.context"></Border>
-    </div>
-    <div v-else class="back-setting-container">
-        <span>{{ t('attr.background') }}</span>
-        <div class="setting">
-            <ColorPicker class="color" :color="new Color(1, 239, 239, 239)"></ColorPicker>
-            <input type="text" :value="'#EFEFEF'" :spellcheck ="false">
-            <input type="text" :value="1">
+    <section>
+        <div v-if="shape">
+            <ShapeBaseAttr :shape="shape" :context="props.context"></ShapeBaseAttr>
+            <Text :shape="shape" :context="props.context"></Text>
+            <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shape" :context="props.context"></Fill>
+            <Border :shape="shape" :context="props.context"></Border>
         </div>
-        
-    </div>
-</section>
+        <div v-else class="back-setting-container">
+            <span>{{ t('attr.background') }}</span>
+            <div class="setting">
+                <ColorPicker class="color" :color="backgroundColor"></ColorPicker>
+                <input type="text" :value="'#EFEFEF'" :spellcheck="false">
+                <input type="text" :value="1">
+            </div>
+
+        </div>
+    </section>
 </template>
 
 <style scoped lang="scss">
@@ -66,9 +68,11 @@ section {
     width: 100%;
     height: 100%;
     font-size: var(--font-default-fontsize);
+
     .back-setting-container {
         font-weight: var(--font-default-bold);
         padding: var(--default-padding);
+
         .setting {
             width: 100%;
             height: 32px;
@@ -80,10 +84,12 @@ section {
             border-radius: var(--default-radius);
             margin-top: var(--default-margin-half);
             display: flex;
-            > .color {
+
+            >.color {
                 flex: 0 0 16px;
             }
-            > input {
+
+            >input {
                 display: block;
                 outline: none;
                 border: none;
@@ -92,12 +98,12 @@ section {
                 flex-shrink: 1;
                 margin-left: var(--default-margin);
             }
-            > input + input {
+
+            >input+input {
                 width: 50px;
                 flex-shrink: 0;
                 margin-left: var(--default-margin);
             }
         }
     }
-}
-</style>
+}</style>

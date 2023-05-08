@@ -7,7 +7,6 @@ import { render as image } from "@/render/image";
 import { render as path } from "@/render/pathshape";
 import { render as rect } from "@/render/rectangle";
 import { render as text } from "@/render/text";
-import { render as bool } from "@/render/boolshape";
 import { render as symref } from "@/render/symbolref";
 import { ShapeType, BoolOp } from "@kcdesign/data/data/classes";
 

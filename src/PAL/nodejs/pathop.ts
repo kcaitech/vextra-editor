@@ -19,6 +19,7 @@ export function intersection(path0: string, path1: string): string {
 export function subtract(path0: string, path1: string): string {
     const p0: Path2D = new Path2D(path0);
     const p1: Path2D = new Path2D(path1);
+    // p0.contains()
     const result = p0.difference(p1);
     // console.log("difference", result);
     return result.d;

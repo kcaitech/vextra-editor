@@ -1,20 +1,19 @@
 import { Artboard } from "@kcdesign/data/data/artboard";
-import { BoolOp, ShapeType } from "@kcdesign/data/data/shape";
+import { ShapeType } from "@kcdesign/data/data/shape";
 import { Color } from "@kcdesign/data/data/style";
 import { renderGroupChilds as gR } from "@/render/group";
 
-const defaultColor = new Color(0, 0, 0, 0)
+const defaultColor = new Color(1, 255, 255, 255)
 
 export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
     const childs = [];
     const frame = shape.frame;
     // background
     if (shape.hasBackgroundColor) {
-        const color = shape.backgroundColor || defaultColor;
+        const color = shape.backgroundColor || defaultColor;        
         childs.push(h("rect", {
             x: 0, y: 0, width: frame.width, height: frame.height,
-            fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")",
-            "fill-opacity": color ? color.alpha : 1
+            fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
         }))
     }
     childs.push(...gR(h, shape, comsMap));
@@ -30,6 +29,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         viewBox: "0 0 " + frame.width + " " + frame.height,
         x: frame.x,
         y: frame.y,
-        overflow: "hidden"
+        overflow: "hidden",
+        reflush
     }, childs);
 }

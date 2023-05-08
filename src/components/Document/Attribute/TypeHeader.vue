@@ -47,7 +47,7 @@ const props = defineProps<{
             flex-shrink: 0;
         }
         > .space {
-            width: 196px;
+            width: 228px;
         }
     }
     > .header + .line {

@@ -4,7 +4,8 @@
  * @FilePath: \kcdesign\src\components\common\IconText.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits,watch,ref } from "vue";
+import { defineProps, defineEmits, watch, ref, nextTick } from "vue";
+type Scale = { axleX: number, degX: number }
 const props = defineProps<{
     svgicon?: any,
     icon?: any,
@@ -15,21 +16,59 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: "onchange", value: string): void;
 }>();
-
-function onChange(e: Event) {
-    const value = (e.currentTarget as any)['value']
-    
-    emit("onchange", value);
-}
-
-const curpt: {x: number, y: number} = {x: 0, y: 0}
-type Scale = {axleX: number, degX: number}
+const curpt: { x: number, y: number } = { x: 0, y: 0 }
 const scale = ref<Scale>({
     axleX: 0,
     degX: 0
 })
 const isDrag = ref(false)
-const onMouseDown = (e:MouseEvent) => {
+const input = ref<HTMLInputElement>();
+
+function onChange(e: Event) {
+    let value = (e.currentTarget as any)['value']
+    if(props.svgicon !== 'angle') {
+        if(isNaN(Number(input.value!.value))){
+            return input.value!.value = String(props.text) 
+        }
+    }else if(props.svgicon === 'angle') {
+        if(input.value!.value.slice(-1) === '°' && isNaN(Number(input.value!.value.slice(0, -1)))){
+            return input.value!.value = String(props.text) 
+        }else if(isNaN(Number(input.value!.value))) {
+            return input.value!.value = String(props.text) 
+        }
+    }
+    if(Number(input.value!.value) < 1 && props.ticon === 'W') {
+        input.value!.value = '1' 
+    } else if(Number(input.value!.value) < 1 && props.ticon === 'H') {
+        input.value!.value = '1' 
+    }
+    if(value < 1 && props.ticon === 'W') {
+        value = 1
+    }else if(value < 1 && props.ticon === 'H') {
+        value = 1
+    }
+    emit("onchange", value);
+}
+const onBlur = (e: MouseEvent) => {
+    document.addEventListener('click', onBlur)
+    if (e.target instanceof Element && !e.target.closest('.icontext')) {
+        var timer = setTimeout(() => {
+            if (input.value) {
+                (input.value).blur()
+            }
+            clearTimeout(timer)
+            document.removeEventListener('click', onBlur);
+        }, 10)
+    }
+}
+const onKeyBlur = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+        if (input.value) {
+            (e.currentTarget as HTMLInputElement).blur()
+        }
+    }
+}
+const onMouseDown = (e: MouseEvent) => {
     isDrag.value = true
     //鼠标按下时的位置
     curpt.x = e.screenX
@@ -40,58 +79,60 @@ const onMouseDown = (e:MouseEvent) => {
 
 const onMouseMove = (e: MouseEvent) => {
     //鼠标移动的距离
-    const mx = e.screenX - curpt.x
-    if(isDrag.value && mx > 4 || mx < 4) {
+    let mx = e.screenX - curpt.x
+    if (isDrag.value && mx > 4 || mx < -4) {
         curpt.x = e.screenX
     }
-    // console.log(mx,'mx');
     //坐标移动的大小
-    scale.value.axleX = Number((mx / 5).toFixed(2));
+    scale.value.axleX = Number((mx).toFixed(2))
     //角度移动的大小
-    scale.value.degX = Number((mx / 10).toFixed(2))
+    scale.value.degX = Number((mx / 5).toFixed(2))
     
 }
-
-watch(scale, (newV, oldV) => {
-    //input的值加上鼠标移动后的大小等于最终改变的值
-    let result = Number(props.text)+ Number(newV.axleX)
-   
-    if(props.ticon) {
-        let value = result 
-        
-        emit("onchange", value.toString());
-        
-    }else {
-        let value = result + scale.value.degX
-        emit("onchange", value.toString())
-    }
-    
-},{deep:true})
-
 const onMouseUp = (e: MouseEvent) => {
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 
 }
+
+watch(scale, () => {
+    //input的值加上鼠标移动后的大小等于最终改变的值
+    if (props.ticon) {
+        input.value!.value = String(Number(input.value!.value) + scale.value.axleX)
+        if(props.ticon === 'W' || props.ticon === 'H') {
+            if(Number(input.value!.value) <= 1) {
+                input.value!.value = '1'
+            }
+        }
+        emit("onchange",input.value!.value);
+    } else {
+        if(props.svgicon === 'angle') {
+            if(input.value!.value.slice(-1) && input.value!.value.slice(-1) === '°') {
+                input.value!.value = input.value!.value.slice(0, -1)     
+            }
+        }
+        input.value!.value = (Number(input.value!.value) + scale.value.degX).toFixed(2)
+        if(props.svgicon === 'radius') {
+            if(Number(input.value!.value) <= 0) {
+                input.value!.value = '0'
+            }
+        }
+        emit("onchange",Number(input.value!.value).toFixed(2))
+    }
+}, { deep: true });
 </script>
 
 <template>
-<label class="icontext">
-    <svg-icon
-        @mousedown="onMouseDown"
-        class="icon"
-        v-if="props.svgicon"
-        :icon-class="props.svgicon"
-        :style="{
-            width: `${props.frame ? frame?.width : 18}px`,
-            height: `${props.frame ? frame?.height : 18}px`,
-            transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`
-        }"
-    ></svg-icon>
-    <img class="icon" v-if="props.icon" :src="props.icon" />
-    <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon" >{{props.ticon}}</span>
-    <input :value="props.text" v-on:change="onChange"/>
-</label>
+    <label class="icontext">
+        <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
+                width: `${props.frame ? frame?.width : 18}px`,
+                height: `${props.frame ? frame?.height : 18}px`,
+                transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`
+            }"></svg-icon>
+        <img class="icon" v-if="props.icon" :src="props.icon" />
+        <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon">{{ props.ticon }}</span>
+        <input ref="input" @click="onBlur" :value="props.text" @keydown="onKeyBlur" v-on:change="onChange" />
+    </label>
 </template>
 
 <style scoped lang="scss">
@@ -104,7 +145,8 @@ const onMouseUp = (e: MouseEvent) => {
     align-items: center;
     padding: 0 8px;
     box-sizing: border-box;
-    > .icon {
+
+    >.icon {
         color: grey;
         width: 14px;
         height: 14px;
@@ -112,10 +154,12 @@ const onMouseUp = (e: MouseEvent) => {
         cursor: ew-resize;
         text-align: center;
     }
-    > span {
+
+    >span {
         line-height: 14px;
     }
-    > input {
+
+    >input {
         width: 100%;
         flex: 1 1 auto;
         align-content: center;

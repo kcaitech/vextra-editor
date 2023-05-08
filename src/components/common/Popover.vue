@@ -1,23 +1,26 @@
 <script setup lang="ts">
-import { ref, nextTick, defineProps, defineExpose } from 'vue';
-
+import { ref, nextTick, defineProps, defineExpose, onMounted, onUnmounted } from 'vue';
+import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
 const props = defineProps<{
   title?: string,
   top?: number,
   left?: number,
   width?: number,
-  height?: number,
+  height?: string | number,
+  context: Context;
 }>();
 defineExpose({
   show,
-  focus
+  focus,
+  popoverClose
 })
 
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();
 
-function focus() {  
+function focus() {
   container.value?.focus();
 }
 function show() {
@@ -54,6 +57,18 @@ function popoverClose() {
   container.value?.removeEventListener('keyup', esc);
   document.removeEventListener('click', handleClickOutside);
 }
+function workspaceUpdate(t?: number) {
+  if (t === WorkSpace.SHUTDOWN_POPOVER) {
+    popoverClose();
+  }
+}
+onMounted(() => {
+  props.context.workspace.popoverVisible(true);
+  props.context.workspace.watch(workspaceUpdate);
+})
+onUnmounted(() => {
+  props.context.workspace.unwatch(workspaceUpdate);
+})
 </script>
 
 <template>

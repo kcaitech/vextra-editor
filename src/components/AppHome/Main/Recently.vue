@@ -32,7 +32,9 @@
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { reactive, ref, onMounted } from 'vue'
+import { pushScopeId, reactive, ref, onMounted } from 'vue'
+import * as share_api from "@/apis/share"
+
 
 
 const form = reactive({

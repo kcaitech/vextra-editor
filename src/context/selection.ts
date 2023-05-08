@@ -1,28 +1,34 @@
 import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
-import { Shape } from "@kcdesign/data/data/shape";
-
+import { Shape, GroupShape } from "@kcdesign/data/data/shape";
+import { cloneDeep } from "lodash";
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
     cursorStart: number,
     cursorEnd: number
 }
-export interface AbsolutePosition {
+export interface XY {
     x: number,
     y: number
 }
+
+export type ActionType = 'translate' | 'scale' | 'rotate';
 
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
     static CHANGE_SHAPE = 2;
     static CHANGE_SHAPE_HOVER = 3;
+    static CHANGE_RENAME = 4;
+    static PAGE_RENAME = 5;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;
+    private m_document: Document;
+    private m_search_keyword: string | undefined;
 
     // todo
     private m_cursorStart: number = -1;
@@ -45,24 +51,83 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
         this.notify(Selection.CHANGE_PAGE);
     }
+    insertPage(p: Page | undefined) {
+        this.m_selectPage = p;
+        this.m_selectShapes.length = 0;
+        this.m_cursorStart = -1;
+        this.m_cursorEnd = -1;
+        this.notify(Selection.CHANGE_PAGE);
+    }
+    async deletePage(id: string, index: number) {
+        if (id === this.m_selectPage?.id) {
+            if (index === this.m_document.pagesList.length) {
+                await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
+                    this.m_selectPage = p;
+                });
+            } else {
+                await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
+                    this.m_selectPage = p;
+                });
+            }
+        }
+        this.m_selectShapes.length = 0;
+        this.m_cursorStart = -1;
+        this.m_cursorEnd = -1;
+        this.notify(Selection.CHANGE_PAGE);
+    }
+    reName(id?: string) {
+        if (id) {
+            this.notify(Selection.CHANGE_RENAME, id);
+        } else {
+            this.notify(Selection.CHANGE_RENAME, this.selectedPage?.id);
+        }
+    }
+    rename() {
+        this.notify(Selection.PAGE_RENAME);
+    }
 
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
-    getShapesByXY(position: AbsolutePosition): Shape[] {        
+    getShapesByXY(position: XY): Shape[] {
+        position = cloneDeep(position);
         const shapes: Shape[] = [];
         const page = this.m_selectPage!;
         const childs = page.childs;
         position.x -= page.frame.x;
         position.y -= page.frame.y;
+
         if (childs?.length) deep(childs, position);
         return shapes;
 
-        function deep(source: Shape[], position: AbsolutePosition) {
-            for(let i = 0; i < source.length; i++) {                
+        function deep(source: Shape[], position: XY) {
+            for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
-                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) shapes.push(source[i]);
-                const suppos = {x: position.x - x, y: position.y - y}
+                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height && source[i].isVisible) shapes.push(source[i]);
+                const suppos = { x: position.x - x, y: position.y - y };
+                if (source[i].childs?.length) deep(source[i].childs, suppos);
+            }
+        }
+    }
+    getClosetContainer(position: XY): GroupShape {
+        position = cloneDeep(position);
+        const page = this.m_selectPage!;
+        const groups: GroupShape[] = [page];
+        const childs = page.childs;
+        position.x -= page.frame.x;
+        position.y -= page.frame.y;
+        if (childs?.length) deep(childs, position);
+        return groups[0];
+
+        function deep(source: Shape[], position: XY) {
+            for (let i = 0; i < source.length; i++) {
+                const { x, y, width, height } = source[i].frame;
+                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {
+                    if (['group-shape', 'artboard'].includes(source[i].typeId)) {
+                        groups.unshift(source[i] as GroupShape);
+                    }
+                }
+                const suppos = { x: position.x - x, y: position.y - y }
                 if (source[i].childs?.length) deep(source[i].childs, suppos);
             }
         }
@@ -73,7 +138,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             this.m_selectShapes.length = 0;
             this.m_cursorStart = -1;
             this.m_cursorEnd = -1;
-            this.m_hoverShape = undefined;        
+            this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
             return;
         }
@@ -82,7 +147,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
                 this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
             } else {
                 this.m_selectShapes.push(shape);
-            }            
+            }
             this.notify(Selection.CHANGE_SHAPE);
             return;
         }
@@ -90,7 +155,12 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_selectShapes.push(shape);
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
-        this.m_hoverShape = undefined;        
+        this.m_hoverShape = undefined;
+        this.notify(Selection.CHANGE_SHAPE);
+    }
+    unSelectShape(shape: Shape) {
+        if (!this.isSelectedShape(shape)) return;
+        this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
@@ -139,17 +209,32 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     hoverShape(shape: Shape) {
-        if (this.isSelectedShape(shape)) {
-            return;
-        }
+        this.m_hoverShape = undefined;
         this.m_hoverShape = shape;
         this.notify(Selection.CHANGE_SHAPE_HOVER);
     }
 
-    unHoverShape(shape: Shape) {
-        if (shape === this.m_hoverShape) {
-            this.m_hoverShape = undefined;
-            this.notify(Selection.CHANGE_SHAPE_HOVER);
+    unHoverShape() {
+        this.m_hoverShape = undefined;
+        this.notify(Selection.CHANGE_SHAPE_HOVER);
+    }
+    // 通过id获取shape
+    getShapeById(id: string): Shape | undefined {
+        const page = this.m_selectPage;
+        let shape: Shape | undefined;
+        if (page) {
+            const childs = page.childs;
+            deep(childs);
+            return shape;
+        }
+
+        function deep(cs: Shape[]) {
+            for (let i = 0; i < cs.length; i++) {
+                if (cs[i].id === id) shape = cs[i];
+                if ((cs[i] as GroupShape)?.childs?.length) {
+                    deep((cs[i] as GroupShape).childs);
+                }
+            }
         }
     }
 

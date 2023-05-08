@@ -1,15 +1,19 @@
-/*
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-02-28 10:54:28
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-28 10:57:48
- * @FilePath: \kcdesign\src\utils\mouse.ts
- * @Description: mouse event
- */
-export enum CursorType {
-    Auto = 'auto',
-    Grab = 'grab',
-    Grabbing = 'grabbing',
-    Crosshair = 'crosshair'
+
+export function process(content: { x: number, y: number, bottom: number, right: number }, event: MouseEvent) {
+    let dx = 0, dy = 0;
+    const { clientX, clientY } = event;
+    const step = 3;
+    if (clientX < content.x) {
+        dx = step;
+    }
+    if (clientX > content.right) {
+        dx = -step;
+    }
+    if (clientY < content.y) {
+        dy = step;
+    }
+    if (clientY > content.bottom) {
+        dy = -step;
+    }
+    return { dx, dy }
 }
-export class Mouse {}

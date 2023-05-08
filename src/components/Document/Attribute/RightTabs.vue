@@ -22,7 +22,6 @@ type Tab = "Design" | "Inspect";
 
 
 const currentTab = ref<Tab>("Design");
-
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('attr.design'),
@@ -68,6 +67,7 @@ function toggle(id: Tab) {
 .tab-container {
     position: relative;
     width: 100%;
+    box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
     .controller {
         height: 36px;
@@ -102,6 +102,5 @@ function toggle(id: Tab) {
         flex: 1 1 auto;
         box-sizing: border-box;
     }
-
 }
 </style>

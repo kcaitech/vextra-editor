@@ -21,16 +21,21 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import {onMounted } from 'vue';
 import * as user_api from '@/apis/users'
+import { User } from '@/context/user'
+import { defineProps, ref, nextTick, reactive, defineEmits, onMounted } from 'vue';
+const getUserInfo = async () => {
+  const result = await user_api.GetInfo()
+  const user = new User(result.data);
+  (window as any).skuser = user;
+}
 
-onMounted (async () => {
+onMounted(async () => {
+  getUserInfo()
   const resavatar = await user_api.GetInfo()
-  localStorage.setItem('avatar',resavatar.data.avatar)
-  localStorage.setItem('nickname',resavatar.data.nickname) 
+  localStorage.setItem('avatar', resavatar.data.avatar)
+  localStorage.setItem('nickname', resavatar.data.nickname)
 })
-
-
 </script>
 
 <style lang="scss" scoped></style>

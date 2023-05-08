@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, reactive, onMounted, onUnmounted } from "vue";
+import { ref, defineProps, reactive, onMounted, onUnmounted, watchEffect } from "vue";
 import Sash from "@/components/common/Sash.vue";
 
 export interface SizeBound {
@@ -11,7 +11,6 @@ export interface SizeBound {
 interface SizeBoundEx extends SizeBound {
     userWidth: number // 用户调整的大小
 }
-
 const props = defineProps<{
     left: SizeBound, // .1 .05 .50
     middle: SizeBound, // .8 .3 .9
@@ -152,7 +151,6 @@ function createColumnCtx(bound: SizeBoundEx, col: string): Ctx {
         _saveWidth = bound.width;
     }
     function onDragOffset(offset: number) {
-        // console.log(offset)
         if (adjustsFun[col]) adjustsFun[col](_saveWidth, offset);
     }
     return {
@@ -197,7 +195,6 @@ function onSizeChange() {
     let leftWidth = sizeBounds.left.width + (savedRootWidth ? sizeBounds.left.width / savedRootWidth * delta : 0);
     let rightWidth = sizeBounds.right.width + (savedRootWidth ? sizeBounds.right.width / savedRootWidth * delta : 0);
 
-    // console.log(leftWidth, rightWidth)
     leftWidth = Math.max(sizeBounds.left.minWidth, Math.min(sizeBounds.left.maxWidth, leftWidth));
     rightWidth = Math.max(sizeBounds.right.minWidth, Math.min(sizeBounds.right.maxWidth, rightWidth));
     const middleWidth = Math.max(rootWidth - leftWidth - rightWidth, 0);
@@ -236,6 +233,7 @@ onMounted(() => {
 onUnmounted(() => {
     observer.disconnect();
 })
+watchEffect(initSizeBounds);
 </script>
 
 <template>
@@ -249,7 +247,7 @@ onUnmounted(() => {
         </div>
         <div class="column3" :style="`width:${sizeBounds.right.width}px; minWidth:${sizeBounds.right.width}px`">
             <slot name="slot3" />
-            <Sash side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" />
+            <!-- <Sash  side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" /> -->
         </div>
     </div>
 </template>
@@ -261,6 +259,10 @@ onUnmounted(() => {
     width: 100%;
     height: auto;
     position: relative;
+
+    >div {
+        transition: 0.1s;
+    }
 
     .column1 {
         position: relative;

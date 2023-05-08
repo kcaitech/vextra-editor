@@ -30,6 +30,16 @@ async function onmessage(e: any) {
     }
 }
 
+async function getUserInfo() {
+    try {
+        const res1 = await user_api.GetDocumentsList();
+        
+    } catch (error) {
+        // 
+    }
+}
+// console.log(res);
+// console.log(res.code);
 onMounted(() => {
     setTimeout(() => {
         new (window as any).WxLogin({

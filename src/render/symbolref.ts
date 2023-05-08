@@ -10,7 +10,7 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     }
     const frame = shape.frame;
     const childs = [];
-    const path = shape.getPath(true);
+    const path = shape.getPath(true).toString();
     // fill
     childs.push(...fillR(h, shape, path));
     // border
@@ -19,23 +19,33 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     // symbol
     childs.push(...gR(h, sym, comsMap));
 
-    if (childs.length == 0) {
-        // todo
-        return h('rect', {
-            reflush,
-            "fill-opacity": 1,
-            stroke: 'none',
-            'stroke-width': 0,
-            x: frame.x,
-            y: frame.y,
-            width: frame.width,
-            height: frame.height
-        });
+    const props: any = {}
+    if (reflush) props.reflush = reflush;
+
+    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
+        const cx = frame.x + frame.width / 2;
+        const cy = frame.y + frame.height / 2;
+        const style: any = {}
+        style.transform = "translate(" + cx + "px," + cy + "px) "
+        if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
+        if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
+        if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
+        style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+        props.style = style;
     }
-    // else if (childs.length == 1) {
-    //     return transform(childs[0], h);
-    // }
     else {
-        return h("g", { transform: 'translate(' + frame.x + ',' + frame.y + ')', reflush }, childs);
+        props.transform = `translate(${frame.x},${frame.y})`
+    }
+
+    if (childs.length == 0) {
+        props["fill-opacity"] = 1;
+        props.d = path;
+        props.fill = 'none';
+        props.stroke = 'none';
+        props["stroke-width"] = 0;
+        return h('path', props);
+    }
+    else {
+        return h("g", props, childs);
     }
 }

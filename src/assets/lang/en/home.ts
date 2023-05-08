@@ -13,7 +13,21 @@ export const system = {
     'bring_to_top': 'Bring to top',
     'send_to_bottom': 'Send to bottom',
     'visible': 'Visible/Hidden',
-    'Lock': 'Lock/Unlock'
+    'Lock': 'Lock/Unlock',
+    'select_all': 'Select all',
+    'fit_canvas': 'Adapt to artboard',
+    'show_many_cursor': 'Show others cursor',
+    'show_comment': 'Show comment',
+    'show_ruler': 'show ruler',
+    'show_pixel_network': 'Show grid',
+    'hide_operation_interface': 'Hide UI',
+    'creating_groups': 'Create group',
+    'create_container': 'Create artboard',
+    'un_group': 'Dissolve the group',
+    'create_component': 'Create component',
+    'unbind_instance': 'Unbind',
+    'reset_instance_roperties': 'Reset',
+    'edit_component': 'Edit component'
 }
 
 export const home = {
@@ -29,6 +43,26 @@ export const navi = {
     comps: 'Compnents',
     resource: 'Resource',
     page: 'Page',
+    add_page: 'Add new page',
+    copy: 'copy'
+}
+
+export const frame = {
+    custom: 'Custom',
+    phone: 'Phone',
+    tablet: 'Tablet',
+    deskdop: 'Deskdop',
+    presentation: 'Presentation',
+    watch: 'Watch',
+    paper: 'Paper',
+    social_media: 'Social media'
+}
+
+export const pageMenu = {
+    copy_link: 'Copy link to page',
+    duplicate: 'Duplicate page',
+    rename: 'Rename page',
+    delete: 'Delete page'
 }
 
 export const attr: any = {
@@ -38,6 +72,7 @@ export const attr: any = {
     constraints: 'Constraints',
     border: 'Border',
     fill: 'Fill',
+    text: 'Text',
     'follow_container_scaling': 'Follow container scaling',
     'advanced_stroke': 'Advanced stroke',
     position: 'Position',
@@ -65,7 +100,8 @@ export const attr: any = {
     'follow_container': 'Follow container',
     'fixed_bottom': 'Bottom fixed',
     'fixed_top': 'Top fixed',
-    'fixed_top_bottom': 'Fixed top and bottom'
+    'fixed_top_bottom': 'Fixed top and bottom',
+    'adapt': 'Resize to fit'
 }
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';

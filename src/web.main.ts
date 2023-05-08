@@ -5,10 +5,9 @@ import SvgIcon from '@/components/common/SvgIcon.vue';
 import "@/assets/icons/loadall";
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
-import '@/style/index.scss';
-import "@/assets/icons/loadall"
+import '@/style/constant.scss';
+import '@/style/app.scss';
 import { router } from "./router" ;
-import AppVue from "./App.vue";
 
 
 const app = createApp(App)

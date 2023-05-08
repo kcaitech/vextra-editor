@@ -1,16 +1,19 @@
 import { Watchable } from "@kcdesign/data/data/basic";
-import { Context } from "./index"
 import { Repository } from "@kcdesign/data/data/transact";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
-import { Matrix } from '@/basic/matrix';
+import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Context } from "./index";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
     AutoK = 'scale',
     AddRect = 'add-rect',
-    AddLine = 'add-line'
+    AddLine = 'add-line',
+    AddEllipse = 'add-ellipse',
+    AddArrow = 'add-arrow',
+    AddFrame = 'add-frame'
 }
-export enum KeyboardKeys {
+export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
     R = 'KeyR',
     V = 'KeyV',
@@ -20,44 +23,88 @@ export enum KeyboardKeys {
     Down = 'ArrowDown',
     Left = 'ArrowLeft',
     Right = 'ArrowRight',
-    K = 'KeyK'
+    K = 'KeyK',
+    O = 'KeyO',
+    F = 'KeyF',
+    Digit0 = 'Digit0'
 }
-export enum CursorType {
-    Crosshair = 'crosshair',
-    Auto = 'auto',
-    Grab = 'grab',
-    Grabbing = 'grabbing'
-}
-export enum CtrlElementType {
-    RectL = 'rect-left',
-    RectR = 'rect-top',
-    RectB = 'rect-bottom',
-    RectT = 'rect-top',
+export enum CtrlElementType { // 控制元素类型
+    RectLeft = 'rect-left',
+    RectRight = 'rect-right',
+    RectBottom = 'rect-bottom',
+    RectTop = 'rect-top',
     RectLT = 'rect-left-top',
     RectRT = 'rect-right-top',
     RectRB = 'rect-right-bottom',
-    RectLB = 'rect-left-bottom'
+    RectLB = 'rect-left-bottom',
+    RectLTR = 'rect-left-top-rotate',
+    RectRTR = 'rect-right-top-rotate',
+    RectRBR = 'rect-right-bottom-rotate',
+    RectLBR = 'rect-left-bottom-rotate',
+    LineStart = 'line-start',
+    LineEnd = 'line-end',
+    LineStartR = 'line-start-rotate',
+    LineEndR = 'line-end-rotate',
 }
+
 const A2R = new Map([
     [Action.Auto, undefined],
-    [Action.AddRect, ShapeType.Rectangle]
+    [Action.AddRect, ShapeType.Rectangle],
+    [Action.AddEllipse, ShapeType.Oval],
+    [Action.AddLine, ShapeType.Line],
+    [Action.AddFrame, ShapeType.Artboard]
 ]);
-export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action);
+export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
-    readonly r_context: Context
-    private m_current_action: Action = Action.AutoV;
-    private m_scale: number = 1;
+    static ESC_EVENT_POINTER: any = undefined; // 用于存储esc事件的指针
+    static INSERT_FRAME = 1; // notify类型：插入容器模版、更新光标、重置光标、矩阵变换
+    static CURSOR_CHANGE = 2;
+    static RESET_CURSOR = 3;
+    static MATRIX_TRANSFORMATION = 4;
+    static SELECTING = 5;
+    static SHUTDOWN_MENU = 6;
+    static SHUTDOWN_POPOVER = 7;
+    private context: Context;
+    private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: any;
+    private m_clip_board: any; // 剪切板
+    private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
+    private m_scaling: boolean = false; // 编辑器是否正在缩放图形
+    private m_rotating: boolean = false; // 编辑器是否正在旋转图形
+    private m_translating: boolean = false; // 编辑器是否正在移动图形
+    private m_creating: boolean = false; // 编辑器是否正在创建图形
+    private m_selecting: boolean = false; // 编辑器是否正在选择图形
+    private m_menu_mount: boolean = false;
+    private m_popover: boolean = false;
+    private m_rootId: string = 'content';
+    private m_pageViewId: string = 'pageview';
     constructor(context: Context) {
         super();
-        this.r_context = context
+        this.context = context
+    }
+    get root() { //return contentView HTMLElement
+        const root = { x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
+        let content: any = document.querySelectorAll('#content');
+        content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
+        if (content) {
+            const { x, y, bottom, right } = content.getBoundingClientRect();
+            root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
+            root.x = x;
+            root.y = y;
+            root.bottom = bottom;
+            root.right = right;
+            root.element = content;
+        }
+        return root;
+    }
+    get pageView() {//return pageView HTMLElement
+        const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
+        if (pageView) {
+            return pageView as Element;
+        }
     }
     get action() {
         return this.m_current_action;
-    }
-    get scale() {
-        return this.m_scale;
     }
     get matrix() {
         return this.m_matrix;
@@ -65,21 +112,99 @@ export class WorkSpace extends Watchable(Object) {
     get clipBoard() {
         return this.m_clip_board;
     }
-    
-    setAction(action: Action) {
-        this.m_current_action = action;
-        this.notify();
+    get frameSize() {
+        return this.m_frame_size;
     }
-    setScale(s: number) {
-        this.m_scale = s;
+    get transforming() {
+        return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating;
+    }
+    get select() {
+        return this.m_selecting;
+    }
+    get isMenuMount() {
+        return this.m_menu_mount;
+    }
+    get ispopover() {
+        return this.m_popover;
+    }
+    menuMount(mount: boolean) {
+        this.m_menu_mount = mount;
+        if (!mount) {
+            this.notify(WorkSpace.SHUTDOWN_MENU);
+        }
+    }
+    popoverVisible(visible: boolean) {
+        this.m_popover = visible;
+        if (!visible) {
+            this.notify(WorkSpace.SHUTDOWN_POPOVER);
+        }
+    }
+    setRootId(id: string) {
+        this.m_rootId = id;
+    }
+    setPageViewId(id: string) {
+        this.m_pageViewId = id
+    }
+    keyboardHandle(event: KeyboardEvent) {
+        const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
+        if (event.code === KeyboardKeys.R) {
+            this.keydown_r();
+        } else if (event.code === KeyboardKeys.V) {
+            this.keydown_v();
+        } else if (event.code === KeyboardKeys.L) {
+            this.keydown_l(shiftKey);
+        } else if (event.code === KeyboardKeys.Z) {
+            this.keydown_z(this.context.repo, ctrlKey, shiftKey, metaKey);
+        } else if (event.code === KeyboardKeys.K) {
+            this.keydown_k();
+        } else if (event.code === KeyboardKeys.O) {
+            this.keydown_o();
+        } else if (event.code === KeyboardKeys.F) {
+            this.keydown_f();
+        } else if (event.code === KeyboardKeys.Digit0) {
+            this.keydown_0(ctrlKey, metaKey);
+        }
+    }
+    matrixTransformation() { // 页面坐标系发生变化
+        this.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    }
+    setAction(action: Action) {
+        if (action === Action.AutoV && WorkSpace.ESC_EVENT_POINTER) {
+            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        } else this.escSetup();
+        this.m_current_action = action;
         this.notify();
     }
     setClipBoard(v: any) {
         this.m_clip_board = v;
     }
+    setFrameSize(size: { width: number, height: number }) {
+        this.m_frame_size = size
+        this.notify(WorkSpace.INSERT_FRAME);
+    }
+    setFrame(size: { width: number, height: number }) {
+        this.m_frame_size = size
+    }
+    scaling(v: boolean) {
+        this.m_scaling = v;
+    }
+    rotating(v: boolean) {
+        this.m_rotating = v;
+    }
+    translating(v: boolean) {
+        this.m_translating = v;
+    }
+    creating(v: boolean) {
+        this.m_creating = v;
+    }
+    selecting(v: boolean) {
+        this.m_selecting = v;
+        this.notify(WorkSpace.SELECTING);
+    }
 
     // keyboard
     keydown_r() {
+        this.escSetup();
         this.m_current_action = Action.AddRect;
         this.notify();
     }
@@ -87,8 +212,9 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AutoV;
         this.notify();
     }
-    keydown_l() {
-        this.m_current_action = Action.AddLine;
+    keydown_l(shiftKey: boolean) {
+        this.escSetup();
+        this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
     }
     keydown_z(repo: Repository, ctrl?: boolean, shift?: boolean, meta?: boolean) {
@@ -98,11 +224,77 @@ export class WorkSpace extends Watchable(Object) {
             repo.canRedo() && repo.redo();
         }
     }
-    keydown_arrow(type: KeyboardKeys, shift?: boolean) {        
-        return this.r_context;
-    }
-    keydown_K() {
+    keydown_k() {
+        this.escSetup();
         this.m_current_action = Action.AutoK;
         this.notify();
+    }
+    keydown_o() {
+        this.escSetup();
+        this.m_current_action = Action.AddEllipse;
+        this.notify();
+    }
+    keydown_f() {
+        this.escSetup();
+        this.m_current_action = Action.AddFrame;
+        this.notify();
+    }
+    keydown_0(ctrl: boolean, meta: boolean) {
+        if (ctrl || meta) {
+            const { center } = this.root;
+            this.m_matrix.trans(-center.x, -center.y);
+            const _s = 1 / this.m_matrix.toArray()[0];
+            this.m_matrix.scale(_s);
+            this.m_matrix.trans(center.x, center.y);
+            this.notify(WorkSpace.MATRIX_TRANSFORMATION);
+        }
+    }
+    escSetup() { // 安装取消当前状态的键盘事件(Esc)，在开启一个状态的时候应该考虑关闭状态的处理！
+        if (WorkSpace.ESC_EVENT_POINTER) {
+            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        }
+        WorkSpace.ESC_EVENT_POINTER = this.esc.bind(this);
+        document.addEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+    }
+    esc(event: KeyboardEvent) {
+        if (event.code === 'Escape') {
+            this.setAction(Action.AutoV);
+            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+            WorkSpace.ESC_EVENT_POINTER = undefined;
+        }
+    }
+    setCursor(type: CtrlElementType, deg: number) {
+        if (this.m_creating || this.m_selecting) {
+            // todo
+        } else {
+            let name = 'auto-0';
+            if (type === CtrlElementType.RectRBR) {
+                name = `rotate-${0 + deg}`;
+            } else if (type === CtrlElementType.RectLBR) {
+                name = `rotate-${90 + deg}`;
+            } else if (type === CtrlElementType.RectLTR) {
+                name = `rotate-${180 + deg}`;
+            } else if (type === CtrlElementType.RectRTR) {
+                name = `rotate-${270 + deg}`;
+            } else if (type === CtrlElementType.RectLT || type === CtrlElementType.RectRB) {
+                name = `scale-${45 + deg}`;
+            } else if (type === CtrlElementType.RectRT || type === CtrlElementType.RectLB) {
+                name = `scale-${135 + deg}`;
+            } else if (type === CtrlElementType.LineStart || type === CtrlElementType.LineEnd) {
+                name = 'extend-0';
+            } else if (type === CtrlElementType.LineStartR) {
+                name = `rotate-${135 + deg}`;
+            } else if (type === CtrlElementType.LineEndR) {
+                name = `rotate-${315 + deg}`;
+            } else if (type === CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
+                name = `scale-${90 + deg}`
+            } else if (type === CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
+                name = `scale-${0 + deg}`
+            }
+            this.notify(WorkSpace.CURSOR_CHANGE, name);
+        }
+    }
+    resetCursor() {
+        !this.transforming && this.notify(WorkSpace.RESET_CURSOR);
     }
 }

@@ -24,5 +24,6 @@ const props = defineProps<{ context: Context }>();
     background-color: rgb(242, 252, 231);
     font-size: 10px;
     padding: 8px 16px;
+    box-sizing: border-box;
 }
 </style>

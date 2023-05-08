@@ -57,14 +57,15 @@ function toggle(id: Tab) {
 .tab-container {
     position: relative;
     width: 100%;
+    box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
     .tab-controller {
         height: 36px;
         width: 100%;
-        flex: 0 0 auto;
         display: flex;
         flex-direction: row;
         margin-left: 13px;
+        overflow: hidden;
 
         >.tab {
             font-weight: var(--font-default-bold);
@@ -81,6 +82,7 @@ function toggle(id: Tab) {
             border-radius: 4px 4px 0 0;
             background-color: var(--grey-dark);
         }
+
     }
 
     .body {
