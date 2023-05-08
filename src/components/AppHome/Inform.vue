@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, defineEmits, defineProps,watch } from 'vue'
+import { ref, computed, defineEmits, defineProps, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import * as share_api from '@/apis/share'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -10,14 +12,14 @@ const props = defineProps<{
   applyList: any
 }>()
 const applyList: any = ref(props.applyList)
-const permission = ref(['无权限', '只读', '可评论','可编辑'])
+const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 enum Audit {
   Pass,
   unPass
 }
 watch(props.applyList, () => {
   applyList.value = props.applyList
-},{deep: true})
+}, { deep: true })
 
 const formatDate = computed(() => {
   return function (value: string): string {
@@ -38,10 +40,10 @@ const refuse = (id: number, index: number) => {
 const promissionApplyAudit = async (id: number, type: number) => {
   try {
     await share_api.promissionApplyAuditAPI({ apply_id: id, approval_code: type })
-  }catch(error) {
+  } catch (error) {
     ElMessage({
-        message: '授权失败'
-      })
+      message: `${t('apply.authorization_failure')}`
+    })
   }
 }
 const close = () => {
@@ -54,7 +56,7 @@ const close = () => {
     <!-- 标题 -->
     <template #header>
       <div class="card-header">
-        <span>通知消息</span>
+        <span>{{ t('apply.notification_message') }}</span>
         <el-button class="button" text @click="close">
           <div class="close"> X </div>
         </el-button>
@@ -69,44 +71,42 @@ const close = () => {
               <span>{{ item.user.nickname }}</span>
               <span>{{ formatDate(item.created_at) }}</span>
             </div>
-            <el-tooltip
-              class="box-item"
-              effect="light"
-              placement="bottom-end"
-            >
-            <template #content><div class="custom-tooltip">申请文档："{{item.document.name}}"权限：{{permission[item.perm_type]}}，【备注】{{item.remarks}}</div></template>
-            <div class="item-text">
-              {{ '申请文档：' + '"' + item.document.name +'"权限：'+permission[item.perm_type] + '， 【备注】' + item.remarks }}
-            </div>
+            <el-tooltip class="box-item" effect="light" placement="bottom-end">
+              <template #content>
+                <div class="custom-tooltip">
+                  {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{ permission[item.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.remarks }}</div>
+              </template>
+              <div class="item-text">
+                {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{ permission[item.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.remarks }}</div>
             </el-tooltip>
           </div>
           <div class="botton" v-if="item.approval_result === 0">
-            <el-button color="#0d99ff" size="small" @click="consent(item.id, i)">同意</el-button>
-            <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.id, i)">拒绝</el-button>
+            <el-button color="#0d99ff" size="small" @click="consent(item.id, i)">{{ t('apply.agree') }}</el-button>
+            <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.id, i)">{{ t('apply.refuse') }}</el-button>
           </div>
           <div class="botton" v-else>
-            <p v-if="item.approval_result === 1">已同意</p>
-            <p v-else-if="item.approval_result === 2">已拒绝</p>
+            <p v-if="item.approval_result === 1">{{ t('apply.have_agreed') }}</p>
+            <p v-else-if="item.approval_result === 2">{{ t('apply.rejected') }}</p>
           </div>
         </div>
-        <div class="text" v-if="applyList.length === 0"><span>未收到任何消息</span></div>
+        <div class="text" v-if="applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
       </el-scrollbar>
     </div>
   </el-card>
 </template>
 
 <style lang="scss" scoped>
-::v-deep .el-card__header {
+:deep(.el-card__header) {
   border-bottom: none;
   padding: var(--default-padding-half) var(--default-padding);
   padding-bottom: 0;
 }
 
-::v-deep .el-card__body {
+:deep(.el-card__body) {
   padding: var(--default-padding-half) var(--default-padding-quarter) var(--default-padding-half) var(--default-padding);
 }
 
-::v-deep .el-button+.el-button {
+:deep(.el-button+.el-button) {
   margin-left: 0;
 }
 
@@ -126,14 +126,18 @@ const close = () => {
   }
 
 }
+
 .tooltip-base-box .box-item {
   margin-top: 10px;
   width: 180px;
   background-color: #fff;
 }
+
 .custom-tooltip {
-  max-width: 200px; /* 设置最大宽度 */
-  word-wrap: break-word; /* 设置自动换行 */
+  max-width: 200px;
+  /* 设置最大宽度 */
+  word-wrap: break-word;
+  /* 设置自动换行 */
 }
 
 .contain {

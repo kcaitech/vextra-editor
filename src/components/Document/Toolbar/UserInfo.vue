@@ -36,9 +36,6 @@ const props = defineProps<Props>();
         box-sizing: border-box;
         display: flex;
         flex-direction: row;
-        position: absolute;
-        right: 0;
-        transform: translateX(-10%);
         div {
             margin: auto 4px;
         }

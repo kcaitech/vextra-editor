@@ -14,7 +14,9 @@ import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document } from '@kcdesign/data/data/document';
 import { Repository } from '@kcdesign/data/data/transact';
 import * as share_api from '@/apis/share'
-import { useRoute } from 'vue-router'
+import { useRoute } from 'vue-router';
+import { router } from '@/router'
+
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
 (window as any).__context = context.value;
@@ -37,7 +39,9 @@ const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
-const permType = ref(1)
+let permType: any = undefined
+const docInfo: any = ref({})
+const docID = '1672502400000'
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -170,30 +174,64 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
-const getDocumentAuthority = async () => {
-    const { data } = await share_api.getDocumentAuthorityAPI({ doc_ic: route.query.id })
-    permType.value = data.perm_type
+const getDocumentInfo = async() => {
+    const data = await share_api.getDocumentInfoAPI({ doc_id: docID })
+    docInfo.value = data.data
+    //获取文档类型是否为私有文档且有无权限
+    if(docInfo.value.document.doc_type !== 0 && docInfo.value.perm_type == 0) {
+        router.push({
+            name: 'apply',
+            query: {
+                id: route.query.id
+            }
+        })
+    }
 }
+//获取文档信息
+getDocumentInfo()
+const getDocumentAuthority = async () => {
+    const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+    permType = data.data.perm_type
+}
+//获取文档类型
 getDocumentAuthority()
+//获取文档密钥
+const getDocumentKey = async() => {
+    const {data} = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
+}
 
 let timer: any = null
 onMounted(() => {
-    if(((window as any).sketchDocument as Document)) {
-        context.value.selection.watch(selectionWatcher);
+    context.value.selection.watch(selectionWatcher);
+    if ((window as any).sketchDocument) {
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
         if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
             document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
         }
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
-        getDocumentAuthority()
-        }, 60000) 
+            getDocumentAuthority()
+        }, 60000)
+        
         return
     }
     
-    // if(!route.query.id) {
-
-    // }
+    if(!(window as any).sketchDocument && !route.query.id) {
+        router.push('/');
+        return;
+    }
+    if(route.query.id) {
+        getDocumentKey()
+        switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+        if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
+            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        }
+        document.addEventListener('keydown', keyboardEventHandler);
+        timer = setInterval(() => {
+            getDocumentAuthority()
+        }, 60000)
+        return
+    }
 })
 onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
@@ -261,6 +299,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 #top {
     display: flex;
+    position: relative;
     flex-flow: row nowrap;
     width: 100%;
     height: 40px;

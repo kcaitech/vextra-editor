@@ -15,12 +15,14 @@ function onclick() {}
 </script>
 
 <template>
-    <div class="temp" title="new file">
-        <svg-icon icon-class="frame"></svg-icon>
+    <div class="tool-left">
+        <div class="temp" title="new file">
+            <svg-icon icon-class="frame"></svg-icon>
+        </div>
+        <ToolButton :onclick="onclick" :valid="true" :selected="false">
+            <span>{{ t('home.new_file') }}</span>
+        </ToolButton>
     </div>
-    <ToolButton :onclick="onclick" :valid="true" :selected="false">
-        <span>{{ t('home.new_file') }}</span>
-    </ToolButton>
 </template>
 
 <style scoped lang="scss">
@@ -37,4 +39,7 @@ function onclick() {}
             height: 100%;
         }
     }
+    .tool-left {
+        display: flex;
+    } 
 </style>
