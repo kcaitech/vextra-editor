@@ -1,9 +1,11 @@
 import { Context } from "@/context"
 
 export function keyboardHandle(e: KeyboardEvent, context: Context) {
+    const { target, shiftKey } = e;
+    if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;
     if (!shapes.length) return;
-    const step = e.shiftKey ? 10 : 1;
+    const step = shiftKey ? 10 : 1;
     let dx: number = 0, dy: number = 0, transform: boolean = false;
     if (e.code === 'ArrowRight') {
         dx = step, dy = 0, transform = true;

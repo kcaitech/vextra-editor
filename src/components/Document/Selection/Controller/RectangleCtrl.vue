@@ -89,7 +89,8 @@ function updater() {
     getRect(props.controllerFrame);
 }
 function getShapesByXY() {
-    const shapes = props.context.selection.getShapesByXY(startPosition);
+    const startPositionOnPage = workspace.value.matrix.inverseCoord(startPosition.x, startPosition.y);
+    const shapes = props.context.selection.getShapesByXY(startPositionOnPage);
     if (shapes.length) {
         props.context.selection.selectShape(shapes.at(-1));
     } else {
