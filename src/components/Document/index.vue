@@ -14,7 +14,9 @@ import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document } from '@kcdesign/data/data/document';
 import { Repository } from '@kcdesign/data/data/transact';
 import * as share_api from '@/apis/share'
-import { useRoute } from 'vue-router'
+import { useRoute } from 'vue-router';
+import { router } from '@/router'
+
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
 (window as any).__context = context.value;
@@ -179,6 +181,10 @@ getDocumentAuthority()
 let timer: any = null
 onMounted(() => {    
     context.value.selection.watch(selectionWatcher);
+    if (!(window as any).sketchDocument) {
+        router.push('/');
+        return;
+    }
     switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
     if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
         document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();

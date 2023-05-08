@@ -1,6 +1,6 @@
-import { createRouter, createWebHashHistory } from "vue-router";
-import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
+import { createRouter, createWebHashHistory, onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import { ref } from 'vue';
+import { SKIP_LOGIN } from '@/utils/setting';
 // import { Document } from "@kcdesign/data/document";
 const AppVue = () => import("@/App.vue");
 const HomeVue = () => import("@/components/Home/index.vue");
@@ -14,11 +14,10 @@ const MeShare = () => import("@/components/AppHome/Main/MeShare.vue");
 const RecycleBin = () => import("@/components/AppHome/Main/RecycleBin.vue");
 const Apply = () => import("@/components/Apply/index.vue")
 
-
 const routes = [
     {
         path: '/',
-        redirect: '/login'
+        redirect: SKIP_LOGIN ? '/apphome/recently' : '/login'
     },
     {
         path: "/login",
