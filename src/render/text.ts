@@ -13,7 +13,6 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
     const { yOffset, paras } = layoutText(shape);
     const pc = paras.length;
 
-    const matrix = new Matrix();
     const paths = [];
     for (let i = 0; i < pc; i++) {
         const lines = paras[i];
@@ -31,9 +30,7 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
                 paths.push(...garr.map((g) => {
                     const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
-                    matrix.reset();
-                    matrix.trans(g.x + offsetX, y + offsetY);
-                    path.transform(matrix)
+                    path.translate(g.x + offsetX, y + offsetY);
                     return path.toString();
                 }))
             }
@@ -69,10 +66,11 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 
                 const span = garr.attr;
                 const fontSize = span?.fontSize || 0;
-                const y = line.y + (line.lineHeight - fontSize) / 2 + yOffset; // top
+                const fontName = span?.fontName;
+                const y = line.y + (line.lineHeight) / 2 + yOffset; // top
 
-                const font = "normal " + (span?.fontSize || 0) + "px " + (span?.fontName);
-                childs.push(h('text', { x: gX.join(' '), y, style: { fill: span && span.color && toRGBA(span.color), font, 'alignment-baseline': 'before-edge' } }, gText.join('')));
+                const font = "normal " + fontSize + "px " + fontName;
+                childs.push(h('text', { x: gX.join(' '), y, style: { fill: span && span.color && toRGBA(span.color), font, 'alignment-baseline': 'central' } }, gText.join('')));
             }
         }
     }
