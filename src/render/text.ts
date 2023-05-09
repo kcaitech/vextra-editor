@@ -56,12 +56,16 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                 const gX = []
                 // const gY = []
                 const garr = line[garrIdx];
-
+                let preChar = ' ';
                 for (let gIdx = 0, gCount = garr.length; gIdx < gCount; gIdx++) {
                     const graph = garr[gIdx];
+                    if (graph.char === ' ' && preChar === ' ') { // 两个连续的空格或者首个空格，svg显示有问题
+                        continue;
+                    }
                     gText.push(graph.char);
                     gX.push(graph.x);
                     // gY.push(y);
+                    preChar = graph.char;
                 }
 
                 const span = garr.attr;
