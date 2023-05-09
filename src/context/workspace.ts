@@ -127,6 +127,7 @@ export class WorkSpace extends Watchable(Object) {
     get ispopover() {
         return this.m_popover;
     }
+
     menuMount(mount: boolean) {
         this.m_menu_mount = mount;
         if (!mount) {

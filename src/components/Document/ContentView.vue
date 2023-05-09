@@ -20,7 +20,7 @@ import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
 import { fourWayWheel, Wheel, forNewShape } from '@/utils/contentFn';
-
+import { compare } from '@/utils/performance';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -305,7 +305,7 @@ function hoveredShape(e: MouseEvent) {
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy);
+    const shapes = props.context.selection._getShapesByXY_beta(xy); // xy: PageXY
     const hoveredShape = shapes.reverse().find(s => s.type && s.type !== ShapeType.Artboard);
     if (hoveredShape) {
         props.context.selection.hoverShape(hoveredShape);
@@ -543,7 +543,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
 
     initMatrix(cur)
 })
-onMounted(() => { // 身负重担的content view
+onMounted(async () => { // 身负重担的content view
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
@@ -552,6 +552,9 @@ onMounted(() => { // 身负重担的content view
     window.addEventListener('blur', windowBlur);
     stylerForCursorMount();
     rootRegister(true);
+    props.context.selection.scoutMount(); // 用于hover判定
+    await props.context.selection.canvaskitScoutMount();
+    (window as any).compare = compare(props.context.selection.canvaskitScout!, props.context.selection.scout!);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
@@ -562,6 +565,7 @@ onUnmounted(() => {
     styler.value.remove();
     rootRegister(false);
     stopWatch();
+    props.context.selection.scout?.remove()
 })
 renderinit().then(() => {
     inited.value = true;

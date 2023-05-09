@@ -7,6 +7,7 @@ import { ControllerType, ctrlMap } from "./Controller";
 import { CtrlElementType } from "@/context/workspace";
 import { getHorizontalAngle, createRect, createHorizontalBox } from "@/utils/common";
 import { XY } from "@/context/selection";
+import { cloneDeep } from "lodash";
 export interface Point {
     x: number,
     y: number,
@@ -211,7 +212,7 @@ function createShapeTracing() { // 描边
         });
         const [p0, p1, p2, p3] = tracing.value;
         tracingStyle = createRect(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-        const path = hoveredShape.getPath(true);
+        const path = hoveredShape.getPath(true);        
         const m2page = hoveredShape.matrix2Page();
         path.transform(m2page);
         path.transform(matrix);

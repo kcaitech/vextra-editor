@@ -277,6 +277,7 @@ watchEffect(updater)
     position: absolute;
     box-sizing: border-box;
     background-color: transparent;
+    // opacity: 0;
     opacity: 1;
 
     >.frame {

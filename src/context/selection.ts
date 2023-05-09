@@ -3,6 +3,8 @@ import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
+import { scout, Scout } from "@/utils/scout";
+import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -10,6 +12,22 @@ interface Saved {
     cursorEnd: number
 }
 export interface XY {
+    x: number,
+    y: number
+}
+export interface PageXY {
+    x: number,
+    y: number
+}
+export interface ClientXY {
+    x: number,
+    y: number
+}
+export interface ParentXY {
+    x: number,
+    y: number
+}
+export interface ShapeXY {
     x: number,
     y: number
 }
@@ -29,6 +47,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_hoverShape?: Shape;
     private m_document: Document;
     private m_search_keyword: string | undefined;
+    private m_scout: Scout | undefined;
+    private m_scout_beta: CanvasKitScout | undefined;
 
     // todo
     private m_cursorStart: number = -1;
@@ -37,6 +57,20 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     constructor(document: Document) {
         super();
         this.m_document = document;
+    }
+    get scout(): Scout | undefined {
+        return this.m_scout;
+    }
+    get canvaskitScout(): CanvasKitScout | undefined {
+        return this.m_scout_beta;
+    }
+    scoutMount() {
+        this.m_scout = scout();
+    }
+    async canvaskitScoutMount() {
+        console.log('mount');
+        
+        this.m_scout_beta = await canvasKitScout();
     }
 
     selectPage(p: Page | undefined) {
@@ -60,15 +94,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     async deletePage(id: string, index: number) {
         if (id === this.m_selectPage?.id) {
-            if (index === this.m_document.pagesList.length) {
-                await this.m_document.pagesMgr.get(this.m_document.pagesList[0].id).then(p => {
-                    this.m_selectPage = p;
-                });
-            } else {
-                await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
-                    this.m_selectPage = p;
-                });
-            }
+            index = index === this.m_document.pagesList.length ? 0 : index;
+            await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
+                this.m_selectPage = p;
+            });
         }
         this.m_selectShapes.length = 0;
         this.m_cursorStart = -1;
@@ -92,8 +121,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     getShapesByXY(position: XY, force?: boolean): Shape[] { // force 暴力矿工，深度搜索。
         // 在项目中，有三种检索需求：hover、左键、右键
         // hover：检索窗口可视图形，被裁剪的、unVisiable不检索。检索过程中，在遇见编组、容器的时候有额外处理
-            // 遇见编组：
-            // 遇见容器：
+        // 遇见编组：
+        // 遇见容器：
         // click left：类似hover，额外有双击操作，双击操作只检索当前hover对象的子对象
         // click right：检索窗口可视、被裁减的图形，unVisiable不检索
         position = cloneDeep(position);
@@ -114,6 +143,43 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
                 if (source[i].childs?.length) deep(source[i].childs, suppos);
             }
         }
+    }
+    _getShapesByXY(position: PageXY): Shape[] { // Scout方案 position: PageXY
+        const page = this.m_selectPage!;
+        const childs = page.childs;
+        const shapes: Shape[] = [];
+        for (let i = 0; i < childs.length; i++) {
+            const item = childs[i];
+            const path = item.getPath(true);
+            const m2page = item.matrix2Page();
+            path.transform(m2page);
+            const d = path.toString();
+            if (this.scout) {
+                if (this.scout.isPointInShape(d, position)) {
+                    shapes.push(item);
+                }
+            }
+        }
+        return shapes;
+    }
+    _getShapesByXY_beta(position: PageXY): Shape[] { // canvaskit-wasm方案
+        const page = this.m_selectPage!;
+        const childs = page.childs;
+        const shapes: Shape[] = [];
+        for (let i = 0; i < childs.length; i++) {
+            const item = childs[i];
+            const path = item.getPath(true);
+            const m2page = item.matrix2Page();
+            path.transform(m2page);
+            const d = path.toString();
+            
+            if (this.canvaskitScout) {
+                if (this.canvaskitScout.isPointInShape(d, position)) {
+                    shapes.push(item);
+                }
+            }
+        }
+        return shapes;
     }
     getClosetContainer(position: XY): GroupShape {
         position = cloneDeep(position);
@@ -244,7 +310,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             }
         }
     }
-
     save(): Saved {
         const saved = {
             page: this.m_selectPage,
