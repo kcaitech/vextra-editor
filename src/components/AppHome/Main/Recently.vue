@@ -1,13 +1,13 @@
 
 <template>
     <el-table :data="documentsList" height="83vh" style="width: 100%" v-if="viewmodel" v-loading="isLoading">
-        <el-table-column prop="name" label="文件名称" />
-        <el-table-column prop="updated_at" label="修改时间" />
-        <el-table-column prop="size" label="大小" />
-        <el-table-column class="operation" label="操作" type="index" width="180">
-            <a href="#">标星</a>&nbsp;
-            <a href="#">分享</a>&nbsp;
-            <a href="#">删除</a>
+        <el-table-column prop="name" :label="t('home.file_name')" />
+        <el-table-column prop="updated_at" :label="t('home.modification_time')" />
+        <el-table-column prop="size" :label="t('home.size')" />
+        <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
+            <a href="#">{{ t('home.star_marking') }}</a>&nbsp;
+            <a href="#">{{ t('home.share') }}</a>&nbsp;
+            <a href="#">{{ t('home.delete') }}</a>
         </el-table-column>
     </el-table>
 
@@ -26,7 +26,7 @@
             </el-card>
         </el-col>
     </el-row>
-    <button @click="viewmodel = !viewmodel">测试</button>
+    <button @click="viewmodel = !viewmodel">{{ t('home.test') }}</button>
 </template>
 
 <script setup lang="ts">
@@ -34,7 +34,8 @@ import * as user_api from '@/apis/users'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { pushScopeId, reactive, ref, onMounted } from 'vue'
 import * as share_api from "@/apis/share"
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 
 const form = reactive({
@@ -71,7 +72,7 @@ const isLoading = ref(false);
 function starclick() {
     //需要判断文件是否已经存在与标星数据中
     ElMessage({
-        message: '文件已被标星，可在标星列表中查看！',
+        message: `${t('home.file_star_marking')}`,
         type: 'success',
     })
 }

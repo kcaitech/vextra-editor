@@ -101,7 +101,7 @@ var exports = defineConfig({
         https: false,
         proxy: {
             '/api':{
-                target: 'http://192.168.0.8:10000',
+                target: 'http://192.168.0.10:10000',
                 // target: 'http://mock.apifox.cn/m1/2612240-0-1d5a81b5',
                 changeOrigin: true,
                 disableHostCheck: true,

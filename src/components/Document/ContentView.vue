@@ -386,8 +386,8 @@ function contextMenuMount(e: MouseEvent) {
             surplusY.value = document.documentElement.clientHeight - site.y;
             if (el) {
                 const height = el.offsetHeight;
-                if (surplusY.value - 30 < height) {
-                    surplusY.value = document.documentElement.clientHeight - site.y - 30;
+                if (surplusY.value < height) {
+                    surplusY.value = document.documentElement.clientHeight - site.y;
                     el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
                 }
             }

@@ -1,8 +1,9 @@
-import { BoolOp, GroupShape, Shape } from "@kcdesign/data/data/shape";
+import { BoolOp, GroupShape, Shape, TextShape } from "@kcdesign/data/data/shape";
 import { difference, intersection, subtract, union } from "./boolop";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 import * as types from "@kcdesign/data/data/classes"
+import { renderText2Path } from "./text";
 
 function opPath(bop: BoolOp, path0: string, path1: string): string {
     let path = "";
@@ -32,6 +33,7 @@ export function render2path(shape: Shape, offsetX?: number, offsetY?: number, co
     offsetY = offsetY || 0;
 
     if (!(shape instanceof GroupShape) || shape.childs.length === 0) {
+        if (shape instanceof TextShape) return renderText2Path(shape, offsetX, offsetY);
         return shape.getPath(offsetX, offsetY).toString();
     }
 

@@ -31,7 +31,7 @@ const routes = [
         props: true,
     },
     {
-        path: "/document/",
+        path: "/document",
         name: "document",
         component: DocumentVue
     },
@@ -74,8 +74,6 @@ const routes = [
         component: Apply
     }
 ]
-
-
 
 export const router = createRouter({
     history: createWebHashHistory(),

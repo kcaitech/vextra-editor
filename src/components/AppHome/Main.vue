@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { Menu, Operation } from '@element-plus/icons-vue'
 import { RouterView } from 'vue-router';
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 </script>
 
 <template>
     <div class="title">
         <div>
-            <span>最近打开</span>
+            <span>{{ t('home.automatically_open') }}</span>
         </div>
         <div>
             <el-icon size="25">

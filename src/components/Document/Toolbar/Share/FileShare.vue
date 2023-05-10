@@ -6,7 +6,8 @@ import * as share_api from '@/apis/share'
 import { ElMessage } from 'element-plus'
 const { t } = useI18n()
 const props = defineProps<{
-  docInfo: any
+  docInfo: any,
+  pageHeight: number
 }>()
 const emit = defineEmits<{
   (e: 'close'): void
@@ -17,18 +18,20 @@ enum permissions {
   reviewable,
   editable
 }
-const url = `http://localhost:8080/#/apply?id=${props.docInfo.document.id}`
+const url = location.href + `?id=${props.docInfo.document.id}`
 const docID = '1672502400000'
 const value1 = ref(true)
-const selectValue = ref('需申请确认')
+const selectValue = ref(`${t('share.need_to_apply_for_confirmation')}`)
 const authority = ref(false)
 const index = ref(0)
-const editable = ref('可编辑')
-const readOnly = ref('只读')
-const remove = ref('移除')
+const card = ref<HTMLDivElement>()
+const editable = ref(`${t('share.editable')}`)
+const readOnly = ref(`${t('share.readOnly')}`)
+const remove = ref(`${t('share.remove')}`)
 const founder = ref(false)
 const userInfo = ref<User>()
 let shareList: any = ref([])
+const handleTop = ref<number>()
 const posi = ref({
   top: 0,
   left: 0
@@ -43,24 +46,24 @@ enum docType {
 const popover = ref<HTMLDivElement>()
 const options = [
   {
-    value: '需申请确认',
-    label: '需申请确认'
+    value: `${t('share.need_to_apply_for_confirmation')}`,
+    label: `${t('share.need_to_apply_for_confirmation')}`
   },
   {
-    value: '任何人均可阅读',
-    label: '任何人均可阅读'
+    value: `${t('share.anyone_can_read_it')}`,
+    label: `${t('share.anyone_can_read_it')}`
   },
   {
-    value: '任何人均可编辑',
-    label: '任何人均可编辑'
+    value: `${t('share.anyone_can_edit_it')}`,
+    label: `${t('share.anyone_can_edit_it')}`
   },
   {
-    value: '任何人可评论',
-    label: '任何人可评论'
+    value: `${t('share.anyone_can_comment')}`,
+    label: `${t('share.anyone_can_comment')}`
   }
 ]
-const DocType = reactive(['需申请确认', '可分享', '任何人均可阅读', '任何人可评论', '任何人均可编辑'])
-const permission = reactive(['无权限', '只读', '可评论', '可编辑'])
+const DocType = reactive([`${t('share.need_to_apply_for_confirmation')}`, `${t('share.shareable')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
+const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const closeShare = (e: MouseEvent) => {
   e.stopPropagation()
   emit('close')
@@ -129,21 +132,55 @@ watchEffect(() => {
 })
 userInfo.value = ((window as any).skuser as User);
 getShareList()
-const copyLink = () => {
-  navigator.clipboard.writeText(url).then(() => {
-    ElMessage({
-      message: '复制成功',
-      type: 'success',
-    })
-  }, () => {
-    ElMessage({
-      message: '复制失败',
-      type: 'success',
-    })
-  })
+const copyLink = async() => {
+  if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(url).then(() => {
+        ElMessage({
+          message: `${t('share.copy_success')}`,
+          type: 'success',
+        })
+        },() => {
+            ElMessage({
+              message: `${t('share.copy_failure')}`,
+              type: 'success',
+            })
+        })
+  }else {
+        const textArea = document.createElement('textarea')
+        textArea.value = url
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        document.execCommand('copy')
+        ElMessage({
+          message: `${t('share.copy_success')}`,
+          type: 'success',
+        })
+        textArea.remove()
+      }
+ 
 }
+handleTop.value = props.pageHeight / 2
+watch(() => props.pageHeight, () => {
+  handleTop.value = props.pageHeight / 2
+  nextTick(() => {
+    if(card.value) {
+      let el = card.value
+      el.style.top = Math.max(handleTop.value!, el.offsetHeight/2) + 'px'
+    }
+  })
+})
+watchEffect(() => {
+  nextTick(() => {
+    handleTop.value = props.pageHeight / 2
+    if(card.value) {
+      let el = card.value
+      el.style.top = Math.max(handleTop.value!, el.offsetHeight/2) + 'px'
+    }
+  })
+})
 
-onMounted(() => {
+onMounted(() => {  
   document.addEventListener('click', handleClick);
 })
 
@@ -153,91 +190,93 @@ onUnmounted(() => {
 
 </script>
 <template>
-  <el-card class="box-card" ref="card" :style="{ width: founder ? 300 + 'px' : 400 + 'px' }">
-    <!-- 标题 -->
-    <template #header>
-      <div class="card-header">
-        <span>文件分享</span>
-        <el-button class="button" text @click="closeShare">
-          <div class="close"> X </div>
-        </el-button>
-      </div>
-    </template>
-    <!-- 内容 -->
-    <div class="contain" v-if="!founder">
-      <!-- 开关 -->
-      <div class="share-switch">
-        <span>分享开关:</span>
-        <el-switch class="switch" size="small" v-model="value1" />
-      </div>
-      <!-- 文件名 -->
-      <div class="file-name">
-        <span>文件名:</span>
-        <p class="name">页面顺序调整</p>
-      </div>
-      <!-- 权限设置 -->
-      <div class="purview">
-        <span>权限设置:</span>
-        <el-select v-model="selectValue" style="width: 180px;" class="m-2">
-          <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value" :label="item.label"
-            :value="item.value" />
-        </el-select>
-        <el-button color="#0d99ff" size="small" @click="copyLink">复制链接</el-button>
-      </div>
-      <!-- 分享人 -->
-      <div>
-        <span>已加入分享的人 (分享限制人数5) :</span>
-        <el-scrollbar height="250px" class="shared-by">
-          <div class="scrollbar-demo-item">
-            <div class="item-left">
-              <div class="avatar"><img :src="userInfo?.userInfo.avatar"></div>
-              <div class="name">{{ userInfo?.userInfo.nickname }}</div>
-            </div>
-            <div class="item-right">
-              <div class="founder">创建者</div>
-            </div>
-          </div>
-          <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
-            <div class="item-left">
-              <div class="avatar"><img :src="item.user.avatar"></div>
-              <div class="name">{{ item.user.nickname }}</div>
-            </div>
-            <div class="item-right" @click="e => selectAuthority(ids, e)">
-              <div class="authority">{{ permission[item.perm_type] }}</div>
-              <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
-              <div class="popover" v-if="authority && index === ids" ref="popover"
-                :style="{ top: posi.top + 'px', right: 30 + 'px' }">
-                <div @click="onEditable(item.id, permissions.editable, ids)">{{ editable }}</div>
-                <div @click="onReadOnly(item.id, permissions.readOnly, ids)">{{ readOnly }}</div>
-                <div @click="onRemove(item.id, ids)">{{ remove }}</div>
+  <div ref="card" class="card" :style="{top:  props.pageHeight / 2}">
+    <el-card class="box-card" :style="{ width: founder ? 300 + 'px' : 400 + 'px'}">
+      <!-- 标题 -->
+      <template #header>
+        <div class="card-header">
+          <span>{{ t('share.file_sharing') }}</span>
+          <el-button class="button" text @click="closeShare">
+            <div class="close"> X </div>
+          </el-button>
+        </div>
+      </template>
+      <!-- 内容 -->
+      <div class="contain" v-if="!founder">
+        <!-- 开关 -->
+        <div class="share-switch">
+          <span>{{ t('share.share_switch') }}:</span>
+          <el-switch class="switch" size="small" v-model="value1" />
+        </div>
+        <!-- 文件名 -->
+        <div class="file-name">
+          <span style="margin-right: 12px;">{{ t('share.file_name') }}:</span>
+          <p class="name">{{props.docInfo.document.name}}</p>
+        </div>
+        <!-- 权限设置 -->
+        <div class="purview">
+          <span>{{ t('share.permission_setting') }}:</span>
+          <el-select v-model="selectValue" style="width: 180px;" class="m-2">
+            <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value" :label="item.label"
+              :value="item.value" />
+          </el-select>
+          <el-button color="#0d99ff" size="small" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+        </div>
+        <!-- 分享人 -->
+        <div>
+          <span>{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
+          <el-scrollbar height="285px" class="shared-by">
+            <div class="scrollbar-demo-item">
+              <div class="item-left">
+                <div class="avatar"><img :src="userInfo?.userInfo.avatar"></div>
+                <div class="name">{{ userInfo?.userInfo.nickname }}</div>
+              </div>
+              <div class="item-right">
+                <div class="founder">{{ t('share.founder') }}</div>
               </div>
             </div>
-          </div>
-        </el-scrollbar>
+            <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
+              <div class="item-left">
+                <div class="avatar"><img :src="item.user.avatar"></div>
+                <div class="name">{{ item.user.nickname }}</div>
+              </div>
+              <div class="item-right" @click="e => selectAuthority(ids, e)">
+                <div class="authority">{{ permission[item.perm_type] }}</div>
+                <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
+                <div class="popover" v-if="authority && index === ids" ref="popover"
+                  :style="{ top: posi.top + 'px', right: 30 + 'px' }">
+                  <div @click="onEditable(item.id, permissions.editable, ids)">{{ editable }}</div>
+                  <div @click="onReadOnly(item.id, permissions.readOnly, ids)">{{ readOnly }}</div>
+                  <div @click="onRemove(item.id, ids)">{{ remove }}</div>
+                </div>
+              </div>
+            </div>
+          </el-scrollbar>
+        </div>
       </div>
-    </div>
-    <div class="contain" v-else>
-      <!-- 文件名 -->
-      <div class="unfounder">
-        <span>文件名:</span>
-        <p class="name">页面顺序调整</p>
+      <div class="contain" v-else>
+        <!-- 文件名 -->
+        <div class="unfounder">
+          <span>{{ t('share.file_name') }}:</span>
+          <p class="name">{{props.docInfo.document.name}}</p>
+        </div>
+        <!-- 创建者 -->
+        <div class="unfounder">
+          <span>{{ t('share.founder') }}:</span>
+          <p class="name">{{props.docInfo.user.nickname}}</p>
+        </div>
+        <!-- 文档权限 -->
+        <div class="unfounder">
+          <span>{{ t('share.document_permission') }}:</span>
+          <p class="name">{{DocType[2]}}</p>
+        </div>
+        <!-- 链接按钮 -->
+        <div class="button bottom">
+          <el-button color="#0d99ff" size="small">{{ t('share.copy_link') }}</el-button>
+        </div>
       </div>
-      <!-- 创建者 -->
-      <div class="unfounder">
-        <span>创建者:</span>
-        <p class="name">张三</p>
-      </div>
-      <!-- 文档权限 -->
-      <div class="unfounder">
-        <span>文档权限:</span>
-        <p class="name">任何人均可阅读</p>
-      </div>
-      <!-- 链接按钮 -->
-      <div class="button bottom">
-        <el-button color="#0d99ff" size="small">复制链接</el-button>
-      </div>
-    </div>
-  </el-card>
+    </el-card>
+  </div>
 </template>
   
 <style scoped lang="scss">
@@ -400,11 +439,12 @@ onUnmounted(() => {
 .founder {
   margin-right: 48px;
 }
-
+.card {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
 .box-card {
   width: 400px;
-  position: absolute;
-  top: 40px;
-  right: 0;
 }
 </style>

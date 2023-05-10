@@ -1,54 +1,55 @@
 import { TextShape } from "@kcdesign/data/data/shape";
-import { TextBehaviour } from "@kcdesign/data/data/text";
-import { layoutPara } from "@/layout/text";
-import * as types from "@kcdesign/data/data/classes"
+import { layoutText } from "@/layout/text";
 import { Color } from "@kcdesign/data/data/classes";
+import { getTextPath } from "@/textpath";
+import { Matrix } from "@kcdesign/data/basic/matrix";
+import { Path } from "@kcdesign/data/data/path";
 
 function toRGBA(color: Color): string {
     return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
 }
 
-export function render(h: Function, shape: TextShape, reflush?: number) {
-    const text = shape.text;
-    const pc = text.paras.length;
-    // const vAlign = text.attr?.verticalAlignment ?? TextVerticalAlignment.Top;
-    // const baseline: string = ((align: TextVerticalAlignment) => {
-    //     switch(align) {
-    //         case TextVerticalAlignment.Top: return "hanging";
-    //         case TextVerticalAlignment.Middle: return "middle";
-    //         case TextVerticalAlignment.Bottom: return "baseline";
-    //     }
-    // })(vAlign);
+export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): string {
+    const { yOffset, paras } = layoutText(shape);
+    const pc = paras.length;
 
-    const frame = shape.frame;
-    const layoutWidth = ((b: TextBehaviour) => {
-        switch(b) {
-            case types.TextBehaviour.Flexible: return Number.MAX_VALUE;
-            case types.TextBehaviour.Fixed: return frame.width;
-            case types.TextBehaviour.FixWidthAndHeight: return frame.width;
-        }
-        return Number.MAX_VALUE
-    })(text.attr?.textBehaviour ?? types.TextBehaviour.Flexible)
-
-    const childs = [];
-    let y = 0;
-
+    const paths = [];
     for (let i = 0; i < pc; i++) {
-        const para = text.paras[i];
-        const layouts = layoutPara(para, layoutWidth);
-        const pAttr = para.attr;
+        const lines = paras[i];
 
-        for (let lineIndex = 0, lineCount = layouts.length; lineIndex < lineCount; lineIndex++) {
-            const line = layouts[lineIndex];
-            let lineHeight = pAttr && pAttr.minimumLineHeight || 0;
-            if (pAttr && pAttr.maximumLineHeight === pAttr.minimumLineHeight) {
-                lineHeight = pAttr.minimumLineHeight || 0;
+        for (let lineIndex = 0, lineCount = lines.length; lineIndex < lineCount; lineIndex++) {
+            const line = lines[lineIndex];
+
+            for (let garrIdx = 0, garrCount = line.length; garrIdx < garrCount; garrIdx++) {
+                const garr = line[garrIdx];
+                const span = garr.attr;
+                const font = span?.fontName || '';
+                const fontSize = span?.fontSize || 0;
+                const y = line.y + (line.lineHeight - fontSize) / 2 + yOffset; // top
+
+                paths.push(...garr.map((g) => {
+                    const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
+                    const path = new Path(pathstr)
+                    path.translate(g.x + offsetX, y + offsetY);
+                    return path.toString();
+                }))
             }
-            else {
-                lineHeight = line.maxFontSize;
-            }
-            const halfLH = lineHeight / 2;
-            y = y + halfLH;
+        }
+    }
+    return paths.join('');
+}
+
+export function render(h: Function, shape: TextShape, reflush?: number) {
+    const { yOffset, paras } = layoutText(shape);
+    const pc = paras.length;
+
+    const childs = []
+    for (let i = 0; i < pc; i++) {
+        const lines = paras[i];
+
+        for (let lineIndex = 0, lineCount = lines.length; lineIndex < lineCount; lineIndex++) {
+            const line = lines[lineIndex];
+            // const y = line.y + line.lineHeight / 2 + yOffset;
 
             for (let garrIdx = 0, garrCount = line.length; garrIdx < garrCount; garrIdx++) {
                 const gText = []
@@ -64,16 +65,47 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                 }
 
                 const span = garr.attr;
+                const fontSize = span?.fontSize || 0;
+                const fontName = span?.fontName;
+                const y = line.y + (line.lineHeight) / 2 + yOffset; // top
 
-                const font = "normal " + (span?.fontSize || 0) + "px " + (span?.fontName);
-                childs.push(h('text', { x: gX.join(' '), y, style: { fill: span && span.color && toRGBA(span.color), font, 'alignment-baseline': 'middle' } }, gText.join('')));
+                const font = "normal " + fontSize + "px " + fontName;
+                childs.push(h('text', { x: gX.join(' '), y, style: { fill: span && span.color && toRGBA(span.color), font, 'alignment-baseline': 'central' } }, gText.join('')));
             }
-
-            y = y + halfLH;
         }
     }
 
+    const frame = shape.frame;
+    const props: any = {}
+    if (reflush) props.reflush = reflush;
 
+    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
+        const cx = frame.x + frame.width / 2;
+        const cy = frame.y + frame.height / 2;
+        const style: any = {}
+        style.transform = "translate(" + cx + "px," + cy + "px) "
+        if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
+        if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
+        if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
+        style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+        props.style = style;
+    }
+    else {
+        props.transform = `translate(${frame.x},${frame.y})`
+    }
+
+    return h('g', props, childs);
+}
+
+
+//
+// for test text path
+export function render_(h: Function, shape: TextShape, reflush?: number) {
+    const path = renderText2Path(shape, 0, 0);
+
+    const childs = [h('path', {d: path})]
+
+    const frame = shape.frame;
     const props: any = {}
     if (reflush) props.reflush = reflush;
 

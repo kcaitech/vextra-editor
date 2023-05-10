@@ -30,8 +30,10 @@ onUnmounted(() => {
 <style scoped>
 .toolbar {
     align-items: center;
+    justify-content: space-between;
     width: 100%;
     height: 100%;
+    min-width: 700px;
     display: flex;
     flex-flow:row nowrap;
     padding: 0px 14px;

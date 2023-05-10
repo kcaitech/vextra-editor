@@ -4,6 +4,8 @@ import { onMounted, reactive, toRefs, defineProps, defineEmits, ref, onUnmounted
 import { Search } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const docID = '1672502400000'
 const input = ref('')
 const num = ref(0)
@@ -85,7 +87,7 @@ onMounted(() => {
         <div class="search">
             <el-icon size="20" class="icon">
                 <Search />
-            </el-icon><input class="input" type="search" placeholder="搜索文件" />
+            </el-icon><input class="input" type="search" :placeholder="t('home.search_file')" />
             <ul class="searchhistory">
                 <li v-for="(item,index) in searchlist" :key="index">{{ item }}</li>
             </ul>
@@ -96,11 +98,11 @@ onMounted(() => {
                 <div class="num" v-if="num > 0" :class="{after: num > 99}" :style="{paddingRight: num>99 ? 9+'px': 4+ 'px'}">{{ num > 99 ? 99 : num }}</div>
             </div>
             <div class="about">
-                <span>关于</span>
+                <span>{{ t('home.about') }}</span>
                 <div class="about-items">
-                    <a href="#">帮助手册</a>
+                    <a href="#">{{ t('home.help_manual') }}</a>
                     <el-divider class="fgx" />
-                    <a href="#">关于软件</a>
+                    <a href="#">{{ t('home.about_software') }}</a>
                 </div>
             </div>
             <div>
@@ -149,11 +151,12 @@ onMounted(() => {
     }
 
     .right {
-        display: flex;
         position: relative;
+        display: flex;
         flex-direction: row;
         align-items: center;
         .notice {
+            position: relative;
             width: 20px;
             height: 20px;
             margin-right: 10px;
@@ -164,8 +167,8 @@ onMounted(() => {
             >.num {
                 position: absolute;
                 font-size: var(--font-default-fontsize);
-                top: 0;
-                left: 8px;
+                top: -10px;
+                left: 10px;
                 min-width: 8px;
                 padding: 0 4px 0 4px;
                 height: 14px;

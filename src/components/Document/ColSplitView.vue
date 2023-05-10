@@ -194,14 +194,17 @@ function onSizeChange() {
 
     let leftWidth = sizeBounds.left.width + (savedRootWidth ? sizeBounds.left.width / savedRootWidth * delta : 0);
     let rightWidth = sizeBounds.right.width + (savedRootWidth ? sizeBounds.right.width / savedRootWidth * delta : 0);
-
+    
     leftWidth = Math.max(sizeBounds.left.minWidth, Math.min(sizeBounds.left.maxWidth, leftWidth));
     rightWidth = Math.max(sizeBounds.right.minWidth, Math.min(sizeBounds.right.maxWidth, rightWidth));
-    const middleWidth = Math.max(rootWidth - leftWidth - rightWidth, 0);
+    // const middleWidth = Math.max(rootWidth - leftWidth - rightWidth, 0);
     savedRootWidth = rootWidth;
 
-    sizeBounds.left.width = leftWidth;
-    sizeBounds.right.width = rightWidth;
+    // sizeBounds.left.width = leftWidth;
+    // sizeBounds.right.width = rightWidth;
+    const middleWidth = Math.max(rootWidth - sizeBounds.left.minWidth - sizeBounds.right.minWidth, 0);
+    sizeBounds.left.width = sizeBounds.left.minWidth;
+    sizeBounds.right.width = sizeBounds.right.minWidth;
     sizeBounds.middle.width = middleWidth;
 }
 

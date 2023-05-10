@@ -31,6 +31,16 @@ export function getDocumentAuthorityAPI(params = {}, opts = {}) {
     })
 }
 
+//获取文档密钥
+export function getDocumentKeyAPI(params = {}, opts = {}) {
+    return httpRequest({
+        url: `/documents/access_key`,
+        method: 'get',
+        params: params,
+        ...opts
+    })
+}
+
 //获取文档信息
 export function getDocumentInfoAPI(params = {}, opts = {}) {
     return httpRequest({

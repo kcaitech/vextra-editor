@@ -166,17 +166,20 @@ onBeforeUpdate(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 24px;
+    padding: 12px 10px;
     box-sizing: border-box;
 
     .add {
-        width: 16px;
-        height: 16px;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: .2s;
 
         >svg {
-            width: 80%;
-            height: 80%;
+            width: 50%;
+            height: 50%;
         }
     }
 
@@ -186,16 +189,18 @@ onBeforeUpdate(() => {
 
     .borders-container {
         .border {
-            height: 32px;
+            height: 30px;
             width: 100%;
             display: flex;
             flex-direction: row;
             align-items: center;
+            justify-content: space-between;
             margin-top: 4px;
 
             .visibility {
-                flex: 0 0 16px;
-                height: 16px;
+                flex: 0 0 18px;
+                height: 18px;
+                width: 18px;
                 background-color: #2561D9;
                 border-radius: 3px;
                 border: 1px solid var(--input-background);
@@ -206,8 +211,8 @@ onBeforeUpdate(() => {
                 align-items: center;
 
                 >svg {
-                    width: 80%;
-                    height: 80%;
+                    width: 60%;
+                    height: 60%;
                 }
             }
 
@@ -224,8 +229,8 @@ onBeforeUpdate(() => {
                 flex: 0 1 140px;
                 background-color: var(--input-background);
                 height: 100%;
-                padding: 2px 8px;
-                margin-left: 12px;
+                padding: 0px 5px;
+                margin-left: 5px;
                 border-radius: 3px;
                 box-sizing: border-box;
                 display: flex;
@@ -235,7 +240,7 @@ onBeforeUpdate(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 92px;
+                    width: 85px;
                     margin-left: 10px;
                 }
 
@@ -245,23 +250,22 @@ onBeforeUpdate(() => {
             }
 
             .extra-action {
-                flex: 0 0 auto;
                 display: flex;
                 align-items: center;
-                margin-left: 8px;
                 justify-content: center;
+                margin-left: 9px;
 
                 .delete {
+                    flex: 0 0 16px;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    width: 16px;
-                    height: 16px;
+                    justify-content: left;
+                    width: 17px;
+                    height: 22px;
                     transition: 0.2s;
-
                     >svg {
-                        width: 80%;
-                        height: 80%;
+                        width: 11px;
+                        height: 11px;
                     }
                 }
 
