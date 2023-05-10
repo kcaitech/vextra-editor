@@ -6,7 +6,6 @@ import { Repository } from "@kcdesign/data/data/transact";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data/editor";
 import { ShapeEditor } from "@kcdesign/data/editor/shape";
 import { uploadExForm } from "@kcdesign/data/io/export";
-// import { uploadExForm } from "@kcdesign/data/io/exform/export";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
 
@@ -60,7 +59,7 @@ export class Context extends Watchable(Object) {
 
     // debug
     upload() {
-        uploadExForm(this.m_data, 'ws://localhost:8000', (successed, fid, versionId) => {
+        uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', (successed, fid, versionId) => {
             console.log(successed, fid, versionId);
         })
     }
