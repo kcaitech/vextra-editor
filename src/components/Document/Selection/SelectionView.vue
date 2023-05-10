@@ -27,19 +27,7 @@ const props = defineProps<{
     matrix: number[],
     isController: boolean,
 }>();
-interface ShapeSelectData {
-    id: string,
-    isSelected: boolean
-}
-const data = reactive<{
-    isHover: boolean,
-    isSelect: boolean,
-    shapes: ShapeSelectData[],
-}>({
-    isHover: false,
-    isSelect: false,
-    shapes: []
-});
+
 const shapes: Array<Shape> = [];
 const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
@@ -53,73 +41,35 @@ let tracingHeight: number;
 let tracingWidth: number;
 let tracingX: number;
 let tracingY: number;
-function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): ShapeSelectData {
-    const data = shapeData ? shapeData : {
-        id: "",
-        isSelected: false
-    };
-    data.id = shape.id;
-    data.isSelected = props.context.selection.isSelectedShape(shape);
-    return data;
+
+const watchedShapes = new Map();
+function watchShapes() { // 监听选区相关shape的变化
+    const needWatchShapes = new Map();
+    const selection = props.context.selection;
+    if (selection.hoveredShape) {
+        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
+    }
+    if (selection.selectedShapes.length > 0) {
+        selection.selectedShapes.forEach((v) => {
+            needWatchShapes.set(v.id, v);
+        })
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(watcher);
+        watchedShapes.delete(k);
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        v.watch(watcher);
+        watchedShapes.set(k, v);
+    })
 }
+
 function updater() {
     matrix.reset(props.matrix);
-    const selection = props.context.selection;
-    data.isHover = selection.hoveredShape != undefined;
-    data.isSelect = selection.selectedShapes.length > 0;
-    if (!data.isHover && !data.isSelect) {
-        shapes.forEach((s) => {
-            s.unwatch(watcher);
-        })
-        shapes.length = 0;
-        data.shapes.length = 0;
-    }
-    else if (data.isHover) {
-        data.shapes.length = 1;
-        for (let i = 1, len = shapes.length; i < len; i++) {
-            shapes[i].unwatch(watcher);
-        }
-        if (shapes.length > 0) {
-            shapes.length = 1;
-            if (shapes[0].id !== (selection.hoveredShape as Shape).id) {
-                shapes[0].unwatch(watcher);
-                shapes[0] = selection.hoveredShape as Shape;
-                shapes[0].watch(watcher);
-            }
-        }
-        else {
-            shapes.length = 1;
-            shapes[0] = selection.hoveredShape as Shape;
-            shapes[0].watch(watcher);
-        }
-        data.shapes[0] = updateShape(data.shapes[0], selection.hoveredShape as Shape);
-        createController(); // 根据已选图层生成控制器
-    }
-    else if (data.isSelect) {
-        data.shapes.length = selection.selectedShapes.length;
-        for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
-            data.shapes[i] = updateShape(data.shapes[i], selection.selectedShapes[i]);
-        }
-        for (let i = data.shapes.length, len = shapes.length; i < len; i++) {
-            shapes[i].unwatch(watcher);
-        }
-        shapes.length = data.shapes.length;
-        for (let i = 0, len = shapes.length; i < len; i++) {
-            if (!shapes[i]) {
-                shapes[i] = selection.selectedShapes[i];
-                shapes[i].watch(watcher);
-            }
-            else if (shapes[i].id != selection.selectedShapes[i].id) {
-                shapes[i].unwatch(watcher);
-                shapes[i] = selection.selectedShapes[i];
-                shapes[i].watch(watcher);
-            }
-            else {
-                // do nothing
-            }
-        }
-        createController();
-    }
+    watchShapes();
+    createController();
     createShapeTracing();
 }
 function createController() {
@@ -246,7 +196,7 @@ watchEffect(updater)
         <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;"></path>
     </svg>
     <!-- 控制 -->
-    <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
+    <component v-if="context.selection.selectedShapes.length > 0" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
         :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate">
     </component>
 </template>
