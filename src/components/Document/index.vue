@@ -25,13 +25,13 @@ const middleWidth = ref<number>(0.8)
 const middleMinWidth = ref<number>(0.3)
 const route = useRoute()
 const Right = ref({
-    rightMin: 336,
+    rightMin: 250,
     rightMinWidth: 0.1,
     rightWidth: 0.1
 })
 
 const Left = ref({
-    leftMin: 336,
+    leftMin: 250,
     leftWidth: 0.1,
     leftMinWidth: 0.1
 })
@@ -127,7 +127,7 @@ const showHiddenRight = () => {
         middleWidth.value = middleWidth.value + 0.1
         showRight.value = false
     } else {
-        Right.value.rightMin = 336
+        Right.value.rightMin = 250
         Right.value.rightWidth = 0.1
         Right.value.rightMinWidth = 0.1
         middleWidth.value = middleWidth.value - 0.1
@@ -144,7 +144,7 @@ const showHiddenLeft = () => {
         middleWidth.value = middleWidth.value + 0.1
         showLeft.value = false
     } else {
-        Left.value.leftMin = 336
+        Left.value.leftMin = 250
         Left.value.leftWidth = 0.1
         Left.value.leftMinWidth = 0.1
         middleWidth.value = middleWidth.value - 0.1
@@ -251,7 +251,7 @@ onUnmounted(() => {
     <ColSplitView ref="colSplitView" id="center"
         :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.1 }"
+        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
@@ -278,7 +278,7 @@ onUnmounted(() => {
             </div>
         </template>
     </ColSplitView>
-    <div id="bottom" v-if="showBottom"></div>
+    <!-- <div id="bottom" v-if="showBottom"></div> -->
 </template>
 <style>
 :root {
@@ -327,7 +327,7 @@ onUnmounted(() => {
     #navigation {
         height: 100%;
         background-color: var(--left-navi-bg-color);
-        z-index: 1;
+        z-index: 2;
     }
 
     #content {
@@ -339,7 +339,7 @@ onUnmounted(() => {
     #attributes {
         height: 100%;
         background-color: var(--right-attr-bg-color);
-        z-index: 1;
+        z-index: 2;
     }
 
     .showHiddenR {
@@ -385,14 +385,14 @@ onUnmounted(() => {
     }
 }
 
-#bottom {
-    transition: 0.18s;
-    flex-flow: row nowrap;
-    width: 100%;
-    height: 30px;
-    min-height: 30px;
-    align-self: flex-end;
-    background-color: var(--theme-color);
-    z-index: 99;
-}
+// #bottom {
+//     transition: 0.18s;
+//     flex-flow: row nowrap;
+//     width: 100%;
+//     height: 30px;
+//     min-height: 30px;
+//     align-self: flex-end;
+//     background-color: var(--theme-color);
+//     z-index: 99;
+// }
 </style>

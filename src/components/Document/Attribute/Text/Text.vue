@@ -25,14 +25,17 @@ const { t } = useI18n();
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 24px;
+    padding: 12px 10px;
     box-sizing: border-box;
     .trigger {
-        width: 16px;
-        height: 16px;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         > svg {
-            width: 80%;
-            height: 80%;
+            width: 50%;
+            height: 50%;
             transition: 0.5s;
         }
         svg:hover {

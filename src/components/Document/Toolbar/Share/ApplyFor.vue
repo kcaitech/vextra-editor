@@ -36,7 +36,7 @@ const close = (index: number) => {
   applyList.value.splice(index, 1)
 }
 let timer: any = null
-getApplyList(timestamp)
+// getApplyList(timestamp)
 onMounted(() => {    
     // timer = setInterval(() => {
     //     getApplyList(timestamp)

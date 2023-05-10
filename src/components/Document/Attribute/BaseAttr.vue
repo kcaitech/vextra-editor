@@ -199,6 +199,7 @@ onUnmounted(() => {
             <div class="adapt" v-if="shwoAdapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
+            <div style="width: 22px;height: 22px;;" v-else></div>
         </div>
         <div class="tr">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}`+'°'" @onchange="onChangeRotate"
@@ -209,6 +210,7 @@ onUnmounted(() => {
             <div class="flip ml-12" @click="flipv" :class="{ bgColor: showBgColorV }">
                 <svg-icon icon-class="flipv"></svg-icon>
             </div>
+            <div style="width: 22px;height: 22px;;"></div>
         </div>
         <div class="tr" v-if="showRadius">
             <IconText class="td frame" svgicon="radius" :text="radius?.rlt || 0" :frame="{ width: 12, height: 12 }"
@@ -241,18 +243,18 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .ml-24 {
-    margin-left: 24px;
+    margin-left: 18px;
 }
 
 .ml-12 {
-    margin-left: 12px;
+    margin-left: 5px;
 }
 
 .table {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 24px;
+    padding: 12px 10px;
     box-sizing: border-box;
     visibility: visible;
 
@@ -260,12 +262,13 @@ onUnmounted(() => {
         position: relative;
         width: 100%;
         align-items: center;
+        justify-content: space-between;
         display: flex;
         flex-direction: row;
         margin: 8px 0;
 
         .space {
-            width: 24px;
+            width: 18px;
         }
 
         >.icontext {
@@ -273,20 +276,20 @@ onUnmounted(() => {
         }
 
         .positon {
-            width: 110px;
-            height: 32px;
+            width: 95px;
+            height: 30px;
             border-radius: 8px;
         }
 
         .frame {
-            width: 110px;
-            height: 32px;
+            width: 95px;
+            height: 30px;
             border-radius: 8px;
         }
 
         .lock {
-            height: 32px;
-            width: 24px;
+            height: 18px;
+            width: 18px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -297,16 +300,16 @@ onUnmounted(() => {
             }
         }
         .adapt {
-            width: 32px;
-            height: 32px;
+            width: 22px;
+            height: 22px;
             display: flex;
             justify-content: center;
             align-items: center;
 
             >svg {
                 transition: 0.3s;
-                width: 40%;
-                height: 40%;
+                width: 50%;
+                height: 50%;
             }
             >svg:hover {
                 transform: scale(1.25);
@@ -314,8 +317,8 @@ onUnmounted(() => {
         }
 
         .angle {
-            height: 32px;
-            width: 110px;
+            height: 30px;
+            width: 95px;
             border-radius: 8px;
 
             >svg {
@@ -329,8 +332,8 @@ onUnmounted(() => {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 49px;
-            height: 32px;
+            width: 45px;
+            height: 30px;
             border-radius: 8px;
 
             >svg {
@@ -346,16 +349,16 @@ onUnmounted(() => {
         }
 
         .more-for-radius {
-            width: 32px;
-            height: 32px;
+            width: 22px;
+            height: 22px;
             display: flex;
             justify-content: center;
             align-items: center;
 
             >svg {
                 transition: 0.3s;
-                width: 40%;
-                height: 40%;
+                width: 50%;
+                height: 50%;
             }
 
             >svg:hover {

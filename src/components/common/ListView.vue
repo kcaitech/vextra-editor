@@ -530,7 +530,7 @@ function mouseMove(Event: MouseEvent) {
         }else if(props.pageHeight && props.draging === 'pageList') {
             const top = container.value?.getBoundingClientRect()
             listTop.value = top?.top! - 45
-            listBottom.value = clientY - (props.pageHeight + top?.top! - 45)
+            listBottom.value = clientY - (props.pageHeight + top?.top! - 15)
             scrollHeight.value = Math.abs(scroll.y) + props.pageHeight
         }
             if(scroll.y < 0 && clientY - listTop.value < 60 && clientY - listTop.value > 20) {
@@ -541,7 +541,7 @@ function mouseMove(Event: MouseEvent) {
                     layoutUp[props.orientation]();
                     if(scroll.y === 0) clearInterval(timer)
                 }, 10)
-            }else if(scroll.y <= 0 && listBottom.value < 60 && listBottom.value > 20 && props.source.length() * props.itemHeight > scrollHeight.value) {
+            }else if(scroll.y <= 0 && listBottom.value < 30 && listBottom.value > 0 && props.source.length() * props.itemHeight > scrollHeight.value) {
                 timer = setInterval(() => {
                     scroll.y = scroll.y - 1   
                     substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
