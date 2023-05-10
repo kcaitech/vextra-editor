@@ -1,12 +1,13 @@
-import { XY } from "@/context/selection";
+import { PageXY } from "@/context/selection";
 import { v4 as uuid } from "uuid";
 
 interface Scout {
     path: SVGPathElement,
     remove: () => void;
-    isPointInShape: (d: string, point: XY) => boolean;
+    isPointInShape: (d: string, point: PageXY) => boolean;
 }
-// 蜘蛛侦探🕷：实现原理为动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条闭合路径(d)上
+// 蜘蛛侦探🕷：ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
+// 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条闭合路径(d)上
 function scout(): Scout {
     const scoutId = (uuid().split('-').at(-1)) || 'scout';
     const pathId = (uuid().split('-').at(-1)) || 'path';
@@ -17,20 +18,21 @@ function scout(): Scout {
 
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
-    function remove() {
-        const s = document.querySelector(`[id="${scoutId}"]`);
-        if (s) {
-            document.removeChild(s)
-        }
-    }
-    function isPointInShape(d: string, point: XY): boolean {
+    function isPointInShape(d: string, point: PageXY): boolean {
         SVGPoint.x = point.x, SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         // console.log('path', path);
         // console.log('isPointInFill - path', (path as SVGGeometryElement).isPointInFill(SVGPoint));
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
-    return { path, remove, isPointInShape }
+
+    function remove() { // 把用于比对的svg元素从Dom树中去除
+        const s = document.querySelector(`[id="${scoutId}"]`);
+        if (s) {
+            document.body.removeChild(s)
+        }
+    }
+    return { path, isPointInShape, remove }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {

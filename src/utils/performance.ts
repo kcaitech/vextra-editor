@@ -3,7 +3,7 @@ import { Shape } from "@kcdesign/data/data/shape";
 import { CanvasKitScout } from "./scout_beta";
 import { Scout } from "./scout";
 function compare(canvaskitScout: CanvasKitScout, scout: Scout) {
-    const size = 1;
+    const size = 10;
     let alphaStart: number = 0;
     let alphaEnd: number = 0;
     let betaStart: number = 0;
@@ -45,7 +45,7 @@ function compare(canvaskitScout: CanvasKitScout, scout: Scout) {
             const a = alphaEnd - alphaStart;
             const b = betaEnd - betaStart;
             console.log('====');
-            console.log('对5个图层进行500次比对， 结果');
+            console.log('对50个图层进行500次比对， 结果');
             console.log(`SVGGeometryElement方案用时：${a}ms, ${a / 1000}s`);
             console.log(`canvaskit方案用时：${b}ms, ${b / 1000}s`);
         } else {
@@ -53,8 +53,13 @@ function compare(canvaskitScout: CanvasKitScout, scout: Scout) {
         }
         return '====='
     }
+    function auto() { // after loaded
+        firstExecute();
+        lastExecute();
+        result();
+    }
 
-    return { loading, firstExecute, lastExecute, result }
+    return { loading, firstExecute, lastExecute, result, auto }
 }
 
 function alphaFn(load: Shape[], canvaskitScout: CanvasKitScout) {

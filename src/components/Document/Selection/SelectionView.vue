@@ -64,6 +64,7 @@ function updateShape(shapeData: ShapeSelectData | undefined, shape: Shape): Shap
     return data;
 }
 function updater() {
+    // console.log('updater', Date.now());
     matrix.reset(props.matrix);
     const selection = props.context.selection;
     data.isHover = selection.hoveredShape != undefined;
@@ -212,7 +213,7 @@ function createShapeTracing() { // 描边
         });
         const [p0, p1, p2, p3] = tracing.value;
         tracingStyle = createRect(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-        const path = hoveredShape.getPath(true);        
+        const path = hoveredShape.getPath(true);
         const m2page = hoveredShape.matrix2Page();
         path.transform(m2page);
         path.transform(matrix);
@@ -225,6 +226,12 @@ function createShapeTracing() { // 描边
         tracingViewBox = `${minX} ${minY} ${tracingWidth} ${tracingHeight}`;
         tracingPath = path.toString();
     }
+}
+function pathMousedown(e: MouseEvent) {
+    e.stopPropagation();
+    props.context.workspace.preToTranslating(e);
+    const hoveredShape = props.context.selection.hoveredShape
+    props.context.selection.selectShape(hoveredShape);
 }
 // hooks
 onMounted(() => {
@@ -244,7 +251,9 @@ watchEffect(updater)
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingWidth" :height="tracingHeight" :viewBox="tracingViewBox"
         :style="`transform: translate(${tracingX}px, ${tracingY}px)`" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;"></path>
+        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;"
+            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        </path>
     </svg>
     <!-- 控制 -->
     <component v-if="data.isSelect" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"

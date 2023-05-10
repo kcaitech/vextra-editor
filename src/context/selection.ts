@@ -1,7 +1,7 @@
 import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
-import { Shape, GroupShape } from "@kcdesign/data/data/shape";
+import { Shape, GroupShape, ShapeType } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
 import { scout, Scout } from "@/utils/scout";
 import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
@@ -15,19 +15,19 @@ export interface XY {
     x: number,
     y: number
 }
-export interface PageXY {
+export interface ClientXY { // 视口坐标系的xy
     x: number,
     y: number
 }
-export interface ClientXY {
+export interface PageXY { // 页面坐标系的xy
     x: number,
     y: number
 }
-export interface ParentXY {
+export interface ParentXY { // 父级元素坐标系的xy
     x: number,
     y: number
 }
-export interface ShapeXY {
+export interface ShapeXY { // 图形自身坐标系的xy
     x: number,
     y: number
 }
@@ -47,6 +47,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_hoverShape?: Shape;
     private m_document: Document;
     private m_search_keyword: string | undefined;
+    // Scout、CanvasKitScout是两种实现方案不同的图形检索对象
     private m_scout: Scout | undefined;
     private m_scout_beta: CanvasKitScout | undefined;
 
@@ -67,7 +68,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     scoutMount() {
         this.m_scout = scout();
     }
-    async canvaskitScoutMount() {        
+    async canvaskitScoutMount() {
         this.m_scout_beta = await canvasKitScout();
     }
 
@@ -160,24 +161,78 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return shapes;
     }
-    _getShapesByXY_beta(position: PageXY): Shape[] { // canvaskit-wasm方案
-        const page = this.m_selectPage!;
-        const childs = page.childs;
+    getShapesByXY_beta(position: PageXY, force?: boolean): Shape[] { // force 暴力矿工，深度搜索。
+        // !force：柔弱小工，只检索可见图形，被裁剪的、unVisible的不检索，更适用于hover判定、左键点击
         const shapes: Shape[] = [];
-        for (let i = 0; i < childs.length; i++) {
-            const item = childs[i];
-            const path = item.getPath(true);
-            const m2page = item.matrix2Page();
+        if (this.scout) {
+            position = cloneDeep(position);
+            const page = this.m_selectPage!;
+            const childs: Shape[] = page.childs;
+            deep(this.scout, childs);
+        }
+        return shapes;
+
+        // 获取图形在页面坐标系上的path
+        function getPathOnPagString(shape: Shape): string {
+            const path = shape.getPath(true);
+            const m2page = shape.matrix2Page();
             path.transform(m2page);
             const d = path.toString();
-            
-            if (this.canvaskitScout) {
-                if (this.canvaskitScout.isPointInShape(d, position)) {
-                    shapes.push(item);
+            return d;
+        }
+        function isTarget(scout: Scout | undefined, shape: Shape, p: PageXY): boolean {
+            const d = getPathOnPagString(shape);
+            if (scout) {
+                return scout.isPointInShape(d, p);
+            } else {
+                return false;
+            }
+        }
+        function deep(scout: Scout, g: Shape[]) {
+            for (let i = 0; i < g.length; i++) {
+                if (g[i].isVisible) { // 只要是!isVisible，force与否都不可以选中
+                    const item = g[i];
+                    if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
+                        const isItemIsTarget = isTarget(scout, item, position);
+                        if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
+                        const c = item.childs as Shape[];
+                        if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
+                            if (c.length) {
+                                deep(scout, c);
+                            } else {
+                                shapes.push(item);
+                            }
+                        } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
+                            forGroup(scout, item.childs);
+                        }
+                    } else {
+                        if (isTarget(scout, item, position)) shapes.push(item);
+                    }
                 }
             }
         }
-        return shapes;
+        // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
+        // 注：子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上
+        function forGroup(scout: Scout, g: Shape[]) {
+            for (let j = 0; j < g.length; j++) {
+                if (g[j].isVisible) {
+                    const childIsTarget = isTarget(scout, g[j], position);
+                    if (childIsTarget) {
+                        if (g[j].type === ShapeType.Group) {
+                            const c: Shape[] = (g[j] as GroupShape).childs;
+                            forGroup(scout, c)
+                        } else {
+                            let target = g[j].parent; // c[j]必定会存在至少一个parent是Group
+                            while (target?.parent && target?.parent?.type === ShapeType.Group) {
+                                target = target.parent;
+                            }
+                            shapes.push(target!);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
     getClosetContainer(position: XY): GroupShape {
         position = cloneDeep(position);
@@ -193,7 +248,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {
-                    if (['artboard'].includes(source[i].typeId)) {
+                    if ([ShapeType.Artboard].includes(source[i].type)) {
                         groups.unshift(source[i] as GroupShape);
                     }
                 }
@@ -279,14 +334,18 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     hoverShape(shape: Shape) {
-        this.m_hoverShape = undefined;
-        this.m_hoverShape = shape;
-        this.notify(Selection.CHANGE_SHAPE_HOVER);
+        if (shape.id !== this.hoveredShape?.id) {
+            this.m_hoverShape = undefined;
+            this.m_hoverShape = shape;
+            this.notify(Selection.CHANGE_SHAPE_HOVER);
+        }
     }
 
     unHoverShape() {
+        if (this.m_hoverShape) {
+            this.notify(Selection.CHANGE_SHAPE_HOVER);
+        }
         this.m_hoverShape = undefined;
-        this.notify(Selection.CHANGE_SHAPE_HOVER);
     }
     // 通过id获取shape
     getShapeById(id: string): Shape | undefined {

@@ -7,8 +7,7 @@ interface CanvasKitScout {
 }
 async function loadCanvasKit() {
     const init = await CanvasKitInit({
-        locateFile: (file: string) =>
-            `/${file}`
+        locateFile: (file: string) => `/${file}`
     });
     return init;
 }

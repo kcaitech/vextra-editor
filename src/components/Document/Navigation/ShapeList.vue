@@ -189,6 +189,7 @@ const isRead = (read: boolean, shape: Shape) => {
     editor.value.setVisible();
     if (!read) {
         props.context.selection.unSelectShape(shape);
+        props.context.selection.unHoverShape();
     }
 }
 function shapeScrollToContentView(shape: Shape) {
@@ -301,8 +302,8 @@ onUnmounted(() => {
                 @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
                 @isLock="isLock" @onMouseDown="MouseDown" orientation="vertical" @after-drag="afterDrag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount" :context="props.context"
-                ref="contextMenuEl">
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
+                :context="props.context" ref="contextMenuEl">
                 <PageViewContextMenuItems :items="chartMenuItems" :context="props.context">
                 </PageViewContextMenuItems>
             </ContextMenu>

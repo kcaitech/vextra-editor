@@ -195,7 +195,10 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
             workspace.value.setAction(Action.AutoV);
         } else if (action === Action.AutoV) {
             // 选择图层
-            getShapesByXY(); // 获取与鼠标点击位置相交的所有图层，并选择最上层的图层
+            // getShapesByXY(); // 获取与鼠标点击位置相交的所有图层，并选择最上层的图层  ---不再在这里选择图形了，改到selection
+            if (!props.context.selection.hoveredShape) {
+                props.context.selection.selectShape();
+            }
         }
     }
     setClass('auto-0');
@@ -305,9 +308,10 @@ function hoveredShape(e: MouseEvent) {
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection._getShapesByXY_beta(xy); // xy: PageXY
-    const hoveredShape = shapes.reverse().find(s => s.type && s.type !== ShapeType.Artboard);
+    const shapes = props.context.selection.getShapesByXY_beta(xy); // xy: PageXY
+    const hoveredShape = shapes.reverse()[0]; // 确保shapes的长度等于0或者1，如果大于1说明在找到的情况下还继续遍历了
     if (hoveredShape) {
+        // console.log('--', shapes.length);
         props.context.selection.hoverShape(hoveredShape);
     } else {
         props.context.selection.unHoverShape();
@@ -386,8 +390,8 @@ function contextMenuMount(e: MouseEvent) {
             surplusY.value = document.documentElement.clientHeight - site.y;
             if (el) {
                 const height = el.offsetHeight;
-                if (surplusY.value < height) {
-                    surplusY.value = document.documentElement.clientHeight - site.y;
+                if (surplusY.value - 30 < height) {
+                    surplusY.value = document.documentElement.clientHeight - site.y - 30;
                     el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
                 }
             }

@@ -28,7 +28,6 @@ function home() {
     <div class="home" title="new file" @click="home">
         <svg-icon icon-class="home_0508"></svg-icon>
     </div>
-    <span></span>
 </template>
 
 <style scoped lang="scss">
