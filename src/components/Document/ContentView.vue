@@ -552,9 +552,9 @@ onMounted(async () => { // 身负重担的content view
     window.addEventListener('blur', windowBlur);
     stylerForCursorMount();
     rootRegister(true);
-    props.context.selection.scoutMount(); // 用于hover判定
+    props.context.selection.scoutMount(); // 用于hover判定 beta
     await props.context.selection.canvaskitScoutMount();
-    (window as any).compare = compare(props.context.selection.canvaskitScout!, props.context.selection.scout!);
+    (window as any).compare = compare(props.context.selection.canvaskitScout!, props.context.selection.scout!); // beta
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);

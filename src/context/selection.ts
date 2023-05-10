@@ -67,9 +67,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     scoutMount() {
         this.m_scout = scout();
     }
-    async canvaskitScoutMount() {
-        console.log('mount');
-        
+    async canvaskitScoutMount() {        
         this.m_scout_beta = await canvasKitScout();
     }
 

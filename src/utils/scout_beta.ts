@@ -1,5 +1,5 @@
 import { PageXY } from "@/context/selection";
-import CanvasKitInit, { Path as SkPath } from "@kcdesign/canvaskit-wasm";
+import CanvasKitInit, { Path } from "@kcdesign/canvaskit-wasm";
 
 // 蜘蛛侦探🕷 ver.canvaskit-wasm，基于canvaskit-wasm实现的图形检索
 interface CanvasKitScout {
@@ -17,7 +17,7 @@ async function canvasKitScout(): Promise<CanvasKitScout> {
     const init = await loadCanvasKit();
 
     function isPointInShape(d: string, point: PageXY): boolean {
-        const path: SkPath | null = init.Path.MakeFromSVGString(d);
+        const path: Path | null = init.Path.MakeFromSVGString(d);
         if (path) {
             const { x, y } = point;
             const isContains = path.contains(x, y);
@@ -27,7 +27,7 @@ async function canvasKitScout(): Promise<CanvasKitScout> {
             return false;
         }
     }
-    return { isPointInShape }
+    return { isPointInShape };
 }
 
 export { canvasKitScout, CanvasKitScout }

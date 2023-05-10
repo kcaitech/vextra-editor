@@ -1,9 +1,9 @@
+// 蜻蜓队长：用于比较两个方案性能强弱，开发阶段使用
 import { Shape } from "@kcdesign/data/data/shape";
 import { CanvasKitScout } from "./scout_beta";
 import { Scout } from "./scout";
-// 蜻蜓队长：用于比较两个方案性能强弱
 function compare(canvaskitScout: CanvasKitScout, scout: Scout) {
-    const size = 10000;
+    const size = 1;
     let alphaStart: number = 0;
     let alphaEnd: number = 0;
     let betaStart: number = 0;
@@ -15,42 +15,45 @@ function compare(canvaskitScout: CanvasKitScout, scout: Scout) {
     function loading(bullet: Shape[]) {
         for (let i = 0; i < size; i++) {
             bullet.forEach(b => {
-               load.push(b);
+                load.push(b);
             })
         }
-        console.log('loaded');
+        return 'loaded';
     }
 
     function firstExecute() {
         alphaStart = Date.now();
         for (let i = 0; i < 500; i++) {
-            alphaFn(load, canvaskitScout);
+            betaFn(load, scout);
         }
         alphaEnd = Date.now();
         stepA = true;
-        console.log('alpha finish');
+        return 'finish';
     }
     function lastExecute() {
         if (!stepA) return;
         betaStart = Date.now();
         for (let i = 0; i < 500; i++) {
-            betaFn(load, scout)
+            alphaFn(load, canvaskitScout);
         }
         betaEnd = Date.now();
         stepB = true;
-        console.log('beta finish');
+        return 'finish';
     }
     function result() {
         if (stepA && stepB) {
             const a = alphaEnd - alphaStart;
             const b = betaEnd - betaStart;
-            console.log('对50000个图层进行500次比对， 结果');
-            console.log(`canvaskit方案用时：${a}ms, ${a / 1000}s`);
-            console.log(`SVGGeometryElement方案用时：${b}ms, ${b / 1000}s`);
+            console.log('====');
+            console.log('对5个图层进行500次比对， 结果');
+            console.log(`SVGGeometryElement方案用时：${a}ms, ${a / 1000}s`);
+            console.log(`canvaskit方案用时：${b}ms, ${b / 1000}s`);
         } else {
             console.log('让子弹飞一会儿！');
         }
+        return '====='
     }
+
     return { loading, firstExecute, lastExecute, result }
 }
 
@@ -62,9 +65,7 @@ function alphaFn(load: Shape[], canvaskitScout: CanvasKitScout) {
         const m2page = item.matrix2Page();
         path.transform(m2page);
         const d = path.toString();
-        // if (i === load.length - 5) {
-        //     console.log('last 5', d);
-        // }
+        // console.log('judge');
         if (canvaskitScout.isPointInShape(d, { x: 100, y: 100 })) {
             shapes.push(item);
         }
@@ -78,9 +79,7 @@ function betaFn(load: Shape[], scout: Scout) {
         const m2page = item.matrix2Page();
         path.transform(m2page);
         const d = path.toString();
-        // if (i === load.length - 5) {
-        //     console.log('last 5', d);
-        // }
+        // console.log('judge');
         if (scout.isPointInShape(d, { x: 100, y: 100 })) {
             shapes.push(item);
         }
@@ -88,3 +87,18 @@ function betaFn(load: Shape[], scout: Scout) {
 }
 
 export { compare }
+// log：canvaskitScout、scout
+// 5个图形，分别比对500次
+// c   s  ms
+// 51  69
+// 44  64
+// 47  56
+// 49  69
+// 54  57
+// 51  71
+// 41  64
+// 56  45 !
+// 51  57
+// 61  48 !
+// 53  55
+// 61  53
