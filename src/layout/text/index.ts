@@ -1,6 +1,7 @@
 import { TextShape } from "@kcdesign/data/data/shape";
-import { Para, SpanAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "@kcdesign/data/data/text";
+import { Para, Span, SpanAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "@kcdesign/data/data/text";
 import { measure } from "./measure";
+import { BasicArray } from "@kcdesign/data/data/basic";
 
 export interface IGraphy {
     char: string,
@@ -20,6 +21,16 @@ export class Line extends Array<GraphArray> {
 }
 export type LineArray = Array<Line>
 
+export class ParaLayout extends Array<Line> {
+    public paraHeight: number = 0;
+    public graphCount: number = 0;
+}
+
+export class TextLayout {
+    public yOffset: number = 0;
+    public paras: ParaLayout[] = [];
+}
+
 export function adjustLines(lineArray: LineArray, align: TextHorAlign) {
     // TODO
 }
@@ -29,9 +40,14 @@ export function adjustLinesVertical(lines: LineArray, align: TextVerAlign) {
 }
 
 export function layoutLines(para: Para, width: number): LineArray {
-    const spansCount = para.spans.length;
+    let spans = para.spans;
+    let spansCount = spans.length;
     if (spansCount === 0) {
-        return [];
+        if (para.length === 0) {
+            return [];
+        }
+        spansCount = 1;
+        spans = new BasicArray<Span>(new Span(para.length)); // fix
     }
     // const frame = shape.frame;
     // const width = frame.width;
@@ -42,7 +58,7 @@ export function layoutLines(para: Para, width: number): LineArray {
     const textLen = text.length
 
     let spanIdx = 0, spanOffset = 0
-    let span = para.spans[spanIdx];
+    let span = spans[spanIdx];
     let font = "normal " + span.fontSize + "px " + span.fontName;
 
     const startX = 0, endX = startX + width;
@@ -51,14 +67,15 @@ export function layoutLines(para: Para, width: number): LineArray {
     let graphArray: GraphArray | undefined;
     let line: Line = new Line();
     line.maxFontSize = span.fontSize ?? 0;
-    const lineArray: LineArray = []
+    const lineArray: LineArray = [];
 
     let preSpanIdx = spanIdx;
 
-    for (; textIdx < textLen && spanIdx < spansCount;) {
+    for (; textIdx < textLen;) {
+        if (spanIdx >= spansCount) spanIdx = spansCount - 1; // fix
 
         if (preSpanIdx !== spanIdx) {
-            span = para.spans[spanIdx];
+            span = spans[spanIdx];
             font = "normal " + span.fontSize + "px " + span.fontName;
         }
 
@@ -83,7 +100,7 @@ export function layoutLines(para: Para, width: number): LineArray {
         }
         const m = measure(c, font);
         const cw = m?.width ?? 0;
-        
+
         if (cw + curX + charSpace <= endX) {
             if (!graphArray) {
                 graphArray = new GraphArray();
@@ -180,13 +197,13 @@ export function layoutLines(para: Para, width: number): LineArray {
     return lineArray;
 }
 
-export function layoutText(shape: TextShape) {
+export function layoutText(shape: TextShape): TextLayout {
     const text = shape.text;
     const pc = text.paras.length;
     const frame = shape.frame;
 
     const layoutWidth = ((b: TextBehaviour) => {
-        switch(b) {
+        switch (b) {
             case TextBehaviour.Flexible: return Number.MAX_VALUE;
             case TextBehaviour.Fixed: return frame.width;
             case TextBehaviour.FixWidthAndHeight: return frame.width;
@@ -194,13 +211,14 @@ export function layoutText(shape: TextShape) {
         // return Number.MAX_VALUE
     })(text.attr?.textBehaviour ?? TextBehaviour.Flexible)
 
-    const paras = []
+    const paras: ParaLayout[] = []
     let contentHeight = 0;
     for (let i = 0; i < pc; i++) {
         const para = text.paras[i];
         const layouts = layoutLines(para, layoutWidth);
         const pAttr = para.attr;
-
+        let paraHeight = 0;
+        let graphCount = 0;
         const lines = layouts.map((line) => {
             let lineHeight = pAttr && pAttr.minimumLineHeight || 0;
             if (pAttr && pAttr.maximumLineHeight === pAttr.minimumLineHeight) {
@@ -211,23 +229,87 @@ export function layoutText(shape: TextShape) {
             }
             const y = contentHeight;
             contentHeight += lineHeight;
+            paraHeight += lineHeight;
+            graphCount += line.length;
 
             line.y = y;
             line.lineHeight = lineHeight;
             // return {y, line, lineHeight}
             return line;
         })
-        paras.push(lines)
+        const paraLayout = new ParaLayout(...lines);
+        paraLayout.paraHeight = paraHeight;
+        paraLayout.graphCount = graphCount;
+
+        paras.push(paraLayout);
     }
 
     const vAlign = text.attr?.verAlign ?? TextVerAlign.Top;
     const yOffset: number = ((align: TextVerAlign) => {
-        switch(align) {
+        switch (align) {
             case TextVerAlign.Top: return 0;
             case TextVerAlign.Middle: return (frame.height - contentHeight) / 2;
             case TextVerAlign.Bottom: return frame.height - contentHeight;
         }
     })(vAlign);
 
-    return {yOffset, paras}
+    return { yOffset, paras }
+}
+
+export function locateText(layout: TextLayout, x: number, y: number): number {
+    const { yOffset, paras } = layout;
+    // index line
+    if (y < yOffset) return 0;
+    y -= yOffset;
+    let index = 0;
+    for (let i = 0, len = paras.length; i < len; i++) {
+        const p = paras[i];
+        if (y >= p.paraHeight) {
+            y -= p.paraHeight;
+            index += p.graphCount;
+            continue;
+        }
+        // index line
+        for (let i = 0, len = p.length; i < len; i++) {
+            const line = p[i];
+            if (y >= line.lineHeight) {
+                y -= line.lineHeight;
+                index += line.length;
+                continue;
+            }
+            // index span
+            for (let i = 0, len = line.length; i < len; i++) {
+                const span = line[i];
+                if (span.length === 0) {
+                    // error??
+                    continue;
+                }
+                const lastGraph = span[span.length - 1];
+                if (x >= (lastGraph.x + lastGraph.cw)) {
+                    index += span.length;
+                    continue;
+                }
+                // index graph
+                // 二分查找
+                let start = 0, end = span.length - 1;
+                let mid = Math.floor((start + end) / 2);
+                while (start < end) {
+                    const graph = span[mid];
+                    if (x < (graph.x + graph.cw)) {
+                        end = mid;
+                    }
+                    else {
+                        start = mid + 1;
+                    }
+                    mid = Math.floor((start + end) / 2);
+                }
+                // get end
+                index += end;
+                break;
+            }
+            break;
+        }
+        break;
+    }
+    return index;
 }

@@ -1,7 +1,8 @@
+import { layoutText, locateText } from "@/layout/text";
 import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
-import { Shape, GroupShape } from "@kcdesign/data/data/shape";
+import { Shape, GroupShape, TextShape } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
 interface Saved {
     page: Page | undefined,
@@ -22,7 +23,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_SHAPE = 2;
     static CHANGE_SHAPE_HOVER = 3;
     static CHANGE_RENAME = 4;
-    static PAGE_RENAME = 5;
+    static CHANGE_TEXT = 5;
+    static PAGE_RENAME = 6;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -235,6 +237,44 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
                     deep((cs[i] as GroupShape).childs);
                 }
             }
+        }
+    }
+
+    /**
+     *
+     * @param x page坐标系
+     * @param y
+     */
+    locateText(x: number, y: number): number {
+        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+            return -1;
+        }
+        const shape = this.m_selectShapes[0] as TextShape;
+        // translate x,y
+        const matrix = shape.matrix2Page();
+        const xy = matrix.inverseCoord(x, y);
+        x = xy.x;
+        y = xy.y;
+
+        const layout = shape.getLayout(layoutText);
+        return locateText(layout, x, y);
+    }
+
+    selectText(start: number, end: number) {
+        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+            return;
+        }
+        if (start < 0) start = 0;
+        // const shape = this.m_selectShapes[0] as TextShape;
+        // const paras = shape.text.paras;
+        // const count = paras.reduce((count, p) => {
+        //     return count + p.length;
+        // }, 0);
+        // if (end > count) end = count;
+        if (start !== this.m_cursorStart || end !== this.m_cursorEnd) {
+            this.m_cursorStart = start;
+            this.m_cursorEnd = end;
+            this.notify(Selection.CHANGE_TEXT);
         }
     }
 
