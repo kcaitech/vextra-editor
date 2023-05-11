@@ -183,6 +183,8 @@ const isLock = (lock: boolean, shape: Shape) => {
 }
 
 const isRead = (read: boolean, shape: Shape) => {
+    let timer: any;
+    timer && clearTimeout(timer);
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
@@ -190,6 +192,12 @@ const isRead = (read: boolean, shape: Shape) => {
     if (!read) {
         props.context.selection.unSelectShape(shape);
         props.context.selection.unHoverShape();
+        props.context.workspace.translating(true);
+        timer = setTimeout(() => {
+            props.context.workspace.translating(false);
+            clearTimeout(timer);
+            timer = null;
+        }, 550)
     }
 }
 function shapeScrollToContentView(shape: Shape) {
@@ -202,15 +210,15 @@ function shapeScrollToContentView(shape: Shape) {
     props.context.selection.selectShape();
     const pageViewEl = props.context.workspace.pageView;
     if (pageViewEl) {
-        pageViewEl.classList.add('transition-600');
+        pageViewEl.classList.add('transition-400');
         props.context.workspace.translating(true);
         workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
         const timer = setTimeout(() => {
             props.context.selection.selectShape(shape);
-            pageViewEl.classList.remove('transition-600');
+            pageViewEl.classList.remove('transition-400');
             props.context.workspace.translating(false);
             clearTimeout(timer);
-        }, 600);
+        }, 400);
     } else {
         workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
     }
@@ -292,7 +300,7 @@ onUnmounted(() => {
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" :placeholder="t('home.search_layer')+'…'" @change="(e: Event) => search(e)">
+                <input type="text" :placeholder="t('home.search_layer') + '…'" @change="(e: Event) => search(e)">
             </div>
         </div>
         <div class="body" ref="ListBody">

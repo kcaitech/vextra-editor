@@ -67,6 +67,7 @@ export const home = {
     picture: '图片',
     comment: '评论',
     groups: '编组',
+    ungroup: '解组',
     search_layer: '搜索图层'
 }
 

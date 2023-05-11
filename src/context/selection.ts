@@ -3,7 +3,7 @@ import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape, ShapeType } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
-import { scout, Scout } from "@/utils/scout";
+import { scout, Scout, isTarget, finder } from "@/utils/scout";
 import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
 interface Saved {
     page: Page | undefined,
@@ -117,13 +117,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
-    getShapesByXY(position: XY, force?: boolean): Shape[] { // force 暴力矿工，深度搜索。
-        // 在项目中，有三种检索需求：hover、左键、右键
-        // hover：检索窗口可视图形，被裁剪的、unVisiable不检索。检索过程中，在遇见编组、容器的时候有额外处理
-        // 遇见编组：
-        // 遇见容器：
-        // click left：类似hover，额外有双击操作，双击操作只检索当前hover对象的子对象
-        // click right：检索窗口可视、被裁减的图形，unVisiable不检索
+    getShapesByXY(position: XY, force: boolean = true): Shape[] { // force 暴力矿工，深度搜索。
         position = cloneDeep(position);
         const shapes: Shape[] = [];
         const page = this.m_selectPage!;
@@ -143,98 +137,20 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             }
         }
     }
-    _getShapesByXY(position: PageXY): Shape[] { // Scout方案 position: PageXY
-        const page = this.m_selectPage!;
-        const childs = page.childs;
-        const shapes: Shape[] = [];
-        for (let i = 0; i < childs.length; i++) {
-            const item = childs[i];
-            const path = item.getPath(true);
-            const m2page = item.matrix2Page();
-            path.transform(m2page);
-            const d = path.toString();
-            if (this.scout) {
-                if (this.scout.isPointInShape(d, position)) {
-                    shapes.push(item);
-                }
-            }
-        }
-        return shapes;
-    }
-    getShapesByXY_beta(position: PageXY, force?: boolean): Shape[] { // 基于SVGGeometryElement的图形检索
+    getShapesByXY_beta(position: PageXY, force: boolean, scope?: Shape[]): Shape[] { // 基于SVGGeometryElement的图形检索
         // force 深度检索。检索在某一位置的所有visible图形，返回的shape[]长度可以大于1
         // !force：只检索可见图形，被裁剪的、unVisible的不检索，返回的shape[]长度等于1或0，更适用于hover判定、左键点击。
+        // scope 检索范围限定，如果没有限定范围则在全域(page)下寻找
         const shapes: Shape[] = [];
         if (this.scout) {
             position = cloneDeep(position);
             const page = this.m_selectPage!;
-            const childs: Shape[] = page.childs;
-            deep(this.scout, childs);
+            const childs: Shape[] = scope || page.childs;
+            shapes.push(...finder(this.scout, childs, position, force));
         }
         return shapes;
-
-        // 获取图形在页面坐标系上的path
-        function getPathOnPagString(shape: Shape): string {
-            const path = shape.getPath(true);
-            const m2page = shape.matrix2Page();
-            path.transform(m2page);
-            const d = path.toString();
-            return d;
-        }
-        function isTarget(scout: Scout | undefined, shape: Shape, p: PageXY): boolean {
-            const d = getPathOnPagString(shape);
-            if (scout) {
-                return scout.isPointInShape(d, p);
-            } else {
-                return false;
-            }
-        }
-        function deep(scout: Scout, g: Shape[]) {
-            for (let i = 0; i < g.length; i++) {
-                if (g[i].isVisible) { // 只要是!isVisible，force与否都不可以选中
-                    const item = g[i];
-                    if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
-                        const isItemIsTarget = isTarget(scout, item, position);
-                        if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
-                        const c = item.childs as Shape[];
-                        if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
-                            if (c.length) {
-                                deep(scout, c);
-                            } else {
-                                shapes.push(item);
-                            }
-                        } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
-                            forGroup(scout, item.childs);
-                        }
-                    } else {
-                        if (isTarget(scout, item, position)) shapes.push(item);
-                    }
-                }
-            }
-        }
-        // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
-        // 注：子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上
-        function forGroup(scout: Scout, g: Shape[]) {
-            for (let j = 0; j < g.length; j++) {
-                if (g[j].isVisible) {
-                    const childIsTarget = isTarget(scout, g[j], position);
-                    if (childIsTarget) {
-                        if (g[j].type === ShapeType.Group) {
-                            const c: Shape[] = (g[j] as GroupShape).childs;
-                            forGroup(scout, c)
-                        } else {
-                            let target = g[j].parent; // c[j]必定会存在至少一个parent是Group
-                            while (target?.parent && target?.parent?.type === ShapeType.Group) {
-                                target = target.parent;
-                            }
-                            shapes.push(target!);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
     }
+
     getClosetContainer(position: XY): GroupShape {
         position = cloneDeep(position);
         const page = this.m_selectPage!;
@@ -343,10 +259,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     unHoverShape() {
-        if (this.m_hoverShape) {
+        const needNotify = this.m_hoverShape ? true : false; // 时机很重要
+        this.m_hoverShape = undefined;
+        if (needNotify) {
             this.notify(Selection.CHANGE_SHAPE_HOVER);
         }
-        this.m_hoverShape = undefined;
     }
     // 通过id获取shape
     getShapeById(id: string): Shape | undefined {

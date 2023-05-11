@@ -308,7 +308,7 @@ function hoveredShape(e: MouseEvent) {
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy); // xy: PageXY
+    const shapes = props.context.selection.getShapesByXY_beta(xy, false); // xy: PageXY
     const hoveredShape = shapes.reverse()[0]; // 确保shapes的长度等于0或者1，如果大于1说明在找到的情况下还继续遍历了
     if (hoveredShape) {
         // console.log('--', shapes.length);
@@ -346,15 +346,6 @@ function pageViewDragging(e: MouseEvent) {
 function pageViewDragEnd() {
     // setClass('grab-0');
     state = STATE_NONE;
-}
-
-function getShapesByXY() { // 判断一个点在多少个图形上面
-    const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
-    if (shapes.length) {
-        props.context.selection.selectShape(shapes.at(-1));
-    } else {
-        props.context.selection.selectShape();
-    }
 }
 
 function contextMenuMount(e: MouseEvent) {

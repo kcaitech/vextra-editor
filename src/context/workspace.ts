@@ -26,7 +26,8 @@ export enum KeyboardKeys { // 键盘按键类型
     K = 'KeyK',
     O = 'KeyO',
     F = 'KeyF',
-    Digit0 = 'Digit0'
+    Digit0 = 'Digit0',
+    G = 'KeyG'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -66,6 +67,8 @@ export class WorkSpace extends Watchable(Object) {
     static SHUTDOWN_POPOVER = 7;
     static TRANSLATING = 8;
     static CHECKSTATUS = 9;
+    static GROUP = 10;
+    static UNGROUP = 11;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -187,6 +190,9 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_f();
         } else if (event.code === KeyboardKeys.Digit0) {
             this.keydown_0(ctrlKey, metaKey);
+        } else if (event.code === KeyboardKeys.G) {
+            event.preventDefault();
+            this.keydown_g(ctrlKey, metaKey, shiftKey);
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -274,6 +280,13 @@ export class WorkSpace extends Watchable(Object) {
             this.m_matrix.scale(_s);
             this.m_matrix.trans(center.x, center.y);
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);
+        }
+    }
+    keydown_g(ctrl: boolean, meta: boolean, shift: boolean) {
+        if ((ctrl || meta) && !shift) { // 编组
+            this.notify(WorkSpace.GROUP);
+        } else if ((ctrl || meta) && shift) { // 解组
+            this.notify(WorkSpace.UNGROUP)
         }
     }
     escSetup() { // 安装取消当前状态的键盘事件(Esc)，在开启一个状态的时候应该考虑关闭状态的处理！

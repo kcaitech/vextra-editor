@@ -67,6 +67,7 @@ export const home = {
     picture: 'Picture',
     comment: 'Add comment',
     groups: 'Group up',
+    ungroup: 'Ungroup',
     search_layer: 'Search layer'
 }
 
