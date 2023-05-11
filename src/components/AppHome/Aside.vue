@@ -13,6 +13,10 @@ import { Repository } from '@kcdesign/data/data/transact';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
 import { importSketch } from '@kcdesign/data/io';
 import { Zip } from "@pal/zip";
+import {defineProps} from 'vue';
+import Main from '@/components/AppHome/Main.vue';
+
+
 
 const picker = new FilePicker((file) => {
     if (!file) return;
@@ -48,13 +52,13 @@ const x = localStorage.getItem('index')
                 <button class="openfile" @click="picker.invoke()">打开文件</button>
             </div>
             <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
-                <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1)">
+                <router-link to="/apphome/recently" title="最近打开"><el-menu-item index="1" @click="Setindex(1)">
                         <el-icon>
                             <Clock />
                         </el-icon>
                         <span>最近打开</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/starfile"><el-menu-item index="2"  @click="Setindex(2)">
+                <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2)">
                         <el-icon>
                             <Star />
                         </el-icon>
@@ -64,7 +68,7 @@ const x = localStorage.getItem('index')
                         <el-icon>
                             <Share />
                         </el-icon>
-                        <span>我共享的文件</span>
+                        <span>我的文件</span>
                     </el-menu-item></router-link>
                 <router-link to="/apphome/shareme"><el-menu-item index="4" @click="Setindex(4)">
                         <el-icon>
@@ -72,7 +76,7 @@ const x = localStorage.getItem('index')
                         </el-icon>
                         <span>收到的共享文件</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/recyclebin"><el-menu-item index="5" @click="Setindex(5)">
+                <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5" @click="Setindex(5)">
                         <el-icon>
                             <Delete />
                         </el-icon>
@@ -145,6 +149,7 @@ a {
             .el-menu-item {
                 border-radius: 5px;
                 margin: 20px;
+
                 &:hover {
                     background: rgb(70, 76, 248);
                     color: white

@@ -1,12 +1,21 @@
 <script setup lang="ts">
 import { Menu, Operation } from '@element-plus/icons-vue'
 import { RouterView } from 'vue-router';
+import { defineProps } from 'vue';
+
+const title:any = '测试测试'
+
+document.addEventListener('DOMContentLoaded',function(){
+    console.log('11111')
+
+})
+
 </script>
 
 <template>
     <div class="title">
         <div>
-            <span>最近打开</span>
+            <slot>默认内容</slot>
         </div>
         <div>
             <el-icon size="25">

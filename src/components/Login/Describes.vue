@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 </script>
 
 <template>
     <div class="logo">
-        <img src="http://www.uimaker.com/uploads/allimg/200105/112501I08_0.png" alt="可可设计" />
-        <h1>ProtoDesign</h1>
-        <p>一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。</p>
+        <img src="http://www.uimaker.com/uploads/allimg/200105/112501I08_0.png" alt="ProtoDesign" />
+        <h1>{{t('system.product_name')}}</h1>
+        <p>{{t('system.product_description')}}</p>
     </div>
 </template>
 
@@ -21,22 +24,35 @@
     align-content: center;
     justify-content: center;
 
-    >img {
+    img {
         width: 160px;
         height: 160px;
         margin: 20px;
     }
 
-    >h1 {
+    h1 {
         font-size: 60PX;
         color: white;
         margin: 20px;
     }
 
-    >p {
+    p {
         font-size: 20PX;
         color: white;
         margin-top: 20px;
+    }
+
+}
+
+@media screen and (max-height: 600px) {
+    .logo {
+        display: none;
+    }
+
+}
+@media screen and (max-width: 800px) {
+    .logo {
+        display: none;
     }
 
 }

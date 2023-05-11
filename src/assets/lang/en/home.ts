@@ -27,7 +27,21 @@ export const system = {
     'create_component': 'Create component',
     'unbind_instance': 'Unbind',
     'reset_instance_roperties': 'Reset',
-    'edit_component': 'Edit component'
+    'edit_component': 'Edit component',
+    'wx_login': 'Wechat scan code login',
+    'login_read':'Scanning code indicates that you have read and agreed',
+    'read_TOS':'Protocol of usage',
+    'read_Privacy':'Privacy policy',
+    'product_name':'ProtoDesign',
+    'product_description':'An efficient RPD writing tool that supports prototyping, document presentation, and approval management.',
+    'login_footer':'© 2023 Kc.Design Inc.All rights reserved.',
+    'placeholder':'Search file',
+    'about':'About',
+    'help_manual':'Help manual',
+    'about_software':'About Software',
+    'personal_center':'Personal center',
+    'login_out':'Login out'
+
 }
 
 export const home = {
