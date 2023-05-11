@@ -106,8 +106,9 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     return shape;
 }
 
-function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, init?: Shape[]): Shape[] { // 时间复杂度：O(n + dk)
+function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, init?: Shape[]): Shape[] {
     // force：找到点上的所有图形，否则找到一个就不再寻找
+    // O(n + dk)
     const result = init || [];
     for (let i = 0; i < g.length; i++) {
         if (g[i].isVisible) { // 只要是!isVisible，force与否都不可以选中
@@ -129,10 +130,10 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, init
                         }
                     }
                 } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
-                    const g = forGroupHover(scout, item.childs, position)
+                    const g = forGroupHover(scout, item.childs, position);
                     if (g) {
                         result.push(g);
-                        if (!force) return result
+                        if (!force) return result;
                     }
                 }
             } else {
