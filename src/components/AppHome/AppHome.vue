@@ -23,9 +23,8 @@ import Header from './Header.vue';
 import Main from './Main.vue';
 import * as user_api from '@/apis/users'
 import {User} from '@/context/user'
-import {defineProps, ref, nextTick, reactive, defineEmits, onMounted} from 'vue';
-import {importDocument, Repository} from "../../../../kcdesign-data";
-import {importSketch} from "../../../../kcdesign-data/io";
+import {onMounted} from 'vue';
+import {importDocument, Repository} from "@kcdesign/data";
 import {router} from "@/router";
 
 const getUserInfo = async () => {
