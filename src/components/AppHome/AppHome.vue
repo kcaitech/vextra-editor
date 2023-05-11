@@ -60,7 +60,7 @@ onMounted(async () => {
     localStorage.setItem('nickname', resavatar.data.nickname)
 
     setTimeout(() => {
-        importDocumentTest()
+        // importDocumentTest()
     }, 2000)
 })
 </script>
