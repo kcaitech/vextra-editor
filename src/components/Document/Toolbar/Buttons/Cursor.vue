@@ -3,6 +3,8 @@ import { ref, nextTick, watch, defineProps,defineEmits, onMounted, onUnmounted, 
 import ToolButton from '../ToolButton.vue';
 import { Action } from '@/context/workspace';
 import DropSelect from "./DropSelect.vue"
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 type Button = InstanceType<typeof ToolButton>
 
 const popoverVisible = ref<boolean>(false);
@@ -46,7 +48,7 @@ function showMenu() {
 const selector = (active: Action) => {
   selected.value = active
   emit('select', active);
- 
+  popoverVisible.value = false;
 }
 
 function onMenuBlur(e: MouseEvent) {
@@ -80,34 +82,45 @@ onUpdated(()=> {
     </template>
     
   </div>
+  <el-tooltip
+    class="box-item"
+    effect="dark"
+    :content="props.d === Action.AutoV ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
+    placement="bottom"
+    :show-after="500"
+    :offset="10"
+  >
   <ToolButton ref="button" @click="() => {select(selects)}" :selected="props.active">
-    <div class="svg-container" title="Cursor">
+    <div class="svg-container" >
       <svg-icon :icon-class="props.d === selected ? props.d: selects"></svg-icon>
     </div>
     <div class="menu" @click="showMenu">
       <svg-icon icon-class="down"></svg-icon>
     </div>
   </ToolButton>
+</el-tooltip>
 </template>
 
 <style scoped lang="scss">
 .svg-container {
-  width: 30px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-left: 3px;
   color: #ffffff;
   > svg {
-    width: 70%;
-    height: 70%;
+    width: 17px;
+    height: 17px;
   }
 }
 .menu {
   width: 10px;
-  height: 32px;
+  height: 28px;
   display: flex;
-  padding-right: 2px;
+  padding-right: 4px;
+  margin-right: 2px;
   justify-content: center;
   align-items: center;
   color: #ffffff;

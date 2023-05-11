@@ -29,6 +29,9 @@ const invalid = computed(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 80%;
+    margin: 0 2px;
+    border-radius: 2px;
     min-width: 28px;
     min-height: 28px;
     overflow: hidden;

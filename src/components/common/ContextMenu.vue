@@ -22,6 +22,7 @@ defineExpose({
 })
 
 function handleClickOutside(event: MouseEvent) {
+  event.stopPropagation()
   event.target instanceof Element && !event.target.closest('.__context-menu') && emit('close');
 }
 function workspaceUpdate(t?: number) {  

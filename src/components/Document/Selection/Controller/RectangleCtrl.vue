@@ -100,6 +100,7 @@ function getShapesByXY() {
 
 function mousedown(e: MouseEvent) {
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        workspace.value.menuMount(false);
         wheel = fourWayWheel(props.context, { rolling: forCtrlRect });
         const action = workspace.value.action;
         if (action === Action.AutoV && props.isController) {

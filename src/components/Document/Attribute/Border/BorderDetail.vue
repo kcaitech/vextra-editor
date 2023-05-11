@@ -10,7 +10,6 @@ import BorderApexStyleItem from './BorderApexStyleItem.vue';
 import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue'
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
-import { ShapeType } from "@kcdesign/data/data/classes"
 import { Border, BorderPosition, BorderStyle, MarkerType } from "@kcdesign//data/data/style";
 import { genOptions } from '@/utils/common';
 
@@ -26,6 +25,13 @@ const editor = computed(() => {
     return props.context.editor4Shape(props.shape);
 });
 const popover = ref();
+const isDrag = ref(false)
+const curpt: { x: number } = { x: 0 }
+const _curpt: { x: number } = { x: 0 }
+const scale = ref<{axleX: number}>({
+    axleX: 0
+})
+const borderThickness = ref<HTMLInputElement>()
 const borderStyle = ref<SelectItem>({ value: 'dash', content: t('attr.dash') });
 const borderStyleOptionsSource: SelectSource[] = genOptions([
   ['solid', t('attr.solid')],
@@ -118,6 +124,53 @@ watch(() => props.border, () => {
   initValue();  
 }, { deep: true })
 
+const onMouseDown = (e: MouseEvent) => {
+  e.stopPropagation()
+  isDrag.value = true
+    //鼠标按下时的位置
+  curpt.x = e.screenX
+  _curpt.x = e.screenX
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
+const i = ref(0)
+const onMouseMove = (e: MouseEvent) => {
+  let mx = e.screenX - curpt.x
+  scale.value.axleX = e.screenX -_curpt.x
+  if(scale.value.axleX > 0 || Number(borderThickness.value!.value) !== 0) {
+    curpt.x = e.screenX
+    i.value = i.value + 1
+    if(i.value >= 3 && isDrag.value) {
+      i.value = 0
+      if(mx > 0) {
+        if(borderThickness.value) {
+          const thickness = Number(borderThickness.value.value) + 1
+          editor.value.setBorderThickness(props.index, thickness);
+          borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
+        }
+      }else if(mx < 0) {
+        if(borderThickness.value) {
+          let thickness = Number(borderThickness.value.value) - 1
+          if(thickness <= 0) {
+            thickness = 0
+            _curpt.x = e.screenX
+          }
+          editor.value.setBorderThickness(props.index, thickness);
+          if(Number(borderThickness.value.value) > 0) {
+            borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
+          }
+        }
+      }
+    }
+  }
+}
+const onMouseUp = (e: MouseEvent) => {
+  e.stopPropagation()
+  isDrag.value = false
+  document.removeEventListener('mousemove', onMouseMove)
+  document.removeEventListener('mouseup', onMouseUp)
+}
+
 const startArr = ['line-shape']
 onMounted(() => {
   if(startArr.includes(props.shape.typeId)) {
@@ -164,8 +217,8 @@ onUpdated(() => {
           <div>
             <label>{{ t('attr.thickness') }}</label>
             <div class="thickness-container">
-              <svg-icon icon-class="thickness"></svg-icon>
-              <input type="text" :value="border.thickness" @change="e => setThickness(e)">
+              <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
+              <input ref="borderThickness" type="text" :value="border.thickness" @change="e => setThickness(e)">
             </div>
           </div>
           <!-- 边框样式 -->
@@ -256,8 +309,8 @@ onUpdated(() => {
             border-radius: var(--default-radius);
             display: flex;
             align-items: center;
-            cursor: ew-resize;
             > svg {
+              cursor: ew-resize;
               flex: 0 0 24px;
               height: 24px;
             }
