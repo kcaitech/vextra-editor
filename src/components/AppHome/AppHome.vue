@@ -35,7 +35,7 @@ const getUserInfo = async () => {
 
 const importDocumentTest = () => {
     importDocument({
-        endPoint: "http://localhost:9000",
+        endPoint: "http://192.168.0.10:9000",
         region: "zhuhai-1",
         accessKey: "MUFUQLKG1RTQEP3UORVQ",
         secretKey: "vooG087IpqRAKvCK8h39LZ1eAiUGULnx7S4BkUbm",
