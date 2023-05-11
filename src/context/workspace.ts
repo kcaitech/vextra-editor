@@ -64,6 +64,8 @@ export class WorkSpace extends Watchable(Object) {
     static SELECTING = 5;
     static SHUTDOWN_MENU = 6;
     static SHUTDOWN_POPOVER = 7;
+    static TRANSLATING = 8;
+    static CHECKSTATUS = 9;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -78,6 +80,8 @@ export class WorkSpace extends Watchable(Object) {
     private m_popover: boolean = false;
     private m_rootId: string = 'content';
     private m_pageViewId: string = 'pageview';
+    private m_pre_to_translating: boolean = false;
+    private m_mousedown_on_page: MouseEvent | undefined;
     constructor(context: Context) {
         super();
         this.context = context
@@ -103,6 +107,12 @@ export class WorkSpace extends Watchable(Object) {
             return pageView as Element;
         }
     }
+    get isPreToTranslating() {
+        return this.m_pre_to_translating;
+    }
+    get startPoint() {
+        return this.m_mousedown_on_page;
+    }
     get action() {
         return this.m_current_action;
     }
@@ -126,6 +136,19 @@ export class WorkSpace extends Watchable(Object) {
     }
     get ispopover() {
         return this.m_popover;
+    }
+    get isTranslating() {
+        return this.m_translating;
+    }
+    preToTranslating(from?: MouseEvent) {
+        if (from) {
+            this.m_pre_to_translating = true;
+            this.m_mousedown_on_page = from;
+            this.notify(WorkSpace.CHECKSTATUS);
+        } else {
+            this.m_pre_to_translating = false;
+            this.m_mousedown_on_page = undefined;
+        }
     }
     menuMount(mount: boolean) {
         this.m_menu_mount = mount;
@@ -193,6 +216,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     translating(v: boolean) {
         this.m_translating = v;
+        this.notify(WorkSpace.TRANSLATING)
     }
     creating(v: boolean) {
         this.m_creating = v;

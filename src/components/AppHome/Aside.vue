@@ -13,10 +13,10 @@ import { Repository } from '@kcdesign/data/data/transact';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
 import { importSketch } from '@kcdesign/data/io';
 import { Zip } from "@pal/zip";
-import {defineProps} from 'vue';
-import Main from '@/components/AppHome/Main.vue';
-
-
+import { newDocument } from '@kcdesign/data/editor/creator';
+import { useI18n } from 'vue-i18n';
+import { DocEditor } from '@kcdesign/data/editor';
+const { t } = useI18n();
 
 const picker = new FilePicker((file) => {
     if (!file) return;
@@ -29,6 +29,18 @@ const picker = new FilePicker((file) => {
         router.push({ name: 'document' });
     })
 });
+
+function newFile() {
+    const repo = new Repository();
+    const nd = newDocument(t('system.new_file'), repo);
+    const editor = new DocEditor(nd, repo);
+    const page = editor.create(t('system.page1'));
+    editor.insert(0, page);
+    window.document.title = nd.name;
+    (window as any).skrepo = repo;
+    (window as any).sketchDocument = nd;
+    router.push({ name: 'document' });
+}
 
 function Setindex(a: any) {
     let x: any = a
@@ -48,39 +60,39 @@ const x = localStorage.getItem('index')
                 <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
             </div>
             <div class="new">
-                <button class="newfile">新建文件</button>
-                <button class="openfile" @click="picker.invoke()">打开文件</button>
+                <button class="newfile" @click="newFile">{{ t('home.New_file') }}</button>
+                <button class="openfile" @click="picker.invoke()">{{ t('home.open_local_file') }}</button>
             </div>
             <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
                 <router-link to="/apphome/recently" title="最近打开"><el-menu-item index="1" @click="Setindex(1)">
                         <el-icon>
                             <Clock />
                         </el-icon>
-                        <span>最近打开</span>
+                        <span>{{ t('home.recently_opened') }}</span>
                     </el-menu-item></router-link>
                 <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2)">
                         <el-icon>
                             <Star />
                         </el-icon>
-                        <span>标星文件</span>
+                        <span>{{ t('home.star_file') }}</span>
                     </el-menu-item></router-link>
                 <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3)">
                         <el-icon>
                             <Share />
                         </el-icon>
-                        <span>我的文件</span>
+                        <span>{{ t('home.file_shared') }}</span>
                     </el-menu-item></router-link>
                 <router-link to="/apphome/shareme"><el-menu-item index="4" @click="Setindex(4)">
                         <el-icon>
                             <BottomLeft />
                         </el-icon>
-                        <span>收到的共享文件</span>
+                        <span>{{ t('home.shared_file_received') }}</span>
                     </el-menu-item></router-link>
                 <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5" @click="Setindex(5)">
                         <el-icon>
                             <Delete />
                         </el-icon>
-                        <span>回收站</span>
+                        <span>{{ t('home.recycling_station') }}</span>
                     </el-menu-item></router-link>
 
             </el-menu>

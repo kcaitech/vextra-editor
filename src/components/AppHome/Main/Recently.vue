@@ -2,26 +2,13 @@
 <template>
     <!-- 表格布局 -->
     <el-table :data="documentsList" height="83vh" style="width: 100%" v-if="viewmodel" v-loading="isLoading">
-        <el-table-column prop="name" label="文件名称" />
-        <el-table-column prop="updated_at" label="修改时间" />
-        <el-table-column prop="size" label="大小" />
-        <el-table-column class="operation" label="操作" type="index" width="180">
-            <template #default="scope: any">
-                <el-icon :size=" 20 " v-if=" documentsList[scope.$index].starfiled ">
-                    <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
-                        @click=" Starfile(scope.$index) "></svg-icon>
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 " v-else>
-                    <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
-                        @click=" Starfile(scope.$index) "></svg-icon>
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 ">
-                    <Share @click=" Sharefile(scope.$index) " />
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 ">
-                    <Remove @click=" Removefile(scope.$index) " />
-                </el-icon>&nbsp;
-            </template>
+        <el-table-column prop="name" :label="t('home.file_name')" />
+        <el-table-column prop="updated_at" :label="t('home.modification_time')" />
+        <el-table-column prop="size" :label="t('home.size')" />
+        <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
+            <a href="#">{{ t('home.star_marking') }}</a>&nbsp;
+            <a href="#">{{ t('home.share') }}</a>&nbsp;
+            <a href="#">{{ t('home.delete') }}</a>
         </el-table-column>
     </el-table>
     <!-- 卡片布局 -->
@@ -44,11 +31,51 @@
 
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
-import { reactive, ref, onMounted } from 'vue'
-import { Share, Remove } from '@element-plus/icons-vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { pushScopeId, reactive, ref, onMounted } from 'vue'
+import * as share_api from "@/apis/share"
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
+
+const form = reactive({
+    name: '',
+    region: '',
+    date1: '',
+    date2: '',
+    delivery: false,
+    type: [],
+    resource: '',
+    desc: '',
+})
+
+const dialogVisible = ref(false)
+const dialogFormVisible = ref(false)
+const formLabelWidth = '140px'
 const viewmodel = ref(true);
-const isLoading = ref(true);
+const isLoading = ref(false);
+
+// function datefile(index: number) {
+//     const x = tableData.value
+//     stardata = tableData.value.splice(index, 1)
+//     if (x.length != stardata.length && x.length != 0) {
+//         ElMessage({
+//             message: '文件已成功移至回收站！',
+//             type: 'success',
+//         })
+//     }
+
+//     //需要判断文件是否已经从数据中移除
+
+// }
+
+function starclick() {
+    //需要判断文件是否已经存在与标星数据中
+    ElMessage({
+        message: `${t('home.file_star_marking')}`,
+        type: 'success',
+    })
+}
 
 let documentsList = ref<any[]>([]);
 

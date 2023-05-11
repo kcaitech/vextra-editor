@@ -1,5 +1,9 @@
 import { BorderPosition } from "@kcdesign/data/data/typesdefine"
 
+export const product = {
+    name: 'ProtoDesign'
+}
+
 export const system = {
     'illegal_input': '输入不合法！',
     select: '请选择！',
@@ -40,7 +44,9 @@ export const system = {
     'help_manual':'帮助手册',
     'about_software':'关于软件',
     'personal_center':'个人中心',
-    'login_out':'退出登录'
+    'login_out':'退出登录',
+    'new_file': '新文件',
+    'page1': '页面 1'
 }
 
 export const home = {
@@ -48,7 +54,28 @@ export const home = {
     open_remote_file: "打开远程文件",
     new_file: "新建文档",
     object_selector: '选择对象',
-    scale: '等比缩放'
+    scale: '等比缩放',
+    automatically_open: '自动打开',
+    search_file: '搜索文件',
+    about: '关于',
+    help_manual: '帮助手册',
+    about_software: '关于软件',
+    New_file: '新建文件',
+    recently_opened: '最近打开',
+    star_file: '标星文件',
+    file_shared: '我共享的文件',
+    shared_file_received: '收到的共享文件',
+    file_shared_with_me: '共享给我的文件',
+    recycling_station: '回收站',
+    file_name: '文件名称',
+    modification_time: '修改时间',
+    size: '大小',
+    operation: '操作',
+    star_marking: '标星',
+    share: '分享',
+    delete: '删除',
+    test: '测试',
+    file_star_marking: '文件已被标星，可在标星列表中查看！',
 }
 
 export const navi = {
@@ -68,7 +95,7 @@ export const frame = {
     presentation: '预览',
     watch: '手表',
     paper: '纸张',
-    social_media : '社交媒体'
+    social_media: '社交媒体'
 }
 
 export const pageMenu = {
@@ -91,7 +118,7 @@ export const attr: any = {
     position: '位置',
     'corner_smoothing': '平滑圆角',
     vertical: '垂直方向',
-    horizontal:'水平方向',
+    horizontal: '水平方向',
     fixedLeft: '左部固定',
     fixedRight: '右部固定',
     withContainer: '跟随容器缩放',

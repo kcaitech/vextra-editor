@@ -79,9 +79,6 @@ onUnmounted(() => {
         box-sizing: border-box;
         display: flex;
         flex-direction: row;
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
         height: 40px;
         div {
             margin: auto 0;

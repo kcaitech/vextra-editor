@@ -158,6 +158,7 @@ function getShapeRange(start: number, end: number): Shape[] {
 }
 
 function hoverShape(shape: Shape) {
+    if (props.context.workspace.transforming) return;
     props.context.selection.hoverShape(shape);
     if (shapeList.value)
         shapeH.value = shapeList.value.offsetHeight
@@ -188,6 +189,7 @@ const isRead = (read: boolean, shape: Shape) => {
     editor.value.setVisible();
     if (!read) {
         props.context.selection.unSelectShape(shape);
+        props.context.selection.unHoverShape();
     }
 }
 function shapeScrollToContentView(shape: Shape) {
@@ -201,10 +203,12 @@ function shapeScrollToContentView(shape: Shape) {
     const pageViewEl = props.context.workspace.pageView;
     if (pageViewEl) {
         pageViewEl.classList.add('transition-600');
+        props.context.workspace.translating(true);
         workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
         const timer = setTimeout(() => {
             props.context.selection.selectShape(shape);
             pageViewEl.classList.remove('transition-600');
+            props.context.workspace.translating(false);
             clearTimeout(timer);
         }, 600);
     } else {
@@ -240,8 +244,8 @@ const chartMenuMount = (e: MouseEvent) => {
             let sy = document.documentElement.clientHeight - e.clientY //点击图形列表剩余的高度
             if (el) {
                 const height = el.offsetHeight //菜单高度
-                if (sy - 30 < height) {
-                    let top = height - sy + 30
+                if (sy < height) {
+                    let top = height - sy
                     el.style.top = chartMenuPosition.value.y - top + 'px'
                 }
                 el.style.borderRadius = 4 + 'px'
@@ -298,8 +302,8 @@ onUnmounted(() => {
                 @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
                 @isLock="isLock" @onMouseDown="MouseDown" orientation="vertical" @after-drag="afterDrag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount" :context="props.context"
-                ref="contextMenuEl">
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
+                :context="props.context" ref="contextMenuEl">
                 <PageViewContextMenuItems :items="chartMenuItems" :context="props.context">
                 </PageViewContextMenuItems>
             </ContextMenu>

@@ -4,6 +4,8 @@ import { ElMessage } from 'element-plus'
 import { router } from '../../router'
 import { useRoute } from 'vue-router'
 import * as share_api from '../../apis/share'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const radio = ref('1')
 const textarea = ref('')
 const disabled = ref(false)
@@ -18,14 +20,14 @@ const onSave = () => {
     disabled.value = true
     if (maxShare.value >= 5) {
         ElMessage({
-            message: '该文件已达最大分享人数，请联系创建者处理'
+            message: `${t('apply.maximum_share')}`
         })
     }
     if (radio.value === '1') {
         idRead.value++
         if (idRead.value > 3) {
             ElMessage({
-                message: '您已多次申请访问权限，请等待创建者处理'
+                message: `${t('apply.request_access')}`
             })
         }
     }
@@ -33,7 +35,7 @@ const onSave = () => {
         idEdit.value++
         if (idEdit.value > 3) {
             ElMessage({
-                message: '您已多次申请访问权限，请等待创建者处理'
+                message: `${t('apply.request_access')}`
             })
         }
     }
@@ -61,15 +63,7 @@ const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, rem
 }
 let timer: any = null
 
-onMounted(() => {
-    if(docInfo.value.perm_type === 0) {
-        router.push({
-            name: 'document',
-            query: {
-                id: route.query.id
-            }
-        })
-    }   
+onMounted(() => {  
     timer = setInterval(() => {
     getDocumentAuthority()
     }, 60000) 
@@ -83,7 +77,7 @@ onUnmounted(() => {
     <div class="container">
         <div class="header">
             <div class="svgBox" @click="() => { router.push({ name: 'apphome' }) }">
-                <svg-icon class="svg" icon-class="home"></svg-icon>
+                <svg-icon class="svg" icon-class="home_0508"></svg-icon>
             </div>
             <div class="user-avatar">
                 <img src="../../assets/pd-logo-svg.svg">
@@ -94,36 +88,36 @@ onUnmounted(() => {
             <div class="svg-file">
                 <svg-icon class="svg" icon-class="file-rectangle"></svg-icon>
             </div>
-            <span>无文件访问权限</span>
+            <span>{{ t('apply.no_file_access_permission') }}</span>
             <div class="file-info">
                 <div class="file-name">
-                    <span>文件归属:</span>
+                    <span>{{ t('apply.file_attribution') }}:</span>
                     <p class="name">{{ docInfo.user.nickname }}</p>
                 </div>
                 <div class="file-name">
-                    <span>申请权限:</span>
+                    <span>{{ t('apply.apply_for_permission') }}:</span>
                     <div class="my-4 flex items-center text-sm">
                         <el-radio-group v-model="radio" class="ml-4">
-                            <el-radio label="1" size="small">仅阅读</el-radio>
-                            <el-radio label="3" size="small">可编辑</el-radio>
+                            <el-radio label="1" size="small">{{ t('apply.read_only') }}</el-radio>
+                            <el-radio label="3" size="small">{{ t('share.editable') }}</el-radio>
                         </el-radio-group>
                     </div>
                 </div>
                 <div class="textarea">
-                    <span>备注:</span>
+                    <span>{{ t('apply.remarks') }}:</span>
                     <el-input class="text" v-model="textarea" :autosize="{ minRows: 3, maxRows: 6 }" maxlength="50"
-                        size="small" placeholder="请输入申请备注" show-word-limit type="textarea" />
+                        size="small" :placeholder="t('apply.please_remarks')" show-word-limit type="textarea" />
                 </div>
                 <div class="button"><el-button :disabled="disabled" color="#0d99ff" size="small"
-                        @click="onSave">申请权限</el-button></div>
+                        @click="onSave">{{ t('apply.apply_for_permission') }}</el-button></div>
             </div>
         </div>
         <div v-else class="context">
             <div class="svg-file">
                 <svg-icon class="svg" icon-class="file-void"></svg-icon>
             </div>
-            <span>无文件访问权限</span>
-            <span class="text">文件已被删除，或创建者已关闭分享</span>
+            <span>{{ t('apply.no_file_access_permission') }}</span>
+            <span class="text">{{ t('apply.file_deleted') }}</span>
         </div>
     </div>
 </template>

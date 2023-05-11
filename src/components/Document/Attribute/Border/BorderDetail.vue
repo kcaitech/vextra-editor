@@ -141,7 +141,7 @@ onUpdated(() => {
 
 <template>
   <div class="border-detail-container">
-    <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="-490" :title="t('attr.advanced_stroke')">
+    <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="-456" :title="t('attr.advanced_stroke')">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
@@ -213,8 +213,8 @@ onUpdated(() => {
 <style scoped lang="scss">
   .border-detail-container {
     > .popover {
-      width: 32px;
-      height: 32px;
+      width: 18px;
+      height: 22px;
       .trigger {
         width: 100%;
         height: 100%;
@@ -222,8 +222,8 @@ onUpdated(() => {
         justify-content: center;
         align-items: center;
         > svg {
-          width: 40%;
-          height: 40%;
+          width: 11px;
+          height: 11px;
           transition: 0.5s;
         }
         > svg:hover {

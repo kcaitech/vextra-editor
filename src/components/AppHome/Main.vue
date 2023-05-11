@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Menu, Operation } from '@element-plus/icons-vue'
 import { RouterView } from 'vue-router';
-import { defineProps } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-const title:any = '测试测试'
+const {t} = useI18n()
 
 document.addEventListener('DOMContentLoaded',function(){
     console.log('11111')
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded',function(){
 <template>
     <div class="title">
         <div>
-            <slot>默认内容</slot>
+            <span>{{ t('home.automatically_open') }}</span>
         </div>
         <div>
             <el-icon size="25">

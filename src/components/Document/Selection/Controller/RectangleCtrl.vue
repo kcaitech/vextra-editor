@@ -1,8 +1,8 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
+import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Action, CtrlElementType } from "@/context/workspace";
+import { Action, CtrlElementType, WorkSpace } from "@/context/workspace";
 import { XY } from "@/context/selection";
 import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
 import CtrlBar from "./Bars/CtrlBar.vue";
@@ -30,6 +30,7 @@ const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
 const offset = 16;
+const visible = ref<boolean>(true);
 let isDragging = false;
 let startPosition: XY = { x: 0, y: 0 };
 let root: XY = { x: 0, y: 0 };
@@ -97,6 +98,13 @@ function getShapesByXY() {
         props.context.selection.selectShape();
     }
 }
+function workspaceUpdate(t?: number) {
+    if (t === WorkSpace.TRANSLATING) {
+        visible.value = !workspace.value.isTranslating;
+    } else if (t === WorkSpace.CHECKSTATUS) {
+        checkStatus();
+    }
+}
 
 function mousedown(e: MouseEvent) {
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
@@ -162,6 +170,7 @@ function mouseup(e: MouseEvent) {
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
         if (wheel) wheel = wheel.remove();
+        if (workspace.value.isPreToTranslating) workspace.value.preToTranslating();
     }
 }
 function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg?: number, aType?: 'rotate' | 'scale') {
@@ -216,6 +225,12 @@ function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg?: number, 
         }
     }
 }
+function checkStatus() {
+    if (workspace.value.isPreToTranslating) {
+        const start = workspace.value.startPoint;
+        mousedown(start!);
+    }
+}
 // 自身不带事务的图形移动, 只能在事务开启之后调用
 function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
     const origin: GroupShape = ((shape.parent || props.context.selection.selectedPage) as GroupShape);
@@ -239,16 +254,20 @@ function windowBlur() {
         document.removeEventListener('mouseup', mouseup);
     }
     if (wheel) wheel = wheel.remove();
+    if (workspace.value.isPreToTranslating) workspace.value.preToTranslating();
 }
 onMounted(() => {
     props.context.selection.watch(updater);
+    props.context.workspace.watch(workspaceUpdate);
     window.addEventListener('blur', windowBlur);
     document.addEventListener('keydown', keyboardHandle);
     getRect(props.controllerFrame);
+    checkStatus();
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
+    props.context.workspace.unwatch(workspaceUpdate);
     shapes.length = 0;
     window.removeEventListener('blur', windowBlur);
     document.removeEventListener('keydown', keyboardHandle);
@@ -257,27 +276,30 @@ onUnmounted(() => {
 watchEffect(updater)
 </script>
 <template>
-    <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
+    <div :class="{ 'ctrl-rect': true, 'un-visible': !visible }" @mousedown="mousedown" :style="rectStyle">
         <CtrlBar v-for="(bar, index) in  bars" :key="index" :context="props.context" :width="bar.width" :height="bar.height"
             :ctrl-type="bar.type" :rotate="props.rotate" @transform="handlePointAction"></CtrlBar>
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
             :rotate="props.rotate" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
         <!-- <div class="frame" :style="{
-                        top: framePosition.top,
-                        left: framePosition.left,
-                        transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
-                    }">
-                        <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
-                        }}</span>
-                    </div> -->
+            top: framePosition.top,
+            left: framePosition.left,
+            transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
+        }">
+            <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
+            }}</span>
+        </div> -->
     </div>
 </template>
 <style lang='scss' scoped>
+.un-visible {
+    opacity: 0;
+}
+
 .ctrl-rect {
     position: absolute;
     box-sizing: border-box;
     background-color: transparent;
-    opacity: 1;
 
     >.frame {
         position: absolute;

@@ -6,35 +6,43 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\OpenFile.vue
 -->
 <script setup lang="ts">
-import ToolButton from './ToolButton.vue';
+import { defineProps } from 'vue';
+import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
+import { router } from '@/router';
 const { t } = useI18n();
+interface Props {
+    context: Context
+}
+const props = defineProps<Props>();
 
-function onclick() {}
-
+function home() {
+    window.document.title = t('product.name');
+    (window as any).sketchDocument = undefined;
+    (window as any).skrepo = undefined;
+    router.push({ name: 'recently' });
+}
 </script>
 
 <template>
-    <div class="temp" title="new file">
-        <svg-icon icon-class="frame"></svg-icon>
+    <div class="home" title="new file" @click="home">
+        <svg-icon icon-class="home_0508"></svg-icon>
     </div>
-    <ToolButton :onclick="onclick" :valid="true" :selected="false">
-        <span>{{ t('home.new_file') }}</span>
-    </ToolButton>
 </template>
 
 <style scoped lang="scss">
-    .temp {
-        cursor: pointer;
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-        color: #ffffff;
-        box-sizing: border-box;
-        padding: 4px;
-        > svg {
-            width: 100%;
-            height: 100%;
-        }
+.home {
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    color: #ffffff;
+    box-sizing: border-box;
+    padding: 4px;
+
+    >svg {
+        width: 100%;
+        height: 100%;
     }
+}
 </style>

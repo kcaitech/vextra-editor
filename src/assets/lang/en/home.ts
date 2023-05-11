@@ -1,5 +1,9 @@
 import { BorderPosition } from "@kcdesign/data/data/typesdefine";
 
+export const product = {
+    name: 'ProtoDesign'
+}
+
 export const system = {
     'illegal_input': 'illegal input!',
     select: 'Select',
@@ -40,8 +44,9 @@ export const system = {
     'help_manual':'Help manual',
     'about_software':'About Software',
     'personal_center':'Personal center',
-    'login_out':'Login out'
-
+    'login_out':'Login out',
+    'new_file': 'New file',
+    'page1': 'Page 1'
 }
 
 export const home = {
@@ -49,7 +54,28 @@ export const home = {
     open_remote_file: "Open remote file",
     new_file: "New file",
     object_selector: 'Move',
-    scale: 'Scale'
+    scale: 'Scale',
+    automatically_open: 'Automatically open',
+    search_file: 'Search file',
+    about: 'About',
+    help_manual: 'Help manual',
+    about_software: 'About software',
+    New_file: 'New file',
+    recently_opened: 'Recently opened',
+    star_file: 'Star file',
+    file_shared: 'The file I shared',
+    shared_file_received: 'Shared file received',
+    file_shared_with_me: 'File shared with me',
+    recycling_station: 'Recycling station',
+    file_name: 'File name',
+    modification_time: 'Modification time',
+    size: 'Size',
+    operation: 'Operation',
+    star_marking: 'Star marking',
+    share: 'Share',
+    delete: 'Delete',
+    test: 'Test',
+    file_star_marking: 'File has been marked star, can be viewed in the star list!',
 }
 
 export const navi = {

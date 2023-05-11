@@ -33,7 +33,7 @@ const editor = computed(() => {
 })
 
 const fills: FillItem[] = reactive([]);
-
+const alpheFill = ref<HTMLInputElement>()
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return "#" + hex(r) + hex(g) + hex(b);
@@ -134,13 +134,41 @@ function onColorChange(idx: number, e: Event) {
 }
 
 function onAlphaChange(idx: number, e: Event) {
-    let value = Number(Number.parseFloat((e.target as HTMLInputElement)?.value).toFixed(2));
-    if (value >= 0 && value <= 1) {
-        const color = fills[idx].fill.color;
-        const clr = toHex(color.red, color.green, color.blue);
-        setColor(idx, clr, value);
-    } else {
-        message('danger', t('system.illegal_input'));
+    let value = (e.currentTarget as any)['value']
+    if(alpheFill.value) {
+        if(value?.slice(-1) === '%'){
+            value = Number(value?.slice(0, -1))
+            if (value >= 0) {
+                if(value > 100) {
+                    value = 100
+                }
+                value = value.toFixed(2) / 100
+                const color = fills[idx].fill.color;
+                const clr = toHex(color.red, color.green, color.blue);
+                setColor(idx, clr, value);
+                return
+            } else {
+                message('danger', t('system.illegal_input'));
+                return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
+            }     
+        }else if (!isNaN(Number(value))) {
+            if (value >= 0) {
+                if(value > 100) {
+                    value = 100
+                }
+                value = Number((Number(value)).toFixed(2)) / 100
+                const color = fills[idx].fill.color;
+                const clr = toHex(color.red, color.green, color.blue);
+                setColor(idx, clr, value);
+                return
+            } else {
+                message('danger', t('system.illegal_input'));
+                return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
+            }   
+        } else {
+            message('danger', t('system.illegal_input'));
+            return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
+        } 
     }
 }
 function getColorFromPicker(rgb: number[], idx: number) {
@@ -194,8 +222,9 @@ onBeforeUpdate(() => {
                     <ColorPicker :color="f.fill.color" @choosecolor="c => getColorFromPicker(c, idx)"></ColorPicker>
                     <input :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
                         @change="(e) => onColorChange(idx, e)" />
-                    <input style="text-align: center;" :value="f.fill.color.alpha" @change="(e) => onAlphaChange(idx, e)" />
+                    <input ref="alpheFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'" @change="(e) => onAlphaChange(idx, e)" />
                 </div>
+                <div style="width: 22px;"></div>
                 <div class="delete" @click="deleteFill(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
@@ -210,16 +239,19 @@ onBeforeUpdate(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 24px;
+    padding: 12px 10px;
     box-sizing: border-box;
 
     .add {
-        width: 16px;
-        height: 16px;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
         >svg {
-            width: 80%;
-            height: 80%;
+            width: 50%;
+            height: 50%;
         }
 
         transition: .2s;
@@ -231,16 +263,18 @@ onBeforeUpdate(() => {
 
     .fills-container {
         .fill {
-            height: 32px;
+            height: 30px;
             width: 100%;
             display: flex;
             flex-direction: row;
+            justify-content: space-between;
             align-items: center;
             margin-top: 4px;
 
             .visibility {
-                width: 16px;
-                height: 16px;
+                flex: 0 0 18px;
+                width: 18px;
+                height: 18px;
                 background-color: #2561D9;
                 border-radius: 3px;
                 border: 1px solid #d8d8d8;
@@ -251,14 +285,14 @@ onBeforeUpdate(() => {
                 align-items: center;
 
                 >svg {
-                    width: 80%;
-                    height: 80%;
+                    width: 60%;
+                    height: 60%;
                 }
             }
 
             .hidden {
-                width: 16px;
-                height: 16px;
+                width: 18px;
+                height: 18px;
                 background-color: transparent;
                 border-radius: 3px;
                 border: 1px solid #d8d8d8;
@@ -268,8 +302,8 @@ onBeforeUpdate(() => {
             .color {
                 background-color: rgba(#D8D8D8, 0.4);
                 height: 100%;
-                padding: 2px 8px;
-                margin-left: 12px;
+                padding: 0px 5px;
+                margin-left: 5px;
                 border-radius: 3px;
                 box-sizing: border-box;
                 display: flex;
@@ -279,27 +313,25 @@ onBeforeUpdate(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 92px;
-                    margin-left: 10px;
+                    width: 85px;
+                    margin-left: 5px;
                 }
 
                 input+input {
-                    width: 30px;
+                    width: 45px;
                 }
             }
 
             .delete {
+                flex: 0 0 22px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 16px;
-                height: 16px;
-                margin-left: 32px;
-                padding: 0 var(--default-padding-half);
-
+                width: 22px;
+                height: 22px;
                 >svg {
-                    width: 80%;
-                    height: 80%;
+                    width: 11px;
+                    height: 11px;
                 }
 
                 transition: .2s;

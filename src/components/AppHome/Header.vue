@@ -3,9 +3,8 @@ import { onMounted, reactive, toRefs, ref, onUnmounted } from 'vue'
 import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const docID = '1672502400000'
 const input = ref('')
 const num = ref(0)
@@ -179,12 +178,13 @@ onMounted(() => {
     }
 
     .right {
-        display: flex;
         position: relative;
+        display: flex;
         flex-direction: row;
         align-items: center;
 
         .notice {
+            position: relative;
             width: 20px;
             height: 20px;
             margin-right: 10px;
@@ -197,8 +197,8 @@ onMounted(() => {
             >.num {
                 position: absolute;
                 font-size: var(--font-default-fontsize);
-                top: 0;
-                left: 8px;
+                top: -10px;
+                left: 10px;
                 min-width: 8px;
                 padding: 0 4px 0 4px;
                 height: 14px;
