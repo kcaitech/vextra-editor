@@ -161,8 +161,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return shapes;
     }
-    getShapesByXY_beta(position: PageXY, force?: boolean): Shape[] { // force 暴力矿工，深度搜索。
-        // !force：柔弱小工，只检索可见图形，被裁剪的、unVisible的不检索，更适用于hover判定、左键点击
+    getShapesByXY_beta(position: PageXY, force?: boolean): Shape[] { // 基于SVGGeometryElement的图形检索
+        // force 深度检索。检索在某一位置的所有visible图形，返回的shape[]长度可以大于1
+        // !force：只检索可见图形，被裁剪的、unVisible的不检索，返回的shape[]长度等于1或0，更适用于hover判定、左键点击。
         const shapes: Shape[] = [];
         if (this.scout) {
             position = cloneDeep(position);
