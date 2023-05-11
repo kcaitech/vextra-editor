@@ -2,11 +2,13 @@
 import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Shape, ShapeType } from "@kcdesign/data/data/shape";
+import { Shape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./Controller";
 import { CtrlElementType } from "@/context/workspace";
 import { getHorizontalAngle, createRect, createHorizontalBox } from "@/utils/common";
 import { XY } from "@/context/selection";
+import TextSelectVue from "./Text/index.vue"
+
 export interface Point {
     x: number,
     y: number,
@@ -196,7 +198,11 @@ watchEffect(updater)
         <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;"></path>
     </svg>
     <!-- 控制 -->
-    <component v-if="context.selection.selectedShapes.length > 0" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate">
+    <component v-if="context.selection.selectedShapes.length > 0 && !context.selection.isSelectText"
+        :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)" :context="props.context"
+        :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate">
     </component>
+
+    <TextSelectVue v-if="context.selection.isSelectText" :shape="(context.selection.selectedShapes[0] as TextShape)"
+        :selection="context.selection" :matrix="props.matrix"></TextSelectVue>
 </template>

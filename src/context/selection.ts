@@ -34,11 +34,25 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     // todo
     private m_cursorStart: number = -1;
+    private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;
 
     constructor(document: Document) {
         super();
         this.m_document = document;
+    }
+
+    get cursorStart() {
+        return this.m_cursorStart;
+    }
+    get cursorAtBefore() {
+        return this.m_cursorAtBefore;
+    }
+    get cursorEnd() {
+        return this.m_cursorEnd;
+    }
+    get isSelectText() {
+        return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape && this.m_cursorStart >= 0;
     }
 
     selectPage(p: Page | undefined) {
@@ -245,9 +259,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @param x page坐标系
      * @param y
      */
-    locateText(x: number, y: number): number {
+    locateText(x: number, y: number): {index: number, before: boolean} {
         if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
-            return -1;
+            return {index: -1, before: false};
         }
         const shape = this.m_selectShapes[0] as TextShape;
         // translate x,y
