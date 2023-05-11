@@ -1,13 +1,13 @@
-import { Watchable } from "@kcdesign/data/data/basic";
-import { Document } from "@kcdesign/data/data/document";
-import { Page } from "@kcdesign/data/data/page";
-import { Shape } from "@kcdesign/data/data/shape";
-import { Repository } from "@kcdesign/data/data/transact";
-import { DocEditor, Editor, PageEditor } from "@kcdesign/data/editor";
-import { ShapeEditor } from "@kcdesign/data/editor/shape";
-import { uploadExForm } from "@kcdesign/data/io/export";
-import { Selection } from "./selection";
-import { WorkSpace } from "./workspace";
+import {Watchable} from "@kcdesign/data/data/basic";
+import {Document} from "@kcdesign/data/data/document";
+import {Page} from "@kcdesign/data/data/page";
+import {Shape} from "@kcdesign/data/data/shape";
+import {Repository} from "@kcdesign/data/data/transact";
+import {DocEditor, Editor, PageEditor} from "@kcdesign/data/editor";
+import {ShapeEditor} from "@kcdesign/data/editor/shape";
+import {uploadExForm} from "@kcdesign/data/io/export";
+import {Selection} from "./selection";
+import {WorkSpace} from "./workspace";
 
 export class Context extends Watchable(Object) {
     private m_data: Document;
@@ -47,19 +47,23 @@ export class Context extends Watchable(Object) {
     get data() {
         return this.m_data;
     }
+
     get repo(): Repository {
         return this.m_repo;
     }
+
     get selection() {
         return this.m_selection;
     }
+
     get workspace() {
         return this.m_workspace;
     }
 
     // debug
     upload() {
-        uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', (successed, fid, versionId) => {
+        const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2ODM5NjA2ODUsIm5iZiI6MTY4MzM1NTg4NSwiaWF0IjoxNjgzMzU1ODg1LCJkYXRhIjp7ImRhdGEiOnsiaWQiOiI4Iiwibmlja25hbWUiOiJJY2UuWiJ9fX0.AZsb_9SYPWAoQHjFD1S0PqY5Kq34yFtmhQ4hKN0BceE"
+        uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', token, "47330851083522048", (successed, fid, versionId) => {
             console.log(successed, fid, versionId);
         })
     }
