@@ -194,7 +194,7 @@ onUpdated(() => {
 
 <template>
   <div class="border-detail-container">
-    <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="-456" :title="t('attr.advanced_stroke')">
+    <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="-465" :title="t('attr.advanced_stroke')">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>

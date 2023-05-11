@@ -11,12 +11,14 @@ const props = defineProps<{
     icon?: any,
     ticon?: string,
     text: string | number,
-    frame?: { width: number, height: number, rotate?: number }
+    frame?: { width: number, height: number, rotate?: number },
+    multipleValues?: boolean
 }>();
 const emit = defineEmits<{
     (e: "onchange", value: string): void;
 }>();
 const curpt: { x: number, y: number } = { x: 0, y: 0 }
+const _curpt: { x: number, y: number } = { x: 0, y: 0 }
 const scale = ref<Scale>({
     axleX: 0,
     degX: 0
@@ -69,6 +71,9 @@ const onKeyBlur = (e: KeyboardEvent) => {
     }
 }
 const onMouseDown = (e: MouseEvent) => {
+    if(props.svgicon === 'radius' && props.multipleValues === true) {
+        return
+    }
     isDrag.value = true
     //鼠标按下时的位置
     curpt.x = e.screenX
@@ -90,6 +95,7 @@ const onMouseMove = (e: MouseEvent) => {
     
 }
 const onMouseUp = (e: MouseEvent) => {
+    isDrag.value = false
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 
@@ -127,11 +133,12 @@ watch(scale, () => {
         <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
                 width: `${props.frame ? frame?.width : 18}px`,
                 height: `${props.frame ? frame?.height : 18}px`,
-                transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`
+                transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`,
+                cursor: props.svgicon === 'radius' && props.multipleValues === true ? 'auto':'ew-resize'
             }"></svg-icon>
         <img class="icon" v-if="props.icon" :src="props.icon" />
         <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon">{{ props.ticon }}</span>
-        <input ref="input" @click="onBlur" :value="props.text" @keydown="onKeyBlur" v-on:change="onChange" />
+        <input ref="input" @click="onBlur" :value="props.multipleValues ? '多值' :props.text" @keydown="onKeyBlur" v-on:change="onChange" />
     </label>
 </template>
 
@@ -169,6 +176,7 @@ watch(scale, () => {
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;
+        font-size: var(--font-default-fontsize);
         outline: none;
     }
 }

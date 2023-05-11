@@ -317,7 +317,7 @@ onUnmounted(() => {
 
     .header {
         width: 100%;
-        height: 64px;
+        height: 70px;
         font-size: 10px;
         box-sizing: border-box;
         position: relative;
@@ -330,8 +330,8 @@ onUnmounted(() => {
         .title {
             margin-left: 13px;
             font-weight: var(--font-default-bold);
-            line-height: 30px;
-            height: 30px;
+            line-height: 36px;
+            height: 36px;
         }
 
         .search {
