@@ -4,7 +4,7 @@
  * @FilePath: \kcdesign\src\components\common\IconText.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits, watch, ref, nextTick } from "vue";
+import { defineProps, defineEmits, watch, ref, onMounted } from "vue";
 type Scale = { axleX: number, degX: number }
 const props = defineProps<{
     svgicon?: any,
@@ -19,6 +19,8 @@ const emit = defineEmits<{
 }>();
 const curpt: { x: number, y: number } = { x: 0, y: 0 }
 const _curpt: { x: number, y: number } = { x: 0, y: 0 }
+const screenWidth = ref(window.innerWidth)
+const screenHeight = ref(window.innerHeight)
 const scale = ref<Scale>({
     axleX: 0,
     degX: 0
@@ -83,14 +85,14 @@ const onMouseDown = (e: MouseEvent) => {
 }
 
 const onMouseMove = (e: MouseEvent) => {
-    //鼠标移动的距离
+        //鼠标移动的距离
     let mx = e.screenX - curpt.x
-    if (isDrag.value && mx > 4 || mx < -4) {
+        if (isDrag.value && mx > 4 || mx < -4) {
         curpt.x = e.screenX
-    }
-    //坐标移动的大小
+        }
+            //坐标移动的大小
     scale.value.axleX = Number((mx).toFixed(2))
-    //角度移动的大小
+            //角度移动的大小
     scale.value.degX = Number((mx / 5).toFixed(2))
     
 }
@@ -126,6 +128,18 @@ watch(scale, () => {
         emit("onchange",Number(input.value!.value).toFixed(2))
     }
 }, { deep: true });
+watch(screenWidth, () => {
+    screenWidth.value = window.innerWidth;
+})
+watch(screenHeight, () => {
+    screenHeight.value = window.innerHeight;
+})
+onMounted(() => {
+    window.addEventListener('resize', () => {
+      screenWidth.value = window.innerWidth;
+      screenHeight.value = window.innerHeight;
+    });
+})
 </script>
 
 <template>
