@@ -5,7 +5,7 @@
  * @LastEditTime: 2023-03-03 17:58:48
 -->
 <script setup lang="ts">
-import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive } from 'vue';
+import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data/data/shape';
 import TypeHeader from '../TypeHeader.vue';
@@ -30,6 +30,7 @@ const props = defineProps<{
 }>();
 const data: { borders: BorderItem[] } = reactive({ borders: [] });
 const { borders } = data;
+const alpheBorder = ref<HTMLInputElement>()
 const editor = computed(() => {
     return props.context.editor4Shape(props.shape);
 });
@@ -70,6 +71,11 @@ function addBorder() {
     const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
     editor.value.addBorder(border);
 }
+const isNoBorder = () => {
+    if(borders.length === 0) {
+        addBorder()
+    }    
+}
 function deleteBorder(idx: number) {
     editor.value.deleteBorder(idx);
 }
@@ -81,6 +87,9 @@ function toggleVisible(idx: number) {
 }
 function onColorChange(e: Event, idx: number) {
     let value = (e.target as HTMLInputElement)?.value;
+    if(value.slice(0, 1) !== '#') {
+        value = "#" + value
+    }
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     const hex = value.match(Reg_HEX);
@@ -99,16 +108,45 @@ function onColorChange(e: Event, idx: number) {
     setBorder(idx, { isEnabled, color });
 }
 function onAlphaChange(e: Event, idx: number) {
-    const alpha = Number(Number.parseFloat((e.target as HTMLInputElement).value).toFixed(2));
-    if (isNaN(alpha) || alpha < 0 || alpha > 1) {
-        message('danger', t('system.illegal_input'));
-        return;
+    let alpha = (e.currentTarget as any)['value']
+    if(alpheBorder.value) {
+        if(alpha?.slice(-1) === '%') {
+            alpha = Number(alpha?.slice(0, -1))
+            if (isNaN(alpha) || alpha < 0) {
+                message('danger', t('system.illegal_input'));
+                return (e.target as HTMLInputElement).value = (borders[idx].border.color.alpha * 100) + '%'
+            }
+            if(alpha > 100) {
+                alpha = 100
+            }
+            alpha = alpha.toFixed(2) / 100
+            console.log(alpha);
+            
+            const border = borders[idx].border;
+            const { red, green, blue } = border.color
+            const color = new Color(alpha, red, green, blue);
+            const isEnabled = border.isEnabled;
+            setBorder(idx, { isEnabled, color });
+            return
+        }else {
+            if(!isNaN(Number(alpha)) && alpha >= 0) {
+                if(alpha > 100) {
+                    alpha = 100
+                }
+                alpha = Number((Number(alpha)).toFixed(2)) / 100
+                const border = borders[idx].border;
+                const { red, green, blue } = border.color
+                const color = new Color(alpha, red, green, blue);
+                const isEnabled = border.isEnabled;
+                setBorder(idx, { isEnabled, color });
+                return
+            }else {
+                message('danger', t('system.illegal_input'));
+                return (e.target as HTMLInputElement).value = (borders[idx].border.color.alpha * 100) + '%'
+            }
+
+        }
     }
-    const border = borders[idx].border;
-    const { red, green, blue } = border.color
-    const color = new Color(alpha, red, green, blue);
-    const isEnabled = border.isEnabled;
-    setBorder(idx, { isEnabled, color });
 }
 function setBorder(idx: number, options: { color: Color, isEnabled: boolean }) {
     editor.value.setBorder(idx, options);
@@ -132,7 +170,7 @@ onBeforeUpdate(() => {
 
 <template>
     <div class="border-panel">
-        <TypeHeader :title="t('attr.border')" class="mt-24">
+        <TypeHeader :title="t('attr.border')" class="mt-24" @click="isNoBorder">
             <template #tool>
                 <div class="add" @click="addBorder">
                     <svg-icon icon-class="add"></svg-icon>
@@ -147,7 +185,7 @@ onBeforeUpdate(() => {
                 <div class="color">
                     <ColorPicker :color="b.border.color" />
                     <input :spellcheck="false" :value="toHex(b.border.color)" @change="e => onColorChange(e, idx)" />
-                    <input style="text-align: center;" :value="b.border.color.alpha" @change="e => onAlphaChange(e, idx)" />
+                    <input ref="alpheBorder" style="text-align: center;" :value="(b.border.color.alpha * 100) + '%'" @change="e => onAlphaChange(e, idx)" />
                 </div>
                 <div class="extra-action">
                     <BorderDetail :context="props.context" :shape="props.shape" :border="b.border" :index="idx">
@@ -241,11 +279,11 @@ onBeforeUpdate(() => {
                     border: none;
                     background-color: transparent;
                     width: 85px;
-                    margin-left: 10px;
+                    margin-left: 5px;
                 }
 
                 input+input {
-                    width: 30px;
+                    width: 45px;
                 }
             }
 

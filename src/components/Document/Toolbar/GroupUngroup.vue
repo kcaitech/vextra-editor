@@ -79,6 +79,14 @@ const nogroupClick = () => {
 </script>
 
 <template>
+    <el-tooltip
+        class="box-item"
+        effect="dark"
+        :content="`${t('home.groups')}`"
+        placement="bottom"
+        :show-after="500"
+        :offset="5"
+    >
     <div class="group">
         <ToolButton :onclick="groupClick" :valid="true" :selected="false" v-if="state === GROUP">
             <svg-icon  icon-class="group"></svg-icon>
@@ -90,6 +98,8 @@ const nogroupClick = () => {
             <svg-icon  :icon-class="preState === GROUP ? 'group' : 'ungroup'"></svg-icon>
         </ToolButton>
     </div>
+</el-tooltip>
+
 </template>
 
 <style scoped lang="scss">
@@ -106,8 +116,8 @@ div.group {
         align-items: center;
         color: #ffffff;
         > svg {
-            height: 70%;
-            width: 70%;
+            height: 55%;
+            width: 55%;
         }
     }
 

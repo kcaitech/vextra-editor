@@ -228,7 +228,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
                     <svg-icon icon-class="file"></svg-icon>
                 </div> -->
                 <div class="shrink" @click="toggle">
-                    <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(90deg)' : 'rotate(0deg)' }"></svg-icon>
+                    <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(270deg)' : 'rotate(0deg)' }"></svg-icon>
                 </div>
             </div>
         </div>

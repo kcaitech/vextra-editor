@@ -292,7 +292,7 @@ onUnmounted(() => {
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" @change="(e: Event) => search(e)">
+                <input type="text" :placeholder="t('home.search_layer')+'…'" @change="(e: Event) => search(e)">
             </div>
         </div>
         <div class="body" ref="ListBody">
@@ -336,19 +336,19 @@ onUnmounted(() => {
         }
 
         .search {
-            width: 100%;
-            height: 32px;
-            margin: 1px 0px;
+            width: auto;
+            height: 26px;
+            margin: 3px 10px;
             display: flex;
             align-items: center;
             box-sizing: border-box;
             background-color: var(--grey-light);
-            padding: 4px var(--default-padding);
+            padding: 4px var(--default-padding-half);
             border-radius: 8px;
 
             >svg {
-                height: 20px;
-                flex: 0 0 20px;
+                width: 12px;
+                height: 12px;
             }
 
             >input {
@@ -357,6 +357,7 @@ onUnmounted(() => {
                 outline: none;
                 margin-left: 4px;
                 background-color: transparent;
+                font-size: var(--font-default-fontsize);
             }
         }
     }

@@ -76,6 +76,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_translating: boolean = false; // 编辑器是否正在移动图形
     private m_creating: boolean = false; // 编辑器是否正在创建图形
     private m_selecting: boolean = false; // 编辑器是否正在选择图形
+    private m_setting: boolean = false; // 是否正在设置属性
     private m_menu_mount: boolean = false;
     private m_popover: boolean = false;
     private m_rootId: string = 'content';
@@ -126,7 +127,7 @@ export class WorkSpace extends Watchable(Object) {
         return this.m_frame_size;
     }
     get transforming() {
-        return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating;
+        return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating || this.m_setting;
     }
     get select() {
         return this.m_selecting;
@@ -225,7 +226,9 @@ export class WorkSpace extends Watchable(Object) {
         this.m_selecting = v;
         this.notify(WorkSpace.SELECTING);
     }
-
+    setting(v: boolean) {
+        this.m_setting = v;
+    }
     // keyboard
     keydown_r() {
         this.escSetup();

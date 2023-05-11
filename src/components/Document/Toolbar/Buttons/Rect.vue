@@ -2,7 +2,8 @@
 import ToolButton from '../ToolButton.vue';
 import { defineEmits, defineProps } from 'vue';
 import { Action } from '@/context/workspace';
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const props = defineProps<{
     active: boolean,
 }>();
@@ -14,23 +15,32 @@ function select(action: Action) {
 }
 </script>
 <template>
+    <el-tooltip
+    class="box-item"
+    effect="dark"
+    :content="`${t('home.rect')} &nbsp;&nbsp; R`"
+    placement="bottom"
+    :show-after="500"
+    :offset="10"
+  >
   <ToolButton ref="button" @click="() => {select(Action.AddRect)}" :selected="props.active">
-    <div class="svg-container" title="rectangle">
+    <div class="svg-container">
       <svg-icon icon-class="pattern-rectangle"></svg-icon>
     </div>
   </ToolButton>
+</el-tooltip>
 </template>
 <style scoped lang="scss">
 .svg-container {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #ffffff;
   > svg {
-    width: 50%;
-    height: 50%;
+    width: 13px;
+    height: 13px;
   }
 }
 </style>

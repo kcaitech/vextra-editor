@@ -457,7 +457,6 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button === MOUSE_LEFT) { // 左键按下
-
         if (spacePressed.value) {
             pageViewDragStart(e);
         } else {

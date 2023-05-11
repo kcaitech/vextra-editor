@@ -78,20 +78,20 @@ function select(pattern: Tools) {
 .container {
     outline: none;
     .svg-container {
-        width: 32px;
-        height: 32px;
+        width: 28px;
+        height: 28px;
         display: flex;
         justify-content: center;
         align-items: center;
         color: #ffffff;
             > svg {
-                width: 50%;
-                height: 50%;
+                width: 14px;
+                height: 14px;
             }
     }
     .menu {
         width: 10px;
-        height: 32px;
+        height: 28px;
         display: flex;
         justify-content: center;
         align-items: center;
