@@ -29,8 +29,6 @@ const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 
 function update() {
-
-    console.log("update")
     const m2p = props.shape.matrix2Page();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
@@ -47,7 +45,6 @@ function update() {
     boundrectPath.value = genRectPath(boundrect);
 
     const p0 = boundrect[0];
-    // const bounds = { left: 0, top: 0, right: 0, bottom: 0 }; // viewbox
     bounds.left = p0.x;
     bounds.top = p0.y;
     bounds.right = p0.x;
@@ -73,9 +70,7 @@ function update() {
         const cursorAtBefore = props.selection.cursorAtBefore;
         const index = props.selection.cursorStart;
         const layout = props.shape.getLayout(layoutText);
-
         const cursor = locateCursor(layout, index, cursorAtBefore).map((point) => matrix.computeCoord(point.x, point.y));
-
         cursorPath.value = genCursorPath(cursor);
     }
 }
@@ -104,18 +99,13 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 }
 
 function genCursorPath(cursor: { x: number, y: number }[]): string {
-    console.log("genCursorPath")
     if (cursor.length !== 2) return "";
     const p0 = cursor[0];
     const p1 = cursor[1];
-    let path = "M " + p0.x + " " + p0.y;
-    path += "L " + p1.x + " " + p1.y;
-    console.log(path)
-    return path;
+    return "M " + p0.x + " " + p0.y + " L " + p1.x + " " + p1.y;
 }
 
 function genRectPath(points: { x: number, y: number }[]): string {
-    console.log("genRectPath")
     let path = ""
     for (let i = 0, len = points.length; (i + 3) < len; i = i + 4) {
         const p0 = points[i];
@@ -128,7 +118,6 @@ function genRectPath(points: { x: number, y: number }[]): string {
         path += "L " + p3.x + " " + p3.y;
         path += "Z"
     }
-    console.log(path)
     return path;
 }
 
