@@ -274,6 +274,19 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return locateText(layout, x, y);
     }
 
+    setCursor(index: number, before: boolean) {
+        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+            return;
+        }
+        if (index < 0) index = 0;
+        if (index !== this.m_cursorStart || index !== this.m_cursorEnd || before !== this.m_cursorAtBefore) {
+            this.m_cursorStart = index;
+            this.m_cursorEnd = index;
+            this.m_cursorAtBefore = before;
+            this.notify(Selection.CHANGE_TEXT);
+        }
+    }
+
     selectText(start: number, end: number) {
         if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
             return;
