@@ -86,6 +86,7 @@ const nogroupClick = () => {
         placement="bottom"
         :show-after="500"
         :offset="5"
+        :hide-after="0"
     >
     <div class="group">
         <ToolButton :onclick="groupClick" :valid="true" :selected="false" v-if="state === GROUP">

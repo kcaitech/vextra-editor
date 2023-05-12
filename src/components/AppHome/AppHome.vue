@@ -24,8 +24,8 @@ import Main from './Main.vue';
 import * as user_api from '@/apis/users'
 import {User} from '@/context/user'
 import {defineProps, ref, nextTick, reactive, defineEmits, onMounted} from 'vue';
-import {importDocument, Repository} from "../../../../kcdesign-data";
-import {importSketch} from "../../../../kcdesign-data/io";
+import {importDocument, Repository} from "@kcdesign/data";
+import {importSketch} from "@kcdesign/data/io";
 import {router} from "@/router";
 
 const getUserInfo = async () => {
@@ -36,7 +36,7 @@ const getUserInfo = async () => {
 
 const importDocumentTest = () => {
     importDocument({
-        endPoint: "http://localhost:9000",
+        endPoint: "http://192.168.0.10:9000",
         region: "zhuhai-1",
         accessKey: "MUFUQLKG1RTQEP3UORVQ",
         secretKey: "vooG087IpqRAKvCK8h39LZ1eAiUGULnx7S4BkUbm",

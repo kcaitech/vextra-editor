@@ -40,7 +40,7 @@ const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: XY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
-const dragActiveDis = 3; // 拖动 3px 后开始触发移动
+const dragActiveDis = 4; // 拖动 3px 后开始触发移动
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix = reactive(props.context.workspace.matrix); // 一切图形可视变换的根源！！！
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
@@ -125,6 +125,7 @@ function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         name = (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
         const s = editor.insert(parent, parent.childs.length, shape);
+        props.context.selection.selectShape(shape)
         if (s) {
             return s;
         }
