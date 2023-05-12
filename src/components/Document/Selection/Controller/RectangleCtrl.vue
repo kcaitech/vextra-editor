@@ -27,13 +27,13 @@ const dragActiveDis = 3;
 const offset = 16;
 const visible = ref<boolean>(true);
 let timer: any;
-const duration: number = 350; // 双击判定时常 ms
+const duration: number = 250; // 双击判定时长 ms
 let isDragging = false;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let startPositionOnPage: PageXY = { x: 0, y: 0 };
 let root: ClientXY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
-let rectStyle: string;
+let controllerStyle: string;
 let wheel: Wheel | undefined = undefined;
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const points = computed<Point[]>(() => {
@@ -67,7 +67,7 @@ const axle = computed<ClientXY>(() => {
 function updater(t?: number) {
     getRect(props.controllerFrame);
     if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
-        initRect();
+        initController();
     }
 }
 function workspaceUpdate(t?: number) {
@@ -149,7 +149,7 @@ function mousemove(e: MouseEvent) {
         }
     }
 }
-function transform(shapes: Shape[], start: XY, end: XY) {
+function transform(shapes: Shape[], start: ClientXY, end: ClientXY) {
     const ps = matrix.inverseCoord(start.x, start.y);
     const pe = matrix.inverseCoord(end.x, end.y);
     const origin = props.context.selection.getClosetContainer(ps);
@@ -257,9 +257,9 @@ function keyboardHandle(e: KeyboardEvent) {
     handle(e, props.context);
 }
 function getRect(points: Point[]) {
-    rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+    controllerStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
 }
-function initRect() {
+function initController() {
     editing.value = false; // 初始状态不为编辑状态
     initTimer(); // 控件生成之后立马开始进行双击预定，该预定将在duration(ms)之后取消
 }
@@ -293,9 +293,8 @@ onMounted(() => {
     props.context.workspace.watch(workspaceUpdate);
     window.addEventListener('blur', windowBlur);
     document.addEventListener('keydown', keyboardHandle);
-    getRect(props.controllerFrame);
     checkStatus();
-    initRect();
+    initController();
 })
 
 onUnmounted(() => {
@@ -310,7 +309,7 @@ onUnmounted(() => {
 watchEffect(() => { updater() })
 </script>
 <template>
-    <div :class="{ 'ctrl-rect': true, 'un-visible': !visible, editing }" @mousedown="mousedown" :style="rectStyle">
+    <div :class="{ 'ctrl-rect': true, 'un-visible': !visible, editing }" @mousedown="mousedown" :style="controllerStyle">
         <CtrlBar v-for="(bar, index) in  bars" :key="index" :context="props.context" :width="bar.width" :height="bar.height"
             :ctrl-type="bar.type" :rotate="props.rotate" @transform="handlePointAction"></CtrlBar>
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"

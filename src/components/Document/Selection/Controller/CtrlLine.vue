@@ -1,9 +1,9 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
+import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Action, CtrlElementType } from "@/context/workspace";
-import { XY } from "@/context/selection";
+import { XY, ClientXY, PageXY } from "@/context/selection";
 import { translate, adjustLT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
 import { Point } from "../SelectionView.vue";
 import { GroupShape, Shape } from "@kcdesign/data/data/shape";
@@ -11,7 +11,8 @@ import { createLine, getAxle } from "@/utils/common";
 import CtrlPoint from "./Points/CtrlPointForStraightLine.vue";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/contentFn";
-
+import { Selection } from "@/context/selection";
+import { WorkSpace } from "@/context/workspace";
 interface Props {
     context: Context,
     isController: boolean
@@ -24,45 +25,82 @@ const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
 let isDragging = false;
-let startPosition: XY = { x: 0, y: 0 };
-let root: XY = { x: 0, y: 0 };
+let startPosition: ClientXY = { x: 0, y: 0 };
+const visible = ref<boolean>(true);
+let root: ClientXY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
 let lineStyle: string;
 let wheel: Wheel | undefined = undefined;
+let timer: any;
+const duration: number = 350; // 双击判定时常 ms
+const editing = ref<boolean>(false); // 是否进入路径编辑状态
 
 const axle = computed<XY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
 
-function updater() {
+function updater(t?: number) {
     getLine(props.controllerFrame);
-}
-function getShapesByXY() {
-    const startPositionOnPage = workspace.value.matrix.inverseCoord(startPosition.x, startPosition.y);
-    const shapes = props.context.selection.getShapesByXY(startPositionOnPage);
-    if (shapes.length) {
-        props.context.selection.selectShape(shapes.at(-1));
-    } else {
-        props.context.selection.selectShape();
+    if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
+        initLine();
     }
 }
-
-function mousedown(e: MouseEvent) {
+function preTodo(e: MouseEvent) { // 移动之前做的准备
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        workspace.value.menuMount(false); // 取消右键事件
         wheel = fourWayWheel(props.context, { rolling: forCtrlRect });
         const action = workspace.value.action;
         if (action === Action.AutoV && props.isController) {
             e.stopPropagation(); // props.isController 当控制权在selection时，不要冒泡出去, 否则父节点也会被控制
             shapes = props.context.selection.selectedShapes;
             if (!shapes.length) return;
-            matrix.reset(workspace.value.matrix);
-            const { clientX, clientY } = e;
             root = workspace.value.root;
             document.addEventListener('mousemove', mousemove);
             document.addEventListener('mouseup', mouseup);
-            startPosition = { x: clientX - root.x, y: clientY - root.y };
         }
+    }
+}
+function handleDblClick() {
+    editing.value = !editing.value;
+    timerClear();
+}
+function mousedown(e: MouseEvent) {
+    setPosition(e);
+    if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
+        handleDblClick();
+    }
+    initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
+    preTodo(e);
+}
+function checkStatus() { // 检查是否可以直接开始移动
+    if (workspace.value.isPreToTranslating) { // 可以开始移动，该状态开启之后将跳过mousedown事件
+        const start = workspace.value.startPoint;
+        setPosition(start!);
+        preTodo(start!);
+    }
+}
+function setPosition(e: MouseEvent) {
+    const { clientX, clientY } = e;
+    matrix.reset(workspace.value.matrix);
+    root = workspace.value.root;
+    startPosition = { x: clientX - root.x, y: clientY - root.y };
+}
+function initLine() {
+    editing.value = false; // 初始状态不为编辑状态
+    initTimer(); // 控件生成之后立马开始进行双击预定，该预定将在duration(ms)之后取消
+}
+function initTimer() {
+    clearTimeout(timer); // 先取消原有的预定
+    timer = setTimeout(() => { // 设置新的预定
+        clearTimeout(timer); // 取消预定
+        timer = null;
+    }, duration)
+}
+function timerClear() {
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
     }
 }
 function mousemove(e: MouseEvent) {
@@ -102,16 +140,15 @@ function transform(shapes: Shape[], start: XY, end: XY) {
 }
 function mouseup(e: MouseEvent) {
     if (e.button === 0) { // 只处理鼠标左键按下时的抬起
-        if (wheel) wheel = wheel.remove();
         if (isDragging) {
             props.context.repo.commit({}); // 如果触发了拖拽状态,必定开启了事务 ---end transaction---
-        } else {
-            getShapesByXY(); // 单纯点击,只选择图层
         }
         isDragging = false;
         workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
+        if (wheel) wheel = wheel.remove();
+        if (workspace.value.isPreToTranslating) workspace.value.preToTranslating(); // 取消移动准备
     }
 }
 function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale') {
@@ -131,6 +168,13 @@ function handlePointAction(type: CtrlElementType, p2: XY, deg: number, aType: 'r
                 adjustRB2(item, p2Onpage.x, p2Onpage.y);
             }
         }
+    }
+}
+function workspaceUpdate(t?: number) {
+    if (t === WorkSpace.TRANSLATING) {
+        visible.value = !workspace.value.isTranslating;
+    } else if (t === WorkSpace.CHECKSTATUS) {
+        checkStatus();
     }
 }
 function keyboardHandle(e: KeyboardEvent) {
@@ -156,25 +200,31 @@ function windowBlur() {
         document.removeEventListener('mouseup', mouseup);
     }
     if (wheel) wheel = wheel.remove();
+    if (workspace.value.isPreToTranslating) workspace.value.preToTranslating();  // 取消移动准备
+    timerClear();
 }
 onMounted(() => {
     props.context.selection.watch(updater);
+    props.context.workspace.watch(workspaceUpdate);
     window.addEventListener('blur', windowBlur);
     document.addEventListener('keydown', keyboardHandle);
+    checkStatus();
     getLine(props.controllerFrame);
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
+    props.context.workspace.unwatch(workspaceUpdate);
     shapes.length = 0;
     window.removeEventListener('blur', windowBlur);
     document.removeEventListener('keydown', keyboardHandle);
+    timerClear();
 })
 
-watchEffect(updater)
+watchEffect(() => { updater() })
 </script>
 <template>
-    <div class="ctrl-line" @mousedown="mousedown" :style="lineStyle">
+    <div :class="{ 'ctrl-line': true, 'un-visible': !visible, editing }" @mousedown="mousedown" :style="lineStyle">
         <div class="display"></div>
         <CtrlPoint :context="props.context" :axle="axle" :rotate="rotate" :pointType="CtrlElementType.LineStart"
             @transform="handlePointAction"></CtrlPoint>
@@ -195,5 +245,13 @@ watchEffect(updater)
         position: absolute;
         top: 6px;
     }
+}
+
+.un-visible {
+    opacity: 0;
+}
+
+.editing {
+    background-color: rgba($color: #2561D9, $alpha: 0.15);
 }
 </style>
