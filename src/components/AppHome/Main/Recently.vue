@@ -93,7 +93,7 @@ const Removefile = (index: number) => {
 
 
 onMounted(() => {
-    reactive(getUserdata());
+    getUserdata()
 
 })
 </script>

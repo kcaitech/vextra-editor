@@ -75,9 +75,9 @@ onUnmounted(() => {
           <span>{{ t('apply.authority') }}:</span>
           <p class="name bold">{{permission[item.perm_type]}}</p>
         </div>
-        <div class="textarea" v-if="item.remarks.trim().length">
+        <div class="textarea" v-if="item.applicant_notes.trim().length">
           <span class="remarks">{{ t('apply.remarks') }}:</span>
-          <p class="text">{{item.remarks}}</p>
+          <p class="text">{{item.applicant_notes}}</p>
         </div>
         <!-- 链接按钮 -->
         <div class="button">
