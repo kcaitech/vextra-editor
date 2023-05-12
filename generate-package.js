@@ -17,8 +17,8 @@ async function Generate() {
     packageJson.devDependencies = { ...packageJson.devDependencies, ...patchPackageJson.devDependencies };
 
     // 添加生成命令
-    packageJson.scripts['generate-package-dev'] = 'node generate-package.js dev && npm install --force';
-    packageJson.scripts['generate-package-prod'] = 'node generate-package.js prod && npm install --force';
+    packageJson.scripts['generate-package-dev'] = 'node generate-package.js dev && npm install --legacy-peer-deps';
+    packageJson.scripts['generate-package-prod'] = 'node generate-package.js prod && npm install --legacy-peer-deps';
 
     // 覆盖package.json
     await fs.writeFile('./package.json', JSON.stringify(packageJson, null, 2), 'utf8');
