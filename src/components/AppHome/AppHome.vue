@@ -1,19 +1,19 @@
 <template>
-    <div class="common-layout">
-        <el-container>
-            <el-aside width="381px">
-                <Aside/>
-            </el-aside>
-            <el-container>
-                <el-header>
-                    <Header/>
-                </el-header>
-                <el-main>
-                    <Main/>
-                </el-main>
-            </el-container>
-        </el-container>
-    </div>
+  <div class="common-layout">
+    <el-container>
+      <el-aside width="381px">
+        <Aside />
+      </el-aside>
+      <el-container>
+        <el-header>
+          <Header />
+        </el-header>
+        <el-main>
+          <Main>test</Main>
+        </el-main>
+      </el-container>
+    </el-container>
+  </div>
 </template>
 
 
@@ -60,9 +60,9 @@ onMounted(async () => {
     localStorage.setItem('avatar', resavatar.data.avatar)
     localStorage.setItem('nickname', resavatar.data.nickname)
 
-    setTimeout(() => {
-        importDocumentTest()
-    }, 2000)
+    // setTimeout(() => {
+    //     importDocumentTest()
+    // }, 2000)
 })
 </script>
 

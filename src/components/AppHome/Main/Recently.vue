@@ -1,5 +1,6 @@
 
 <template>
+    <!-- 表格布局 -->
     <el-table :data="documentsList" height="83vh" style="width: 100%" v-if="viewmodel" v-loading="isLoading">
         <el-table-column prop="name" :label="t('home.file_name')" />
         <el-table-column prop="updated_at" :label="t('home.modification_time')" />
@@ -10,11 +11,11 @@
             <a href="#">{{ t('home.delete') }}</a>
         </el-table-column>
     </el-table>
-
-
+    <!-- 卡片布局 -->
     <el-row v-else>
-        <el-col v-for="(item) in documentsList" :key="item.id" :span="3"  style="margin:0px 20px 20px 0px;"  >
-            <el-card :body-style="{ padding: '0px' }" shadow="hover">
+        <el-col v-for="(     item     ) in      documentsList     " :key=" item.id " :span=" 3 "
+            style="margin:0px 20px 20px 0px;">
+            <el-card :body-style=" { padding: '0px' } " shadow="hover">
                 <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
                     class="image" />
                 <div style="padding: 14px">
@@ -26,7 +27,6 @@
             </el-card>
         </el-col>
     </el-row>
-    <button @click="viewmodel = !viewmodel">{{ t('home.test') }}</button>
 </template>
 
 <script setup lang="ts">
@@ -88,52 +88,31 @@ async function getUserdata() {
         const size = Math.round(documentsList.value[i].size / 1024)
         documentsList.value[i].size = size + " KB"
         documentsList.value[i].updated_at = updated
+        documentsList.value[i].starfiled = true
 
     }
+    documentsList.value[1].starfiled = false
     // process();  
     // unloading  
     isLoading.value = false;
 }
 
-
-
-const handleClose = (done: () => void) => {
-    ElMessageBox.confirm('Are you sure to close this dialog?')
-        .then(() => {
-            done()
-        })
-        .catch(() => {
-            // catch error
-        })
+const Starfile = (index: number) => {
+    documentsList.value[index].starfiled = documentsList.value[index].starfiled === true ? false : true
 }
 
-// const tableData = ref([
-//     {
-//         filename: '第一个文档',
-//         modtime: '2023-01-23',
-//         size: '1MB',
+const Sharefile = (index: number) => {
+    console.log(index)
+}
 
-//     },
-//     {
-//         filename: '第二个文档',
-//         modtime: '2023-01-23',
-//         size: '1MB',
+const Removefile = (index: number) => {
+    console.log(index)
+}
 
-//     },
-//     {
-//         filename: '第三个文档',
-//         modtime: '2023-01-23',
-//         size: '1MB',
-//     },
-//     {
-//         filename: '第四个文档',
-//         modtime: '2023-01-23',
-//         size: '1MB',
-//     },
 
-// ])
 onMounted(() => {
-    getUserdata();
+    reactive(getUserdata());
+
 })
 </script>
 <style lang="scss">
@@ -148,13 +127,27 @@ onMounted(() => {
     margin-right: 10px;
 }
 
+.test {
+    >svg {
+        width: 100%;
+        height: 100%;
+    }
+}
 
-a {
+.el-icon {
     display: none;
 }
 
-.el-table__row:hover a {
+.el-icon:active {
+    background-color: #999;
+    border-radius: 1px;
+    color: #6290ee;
+
+}
+
+.el-table__row:hover .el-icon {
     display: inline-block;
+    color: #3172f4;
 }
 
 :deep(.el-table_1_column_4 .cell) {

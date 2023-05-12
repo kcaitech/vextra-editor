@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 
 
 </script>
@@ -7,11 +9,15 @@
 <template>
     <div class="footer">
         <span>
-            © 2023 Kc.Design Inc. All rights reserved.
+            {{ t('system.login_footer') }}
         </span>
-        <span><a href="http://www.baidu.com">使用协议</a></span>
-        <span><a href="http://www.baidu.com">隐私政策</a></span>
-     
+        <span>
+            <a href="">{{ t('system.read_TOS') }}</a>
+        </span>
+        <span>
+            <a href="">{{ t('system.read_Privacy') }}</a>
+        </span>
+
     </div>
 </template>
 
@@ -22,12 +28,13 @@
     z-index: 1;
     bottom: 0;
     color: rgb(164, 162, 162);
+    font-size: 12px;
 
     >span {
         margin: 5px;
 
         >a {
-            font-size: 14px;
+            color: rgb(164, 162, 162);
         }
     }
 
