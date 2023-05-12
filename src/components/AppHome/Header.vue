@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, defineProps, defineEmits, ref, onUnmounted } from 'vue'
-
-import { Search } from '@element-plus/icons-vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
+import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const docID = '1672502400000'
-const input = ref('')
 const num = ref(0)
 const showInForm = ref(false)
 const applyList: any = ref([])
@@ -19,13 +17,13 @@ const getApplyList = async () => {
         const { data } = await share_api.getApplyListAPI({ doc_id: docID })
         num.value = data.length
         applyList.value = data
-    }catch(err) {
+    } catch (err) {
         console.log(err)
     }
 }
 let timer: any = null
 getApplyList()
-onMounted(() => {    
+onMounted(() => {
     timer = setInterval(() => {
         getApplyList()
     }, 60000)
@@ -33,10 +31,42 @@ onMounted(() => {
 onUnmounted(() => {
     clearInterval(timer)
 })
-// import { onMounted, reactive, toRefs, defineProps, defineEmits } from 'vue'
-// import { Search } from '@element-plus/icons-vue'
 
 
+const tableData = [
+    { name: 'wh sh', updated_at: '2020-11-11 18:20:11', size: '12kb' },
+    { name: 'aaa', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'er嗡嗡嗡', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'er三万五千', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'e威威r', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'er嗡嗡嗡', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'er三万五千', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'e威威r', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' }
+
+]
 
 
 const errorHandler = () => true
@@ -46,37 +76,59 @@ const state = reactive({
 })
 const { circleUrl, uname, } = toRefs(state)
 
-let inputiner: string
-let searchlist =reactive(new Array) 
-onMounted(() => {
+const search = ref('')
+let documentsList = ref<any[]>([]);
+documentsList.value=tableData
+
+function getSearch() {
+
     const historylist: any = document.querySelector('.searchhistory')
+    const close: any = document.querySelector('.CloseIcon')
     const input: any = document.querySelector('.input')
-    input.addEventListener('focus', (e: any) => {
-        historylist.style.display = 'block',
-            historylist.style.opacity = '1',
-            historylist.style.transition = 'opacity 0.5s'
+
+    input.addEventListener('focus', () => {
+        
+        documentsList = computed(() =>tableData.filter((data) =>!search.value ||data.name.toLowerCase().includes(search.value.toLowerCase())))
+        historylist.style.display = 'block'
 
     })
     input.addEventListener('blur', () => {
-        historylist.style.display = 'none',
-            historylist.style.opacity = '0'
-
+        search.value = ''
+        historylist.style.display = 'none'
     })
-
 
     input.addEventListener('keyup', (e: any) => {
-        if (e.key === 'Enter') {
-            inputiner = input.value
-            if(searchlist.length < 5){
-                searchlist.unshift(inputiner)
-            }else{
-                searchlist.pop()
-                searchlist.unshift(inputiner)
-            }
+        if (search.value !== '') {
+            close.style.display = 'block'
+        } else {
+            close.style.display = 'none'
         }
+
+        // if (e.key === 'Enter') {
+        //     if (searchlist.length < 11) {
+        //         searchlist.unshift(input.value)
+        //     } else {
+        //         searchlist.pop()
+        //         searchlist.unshift(input.value)
+        //     }
+        // }
     })
+    close.addEventListener('click', () => {
+        search.value = ''
+        close.style.display = 'none'
+    })
+}
+
+
+onMounted(() => {
+    getSearch()
+    
 
 })
+
+
+
+
 
 
 
@@ -85,31 +137,58 @@ onMounted(() => {
 <template>
     <div class="header">
         <div class="search">
-            <el-icon size="20" class="icon">
+            <el-icon size="20" class="SearchIcon" style="margin: 10px;">
                 <Search />
-            </el-icon><input class="input" type="search" :placeholder="t('home.search_file')" />
-            <ul class="searchhistory">
-                <li v-for="(item,index) in searchlist" :key="index">{{ item }}</li>
-            </ul>
+            </el-icon><input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`" />
+            <el-icon size="20" class="CloseIcon" style="margin: 10px;">
+                <Close />
+            </el-icon>
+            <div class="searchhistory">
+                <div>
+                    <el-table :data="documentsList" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果">
+                        <el-table-column prop="name" :label="t('home.file_name')" />
+                        <el-table-column prop="updated_at" :label="t('home.modification_time')" />
+                        <el-table-column prop="size" :label="t('home.size')" />
+                    </el-table>
+                    <!-- <ul>
+                        <li v-for="(item, index) in documentsList" :key="index" >
+                            {{ item.name }}-{{ item.updated_at }}-{{ item.size }}
+                        </li>
+                    </ul> -->
+                    <!-- <span style="display: inline-block;font-size: 12px;font-weight: bold;">文件名称</span>
+                    <span style="display: inline-block;font-size: 12px;font-weight: bold;">打开时间</span>
+                    <span v-for="(item, index) in searchlist" :key="index">{{ item }}<br /></span> -->
+                </div>
+                <!-- <div v-else style="text-align: center;">没有内容</div> -->
+            </div>
+
         </div>
         <div class="right">
             <div class="notice" @click="showInForm = true">
                 <svg-icon class="svg" icon-class="notice"></svg-icon>
-                <div class="num" v-if="num > 0" :class="{after: num > 99}" :style="{paddingRight: num>99 ? 9+'px': 4+ 'px'}">{{ num > 99 ? 99 : num }}</div>
+                <div class="num" v-if="num > 0" :class="{ after: num > 99 }"
+                    :style="{ paddingRight: num > 99 ? 9 + 'px' : 4 + 'px' }">{{ num > 99 ? 99 : num }}</div>
             </div>
             <div class="about">
-                <span>{{ t('home.about') }}</span>
+                <span>{{ t('system.about') }}</span>
                 <div class="about-items">
-                    <a href="#">{{ t('home.help_manual') }}</a>
-                    <el-divider class="fgx" />
-                    <a href="#">{{ t('home.about_software') }}</a>
+                    <div>{{ t('system.help_manual') }}</div>
+                    <div>{{ t('system.about_software') }}</div>
                 </div>
             </div>
-            <div>
+            <div class="user">
                 <el-avatar :src="circleUrl" @error="errorHandler">
                     <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
-                </el-avatar><br />
-                <span>{{ uname }}</span>
+                </el-avatar>
+                <span style="display: block">{{ uname }}</span>
+                <div class="userinfo">
+                    <div><el-icon size="20">
+                            <User />
+                        </el-icon>{{ t('system.personal_center') }}</div>
+                    <div><el-icon size="20">
+                            <SwitchButton />
+                        </el-icon>{{ t('system.login_out') }}</div>
+                </div>
             </div>
             <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
         </div>
@@ -145,8 +224,12 @@ onMounted(() => {
 
         }
 
-        .search .icon {
-            margin: auto 10px;
+        .CloseIcon {
+            display: none;
+
+            :hover {
+                color: blue
+            }
         }
     }
 
@@ -155,15 +238,18 @@ onMounted(() => {
         display: flex;
         flex-direction: row;
         align-items: center;
+
         .notice {
             position: relative;
             width: 20px;
             height: 20px;
             margin-right: 10px;
+
             >.svg {
                 width: 100%;
                 height: 100%;
             }
+
             >.num {
                 position: absolute;
                 font-size: var(--font-default-fontsize);
@@ -178,48 +264,56 @@ onMounted(() => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                
+
             }
+
             .after::after {
-                    content: '+';
-                    position: absolute;
-                    display: block;
-                    top: -4px;
-                    left: 16px;
-                    color: #fff;
-                }
+                content: '+';
+                position: absolute;
+                display: block;
+                top: -4px;
+                left: 16px;
+                color: #fff;
+            }
         }
 
         .about {
-            margin-right: 10px;
+            margin: 0 20px;
+            font-size: 16px;
             position: relative;
             display: inline-block;
 
             .about-items {
                 position: absolute;
-                right: -40px;
                 background-color: #f9f9f9;
                 min-width: 80px;
                 box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-                padding: 12px 16px;
+                right: -30px;
                 z-index: 99;
+                padding: 0 10px;
+                border-radius: 2px;
                 display: none;
 
-                .fgx {
-                    margin: 10px 0 10px 0;
+                div {
+                    font-size: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 2px;
+                    margin: 10px 0;
                 }
 
-                a {
-                    margin-left: 10px;
+                div:hover {
+                    background: rgba(217, 217, 217, 0.67);
+
+                    &:active {
+                        background: rgb(113, 110, 110);
+                    }
                 }
             }
 
             &:hover .about-items {
                 display: block;
-            }
-
-            &:hover span {
-                background: rgba(217, 217, 217, 0.67);
             }
         }
 
@@ -233,33 +327,56 @@ onMounted(() => {
             }
         }
 
+        .userinfo {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 80px;
+            right: -30px;
+            z-index: 99;
+            padding: 0 10px;
+            border-radius: 2px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+
+            div {
+                border-radius: 2px;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 10px 0;
+            }
+
+            div:hover {
+                background: rgba(217, 217, 217, 0.67);
+
+                &:active {
+                    background: rgb(113, 110, 110);
+                }
+            }
+
+        }
+
+        .user:hover .userinfo {
+            display: block;
+        }
     }
 }
 
-ul[data-v-22577da8] {
-    padding-top: 10px;
-    padding-bottom: 10px;
+.searchhistory {
+    margin-top: 20px;
     box-sizing: border-box;
     position: absolute;
     top: 60px;
     left: calc(381px + 20px);
     width: 550px;
+    min-height: 300px;
+    max-height: 600px;
     background: white;
     z-index: 9999;
-    box-shadow: 1px 1px 2px rgb(220, 220, 218);
-    list-style-type: none;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     display: none;
     border-radius: 5px;
-
-    :deep li {
-        margin-bottom: 5px;
-        margin-left: 0px;
-        padding-inline-start: 0px;
-
-        &:hover {
-            background: rgba(217, 217, 217, 0.67);
-        }
-    }
-
+    text-align: center;
 }
 </style>

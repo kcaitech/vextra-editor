@@ -64,7 +64,7 @@ const x = localStorage.getItem('index')
                 <button class="openfile" @click="picker.invoke()">{{ t('home.open_local_file') }}</button>
             </div>
             <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
-                <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1)">
+                <router-link to="/apphome/recently" title="最近打开"><el-menu-item index="1" @click="Setindex(1)">
                         <el-icon>
                             <Clock />
                         </el-icon>
@@ -88,7 +88,7 @@ const x = localStorage.getItem('index')
                         </el-icon>
                         <span>{{ t('home.shared_file_received') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/recyclebin"><el-menu-item index="5" @click="Setindex(5)">
+                <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5" @click="Setindex(5)">
                         <el-icon>
                             <Delete />
                         </el-icon>
@@ -161,11 +161,6 @@ a {
             .el-menu-item {
                 border-radius: 5px;
                 margin: 20px;
-
-                .el-icon {}
-
-                span {}
-
 
                 &:hover {
                     background: rgb(70, 76, 248);

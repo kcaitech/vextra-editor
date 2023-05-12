@@ -27,5 +27,5 @@ export function toHex(options: {
     const toHex = (n: number) => {
         return n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     }
-    return toHex(options.red) + toHex(options.green) + toHex(options.blue);
+    return "#" + toHex(options.red) + toHex(options.green) + toHex(options.blue);
 }

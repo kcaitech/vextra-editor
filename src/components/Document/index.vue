@@ -213,7 +213,6 @@ onMounted(() => {
         timer = setInterval(() => {
             getDocumentAuthority()
         }, 60000)
-        
         return
     }
     

@@ -27,7 +27,7 @@ const dragActiveDis = 3;
 const offset = 16;
 const visible = ref<boolean>(true);
 let timer: any;
-const duration: number = 350; // 双击判定时长 ms
+const duration: number = 250; // 双击判定时长 ms
 let isDragging = false;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let startPositionOnPage: PageXY = { x: 0, y: 0 };

@@ -62,6 +62,7 @@ onUnmounted(() => {
             placement="bottom"
             :show-after="500"
             :offset="10"
+            :hide-after="0"
         >
             <ToolButton>
                 <div class="temp">
@@ -76,6 +77,7 @@ onUnmounted(() => {
             placement="bottom"
             :show-after="500"
             :offset="10"
+            :hide-after="0"
         >
             <ToolButton>
                 <div class="temp">
@@ -91,6 +93,7 @@ onUnmounted(() => {
             placement="bottom"
             :show-after="500"
             :offset="10"
+            :hide-after="0"
         >
             <ToolButton>
                 <div class="temp">

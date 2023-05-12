@@ -203,12 +203,13 @@ div.container {
     background-color: var(--left-navi-button-hover-color);
 }
 
-div.container.selected {
-    background-color: var(--left-navi-button-select-color);
-}
-
 div.container.selectedChild {
+    z-index: 2;
     background-color: var(--left-navi-button-hover-color);
+}
+div.container.selected {
+    z-index: 1;
+    background-color: var(--left-navi-button-select-color);
 }
 
 div.ph {

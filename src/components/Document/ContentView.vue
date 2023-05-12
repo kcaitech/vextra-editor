@@ -33,14 +33,14 @@ const STATE_MOVEING = 2;
 const MOUSE_LEFT = 0;
 const MOUSE_RIGHT = 2;
 const workspace = computed(() => props.context.workspace);
-const scale_delta = 1.02;
-const scale_delta_ = 1 / scale_delta;
+let scale_delta = 1.06;
+let scale_delta_ = 1 / scale_delta;
 const wheel_step = 50;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: XY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
-const dragActiveDis = 3; // 拖动 3px 后开始触发移动
+const dragActiveDis = 4; // 拖动 3px 后开始触发移动
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix = reactive(props.context.workspace.matrix); // 一切图形可视变换的根源！！！
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
@@ -125,6 +125,7 @@ function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         name = (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
         const s = editor.insert(parent, parent.childs.length, shape);
+        props.context.selection.selectShape(shape)
         if (s) {
             return s;
         }
@@ -141,6 +142,11 @@ function onMouseWheel(e: WheelEvent) {
     const offsetY = e.y - xy.y;
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
+        if(Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
+            scale_delta_ = 1
+        }else {
+            scale_delta_ = 1 / scale_delta;
+        }
         matrix.trans(-offsetX, -offsetY);
         matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
         matrix.trans(offsetX, offsetY);

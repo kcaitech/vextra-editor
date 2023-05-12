@@ -176,7 +176,7 @@ onBeforeUpdate(() => {
 
 <template>
   <div class="position-container">
-    <Popover class="popover" ref="popover" :left="-585" :height="160" :title="t('attr.constraints')" :context="props.context">
+    <Popover class="popover" ref="popover" :left="-592" :height="160" :title="t('attr.constraints')" :context="props.context">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>

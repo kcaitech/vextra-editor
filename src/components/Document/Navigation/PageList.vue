@@ -268,7 +268,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
 
         .title {
             margin-left: 13px;
-            height: 30px;
+            height: 36px;
             font-weight: var(--font-default-bold);
             line-height: 36px;
         }

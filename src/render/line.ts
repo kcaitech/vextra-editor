@@ -30,8 +30,8 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     }
     props.d = path;
     props["fill-opacity"] = fillColor.alpha;
-    props.fill = `#${fill}`;
-    props.stroke = `#${stroke}`;
+    props.fill = fill;
+    props.stroke = stroke;
     props["stroke-width"] = border?.thickness || 1;
     return h('path', props);
 }

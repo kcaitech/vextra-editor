@@ -96,7 +96,7 @@ function onColorChange(e: Event, idx: number) {
     const border = borders[idx].border;
     if (!hex) {
         message('danger', t('system.illegal_input'));
-        return;
+        return (e.target as HTMLInputElement).value = (toHex(borders[idx].border.color)).slice(1)
     }
 
     const r = Number.parseInt(hex[1], 16);
@@ -120,8 +120,6 @@ function onAlphaChange(e: Event, idx: number) {
                 alpha = 100
             }
             alpha = alpha.toFixed(2) / 100
-            console.log(alpha);
-            
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
@@ -151,6 +149,13 @@ function onAlphaChange(e: Event, idx: number) {
 function setBorder(idx: number, options: { color: Color, isEnabled: boolean }) {
     editor.value.setBorder(idx, options);
 }
+function getColorFromPicker(rgb: number[], idx: number) {
+    const isEnabled = borders[idx].border.isEnabled;
+    const alpha = borders[idx].border.color.alpha;
+    const color = new Color(alpha,rgb[0], rgb[1], rgb[2]);
+    editor.value.setBorder(idx, { isEnabled, color });
+}
+
 // hooks
 onMounted(() => {
     updateData();
@@ -183,8 +188,8 @@ onBeforeUpdate(() => {
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="b.border.color" />
-                    <input :spellcheck="false" :value="toHex(b.border.color)" @change="e => onColorChange(e, idx)" />
+                    <ColorPicker :color="b.border.color" @choosecolor="c => getColorFromPicker(c, idx)"/>
+                    <input :spellcheck="false" :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)" />
                     <input ref="alpheBorder" style="text-align: center;" :value="(b.border.color.alpha * 100) + '%'" @change="e => onAlphaChange(e, idx)" />
                 </div>
                 <div class="extra-action">

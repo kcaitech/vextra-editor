@@ -107,6 +107,7 @@ const isSelect = () => {
     placement="bottom"
     :show-after="500"
     :offset="10"
+    :hide-after="0"
   >
   <ToolButton ref="button" @click="isSelect" :selected="props.active">
     <div class="svg-container">

@@ -89,21 +89,28 @@ const nogroupClick = () => {
 </script>
 
 <template>
-    <el-tooltip class="box-item" effect="dark"
+    <el-tooltip
+        class="box-item"
+        effect="dark"
         :content="state === GROUP ? `${t('home.groups')} &nbsp;&nbsp; Ctrl+G` : `${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Shift+G`"
-        placement="bottom" :show-after="500" :offset="5">
-        <div class="group">
-            <ToolButton :onclick="groupClick" :valid="true" :selected="false" v-if="state === GROUP">
-                <svg-icon icon-class="group"></svg-icon>
-            </ToolButton>
-            <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" v-if="state === UNGROUP">
-                <svg-icon icon-class="ungroup"></svg-icon>
-            </ToolButton>
-            <ToolButton :onclick="nogroupClick" :valid="false" :selected="false" v-if="state === NOGROUP">
-                <svg-icon :icon-class="preState === GROUP ? 'group' : 'ungroup'"></svg-icon>
-            </ToolButton>
-        </div>
-    </el-tooltip>
+        placement="bottom"
+        :show-after="500"
+        :offset="5"
+        :hide-after="0"
+    >
+    <div class="group">
+        <ToolButton :onclick="groupClick" :valid="true" :selected="false" v-if="state === GROUP">
+            <svg-icon  icon-class="group"></svg-icon>
+        </ToolButton>
+        <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" v-if="state === UNGROUP">
+            <svg-icon  icon-class="ungroup"></svg-icon>
+        </ToolButton>
+        <ToolButton :onclick="nogroupClick" :valid="false" :selected="false" v-if="state === NOGROUP">
+            <svg-icon  :icon-class="preState === GROUP ? 'group' : 'ungroup'"></svg-icon>
+        </ToolButton>
+    </div>
+</el-tooltip>
+
 </template>
 
 <style scoped lang="scss">
