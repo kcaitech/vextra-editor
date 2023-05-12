@@ -38,16 +38,17 @@ export function render(h: Function, shape: PathShape, reflush?: number) {
     else {
         props.transform = `translate(${frame.x},${frame.y})`
     }
-
-    if (childs.length == 0) {
-        props["fill-opacity"] = 1;
-        props.d = path;
-        props.fill = 'none';
-        props.stroke = 'none';
-        props["stroke-width"] = 0;
-        return h('path', props);
-    }
-    else {
-        return h("g", props, childs);
+    if (shape.isVisible) {
+        if (childs.length == 0) {
+            props["fill-opacity"] = 1;
+            props.d = path;
+            props.fill = 'none';
+            props.stroke = 'none';
+            props["stroke-width"] = 0;
+            return h('path', props);
+        }
+        else {
+            return h("g", props, childs);
+        }
     }
 }

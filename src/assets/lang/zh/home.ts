@@ -1,5 +1,9 @@
 import { BorderPosition } from "@kcdesign/data/data/typesdefine"
 
+export const product = {
+    name: 'ProtoDesign'
+}
+
 export const system = {
     'illegal_input': '输入不合法！',
     select: '请选择！',
@@ -27,7 +31,9 @@ export const system = {
     'create_component': '创建组件',
     'unbind_instance': '解绑实例',
     'reset_instance_roperties': '重置实例属性',
-    'edit_component': '编辑组件'
+    'edit_component': '编辑组件',
+    'new_file': '新文件',
+    'page1': '页面 1'
 }
 
 export const home = {
@@ -61,6 +67,7 @@ export const home = {
     picture: '图片',
     comment: '评论',
     groups: '编组',
+    ungroup: '解组',
     search_layer: '搜索图层'
 }
 
@@ -81,7 +88,7 @@ export const frame = {
     presentation: '预览',
     watch: '手表',
     paper: '纸张',
-    social_media : '社交媒体'
+    social_media: '社交媒体'
 }
 
 export const pageMenu = {
@@ -104,7 +111,7 @@ export const attr: any = {
     position: '位置',
     'corner_smoothing': '平滑圆角',
     vertical: '垂直方向',
-    horizontal:'水平方向',
+    horizontal: '水平方向',
     fixedLeft: '左部固定',
     fixedRight: '右部固定',
     withContainer: '跟随容器缩放',

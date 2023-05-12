@@ -20,7 +20,7 @@ import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
 import { fourWayWheel, Wheel, forNewShape } from '@/utils/contentFn';
-
+import { compare } from '@/utils/performance';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -33,8 +33,8 @@ const STATE_MOVEING = 2;
 const MOUSE_LEFT = 0;
 const MOUSE_RIGHT = 2;
 const workspace = computed(() => props.context.workspace);
-const scale_delta = 1.02;
-const scale_delta_ = 1 / scale_delta;
+let scale_delta = 1.06;
+let scale_delta_ = 1 / scale_delta;
 const wheel_step = 50;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
@@ -142,6 +142,11 @@ function onMouseWheel(e: WheelEvent) {
     const offsetY = e.y - xy.y;
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
+        if(Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
+            scale_delta_ = 1
+        }else {
+            scale_delta_ = 1 / scale_delta;
+        }
         matrix.trans(-offsetX, -offsetY);
         matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
         matrix.trans(offsetX, offsetY);
@@ -196,7 +201,10 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
             workspace.value.setAction(Action.AutoV);
         } else if (action === Action.AutoV) {
             // 选择图层
-            getShapesByXY(); // 获取与鼠标点击位置相交的所有图层，并选择最上层的图层
+            // getShapesByXY(); // 获取与鼠标点击位置相交的所有图层，并选择最上层的图层  ---不再在这里选择图形了，改到selection
+            if (!props.context.selection.hoveredShape) {
+                props.context.selection.selectShape();
+            }
         }
     }
     setClass('auto-0');
@@ -306,9 +314,10 @@ function hoveredShape(e: MouseEvent) {
     const { clientX, clientY } = e;
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy);
-    const hoveredShape = shapes.reverse().find(s => s.type && s.type !== ShapeType.Artboard);
+    const shapes = props.context.selection.getShapesByXY_beta(xy, false); // xy: PageXY
+    const hoveredShape = shapes.reverse()[0]; // 确保shapes的长度等于0或者1，如果大于1说明在找到的情况下还继续遍历了
     if (hoveredShape) {
+        // console.log('--', shapes.length);
         props.context.selection.hoverShape(hoveredShape);
     } else {
         props.context.selection.unHoverShape();
@@ -345,15 +354,6 @@ function pageViewDragEnd() {
     state = STATE_NONE;
 }
 
-function getShapesByXY() { // 判断一个点在多少个图形上面
-    const shapes = props.context.selection.getShapesByXY(mousedownOnPageXY);
-    if (shapes.length) {
-        props.context.selection.selectShape(shapes.at(-1));
-    } else {
-        props.context.selection.selectShape();
-    }
-}
-
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace
     workspace.menuMount(false);
@@ -387,8 +387,8 @@ function contextMenuMount(e: MouseEvent) {
             surplusY.value = document.documentElement.clientHeight - site.y;
             if (el) {
                 const height = el.offsetHeight;
-                if (surplusY.value < height) {
-                    surplusY.value = document.documentElement.clientHeight - site.y;
+                if (surplusY.value - 30 < height) {
+                    surplusY.value = document.documentElement.clientHeight - site.y - 30;
                     el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
                 }
             }
@@ -543,7 +543,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
 
     initMatrix(cur)
 })
-onMounted(() => { // 身负重担的content view
+onMounted(async () => { // 身负重担的content view
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
@@ -552,6 +552,9 @@ onMounted(() => { // 身负重担的content view
     window.addEventListener('blur', windowBlur);
     stylerForCursorMount();
     rootRegister(true);
+    props.context.selection.scoutMount(); // 用于hover判定 beta
+    await props.context.selection.canvaskitScoutMount();
+    (window as any).compare = compare(props.context.selection.canvaskitScout!, props.context.selection.scout!); // beta
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
@@ -562,6 +565,7 @@ onUnmounted(() => {
     styler.value.remove();
     rootRegister(false);
     stopWatch();
+    props.context.selection.scout?.remove()
 })
 renderinit().then(() => {
     inited.value = true;

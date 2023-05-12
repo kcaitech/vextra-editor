@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref, watch } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -15,7 +15,9 @@ import { Document } from '@kcdesign/data/data/document';
 import { Repository } from '@kcdesign/data/data/transact';
 import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
-import { router } from '@/router'
+import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
@@ -135,7 +137,6 @@ const showHiddenRight = () => {
     }
 }
 
-
 const showHiddenLeft = () => {
     if (showLeft.value) {
         Left.value.leftMin = 0
@@ -231,11 +232,18 @@ onMounted(() => {
         }, 60000)
         return
     }
+    document.addEventListener('keydown', keyboardEventHandler);
+    timer = setInterval(() => {
+        getDocumentAuthority()
+    }, 60000)
 })
 onUnmounted(() => {
+    window.document.title = t('product.name');
+    (window as any).sketchDocument = undefined;
+    (window as any).skrepo = undefined;
     context.value.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
-    clearInterval(timer)
+    clearInterval(timer);
 })
 
 </script>

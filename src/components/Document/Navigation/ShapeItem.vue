@@ -155,7 +155,7 @@ onBeforeUpdate(() => {
 
 <template>
     <div class="contain" :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }"
-        @click="selectShape" @mouseover="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
+        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
         <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
             <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">

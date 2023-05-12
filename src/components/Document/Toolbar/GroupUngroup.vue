@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
 import { Artboard } from '@kcdesign/data/data/artboard';
 import { Page } from '@kcdesign/data/data/page';
 import { GroupShape } from '@kcdesign/data/data/shape';
@@ -50,12 +51,21 @@ const updater = () => {
         setState(val);
     }
 }
+function workspaceUpdate(t?: number) {
+    if (t === WorkSpace.GROUP) {
+        groupClick();
+    } else if (t === WorkSpace.UNGROUP) {
+        ungroupClick();
+    }
+}
 onMounted(() => {
+    props.context.workspace.watch(workspaceUpdate)
     props.selection.watch(updater);
     updater();
 })
 onUnmounted(() => {
     props.selection.unwatch(updater);
+    props.context.workspace.unwatch(workspaceUpdate)
 })
 
 const groupClick = () => {
@@ -82,7 +92,7 @@ const nogroupClick = () => {
     <el-tooltip
         class="box-item"
         effect="dark"
-        :content="`${t('home.groups')}`"
+        :content="state === GROUP ? `${t('home.groups')} &nbsp;&nbsp; Ctrl+G` : `${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Shift+G`"
         placement="bottom"
         :show-after="500"
         :offset="5"
@@ -110,13 +120,15 @@ div.group {
     align-items: center;
     height: 100%;
     width: 40px;
-    > div {
+
+    >div {
         height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
         color: #ffffff;
-        > svg {
+
+        >svg {
             height: 55%;
             width: 55%;
         }

@@ -133,6 +133,7 @@ function onColorChange(idx: number, e: Event) {
         setColor(idx, value, alpha);
     } else {
         message('danger', t('system.illegal_input'));
+        return (e.target as HTMLInputElement).value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue)
     }
 }
 
@@ -147,7 +148,10 @@ function onAlphaChange(idx: number, e: Event) {
                 }
                 value = value.toFixed(2) / 100
                 const color = fills[idx].fill.color;
-                const clr = toHex(color.red, color.green, color.blue);
+                let clr = toHex(color.red, color.green, color.blue);
+                if(clr.slice(0, 1) !== '#') {
+                    clr = "#" + clr
+                }
                 setColor(idx, clr, value);
                 return
             } else {
@@ -161,7 +165,10 @@ function onAlphaChange(idx: number, e: Event) {
                 }
                 value = Number((Number(value)).toFixed(2)) / 100
                 const color = fills[idx].fill.color;
-                const clr = toHex(color.red, color.green, color.blue);
+                let clr = toHex(color.red, color.green, color.blue);
+                if(clr.slice(0, 1) !== '#') {
+                    clr = "#" + clr
+                }
                 setColor(idx, clr, value);
                 return
             } else {
@@ -175,7 +182,10 @@ function onAlphaChange(idx: number, e: Event) {
     }
 }
 function getColorFromPicker(rgb: number[], idx: number) {
-    const clr = toHex(rgb[0], rgb[1], rgb[2]);
+    let clr = toHex(rgb[0], rgb[1], rgb[2]);
+    if(clr.slice(0, 1) !== '#') {
+        clr = "#" + clr
+    }
     const alpha = fills[idx].fill.color.alpha;
     setColor(idx, clr, alpha);
 }

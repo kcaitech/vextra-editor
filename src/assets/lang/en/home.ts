@@ -1,5 +1,9 @@
 import { BorderPosition } from "@kcdesign/data/data/typesdefine";
 
+export const product = {
+    name: 'ProtoDesign'
+}
+
 export const system = {
     'illegal_input': 'illegal input!',
     select: 'Select',
@@ -27,7 +31,9 @@ export const system = {
     'create_component': 'Create component',
     'unbind_instance': 'Unbind',
     'reset_instance_roperties': 'Reset',
-    'edit_component': 'Edit component'
+    'edit_component': 'Edit component',
+    'new_file': 'New file',
+    'page1': 'Page 1'
 }
 
 export const home = {
@@ -61,6 +67,7 @@ export const home = {
     picture: 'Picture',
     comment: 'Add comment',
     groups: 'Group up',
+    ungroup: 'Ungroup',
     search_layer: 'Search layer'
 }
 

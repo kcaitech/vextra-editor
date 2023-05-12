@@ -12,9 +12,9 @@ async function Generate() {
     const patchPackageJson = JSON.parse(await fs.readFile(`./package.${runEnv}.json`, 'utf8'));
 
     // 合并scripts、dependencies、devDependencies
-    packageJson.scripts = {...packageJson.scripts, ...patchPackageJson.scripts};
-    packageJson.dependencies = {...packageJson.dependencies, ...patchPackageJson.dependencies};
-    packageJson.devDependencies = {...packageJson.devDependencies, ...patchPackageJson.devDependencies};
+    packageJson.scripts = { ...packageJson.scripts, ...patchPackageJson.scripts };
+    packageJson.dependencies = { ...packageJson.dependencies, ...patchPackageJson.dependencies };
+    packageJson.devDependencies = { ...packageJson.devDependencies, ...patchPackageJson.devDependencies };
 
     // 添加生成命令
     packageJson.scripts['generate-package-dev'] = 'node generate-package.js dev && npm install --force';

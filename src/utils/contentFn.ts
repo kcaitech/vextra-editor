@@ -18,7 +18,7 @@ interface Effects {
     tail?: (context: Context) => void;
 }
 
-// 车轮滚滚函数，return一个轮子，在该滚动的时候滚动(目前指鼠标脱离innerArea时)，滚动时可以根据传入的effects干一些调用者想要它干的的事情...
+// 车轮滚滚🚗，return一个轮子，在该滚动的时候滚动(目前指鼠标脱离innerArea时)，滚动时可以根据传入的effects干一些调用者想要它干的的事情...
 function fourWayWheel(context: Context, effects?: Effects, setupPoint?: XY): Wheel {
     const workspace = context.workspace, selection = context.selection;
     const innerArea: Area = { top: 0, right: 0, bottom: 0, left: 0 };
