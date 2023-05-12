@@ -41,7 +41,6 @@ declare module '@vue/runtime-core' {
     DropSelect: typeof import('./src/components/Document/Toolbar/Buttons/DropSelect.vue')['default']
     EditorTools: typeof import('./src/components/Document/Toolbar/EditorTools.vue')['default']
     Ellipse: typeof import('./src/components/Document/Toolbar/Buttons/Ellipse.vue')['default']
-    Examples: typeof import('./src/components/Home/Examples.vue')['default']
     ExportAttr: typeof import('./src/components/Document/Attribute/ExportAttr.vue')['default']
     FilePickButton: typeof import('./src/components/common/FilePickButton.vue')['default']
     FileShare: typeof import('./src/components/Document/Toolbar/Share/FileShare.vue')['default']
