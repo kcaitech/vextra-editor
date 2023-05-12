@@ -4,9 +4,8 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape, ShapeType } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./Controller";
-import { CtrlElementType } from "@/context/workspace";
+import { Action, CtrlElementType } from "@/context/workspace";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
-import { cloneDeep } from "lodash";
 export interface Point {
     x: number,
     y: number,
@@ -197,22 +196,24 @@ function createShapeTracing() { // 描边
         const m2page = hoveredShape.matrix2Page();
         path.transform(m2page);
         path.transform(matrix);
-        const bounds = path.bounds;
-        const { minX, maxX, minY, maxY } = bounds;
-        tracingX = minX;
-        tracingY = minY;
-        tracingWidth = maxX - minX;
-        tracingHeight = maxY - minY;
-        tracingViewBox = `${minX} ${minY} ${tracingWidth} ${tracingHeight}`;
+        const { x, y, right, bottom } = props.context.workspace.root;
+        tracingX = 0;
+        tracingY = 0;
+        tracingWidth = right - x;
+        tracingHeight = bottom - y;
+        tracingViewBox = `${tracingX} ${tracingX} ${tracingWidth} ${tracingHeight}`;
         tracingPath = path.toString();
     }
 }
 function pathMousedown(e: MouseEvent) {
-    e.stopPropagation();
-    props.context.workspace.preToTranslating(e);
-    const hoveredShape = props.context.selection.hoveredShape
-    props.context.selection.selectShape(hoveredShape);
+    if (props.context.workspace.action === Action.AutoV) {
+        e.stopPropagation();
+        props.context.workspace.preToTranslating(e);
+        const hoveredShape = props.context.selection.hoveredShape
+        props.context.selection.selectShape(hoveredShape);
+    }
 }
+
 // hooks
 onMounted(() => {
     props.context.selection.watch(updater);
@@ -230,9 +231,9 @@ watchEffect(updater)
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingWidth" :height="tracingHeight" :viewBox="tracingViewBox"
-        :style="`transform: translate(${tracingX}px, ${tracingY}px)`" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.2;"
-            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        @mousedown="(e: MouseEvent) => pathMousedown(e)" :style="`transform: translate(${tracingX}px, ${tracingY}px)`"
+        :reflush="reflush !== 0 ? reflush : undefined">
+        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.2;">
         </path>
     </svg>
     <!-- 控制 -->

@@ -5,7 +5,7 @@ import { v4 as uuid } from "uuid";
 interface Scout {
     path: SVGPathElement,
     remove: () => void;
-    isPointInShape: (d: string, point: PageXY) => boolean;
+    isPointInShape: (shape: Shape, point: PageXY) => boolean;
 }
 // 蜘蛛侦探🕷：ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条闭合路径(d)上
@@ -19,12 +19,21 @@ function scout(): Scout {
 
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
-    function isPointInShape(d: string, point: PageXY): boolean {
+    function isPointInShape(shape: Shape, point: PageXY): boolean {
+        const d = getPathOnPageString(shape);
         SVGPoint.x = point.x, SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         // console.log('path', path);
         // console.log('isPointInFill - path', (path as SVGGeometryElement).isPointInFill(SVGPoint));
-        return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        let result: boolean = false;
+        if (shape.type === ShapeType.Line) {
+            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14);
+            path.setAttributeNS(null, 'stroke-width', `${thickness}`);
+            result = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        } else {
+            result = (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        }
+        return result;
     }
 
     function remove() { // 把用于比对的svg元素从Dom树中去除
@@ -58,11 +67,10 @@ function getPathOnPageString(shape: Shape): string { // path坐标系：页面
     return d;
 }
 
-// 判定是否点是否在图形内
+// 判定点是否在图形内
 function isTarget(scout: Scout | undefined, shape: Shape, p: PageXY): boolean {
-    const d = getPathOnPageString(shape);
     if (scout) {
-        return scout.isPointInShape(d, p);
+        return scout.isPointInShape(shape, p);
     } else {
         return false;
     }

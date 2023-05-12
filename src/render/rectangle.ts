@@ -7,7 +7,7 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     //     // todo 只画selection
     //     return;
     // }
-
+    if (!shape.isVisible) return;
     const frame = shape.frame;
     const childs = [];
     const path = shape.getPath(true).toString();
@@ -37,17 +37,15 @@ export function render(h: Function, shape: Shape, reflush?: number) {
         props.transform = `translate(${frame.x},${frame.y})`
     }
 
-    if (shape.isVisible) {
-        if (childs.length == 0) {
-            props["fill-opacity"] = 1;
-            props.d = path;
-            props.fill = 'none';
-            props.stroke = 'none';
-            props["stroke-width"] = 0;
-            return h('path', props);
-        }
-        else {
-            return h("g", props, childs);
-        }
+    if (childs.length == 0) {
+        props["fill-opacity"] = 1;
+        props.d = path;
+        props.fill = 'none';
+        props.stroke = 'none';
+        props["stroke-width"] = 0;
+        return h('path', props);
+    }
+    else {
+        return h("g", props, childs);
     }
 }

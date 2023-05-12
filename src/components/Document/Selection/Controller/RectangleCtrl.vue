@@ -293,7 +293,6 @@ onMounted(() => {
     props.context.workspace.watch(workspaceUpdate);
     window.addEventListener('blur', windowBlur);
     document.addEventListener('keydown', keyboardHandle);
-    getRect(props.controllerFrame);
     checkStatus();
     initRect();
 })
