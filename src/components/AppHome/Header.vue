@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted } from 'vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
 import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const docID = '1672502400000'
-const input = ref('')
 const num = ref(0)
 const showInForm = ref(false)
 const applyList: any = ref([])
@@ -32,10 +31,42 @@ onMounted(() => {
 onUnmounted(() => {
     clearInterval(timer)
 })
-// import { onMounted, reactive, toRefs, defineProps, defineEmits } from 'vue'
-// import { Search } from '@element-plus/icons-vue'
 
 
+const tableData = [
+    { name: 'wh sh', updated_at: '2020-11-11 18:20:11', size: '12kb' },
+    { name: 'aaa', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'er嗡嗡嗡', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'er三万五千', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'e威威r', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'er嗡嗡嗡', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'er三万五千', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'e威威r', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
+    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
+    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' }
+
+]
 
 
 const errorHandler = () => true
@@ -45,44 +76,59 @@ const state = reactive({
 })
 const { circleUrl, uname, } = toRefs(state)
 
-let inputiner: string
-let searchlist = reactive(new Array)
-onMounted(() => {
+const search = ref('')
+let documentsList = ref<any[]>([]);
+documentsList.value=tableData
+
+function getSearch() {
+
     const historylist: any = document.querySelector('.searchhistory')
     const close: any = document.querySelector('.CloseIcon')
     const input: any = document.querySelector('.input')
-    input.addEventListener('focus', (e: any) => {
+
+    input.addEventListener('focus', () => {
+        
+        documentsList = computed(() =>tableData.filter((data) =>!search.value ||data.name.toLowerCase().includes(search.value.toLowerCase())))
         historylist.style.display = 'block'
 
     })
     input.addEventListener('blur', () => {
+        search.value = ''
         historylist.style.display = 'none'
     })
 
-
     input.addEventListener('keyup', (e: any) => {
-        if (input.value !== '') {
+        if (search.value !== '') {
             close.style.display = 'block'
         } else {
             close.style.display = 'none'
         }
 
-        if (e.key === 'Enter') {
-            inputiner = input.value
-            if (searchlist.length < 11) {
-                searchlist.unshift(inputiner)
-            } else {
-                searchlist.pop()
-                searchlist.unshift(inputiner)
-            }
-        }
+        // if (e.key === 'Enter') {
+        //     if (searchlist.length < 11) {
+        //         searchlist.unshift(input.value)
+        //     } else {
+        //         searchlist.pop()
+        //         searchlist.unshift(input.value)
+        //     }
+        // }
     })
     close.addEventListener('click', () => {
-        input.value = ''
+        search.value = ''
         close.style.display = 'none'
     })
+}
+
+
+onMounted(() => {
+    getSearch()
+    
 
 })
+
+
+
+
 
 
 
@@ -93,17 +139,27 @@ onMounted(() => {
         <div class="search">
             <el-icon size="20" class="SearchIcon" style="margin: 10px;">
                 <Search />
-            </el-icon><input class="input" type="input" :placeholder="`${t('system.placeholder')}`" />
+            </el-icon><input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`" />
             <el-icon size="20" class="CloseIcon" style="margin: 10px;">
                 <Close />
             </el-icon>
             <div class="searchhistory">
-                <div v-if="searchlist.length != 0">
-                    <span style="display: inline-block;font-size: 12px;font-weight: bold;">文件名称</span><span
-                        style="display: inline-block;font-size: 12px;font-weight: bold;">打开时间</span>
-                    <span v-for="(item, index) in searchlist" :key="index">{{ item }}<br /></span>
+                <div>
+                    <el-table :data="documentsList" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果">
+                        <el-table-column prop="name" :label="t('home.file_name')" />
+                        <el-table-column prop="updated_at" :label="t('home.modification_time')" />
+                        <el-table-column prop="size" :label="t('home.size')" />
+                    </el-table>
+                    <!-- <ul>
+                        <li v-for="(item, index) in documentsList" :key="index" >
+                            {{ item.name }}-{{ item.updated_at }}-{{ item.size }}
+                        </li>
+                    </ul> -->
+                    <!-- <span style="display: inline-block;font-size: 12px;font-weight: bold;">文件名称</span>
+                    <span style="display: inline-block;font-size: 12px;font-weight: bold;">打开时间</span>
+                    <span v-for="(item, index) in searchlist" :key="index">{{ item }}<br /></span> -->
                 </div>
-                <div v-else style="width: 100%;height: 100%;line-height: 300px;text-align: center;">没有内容</div>
+                <!-- <div v-else style="text-align: center;">没有内容</div> -->
             </div>
 
         </div>
@@ -315,23 +371,12 @@ onMounted(() => {
     left: calc(381px + 20px);
     width: 550px;
     min-height: 300px;
+    max-height: 600px;
     background: white;
     z-index: 9999;
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-
     display: none;
     border-radius: 5px;
-
-    span {
-        display: block;
-        box-sizing: border-box;
-        padding: 5px;
-        margin: 10px 20px;
-
-        &:hover {
-            background: rgba(217, 217, 217, 0.67);
-        }
-    }
-
+    text-align: center;
 }
 </style>

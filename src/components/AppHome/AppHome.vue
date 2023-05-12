@@ -9,7 +9,7 @@
           <Header />
         </el-header>
         <el-main>
-          <Main>test</Main>
+          <Main/>
         </el-main>
       </el-container>
     </el-container>
@@ -23,7 +23,7 @@ import Header from './Header.vue';
 import Main from './Main.vue';
 import * as user_api from '@/apis/users'
 import {User} from '@/context/user'
-import {defineProps, ref, nextTick, reactive, defineEmits, onMounted} from 'vue';
+import {ref, nextTick, reactive, onMounted} from 'vue';
 import {importDocument, Repository} from "@kcdesign/data";
 import {importSketch} from "@kcdesign/data/io";
 import {router} from "@/router";
