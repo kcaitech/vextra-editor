@@ -98,8 +98,8 @@ function mouseup(e: MouseEvent) {
 function transform(shapes: Shape[], start: XY, end: XY) {
   const ps = matrix.inverseCoord(start.x, start.y);
   const pe = matrix.inverseCoord(end.x, end.y);
-  const origin = props.context.selection.getClosetContainer(ps);
-  const targetParent = props.context.selection.getClosetContainer(pe);
+  const origin = props.context.selection.getClosetArtboard(ps);
+  const targetParent = props.context.selection.getClosetArtboard(pe);
   // 对选中的每个图层进行变换
   for (let i = 0; i < shapes.length; i++) {
     translate(shapes[i], pe.x - ps.x, pe.y - ps.y);
@@ -141,7 +141,7 @@ function initMatrix() {
 }
 
 // 自身不带事务的图形移动, 只能在事务开启之后调用
-function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
+function shapeMoveNoTransaction(shape: Shape, targetParent: Shape) {
   const origin: GroupShape = ((shape.parent || props.context.selection.selectedPage) as GroupShape);
   origin.removeChild(shape);
   const { x, y } = shape.frame2Page();

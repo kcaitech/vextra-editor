@@ -120,6 +120,9 @@ function pickerFromSelectedShapes() {
         const isHasTarget = forGroupHover(props.context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage);
         if (!isHasTarget) props.context.selection.selectShape();
     }
+    if (props.context.selection.hoveredShape) {
+        props.context.selection.selectShape(props.context.selection.hoveredShape);
+    }
 }
 function mousedown(e: MouseEvent) {
     setPosition(e);
@@ -152,17 +155,31 @@ function mousemove(e: MouseEvent) {
 function transform(shapes: Shape[], start: ClientXY, end: ClientXY) {
     const ps = matrix.inverseCoord(start.x, start.y);
     const pe = matrix.inverseCoord(end.x, end.y);
-    const origin = props.context.selection.getClosetContainer(ps);
-    const targetParent = props.context.selection.getClosetContainer(pe);
+    const selection = props.context.selection;
+    let targetParent;
+    const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置存在容器
+    if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
+        targetParent = props.context.selection.getClosetArtboard(pe, artboardOnStart);
+    } else {
+        targetParent = props.context.selection.getClosetArtboard(pe);
+    }
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].isLocked) continue; // 🔒住不让动
         translate(shapes[i], pe.x - ps.x, pe.y - ps.y);
-        if (origin.id !== targetParent.id) {
+        if (shapes[i].parent?.id !== targetParent.id) {
             shapeMoveNoTransaction(shapes[i], targetParent);
         }
     }
     props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
+}
+// 自身不带事务的图形移动, 只能在事务开启之后调用
+function shapeMoveNoTransaction(shape: Shape, targetParent: Shape) {
+    const origin: GroupShape = ((shape.parent || props.context.selection.selectedPage) as GroupShape);
+    origin.removeChild(shape);
+    const { x, y } = shape.frame2Page();
+    targetParent.addChild(shape);
+    translateTo(shape, x, y);
 }
 function mouseup(e: MouseEvent) {
     if (e.button === 0) { // 只处理鼠标左键按下时的抬起
@@ -244,14 +261,6 @@ function setPosition(e: MouseEvent) {
     root = workspace.value.root;
     startPosition = { x: clientX - root.x, y: clientY - root.y };
     startPositionOnPage = matrix.inverseCoord(startPosition.x, startPosition.y);
-}
-// 自身不带事务的图形移动, 只能在事务开启之后调用
-function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
-    const origin: GroupShape = ((shape.parent || props.context.selection.selectedPage) as GroupShape);
-    origin.removeChild(shape);
-    const { x, y } = shape.frame2Page();
-    targetParent.addChild(shape);
-    translateTo(shape, x, y);
 }
 function keyboardHandle(e: KeyboardEvent) {
     handle(e, props.context);

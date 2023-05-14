@@ -11,7 +11,7 @@ import { Action, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/works
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from './Selection/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { ShapeType } from '@kcdesign/data/data/typesdefine';
+import { GroupShape, ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
@@ -116,11 +116,11 @@ function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         frame.y = y;
     }
     const page = props.context.selection.selectedPage;
-    const parent = getCloestContainer();
+    const parent = props.context.selection.getClosetArtboard(mousedownOnPageXY);
     if (page && parent && type) {
         const editor = props.context.editor4Page(page);
         let name = t(`shape.${type}`);
-        const brothers = parent.childs.filter(item => item.type === type)
+        const brothers = parent.childs.filter((item: Shape) => item.type === type)
         const repeats: number = brothers.length;
         name = (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
@@ -131,29 +131,30 @@ function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         }
     }
 }
-
-function getCloestContainer() { // 获取鼠标当前位置的最近容器
-    return props.context.selection.getClosetContainer(mousedownOnPageXY);
-}
-
 function onMouseWheel(e: WheelEvent) {
     const xy = offset2Root();
+    const { ctrlKey, metaKey, shiftKey, deltaMode } = e;
     const offsetX = e.x - xy.x;
     const offsetY = e.y - xy.y;
-    if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        if(Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
-            scale_delta_ = 1
-        }else {
-            scale_delta_ = 1 / scale_delta;
+    e.preventDefault();
+    if (deltaMode === 0) {
+        if (ctrlKey || metaKey) { // 缩放
+            if (Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
+                scale_delta_ = 1
+            } else {
+                scale_delta_ = 1 / scale_delta;
+            }
+            matrix.trans(-offsetX, -offsetY);
+            matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
+            matrix.trans(offsetX, offsetY);
+        } else {
+            const delta = e.deltaY > 0 ? -wheel_step : wheel_step;
+            if (shiftKey) {
+                matrix.trans(delta, 0);
+            } else {
+                matrix.trans(0, delta);
+            }
         }
-        matrix.trans(-offsetX, -offsetY);
-        matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
-        matrix.trans(offsetX, offsetY);
-    } else if (e.shiftKey) {
-        matrix.trans(e.deltaY > 0 ? -wheel_step : wheel_step, 0);
-    } else {
-        matrix.trans(0, e.deltaY > 0 ? -wheel_step : wheel_step);
     }
     workspace.value.matrixTransformation();
 }
@@ -552,9 +553,7 @@ onMounted(async () => { // 身负重担的content view
     window.addEventListener('blur', windowBlur);
     stylerForCursorMount();
     rootRegister(true);
-    props.context.selection.scoutMount(); // 用于hover判定 beta
-    await props.context.selection.canvaskitScoutMount();
-    (window as any).compare = compare(props.context.selection.canvaskitScout!, props.context.selection.scout!); // beta
+    props.context.selection.scoutMount(); // 用于hover判定
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
@@ -565,7 +564,7 @@ onUnmounted(() => {
     styler.value.remove();
     rootRegister(false);
     stopWatch();
-    props.context.selection.scout?.remove()
+    props.context.selection.scout?.remove();
 })
 renderinit().then(() => {
     inited.value = true;

@@ -53,19 +53,22 @@ export function scrollToContentView(shape: Shape, selection: Selection, workspac
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2);
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 };
-    selection.unHoverShape();
-    selection.selectShape();
-    const pageViewEl = workspace.pageView;
-    if (pageViewEl) {
-        pageViewEl.classList.add('transition-600');
-        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
-        const timer = setTimeout(() => {
-            selection.selectShape(shape);
-            pageViewEl.classList.remove('transition-600');
-            clearTimeout(timer);
-        }, 600);
-    } else {
-        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
+    const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
+    if (transX || transY) {
+        selection.unHoverShape();
+        selection.selectShape();
+        const pageViewEl = workspace.pageView;
+        if (pageViewEl) {
+            pageViewEl.classList.add('transition-400');
+            workspace.matrix.trans(transX, transY);
+            const timer = setTimeout(() => {
+                selection.selectShape(shape);
+                pageViewEl.classList.remove('transition-400');
+                clearTimeout(timer);
+            }, 400);
+        } else {
+            workspace.matrix.trans(transX, transY);
+        }
+        workspace.matrixTransformation();
     }
-    workspace.matrixTransformation();
 }

@@ -102,7 +102,7 @@ function notifySourceChange(t?: number) {
             }
         })
     }
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE)
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 const stopWatch = watch(() => props.page, () => {
@@ -115,7 +115,6 @@ const stopWatch = watch(() => props.page, () => {
     shapeDirList = source;
     shapeDirList.watch(notifySourceChange)
     notifySourceChange();
-
 }, { immediate: true })
 
 
@@ -179,7 +178,8 @@ const isLock = (lock: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    editor.value.setLock()
+    editor.value.setLock();
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 const isRead = (read: boolean, shape: Shape) => {
@@ -197,8 +197,9 @@ const isRead = (read: boolean, shape: Shape) => {
             props.context.workspace.translating(false);
             clearTimeout(timer);
             timer = null;
-        }, 550)
+        }, 350)
     }
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 function shapeScrollToContentView(shape: Shape) {
     const workspace = props.context.workspace;
@@ -206,23 +207,27 @@ function shapeScrollToContentView(shape: Shape) {
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
-    props.context.selection.unHoverShape();
-    props.context.selection.selectShape();
-    const pageViewEl = props.context.workspace.pageView;
-    if (pageViewEl) {
-        pageViewEl.classList.add('transition-400');
-        props.context.workspace.translating(true);
-        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
-        const timer = setTimeout(() => {
-            props.context.selection.selectShape(shape);
-            pageViewEl.classList.remove('transition-400');
-            props.context.workspace.translating(false);
-            clearTimeout(timer);
-        }, 400);
-    } else {
-        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
+    const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
+    if (transX || transY) {
+        props.context.selection.unHoverShape();
+        props.context.selection.selectShape();
+        const pageViewEl = props.context.workspace.pageView;
+        if (pageViewEl) {
+            pageViewEl.classList.add('transition-400');
+            props.context.workspace.translating(true);
+            workspace.matrix.trans(transX, transY);
+            const timer = setTimeout(() => {
+                props.context.selection.selectShape(shape);
+                pageViewEl.classList.remove('transition-400');
+                props.context.workspace.translating(false);
+                clearTimeout(timer);
+            }, 400);
+        } else {
+            workspace.matrix.trans(transX, transY);
+        }
+        workspace.matrixTransformation();
     }
-    workspace.matrixTransformation();
+
 }
 
 const MouseDown = (e: MouseEvent) => {
