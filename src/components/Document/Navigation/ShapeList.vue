@@ -10,7 +10,7 @@ import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
-import PageViewContextMenuItems from "../Selection/PageViewContextMenuItems.vue";
+import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {

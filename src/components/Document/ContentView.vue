@@ -9,7 +9,7 @@ import { XY } from '@/context/selection';
 import { init as renderinit } from '@/render';
 import { Action, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
 import ContextMenu from '../common/ContextMenu.vue';
-import PageViewContextMenuItems from './Selection/PageViewContextMenuItems.vue';
+import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import { GroupShape, ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
@@ -124,7 +124,7 @@ function addShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         const repeats: number = brothers.length;
         name = (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
         const shape = editor.create(type, name, frame);
-        const s = editor.insert(parent, parent.childs.length, shape);
+        const s = editor.insert((parent as any), parent.childs.length, shape);
         props.context.selection.selectShape(shape)
         if (s) {
             return s;
