@@ -19,7 +19,7 @@ import { expandTo, translateTo } from "@kcdesign/data/editor/frame";
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
-import { fourWayWheel, Wheel, forNewShape } from '@/utils/contentFn';
+import { fourWayWheel, Wheel, forNewShape } from '@/utils/wheel';
 import { compare } from '@/utils/performance';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
@@ -160,7 +160,11 @@ function onMouseWheel(e: WheelEvent) {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    spacePressed.value = e.code === KeyboardKeys.Space;
+    if (e.code === KeyboardKeys.Space) {
+        spacePressed.value = true;
+        props.context.workspace.setCtrl('page');
+    }
+
 }
 function onKeyUp(e: KeyboardEvent) {
     if (spacePressed.value && e.code == KeyboardKeys.Space) {
@@ -171,6 +175,7 @@ function onKeyUp(e: KeyboardEvent) {
             setClass('auto-0');
         }
         spacePressed.value = false;
+        props.context.workspace.setCtrl('controller');
     }
 }
 
@@ -333,19 +338,22 @@ function pageViewDragStart(e: MouseEvent) {
 }
 
 function pageViewDragging(e: MouseEvent) {
-    const dx = e.screenX - prePt.x;
-    const dy = e.screenY - prePt.y;
-    if (state === STATE_MOVEING) {
-        matrix.trans(dx, dy);
-        prePt.x = e.screenX;
-        prePt.y = e.screenY;
-    } else {
-        const diff = Math.hypot(dx, dy);
-        if (diff > dragActiveDis) {
-            state = STATE_MOVEING;
+    const isController = workspace.value.controller == 'page';
+    if (isController) {
+        const dx = e.screenX - prePt.x;
+        const dy = e.screenY - prePt.y;
+        if (state === STATE_MOVEING) {
             matrix.trans(dx, dy);
             prePt.x = e.screenX;
             prePt.y = e.screenY;
+        } else {
+            const diff = Math.hypot(dx, dy);
+            if (diff > dragActiveDis) {
+                state = STATE_MOVEING;
+                matrix.trans(dx, dy);
+                prePt.x = e.screenX;
+                prePt.y = e.screenY;
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ import CtrlPoint from "./Points/CtrlPoint.vue";
 import { Point, Bar } from "../SelectionView.vue";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data/data/shape";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
-import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/contentFn";
+import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { groupPassthrough, forGroupHover } from "@/utils/scout";
@@ -197,8 +197,8 @@ function mouseup(e: MouseEvent) {
     }
 }
 function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg?: number, aType?: 'rotate' | 'scale') {
-    shapes = props.context.selection.selectedShapes;
     matrix.reset(workspace.value.matrix);
+    const shapes = props.context.selection.selectedShapes;
     for (let i = 0; i < shapes.length; i++) {
         let item = shapes[i];
         if (item.isLocked) continue; // 🔒住不让动

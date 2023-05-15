@@ -86,6 +86,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_pageViewId: string = 'pageview';
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
+    private m_controller: 'page' | 'controller' = 'controller';
     constructor(context: Context) {
         super();
         this.context = context
@@ -143,6 +144,12 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isTranslating() {
         return this.m_translating;
+    }
+    get controller() {
+        return this.m_controller;
+    }
+    setCtrl(v: 'page' | 'controller') {
+        this.m_controller = v;
     }
     preToTranslating(from?: MouseEvent) {
         if (from) {
@@ -289,6 +296,7 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.UNGROUP)
         }
     }
+
     escSetup() { // 安装取消当前状态的键盘事件(Esc)，在开启一个状态的时候应该考虑关闭状态的处理！
         if (WorkSpace.ESC_EVENT_POINTER) {
             document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);

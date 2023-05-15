@@ -18,7 +18,7 @@ interface Effects {
     tail?: (context: Context) => void;
 }
 
-// 车轮滚滚🚗，return一个轮子，在该滚动的时候滚动(目前指鼠标脱离innerArea时)，滚动时可以根据传入的effects干一些调用者想要它干的的事情...
+// return一个轮子，在该滚动的时候滚动(目前指鼠标脱离innerArea时)，滚动时可以根据传入的effects干一些调用者想要它干的的事情...
 function fourWayWheel(context: Context, effects?: Effects, setupPoint?: XY): Wheel {
     const workspace = context.workspace, selection = context.selection;
     const innerArea: Area = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -42,7 +42,7 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: XY): Whe
         effects?.before && effects.before(context);
         // console.log('-wheel setup-');
     }
-    // retrun isOut; 如果你要是出去了你可要告诉别人
+    // retrun isOut;
     function moving(event: MouseEvent): boolean { // 鼠标移动触发
         let isOut: boolean = false;
         const { clientX, clientY } = event;
@@ -145,6 +145,6 @@ function forNewShape(context: Context, dx: number, dy: number, setupPint?: XY, c
         expandTo(newShape, width, height);
         translateTo(newShape, x1.x, x1.y);
     }
-    context.repo.transactCtx.fireNotify(); // 要更新页面的啦
+    context.repo.transactCtx.fireNotify();
 }
 export { Wheel, fourWayWheel, forCtrlRect, isDrag, forNewShape }
