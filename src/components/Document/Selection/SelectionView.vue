@@ -207,10 +207,12 @@ function createShapeTracing() { // 描边
 }
 function pathMousedown(e: MouseEvent) {
     if (props.context.workspace.action === Action.AutoV) {
-        e.stopPropagation();
-        props.context.workspace.preToTranslating(e);
-        const hoveredShape = props.context.selection.hoveredShape
-        props.context.selection.selectShape(hoveredShape);
+        if (e.buttons == 1) {
+            e.stopPropagation();
+            props.context.workspace.preToTranslating(e);
+            const hoveredShape = props.context.selection.hoveredShape
+            props.context.selection.selectShape(hoveredShape);
+        }
     }
 }
 

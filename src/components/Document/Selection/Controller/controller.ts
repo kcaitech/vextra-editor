@@ -6,7 +6,7 @@ import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
-import { forGroupHover } from "@/utils/scout";
+import { forGroupHover, groupPassthrough } from "@/utils/scout";
 import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
 import { Action, CtrlElementType, WorkSpace } from "@/context/workspace";
 
@@ -23,10 +23,16 @@ export function useController(context: Context) {
     let wheel: Wheel | undefined = undefined;
     let editing: boolean = false;
     let shapes: Shape[] = [];
-
+    function downpoint() {
+        return startPosition;
+    }
+    function downpoint_pagy() {
+        return startPositionOnPage;
+    }
     function updater(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
             initController();
+            editing = false;
         }
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
@@ -36,39 +42,52 @@ export function useController(context: Context) {
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
             const action = workspace.value.action;
-            const isController = workspace.value.controller === 'controller';
-            if (action == Action.AutoV && isController) {
+            workspace.value.setCtrl('controller');
+            if (action == Action.AutoV) {
                 wheel = fourWayWheel(context, { rolling: forCtrlRect });
                 document.addEventListener('mousemove', mousemove);
                 document.addEventListener('mouseup', mouseup);
             }
         }
     }
+
     function handleDblClick() {
         const selected = context.selection.selectedShapes;
         if (selected.length === 1) {
             const item = selected[0];
-            if (item.type != ShapeType.Group) {
+            if (item.type == ShapeType.Group) {
+                const scope = (item as GroupShape).childs;
+                const scout = context.selection.scout;
+                const target = groupPassthrough(scout!, scope, startPositionOnPage);
+                if (target) {
+                    context.selection.selectShape(target);
+                }
+            } else {
                 editing = !editing;
             }
         }
     }
     function mousedown(e: MouseEvent) {
-        matrix.reset(workspace.value.matrix);
-        setPosition(e);
-        if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
-            handleDblClick();
+        if (isElement(e)) {
+            matrix.reset(workspace.value.matrix);
+            setPosition(e);
+
+            if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
+                handleDblClick();
+            }
+
+            initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
+            preTodo(e);
+        } else {
+            if (!context.selection.hoveredShape) {
+                context.selection.selectShape();
+            }
         }
-        initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
-        preTodo(e);
     }
 
     function mousemove(e: MouseEvent) {
-        if (e.button === 0) { //只处理鼠标左键按下时的移动
+        if (e.buttons == 1) { //只处理鼠标左键按下时的移动
             const { clientX, clientY } = e;
-            if (wheel) {
-                wheel.moving(e);
-            }
             const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
             if (isDragging) {
                 workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
@@ -76,16 +95,22 @@ export function useController(context: Context) {
                 if (!editing) { // 处于编辑状态时，不拖动图形
                     transform(shapes, startPosition, mousePosition);
                 }
+                if (wheel) {
+                    wheel.moving(e);
+                }
                 startPosition = { ...mousePosition };
             } else {
                 if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
-                    isDragging = true;
-                    context.repo.start('transform', {});
+                    if (!editing) {
+                        isDragging = true;
+                        context.repo.start('transform', {});
+                    }
                 }
             }
         }
     }
     function mouseup(e: MouseEvent) {
+        if (!isElement(e)) return;
         if (e.button === 0) { // 只处理鼠标左键按下时的抬起
             if (isDragging) {
                 context.repo.commit({});
@@ -94,11 +119,12 @@ export function useController(context: Context) {
             } else {
                 pickerFromSelectedShapes();
             }
-            document.removeEventListener('mousemove', mousemove);
-            document.removeEventListener('mouseup', mouseup);
             if (wheel) wheel = wheel.remove(); // 卸载滚轮
             if (workspace.value.isPreToTranslating) workspace.value.preToTranslating(); // 取消移动准备
+            document.removeEventListener('mousemove', mousemove);
+            document.removeEventListener('mouseup', mouseup);
         }
+        workspace.value.setCtrl('page');
     }
     function transform(shapes: Shape[], start: ClientXY, end: ClientXY) {
         const ps = matrix.inverseCoord(start.x, start.y);
@@ -133,9 +159,16 @@ export function useController(context: Context) {
         if (selected.length > 1) {
             const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, selected).reverse()[0];
             context.selection.selectShape(target);
-        } else if (selected.length === 1 && selected[0].type === ShapeType.Group) {
-            const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage);
-            if (!isHasTarget) context.selection.selectShape();
+        } else if (selected.length === 1) {
+            if (selected[0].type === ShapeType.Group) {
+                const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage);
+                if (!isHasTarget) context.selection.selectShape();
+            } else {
+                const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, selected)[0];
+                if (!target) {
+                    context.selection.selectShape();
+                }
+            }
         }
         if (context.selection.hoveredShape) {
             context.selection.selectShape(context.selection.hoveredShape);
@@ -148,6 +181,7 @@ export function useController(context: Context) {
             preTodo(start!);
         }
     }
+
     function setPosition(e: MouseEvent) {
         const { clientX, clientY } = e;
         matrix.reset(workspace.value.matrix);
@@ -155,14 +189,16 @@ export function useController(context: Context) {
         startPosition = { x: clientX - root.x, y: clientY - root.y };
         startPositionOnPage = matrix.inverseCoord(startPosition.x, startPosition.y);
     }
+
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context);
     }
+
     function handlePointAction(type: CtrlElementType, p1: ClientXY, p2: ClientXY, deg?: number, aType?: 'rotate' | 'scale') {
         matrix.reset(workspace.value.matrix);
         const shapes = context.selection.selectedShapes;
         for (let i = 0; i < shapes.length; i++) {
-            let item = shapes[i];
+            const item = shapes[i];
             if (item.isLocked) continue; // 🔒住不让动
             if (aType === 'rotate') {
                 const newDeg = (item.rotation || 0) + (deg || 0);
@@ -210,6 +246,7 @@ export function useController(context: Context) {
             }
         }
     }
+
     function workspaceUpdate(t?: number) {
         if (t === WorkSpace.CHECKSTATUS) {
             checkStatus();
@@ -231,18 +268,7 @@ export function useController(context: Context) {
             timer = null;
         }
     }
-    function windowBlur() {
-        if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
-            workspace.value.translating(false);
-            document.removeEventListener('mousemove', mousemove);
-            document.removeEventListener('mouseup', mouseup);
-            isDragging = false;
-            context.repo.commit({});
-        }
-        if (wheel) wheel = wheel.remove(); // 卸载滚轮
-        if (workspace.value.isPreToTranslating) workspace.value.preToTranslating();  // 取消移动准备
-        timerClear();
-    }
+
     function isDblClick() {
         return timer;
     }
@@ -252,6 +278,27 @@ export function useController(context: Context) {
     function isDrag() {
         return isDragging;
     }
+    function isElement(e: MouseEvent): boolean {
+        if ((e.target as HTMLElement).dataset.area == 'controller') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    function windowBlur() {
+        if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
+            workspace.value.translating(false);
+            document.removeEventListener('mousemove', mousemove);
+            document.removeEventListener('mouseup', mouseup);
+            isDragging = false;
+            context.repo.commit({});
+        }
+        if (wheel) wheel = wheel.remove(); // 卸载滚轮
+        workspace.value.setCtrl('page');
+        if (workspace.value.isPreToTranslating) workspace.value.preToTranslating();  // 取消移动准备
+        timerClear();
+    }
+
     onMounted(() => {
         context.workspace.watch(workspaceUpdate);
         context.selection.watch(updater);
@@ -271,5 +318,5 @@ export function useController(context: Context) {
         timerClear();
     })
 
-    return { isDblClick, handlePointAction, isEditing, isDrag, startPosition, startPositionOnPage }
+    return { isDblClick, handlePointAction, isEditing, isDrag, downpoint, downpoint_pagy }
 }

@@ -86,7 +86,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_pageViewId: string = 'pageview';
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
-    private m_controller: 'page' | 'controller' = 'controller';
+    private m_controller: 'page' | 'controller' = 'page';
     constructor(context: Context) {
         super();
         this.context = context
@@ -181,6 +181,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
+        event.preventDefault();
         if (event.code === KeyboardKeys.R) {
             this.keydown_r();
         } else if (event.code === KeyboardKeys.V) {
@@ -198,7 +199,6 @@ export class WorkSpace extends Watchable(Object) {
         } else if (event.code === KeyboardKeys.Digit0) {
             this.keydown_0(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.G) {
-            event.preventDefault();
             this.keydown_g(ctrlKey, metaKey, shiftKey);
         }
     }

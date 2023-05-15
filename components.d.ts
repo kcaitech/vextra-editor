@@ -28,7 +28,6 @@ declare module '@vue/runtime-core' {
     CompsTab: typeof import('./src/components/Document/Navigation/CompsTab.vue')['default']
     ContentView: typeof import('./src/components/Document/ContentView.vue')['default']
     ContextMenu: typeof import('./src/components/common/ContextMenu.vue')['default']
-    Controller: typeof import('./src/components/Document/Selection/Controller/Controller.vue')['default']
     CtrlBar: typeof import('./src/components/Document/Selection/Controller/Bars/CtrlBar.vue')['default']
     CtrlLine: typeof import('./src/components/Document/Selection/Controller/CtrlLine.vue')['default']
     CtrlPoint: typeof import('./src/components/Document/Selection/Controller/Points/CtrlPoint.vue')['default']
