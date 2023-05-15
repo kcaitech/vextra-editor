@@ -106,7 +106,7 @@ declare module '@vue/runtime-core' {
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
-    Text: typeof import('./src/components/Document/Selection/Text/index.vue')['default']
+    Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']
     TextView: typeof import('./src/components/Document/Content/TextView.vue')['default']
     Toolbar: typeof import('./src/components/Document/Toolbar/index.vue')['default']
     ToolButton: typeof import('./src/components/Document/Toolbar/ToolButton.vue')['default']

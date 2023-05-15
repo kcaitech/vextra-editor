@@ -30,6 +30,7 @@ function pageViewRegister(mount: boolean) {
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
+    
 })
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
@@ -56,6 +57,7 @@ onUnmounted(() => {
         <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>
+    <div class="shapeName" :style="{ transform: matrixWithFrame.toString() }">11</div>
 </template>
 
 <style scoped>
@@ -63,5 +65,8 @@ svg {
     position: absolute;
     transform-origin: top left;
     background-color: var(--center-content-bg-color);
+}
+.shapeName {
+    position: absolute;
 }
 </style>

@@ -176,35 +176,52 @@ function keyToggleTB() {
     showTop.value = showBottom.value;
 }
 const getDocumentInfo = async() => {
-    const data = await share_api.getDocumentInfoAPI({ doc_id: docID })
-    docInfo.value = data.data
-    //获取文档类型是否为私有文档且有无权限
-    if(docInfo.value.document.doc_type !== 0 && docInfo.value.perm_type == 0) {
-        router.push({
-            name: 'apply',
-            query: {
-                id: route.query.id
-            }
-        })
+    try {
+        const data = await share_api.getDocumentInfoAPI({ doc_id: docID })
+        docInfo.value = data.data
+        //获取文档类型是否为私有文档且有无权限
+        if(docInfo.value.document.doc_type !== 0 && docInfo.value.perm_type == 0) {
+            router.push({
+                name: 'apply',
+                query: {
+                    id: route.query.id
+                }
+            })
+        }
+    }catch (err) {
+        console.log(err);
     }
 }
 //获取文档信息
 getDocumentInfo()
 const getDocumentAuthority = async () => {
-    const data = await share_api.getDocumentAuthorityAPI({ doc_id: docID })
-    permType = data.data.perm_type
+    try {
+        const data = await share_api.getDocumentAuthorityAPI({ doc_id: docID })
+        permType = data.data.perm_type
+    }catch (err){
+        console.log(err);
+    }
 }
 //获取文档类型
 // getDocumentAuthority()
 //获取文档密钥
 const getDocumentKey = async() => {
-    const {data} = await share_api.getDocumentKeyAPI({ doc_id: docID })
+    try {
+        const {data} = await share_api.getDocumentKeyAPI({ doc_id: docID })
+    }catch (err) {
+        console.log(err);
+    }
 }
+let uploadTimer: any = null
+uploadTimer = setInterval(() => {
+    context.value.upload()
+}, 60000)
 
 let timer: any = null
 onMounted(() => {
     context.value.selection.watch(selectionWatcher);
     if ((window as any).sketchDocument) {
+        
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
         if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
             document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
@@ -232,10 +249,6 @@ onMounted(() => {
         }, 60000)
         return
     }
-    document.addEventListener('keydown', keyboardEventHandler);
-    timer = setInterval(() => {
-        getDocumentAuthority()
-    }, 60000)
 })
 onUnmounted(() => {
     window.document.title = t('product.name');
@@ -244,6 +257,7 @@ onUnmounted(() => {
     context.value.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
+    clearInterval(uploadTimer);
 })
 
 </script>

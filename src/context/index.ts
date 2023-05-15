@@ -64,7 +64,7 @@ export class Context extends Watchable(Object) {
     upload() {
         const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2ODM5NjA2ODUsIm5iZiI6MTY4MzM1NTg4NSwiaWF0IjoxNjgzMzU1ODg1LCJkYXRhIjp7ImRhdGEiOnsiaWQiOiI4Iiwibmlja25hbWUiOiJJY2UuWiJ9fX0.AZsb_9SYPWAoQHjFD1S0PqY5Kq34yFtmhQ4hKN0BceE"
         uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', token, "47330851083522048", (successed, doc_id) => {
-            console.log(successed, doc_id);
+            console.log(successed,'success', doc_id,'id');
         })
     }
 }
