@@ -158,7 +158,8 @@ function onMouseWheel(e: WheelEvent) {
 function onKeyDown(e: KeyboardEvent) {
     if (e.code === KeyboardKeys.Space) {
         spacePressed.value = true;
-        props.context.workspace.setCtrl('page');
+        workspace.value.setCtrl('page');
+        workspace.value.pageDragging(true);
     }
 
 }
@@ -171,7 +172,7 @@ function onKeyUp(e: KeyboardEvent) {
             setClass('auto-0');
         }
         spacePressed.value = false;
-        props.context.workspace.setCtrl('controller');
+        workspace.value.pageDragging(false);
     }
 }
 
@@ -452,7 +453,7 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
 // mousedown(target：contentview)
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
-    if (e.buttons === 1) { // 左键按下
+    if (e.button == 0) { // 左键按下
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
         if (spacePressed.value) {
             pageViewDragStart(e); // 空格键press，准备拖动页面
@@ -461,7 +462,7 @@ function onMouseDown(e: MouseEvent) {
         }
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
-    } else if (e.buttons == 2) { // 右键按下，右键菜单处理
+    } else if (e.button == 2) { // 右键按下，右键菜单处理
         e.stopPropagation();
         contextMenuMount(e);
     }
@@ -483,13 +484,15 @@ function onMouseMove(e: MouseEvent) {
 // mousemove(target：contentview) 
 function onMouseMove_CV(e: MouseEvent) {
     if (workspace.value.controller == 'page') {
-        if (e.buttons == 1) { // 左键按下的情况下移动鼠标，属于框选动作，不冒泡，否则有可能和document上的事件冲突
-            if (workspace.value.action == Action.AutoV) {
-                select(e); // 选区
-            }
-        } else if (e.buttons == 0) {
-            if (workspace.value.action == Action.AutoV) {
-                search(e); // 图形检索(hover)
+        if (!spacePressed.value) {
+            if (e.buttons == 1) { // 左键按下的情况下移动鼠标，属于框选动作，不冒泡，否则有可能和document上的事件冲突
+                if (workspace.value.action == Action.AutoV) {
+                    select(e); // 选区
+                }
+            } else if (e.buttons == 0) {
+                if (workspace.value.action == Action.AutoV) {
+                    search(e); // 图形检索(hover)
+                }
             }
         }
     }

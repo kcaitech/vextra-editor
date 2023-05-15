@@ -68,19 +68,22 @@ export function useController(context: Context) {
         }
     }
     function mousedown(e: MouseEvent) {
-        if (isElement(e)) {
-            matrix.reset(workspace.value.matrix);
-            setPosition(e);
+        const working = !context.workspace.isPageDragging;
+        if (working) {
+            if (isElement(e)) {
+                matrix.reset(workspace.value.matrix);
+                setPosition(e);
 
-            if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
-                handleDblClick();
-            }
+                if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
+                    handleDblClick();
+                }
 
-            initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
-            preTodo(e);
-        } else {
-            if (!context.selection.hoveredShape) {
-                context.selection.selectShape();
+                initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
+                preTodo(e);
+            } else {
+                if (!context.selection.hoveredShape) {
+                    context.selection.selectShape();
+                }
             }
         }
     }
@@ -110,7 +113,6 @@ export function useController(context: Context) {
         }
     }
     function mouseup(e: MouseEvent) {
-        if (!isElement(e)) return;
         if (e.button === 0) { // 只处理鼠标左键按下时的抬起
             if (isDragging) {
                 context.repo.commit({});
@@ -126,6 +128,7 @@ export function useController(context: Context) {
         }
         workspace.value.setCtrl('page');
     }
+
     function transform(shapes: Shape[], start: ClientXY, end: ClientXY) {
         const ps = matrix.inverseCoord(start.x, start.y);
         const pe = matrix.inverseCoord(end.x, end.y);
