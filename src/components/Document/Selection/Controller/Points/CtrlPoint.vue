@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { ref, defineProps, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
-import { XY } from '@/context/selection';
+import { XY, ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
 import { Point } from '../../SelectionView.vue';
@@ -81,7 +81,7 @@ function onMouseDown(event: MouseEvent) {
 }
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
-  const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
+  const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
   let aType: 'rotate' | 'scale' = 'scale';
   if (isDragging) {
     let deg = 0;
@@ -95,9 +95,9 @@ function onMouseMove(event: MouseEvent) {
     }
     if (asyncBaseAction) {
       matrix.reset(workspace.value.matrix);
-      const p1OnPage = matrix.inverseCoord(startPosition.x, startPosition.y); // page
-      const p2Onpage = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
-      asyncBaseAction.execute(props.point.type, p1OnPage, p2Onpage, deg, aType)
+      const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y); // page
+      const p2Onpage: PageXY = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
+      asyncBaseAction.execute(props.point.type, p1OnPage, p2Onpage, deg, aType);
     }
     startPosition = { ...mouseOnPage };
   } else {

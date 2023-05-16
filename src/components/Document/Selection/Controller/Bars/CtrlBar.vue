@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { defineProps, defineEmits, computed, onMounted, onUnmounted, watchEffect } from 'vue';
+import { defineProps, computed, onMounted, onUnmounted, watchEffect } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
-import { XY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getBarStyle } from '@/utils/rectFn';
 import { AsyncBaseAction } from "@kcdesign/data/editor/controller";
 import { Shape } from '@kcdesign/data';
-
+import { PageXY, ClientXY } from '@/context/selection';
 interface Props {
     context: Context,
     ctrlType: CtrlElementType,
@@ -20,7 +19,7 @@ const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
 const dragActiveDis = 3;
 let isDragging = false;
-let startPosition = { x: 0, y: 0 };
+let startPosition: ClientXY = { x: 0, y: 0 };
 let root = { x: 0, y: 0 };
 let scaling: boolean = false;
 let barStyle: string = '';
@@ -37,8 +36,8 @@ function setStatus(s: boolean) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
     if (event.button === 0) {
-        workspace.value.setCtrl('controller');
         event.stopPropagation();
+        workspace.value.setCtrl('controller');
         const { clientX, clientY } = event;
         setStatus(true);
         matrix.reset(workspace.value.matrix);
@@ -50,13 +49,13 @@ function onMouseDown(event: MouseEvent) {
 }
 function onMouseMove(event: MouseEvent) {
     const { clientX, clientY } = event;
-    const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
+    const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
     if (isDragging) {
         if (asyncBaseAction) {
             matrix.reset(workspace.value.matrix);
-            const p1OnPage = matrix.inverseCoord(startPosition.x, startPosition.y); // page
-            const p2Onpage = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
-            asyncBaseAction.execute(props.ctrlType, p1OnPage, p2Onpage)
+            const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y); // page
+            const p2Onpage: PageXY = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
+            asyncBaseAction.execute(props.ctrlType, p1OnPage, p2Onpage);
         }
         startPosition = { ...mouseOnPage };
     } else {
@@ -129,7 +128,7 @@ watchEffect(() => {
         width: 100%;
         position: absolute;
         height: 1px;
-        border-bottom: 1px solid #2561D9;
+        border-bottom: 1.5px solid #2561D9;
         top: 7px;
         box-sizing: border-box;
     }

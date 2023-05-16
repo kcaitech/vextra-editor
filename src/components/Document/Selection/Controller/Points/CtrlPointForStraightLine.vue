@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { ref, defineProps, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
-import { XY } from '@/context/selection';
+import { XY, ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
 import { AsyncLineAction } from '@kcdesign/data/editor/controller';
@@ -19,7 +19,7 @@ const workspace = computed(() => props.context.workspace);
 const dragActiveDis = 3;
 const pointContainer = ref<HTMLElement>();
 let isDragging = false;
-let startPosition = { x: 0, y: 0 };
+let startPosition: ClientXY = { x: 0, y: 0 };
 let root = { x: 0, y: 0 };
 let scaling: boolean = false;
 let rotating: boolean = false;
@@ -80,7 +80,7 @@ function onMouseDown(event: MouseEvent) {
 }
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
-  const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
+  const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
   let aType: 'rotate' | 'scale' = 'scale';
   if (isDragging) {
     let deg = 0;
@@ -94,7 +94,7 @@ function onMouseMove(event: MouseEvent) {
     }
     if (asyncLineEditor) {
       matrix.reset(workspace.value.matrix);
-      const end = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
+      const end: PageXY = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
       asyncLineEditor.execute(props.pointType, end, deg, aType);
     }
     startPosition = { ...mouseOnPage };

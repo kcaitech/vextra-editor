@@ -90,7 +90,7 @@ watchEffect(() => { updater() })
 <template>
     <div :class="{ 'ctrl-line': true, 'un-visible': !visible, editing }" @mousedown="mousedown" :style="lineStyle"
         data-area="controller">
-        <div class="display"></div>
+        <div class="display" data-area="controller"></div>
         <CtrlPoint :context="props.context" :axle="axle" :rotate="rotate" :pointType="CtrlElementType.LineStart">
         </CtrlPoint>
         <CtrlPoint :context="props.context" :axle="axle" :rotate="rotate" :pointType="CtrlElementType.LineEnd"></CtrlPoint>

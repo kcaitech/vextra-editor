@@ -9,12 +9,13 @@ import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
 import { forGroupHover, groupPassthrough } from "@/utils/scout";
 import { Action, WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data/editor/controller";
+import { debounce } from "lodash";
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
     const dragActiveDis = 3;
     let timer: any;
-    const duration: number = 250; // 双击判定时长 ms
+    const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
     let startPosition: ClientXY = { x: 0, y: 0 };
     let startPositionOnPage: PageXY = { x: 0, y: 0 };
@@ -23,6 +24,26 @@ export function useController(context: Context) {
     let editing: boolean = false;
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
+    function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断并迁移
+        if (shapes.length) {
+            const ps = matrix.inverseCoord(start.x, start.y);
+            const pe = matrix.inverseCoord(end.x, end.y);
+            const selection = context.selection;
+            let targetParent;
+            const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
+            if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
+                targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
+            } else {
+                targetParent = context.selection.getClosetArtboard(pe);
+            }
+            const m = shapes[0].parent?.id != targetParent.id;
+            // console.log('checking', shapes[0].parent?.name, targetParent.name);
+            if (m && asyncTransfer) {
+                asyncTransfer.migrate(targetParent);
+            }
+        }
+    }
+    const migrate = debounce(_migrate, 60); // 停留60ms之后做环境判断和迁移
     function downpoint() {
         return startPosition;
     }
@@ -70,13 +91,9 @@ export function useController(context: Context) {
     function mousedown(e: MouseEvent) {
         const working = !context.workspace.isPageDragging;
         if (working) {
-            console.log('---');
             if (isElement(e)) {
-                console.log('--------');
-
                 matrix.reset(workspace.value.matrix);
                 setPosition(e);
-
                 if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
                     handleDblClick();
                 }
@@ -118,7 +135,14 @@ export function useController(context: Context) {
     function mouseup(e: MouseEvent) {
         if (e.button === 0) { // 只处理鼠标左键按下时的抬起
             if (isDragging) {
-                asyncTransfer = asyncTransfer?.close();
+                if (asyncTransfer) {
+                    const { clientX, clientY } = e;
+                    const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+                    // matrix.reset(workspace.value.matrix);
+                    // const end: PageXY = matrix.inverseCoord(mousePosition);
+                    _migrate(shapes, startPosition, mousePosition);
+                    asyncTransfer.close();
+                }
                 isDragging = false;
                 workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
             } else {
@@ -137,25 +161,10 @@ export function useController(context: Context) {
         const pe = matrix.inverseCoord(end.x, end.y);
         if (asyncTransfer) {
             asyncTransfer.trans(ps, pe);
+            migrate(shapes, ps, pe);
         }
     }
-    function isContainerChange(shapes: Shape[], start: ClientXY, end: ClientXY): boolean {
-        if (shapes.length) {
-            const ps = matrix.inverseCoord(start.x, start.y);
-            const pe = matrix.inverseCoord(end.x, end.y);
-            const selection = context.selection;
-            let targetParent;
-            const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
-            if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
-                targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
-            } else {
-                targetParent = context.selection.getClosetArtboard(pe);
-            }
-            return shapes[0].parent?.id != targetParent.id
-        } else {
-            return false;
-        }
-    }
+
     function pickerFromSelectedShapes() {
         const selected = context.selection.selectedShapes;
         if (selected.length > 1) {
