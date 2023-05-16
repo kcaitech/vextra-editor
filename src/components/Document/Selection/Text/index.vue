@@ -4,16 +4,20 @@ import { Selection } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { TextShape } from '@kcdesign/data/data/shape';
 import { layoutText, locateCursor, locateRange } from '@/layout/text';
+import { Context } from '@/context';
 
 const props = defineProps<{
     shape: TextShape,
     selection: Selection,
     matrix: number[],
+    context: Context
 }>();
 
+let editor = props.context.editor4Shape(props.shape);
 const stopWatch = watch(() => props.shape, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
+    editor = props.context.editor4Shape(props.shape);
 })
 
 const reflush = ref(0);
@@ -81,7 +85,6 @@ function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
 }
 
-// 画个虚线框
 onMounted(() => {
     props.shape.watch(watcher);
     update();
@@ -121,6 +124,169 @@ function genRectPath(points: { x: number, y: number }[]): string {
     return path;
 }
 
+const inputel = ref<HTMLInputElement>();
+const inputpos = ref({ left: 0, top: 0 })
+
+let downIndex: { index: number, before: boolean };
+function onMouseDown(e: MouseEvent) {
+    matrix.reset(props.matrix);
+    const xy = matrix.inverseCoord(e.offsetX + bounds.left, e.offsetY + bounds.top);
+    downIndex = props.selection.locateText(xy.x, xy.y);
+    e.stopPropagation();
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    if (inputel.value) inputel.value.hidden = true;
+}
+function onMouseUp(e: MouseEvent) {
+    e.stopPropagation();
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+
+    const workspace = props.context.workspace;
+    const { clientX, clientY } = e;
+    const root = workspace.root;
+    matrix.reset(props.matrix);
+    const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+    const locate = props.selection.locateText(xy.x, xy.y);
+    if (downIndex.index === locate.index) {
+        props.selection.setCursor(locate.index, locate.before)
+    }
+    else {
+        props.selection.selectText(downIndex.index, locate.index);
+    }
+    updateInputPos(locate.before);
+}
+
+function onMouseMove(e: MouseEvent) {
+    const workspace = props.context.workspace;
+    const { clientX, clientY } = e;
+    const root = workspace.root;
+    matrix.reset(props.matrix);
+    const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+    const locate = props.selection.locateText(xy.x, xy.y);
+    if (downIndex.index === locate.index) {
+        props.selection.setCursor(locate.index, locate.before)
+    }
+    else {
+        props.selection.selectText(downIndex.index, locate.index);
+    }
+}
+
+function updateInputPos(cursorAtBefore: boolean) {
+    if (!inputel.value) return;
+    inputel.value.hidden = false;
+
+    const m2p = props.shape.matrix2Page();
+    matrix.reset(m2p);
+    matrix.multiAtLeft(props.matrix);
+
+    // let cursorAtBefore = props.selection.cursorAtBefore;
+    let index = props.selection.cursorStart;
+    const end = props.selection.cursorEnd;
+    if (index === end) {
+        //
+    }
+    else {
+        index = end;
+    }
+
+    const layout = props.shape.getLayout(layoutText);
+    const cursor = locateCursor(layout, index, cursorAtBefore).map((point) => matrix.computeCoord(point.x, point.y));
+
+    if (cursor.length !== 2) return;
+
+    const x = cursor[0].x;
+    let y = cursor[0].y;
+
+    if (cursor[1].y < y) y = cursor[1].y;
+
+    inputpos.value.left = x;
+    inputpos.value.top = y;
+
+    inputel.value.focus();
+}
+
+function committext() {
+    if (!inputel.value) return;
+    const text = inputel.value.value;
+    if (text.length === 0) return;
+
+    if (editor.isInComposingInput()) {
+        if (editor.composingInputEnd(text)) {
+            props.selection.setCursor(composingStartIndex + text.length, true);
+        }
+    }
+    else {
+        let index = props.selection.cursorStart;
+        let end = props.selection.cursorEnd;
+        if (index > end) {
+            let t = index;
+            index = end;
+            end = t;
+        }
+        if (editor.insertText2(text, index, end - index)) {
+            props.selection.setCursor(index + text.length, true);
+        }
+    }
+
+    inputel.value.value = ''
+}
+
+function oninput(e: Event) {
+    const event = e as InputEvent;
+    if (event.isComposing) {
+        if (!inputel.value) return;
+        const text = inputel.value.value;
+        if (editor.composingInputUpdate(text)) {
+            props.selection.setCursor(composingStartIndex + text.length, true);
+        }
+    } else {
+        committext();
+    }
+}
+
+let composingStartIndex = 0;
+function compositionstart(e: Event) {
+    if (!inputel.value) return;
+    let index = props.selection.cursorStart;
+    let end = props.selection.cursorEnd;
+    if (index > end) {
+        let t = index;
+        index = end;
+        end = t;
+    }
+    composingStartIndex = index;
+    editor.composingInputStart(index, end - index)
+}
+
+function compositionend(e: Event) {
+    if (!inputel.value) return;
+    const text = inputel.value.value;
+    if (editor.composingInputEnd(text)) {
+        props.selection.setCursor(composingStartIndex + text.length, true);
+    }
+    inputel.value.value = ''
+}
+
+function compositionupdate(e: Event) {
+}
+
+function onFocueOut() {
+    committext();
+}
+
+function onKeyDown(e: KeyboardEvent) {
+    console.log("onKeyDown", inputel.value?.value)
+}
+
+function onKeyUp(e: KeyboardEvent) {
+    console.log("onKeyUp", inputel.value?.value)
+}
+
+function onKeyPress(e: KeyboardEvent) {
+    console.log("onKeyPress", inputel.value?.value)
+}
+
 </script>
 
 <template>
@@ -128,11 +294,22 @@ function genRectPath(points: { x: number, y: number }[]): string {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        overflow="visible" :reflush="reflush !== 0 ? reflush : undefined">
+        :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
+        :reflush="reflush !== 0 ? reflush : undefined">
         <path v-if="isCursor" :d="cursorPath" fill="none" stroke='blue' stroke-width="2px"></path>
         <path v-if="!isCursor" :d="selectPath" fill="blue" fill-opacity="0.5" stroke='none'></path>
         <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
     </svg>
+    <input type="text" class="input" @focusout="onFocueOut" @input="oninput" @compositionstart="compositionstart"
+        @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
+        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }"
+        ref="inputel" />
 </template>
 
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.input {
+    z-index: -999;
+    border: none;
+    fill: transparent;
+}
+</style>

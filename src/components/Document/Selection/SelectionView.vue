@@ -204,5 +204,5 @@ watchEffect(updater)
     </component>
 
     <TextSelectVue v-if="context.selection.isSelectText" :shape="(context.selection.selectedShapes[0] as TextShape)"
-        :selection="context.selection" :matrix="props.matrix"></TextSelectVue>
+        :selection="context.selection" :matrix="props.matrix" :context="props.context"></TextSelectVue>
 </template>
