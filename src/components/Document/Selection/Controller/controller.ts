@@ -7,9 +7,9 @@ import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
 import { forGroupHover, groupPassthrough } from "@/utils/scout";
-import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
+import { adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
 import { Action, CtrlElementType, WorkSpace } from "@/context/workspace";
-
+import { Transfer } from "@kcdesign/data/editor/page";
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -23,6 +23,7 @@ export function useController(context: Context) {
     let wheel: Wheel | undefined = undefined;
     let editing: boolean = false;
     let shapes: Shape[] = [];
+    let transfer: Transfer | undefined = undefined;
     function downpoint() {
         return startPosition;
     }
@@ -96,7 +97,8 @@ export function useController(context: Context) {
                 workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
                 context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
                 if (!editing) { // 处于编辑状态时，不拖动图形
-                    transform(shapes, startPosition, mousePosition);
+                    // transform(shapes, startPosition, mousePosition);
+                    transform(startPosition, mousePosition);
                 }
                 if (wheel) {
                     wheel.moving(e);
@@ -106,7 +108,10 @@ export function useController(context: Context) {
                 if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
                     if (!editing) {
                         isDragging = true;
-                        context.repo.start('transform', {});
+                        const page = context.selection.selectedPage;
+                        if (page) {
+                            transfer = context.editor4Page(page).transfer(shapes);
+                        }
                     }
                 }
             }
@@ -115,7 +120,7 @@ export function useController(context: Context) {
     function mouseup(e: MouseEvent) {
         if (e.button === 0) { // 只处理鼠标左键按下时的抬起
             if (isDragging) {
-                context.repo.commit({});
+                transfer = transfer?.close();
                 isDragging = false;
                 workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
             } else {
@@ -129,26 +134,29 @@ export function useController(context: Context) {
         workspace.value.setCtrl('page');
     }
 
-    function transform(shapes: Shape[], start: ClientXY, end: ClientXY) {
+    function transform(start: ClientXY, end: ClientXY) {
         const ps = matrix.inverseCoord(start.x, start.y);
         const pe = matrix.inverseCoord(end.x, end.y);
-        const selection = context.selection;
-        let targetParent;
-        const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置存在容器
-        if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
-            targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
-        } else {
-            targetParent = context.selection.getClosetArtboard(pe);
+        if (transfer) {
+            transfer.trans(ps, pe);
         }
-        // 对选中的每个图层进行变换
-        for (let i = 0; i < shapes.length; i++) {
-            if (shapes[i].isLocked) continue; // 🔒住不让动
-            translate(shapes[i], pe.x - ps.x, pe.y - ps.y);
-            if (shapes[i].parent?.id !== targetParent.id) {
-                shapeMoveNoTransaction(shapes[i], targetParent);
+    }
+    function isContainerChange(shapes: Shape[], start: ClientXY, end: ClientXY): boolean {
+        if (shapes.length) {
+            const ps = matrix.inverseCoord(start.x, start.y);
+            const pe = matrix.inverseCoord(end.x, end.y);
+            const selection = context.selection;
+            let targetParent;
+            const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
+            if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
+                targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
+            } else {
+                targetParent = context.selection.getClosetArtboard(pe);
             }
+            return shapes[0].parent?.id != targetParent.id
+        } else {
+            return false;
         }
-        context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---
     }
     function shapeMoveNoTransaction(shape: Shape, targetParent: Shape) {
         const origin: GroupShape = ((shape.parent || context.selection.selectedPage) as GroupShape);
@@ -294,7 +302,8 @@ export function useController(context: Context) {
             document.removeEventListener('mousemove', mousemove);
             document.removeEventListener('mouseup', mouseup);
             isDragging = false;
-            context.repo.commit({});
+            // context.repo.commit({});
+            transfer = transfer?.close();
         }
         if (wheel) wheel = wheel.remove(); // 卸载滚轮
         workspace.value.setCtrl('page');

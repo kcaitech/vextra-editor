@@ -1,7 +1,8 @@
+import { layoutText, locateText } from "@/layout/text";
 import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
-import { Shape, GroupShape, ShapeType } from "@kcdesign/data/data/shape";
+import { Shape, GroupShape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
 import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
 import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
@@ -41,7 +42,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_SHAPE = 2;
     static CHANGE_SHAPE_HOVER = 3;
     static CHANGE_RENAME = 4;
-    static PAGE_RENAME = 5;
+    static CHANGE_TEXT = 5;
+    static PAGE_RENAME = 6;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -54,6 +56,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     // todo
     private m_cursorStart: number = -1;
+    private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;
 
     constructor(document: Document) {
@@ -71,6 +74,19 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     async canvaskitScoutMount() {
         this.m_scout_beta = await canvasKitScout();
+    }
+
+    get cursorStart() {
+        return this.m_cursorStart;
+    }
+    get cursorAtBefore() {
+        return this.m_cursorAtBefore;
+    }
+    get cursorEnd() {
+        return this.m_cursorEnd;
+    }
+    get isSelectText() {
+        return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape && this.m_cursorStart >= 0;
     }
 
     selectPage(p: Page | undefined) {
@@ -274,6 +290,58 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             }
         }
     }
+
+    /**
+     *
+     * @param x page坐标系
+     * @param y
+     */
+    locateText(x: number, y: number): { index: number, before: boolean } {
+        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+            return { index: -1, before: false };
+        }
+        const shape = this.m_selectShapes[0] as TextShape;
+        // translate x,y
+        const matrix = shape.matrix2Page();
+        const xy = matrix.inverseCoord(x, y);
+        x = xy.x;
+        y = xy.y;
+
+        const layout = shape.getLayout(layoutText);
+        return locateText(layout, x, y);
+    }
+
+    setCursor(index: number, before: boolean) {
+        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+            return;
+        }
+        if (index < 0) index = 0;
+        if (index !== this.m_cursorStart || index !== this.m_cursorEnd || before !== this.m_cursorAtBefore) {
+            this.m_cursorStart = index;
+            this.m_cursorEnd = index;
+            this.m_cursorAtBefore = before;
+            this.notify(Selection.CHANGE_TEXT);
+        }
+    }
+
+    selectText(start: number, end: number) {
+        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+            return;
+        }
+        if (start < 0) start = 0;
+        // const shape = this.m_selectShapes[0] as TextShape;
+        // const paras = shape.text.paras;
+        // const count = paras.reduce((count, p) => {
+        //     return count + p.length;
+        // }, 0);
+        // if (end > count) end = count;
+        if (start !== this.m_cursorStart || end !== this.m_cursorEnd) {
+            this.m_cursorStart = start;
+            this.m_cursorEnd = end;
+            this.notify(Selection.CHANGE_TEXT);
+        }
+    }
+
     save(): Saved {
         const saved = {
             page: this.m_selectPage,

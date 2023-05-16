@@ -188,24 +188,32 @@ export class WorkSpace extends Watchable(Object) {
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
-        event.preventDefault();
         if (event.code === KeyboardKeys.R) {
+            event.preventDefault();
             this.keydown_r();
         } else if (event.code === KeyboardKeys.V) {
+            event.preventDefault();
             this.keydown_v();
         } else if (event.code === KeyboardKeys.L) {
+            event.preventDefault();
             this.keydown_l(shiftKey);
         } else if (event.code === KeyboardKeys.Z) {
+            event.preventDefault();
             this.keydown_z(this.context.repo, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
+            event.preventDefault();
             this.keydown_k();
         } else if (event.code === KeyboardKeys.O) {
+            event.preventDefault();
             this.keydown_o();
         } else if (event.code === KeyboardKeys.F) {
+            event.preventDefault();
             this.keydown_f();
         } else if (event.code === KeyboardKeys.Digit0) {
+            event.preventDefault();
             this.keydown_0(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.G) {
+            event.preventDefault();
             this.keydown_g(ctrlKey, metaKey, shiftKey);
         }
     }

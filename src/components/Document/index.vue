@@ -191,14 +191,14 @@ const getDocumentInfo = async () => {
 //获取文档信息
 getDocumentInfo()
 const getDocumentAuthority = async () => {
-    const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+    const data = await share_api.getDocumentAuthorityAPI({ doc_id: docID })
     permType = data.data.perm_type
 }
 //获取文档类型
-getDocumentAuthority()
+// getDocumentAuthority()
 //获取文档密钥
-const getDocumentKey = async () => {
-    const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
+const getDocumentKey = async() => {
+    const {data} = await share_api.getDocumentKeyAPI({ doc_id: docID })
 }
 
 let timer: any = null
