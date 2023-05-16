@@ -10,7 +10,7 @@ import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
-import PageViewContextMenuItems from "../Selection/PageViewContextMenuItems.vue";
+import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -102,7 +102,7 @@ function notifySourceChange(t?: number) {
             }
         })
     }
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE)
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 const stopWatch = watch(() => props.page, () => {
@@ -115,7 +115,6 @@ const stopWatch = watch(() => props.page, () => {
     shapeDirList = source;
     shapeDirList.watch(notifySourceChange)
     notifySourceChange();
-
 }, { immediate: true })
 
 
@@ -179,10 +178,13 @@ const isLock = (lock: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    editor.value.setLock()
+    editor.value.setLock();
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
 const isRead = (read: boolean, shape: Shape) => {
+    let timer: any;
+    timer && clearTimeout(timer);
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
@@ -190,7 +192,14 @@ const isRead = (read: boolean, shape: Shape) => {
     if (!read) {
         props.context.selection.unSelectShape(shape);
         props.context.selection.unHoverShape();
+        props.context.workspace.translating(true);
+        timer = setTimeout(() => {
+            props.context.workspace.translating(false);
+            clearTimeout(timer);
+            timer = null;
+        }, 350)
     }
+    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 function shapeScrollToContentView(shape: Shape) {
     const workspace = props.context.workspace;
@@ -198,23 +207,27 @@ function shapeScrollToContentView(shape: Shape) {
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
-    props.context.selection.unHoverShape();
-    props.context.selection.selectShape();
-    const pageViewEl = props.context.workspace.pageView;
-    if (pageViewEl) {
-        pageViewEl.classList.add('transition-600');
-        props.context.workspace.translating(true);
-        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
-        const timer = setTimeout(() => {
-            props.context.selection.selectShape(shape);
-            pageViewEl.classList.remove('transition-600');
-            props.context.workspace.translating(false);
-            clearTimeout(timer);
-        }, 600);
-    } else {
-        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
+    const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
+    if (transX || transY) {
+        props.context.selection.unHoverShape();
+        props.context.selection.selectShape();
+        const pageViewEl = props.context.workspace.pageView;
+        if (pageViewEl) {
+            pageViewEl.classList.add('transition-400');
+            props.context.workspace.translating(true);
+            workspace.matrix.trans(transX, transY);
+            const timer = setTimeout(() => {
+                props.context.selection.selectShape(shape);
+                pageViewEl.classList.remove('transition-400');
+                props.context.workspace.translating(false);
+                clearTimeout(timer);
+            }, 400);
+        } else {
+            workspace.matrix.trans(transX, transY);
+        }
+        workspace.matrixTransformation();
     }
-    workspace.matrixTransformation();
+
 }
 
 const MouseDown = (e: MouseEvent) => {
@@ -292,7 +305,7 @@ onUnmounted(() => {
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" @change="(e: Event) => search(e)">
+                <input type="text" :placeholder="t('home.search_layer') + '…'" @change="(e: Event) => search(e)">
             </div>
         </div>
         <div class="body" ref="ListBody">
@@ -318,7 +331,7 @@ onUnmounted(() => {
 
     .header {
         width: 100%;
-        height: 64px;
+        height: 70px;
         font-size: 10px;
         box-sizing: border-box;
         position: relative;
@@ -331,24 +344,24 @@ onUnmounted(() => {
         .title {
             margin-left: 13px;
             font-weight: var(--font-default-bold);
-            line-height: 30px;
-            height: 30px;
+            line-height: 36px;
+            height: 36px;
         }
 
         .search {
-            width: 100%;
-            height: 32px;
-            margin: 1px 0px;
+            width: auto;
+            height: 26px;
+            margin: 3px 10px;
             display: flex;
             align-items: center;
             box-sizing: border-box;
             background-color: var(--grey-light);
-            padding: 4px var(--default-padding);
+            padding: 4px var(--default-padding-half);
             border-radius: 8px;
 
             >svg {
-                height: 20px;
-                flex: 0 0 20px;
+                width: 12px;
+                height: 12px;
             }
 
             >input {
@@ -357,6 +370,7 @@ onUnmounted(() => {
                 outline: none;
                 margin-left: 4px;
                 background-color: transparent;
+                font-size: var(--font-default-fontsize);
             }
         }
     }

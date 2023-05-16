@@ -76,6 +76,12 @@ export const home = {
     delete: 'Delete',
     test: 'Test',
     file_star_marking: 'File has been marked star, can be viewed in the star list!',
+    rect: 'Rectangle',
+    picture: 'Picture',
+    comment: 'Add comment',
+    groups: 'Group up',
+    ungroup: 'Ungroup',
+    search_layer: 'Search layer'
 }
 
 export const navi = {

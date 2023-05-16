@@ -9,7 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
-    Apphome: typeof import('./src/components/AppHome/Apphome.vue')['default']
+    AppHome: typeof import('./src/components/AppHome/AppHome.vue')['default']
     Apply: typeof import('./src/components/Apply/index.vue')['default']
     ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']
     Arrow: typeof import('./src/components/Document/Toolbar/Buttons/Arrow.vue')['default']
@@ -32,7 +32,6 @@ declare module '@vue/runtime-core' {
     CtrlLine: typeof import('./src/components/Document/Selection/Controller/CtrlLine.vue')['default']
     CtrlPoint: typeof import('./src/components/Document/Selection/Controller/Points/CtrlPoint.vue')['default']
     CtrlPointForStraightLine: typeof import('./src/components/Document/Selection/Controller/Points/CtrlPointForStraightLine.vue')['default']
-    CtrlRect: typeof import('./src/components/Document/Selection/Controller/CtrlRect.vue')['default']
     Cursor: typeof import('./src/components/Document/Toolbar/Buttons/Cursor.vue')['default']
     Describes: typeof import('./src/components/Login/Describes.vue')['default']
     Design: typeof import('./src/components/Document/Attribute/Design.vue')['default']
@@ -56,7 +55,7 @@ declare module '@vue/runtime-core' {
     IconText: typeof import('./src/components/common/IconText.vue')['default']
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
     Inform: typeof import('./src/components/AppHome/Inform.vue')['default']
-    Layers: typeof import('./src/components/Document/Selection/Layers.vue')['default']
+    Layers: typeof import('./src/components/Document/Menu/Layers.vue')['default']
     LeftTabs: typeof import('./src/components/Document/Navigation/LeftTabs.vue')['default']
     Line: typeof import('./src/components/Document/Content/Line.vue')['default']
     ListView: typeof import('./src/components/common/ListView.vue')['default']
@@ -70,7 +69,7 @@ declare module '@vue/runtime-core' {
     PageItem: typeof import('./src/components/Document/Navigation/PageItem.vue')['default']
     PageList: typeof import('./src/components/Document/Navigation/PageList.vue')['default']
     PageView: typeof import('./src/components/Document/Content/PageView.vue')['default']
-    PageViewContextMenuItems: typeof import('./src/components/Document/Selection/PageViewContextMenuItems.vue')['default']
+    PageViewContextMenuItems: typeof import('./src/components/Document/Menu/PageViewContextMenuItems.vue')['default']
     Path: typeof import('./src/components/Document/Toolbar/Buttons/Path.vue')['default']
     Pattern: typeof import('./src/components/Document/Toolbar/Buttons/Pattern.vue')['default']
     Pen: typeof import('./src/components/Document/Toolbar/Buttons/Pen.vue')['default']

@@ -1,6 +1,6 @@
 import RectangleCtrl from "./RectangleCtrl.vue";
 import CtrlLine from "./CtrlLine.vue";
-export enum ControllerType {
+export enum ControllerType { // 控件类型
     Rect = 'rect',
     Line = 'line'
 }

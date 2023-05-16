@@ -529,11 +529,11 @@ function mouseMove(Event: MouseEvent) {
             listBottom.value = document.documentElement.offsetHeight - clientY
         }else if(props.pageHeight && props.draging === 'pageList') {
             const top = container.value?.getBoundingClientRect()
-            listTop.value = top?.top! - 45
+            listTop.value = top?.top! - 75
             listBottom.value = clientY - (props.pageHeight + top?.top! - 15)
             scrollHeight.value = Math.abs(scroll.y) + props.pageHeight
         }
-            if(scroll.y < 0 && clientY - listTop.value < 60 && clientY - listTop.value > 20) {
+            if(scroll.y < 0 && clientY - listTop.value < 90 && clientY - listTop.value > 60) {
                 timer = setInterval(() => {
                     scroll.y = scroll.y + 1   
                     substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);

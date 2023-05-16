@@ -61,7 +61,7 @@ function updateProgress(x: number) {
   <div class="radius-for-ios-container">
     <Popover
       :context="props.context"
-      :left="-466"
+      :left="-472"
       :width="240"
       :height="100"
       ref="popover"
@@ -134,11 +134,13 @@ function updateProgress(x: number) {
     .progress-button {
       position: absolute;
       left: 0%;
-      top: -2px;
-      width: 10px;
-      height: 10px;
-      border-radius: 5px;
+      top: -3px;
+      width: 12px;
+      height: 12px;
+      border-radius: 6px;
+      border: 2px solid var(--grey-light);
       background-color: #fff;
+      box-sizing: border-box;
       cursor: pointer;
       z-index: 1;
     }

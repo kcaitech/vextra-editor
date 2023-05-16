@@ -6,7 +6,7 @@
  * @FilePath: \kcdesign\src\components\Document\Attribute\TypeHeader.vue
 -->
 <script setup lang="ts">
-import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref, nextTick } from 'vue';
+import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref } from 'vue';
 import { Context } from '@/context';
 import { Shape, ShapeType } from '@kcdesign/data/data/shape';
 import { Color, Fill, ContextSettings } from "@kcdesign/data/data/style";
@@ -36,7 +36,7 @@ const fills: FillItem[] = reactive([]);
 const alpheFill = ref<HTMLInputElement>()
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
-    return "#" + hex(r) + hex(g) + hex(b);
+    return hex(r) + hex(g) + hex(b);
 }
 
 let shapeId: string = "";
@@ -123,6 +123,9 @@ function setColor(idx: number, clr: string, alpha: number) {
 
 function onColorChange(idx: number, e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
+    if(value.slice(0, 1) !== '#') {
+        value = "#" + value
+    }
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     if (Reg_HEX.test(value)) {
@@ -130,6 +133,7 @@ function onColorChange(idx: number, e: Event) {
         setColor(idx, value, alpha);
     } else {
         message('danger', t('system.illegal_input'));
+        return (e.target as HTMLInputElement).value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue)
     }
 }
 
@@ -144,7 +148,10 @@ function onAlphaChange(idx: number, e: Event) {
                 }
                 value = value.toFixed(2) / 100
                 const color = fills[idx].fill.color;
-                const clr = toHex(color.red, color.green, color.blue);
+                let clr = toHex(color.red, color.green, color.blue);
+                if(clr.slice(0, 1) !== '#') {
+                    clr = "#" + clr
+                }
                 setColor(idx, clr, value);
                 return
             } else {
@@ -158,7 +165,10 @@ function onAlphaChange(idx: number, e: Event) {
                 }
                 value = Number((Number(value)).toFixed(2)) / 100
                 const color = fills[idx].fill.color;
-                const clr = toHex(color.red, color.green, color.blue);
+                let clr = toHex(color.red, color.green, color.blue);
+                if(clr.slice(0, 1) !== '#') {
+                    clr = "#" + clr
+                }
                 setColor(idx, clr, value);
                 return
             } else {
@@ -172,7 +182,10 @@ function onAlphaChange(idx: number, e: Event) {
     }
 }
 function getColorFromPicker(rgb: number[], idx: number) {
-    const clr = toHex(rgb[0], rgb[1], rgb[2]);
+    let clr = toHex(rgb[0], rgb[1], rgb[2]);
+    if(clr.slice(0, 1) !== '#') {
+        clr = "#" + clr
+    }
     const alpha = fills[idx].fill.color.alpha;
     setColor(idx, clr, alpha);
 }

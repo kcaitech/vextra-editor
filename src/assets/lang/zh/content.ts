@@ -4,6 +4,7 @@ export const shape: any = {
     page: "页面",
     line: '直线',
     oval: '圆形',
-    artboard: '容器'
+    artboard: '容器',
+    arrow: '箭头'
 }
 shape[ShapeType.Rectangle] = '矩形';

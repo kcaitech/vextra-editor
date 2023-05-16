@@ -80,12 +80,8 @@ function betaFn(load: Shape[], scout: Scout) {
     const shapes: Shape[] = [];
     for (let i = 0; i < load.length; i++) {
         const item = load[i];
-        const path = item.getPath(true);
-        const m2page = item.matrix2Page();
-        path.transform(m2page);
-        const d = path.toString();
         // console.log('judge');
-        if (scout.isPointInShape(d, { x: 100, y: 100 })) {
+        if (scout.isPointInShape(load[i], { x: 100, y: 100 })) {
             shapes.push(item);
         }
     }

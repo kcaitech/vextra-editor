@@ -29,7 +29,7 @@ function show() {
     popoverVisible.value = true;
     container.value.focus();
     container.value.addEventListener('keyup', esc);
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     nextTick(() => { // popver 挂载之后计算其布局位置
       if (popover.value) {
         const buffer = 10;

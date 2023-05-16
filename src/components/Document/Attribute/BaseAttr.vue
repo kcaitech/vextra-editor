@@ -36,6 +36,7 @@ const showRadian = ref<boolean>(false)
 const showBgFlipH = ref<boolean>()
 const showBgColorV = ref<boolean>()
 const shwoAdapt = ref<boolean>(false)
+const multipleValues = ref<boolean>(false)
 
 function calcFrame() {
     const xy = props.shape.realXY();
@@ -100,6 +101,19 @@ function lockToggle() {
 }
 function radiusToggle() {
     isMoreForRadius.value = !isMoreForRadius.value
+    if(!isMoreForRadius.value) {
+        if(radius.value) {
+            let { rlb, rlt, rrb, rrt } = radius.value
+            if(rlt === rlb && rlt === rrb && rlt === rrt) {
+                multipleValues.value = false
+            }else {
+                multipleValues.value = true
+            }
+        }
+    }else {
+        multipleValues.value = false
+    }
+    
 }
 
 function fliph() {
@@ -213,7 +227,7 @@ onUnmounted(() => {
             <div style="width: 22px;height: 22px;;"></div>
         </div>
         <div class="tr" v-if="showRadius">
-            <IconText class="td frame" svgicon="radius" :text="radius?.rlt || 0" :frame="{ width: 12, height: 12 }"
+            <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.rlt || 0" :frame="{ width: 12, height: 12 }"
                 @onchange="e => onChangeRadian(e, 'rlt')" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rrt || 0" :frame="{ width: 12, height: 12, rotate: 90 }"

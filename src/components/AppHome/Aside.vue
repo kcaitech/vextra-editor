@@ -15,7 +15,8 @@ import { Repository } from '@kcdesign/data/data/transact';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
 import { importSketch } from '@kcdesign/data/io';
 import { Zip } from "@pal/zip";
-import {  } from '@kcdesign/data/editor/creator';
+import { uploadExForm } from "@kcdesign/data/io/export";
+import { newDocument } from '@kcdesign/data/editor/creator';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data/editor';
 const { t } = useI18n();
@@ -41,6 +42,10 @@ function newFile() {
     window.document.title = nd.name;
     (window as any).skrepo = repo;
     (window as any).sketchDocument = nd;
+    const token=localStorage.getItem('token')
+    uploadExForm(nd,'ws://192.168.0.10:10000/api/v1', token, "", (successed:boolean, fid:string, versionId:string) => {
+        console.log(successed, fid, versionId);
+    })
     router.push({ name: 'document' });
 }
 
@@ -62,9 +67,13 @@ const x = localStorage.getItem('index')
                 <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
             </div>
             <div class="new">
-               
-                <button class="newfile" @click="newFile"> <el-icon :size="22"><Plus /></el-icon>{{ t('home.New_file') }}</button>
-                <button class="openfile" @click="picker.invoke()"><el-icon :size="22"><Folder /></el-icon>{{ t('home.open_local_file') }}</button>
+
+                <button class="newfile" @click="newFile"> <el-icon :size="22">
+                        <Plus />
+                    </el-icon>{{ t('home.New_file') }}</button>
+                <button class="openfile" @click="picker.invoke()"><el-icon :size="22">
+                        <Folder />
+                    </el-icon>{{ t('home.open_local_file') }}</button>
             </div>
             <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
                 <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1)">
@@ -177,5 +186,4 @@ a {
             }
         }
     }
-}
-</style>
+}</style>

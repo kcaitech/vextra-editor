@@ -4,7 +4,7 @@ import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
 import { Page } from '@kcdesign/data/data/page';
-import { Selection } from '@/context/selection'
+import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
@@ -175,11 +175,11 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
-const getDocumentInfo = async() => {
+const getDocumentInfo = async () => {
     const data = await share_api.getDocumentInfoAPI({ doc_id: docID })
     docInfo.value = data.data
     //获取文档类型是否为私有文档且有无权限
-    if(docInfo.value.document.doc_type !== 0 && docInfo.value.perm_type == 0) {
+    if (docInfo.value.document.doc_type !== 0 && docInfo.value.perm_type == 0) {
         router.push({
             name: 'apply',
             query: {
@@ -197,8 +197,8 @@ const getDocumentAuthority = async () => {
 //获取文档类型
 getDocumentAuthority()
 //获取文档密钥
-const getDocumentKey = async() => {
-    const {data} = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
+const getDocumentKey = async () => {
+    const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
 }
 
 let timer: any = null
@@ -213,15 +213,14 @@ onMounted(() => {
         timer = setInterval(() => {
             getDocumentAuthority()
         }, 60000)
-        
         return
     }
-    
-    if(!(window as any).sketchDocument && !route.query.id) {
+
+    if (!(window as any).sketchDocument && !route.query.id) {
         router.push('/');
         return;
     }
-    if(route.query.id) {
+    if (route.query.id) {
         getDocumentKey()
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
         if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {

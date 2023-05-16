@@ -13,8 +13,8 @@
     "build:electron": "vue-cli-service electron:build",
     "lint": "vue-cli-service lint",
     "test": "jest",
-    "generate-package-dev": "node generate-package.js dev && npm install",
-    "generate-package-prod": "node generate-package.js prod && npm install"
+    "generate-package-dev": "node generate-package.js dev && npm install --legacy-peer-deps",
+    "generate-package-prod": "node generate-package.js prod && npm install --legacy-peer-deps"
   },
   "dependencies": {
     "@kcdesign/canvaskit-wasm": "^0.1.1",

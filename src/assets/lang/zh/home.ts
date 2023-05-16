@@ -76,6 +76,12 @@ export const home = {
     delete: '删除',
     test: '测试',
     file_star_marking: '文件已被标星，可在标星列表中查看！',
+    rect: '矩形',
+    picture: '图片',
+    comment: '评论',
+    groups: '编组',
+    ungroup: '解组',
+    search_layer: '搜索图层'
 }
 
 export const navi = {
