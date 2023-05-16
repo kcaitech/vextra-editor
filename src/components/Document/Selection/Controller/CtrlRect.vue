@@ -17,7 +17,7 @@ interface Props {
     rotate: number
 }
 const props = defineProps<Props>();
-const { isDblClick, isDrag, isEditing, handlePointAction } = useController(props.context);
+const { isDblClick, isDrag, isEditing } = useController(props.context);
 const workspace = computed(() => props.context.workspace);
 const visible = ref<boolean>(true);
 let controllerStyle: string;
@@ -118,9 +118,9 @@ watchEffect(() => { updater() })
     <div :class="{ 'ctrl-rect': true, 'un-visible': !visible, editing }" @mousedown="mousedown" :style="controllerStyle"
         data-area="controller">
         <CtrlBar v-for="(bar, index) in  bars" :key="index" :context="props.context" :width="bar.width" :height="bar.height"
-            :ctrl-type="bar.type" :rotate="props.rotate" @transform="handlePointAction"></CtrlBar>
+            :ctrl-type="bar.type" :rotate="props.rotate" ></CtrlBar>
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
-            :rotate="props.rotate" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
+            :rotate="props.rotate" :controller-frame="props.controllerFrame"></CtrlPoint>
     </div>
 </template>
 <style lang='scss' scoped>

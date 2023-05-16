@@ -187,7 +187,7 @@ watchEffect(updater)
         :width="tracingWidth" :height="tracingHeight" :viewBox="tracingViewBox"
         @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px)"
         :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.2;">
+        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;">
         </path>
     </svg>
     <!-- 控制 -->

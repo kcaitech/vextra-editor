@@ -15,13 +15,11 @@ import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { Shape } from "@kcdesign/data/data/shape";
 import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
 import { useI18n } from 'vue-i18n';
-import { expandTo, translateTo } from "@kcdesign/data/editor/frame";
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
 import { fourWayWheel, Wheel, forNewShape } from '@/utils/wheel';
-import { AsyncCreator } from "@kcdesign/data/editor/page";
-
+import { AsyncCreator } from '@kcdesign/data/editor/controller';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -116,7 +114,7 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
     const page = props.context.selection.selectedPage;
     const parent = props.context.selection.getClosetArtboard(mousedownOnPageXY);
     if (page && parent && type) {
-        const editor = props.context.editor4Page(page);
+        const editor = props.context.editor.controller();
         let name = t(`shape.${type}`);
         const brothers = parent.childs.filter((item: Shape) => item.type === type)
         const repeats: number = brothers.length;

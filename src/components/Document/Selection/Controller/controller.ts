@@ -7,9 +7,8 @@ import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
 import { forGroupHover, groupPassthrough } from "@/utils/scout";
-import { adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
-import { Action, CtrlElementType, WorkSpace } from "@/context/workspace";
-import { Transfer } from "@kcdesign/data/editor/page";
+import { Action, WorkSpace } from "@/context/workspace";
+import { AsyncTransfer } from "@kcdesign/data/editor/controller";
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -23,7 +22,7 @@ export function useController(context: Context) {
     let wheel: Wheel | undefined = undefined;
     let editing: boolean = false;
     let shapes: Shape[] = [];
-    let transfer: Transfer | undefined = undefined;
+    let asyncTransfer: AsyncTransfer | undefined = undefined;
     function downpoint() {
         return startPosition;
     }
@@ -71,7 +70,10 @@ export function useController(context: Context) {
     function mousedown(e: MouseEvent) {
         const working = !context.workspace.isPageDragging;
         if (working) {
+            console.log('---');
             if (isElement(e)) {
+                console.log('--------');
+
                 matrix.reset(workspace.value.matrix);
                 setPosition(e);
 
@@ -97,7 +99,6 @@ export function useController(context: Context) {
                 workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
                 context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
                 if (!editing) { // 处于编辑状态时，不拖动图形
-                    // transform(shapes, startPosition, mousePosition);
                     transform(startPosition, mousePosition);
                 }
                 if (wheel) {
@@ -108,10 +109,7 @@ export function useController(context: Context) {
                 if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
                     if (!editing) {
                         isDragging = true;
-                        const page = context.selection.selectedPage;
-                        if (page) {
-                            transfer = context.editor4Page(page).transfer(shapes);
-                        }
+                        asyncTransfer = context.editor.controller().asyncTransfer(shapes);
                     }
                 }
             }
@@ -120,7 +118,7 @@ export function useController(context: Context) {
     function mouseup(e: MouseEvent) {
         if (e.button === 0) { // 只处理鼠标左键按下时的抬起
             if (isDragging) {
-                transfer = transfer?.close();
+                asyncTransfer = asyncTransfer?.close();
                 isDragging = false;
                 workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
             } else {
@@ -137,8 +135,8 @@ export function useController(context: Context) {
     function transform(start: ClientXY, end: ClientXY) {
         const ps = matrix.inverseCoord(start.x, start.y);
         const pe = matrix.inverseCoord(end.x, end.y);
-        if (transfer) {
-            transfer.trans(ps, pe);
+        if (asyncTransfer) {
+            asyncTransfer.trans(ps, pe);
         }
     }
     function isContainerChange(shapes: Shape[], start: ClientXY, end: ClientXY): boolean {
@@ -157,13 +155,6 @@ export function useController(context: Context) {
         } else {
             return false;
         }
-    }
-    function shapeMoveNoTransaction(shape: Shape, targetParent: Shape) {
-        const origin: GroupShape = ((shape.parent || context.selection.selectedPage) as GroupShape);
-        origin.removeChild(shape);
-        const { x, y } = shape.frame2Page();
-        targetParent.addChild(shape);
-        translateTo(shape, x, y);
     }
     function pickerFromSelectedShapes() {
         const selected = context.selection.selectedShapes;
@@ -203,59 +194,6 @@ export function useController(context: Context) {
 
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context);
-    }
-
-    function handlePointAction(type: CtrlElementType, p1: ClientXY, p2: ClientXY, deg?: number, aType?: 'rotate' | 'scale') {
-        matrix.reset(workspace.value.matrix);
-        const shapes = context.selection.selectedShapes;
-        for (let i = 0; i < shapes.length; i++) {
-            const item = shapes[i];
-            if (item.isLocked) continue; // 🔒住不让动
-            if (aType === 'rotate') {
-                const newDeg = (item.rotation || 0) + (deg || 0);
-                item.rotate(newDeg);
-            } else {
-                const p1OnPage = matrix.inverseCoord(p1.x, p1.y); // page
-                const p2Onpage = matrix.inverseCoord(p2.x, p2.y);
-                if (type === CtrlElementType.RectLT) {
-                    adjustLT2(item, p2Onpage.x, p2Onpage.y);
-                } else if (type === CtrlElementType.RectRT) {
-                    adjustRT2(item, p2Onpage.x, p2Onpage.y);
-                } else if (type === CtrlElementType.RectRB) {
-                    adjustRB2(item, p2Onpage.x, p2Onpage.y);
-                } else if (type === CtrlElementType.RectLB) {
-                    adjustLB2(item, p2Onpage.x, p2Onpage.y);
-                } else if (type === CtrlElementType.RectTop) {
-                    const m = item.matrix2Page();
-                    const p1 = m.inverseCoord(p1OnPage.x, p1OnPage.y);
-                    const p2 = m.inverseCoord(p2Onpage.x, p2Onpage.y);
-                    const dy = p2.y - p1.y;
-                    const { x, y } = m.computeCoord(0, dy);
-                    adjustLT2(item, x, y);
-                } else if (type === CtrlElementType.RectRight) {
-                    const m = item.matrix2Page();
-                    const p1 = m.inverseCoord(p1OnPage.x, p1OnPage.y);
-                    const p2 = m.inverseCoord(p2Onpage.x, p2Onpage.y);
-                    const dx = p2.x - p1.x;
-                    const { x, y } = m.computeCoord(item.frame.width + dx, 0);
-                    adjustRT2(item, x, y);
-                } else if (type === CtrlElementType.RectBottom) {
-                    const m = item.matrix2Page();
-                    const p1 = m.inverseCoord(p1OnPage.x, p1OnPage.y);
-                    const p2 = m.inverseCoord(p2Onpage.x, p2Onpage.y);
-                    const dy = p2.y - p1.y;
-                    const { x, y } = m.computeCoord(item.frame.width, item.frame.height + dy);
-                    adjustRB2(item, x, y);
-                } else if (type === CtrlElementType.RectLeft) {
-                    const m = item.matrix2Page();
-                    const p1 = m.inverseCoord(p1OnPage.x, p1OnPage.y);
-                    const p2 = m.inverseCoord(p2Onpage.x, p2Onpage.y);
-                    const dx = p2.x - p1.x;
-                    const { x, y } = m.computeCoord(dx, item.frame.height);
-                    adjustLB2(item, x, y);
-                }
-            }
-        }
     }
 
     function workspaceUpdate(t?: number) {
@@ -301,9 +239,8 @@ export function useController(context: Context) {
             workspace.value.translating(false);
             document.removeEventListener('mousemove', mousemove);
             document.removeEventListener('mouseup', mouseup);
+            asyncTransfer = asyncTransfer?.close();
             isDragging = false;
-            // context.repo.commit({});
-            transfer = transfer?.close();
         }
         if (wheel) wheel = wheel.remove(); // 卸载滚轮
         workspace.value.setCtrl('page');
@@ -330,5 +267,5 @@ export function useController(context: Context) {
         timerClear();
     })
 
-    return { isDblClick, handlePointAction, isEditing, isDrag, downpoint, downpoint_pagy }
+    return { isDblClick, isEditing, isDrag, downpoint, downpoint_pagy }
 }

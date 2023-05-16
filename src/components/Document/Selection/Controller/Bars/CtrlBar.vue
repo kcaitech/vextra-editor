@@ -4,7 +4,10 @@ import { defineProps, defineEmits, computed, onMounted, onUnmounted, watchEffect
 import { CtrlElementType } from '@/context/workspace';
 import { XY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { getBarStyle } from '@/utils/rectFn'
+import { getBarStyle } from '@/utils/rectFn';
+import { AsyncBaseAction } from "@kcdesign/data/editor/controller";
+import { Shape } from '@kcdesign/data';
+
 interface Props {
     context: Context,
     ctrlType: CtrlElementType,
@@ -13,9 +16,6 @@ interface Props {
     height: number
 }
 const props = defineProps<Props>();
-const emit = defineEmits<{
-    (e: 'transform', type: CtrlElementType, p1: XY, p2: XY): void
-}>();
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
 const dragActiveDis = 3;
@@ -24,6 +24,7 @@ let startPosition = { x: 0, y: 0 };
 let root = { x: 0, y: 0 };
 let scaling: boolean = false;
 let barStyle: string = '';
+let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 
 function setStatus(s: boolean) {
     scaling = s;
@@ -51,13 +52,18 @@ function onMouseMove(event: MouseEvent) {
     const { clientX, clientY } = event;
     const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
     if (isDragging) {
-        emit('transform', props.ctrlType, startPosition, mouseOnPage);
-        props.context.repo.transactCtx.fireNotify();
+        if (asyncBaseAction) {
+            matrix.reset(workspace.value.matrix);
+            const p1OnPage = matrix.inverseCoord(startPosition.x, startPosition.y); // page
+            const p2Onpage = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
+            asyncBaseAction.execute(props.ctrlType, p1OnPage, p2Onpage)
+        }
         startPosition = { ...mouseOnPage };
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            props.context.repo.start('transform', {});
+            const shapes: Shape[] = props.context.selection.selectedShapes;
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes);
         }
     }
 }
@@ -65,9 +71,11 @@ function onMouseUp(event: MouseEvent) {
     if (event.button === 0) {
         workspace.value.setCtrl('page');
         if (isDragging) {
-            props.context.repo.commit({});
+            if (asyncBaseAction) {
+                asyncBaseAction = asyncBaseAction.close();
+            }
+            isDragging = false;
         }
-        isDragging = false;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         setStatus(false);
@@ -84,6 +92,9 @@ function mousemove() {
 }
 function windowBlur() {
     if (isDragging) {
+        if (asyncBaseAction) {
+            asyncBaseAction = asyncBaseAction.close();
+        }
         setStatus(false);
         props.context.repo.commit({});
         document.removeEventListener('mousemove', onMouseMove);
