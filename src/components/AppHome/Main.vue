@@ -5,10 +5,6 @@ import { useI18n } from 'vue-i18n';
 
 const {t} = useI18n()
 
-document.addEventListener('DOMContentLoaded',function(){
-    console.log('11111')
-
-})
 
 </script>
 

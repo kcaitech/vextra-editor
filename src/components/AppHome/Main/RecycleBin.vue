@@ -1,77 +1,102 @@
 <template>
-    deee
+    <!-- 表格布局 -->
+    <el-table :data="RecycleLists" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
+        <el-table-column prop="document.name" :label="t('home.file_name')" />
+        <el-table-column prop="document.updated_at" :label="t('home.modification_time')" />
+        <el-table-column prop="document.size" :label="t('home.size')" />
+        <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
+            <template #default="scope: any">
+                <el-icon :size=" 20 ">
+                    <el-tooltip content="还原" show-after="1000">
+                        <svg-icon class="svg restore" style="width: 20px; height: 20px;" icon-class="restore"
+                            @click=" Restorefile(scope.$index) "></svg-icon>
+                    </el-tooltip>
+                </el-icon>&nbsp;
+                <el-icon :size=" 20 ">
+                    <el-tooltip content="彻底删除" show-after="1000">
+                        <Delete @click=" Deletefile(scope.$index) " />
+                    </el-tooltip>
+                </el-icon>&nbsp;
+            </template>
+        </el-table-column>
+    </el-table>
 </template>
-
 <script setup lang="ts">
+import * as user_api from '@/apis/users'
+import { Share, Delete } from '@element-plus/icons-vue'
+import { pushScopeId, reactive, ref, onMounted } from 'vue'
+import * as share_api from "@/apis/share"
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
+let RecycleLists = ref<any[]>([]);
+const isLoading = ref(false);
+async function RecycleList() {
+    // loading
+    isLoading.value = true;
+    RecycleLists.value = (await user_api.GetrecycleList()).data;
+    for (let i = 0; i < RecycleLists.value.length; i++) {
+        const updated = RecycleLists.value[i].document.updated_at.slice(0, 19)
+        const size = Math.round(RecycleLists.value[i].document.size / 1024)
+        RecycleLists.value[i].document.size = size + " KB"
+        RecycleLists.value[i].document.updated_at = updated
+        RecycleLists.value[i].starfiled = true
+
+    }
+    isLoading.value = false;
+}
+
+const Restorefile = (index: number) => {
+    console.log(index)
+}
+const Deletefile = (index: number) => {
+    console.log(index)
+}
+
+onMounted(() => {
+    RecycleList();
+
+})
 </script>
 
 <style lang="scss" scoped>
+.el-icon {
+    display: none;
 
-/* .warrp{
-        border: 1px solid red;
-    } */
-    .img{
-        width: 600px;
-        height: 100%;
+    &:hover {
+        color: #6395f9;
     }
-    .flex{
-        display: flex;
+
+    &:active {
+        color: #145ff6;
+
     }
-    .header{
-        background-color: skyblue;
-        padding: 0 20px;
-        box-sizing: border-box;
-        height: 150px;
-        width: 600px;
+
+    &:focus-visible {
+        outline: none;
     }
-    .max{
-        padding:20px;
-        background-color: #fff;
+}
+
+:deep(.el-icon) {
+    &>:focus {
+        outline: none;
     }
-    .item{
-        height: 50px;
-        line-height: 50px;
-        border-bottom:1px dashed black ;
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 20px;
+
+    &>:focus-visible {
+        outline: none;
     }
-    .fu{
-        margin: 0 10px;
-    }
-    .footer{
-        padding: 0 20px;
-        box-sizing: border-box;
-        justify-content: space-between;
-    }
-    .input{
-        width: 80%;
-        height: 40px;
-        border-radius: 8px;
-        border: 1px solid red;
-    }
-    .sele{
-        height: 100%;
-        border:none;
-        width: 70px;
-        line-height: 100%;
-        border-radius: 8px 0 0 8px;
-        outline:none;
-    }
-    .inp{
-        height: 38px;
-        border:none;
-        width: 300px;
-        outline:none;
-        line-height: 100%;
-    }
-    .que{
-        width: 74px;
-        height: 100%;
-        text-align: center;
-        line-height: 40px;
-        border-radius: 0 8px 8px 0;
-        background-color: #ccc;
-    }
+}
+
+.el-table__row:hover .el-icon {
+    display: inline-block;
+}
+
+:deep(.el-table_2_column_7) {
+    text-align: center;
+}
+
+:deep(.el-table__row) {
+    height: 56px;
+    font-weight: 18px;
+}
 </style>
