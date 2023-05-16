@@ -43,7 +43,7 @@ export function useController(context: Context) {
             }
         }
     }
-    const migrate = debounce(_migrate, 60); // 停留60ms之后做环境判断和迁移
+    const migrate = debounce(_migrate, 35); // 停留35ms之后做环境判断和迁移
     function downpoint() {
         return startPosition;
     }
