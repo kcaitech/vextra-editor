@@ -7,7 +7,7 @@ import { ControllerType, ctrlMap } from "./Controller";
 import { CtrlElementType } from "@/context/workspace";
 import { getHorizontalAngle, createRect, createHorizontalBox } from "@/utils/common";
 import { XY } from "@/context/selection";
-import TextSelectVue from "./Text/index.vue"
+import TextSelectVue from "./TextShape/index.vue"
 
 export interface Point {
     x: number,
