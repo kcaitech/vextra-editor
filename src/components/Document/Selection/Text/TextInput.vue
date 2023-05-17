@@ -3,24 +3,24 @@ import { Context } from '@/context';
 import { layoutText, locateCursor } from '@/layout/text';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { TextShape } from '@kcdesign/data/data/shape';
-import { onUnmounted, onUpdated, ref, watch, defineProps, computed, onMounted, onBeforeUpdate } from 'vue';
+import { onUnmounted, ref, watch, defineProps, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
 
 const props = defineProps<{
     shape: TextShape,
     context: Context,
     matrix: number[],
-    // pos: { left: number, top: number }
 }>();
 
 let editor = props.context.editor4Shape(props.shape);
-const stopWatch = watch(() => props.shape, (value, old) => {
+watch(() => props.shape, (value, old) => {
     old.unwatch(updateInputPos);
     value.watch(updateInputPos);
     editor = props.context.editor4Shape(props.shape);
+    updateInputPos();
 })
 
-const stopWatch2 = watch(() => props.matrix, (value, old) => {
+watch(() => props.matrix, () => {
     updateInputPos();
 })
 
@@ -46,9 +46,10 @@ function _updateInputPos() {
     if (!inputel.value) return;
     // inputel.value.hidden = false;
     const selection = props.context.selection;
-    const m2p = props.shape.matrix2Page();
-    matrix.reset(m2p);
-    matrix.multiAtLeft(props.matrix);
+    // const m2p = props.shape.matrix2Page();
+    // matrix.reset(m2p);
+    // matrix.multiAtLeft(props.matrix);
+    matrix.reset(props.matrix);
 
     let cursorAtBefore = selection.cursorAtBefore;
     let index = selection.cursorStart;
@@ -75,32 +76,20 @@ function _updateInputPos() {
     inputpos.value.left = x;
     inputpos.value.top = y;
 
-    // console.log("inputpos", locatepoints, JSON.parse(JSON.stringify(inputpos.value)), cursor, matrix.toString(), m2p.toString(), props.matrix.toString())
-
     inputel.value.focus();
 }
-
-// onUpdated(() => {
-//     if (inputel.value) inputel.value.focus();
-// })
 
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) updateInputPos();
 }
 
-// onBeforeUpdate(() => {
-//     updateInputPos();
-// })
-
 onMounted(() => {
-    updateInputPos();
     props.shape.watch(updateInputPos)
     props.context.selection.watch(selectionWatcher);
+    updateInputPos();
 })
 
 onUnmounted(() => {
-    stopWatch();
-    stopWatch2();
     props.shape.unwatch(updateInputPos)
     props.context.selection.unwatch(selectionWatcher);
 })
@@ -201,8 +190,11 @@ function onKeyPress(e: KeyboardEvent) {
 <style lang='scss' scoped>
 .input {
     z-index: -999;
+    background-color: transparent;
     border: none;
-    fill: transparent;
+    box-shadow: none;
+    outline: none;
+    caret-color: transparent;
     height: 10px;
 }
 </style>
