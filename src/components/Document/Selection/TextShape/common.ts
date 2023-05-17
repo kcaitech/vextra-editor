@@ -15,14 +15,14 @@ export function genRectPath(points: { x: number, y: number }[]): string {
     return path;
 }
 
-export function throttle(func: () => void, delay: number) {
+export function throttle<T extends (...args: any[]) => void> (func: T, delay: number): T {
     let timerId: any = null;
-    return function () {
+    return function (...args: any[]) {
         if (!timerId) {
             timerId = setTimeout(() => {
                 func();
                 timerId = null;
             }, delay);
         }
-    };
+    } as T;
 }

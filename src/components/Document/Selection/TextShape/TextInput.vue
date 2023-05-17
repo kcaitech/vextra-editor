@@ -5,6 +5,8 @@ import { Matrix } from '@kcdesign/data/basic/matrix';
 import { TextShape } from '@kcdesign/data/data/shape';
 import { onUnmounted, ref, watch, defineProps, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
+import { throttle } from './common';
+import { handleKeyEvent } from './keyhandler';
 
 const props = defineProps<{
     shape: TextShape,
@@ -27,18 +29,6 @@ watch(() => props.matrix, () => {
 const inputel = ref<HTMLInputElement>();
 const inputpos = ref({ left: 0, top: 0 })
 const matrix = new Matrix();
-
-function throttle(func: () => void, delay: number) {
-    let timerId: any = null;
-    return function () {
-        if (!timerId) {
-            timerId = setTimeout(() => {
-                func();
-                timerId = null;
-            }, delay);
-        }
-    };
-}
 
 const updateInputPos = throttle(_updateInputPos, 5);
 
@@ -169,15 +159,15 @@ function onfocusout() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    console.log("onKeyDown", inputel.value?.value)
+    console.log(e.key)
+    handleKeyEvent(e, props.context, props.shape, editor);
 }
 
 function onKeyUp(e: KeyboardEvent) {
-    console.log("onKeyUp", inputel.value?.value)
 }
 
 function onKeyPress(e: KeyboardEvent) {
-    console.log("onKeyPress", inputel.value?.value)
+    handleKeyEvent(e, props.context, props.shape, editor);
 }
 
 </script>
