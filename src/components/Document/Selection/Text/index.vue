@@ -5,6 +5,7 @@ import { Matrix } from '@kcdesign/data/basic/matrix';
 import { TextShape } from '@kcdesign/data/data/shape';
 import { layoutText, locateCursor, locateRange } from '@/layout/text';
 import { Context } from '@/context';
+import TextInput from './TextInput.vue';
 
 const props = defineProps<{
     shape: TextShape,
@@ -13,11 +14,11 @@ const props = defineProps<{
     context: Context
 }>();
 
-let editor = props.context.editor4Shape(props.shape);
+// let editor = props.context.editor4Shape(props.shape);
 const stopWatch = watch(() => props.shape, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
-    editor = props.context.editor4Shape(props.shape);
+    // editor = props.context.editor4Shape(props.shape);
 })
 
 const reflush = ref(0);
@@ -124,8 +125,8 @@ function genRectPath(points: { x: number, y: number }[]): string {
     return path;
 }
 
-const inputel = ref<HTMLInputElement>();
-const inputpos = ref({ left: 0, top: 0 })
+// const inputel = ref<HTMLInputElement>();
+// const inputpos = ref({ left: 0, top: 0 })
 
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
@@ -135,7 +136,7 @@ function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
-    if (inputel.value) inputel.value.hidden = true;
+    // if (inputel.value) inputel.value.hidden = true;
 }
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation();
@@ -154,7 +155,7 @@ function onMouseUp(e: MouseEvent) {
     else {
         props.selection.selectText(downIndex.index, locate.index);
     }
-    updateInputPos(locate.before);
+    // updateInputPos(locate.before);
 }
 
 function onMouseMove(e: MouseEvent) {
@@ -172,121 +173,6 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 
-function updateInputPos(cursorAtBefore: boolean) {
-    if (!inputel.value) return;
-    inputel.value.hidden = false;
-
-    const m2p = props.shape.matrix2Page();
-    matrix.reset(m2p);
-    matrix.multiAtLeft(props.matrix);
-
-    // let cursorAtBefore = props.selection.cursorAtBefore;
-    let index = props.selection.cursorStart;
-    const end = props.selection.cursorEnd;
-    if (index === end) {
-        //
-    }
-    else {
-        index = end;
-    }
-
-    const layout = props.shape.getLayout(layoutText);
-    const cursor = locateCursor(layout, index, cursorAtBefore).map((point) => matrix.computeCoord(point.x, point.y));
-
-    if (cursor.length !== 2) return;
-
-    const x = cursor[0].x;
-    let y = cursor[0].y;
-
-    if (cursor[1].y < y) y = cursor[1].y;
-
-    inputpos.value.left = x;
-    inputpos.value.top = y;
-
-    inputel.value.focus();
-}
-
-function committext() {
-    if (!inputel.value) return;
-    const text = inputel.value.value;
-    if (text.length === 0) return;
-
-    if (editor.isInComposingInput()) {
-        if (editor.composingInputEnd(text)) {
-            props.selection.setCursor(composingStartIndex + text.length, true);
-        }
-    }
-    else {
-        let index = props.selection.cursorStart;
-        let end = props.selection.cursorEnd;
-        if (index > end) {
-            let t = index;
-            index = end;
-            end = t;
-        }
-        if (editor.insertText2(text, index, end - index)) {
-            props.selection.setCursor(index + text.length, true);
-        }
-    }
-
-    inputel.value.value = ''
-}
-
-function oninput(e: Event) {
-    const event = e as InputEvent;
-    if (event.isComposing) {
-        if (!inputel.value) return;
-        const text = inputel.value.value;
-        if (editor.composingInputUpdate(text)) {
-            props.selection.setCursor(composingStartIndex + text.length, true);
-        }
-    } else {
-        committext();
-    }
-}
-
-let composingStartIndex = 0;
-function compositionstart(e: Event) {
-    if (!inputel.value) return;
-    let index = props.selection.cursorStart;
-    let end = props.selection.cursorEnd;
-    if (index > end) {
-        let t = index;
-        index = end;
-        end = t;
-    }
-    composingStartIndex = index;
-    editor.composingInputStart(index, end - index)
-}
-
-function compositionend(e: Event) {
-    if (!inputel.value) return;
-    const text = inputel.value.value;
-    if (editor.composingInputEnd(text)) {
-        props.selection.setCursor(composingStartIndex + text.length, true);
-    }
-    inputel.value.value = ''
-}
-
-function compositionupdate(e: Event) {
-}
-
-function onFocueOut() {
-    committext();
-}
-
-function onKeyDown(e: KeyboardEvent) {
-    console.log("onKeyDown", inputel.value?.value)
-}
-
-function onKeyUp(e: KeyboardEvent) {
-    console.log("onKeyUp", inputel.value?.value)
-}
-
-function onKeyPress(e: KeyboardEvent) {
-    console.log("onKeyPress", inputel.value?.value)
-}
-
 </script>
 
 <template>
@@ -300,16 +186,9 @@ function onKeyPress(e: KeyboardEvent) {
         <path v-if="!isCursor" :d="selectPath" fill="blue" fill-opacity="0.5" stroke='none'></path>
         <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
     </svg>
-    <input type="text" class="input" @focusout="onFocueOut" @input="oninput" @compositionstart="compositionstart"
-        @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
-        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }"
-        ref="inputel" />
+    <TextInput :context="props.context" :shape="props.shape" :matrix="props.matrix"></TextInput>
 </template>
 
 <style lang='scss' scoped>
-.input {
-    z-index: -999;
-    border: none;
-    fill: transparent;
-}
+
 </style>
