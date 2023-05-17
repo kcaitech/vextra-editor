@@ -2,8 +2,7 @@
 import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
 import { CtrlElementType } from "@/context/workspace";
-import { XY, ClientXY } from "@/context/selection";
-import { adjustLT2, adjustRB2 } from "@kcdesign/data/editor/frame";
+import { ClientXY } from "@/context/selection";
 import { Point } from "../SelectionView.vue";
 import { createLine, getAxle } from "@/utils/common";
 import CtrlPoint from "./Points/CtrlPointForStraightLine.vue";

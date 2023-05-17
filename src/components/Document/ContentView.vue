@@ -120,7 +120,7 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         const repeats: number = brothers.length;
         name = (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-        const shape = asyncCreator.init((parent as any), type, name, frame);
+        const shape = asyncCreator.init(page, (parent as any), type, name, frame);
         props.context.selection.selectShape(shape);
         if (shape) {
             return shape;
@@ -266,7 +266,9 @@ function insertFrame() {
     const shapeFrame = new ShapeFrame(x, y, width, height);
     const artboard = initShape(shapeFrame);
     // 新增容器之后使容器在可视区域
-    if (artboard) nextTick(() => { scrollToContentView(artboard, props.context.selection, props.context.workspace) });
+    if (artboard) {
+        nextTick(() => { scrollToContentView(artboard, props.context.selection, props.context.workspace) });
+    }
     workspace.value.setAction(Action.AutoV);
 }
 

@@ -158,7 +158,7 @@ function createShapeTracing() { // 描边
     }
 }
 function pathMousedown(e: MouseEvent) {
-    if (props.context.workspace.action === Action.AutoV) {
+    if (props.context.workspace.action == Action.AutoV) {
         if (e.button == 0) {
             e.stopPropagation();
             props.context.workspace.preToTranslating(e);

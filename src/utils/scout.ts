@@ -117,7 +117,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     return shape;
 }
 
-function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, init?: Shape[]): Shape[] {
+function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, selected: Shape, init?: Shape[]): Shape[] {
     // force：找到点上的所有图形，否则找到一个就不再寻找
     // O(n + dk)
     const result = init || [];
@@ -130,14 +130,14 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, init
                 const c = item.childs as Shape[];
                 if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
                     if (c.length) {
-                        result.push(...finder(scout, c, position, false, result));
+                        result.push(...finder(scout, c, position, false, selected, result));
                         if (!force && result.length) return result;
                     } else {
                         result.push(item);
                         if (!force && result.length) return result;
                     }
                 } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
-                    const g = forGroupHover(scout, item.childs, position);
+                    const g = forGroupHover(scout, item.childs, position, selected);
                     if (g) {
                         result.push(g);
                         if (!force) return result;
@@ -156,7 +156,7 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, init
 
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
 // 注：子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上
-function forGroupHover(scout: Scout, g: Shape[], position: PageXY): Shape | undefined {
+function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape): Shape | undefined {
     let result: Shape | undefined;
     for (let j = 0; j < g.length; j++) {
         if (g[j].isVisible) {
@@ -164,10 +164,21 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY): Shape | unde
             if (childIsTarget) {
                 if (g[j].type === ShapeType.Group) {
                     const c: Shape[] = (g[j] as GroupShape).childs;
-                    return forGroupHover(scout, c, position);
+                    return forGroupHover(scout, c, position, selected);
                 } else {
-                    let target = g[j].parent; // c[j]必定会存在至少一个parent是Group
+                    let target = g[j]; // c[j]必定会存在至少一个parent是Group
                     while (target?.parent && target?.parent?.type === ShapeType.Group) {
+                        const c = (target.parent as GroupShape).childs;
+                        if (selected) {
+                            let isBroSelected: boolean = false;
+                            for (let i = 0; i < c.length; i++) {
+                                const item = c[i];
+                                if (item.id == selected.id) {
+                                    isBroSelected = true;
+                                }
+                            }
+                            if (isBroSelected) break;
+                        }
                         target = target.parent;
                     }
                     result = target!;
@@ -178,7 +189,10 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY): Shape | unde
     }
     return result;
 }
-
+function isPartSelect(shape: Shape): boolean {
+    
+    return false;
+}
 function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Shape): Shape | undefined {
     let result: Shape | undefined = undefined;
     for (let i = g.length - 1; i > -1; i--) {

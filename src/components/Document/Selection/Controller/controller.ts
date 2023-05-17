@@ -24,7 +24,7 @@ export function useController(context: Context) {
     let editing: boolean = false;
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
-    function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断并迁移
+    function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
             const ps = matrix.inverseCoord(start.x, start.y);
             const pe = matrix.inverseCoord(end.x, end.y);
@@ -43,7 +43,7 @@ export function useController(context: Context) {
             }
         }
     }
-    const migrate = debounce(_migrate, 35); // 停留35ms之后做环境判断和迁移
+    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 35); // 停留35ms之后做环境判断和迁移
     function downpoint() {
         return startPosition;
     }
@@ -71,7 +71,6 @@ export function useController(context: Context) {
             }
         }
     }
-
     function handleDblClick() {
         const selected = context.selection.selectedShapes;
         if (selected.length === 1) {
@@ -97,17 +96,17 @@ export function useController(context: Context) {
                 if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
                     handleDblClick();
                 }
-
                 initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
                 preTodo(e);
             } else {
-                if (!context.selection.hoveredShape) {
-                    context.selection.selectShape();
+                if ((e.target as Element)?.closest(`#content`)) {
+                    if (!context.selection.hoveredShape) {
+                        context.selection.selectShape();
+                    }
                 }
             }
         }
     }
-
     function mousemove(e: MouseEvent) {
         if (e.buttons == 1) { //只处理鼠标左键按下时的移动
             const { clientX, clientY } = e;
@@ -138,8 +137,6 @@ export function useController(context: Context) {
                 if (asyncTransfer) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
-                    // matrix.reset(workspace.value.matrix);
-                    // const end: PageXY = matrix.inverseCoord(mousePosition);
                     _migrate(shapes, startPosition, mousePosition);
                     asyncTransfer.close();
                 }
@@ -149,13 +146,11 @@ export function useController(context: Context) {
                 pickerFromSelectedShapes();
             }
             if (wheel) wheel = wheel.remove(); // 卸载滚轮
-            if (workspace.value.isPreToTranslating) workspace.value.preToTranslating(); // 取消移动准备
             document.removeEventListener('mousemove', mousemove);
             document.removeEventListener('mouseup', mouseup);
         }
         workspace.value.setCtrl('page');
     }
-
     function transform(start: ClientXY, end: ClientXY) {
         const ps = matrix.inverseCoord(start.x, start.y);
         const pe = matrix.inverseCoord(end.x, end.y);
@@ -164,7 +159,6 @@ export function useController(context: Context) {
             migrate(shapes, ps, pe);
         }
     }
-
     function pickerFromSelectedShapes() {
         const selected = context.selection.selectedShapes;
         if (selected.length > 1) {
@@ -172,7 +166,7 @@ export function useController(context: Context) {
             context.selection.selectShape(target);
         } else if (selected.length === 1) {
             if (selected[0].type === ShapeType.Group) {
-                const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage);
+                const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage, selected[0]);
                 if (!isHasTarget) context.selection.selectShape();
             } else {
                 const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, selected)[0];
@@ -190,9 +184,9 @@ export function useController(context: Context) {
             const start = workspace.value.startPoint;
             setPosition(start!);
             preTodo(start!);
+            workspace.value.preToTranslating(false);
         }
     }
-
     function setPosition(e: MouseEvent) {
         const { clientX, clientY } = e;
         matrix.reset(workspace.value.matrix);
@@ -200,11 +194,9 @@ export function useController(context: Context) {
         startPosition = { x: clientX - root.x, y: clientY - root.y };
         startPositionOnPage = matrix.inverseCoord(startPosition.x, startPosition.y);
     }
-
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context);
     }
-
     function workspaceUpdate(t?: number) {
         if (t === WorkSpace.CHECKSTATUS) {
             checkStatus();
@@ -226,7 +218,6 @@ export function useController(context: Context) {
             timer = null;
         }
     }
-
     function isDblClick() {
         return timer;
     }
@@ -253,10 +244,8 @@ export function useController(context: Context) {
         }
         if (wheel) wheel = wheel.remove(); // 卸载滚轮
         workspace.value.setCtrl('page');
-        if (workspace.value.isPreToTranslating) workspace.value.preToTranslating();  // 取消移动准备
         timerClear();
     }
-
     onMounted(() => {
         context.workspace.watch(workspaceUpdate);
         context.selection.watch(updater);
@@ -266,7 +255,6 @@ export function useController(context: Context) {
         checkStatus();
         initController();
     })
-
     onUnmounted(() => {
         context.workspace.unwatch(workspaceUpdate);
         context.selection.unwatch(updater);
@@ -275,6 +263,5 @@ export function useController(context: Context) {
         document.removeEventListener('mousedown', mousedown);
         timerClear();
     })
-
     return { isDblClick, isEditing, isDrag, downpoint, downpoint_pagy }
 }

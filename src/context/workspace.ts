@@ -158,7 +158,7 @@ export class WorkSpace extends Watchable(Object) {
     setCtrl(v: 'page' | 'controller') {
         this.m_controller = v;
     }
-    preToTranslating(from?: MouseEvent) {
+    preToTranslating(from: MouseEvent | false) {
         if (from) {
             this.m_pre_to_translating = true;
             this.m_mousedown_on_page = from;

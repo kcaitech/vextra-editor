@@ -64,7 +64,7 @@ function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
     workspace.value.setCtrl('controller');
     const ct = getCtrlElementType(event);
-    if (ct) {
+    if (ct) {      
       event.stopPropagation();
       if (!pointContainer.value) return;
       const { clientX, clientY } = event;
