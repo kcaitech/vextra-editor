@@ -4,9 +4,10 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./Controller";
-import TextSelectVue from "./Text/index.vue"
-import { Action, CtrlElementType } from "@/context/workspace";
+import { CtrlElementType, Action } from "@/context/workspace";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
+import TextSelectVue from "./TextShape/index.vue"
+
 export interface Point {
     x: number,
     y: number,
@@ -197,5 +198,5 @@ watchEffect(updater)
     </component>
 
     <TextSelectVue v-if="context.selection.isSelectText" :shape="(context.selection.selectedShapes[0] as TextShape)"
-        :selection="context.selection" :matrix="props.matrix"></TextSelectVue>
+        :matrix="props.matrix" :context="props.context"></TextSelectVue>
 </template>

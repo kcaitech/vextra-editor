@@ -54,6 +54,7 @@ export function useController(context: Context) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
             initController();
             editing = false;
+            context.workspace.contentEdit(false);
         }
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
@@ -88,7 +89,10 @@ export function useController(context: Context) {
         }
     }
     function mousedown(e: MouseEvent) {
-        const working = !context.workspace.isPageDragging;
+        if (context.workspace.isEditing) {
+            context.selection.selectShape(context.selection.hoveredShape);
+        }
+        const working = !context.workspace.isPageDragging && !context.workspace.isEditing;
         if (working) {
             if (isElement(e)) {
                 matrix.reset(workspace.value.matrix);
@@ -218,8 +222,8 @@ export function useController(context: Context) {
             timer = null;
         }
     }
-    function isDblClick() {
-        return timer;
+    function isDblClick(): boolean {
+        return timer ? true : false;
     }
     function isEditing() {
         return editing;
@@ -254,6 +258,7 @@ export function useController(context: Context) {
         document.addEventListener('mousedown', mousedown);
         checkStatus();
         initController();
+        context.workspace.contentEdit(false);
     })
     onUnmounted(() => {
         context.workspace.unwatch(workspaceUpdate);

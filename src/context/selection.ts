@@ -86,7 +86,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_cursorEnd;
     }
     get isSelectText() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape && this.m_cursorStart >= 0;
+        return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape;
     }
 
     selectPage(p: Page | undefined) {

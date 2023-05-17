@@ -81,6 +81,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_selecting: boolean = false; // 编辑器是否正在选择图形
     private m_setting: boolean = false; // 是否正在设置属性
     private m_page_dragging: boolean = false; // 编辑器正在拖动页面
+    private m_content_editing: boolean = false; // 编辑器正在内容编辑
     private m_menu_mount: boolean = false;
     private m_popover: boolean = false;
     private m_rootId: string = 'content';
@@ -151,6 +152,12 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isPageDragging() {
         return this.m_page_dragging;
+    }
+    get isEditing() {
+        return this.m_content_editing;
+    }
+    contentEdit(v: boolean) {
+        this.m_content_editing = v;
     }
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
