@@ -280,7 +280,15 @@ function search(e: MouseEvent) { // 检索图形
     const shapes = props.context.selection.getShapesByXY_beta(xy, false); // xy: PageXY
     const hoveredShape = shapes[0]; // 确保shapes的长度等于0或者1，如果大于1说明在找到的情况下还继续遍历了
     if (hoveredShape) {
-        props.context.selection.hoverShape(hoveredShape);
+        const selected = props.context.selection.selectedShapes;
+        if (selected.length) {
+            const isSelected = selected.find((s: Shape) => s.id == hoveredShape.id);
+            if (!isSelected) {
+                props.context.selection.hoverShape(hoveredShape);
+            }
+        } else {
+            props.context.selection.hoverShape(hoveredShape);
+        }
     } else {
         props.context.selection.unHoverShape();
     }
