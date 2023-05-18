@@ -57,11 +57,12 @@ export function GetfavoritesList(params = {}, ops = {}) {
 }
 
 //设置收藏列表
-export function SetfavoriteStatus(params = {}, ops = {}) {
+// get delete用params put post用data
+export function SetfavoriteStatus(data = {}, ops = {}) {
     return httpRequest({
-        url: 'documents/favorite',
+        url: 'documents/favorites',
         method: 'put',
-        params:params,
+        data:data,
         ...ops
     })
 }
@@ -77,11 +78,11 @@ export function GetrecycleList(params = {}, ops = {}) {
 }
 
 //恢复文件
-export function RecoverFile(params = {}, ops = {}) {
+export function RecoverFile(data = {}, ops = {}) {
     return httpRequest({
         url: 'documents/recycle_bin',
         method: 'put',
-        params:params,
+        data:data,
         ...ops
     })
 }
@@ -91,6 +92,36 @@ export function DeleteFile(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/recycle_bin',
         method: 'delete',
+        params:params,
+        ...ops
+    })
+}
+
+//退出共享
+export function ExitSharing(params = {}, ops = {}) {
+    return httpRequest({
+        url: 'documents/share',
+        method: 'delete',
+        params:params,
+        ...ops
+    })
+}
+
+//移动文件到回收站
+export function MoveFile(params = {}, ops = {}) {
+    return httpRequest({
+        url: 'documents',
+        method: 'delete',
+        params:params,
+        ...ops
+    })
+}
+
+//收到的共享文件列表
+export function ShareLists(params = {}, ops = {}) {
+    return httpRequest({
+        url: 'documents/shares',
+        method: 'get',
         params:params,
         ...ops
     })

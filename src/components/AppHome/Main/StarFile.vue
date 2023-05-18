@@ -1,12 +1,12 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="documentsList" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
+    <el-table :data="Getfavorites || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
-        <el-table-column prop="document.updated_at" :label="t('home.modification_time')" />
+        <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">
-                <el-icon :size=" 20 " v-if=" !documentsList[scope.$index].starfiled ">
+                <el-icon :size=" 20 " v-if=" Getfavorites[scope.$index].document_favorites.is_favorite == false ">
                     <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
                         @click=" Starfile(scope.$index) "></svg-icon>
                 </el-icon>&nbsp;
@@ -24,48 +24,60 @@
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { Share, Remove } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { pushScopeId, reactive, ref, onMounted } from 'vue'
 import * as share_api from "@/apis/share"
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
-let documentsList = ref<any[]>([]);
+let Getfavorites = ref<any[]>([]);
 const isLoading = ref(false);
+
 async function getUserdata() {
     // loading
-    isLoading.value = true;
-    documentsList.value = (await user_api.GetfavoritesList()).data;
-    for (let i = 0; i < documentsList.value.length; i++) {
-        const updated = documentsList.value[i].document.updated_at.slice(0, 19)
-        const size = sizeTostr(documentsList.value[i].document.size)
-        documentsList.value[i].document.size = size
-        documentsList.value[i].document.updated_at = updated
+    isLoading.value = true
+    const { data } = await user_api.GetfavoritesList()
+    if (data == null) {
+        ElMessage.error("文档列表获取失败")
+    } else {
+        for (let i = 0; i < data.length; i++) {
+            let { document: { size }, document_access_record: { last_access_time } } = data[i]
+            data[i].document.size = sizeTostr(size)
+            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+        }
     }
+    Getfavorites.value = data
+    // unloading  
     isLoading.value = false;
 }
 
 function sizeTostr(size: any) {
     if ((size / 1024 / 1024 / 1024) > 1) {
-        size = Math.round((size / 1024 / 1024 / 1024) * 100) / 100 + "GB"
+        size = (size / 1024 / 1024 / 1024).toFixed(2) + "GB"
     } else if ((size / 1024 / 1024) > 1) {
-        size = Math.round((size / 1024 / 1024) * 100) / 100 + "MB"
+        size = (size / 1024 / 1024).toFixed(2) + "MB"
     } else if ((size / 1024) > 1) {
-        size = Math.round((size / 1024) * 100) / 100 + "KB"
+        size = (size / 1024).toFixed(2) + "KB"
     } else {
         size = Math.round(size * 100) / 100 + "B"
     }
     return size
 }
 
-const Starfile = (index: number) => {
-    documentsList.value[index].starfiled = documentsList.value[index].starfiled === true ? false : true
-    const favorite_id: string = documentsList.value[index].document.id
-    if (documentsList.value[index].starfiled ==true) {
-        const status = 1
-        user_api.DeleteList({ favorite_id, status })
+const Starfile = async (index: number) => {
+    Getfavorites.value[index].document_favorites.is_favorite = Getfavorites.value[index].document_favorites.is_favorite === true ? false : true
+    const doc_id = Getfavorites.value[index].document.id
+    if (Getfavorites.value[index].document_favorites.is_favorite == true) {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
+        if (code === 0) {
+            ElMessage.success("已取消星标文档")
+        }
     } else {
-        const status = 0
-        user_api.DeleteList({ favorite_id, status })
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
+        if (code === 0) {
+            ElMessage.success("已取消星标文档")
+            getUserdata()
+        }
     }
 
 }

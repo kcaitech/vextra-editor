@@ -20,6 +20,7 @@ import { newDocument } from '@kcdesign/data/editor/creator';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data/editor';
 const { t } = useI18n();
+const token:any = localStorage.getItem('token')
 
 const picker = new FilePicker((file) => {
     if (!file) return;
@@ -29,9 +30,13 @@ const picker = new FilePicker((file) => {
         window.document.title = document.name;
         (window as any).skrepo = repo;
         (window as any).sketchDocument = document;
+        uploadExForm(document, 'ws://192.168.0.10:10000/api/v1', token, "", (successed, doc_id) => {
+        console.log(successed, doc_id);
+    })
         router.push({ name: 'document' });
     })
 });
+
 
 function newFile() {
     const repo = new Repository();
@@ -42,9 +47,8 @@ function newFile() {
     window.document.title = nd.name;
     (window as any).skrepo = repo;
     (window as any).sketchDocument = nd;
-    const token=localStorage.getItem('token')
-    uploadExForm(nd,'ws://192.168.0.10:10000/api/v1', token, "", (successed:boolean, fid:string, versionId:string) => {
-        console.log(successed, fid, versionId);
+    uploadExForm(nd, 'ws://192.168.0.10:10000/api/v1', token, "", (successed, doc_id) => {
+        console.log(successed, doc_id);
     })
     router.push({ name: 'document' });
 }
@@ -186,4 +190,5 @@ a {
             }
         }
     }
-}</style>
+}
+</style>

@@ -1,16 +1,17 @@
 
 <template>
     <!-- 表格布局 -->
-    <el-table :data=" Myfilelist " height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容" >
-        <el-table-column prop="document.name" :label=" t('home.file_name') " />
-        <el-table-column prop="document.updated_at" :label=" t('home.modification_time') " />
-        <el-table-column prop="document.size" :label=" t('home.size') " />
-        <el-table-column class="operation" :label=" t('home.operation') " type="index" width="180"
+    <el-table :data="getDoucmentList || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
+        <el-table-column prop="document.name" :label="t('home.file_name')" />
+        <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
+        <el-table-column prop="document.size" :label="t('home.size')" />
+        <el-table-column class="operation" :label="t('home.operation')" type="index" width="180"
             style="text-align: center;">
             <template #default=" scope: any ">
-                <el-icon :size=" 20 " v-if=" !Myfilelist[scope.$index].starfiled ">
+                <el-icon :size=" 20 " v-if=" !getDoucmentList[scope.$index].document_favorites.is_favorite ">
                     <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
-                        @click=" Starfile(scope.$index) ">{{ Myfilelist[scope.$index].starfiled }}</svg-icon>
+                        @click=" Starfile(scope.$index) ">{{ getDoucmentList[scope.$index].document_favorites.is_favorite
+                        }}</svg-icon>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 " v-else>
                     <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
@@ -19,6 +20,11 @@
                 <el-icon :size=" 20 ">
                     <Share @click=" Sharefile(scope.$index) " />
                 </el-icon>&nbsp;
+                <el-icon :size=" 20 ">
+                    <el-tooltip content="删除" show-after="1000">
+                        <Delete @click=" Deletefile(scope.$index) " />
+                    </el-tooltip>
+                </el-icon>&nbsp;
             </template>
         </el-table-column>
     </el-table>
@@ -26,37 +32,64 @@
 
 <script setup lang="ts">
 import * as share_api from "@/apis/share"
-import { Share } from '@element-plus/icons-vue'
+import * as user_api from '@/apis/users'
+import { Share, Delete } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { onMounted, ref } from "vue"
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const isLoading = ref(false)
-let Myfilelist = ref<any[]>([])
+let getDoucmentList = ref<any[]>([])
 
 isLoading.value = true;
 
-async function GetMyfilelist() {
-    Myfilelist.value = (await share_api.getDoucmentListAPI()).data;
-
-
-    for (let i = 0; i < Myfilelist.value.length; i++) {
-        const updated = Myfilelist.value[i].document.updated_at.slice(0, 19)
-        const size = Math.round(Myfilelist.value[i].document.size / 1024)
-        Myfilelist.value[i].document.size = size + " KB"
-        Myfilelist.value[i].document.updated_at = updated
-        Myfilelist.value[i].starfiled = true
-
-
+async function getDoucment() {
+    // loading
+    isLoading.value = true
+    const { data } = await share_api.getDoucmentListAPI()
+    if (data == null) {
+        ElMessage.error("文档列表获取失败")
+    } else {
+        for (let i = 0; i < data.length; i++) {
+            let { document: { size }, document_access_record: { last_access_time } } = data[i]
+            data[i].document.size = sizeTostr(size)
+            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+        }
     }
+    getDoucmentList.value = data
+    // unloading  
     isLoading.value = false;
-
 }
 
-const Starfile = (index: number) => {
-    Myfilelist.value[index].starfiled = Myfilelist.value[index].starfiled === true ? false : true
-    console.log(Myfilelist.value[index].starfiled);
+function sizeTostr(size: any) {
+    if ((size / 1024 / 1024 / 1024) > 1) {
+        size = (size / 1024 / 1024 / 1024).toFixed(2) + "GB"
+    } else if ((size / 1024 / 1024) > 1) {
+        size = (size / 1024 / 1024).toFixed(2) + "MB"
+    } else if ((size / 1024) > 1) {
+        size = (size / 1024).toFixed(2) + "KB"
+    } else {
+        size = Math.round(size * 100) / 100 + "B"
+    }
+    return size
+}
 
+
+const Starfile = async (index: number) => {
+    getDoucmentList.value[index].document_favorites.is_favorite = getDoucmentList.value[index].document_favorites.is_favorite === true ? false : true
+    const doc_id = getDoucmentList.value[index].document.id
+    if (getDoucmentList.value[index].document_favorites.is_favorite == true) {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
+        if (code === 0) {
+            ElMessage.success("已取消星标文档")
+        }
+    } else {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
+        if (code === 0) {
+            ElMessage.success("已取消星标文档")
+        }
+    }
 
 }
 
@@ -64,9 +97,20 @@ const Sharefile = (index: number) => {
     console.log(index)
 }
 
+const Deletefile = async (index: number) => {
+    const {document:{id}} = getDoucmentList.value[index]
+    const { code } = await user_api.MoveFile({ doc_id: id })
+    if (code === 0) {
+        ElMessage.success('文件已移至回收站')
+        getDoucment()
+    } else {
+        ElMessage.error('移除失败')
+    }
+}
+
 
 onMounted(() => {
-    GetMyfilelist()
+    getDoucment()
 })
 
 

@@ -1,6 +1,6 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="RecycleLists" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
+    <el-table :data="GetrecycleList || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document.updated_at" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -24,37 +24,74 @@
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { Share, Delete } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { pushScopeId, reactive, ref, onMounted } from 'vue'
 import * as share_api from "@/apis/share"
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
-let RecycleLists = ref<any[]>([]);
+let GetrecycleList = ref<any[]>([]);
 const isLoading = ref(false);
-async function RecycleList() {
-    // loading
-    isLoading.value = true;
-    RecycleLists.value = (await user_api.GetrecycleList()).data;
-    for (let i = 0; i < RecycleLists.value.length; i++) {
-        const updated = RecycleLists.value[i].document.updated_at.slice(0, 19)
-        const size = Math.round(RecycleLists.value[i].document.size / 1024)
-        RecycleLists.value[i].document.size = size + " KB"
-        RecycleLists.value[i].document.updated_at = updated
-        RecycleLists.value[i].starfiled = true
 
+//获取回收站文件列表
+async function GetrecycleLists() {
+    // loading
+    isLoading.value = true
+    const { data } = await user_api.GetrecycleList()
+    if (data == null) {
+        ElMessage.error("文档列表获取失败")
+    } else {
+        for (let i = 0; i < data.length; i++) {
+            let { document: { size }, document_access_record: { last_access_time } } = data[i]
+            data[i].document.size = sizeTostr(size)
+            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+        }
     }
+    GetrecycleList.value = data
+    // unloading  
     isLoading.value = false;
 }
 
-const Restorefile = (index: number) => {
-    console.log(index)
+//转换文件大小
+function sizeTostr(size: any) {
+    if ((size / 1024 / 1024 / 1024) > 1) {
+        size = Math.round((size / 1024 / 1024 / 1024) * 100) / 100 + "GB"
+    } else if ((size / 1024 / 1024) > 1) {
+        size = Math.round((size / 1024 / 1024) * 100) / 100 + "MB"
+    } else if ((size / 1024) > 1) {
+        size = Math.round((size / 1024) * 100) / 100 + "KB"
+    } else {
+        size = Math.round(size * 100) / 100 + "B"
+    }
+    return size
 }
-const Deletefile = (index: number) => {
-    console.log(index)
+
+//还原对应文件
+const Restorefile = async (index: number) => {
+    const { document: { id } } = GetrecycleList.value[index]
+
+    const { code } = await user_api.RecoverFile({ doc_id: id })
+    if (code === 0) {
+        ElMessage.success('还原成功')
+        GetrecycleLists()
+    } else {
+        ElMessage.error('还原失败')
+    }
+}
+
+const Deletefile = async (index: number) => {
+    const { document: { id } } = GetrecycleList.value[index]
+    const { code } = await user_api.DeleteFile({ doc_id: id })
+    if (code === 0) {
+        ElMessage.success('删除成功')
+        GetrecycleLists()
+    } else {
+        ElMessage.error('删除失败')
+    }
 }
 
 onMounted(() => {
-    RecycleList();
+    GetrecycleLists()
 
 })
 </script>
