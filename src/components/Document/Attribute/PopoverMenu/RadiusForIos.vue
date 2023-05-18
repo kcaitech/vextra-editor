@@ -61,7 +61,7 @@ function updateProgress(x: number) {
   <div class="radius-for-ios-container">
     <Popover
       :context="props.context"
-      :left="-516"
+      :left="-472"
       :width="240"
       :height="100"
       ref="popover"
@@ -92,8 +92,8 @@ function updateProgress(x: number) {
 <style scoped lang="scss">
 .radius-for-ios-container {
   .popover {
-    width: 32px;
-    height: 32px;
+    width: 22px;
+    height: 22px;
     .trigger {
       width: 100%;
       height: 100%;
@@ -101,8 +101,8 @@ function updateProgress(x: number) {
       justify-content: center;
       align-items: center;
       svg {
-        width: 40%;
-        height: 40%;
+        width: 50%;
+        height: 50%;
         transition: 0.5s;
       }
       svg:hover {
@@ -134,11 +134,13 @@ function updateProgress(x: number) {
     .progress-button {
       position: absolute;
       left: 0%;
-      top: -2px;
-      width: 10px;
-      height: 10px;
-      border-radius: 5px;
+      top: -3px;
+      width: 12px;
+      height: 12px;
+      border-radius: 6px;
+      border: 2px solid var(--grey-light);
       background-color: #fff;
+      box-sizing: border-box;
       cursor: pointer;
       z-index: 1;
     }

@@ -1,11 +1,13 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { ref, defineProps, defineEmits, computed, onMounted, onUnmounted } from 'vue';
+import { ref, defineProps, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
-import { XY } from '@/context/selection';
+import { XY, ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
 import { Point } from '../../SelectionView.vue';
+import { AsyncBaseAction } from "@kcdesign/data/editor/controller";
+import { Shape } from '@kcdesign/data';
 interface Props {
   context: Context,
   axle: XY,
@@ -13,9 +15,6 @@ interface Props {
   rotate: number
 }
 const props = defineProps<Props>();
-const emit = defineEmits<{
-  (e: 'transform', type: CtrlElementType, p1: XY, p2: XY, deg: number, aType: 'rotate' | 'scale'): void
-}>();
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
 const dragActiveDis = 3;
@@ -26,6 +25,7 @@ let root = { x: 0, y: 0 };
 let scaling: boolean = false;
 let rotating: boolean = false;
 let clt: CtrlElementType;
+let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 const rotatePositon = computed(() => {
   const map = new Map([
     [CtrlElementType.RectLT, 'lt'],
@@ -66,6 +66,7 @@ function onMouseDown(event: MouseEvent) {
     const ct = getCtrlElementType(event);
     if (ct) {
       event.stopPropagation();
+      workspace.value.setCtrl('controller');
       if (!pointContainer.value) return;
       const { clientX, clientY } = event;
       setStatus(ct);
@@ -80,7 +81,7 @@ function onMouseDown(event: MouseEvent) {
 }
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
-  const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
+  const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
   let aType: 'rotate' | 'scale' = 'scale';
   if (isDragging) {
     let deg = 0;
@@ -92,25 +93,33 @@ function onMouseMove(event: MouseEvent) {
       workspace.value.setCursor(clt, props.rotate);
       aType = 'rotate';
     }
-    emit('transform', props.point.type, startPosition, mouseOnPage, deg, aType);
-    props.context.repo.transactCtx.fireNotify();
+    if (asyncBaseAction) {
+      matrix.reset(workspace.value.matrix);
+      const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y); // page
+      const p2Onpage: PageXY = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
+      asyncBaseAction.execute(props.point.type, p1OnPage, p2Onpage, deg, aType);
+    }
     startPosition = { ...mouseOnPage };
   } else {
     if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
       isDragging = true;
-      props.context.repo.start('transform', {});
+      const shapes: Shape[] = props.context.selection.selectedShapes;
+      asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes);
     }
   }
 }
 function onMouseUp(event: MouseEvent) {
   if (event.button === 0) {
     if (isDragging) {
-      props.context.repo.commit({});
+      if (asyncBaseAction) {
+        asyncBaseAction = asyncBaseAction.close();
+      }
+      isDragging = false;
     }
-    isDragging = false;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
     setStatus();
+    workspace.value.setCtrl('page');
     workspace.value.resetCursor();
   }
 }
@@ -126,7 +135,9 @@ function mousemove(event: MouseEvent) {
 function windowBlur() {
   if (isDragging) {
     setStatus();
-    props.context.repo.commit({});
+    if (asyncBaseAction) {
+      asyncBaseAction = asyncBaseAction.close();
+    }
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
     workspace.value.resetCursor();

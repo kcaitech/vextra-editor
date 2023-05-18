@@ -21,7 +21,7 @@ onUnmounted(() => {
     stopWatch();
 })
 const render = () => {
-    return r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined)
+    return r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined);
 }
 
 </script>

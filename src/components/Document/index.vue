@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref, watch } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
 import { Page } from '@kcdesign/data/data/page';
-import { Selection } from '@/context/selection'
+import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';
@@ -15,7 +15,9 @@ import { Document } from '@kcdesign/data/data/document';
 import { Repository } from '@kcdesign/data/data/transact';
 import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
-import { router } from '@/router'
+import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
@@ -25,13 +27,13 @@ const middleWidth = ref<number>(0.8)
 const middleMinWidth = ref<number>(0.3)
 const route = useRoute()
 const Right = ref({
-    rightMin: 336,
+    rightMin: 250,
     rightMinWidth: 0.1,
     rightWidth: 0.1
 })
 
 const Left = ref({
-    leftMin: 336,
+    leftMin: 250,
     leftWidth: 0.1,
     leftMinWidth: 0.1
 })
@@ -127,14 +129,13 @@ const showHiddenRight = () => {
         middleWidth.value = middleWidth.value + 0.1
         showRight.value = false
     } else {
-        Right.value.rightMin = 336
+        Right.value.rightMin = 250
         Right.value.rightWidth = 0.1
         Right.value.rightMinWidth = 0.1
         middleWidth.value = middleWidth.value - 0.1
         showRight.value = true
     }
 }
-
 
 const showHiddenLeft = () => {
     if (showLeft.value) {
@@ -144,7 +145,7 @@ const showHiddenLeft = () => {
         middleWidth.value = middleWidth.value + 0.1
         showLeft.value = false
     } else {
-        Left.value.leftMin = 336
+        Left.value.leftMin = 250
         Left.value.leftWidth = 0.1
         Left.value.leftMinWidth = 0.1
         middleWidth.value = middleWidth.value - 0.1
@@ -174,11 +175,11 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
-const getDocumentInfo = async() => {
+const getDocumentInfo = async () => {
     const data = await share_api.getDocumentInfoAPI({ doc_id: docID })
     docInfo.value = data.data
     //获取文档类型是否为私有文档且有无权限
-    if(docInfo.value.document.doc_type !== 0 && docInfo.value.perm_type == 0) {
+    if (docInfo.value.document.doc_type !== 0 && docInfo.value.perm_type == 0) {
         router.push({
             name: 'apply',
             query: {
@@ -190,14 +191,14 @@ const getDocumentInfo = async() => {
 //获取文档信息
 getDocumentInfo()
 const getDocumentAuthority = async () => {
-    const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+    const data = await share_api.getDocumentAuthorityAPI({ doc_id: docID })
     permType = data.data.perm_type
 }
 //获取文档类型
-getDocumentAuthority()
+// getDocumentAuthority()
 //获取文档密钥
 const getDocumentKey = async() => {
-    const {data} = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
+    const {data} = await share_api.getDocumentKeyAPI({ doc_id: docID })
 }
 
 let timer: any = null
@@ -212,15 +213,14 @@ onMounted(() => {
         timer = setInterval(() => {
             getDocumentAuthority()
         }, 60000)
-        
         return
     }
-    
-    if(!(window as any).sketchDocument && !route.query.id) {
+
+    if (!(window as any).sketchDocument && !route.query.id) {
         router.push('/');
         return;
     }
-    if(route.query.id) {
+    if (route.query.id) {
         getDocumentKey()
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
         if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
@@ -232,11 +232,18 @@ onMounted(() => {
         }, 60000)
         return
     }
+    document.addEventListener('keydown', keyboardEventHandler);
+    timer = setInterval(() => {
+        getDocumentAuthority()
+    }, 60000)
 })
 onUnmounted(() => {
+    window.document.title = t('product.name');
+    (window as any).sketchDocument = undefined;
+    (window as any).skrepo = undefined;
     context.value.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
-    clearInterval(timer)
+    clearInterval(timer);
 })
 
 </script>
@@ -251,7 +258,7 @@ onUnmounted(() => {
     <ColSplitView ref="colSplitView" id="center"
         :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.1 }"
+        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
@@ -278,7 +285,7 @@ onUnmounted(() => {
             </div>
         </template>
     </ColSplitView>
-    <div id="bottom" v-if="showBottom"></div>
+    <!-- <div id="bottom" v-if="showBottom"></div> -->
 </template>
 <style>
 :root {
@@ -327,7 +334,7 @@ onUnmounted(() => {
     #navigation {
         height: 100%;
         background-color: var(--left-navi-bg-color);
-        z-index: 1;
+        z-index: 2;
     }
 
     #content {
@@ -339,7 +346,7 @@ onUnmounted(() => {
     #attributes {
         height: 100%;
         background-color: var(--right-attr-bg-color);
-        z-index: 1;
+        z-index: 2;
     }
 
     .showHiddenR {
@@ -385,14 +392,14 @@ onUnmounted(() => {
     }
 }
 
-#bottom {
-    transition: 0.18s;
-    flex-flow: row nowrap;
-    width: 100%;
-    height: 30px;
-    min-height: 30px;
-    align-self: flex-end;
-    background-color: var(--theme-color);
-    z-index: 99;
-}
+// #bottom {
+//     transition: 0.18s;
+//     flex-flow: row nowrap;
+//     width: 100%;
+//     height: 30px;
+//     min-height: 30px;
+//     align-self: flex-end;
+//     background-color: var(--theme-color);
+//     z-index: 99;
+// }
 </style>

@@ -24,7 +24,7 @@ function dragStart() {
     structure.value.pagelistHeightBackup = structure.value.pagelistHeight
 }
 function onDragOffset(offset: number) {
-    const newheight = Math.min(containerHeight.value - 95, Math.max(60, structure.value.pagelistHeightBackup + Number(offset)));
+    const newheight = Math.min(containerHeight.value - 100, Math.max(66, structure.value.pagelistHeightBackup + Number(offset)));
     structure.value.pagelistHeight = newheight
 }
 function pageListFold(fold: boolean) {

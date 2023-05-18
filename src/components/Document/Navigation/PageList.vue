@@ -34,14 +34,12 @@ const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
+
 const selectionChange = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
-    } else if (t === Selection.PAGE_RENAME) {
-        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
-
 onMounted(() => {
     props.context.selection.watch(selectionChange);
     if (ListBody.value) {
@@ -118,11 +116,10 @@ const addPage = () => {
             pagelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
         } else if (itemScrollH + 29 < -(pagelist.value.scroll.y)) {
             pagelist.value.clampScroll(0, -itemScrollH)
-            console.log(-itemScrollH);
         }
     }
-    props.context.selection.insertPage(page);
-
+    props.context.selection.selectPage(page);
+    pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     nextTick(() => {
         props.context.selection.reName();
     })
@@ -144,7 +141,7 @@ const rename = (value: string, id: string) => {
             return props.context.editor4Page(p)
         });
         editor.value.setName(value)
-        props.context.selection.rename();
+        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     })
 
 }
@@ -172,7 +169,7 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
             const el = contextMenuEl.value.menu;
             if (el) {
                 el.style.borderRadius = 4 + 'px'
-                el.style.width = 180 + 'px'
+                el.style.width = 160 + 'px'
             }
         }
 
@@ -202,7 +199,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
             page = p && pageMgr.copy(p, name);
             const index = props.context.data.pagesList.findIndex((item) => item.id === id);
             page && pageMgr.insert(index + 1, page);
-            props.context.selection.insertPage(page);
+            pageSource.notify(0, 0, 0, Number.MAX_VALUE);
         })
     } else if (item === 'copy_link') {
         e?.stopPropagation()
@@ -228,14 +225,14 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
                     <svg-icon icon-class="file"></svg-icon>
                 </div> -->
                 <div class="shrink" @click="toggle">
-                    <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(90deg)' : 'rotate(0deg)' }"></svg-icon>
+                    <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(270deg)' : 'rotate(0deg)' }"></svg-icon>
                 </div>
             </div>
         </div>
         <div class="body" ref="ListBody" :style="{ height: fold ? 0 : 'calc(100% - 30px)' }">
-            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0" :pageHeight="pageH"
-                :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical" :allowDrag="true"
-                location="pagelist" @rename="rename" @onMouseDown="MouseDown" @after-drag="afterDrag">
+            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0"
+                :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
+                :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="MouseDown" @after-drag="afterDrag">
             </ListView>
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
                 :context="props.context" @close="pageMenuUnmount">
@@ -268,7 +265,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
 
         .title {
             margin-left: 13px;
-            height: 30px;
+            height: 36px;
             font-weight: var(--font-default-bold);
             line-height: 36px;
         }

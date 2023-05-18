@@ -4,19 +4,23 @@
  * @FilePath: \kcdesign\src\components\common\IconText.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits, watch, ref, nextTick } from "vue";
+import { defineProps, defineEmits, watch, ref, onMounted } from "vue";
 type Scale = { axleX: number, degX: number }
 const props = defineProps<{
     svgicon?: any,
     icon?: any,
     ticon?: string,
     text: string | number,
-    frame?: { width: number, height: number, rotate?: number }
+    frame?: { width: number, height: number, rotate?: number },
+    multipleValues?: boolean
 }>();
 const emit = defineEmits<{
     (e: "onchange", value: string): void;
 }>();
 const curpt: { x: number, y: number } = { x: 0, y: 0 }
+const _curpt: { x: number, y: number } = { x: 0, y: 0 }
+const screenWidth = ref(window.innerWidth)
+const screenHeight = ref(window.innerHeight)
 const scale = ref<Scale>({
     axleX: 0,
     degX: 0
@@ -32,8 +36,8 @@ function onChange(e: Event) {
         }
     }else if(props.svgicon === 'angle') {
         if(input.value!.value.slice(-1) === '°' && isNaN(Number(input.value!.value.slice(0, -1)))){
-            return input.value!.value = String(props.text) 
-        }else if(isNaN(Number(input.value!.value))) {
+            return input.value!.value = String(props.text)             
+        }else if(input.value!.value.slice(-1) !== '°' && isNaN(Number(input.value!.value))) {
             return input.value!.value = String(props.text) 
         }
     }
@@ -69,6 +73,9 @@ const onKeyBlur = (e: KeyboardEvent) => {
     }
 }
 const onMouseDown = (e: MouseEvent) => {
+    if(props.svgicon === 'radius' && props.multipleValues === true) {
+        return
+    }
     isDrag.value = true
     //鼠标按下时的位置
     curpt.x = e.screenX
@@ -76,20 +83,55 @@ const onMouseDown = (e: MouseEvent) => {
     document.addEventListener('mouseup', onMouseUp)
 
 }
-
+let posi = 0
 const onMouseMove = (e: MouseEvent) => {
-    //鼠标移动的距离
+        //鼠标移动的距离
     let mx = e.screenX - curpt.x
-    if (isDrag.value && mx > 4 || mx < -4) {
+        if (isDrag.value && mx > 4 || mx < -4) {
         curpt.x = e.screenX
-    }
-    //坐标移动的大小
+        }
+            //坐标移动的大小
     scale.value.axleX = Number((mx).toFixed(2))
-    //角度移动的大小
+            //角度移动的大小
     scale.value.degX = Number((mx / 5).toFixed(2))
     
+    // if(isDrag.value) {
+    //      //鼠标移动的距离
+    //     let mx = e.clientX - curpt.x
+    //     if (isDrag.value && mx > 4 || mx < -4) {
+    //         curpt.x = e.clientX
+    //     }
+    //     if(mx > 0) {
+    //         posi === 5 ? posi = 6 : posi = 5
+    //          //坐标移动的大小
+    //         scale.value.axleX = Number((posi).toFixed(2))
+    //         //角度移动的大小
+    //         scale.value.degX = Number((posi / 5).toFixed(2))
+    //     }else if (mx < 0) {
+    //         posi === -6 ? posi = -5 : posi = -6
+    //         //坐标移动的大小
+    //         scale.value.axleX = Number((posi).toFixed(2))
+    //         //角度移动的大小
+    //         scale.value.degX = Number((posi / 5).toFixed(2))
+    //     } else if (mx === 0 && e.clientX <= 0 || e.clientX >= (screenWidth.value - 2)) {
+    //         if(e.clientX > 0) {
+    //             posi === 6 ? posi = 5 : posi = 6
+    //          //坐标移动的大小
+    //             scale.value.axleX = Number((posi).toFixed(2))
+    //             //角度移动的大小
+    //             scale.value.degX = Number((posi / 5).toFixed(2))
+    //         }else {
+    //             posi === -6 ? posi = -5 : posi = -6
+    //             //坐标移动的大小
+    //             scale.value.axleX = Number((posi).toFixed(2))
+    //             //角度移动的大小
+    //             scale.value.degX = Number((posi / 5).toFixed(2))
+    //         }
+    //     }
+    // }
 }
 const onMouseUp = (e: MouseEvent) => {
+    isDrag.value = false
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 
@@ -120,6 +162,18 @@ watch(scale, () => {
         emit("onchange",Number(input.value!.value).toFixed(2))
     }
 }, { deep: true });
+watch(screenWidth, () => {
+    screenWidth.value = window.innerWidth;
+})
+watch(screenHeight, () => {
+    screenHeight.value = window.innerHeight;
+})
+onMounted(() => {
+    window.addEventListener('resize', () => {
+      screenWidth.value = window.innerWidth;
+      screenHeight.value = window.innerHeight;
+    });
+})
 </script>
 
 <template>
@@ -127,11 +181,12 @@ watch(scale, () => {
         <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
                 width: `${props.frame ? frame?.width : 18}px`,
                 height: `${props.frame ? frame?.height : 18}px`,
-                transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`
+                transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`,
+                cursor: props.svgicon === 'radius' && props.multipleValues === true ? 'auto':'ew-resize'
             }"></svg-icon>
         <img class="icon" v-if="props.icon" :src="props.icon" />
         <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon">{{ props.ticon }}</span>
-        <input ref="input" @click="onBlur" :value="props.text" @keydown="onKeyBlur" v-on:change="onChange" />
+        <input ref="input" @click="onBlur" :value="props.multipleValues ? '多值' :props.text" @keydown="onKeyBlur" v-on:change="onChange" />
     </label>
 </template>
 
@@ -169,6 +224,7 @@ watch(scale, () => {
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;
+        font-size: var(--font-default-fontsize);
         outline: none;
     }
 }

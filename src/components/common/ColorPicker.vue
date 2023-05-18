@@ -72,7 +72,7 @@ function showPopover() {
       let el = popoverEl.value
       let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
       el.style.top = top + 'px';
-      el.style.left = -(66 + el.offsetWidth) + 'px';
+      el.style.left = -(46 + el.offsetWidth) + 'px';
     }
   })
 }

@@ -4,7 +4,6 @@ import { Shape } from '@kcdesign/data/data/shape';
 import { isTarget } from './common';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
@@ -53,19 +52,22 @@ export function scrollToContentView(shape: Shape, selection: Selection, workspac
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2);
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 };
-    selection.unHoverShape();
-    selection.selectShape();
-    const pageViewEl = workspace.pageView;
-    if (pageViewEl) {
-        pageViewEl.classList.add('transition-600');
-        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
-        const timer = setTimeout(() => {
-            selection.selectShape(shape);
-            pageViewEl.classList.remove('transition-600');
-            clearTimeout(timer);
-        }, 600);
-    } else {
-        workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
+    const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
+    if (transX || transY) {
+        selection.unHoverShape();
+        selection.selectShape();
+        const pageViewEl = workspace.pageView;
+        if (pageViewEl) {
+            pageViewEl.classList.add('transition-400');
+            workspace.matrix.trans(transX, transY);
+            const timer = setTimeout(() => {
+                selection.selectShape(shape);
+                pageViewEl.classList.remove('transition-400');
+                clearTimeout(timer);
+            }, 400);
+        } else {
+            workspace.matrix.trans(transX, transY);
+        }
+        workspace.matrixTransformation();
     }
-    workspace.matrixTransformation();
 }

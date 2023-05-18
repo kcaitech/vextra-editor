@@ -5,7 +5,7 @@ import { render as r } from "@/render/rectangle";
 
 const props = defineProps<{ data: Shape }>();
 const reflush = ref(0);
-const watcher = () => {    
+const watcher = () => {
     reflush.value++;
 }
 const stopWatch = watch(() => props.data, (value, old) => {

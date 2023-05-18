@@ -26,7 +26,8 @@ export enum KeyboardKeys { // 键盘按键类型
     K = 'KeyK',
     O = 'KeyO',
     F = 'KeyF',
-    Digit0 = 'Digit0'
+    Digit0 = 'Digit0',
+    G = 'KeyG'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -64,6 +65,10 @@ export class WorkSpace extends Watchable(Object) {
     static SELECTING = 5;
     static SHUTDOWN_MENU = 6;
     static SHUTDOWN_POPOVER = 7;
+    static TRANSLATING = 8;
+    static CHECKSTATUS = 9;
+    static GROUP = 10;
+    static UNGROUP = 11;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -74,10 +79,16 @@ export class WorkSpace extends Watchable(Object) {
     private m_translating: boolean = false; // 编辑器是否正在移动图形
     private m_creating: boolean = false; // 编辑器是否正在创建图形
     private m_selecting: boolean = false; // 编辑器是否正在选择图形
+    private m_setting: boolean = false; // 是否正在设置属性
+    private m_page_dragging: boolean = false; // 编辑器正在拖动页面
+    private m_content_editing: boolean = false; // 编辑器正在内容编辑
     private m_menu_mount: boolean = false;
     private m_popover: boolean = false;
     private m_rootId: string = 'content';
     private m_pageViewId: string = 'pageview';
+    private m_pre_to_translating: boolean = false;
+    private m_mousedown_on_page: MouseEvent | undefined;
+    private m_controller: 'page' | 'controller' = 'page';
     constructor(context: Context) {
         super();
         this.context = context
@@ -103,6 +114,12 @@ export class WorkSpace extends Watchable(Object) {
             return pageView as Element;
         }
     }
+    get isPreToTranslating() {
+        return this.m_pre_to_translating;
+    }
+    get startPoint() {
+        return this.m_mousedown_on_page;
+    }
     get action() {
         return this.m_current_action;
     }
@@ -116,7 +133,7 @@ export class WorkSpace extends Watchable(Object) {
         return this.m_frame_size;
     }
     get transforming() {
-        return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating;
+        return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating || this.m_setting;
     }
     get select() {
         return this.m_selecting;
@@ -126,6 +143,37 @@ export class WorkSpace extends Watchable(Object) {
     }
     get ispopover() {
         return this.m_popover;
+    }
+    get isTranslating() {
+        return this.m_translating;
+    }
+    get controller() {
+        return this.m_controller;
+    }
+    get isPageDragging() {
+        return this.m_page_dragging;
+    }
+    get isEditing() {
+        return this.m_content_editing;
+    }
+    contentEdit(v: boolean) {
+        this.m_content_editing = v;
+    }
+    pageDragging(v: boolean) {
+        this.m_page_dragging = v;
+    }
+    setCtrl(v: 'page' | 'controller') {
+        this.m_controller = v;
+    }
+    preToTranslating(from: MouseEvent | false) {
+        if (from) {
+            this.m_pre_to_translating = true;
+            this.m_mousedown_on_page = from;
+            this.notify(WorkSpace.CHECKSTATUS);
+        } else {
+            this.m_pre_to_translating = false;
+            this.m_mousedown_on_page = undefined;
+        }
     }
     menuMount(mount: boolean) {
         this.m_menu_mount = mount;
@@ -148,21 +196,32 @@ export class WorkSpace extends Watchable(Object) {
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (event.code === KeyboardKeys.R) {
+            event.preventDefault();
             this.keydown_r();
         } else if (event.code === KeyboardKeys.V) {
+            event.preventDefault();
             this.keydown_v();
         } else if (event.code === KeyboardKeys.L) {
+            event.preventDefault();
             this.keydown_l(shiftKey);
         } else if (event.code === KeyboardKeys.Z) {
+            event.preventDefault();
             this.keydown_z(this.context.repo, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
+            event.preventDefault();
             this.keydown_k();
         } else if (event.code === KeyboardKeys.O) {
+            event.preventDefault();
             this.keydown_o();
         } else if (event.code === KeyboardKeys.F) {
+            event.preventDefault();
             this.keydown_f();
         } else if (event.code === KeyboardKeys.Digit0) {
+            event.preventDefault();
             this.keydown_0(ctrlKey, metaKey);
+        } else if (event.code === KeyboardKeys.G) {
+            event.preventDefault();
+            this.keydown_g(ctrlKey, metaKey, shiftKey);
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -193,6 +252,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     translating(v: boolean) {
         this.m_translating = v;
+        this.notify(WorkSpace.TRANSLATING)
     }
     creating(v: boolean) {
         this.m_creating = v;
@@ -201,7 +261,9 @@ export class WorkSpace extends Watchable(Object) {
         this.m_selecting = v;
         this.notify(WorkSpace.SELECTING);
     }
-
+    setting(v: boolean) {
+        this.m_setting = v;
+    }
     // keyboard
     keydown_r() {
         this.escSetup();
@@ -249,6 +311,14 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }
+    keydown_g(ctrl: boolean, meta: boolean, shift: boolean) {
+        if ((ctrl || meta) && !shift) { // 编组
+            this.notify(WorkSpace.GROUP);
+        } else if ((ctrl || meta) && shift) { // 解组
+            this.notify(WorkSpace.UNGROUP)
+        }
+    }
+
     escSetup() { // 安装取消当前状态的键盘事件(Esc)，在开启一个状态的时候应该考虑关闭状态的处理！
         if (WorkSpace.ESC_EVENT_POINTER) {
             document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);

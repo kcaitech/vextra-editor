@@ -1,19 +1,19 @@
 <template>
-    <div class="common-layout">
-        <el-container>
-            <el-aside width="381px">
-                <Aside/>
-            </el-aside>
-            <el-container>
-                <el-header>
-                    <Header/>
-                </el-header>
-                <el-main>
-                    <Main/>
-                </el-main>
-            </el-container>
-        </el-container>
-    </div>
+  <div class="common-layout">
+    <el-container>
+      <el-aside width="381px">
+        <Aside />
+      </el-aside>
+      <el-container>
+        <el-header>
+          <Header />
+        </el-header>
+        <el-main>
+          <Main/>
+        </el-main>
+      </el-container>
+    </el-container>
+  </div>
 </template>
 
 
@@ -23,8 +23,14 @@ import Header from './Header.vue';
 import Main from './Main.vue';
 import * as user_api from '@/apis/users'
 import {User} from '@/context/user'
+<<<<<<< HEAD
 import {onMounted} from 'vue';
 import {importDocument, Repository} from "@kcdesign/data";
+=======
+import {ref, nextTick, reactive, onMounted} from 'vue';
+import {importDocument, Repository} from "@kcdesign/data";
+import {importSketch} from "@kcdesign/data/io";
+>>>>>>> master
 import {router} from "@/router";
 
 const getUserInfo = async () => {
@@ -59,9 +65,15 @@ onMounted(async () => {
     localStorage.setItem('avatar', resavatar.data.avatar)
     localStorage.setItem('nickname', resavatar.data.nickname)
 
+<<<<<<< HEAD
     setTimeout(() => {
         // importDocumentTest()
     }, 2000)
+=======
+    // setTimeout(() => {
+    //     importDocumentTest()
+    // }, 2000)
+>>>>>>> master
 })
 </script>
 

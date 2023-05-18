@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, shallowRef } from "vue"
 import { Context } from '@/context';
-import OpenFile from "./OpenFile.vue";
+import Home from "./OpenFile.vue";
 import EditorTools from "./EditorTools.vue";
 import UserInfo from './UserInfo.vue';
 
@@ -21,7 +21,7 @@ onUnmounted(() => {
 
 <template>
     <div class="toolbar">
-        <OpenFile></OpenFile>
+        <Home :context="props.context"></Home>
         <EditorTools :context="context" :selection="selection"></EditorTools>
         <UserInfo :context="props.context" ></UserInfo>
     </div>
@@ -33,6 +33,7 @@ onUnmounted(() => {
     justify-content: space-between;
     width: 100%;
     height: 100%;
+    min-width: 700px;
     display: flex;
     flex-flow:row nowrap;
     padding: 0px 14px;

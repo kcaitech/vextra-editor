@@ -1,5 +1,9 @@
 import { BorderPosition } from "@kcdesign/data/data/typesdefine"
 
+export const product = {
+    name: 'ProtoDesign'
+}
+
 export const system = {
     'illegal_input': '输入不合法！',
     select: '请选择！',
@@ -27,7 +31,22 @@ export const system = {
     'create_component': '创建组件',
     'unbind_instance': '解绑实例',
     'reset_instance_roperties': '重置实例属性',
-    'edit_component': '编辑组件'
+    'edit_component': '编辑组件',
+    'wx_login':'微信扫码登录',
+    'login_read':'扫码表示已阅读并同意',
+    'read_TOS':'使用协议',
+    'read_Privacy':'隐私政策',
+    'product_name':'ProtoDesign',
+    'product_description':'一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
+    'login_footer':'© 2023 Kc.Design Inc.All rights reserved.',
+    'placeholder':'搜索文件',
+    'about':'关于',
+    'help_manual':'帮助手册',
+    'about_software':'关于软件',
+    'personal_center':'个人中心',
+    'login_out':'退出登录',
+    'new_file': '新文件',
+    'page1': '页面 1'
 }
 
 export const home = {
@@ -57,6 +76,12 @@ export const home = {
     delete: '删除',
     test: '测试',
     file_star_marking: '文件已被标星，可在标星列表中查看！',
+    rect: '矩形',
+    picture: '图片',
+    comment: '评论',
+    groups: '编组',
+    ungroup: '解组',
+    search_layer: '搜索图层'
 }
 
 export const navi = {
@@ -76,7 +101,7 @@ export const frame = {
     presentation: '预览',
     watch: '手表',
     paper: '纸张',
-    social_media : '社交媒体'
+    social_media: '社交媒体'
 }
 
 export const pageMenu = {
@@ -99,7 +124,7 @@ export const attr: any = {
     position: '位置',
     'corner_smoothing': '平滑圆角',
     vertical: '垂直方向',
-    horizontal:'水平方向',
+    horizontal: '水平方向',
     fixedLeft: '左部固定',
     fixedRight: '右部固定',
     withContainer: '跟随容器缩放',

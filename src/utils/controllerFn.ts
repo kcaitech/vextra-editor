@@ -21,6 +21,8 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
             editor.delete();
         }
         context.selection.selectShape();
+    } else if (e.code === 'Escape') {
+        context.selection.resetSelectShapes();
     }
     if (transform) {
         for (let i = 0; i < shapes.length; i++) {

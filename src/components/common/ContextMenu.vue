@@ -22,6 +22,7 @@ defineExpose({
 })
 
 function handleClickOutside(event: MouseEvent) {
+  event.stopPropagation()
   event.target instanceof Element && !event.target.closest('.__context-menu') && emit('close');
 }
 function workspaceUpdate(t?: number) {  
@@ -33,12 +34,12 @@ function workspaceUpdate(t?: number) {
 if (props.site)
   surplusX.value = document.documentElement.clientWidth - props.site.x
 
-onMounted(() => {
+onMounted(() => {  
   props.context.workspace.menuMount(true);
   props.context.workspace.watch(workspaceUpdate);
   document.addEventListener('mousedown', handleClickOutside);
 })
-onUnmounted(() => {
+onUnmounted(() => {  
   props.context.workspace.unwatch(workspaceUpdate);
   document.removeEventListener('mousedown', handleClickOutside);
 })

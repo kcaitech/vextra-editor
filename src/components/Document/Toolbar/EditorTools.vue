@@ -18,6 +18,8 @@ import Ellipse from "./Buttons/Ellipse.vue";
 import Line from "./Buttons/Path.vue";
 import Arrow from "./Buttons/Arrow.vue";
 import { Action, WorkSpace } from "@/context/workspace";
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const props = defineProps<{ 
     context: Context,
@@ -53,22 +55,52 @@ onUnmounted(() => {
         <Ellipse @select="select" :active="selected === Action.AddEllipse" ></Ellipse>
         <Line @select="select" :active="selected === Action.AddLine" ></Line>
         <Arrow @select="select" :active="selected === Action.AddArrow" ></Arrow>
-        <ToolButton>
-            <div class="temp" title="Text">
-                <svg-icon icon-class="text"></svg-icon>
-            </div>
-        </ToolButton>
-        <ToolButton>
-            <div class="temp" title="Picture">
-                <svg-icon icon-class="picture"></svg-icon>
-            </div>
-        </ToolButton>
+        <el-tooltip
+            class="box-item"
+            effect="dark"
+            :content="`${t('attr.text')} &nbsp;&nbsp; T`"
+            placement="bottom"
+            :show-after="500"
+            :offset="10"
+            :hide-after="0"
+        >
+            <ToolButton>
+                <div class="temp">
+                    <svg-icon icon-class="text"></svg-icon>
+                </div>
+            </ToolButton>
+        </el-tooltip>
+        <el-tooltip
+            class="box-item"
+            effect="dark"
+            :content="`${t('home.picture')} &nbsp;&nbsp; Shift+Ctrl+K`"
+            placement="bottom"
+            :show-after="500"
+            :offset="10"
+            :hide-after="0"
+        >
+            <ToolButton>
+                <div class="temp">
+                    <svg-icon icon-class="picture"></svg-icon>
+                </div>
+            </ToolButton>
+        </el-tooltip>
         <div class="vertical-line" />
-        <ToolButton>
-            <div class="temp" title="Resource">
-                <svg-icon icon-class="resource"></svg-icon>
-            </div>
-        </ToolButton>
+        <el-tooltip
+            class="box-item"
+            effect="dark"
+            :content="`${t('navi.comps')} &nbsp;&nbsp; Shift+I`"
+            placement="bottom"
+            :show-after="500"
+            :offset="10"
+            :hide-after="0"
+        >
+            <ToolButton>
+                <div class="temp">
+                    <svg-icon icon-class="resource"></svg-icon>
+                </div>
+            </ToolButton>
+        </el-tooltip>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     
@@ -79,23 +111,22 @@ onUnmounted(() => {
         box-sizing: border-box;
         display: flex;
         flex-direction: row;
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
+        align-items: center;
         height: 40px;
-        div {
-            margin: auto 0;
-        }
+      
         .temp {
             width: 28px;
             height: 28px;
             font-size: 12px;
             color: #ffffff;
             box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 4px;
             > svg {
-                width: 100%;
-                height: 100%;
+                width: 14px;
+                height: 14px;
             }
         }
         .vertical-line {
