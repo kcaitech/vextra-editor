@@ -5,7 +5,7 @@ import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
 import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
-import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
+// import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
 import { Artboard } from "@kcdesign/data";
 interface Saved {
     page: Page | undefined,
@@ -50,7 +50,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_search_keyword: string | undefined;
     // Scout、CanvasKitScout是两种实现方案不同的图形检索对象
     private m_scout: Scout | undefined;
-    private m_scout_beta: CanvasKitScout | undefined;
+    // private m_scout_beta: CanvasKitScout | undefined;
     // todo
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
@@ -63,15 +63,15 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get scout(): Scout | undefined {
         return this.m_scout;
     }
-    get canvaskitScout(): CanvasKitScout | undefined {
-        return this.m_scout_beta;
-    }
+    // get canvaskitScout(): CanvasKitScout | undefined {
+    //     return this.m_scout_beta;
+    // }
     scoutMount() {
         this.m_scout = scout();
     }
-    async canvaskitScoutMount() {
-        this.m_scout_beta = await canvasKitScout();
-    }
+    // async canvaskitScoutMount() {
+    //     this.m_scout_beta = await canvasKitScout();
+    // }
     get artboarts() {
         const abs = Array.from(this.m_artboart_list.values());
         return abs;
