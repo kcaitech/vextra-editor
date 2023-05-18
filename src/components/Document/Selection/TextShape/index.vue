@@ -151,7 +151,7 @@ onUnmounted(() => {
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible">
         <SelectView :context="props.context" :shape="props.shape" :matrix="submatrix.toArray()"></SelectView>
-        <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px" data-area="controller"></path>
+        <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
     </svg>
     <TextInput :context="props.context" :shape="props.shape" :matrix="submatrix.toArray()"></TextInput>
 </template>

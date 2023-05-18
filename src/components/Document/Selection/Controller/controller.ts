@@ -232,7 +232,12 @@ export function useController(context: Context) {
         return isDragging;
     }
     function isElement(e: MouseEvent): boolean {
-        if ((e.target as HTMLElement).dataset.area == 'controller') {
+        // if ((e.target as HTMLElement).dataset.area == 'controller') {
+        //     return true;
+        // } else {
+        //     return false;
+        // }
+        if ((e.target as Element).closest('[data-area="controller"]')) {
             return true;
         } else {
             return false;

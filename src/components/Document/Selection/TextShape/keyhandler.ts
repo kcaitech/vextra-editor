@@ -153,7 +153,7 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
         const timer = setTimeout(() => {
             selection.selectShape(shape);
             clearTimeout(timer);
-        }, 10)
+        })
         context.workspace.contentEdit(false);
     }
 

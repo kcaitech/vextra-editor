@@ -173,9 +173,9 @@ function onKeyPress(e: KeyboardEvent) {
 </script>
 <template>
     <input type="text" class="input" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
-        data-area="controller" @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown"
-        @keypress="onKeyPress" @keyup="onKeyUp"
-        :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }" ref="inputel" />
+        @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
+        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }"
+        ref="inputel" />
 </template>
 <style lang='scss' scoped>
 .input {
