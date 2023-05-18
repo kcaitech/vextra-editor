@@ -142,7 +142,7 @@ export function useController(context: Context) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
                     _migrate(shapes, startPosition, mousePosition);
-                    asyncTransfer.close();
+                    asyncTransfer = asyncTransfer.close();
                 }
                 isDragging = false;
                 workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
@@ -232,11 +232,6 @@ export function useController(context: Context) {
         return isDragging;
     }
     function isElement(e: MouseEvent): boolean {
-        // if ((e.target as HTMLElement).dataset.area == 'controller') {
-        //     return true;
-        // } else {
-        //     return false;
-        // }
         if ((e.target as Element).closest('[data-area="controller"]')) {
             return true;
         } else {
