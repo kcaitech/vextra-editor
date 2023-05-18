@@ -7,14 +7,15 @@
             <el-icon size="20" class="CloseIcon" style="margin: 10px;">
                 <Close />
             </el-icon>
-            <div class="searchhistory">
-                <div>
+            <div class="searchhistory" >
+                <div v-if="search!=''">
                     <el-table :data="SearchList||[]" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果">
-                        <el-table-column prop="name" :label="t('home.file_name')" />
+                        <el-table-column prop="name" :label="t('home.file_name')"/>
                         <el-table-column prop="updated_at" :label="t('home.modification_time')" />
                         <el-table-column prop="size" :label="t('home.size')" />
                     </el-table>
                 </div>
+                <div v-else>没有搜索记录</div>
             </div>
         </div>
         <div class="right">
@@ -97,40 +98,38 @@ const errorHandler = () => true
 let search = ref('')
 let SearchList = ref<any[]>([]);
 
-// function getSearch() {
-//     const historylist: any = document.querySelector('.searchhistory')
-//     const close: any = document.querySelector('.CloseIcon')
-//     const input: any = document.querySelector('.input')
+function getSearch() {
+    const historylist: any = document.querySelector('.searchhistory')
+    const close: any = document.querySelector('.CloseIcon')
+    const input: any = document.querySelector('.input')
 
-//     input.addEventListener('focus', () => {
-//         if(SearchList==null){
-//           return  
-//         }else{
-//         SearchList = computed(() => SearchList.value.filter((data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())))
-//         historylist.style.display = 'block'
-//     }
-//     })
-//     input.addEventListener('blur', () => {
-//         search.value = ''
-//         historylist.style.display = 'none'
-//     })
+    input.addEventListener('focus', () => {
+       
+        SearchList = computed(() => SearchList.value.filter((data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())))
+        historylist.style.display = 'block'
+    
+    })
+    historylist.addEventListener('blur', () => {
+        search.value = ''
+        historylist.style.display = 'none'
+    })
 
-//     input.addEventListener('keyup', (e: any) => {
-//         if (search.value !== '') {
-//             close.style.display = 'block'
-//         } else {
-//             close.style.display = 'none'
-//         }
-//     })
-//     close.addEventListener('click', () => {
-//         search.value = ''
-//         close.style.display = 'none'
-//     })
-// }
+    input.addEventListener('keyup', (e: any) => {
+        if (search.value !== '') {
+            close.style.display = 'block'
+        } else {
+            close.style.display = 'none'
+        }
+    })
+    close.addEventListener('click', () => {
+        search.value = ''
+        close.style.display = 'none'
+    })
+}
 
 
 onMounted(() => {
-    // getSearch()
+    getSearch()
 })
 
 </script>

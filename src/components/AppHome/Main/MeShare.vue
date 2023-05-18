@@ -1,7 +1,8 @@
 
 <template>
     <!-- 表格布局 -->
-    <el-table :data="getDoucmentList || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
+    <el-table :data="getDoucmentList || []" height="83vh" style="width: 100%" v-loading="isLoading" v-infinite-scroll="load"
+        empty-text="没有内容">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -27,7 +28,9 @@
                 </el-icon>&nbsp;
             </template>
         </el-table-column>
+        <append>aaaa</append>
     </el-table>
+    <append>aaaa</append>
 </template>
 
 <script setup lang="ts">
@@ -43,6 +46,9 @@ const isLoading = ref(false)
 let getDoucmentList = ref<any[]>([])
 
 isLoading.value = true;
+function load() {
+
+}
 
 async function getDoucment() {
     // loading
@@ -58,9 +64,13 @@ async function getDoucment() {
         }
     }
     getDoucmentList.value = data
-    // unloading  
-    isLoading.value = false;
+    // unloading
+    isLoading.value = false
+
 }
+
+
+
 
 function sizeTostr(size: any) {
     if ((size / 1024 / 1024 / 1024) > 1) {
@@ -98,7 +108,7 @@ const Sharefile = (index: number) => {
 }
 
 const Deletefile = async (index: number) => {
-    const {document:{id}} = getDoucmentList.value[index]
+    const { document: { id } } = getDoucmentList.value[index]
     const { code } = await user_api.MoveFile({ doc_id: id })
     if (code === 0) {
         ElMessage.success('文件已移至回收站')
