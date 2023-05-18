@@ -4,9 +4,9 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
 import { ControllerType, ctrlMap } from "./Controller";
-import TextSelectVue from "./TextShape/index.vue"
-import { Action, CtrlElementType } from "@/context/workspace";
+import { CtrlElementType, Action } from "@/context/workspace";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
+import TextSelectVue from "./TextShape/index.vue"
 
 export interface Point {
     x: number,
@@ -34,14 +34,12 @@ const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
 const controllerFrame = ref<Point[]>([]);
 const tracing = ref<boolean>(false);
+const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 let tracingPath: string;
 let tracingViewBox: string;
 let tracingHeight: number;
 let tracingWidth: number;
-let tracingX: number;
-let tracingY: number;
-
 const watchedShapes = new Map();
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -75,7 +73,10 @@ function updater() {
 }
 function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;
-    if (!selection.length) return;
+    if (!selection.length) {
+        controller.value = false;
+        return;
+    }
     if (selection.length === 1) { // 单选
         const shape = selection[0];
         const m = shape.matrix2Page();
@@ -132,7 +133,9 @@ function createController() {
             rotate.value = 0; // 多选时，rect只为水平状态
         });
         controllerType.value = ControllerType.Rect;
+
     }
+    controller.value = true;
 }
 function createShapeTracing() { // 描边
     tracing.value = false;
@@ -149,20 +152,20 @@ function createShapeTracing() { // 描边
         path.transform(m2page);
         path.transform(matrix);
         const { x, y, right, bottom } = props.context.workspace.root;
-        tracingX = 0;
-        tracingY = 0;
         tracingWidth = right - x;
         tracingHeight = bottom - y;
-        tracingViewBox = `${tracingX} ${tracingX} ${tracingWidth} ${tracingHeight}`;
+        tracingViewBox = `${0} ${0} ${tracingWidth} ${tracingHeight}`;
         tracingPath = path.toString();
     }
 }
 function pathMousedown(e: MouseEvent) {
-    if (props.context.workspace.action === Action.AutoV) {
-        e.stopPropagation();
-        props.context.workspace.preToTranslating(e);
-        const hoveredShape = props.context.selection.hoveredShape
-        props.context.selection.selectShape(hoveredShape);
+    if (props.context.workspace.action == Action.AutoV) {
+        if (e.button == 0) {
+            e.stopPropagation();
+            props.context.workspace.preToTranslating(e);
+            const hoveredShape = props.context.selection.hoveredShape;
+            props.context.selection.selectShape(hoveredShape);
+        }
     }
 }
 
@@ -183,13 +186,13 @@ watchEffect(updater)
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingWidth" :height="tracingHeight" :viewBox="tracingViewBox"
-        @mousedown="(e: MouseEvent) => pathMousedown(e)" :style="`transform: translate(${tracingX}px, ${tracingY}px)`"
+        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px)"
         :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.2;">
+        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;">
         </path>
     </svg>
     <!-- 控制 -->
-    <component v-if="context.selection.selectedShapes.length > 0 && !context.selection.isSelectText"
+    <component v-if="controller && !context.selection.isSelectText"
         :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)" :context="props.context"
         :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate">
     </component>

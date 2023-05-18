@@ -4,8 +4,9 @@ import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
-import { scout, Scout, isTarget, finder } from "@/utils/scout";
-import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
+import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
+// import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
+import { Artboard } from "@kcdesign/data";
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -34,7 +35,6 @@ export interface ShapeXY { // 图形自身坐标系的xy
 }
 
 export type ActionType = 'translate' | 'scale' | 'rotate';
-
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -42,7 +42,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_SHAPE_HOVER = 3;
     static CHANGE_RENAME = 4;
     static CHANGE_TEXT = 5;
-    static PAGE_RENAME = 6;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -51,8 +50,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_search_keyword: string | undefined;
     // Scout、CanvasKitScout是两种实现方案不同的图形检索对象
     private m_scout: Scout | undefined;
-    private m_scout_beta: CanvasKitScout | undefined;
-
+    // private m_scout_beta: CanvasKitScout | undefined;
     // todo
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
@@ -65,16 +63,19 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get scout(): Scout | undefined {
         return this.m_scout;
     }
-    get canvaskitScout(): CanvasKitScout | undefined {
-        return this.m_scout_beta;
-    }
+    // get canvaskitScout(): CanvasKitScout | undefined {
+    //     return this.m_scout_beta;
+    // }
     scoutMount() {
         this.m_scout = scout();
     }
-    async canvaskitScoutMount() {
-        this.m_scout_beta = await canvasKitScout();
+    // async canvaskitScoutMount() {
+    //     this.m_scout_beta = await canvasKitScout();
+    // }
+    get artboarts() {
+        const abs = Array.from(this.m_artboart_list.values());
+        return abs;
     }
-
     get cursorStart() {
         return this.m_cursorStart;
     }
@@ -85,22 +86,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_cursorEnd;
     }
     get isSelectText() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape && this.m_cursorStart >= 0;
+        return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape;
     }
 
     selectPage(p: Page | undefined) {
         if (this.m_selectPage === p) {
             return;
         }
-        // reset others
-        this.m_selectPage = p;
-        this.m_selectShapes.length = 0;
-        this.m_cursorStart = -1;
-        this.m_cursorEnd = -1;
-
-        this.notify(Selection.CHANGE_PAGE);
-    }
-    insertPage(p: Page | undefined) {
         this.m_selectPage = p;
         this.m_selectShapes.length = 0;
         this.m_cursorStart = -1;
@@ -108,16 +100,15 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.notify(Selection.CHANGE_PAGE);
     }
     async deletePage(id: string, index: number) {
-        if (id === this.m_selectPage?.id) {
-            index = index === this.m_document.pagesList.length ? 0 : index;
-            await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
-                this.m_selectPage = p;
-            });
+        if (this.m_document.pagesList.length > 1) {
+            if (id === this.m_selectPage?.id) {
+                index = index === this.m_document.pagesList.length ? 0 : index;
+                await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
+                    this.m_artboart_lists.delete(id);
+                    this.selectPage(p);
+                });
+            }
         }
-        this.m_selectShapes.length = 0;
-        this.m_cursorStart = -1;
-        this.m_cursorEnd = -1;
-        this.notify(Selection.CHANGE_PAGE);
     }
     reName(id?: string) {
         if (id) {
@@ -126,9 +117,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             this.notify(Selection.CHANGE_RENAME, this.selectedPage?.id);
         }
     }
-    rename() {
-        this.notify(Selection.PAGE_RENAME);
-    }
+
 
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
@@ -162,59 +151,44 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             position = cloneDeep(position);
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
-            shapes.push(...finder(this.scout, childs, position, force));
+            shapes.push(...finder(this.scout, childs, position, force, this.selectedShapes[0]));
         }
         return shapes;
     }
 
-    getClosetContainer(position: XY): GroupShape {
-        position = cloneDeep(position);
-        const page = this.m_selectPage!;
-        const groups: GroupShape[] = [page];
-        const childs = page.childs;
-        position.x -= page.frame.x;
-        position.y -= page.frame.y;
-        if (childs?.length) deep(childs, position);
-        return groups[0];
-
-        function deep(source: Shape[], position: XY) {
-            for (let i = 0; i < source.length; i++) {
-                const { x, y, width, height } = source[i].frame;
-                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {
-                    if ([ShapeType.Artboard].includes(source[i].type)) {
-                        groups.unshift(source[i] as GroupShape);
-                    }
-                }
-                const suppos = { x: position.x - x, y: position.y - y }
-                if (source[i].childs?.length) deep(source[i].childs, suppos);
-            }
+    getClosetArtboard(position: PageXY, except?: Shape, scope?: Shape[]): Shape {
+        let result: Shape = this.selectedPage!; // 任何一个元素,至少在一个容器内
+        const range: Shape[] = scope || this.m_selectPage?.artboards.filter((ab: Artboard) => !ab.isLocked && ab.isVisible) || [];
+        const artboard = artboardFinder(this.scout!, range, position, except);
+        if (artboard) {
+            result = artboard;
         }
+        return result;
     }
 
+
     selectShape(shape?: Shape, ctrl?: boolean, meta?: boolean) {
-        if (!shape) {
+        if (!shape) { // 取消所有已经选择的图形
+            this.resetSelectShapes();
+        } else {
+            if (shape.isLocked) return;
+            if (ctrl || meta) {
+                if (this.isSelectedShape(shape)) {
+                    this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
+                } else {
+                    this.m_selectShapes.push(shape);
+                }
+                this.notify(Selection.CHANGE_SHAPE);
+                return;
+            }
             this.m_selectShapes.length = 0;
+            this.m_selectShapes.push(shape);
             this.m_cursorStart = -1;
             this.m_cursorEnd = -1;
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
-            return;
         }
-        if (ctrl || meta) {
-            if (this.isSelectedShape(shape)) {
-                this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
-            } else {
-                this.m_selectShapes.push(shape);
-            }
-            this.notify(Selection.CHANGE_SHAPE);
-            return;
-        }
-        this.m_selectShapes.length = 0;
-        this.m_selectShapes.push(shape);
-        this.m_cursorStart = -1;
-        this.m_cursorEnd = -1;
-        this.m_hoverShape = undefined;
-        this.notify(Selection.CHANGE_SHAPE);
+
     }
     unSelectShape(shape: Shape) {
         if (!this.isSelectedShape(shape)) return;
@@ -247,8 +221,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
         this.notify(Selection.CHANGE_SHAPE);
-        // todo
-        // shape.notify(Selection.CHANGE_SHAPE);
     }
 
     isSelectedShape(shape: Shape) {
@@ -307,9 +279,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @param x page坐标系
      * @param y
      */
-    locateText(x: number, y: number): {index: number, before: boolean} {
+    locateText(x: number, y: number): { index: number, before: boolean } {
         if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
-            return {index: -1, before: false};
+            return { index: -1, before: false };
         }
         const shape = this.m_selectShapes[0] as TextShape;
         // translate x,y

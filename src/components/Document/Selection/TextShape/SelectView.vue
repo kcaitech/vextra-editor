@@ -105,7 +105,22 @@ function genCursorPath(cursor: { x: number, y: number }[]): string {
 
 </script>
 <template>
-    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='blue' stroke-width="2px"></path>
+    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='blue' stroke-width="2px" class="scan">
+    </path>
     <path v-if="!isCursor" :d="selectPath" fill="blue" fill-opacity="0.5" stroke='none'></path>
 </template>
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.scan {
+    animation: scan 0.8s none infinite;
+}
+
+@keyframes scan {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+</style>

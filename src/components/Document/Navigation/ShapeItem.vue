@@ -62,9 +62,12 @@ function selectShape(e: MouseEvent) {
 }
 
 function hoverShape(e: MouseEvent) {
-    e.stopPropagation();
-    emit("hovershape", props.data.shape);
-    isVisible.value = true
+    const working = !props.data.context.workspace.isTranslating;
+    if (working) {
+        e.stopPropagation();
+        emit("hovershape", props.data.shape);
+        isVisible.value = true;
+    }
 }
 function unHoverShape(e: MouseEvent) {
     e.stopPropagation();
@@ -97,7 +100,7 @@ const onRename = () => {
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
     if (esc.value) return
-    if(value.length === 0 || value.length > 40 || value.trim().length === 0) return  
+    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
     emit('rename', value, props.data.shape);
 }
 
@@ -167,7 +170,8 @@ onBeforeUpdate(() => {
         <div class="text" :class="{ container: true, selected: props.data.selected }"
             :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
-            <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}`, width: `${isVisible ? 66 + 'px' : isLock || !isRead ? 66 + 'px' : 0}`}">
+            <div class="tool_icon"
+                :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}`, width: `${isVisible ? 66 + 'px' : isLock || !isRead ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': isLock }" @click="(e: MouseEvent) => onLock(e)">
                     <svg-icon v-if="!isLock" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="lock-lock"></svg-icon>
@@ -207,6 +211,7 @@ div.container.selectedChild {
     z-index: 2;
     background-color: var(--left-navi-button-hover-color);
 }
+
 div.container.selected {
     z-index: 1;
     background-color: var(--left-navi-button-select-color);
@@ -263,6 +268,7 @@ div.containerSvg {
     justify-content: center;
     align-items: center;
     margin-left: 2px;
+
     .svg {
         width: 10px;
         height: 10px;

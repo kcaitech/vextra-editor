@@ -146,6 +146,18 @@ const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextSh
     }
 }, keydelays);
 
+const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+    const selection = context.selection;
+    if (selection.cursorStart > -1) {
+        selection.resetSelectShapes();
+        const timer = setTimeout(() => {
+            selection.selectShape(shape);
+            clearTimeout(timer);
+        })
+        context.workspace.contentEdit(false);
+    }
+
+}, keydelays);
 
 const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
@@ -155,6 +167,7 @@ handler['arrowup'] = enterArrowUp;
 handler['arrowdown'] = enterArrowDown;
 handler['backspace'] = enterBackspace;
 handler['delete'] = enterDelete;
+handler['escape'] = escape;
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) {
     if (editor.isInComposingInput()) {
