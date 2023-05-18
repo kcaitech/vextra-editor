@@ -176,7 +176,7 @@ onBeforeUpdate(() => {
 
 <template>
   <div class="position-container">
-    <Popover class="popover" ref="popover" :left="-636" :height="160" :title="t('attr.constraints')" :context="props.context">
+    <Popover class="popover" ref="popover" :left="-592" :height="160" :title="t('attr.constraints')" :context="props.context">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
@@ -245,8 +245,8 @@ onBeforeUpdate(() => {
 <style scoped lang="scss">
 .position-container {
   > .popover {
-    width: 32px;
-    height: 32px;
+    width: 22px;
+    height: 22px;
     .trigger {
       width: 100%;
       height: 100%;
@@ -254,8 +254,8 @@ onBeforeUpdate(() => {
       justify-content: center;
       align-items: center;
       > svg {
-        width: 40%;
-        height: 40%;
+        width: 50%;
+        height: 50%;
         transition: 0.5s;
       }
       > svg:hover {

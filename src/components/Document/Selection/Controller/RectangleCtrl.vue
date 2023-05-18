@@ -1,28 +1,23 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect } from "vue";
+import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Action, CtrlElementType } from "@/context/workspace";
-import { XY } from "@/context/selection";
+import { Action, CtrlElementType, WorkSpace } from "@/context/workspace";
+import { XY, ClientXY, PageXY } from "@/context/selection";
 import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
 import CtrlBar from "./Bars/CtrlBar.vue";
 import CtrlPoint from "./Points/CtrlPoint.vue";
 import { Point, Bar } from "../SelectionView.vue";
-import { GroupShape, Shape } from "@kcdesign/data/data/shape";
+import { GroupShape, Shape, ShapeType } from "@kcdesign/data/data/shape";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
 import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/contentFn";
-import { keyboardHandle as handle } from "@/utils/controllerFn"
+import { keyboardHandle as handle } from "@/utils/controllerFn";
+import { Selection } from "@/context/selection";
+import { groupPassthrough, forGroupHover } from "@/utils/scout";
 interface Props {
     context: Context,
     isController: boolean
     controllerFrame: Point[],
-    rotate: number
-}
-interface FramePosition {
-    top: string,
-    left: string,
-    transX: number,
-    transY: number,
     rotate: number
 }
 const props = defineProps<Props>();
@@ -30,12 +25,17 @@ const workspace = computed(() => props.context.workspace);
 const matrix = new Matrix();
 const dragActiveDis = 3;
 const offset = 16;
+const visible = ref<boolean>(true);
+let timer: any;
+const duration: number = 250; // 双击判定时长 ms
 let isDragging = false;
-let startPosition: XY = { x: 0, y: 0 };
-let root: XY = { x: 0, y: 0 };
+let startPosition: ClientXY = { x: 0, y: 0 };
+let startPositionOnPage: PageXY = { x: 0, y: 0 };
+let root: ClientXY = { x: 0, y: 0 };
 let shapes: Shape[] = [];
-let rectStyle: string;
+let controllerStyle: string;
 let wheel: Wheel | undefined = undefined;
+const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const points = computed<Point[]>(() => {
     const [lt, rt, rb] = props.controllerFrame;
     const { width, height } = getRectWH(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y);
@@ -60,60 +60,74 @@ const bars = computed<Bar[]>(() => {
     const bs: Bar[] = [b1, b2, b3, b4];
     return bs;
 });
-const axle = computed<XY>(() => {
+const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
-// let framePosition: FramePosition = {
-//     top: `${props.controllerFrame.height}px`,
-//     left: '50%',
-//     transX: -50,
-//     transY: 0,
-//     rotate: 0
-// }
-function updater() {
-    // let rotate = (props.controllerFrame.rotate || 0) % 360;
-    // rotate = rotate < 0 ? rotate + 360 : rotate;
-    // const { width, height } = props.controllerFrame;
-    // if (0 <= rotate && rotate < 45) {
-    //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-    // } else if (45 <= rotate && rotate < 135) {
-    //     framePosition = { top: '50%', left: `${width + 10}px`, transX: -50, transY: -50, rotate: 270 }
-    // } else if (135 <= rotate && rotate < 225) {
-    //     framePosition = { top: '-4px', left: '50%', transX: -50, transY: -100, rotate: 180 }
-    // } else if (225 <= rotate && rotate < 315) {
-    //     framePosition = { top: '50%', left: '-14px', transX: -50, transY: -50, rotate: 90 }
-    // } else if (315 <= rotate && rotate < 360) {
-    //     framePosition = { top: `${height}px`, left: '50%', transX: -50, transY: 0, rotate: 0 }
-    // }    
+function updater(t?: number) {
     getRect(props.controllerFrame);
+    if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
+        initController();
+    }
 }
-function getShapesByXY() {
-    const startPositionOnPage = workspace.value.matrix.inverseCoord(startPosition.x, startPosition.y);
-    const shapes = props.context.selection.getShapesByXY(startPositionOnPage);
-    if (shapes.length) {
-        props.context.selection.selectShape(shapes.at(-1));
-    } else {
-        props.context.selection.selectShape();
+function workspaceUpdate(t?: number) {
+    if (t === WorkSpace.TRANSLATING) {
+        visible.value = !workspace.value.isTranslating;
+    } else if (t === WorkSpace.CHECKSTATUS) {
+        checkStatus();
     }
 }
 
-function mousedown(e: MouseEvent) {
+function preTodo(e: MouseEvent) { // 移动之前做的准备
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        workspace.value.menuMount(false); // 取消右键事件
         wheel = fourWayWheel(props.context, { rolling: forCtrlRect });
         const action = workspace.value.action;
         if (action === Action.AutoV && props.isController) {
             e.stopPropagation(); // props.isController 当控制权在selection时，不要冒泡出去, 否则父节点也会被控制
             shapes = props.context.selection.selectedShapes;
             if (!shapes.length) return;
-            matrix.reset(workspace.value.matrix);
-            const { clientX, clientY } = e;
             root = workspace.value.root;
             document.addEventListener('mousemove', mousemove);
             document.addEventListener('mouseup', mouseup);
-            startPosition = { x: clientX - root.x, y: clientY - root.y };
         }
     }
+}
+function handleDblClick() {
+    matrix.reset(workspace.value.matrix);
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const item = selected[0];
+        if (item.type === ShapeType.Group) {
+            const scope = (item as GroupShape).childs;
+            const scout = props.context.selection.scout;
+            const target = groupPassthrough(scout!, scope, startPositionOnPage);
+            if (target) {
+                props.context.selection.selectShape(target);
+            }
+        } else {
+            editing.value = !editing.value;
+        }
+        timerClear();
+    }
+}
+function pickerFromSelectedShapes() {
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length > 1) {
+        const target: Shape | undefined = props.context.selection.getShapesByXY_beta(startPositionOnPage, false, selected).reverse()[0];
+        props.context.selection.selectShape(target);
+    } else if (selected.length === 1 && selected[0].type === ShapeType.Group) {
+        const isHasTarget = forGroupHover(props.context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage);
+        if (!isHasTarget) props.context.selection.selectShape();
+    }
+}
+function mousedown(e: MouseEvent) {
+    setPosition(e);
+    if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
+        handleDblClick();
+    }
+    initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
+    preTodo(e);
 }
 function mousemove(e: MouseEvent) {
     if (e.button === 0) { //只处理鼠标左键按下时的移动
@@ -121,7 +135,7 @@ function mousemove(e: MouseEvent) {
         if (wheel) {
             wheel.moving(e);
         }
-        const mousePosition = { x: clientX - root.x, y: clientY - root.y };
+        const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
         if (isDragging) {
             workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
             props.context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
@@ -135,7 +149,7 @@ function mousemove(e: MouseEvent) {
         }
     }
 }
-function transform(shapes: Shape[], start: XY, end: XY) {
+function transform(shapes: Shape[], start: ClientXY, end: ClientXY) {
     const ps = matrix.inverseCoord(start.x, start.y);
     const pe = matrix.inverseCoord(end.x, end.y);
     const origin = props.context.selection.getClosetContainer(ps);
@@ -154,14 +168,15 @@ function mouseup(e: MouseEvent) {
     if (e.button === 0) { // 只处理鼠标左键按下时的抬起
         if (isDragging) {
             props.context.repo.commit({}); // 如果触发了拖拽状态,必定开启了事务 ---end transaction---
+            isDragging = false;
+            workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
         } else {
-            getShapesByXY(); // 单纯点击,只选择图层
+            pickerFromSelectedShapes(); // 多选时的单纯点击则取消多选
         }
-        isDragging = false;
-        workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
-        if (wheel) wheel = wheel.remove();
+        if (wheel) wheel = wheel.remove(); // 卸载滚轮
+        if (workspace.value.isPreToTranslating) workspace.value.preToTranslating(); // 取消移动准备
     }
 }
 function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg?: number, aType?: 'rotate' | 'scale') {
@@ -216,6 +231,20 @@ function handlePointAction(type: CtrlElementType, p1: XY, p2: XY, deg?: number, 
         }
     }
 }
+function checkStatus() { // 检查是否可以直接开始移动
+    if (workspace.value.isPreToTranslating) { // 可以开始移动，该状态开启之后将跳过mousedown事件
+        const start = workspace.value.startPoint;
+        setPosition(start!);
+        preTodo(start!);
+    }
+}
+function setPosition(e: MouseEvent) {
+    const { clientX, clientY } = e;
+    matrix.reset(workspace.value.matrix);
+    root = workspace.value.root;
+    startPosition = { x: clientX - root.x, y: clientY - root.y };
+    startPositionOnPage = matrix.inverseCoord(startPosition.x, startPosition.y);
+}
 // 自身不带事务的图形移动, 只能在事务开启之后调用
 function shapeMoveNoTransaction(shape: Shape, targetParent: GroupShape) {
     const origin: GroupShape = ((shape.parent || props.context.selection.selectedPage) as GroupShape);
@@ -228,7 +257,24 @@ function keyboardHandle(e: KeyboardEvent) {
     handle(e, props.context);
 }
 function getRect(points: Point[]) {
-    rectStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+    controllerStyle = createRect(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+}
+function initController() {
+    editing.value = false; // 初始状态不为编辑状态
+    initTimer(); // 控件生成之后立马开始进行双击预定，该预定将在duration(ms)之后取消
+}
+function initTimer() {
+    clearTimeout(timer); // 先取消原有的预定
+    timer = setTimeout(() => { // 设置新的预定
+        clearTimeout(timer); // 取消预定
+        timer = null;
+    }, duration)
+}
+function timerClear() {
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
 }
 function windowBlur() {
     if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
@@ -238,38 +284,36 @@ function windowBlur() {
         document.removeEventListener('mousemove', mousemove);
         document.removeEventListener('mouseup', mouseup);
     }
-    if (wheel) wheel = wheel.remove();
+    if (wheel) wheel = wheel.remove(); // 卸载滚轮
+    if (workspace.value.isPreToTranslating) workspace.value.preToTranslating();  // 取消移动准备
+    timerClear();
 }
 onMounted(() => {
     props.context.selection.watch(updater);
+    props.context.workspace.watch(workspaceUpdate);
     window.addEventListener('blur', windowBlur);
     document.addEventListener('keydown', keyboardHandle);
-    getRect(props.controllerFrame);
+    checkStatus();
+    initController();
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
+    props.context.workspace.unwatch(workspaceUpdate);
     shapes.length = 0;
     window.removeEventListener('blur', windowBlur);
     document.removeEventListener('keydown', keyboardHandle);
+    timerClear();
 })
 
-watchEffect(updater)
+watchEffect(() => { updater() })
 </script>
 <template>
-    <div class="ctrl-rect" @mousedown="mousedown" :style="rectStyle">
+    <div :class="{ 'ctrl-rect': true, 'un-visible': !visible, editing }" @mousedown="mousedown" :style="controllerStyle">
         <CtrlBar v-for="(bar, index) in  bars" :key="index" :context="props.context" :width="bar.width" :height="bar.height"
             :ctrl-type="bar.type" :rotate="props.rotate" @transform="handlePointAction"></CtrlBar>
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
             :rotate="props.rotate" @transform="handlePointAction" :controller-frame="props.controllerFrame"></CtrlPoint>
-        <!-- <div class="frame" :style="{
-                        top: framePosition.top,
-                        left: framePosition.left,
-                        transform: `translate(${framePosition.transX}%, ${framePosition.transY}%) rotate(${framePosition.rotate}deg)`
-                    }">
-                        <span>{{ `${props.controllerFrame.realWidth.toFixed(2)} * ${props.controllerFrame.realHeight.toFixed(2)}`
-                        }}</span>
-                    </div> -->
     </div>
 </template>
 <style lang='scss' scoped>
@@ -277,24 +321,13 @@ watchEffect(updater)
     position: absolute;
     box-sizing: border-box;
     background-color: transparent;
-    opacity: 1;
+}
 
-    >.frame {
-        position: absolute;
-        display: table;
-        text-align: center;
-        height: 20px;
-        padding: 0 var(--default-padding-quarter);
-        font-size: var(--font-default-fontsize);
-        line-height: 20px;
-        color: var(--theme-color-anti);
-        background-color: var(--active-color);
-        border-radius: 2px;
+.un-visible {
+    opacity: 0;
+}
 
-        >span {
-            display: table-cell;
-            white-space: nowrap;
-        }
-    }
+.editing {
+    background-color: rgba($color: #2561D9, $alpha: 0.15);
 }
 </style>

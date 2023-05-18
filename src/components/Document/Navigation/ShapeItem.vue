@@ -155,7 +155,7 @@ onBeforeUpdate(() => {
 
 <template>
     <div class="contain" :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }"
-        @click="selectShape" @mouseover="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
+        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
         <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
             <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
@@ -167,7 +167,7 @@ onBeforeUpdate(() => {
         <div class="text" :class="{ container: true, selected: props.data.selected }"
             :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
-            <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}` }">
+            <div class="tool_icon" :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}`, width: `${isVisible ? 66 + 'px' : isLock || !isRead ? 66 + 'px' : 0}`}">
                 <div class="tool_lock tool" :class="{ 'visible': isLock }" @click="(e: MouseEvent) => onLock(e)">
                     <svg-icon v-if="!isLock" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else class="svg" icon-class="lock-lock"></svg-icon>
@@ -203,12 +203,13 @@ div.container {
     background-color: var(--left-navi-button-hover-color);
 }
 
-div.container.selected {
-    background-color: var(--left-navi-button-select-color);
-}
-
 div.container.selectedChild {
+    z-index: 2;
     background-color: var(--left-navi-button-hover-color);
+}
+div.container.selected {
+    z-index: 1;
+    background-color: var(--left-navi-button-select-color);
 }
 
 div.ph {
@@ -308,15 +309,16 @@ div .rename {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-
+    width: 20px;
+    height: 20px;
+    margin-right: 2px;
 }
 
 .tool_icon {
     display: flex;
     align-items: center;
-    margin-right: 6px;
+    width: 66px;
+    height: 100%;
 
     .tool_lock {
         .svg {
@@ -325,17 +327,17 @@ div .rename {
         }
 
         .svg-open {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
     }
 
     .tool_eye {
-        margin-right: 5px;
+        margin-right: 10px;
 
         .svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
     }
 

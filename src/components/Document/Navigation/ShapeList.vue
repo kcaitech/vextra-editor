@@ -158,6 +158,7 @@ function getShapeRange(start: number, end: number): Shape[] {
 }
 
 function hoverShape(shape: Shape) {
+    if (props.context.workspace.transforming) return;
     props.context.selection.hoverShape(shape);
     if (shapeList.value)
         shapeH.value = shapeList.value.offsetHeight
@@ -182,12 +183,21 @@ const isLock = (lock: boolean, shape: Shape) => {
 }
 
 const isRead = (read: boolean, shape: Shape) => {
+    let timer: any;
+    timer && clearTimeout(timer);
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
     editor.value.setVisible();
     if (!read) {
         props.context.selection.unSelectShape(shape);
+        props.context.selection.unHoverShape();
+        props.context.workspace.translating(true);
+        timer = setTimeout(() => {
+            props.context.workspace.translating(false);
+            clearTimeout(timer);
+            timer = null;
+        }, 550)
     }
 }
 function shapeScrollToContentView(shape: Shape) {
@@ -200,13 +210,15 @@ function shapeScrollToContentView(shape: Shape) {
     props.context.selection.selectShape();
     const pageViewEl = props.context.workspace.pageView;
     if (pageViewEl) {
-        pageViewEl.classList.add('transition-600');
+        pageViewEl.classList.add('transition-400');
+        props.context.workspace.translating(true);
         workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
         const timer = setTimeout(() => {
             props.context.selection.selectShape(shape);
-            pageViewEl.classList.remove('transition-600');
+            pageViewEl.classList.remove('transition-400');
+            props.context.workspace.translating(false);
             clearTimeout(timer);
-        }, 600);
+        }, 400);
     } else {
         workspace.matrix.trans(contentViewCenter.x - shapeCenter.x, contentViewCenter.y - shapeCenter.y);
     }
@@ -240,8 +252,8 @@ const chartMenuMount = (e: MouseEvent) => {
             let sy = document.documentElement.clientHeight - e.clientY //点击图形列表剩余的高度
             if (el) {
                 const height = el.offsetHeight //菜单高度
-                if (sy - 30 < height) {
-                    let top = height - sy + 30
+                if (sy < height) {
+                    let top = height - sy
                     el.style.top = chartMenuPosition.value.y - top + 'px'
                 }
                 el.style.borderRadius = 4 + 'px'
@@ -288,7 +300,7 @@ onUnmounted(() => {
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" @change="(e: Event) => search(e)">
+                <input type="text" :placeholder="t('home.search_layer') + '…'" @change="(e: Event) => search(e)">
             </div>
         </div>
         <div class="body" ref="ListBody">
@@ -298,8 +310,8 @@ onUnmounted(() => {
                 @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
                 @isLock="isLock" @onMouseDown="MouseDown" orientation="vertical" @after-drag="afterDrag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount" :context="props.context"
-                ref="contextMenuEl">
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
+                :context="props.context" ref="contextMenuEl">
                 <PageViewContextMenuItems :items="chartMenuItems" :context="props.context">
                 </PageViewContextMenuItems>
             </ContextMenu>
@@ -314,7 +326,7 @@ onUnmounted(() => {
 
     .header {
         width: 100%;
-        height: 64px;
+        height: 70px;
         font-size: 10px;
         box-sizing: border-box;
         position: relative;
@@ -327,24 +339,24 @@ onUnmounted(() => {
         .title {
             margin-left: 13px;
             font-weight: var(--font-default-bold);
-            line-height: 30px;
-            height: 30px;
+            line-height: 36px;
+            height: 36px;
         }
 
         .search {
-            width: 100%;
-            height: 32px;
-            margin: 1px 0px;
+            width: auto;
+            height: 26px;
+            margin: 3px 10px;
             display: flex;
             align-items: center;
             box-sizing: border-box;
             background-color: var(--grey-light);
-            padding: 4px var(--default-padding);
+            padding: 4px var(--default-padding-half);
             border-radius: 8px;
 
             >svg {
-                height: 20px;
-                flex: 0 0 20px;
+                width: 12px;
+                height: 12px;
             }
 
             >input {
@@ -353,6 +365,7 @@ onUnmounted(() => {
                 outline: none;
                 margin-left: 4px;
                 background-color: transparent;
+                font-size: var(--font-default-fontsize);
             }
         }
     }

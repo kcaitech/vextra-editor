@@ -53,10 +53,8 @@ onUnmounted(() => {
         :viewBox='"0 0 " + data.frame.width + " " + data.frame.height' :width="data.frame.width" :height="data.frame.height"
         :style="{ transform: matrixWithFrame.toString() }" overflow="visible" :reflush="reflush !== 0 ? reflush : undefined"
         :data-area="rootId">
-
         <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
-
     </svg>
 </template>
 

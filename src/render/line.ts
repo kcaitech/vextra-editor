@@ -2,6 +2,7 @@ import { Color } from "@kcdesign/data/data/baseclasses";
 import { Shape } from "@kcdesign/data/data/shape";
 import { toHex } from "@/utils/color"
 export function render(h: Function, shape: Shape, reflush?: number) {
+    if (!shape.isVisible) return;
     const frame = shape.frame;
     const path = shape.getPath(true);
     const border = shape.style.borders.at(-1);
@@ -32,6 +33,5 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     props.fill = fill;
     props.stroke = stroke;
     props["stroke-width"] = border?.thickness || 1;
-
     return h('path', props);
 }

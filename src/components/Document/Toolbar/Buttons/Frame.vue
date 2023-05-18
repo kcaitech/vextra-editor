@@ -100,34 +100,46 @@ const isSelect = () => {
       </div>
     </div>
   </div>
+  <el-tooltip
+    class="box-item"
+    effect="dark"
+    :content="`${t('shape.artboard')} &nbsp;&nbsp; F`"
+    placement="bottom"
+    :show-after="500"
+    :offset="10"
+    :hide-after="0"
+  >
   <ToolButton ref="button" @click="isSelect" :selected="props.active">
-    <div class="svg-container" title="Frame">
+    <div class="svg-container">
       <svg-icon icon-class="frame"></svg-icon>
     </div>
     <div class="menu-f" @click="showMenu">
       <svg-icon icon-class="down"></svg-icon>
     </div>
   </ToolButton>
+</el-tooltip>
 </template>
 
 <style scoped lang="scss">
 .svg-container {
-  width: 30px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-left: 3px;
   color: #ffffff;
   > svg {
-    width: 50%;
-    height: 50%;
+    width: 13px;
+    height: 13px;
   }
 }
 .menu-f {
   width: 10px;
-  height: 32px;
+  height: 28px;
   display: flex;
-  padding-right: 2px;
+  padding-right: 4px;
+  margin-right: 2px;
   justify-content: center;
   align-items: center;
   color: #ffffff;

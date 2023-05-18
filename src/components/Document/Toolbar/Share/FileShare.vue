@@ -210,7 +210,7 @@ onUnmounted(() => {
         </div>
         <!-- 文件名 -->
         <div class="file-name">
-          <span>{{ t('share.file_name') }}:</span>
+          <span style="margin-right: 12px;">{{ t('share.file_name') }}:</span>
           <p class="name">{{props.docInfo.document.name}}</p>
         </div>
         <!-- 权限设置 -->
