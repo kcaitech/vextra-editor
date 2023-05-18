@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref, nextTick } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -17,8 +17,12 @@ import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
+import { importDocument } from "@kcdesign/data";
+import { DocumentInfo } from "@/context/user"
+
 const { t } = useI18n();
 
+const docID = localStorage.getItem('docId') || ''
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
 (window as any).__context = context.value;
@@ -37,13 +41,14 @@ const Left = ref({
     leftWidth: 0.1,
     leftMinWidth: 0.1
 })
+
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
 let permType: any = undefined
 const docInfo: any = ref({})
-const docID = '1672502400000'
+
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -99,7 +104,10 @@ function switchPage(id?: string) {
     const ctx: Context = context.value;
     const pagesMgr = ctx.data.pagesMgr;
     pagesMgr.get(id).then((page: Page | undefined) => {
-        if (page) ctx.selection.selectPage(page);
+        if (page) {
+            ctx.selection.selectPage(page);
+            curPage.value = page;
+        }
     })
 }
 function selectionWatcher(t: number) {
@@ -175,12 +183,16 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
-const getDocumentInfo = async() => {
+
+//获取文档信息
+const getDocumentInfo = async () => {
     try {
-        const data = await share_api.getDocumentInfoAPI({ doc_id: docID })
-        docInfo.value = data.data
+        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
+        docInfo.value = dataInfo.data
+        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
+        // documentKey.value = data
         //获取文档类型是否为私有文档且有无权限
-        if(docInfo.value.document.doc_type !== 0 && docInfo.value.perm_type == 0) {
+        if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
                 query: {
@@ -188,61 +200,68 @@ const getDocumentInfo = async() => {
                 }
             })
         }
-    }catch (err) {
+        await importDocument({
+            endPoint: "http://192.168.0.10:9000",
+            region: "zhuhai-1",
+            accessKey: data.access_key,
+            secretKey: data.secret_access_key,
+            sessionToken: data.session_token,
+            bucketName: "document"
+        }, docInfo.value.document.path, "", "").then((document) => {
+            if (document) {
+                const repo = new Repository();
+                window.document.title = document.name;
+                context.value = new Context((document as Document), (repo as Repository));
+                context.value.watch(selectionWatcher);
+                switchPage(context.value.data.pagesList[0]?.id);
+            }
+        })
+
+        if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
+            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        }
+    } catch (err) {
         console.log(err);
     }
 }
-//获取文档信息
-getDocumentInfo()
+
 const getDocumentAuthority = async () => {
     try {
-        const data = await share_api.getDocumentAuthorityAPI({ doc_id: docID })
+        const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
         permType = data.data.perm_type
-    }catch (err){
+    } catch (err) {
         console.log(err);
     }
 }
-//获取文档类型
-// getDocumentAuthority()
-//获取文档密钥
-const getDocumentKey = async() => {
-    try {
-        const {data} = await share_api.getDocumentKeyAPI({ doc_id: docID })
-    }catch (err) {
-        console.log(err);
-    }
-}
+
 let uploadTimer: any = null
 uploadTimer = setInterval(() => {
-    context.value.upload()
+    context.value.upload(docID)
 }, 60000)
 
 let timer: any = null
 onMounted(() => {
-    context.value.selection.watch(selectionWatcher);
+    if (context.value) {
+        context.value.selection.watch(selectionWatcher);
+    }
     if ((window as any).sketchDocument) {
-        
+        context.value.upload()
+
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
         if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
             document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
         }
         document.addEventListener('keydown', keyboardEventHandler);
-        timer = setInterval(() => {
-            getDocumentAuthority()
-        }, 60000)
         return
     }
-    
-    if(!(window as any).sketchDocument && !route.query.id) {
+
+    if (!(window as any).sketchDocument && !route.query.id) {
         router.push('/');
         return;
     }
-    if(route.query.id) {
-        getDocumentKey()
-        switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
-        if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
-            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-        }
+
+    if (route.query.id) {
+        getDocumentInfo()
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
             getDocumentAuthority()
@@ -255,6 +274,7 @@ onUnmounted(() => {
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     context.value.selection.unwatch(selectionWatcher);
+    context.value.unwatch(selectionWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
     clearInterval(uploadTimer);

@@ -3,9 +3,11 @@ import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
 import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
+import * as users_api from '@/apis/users'
 import { useI18n } from 'vue-i18n'
+import {router} from "@/router";
 const { t } = useI18n()
-const docID = '1672502400000'
+const docID = '49140601005805568'
 const num = ref(0)
 const showInForm = ref(false)
 const applyList: any = ref([])
@@ -17,20 +19,13 @@ const getApplyList = async () => {
         const { data } = await share_api.getApplyListAPI({ doc_id: docID })
         num.value = data.length
         applyList.value = data
+        
     } catch (err) {
         console.log(err)
     }
 }
 let timer: any = null
 getApplyList()
-onMounted(() => {
-    timer = setInterval(() => {
-        getApplyList()
-    }, 60000)
-})
-onUnmounted(() => {
-    clearInterval(timer)
-})
 
 
 const tableData = [
@@ -119,14 +114,31 @@ function getSearch() {
     })
 }
 
+const toDocument = async() => {
+    try {
+        const { data } = await users_api.GetrecordsList()
+        router.push({
+            name: 'document',
+            query: {
+                id:  '49140601005805568'
+            }
+        })
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+
 
 onMounted(() => {
     getSearch()
-    
-
+    timer = setInterval(() => {
+        getApplyList()
+    }, 60000)
 })
-
-
+onUnmounted(() => {
+    clearInterval(timer)
+})
 
 
 
@@ -190,6 +202,7 @@ onMounted(() => {
                         </el-icon>{{ t('system.login_out') }}</div>
                 </div>
             </div>
+            <button @click="toDocument">跳转</button>
             <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
         </div>
     </div>

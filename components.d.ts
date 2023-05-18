@@ -100,6 +100,7 @@ declare module '@vue/runtime-core' {
     ShapeList: typeof import('./src/components/Document/Navigation/ShapeList.vue')['default']
     ShapePath: typeof import('./src/components/Document/Content/ShapePath.vue')['default']
     ShapeTab: typeof import('./src/components/Document/Navigation/ShapeTab.vue')['default']
+    ShapeTitle: typeof import('./src/components/Document/Content/shapeTitle.vue')['default']
     Share: typeof import('./src/components/Document/Toolbar/Share/Share.vue')['default']
     ShareMe: typeof import('./src/components/AppHome/Main/ShareMe.vue')['default']
     StarFile: typeof import('./src/components/AppHome/Main/StarFile.vue')['default']

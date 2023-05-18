@@ -36,7 +36,6 @@ const tabs: { title: string, id: Tab }[] = [
 function toggle(id: Tab) {
     currentTab.value = id
 }
-
 </script>
 
 <template>

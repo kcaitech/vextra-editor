@@ -307,9 +307,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @param x page坐标系
      * @param y
      */
-    locateText(x: number, y: number): {index: number, before: boolean} {
+    locateText(x: number, y: number): { index: number, before: boolean } {
         if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
-            return {index: -1, before: false};
+            return { index: -1, before: false };
         }
         const shape = this.m_selectShapes[0] as TextShape;
         // translate x,y

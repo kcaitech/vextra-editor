@@ -77,6 +77,7 @@ function updater() {
 function createController() {
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (!selection.length) return;
+
     if (selection.length === 1) { // 单选
         const shape = selection[0];
         const m = shape.matrix2Page();
@@ -134,6 +135,7 @@ function createController() {
         });
         controllerType.value = ControllerType.Rect;
     }
+    
 }
 function createShapeTracing() { // 描边
     tracing.value = false;

@@ -35,3 +35,12 @@ export function GetDocumentsList(params = {}, ops = {}) {
         ...ops
     })
 }
+
+export function GetrecordsList(params = {}, ops = {}) {
+    return httpRequest({
+        url: 'documents/access_records',
+        method: 'get',
+        params:params,
+        ...ops
+    })
+}

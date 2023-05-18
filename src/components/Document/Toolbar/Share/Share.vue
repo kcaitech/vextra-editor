@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted } from 'vue';
+import { onMounted, ref, onUnmounted, defineProps } from 'vue';
 import FileShare from './FileShare.vue';
-import * as share_api from '@/apis/share'
-const docID = '1672502400000'
+import { Context } from '@/context';
+interface Props {
+    context: Context
+}
+const props = defineProps<Props>();
 const showFileShare = ref<boolean>(false);
-const docInfo: any = ref({})
 const pageHeight = ref(0)
 const onShare = () => {
   if(showFileShare.value) {
@@ -16,14 +18,6 @@ const onShare = () => {
 const closeShare = () => {
   showFileShare.value = false
 }
-const getDocumentInfo = async() => {
-  try {
-    const {data} = await share_api.getDocumentInfoAPI({doc_id: docID})
-    docInfo.value = data
-  }catch(err) {
-    console.log(err);
-  }
-} 
 
 // 实时获取页面的高度
 const getPageHeight = () => {
@@ -36,7 +30,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', getPageHeight);
 })
-getDocumentInfo()
 </script>
 
 <template>
@@ -44,7 +37,7 @@ getDocumentInfo()
     <div class="share" @click.stop="onShare">
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
-    <FileShare v-if="showFileShare" @close="closeShare" :pageHeight="pageHeight" :docInfo="docInfo"></FileShare>
+    <FileShare v-if="showFileShare" @close="closeShare" :pageHeight="pageHeight"></FileShare>
   </div>
 </template>
 
