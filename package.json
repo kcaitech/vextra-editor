@@ -35,7 +35,7 @@
     "vue-property-decorator": "^9.1.2",
     "vue-router": "^4.1.6",
     "vue-wxlogin": "^1.0.4",
-    "@kcdesign/data": "file:../kcdesign-data"
+    "@kcdesign/data": "0.1.14"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
