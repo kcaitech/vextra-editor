@@ -46,18 +46,24 @@ watch(textarea, () => {
     disabled.value = false
 })
 const getDocumentAuthority = async () => {
-    const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
-    permType = data.perm_type
-    if(permType !== 0) {
-        router.push({
-            name: 'document',
-            query: {
-                id: route.query.id
+    try {
+        const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+        if(data) {
+            permType = data.perm_type
+            if(permType !== 0) {
+                router.push({
+                    name: 'document',
+                    query: {
+                        id: route.query.id
+                    }
+                })
             }
-        })
+        }
+    } catch(err) {
+        console.log(err);
+        
     }
 }
-
 
 getDocumentAuthority()
 const getDocumentInfo = async () => {

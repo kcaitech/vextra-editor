@@ -109,18 +109,19 @@ const selectAuthority = (i: number, e: Event) => {
     posi.value.top = Math.max(el.parentElement!.offsetHeight, 35) * (i + 2)
   })
 }
-const onEditable = (id: number, type: number, index: number) => {
+const onEditable = (id: string, type: number, index: number) => {
   if(shareList.value[index].perm_type === type) return
   putShareAuthority(id, type)
   shareList.value[index].perm_type = type
 }
-const onReadOnly = (id: number, type: number, index: number) => {
+const onReadOnly = (id: string, type: number, index: number) => {
   if(shareList.value[index].perm_type === type) return
   putShareAuthority(id, type)
   shareList.value[index].perm_type = type
 }
-const onRemove = (id: number, i: number) => {
+const onRemove = (id: string, i: number) => {
   delShare(id)
+  shareList.value.splice(i, 1)
 }
 const getShareList = async () => {
   try {
@@ -130,7 +131,7 @@ const getShareList = async () => {
     console.log(err);
   }
 }
-const delShare = async (id: number) => {
+const delShare = async (id: string) => {
   try {
     await share_api.delShareAuthorityAPI({ share_id: id })
     getShareList()
@@ -138,7 +139,7 @@ const delShare = async (id: number) => {
     console.log(err);
   }
 }
-const putShareAuthority = async (id: number, type: number) => {
+const putShareAuthority = async (id: string, type: number) => {
   try {
     await share_api.putShareAuthorityAPI({ share_id: id, perm_type: type })
   }catch(err) {
@@ -185,6 +186,8 @@ watch(value1, (nVal, oVal) => {
 watchEffect(() => {
   if(route.query.id) {
     if(docInfo.value) {
+      console.log(userInfo.value?.userInfo.id,'id');
+      
       docInfo.value.user.id !== userInfo.value?.userInfo.id ? founder.value = true : founder.value = false
     }
   }
@@ -193,14 +196,16 @@ watchEffect(() => {
 const copyLink = async() => {
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(url).then(() => {
-      if(selectValue.value == DocType[docType.Critical]) {
-        setShateType(docType.Critical)
-      }else if(selectValue.value == DocType[docType.Edit]){
-        setShateType(docType.Edit)
-      }else if(selectValue.value == DocType[docType.Read]){
-        setShateType(docType.Read)
-      }else if(selectValue.value == DocType[docType.Share]){
-        setShateType(docType.Share)
+      if(value1.value) {
+        if(selectValue.value == DocType[docType.Critical]) {
+          setShateType(docType.Critical)
+        }else if(selectValue.value == DocType[docType.Edit]){
+          setShateType(docType.Edit)
+        }else if(selectValue.value == DocType[docType.Read]){
+          setShateType(docType.Read)
+        }else if(selectValue.value == DocType[docType.Share]){
+          setShateType(docType.Share)
+        }
       }
           ElMessage({
       message: `${t('share.copy_success')}`,
@@ -328,7 +333,7 @@ onUnmounted(() => {
       </div>
     </el-card>
 
-    <el-card class="box-card" :style="{ width: 300 + 'px'}"  v-if="founder">
+    <el-card class="box-card" :style="{ width: 300 + 'px'}"  v-if="founder && docInfo">
       <!-- 标题 -->
       <template #header>
         <div class="card-header">

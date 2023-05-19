@@ -9,26 +9,26 @@
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">
                 <el-icon :size=" 20 " content="标星" v-if=" !documentsList[scope.$index].document_favorites.is_favorite ">
-                    <el-tooltip content="标星" show-after="1000">
+                    <el-tooltip content="标星" :show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
                             @click=" Starfile(scope.$index) ">
                         </svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 " v-else>
-                    <el-tooltip content="取消标星" show-after="1000">
+                    <el-tooltip content="取消标星" :show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
                             @click=" Starfile(scope.$index) ">
                         </svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip content="分享" show-after="1000">
+                    <el-tooltip content="分享" :show-after="1000">
                         <Share @click=" Sharefile(scope.$index) " />
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip content="移除记录" show-after="1000">
+                    <el-tooltip content="移除记录" :show-after="1000">
                         <Remove @click=" Removefile(scope.$index) " />
                     </el-tooltip>
                 </el-icon>&nbsp;

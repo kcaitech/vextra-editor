@@ -5,7 +5,7 @@ import { SKIP_LOGIN } from '@/utils/setting';
 const AppVue = () => import("@/App.vue");
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
-const Apphome = () => import("@/components/AppHome/Apphome.vue");
+const Apphome = () => import("@/components/AppHome/AppHome.vue");
 const Login = () => import("@/components/Login/Login.vue");
 const Recently = () => import("@/components/AppHome/Main/Recently.vue");
 const StarFile = () => import("@/components/AppHome/Main/StarFile.vue");
@@ -18,7 +18,7 @@ const per_center=()=>import('@/components/Userinfo/per_center.vue')
 const routes = [
     {
         path: '/',
-        redirect: SKIP_LOGIN ? '/apphome/recently' : '/login'
+        redirect: '/apphome/recently'
     },
     {
         path: "/login",

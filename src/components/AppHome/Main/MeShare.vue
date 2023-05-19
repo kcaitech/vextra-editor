@@ -22,7 +22,7 @@
                     <Share @click=" Sharefile(scope.$index) " />
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip content="删除" show-after="1000">
+                    <el-tooltip content="删除" :show-after="1000">
                         <Delete @click=" Deletefile(scope.$index) " />
                     </el-tooltip>
                 </el-icon>&nbsp;

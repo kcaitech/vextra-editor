@@ -256,6 +256,7 @@ let uploadTimer: any = null
 uploadTimer = setInterval(() => {
     docID = localStorage.getItem('docId') || ''
     if(docID) {
+        
         context.value.upload(docID)
     }
 }, 60000)

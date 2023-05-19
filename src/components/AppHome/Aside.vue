@@ -15,7 +15,6 @@ import { Repository } from '@kcdesign/data/data/transact';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
 import { importSketch } from '@kcdesign/data/io';
 import { Zip } from "@pal/zip";
-import { uploadExForm } from "@kcdesign/data/io/export";
 import { newDocument } from '@kcdesign/data/editor/creator';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data/editor';
@@ -30,9 +29,6 @@ const picker = new FilePicker((file) => {
         window.document.title = document.name;
         (window as any).skrepo = repo;
         (window as any).sketchDocument = document;
-        uploadExForm(document, 'ws://192.168.0.10:10000/api/v1', token, "", (successed, doc_id) => {
-        console.log(successed, doc_id);
-    })
         router.push({ name: 'document' });
     })
 });
@@ -47,9 +43,6 @@ function newFile() {
     window.document.title = nd.name;
     (window as any).skrepo = repo;
     (window as any).sketchDocument = nd;
-    uploadExForm(nd, 'ws://192.168.0.10:10000/api/v1', token, "", (successed, doc_id) => {
-        console.log(successed, doc_id);
-    })
     router.push({ name: 'document' });
 }
 
