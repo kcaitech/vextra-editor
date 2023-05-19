@@ -60,8 +60,7 @@ export function useController(context: Context) {
             }
             p = p.parent;
         }
-        // console.log('-result-', result.name);
-        return result;
+        return result
     }
     function updater(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
