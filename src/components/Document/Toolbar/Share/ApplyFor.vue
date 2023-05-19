@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import * as share_api from '@/apis/share'
 const { t } = useI18n()
 
-const docID = '1672502400000'
 const applyList: any = ref([])
 const container = ref<HTMLDivElement>()
 const posi = ref({
@@ -12,35 +11,38 @@ const posi = ref({
   right: 10
 })
 enum Audit {
-  Pass,
-  unPass
+  unPass,
+  Pass
 }
+let docID = ''
 const timestamp  = Date.now()
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`,`${t('share.editable')}`])
-const getApplyList = async (time: number) => {
-    const { data } = await share_api.getApplyListAPI({ doc_id: docID, start_time: time })
+const getApplyList = async (time?: number) => {  
+    docID = localStorage.getItem('docId') || ''
+    const { data } = await share_api.getApplyListAPI({ doc_id: docID })
     applyList.value = data
 }
-const consent = (id: number, index: number) => {
+const consent = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.Pass)
   applyList.value.splice(index, 1)
 }
-const refuse = (id: number, index: number) => {
+const refuse = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.unPass)
   applyList.value.splice(index, 1)
 }
-const promissionApplyAudit = async (id: number, type: number) => {
+const promissionApplyAudit = async (id: string, type: number) => {
   await share_api.promissionApplyAuditAPI({apply_id: id, approval_code: type})
 }
 const close = (index: number) => {
   applyList.value.splice(index, 1)
 }
 let timer: any = null
-// getApplyList(timestamp)
+// 
+getApplyList(timestamp)
 onMounted(() => {    
-    // timer = setInterval(() => {
-    //     getApplyList(timestamp)
-    // }, 60000)
+    timer = setInterval(() => {
+        getApplyList()
+    }, 10000)
 })
 onUnmounted(() => {
     clearInterval(timer)
@@ -73,16 +75,16 @@ onUnmounted(() => {
          <!-- 文档权限 -->
          <div class="unfounder">
           <span>{{ t('apply.authority') }}:</span>
-          <p class="name bold">{{permission[item.perm_type]}}</p>
+          <p class="name bold">{{permission[item.apply.perm_type]}}</p>
         </div>
-        <div class="textarea" v-if="item.applicant_notes.trim().length">
+        <div class="textarea" v-if="item.apply.applicant_notes.trim().length">
           <span class="remarks">{{ t('apply.remarks') }}:</span>
-          <p class="text">{{item.applicant_notes}}</p>
+          <p class="text">{{item.apply.applicant_notes}}</p>
         </div>
         <!-- 链接按钮 -->
         <div class="button">
-          <el-button color="#0d99ff" size="small" @click="consent(item.id, index)">{{ t('apply.agree') }}</el-button>
-          <el-button plain size="small" @click="refuse(item.id, index)">{{ t('apply.refuse') }}</el-button>
+          <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, index)">{{ t('apply.agree') }}</el-button>
+          <el-button plain size="small" @click="refuse(item.apply.id, index)">{{ t('apply.refuse') }}</el-button>
         </div>
       </div>
     </el-card>

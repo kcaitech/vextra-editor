@@ -8,6 +8,7 @@ import { WorkSpace } from '@/context/workspace';
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
 // 直到没有🍌为止，得到最后的XY;
+
 export function landFinderOnPage(pageMatrix: Matrix, center: XY, width: number, height: number, shapes: Shape[]): XY {
     center = pageMatrix.inverseCoord(center.x, center.y);
     const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point

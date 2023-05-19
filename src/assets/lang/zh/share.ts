@@ -46,4 +46,5 @@ export const apply = {
     have_agreed: '已同意',
     rejected: '已拒绝',
     no_message_received: '未收到任何消息',
+    link_not: '链接不存在'
 }

@@ -63,7 +63,7 @@ export const home = {
     New_file: '新建文件',
     recently_opened: '最近打开',
     star_file: '标星文件',
-    file_shared: '我共享的文件',
+    file_shared: '我的文件',
     shared_file_received: '收到的共享文件',
     file_shared_with_me: '共享给我的文件',
     recycling_station: '回收站',
@@ -81,7 +81,8 @@ export const home = {
     comment: '评论',
     groups: '编组',
     ungroup: '解组',
-    search_layer: '搜索图层'
+    search_layer: '搜索图层',
+    prompt: '创建者变更了文档权限，文档即将刷新'
 }
 
 export const navi = {

@@ -9,7 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
-    AppHome: typeof import('./src/components/AppHome/AppHome.vue')['default']
+    AppHome: typeof import('./src/components/AppHome/index.vue')['default']
     Apply: typeof import('./src/components/Apply/index.vue')['default']
     ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']
     Arrow: typeof import('./src/components/Document/Toolbar/Buttons/Arrow.vue')['default']
@@ -55,6 +55,7 @@ declare module '@vue/runtime-core' {
     Icon: typeof import('./src/components/common/Icon.vue')['default']
     IconText: typeof import('./src/components/common/IconText.vue')['default']
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
+    Index: typeof import('./src/components/AppHome/Index.vue')['default']
     Inform: typeof import('./src/components/AppHome/Inform.vue')['default']
     Layers: typeof import('./src/components/Document/Menu/Layers.vue')['default']
     LeftTabs: typeof import('./src/components/Document/Navigation/LeftTabs.vue')['default']
@@ -74,6 +75,7 @@ declare module '@vue/runtime-core' {
     Path: typeof import('./src/components/Document/Toolbar/Buttons/Path.vue')['default']
     Pattern: typeof import('./src/components/Document/Toolbar/Buttons/Pattern.vue')['default']
     Pen: typeof import('./src/components/Document/Toolbar/Buttons/Pen.vue')['default']
+    Per_center: typeof import('./src/components/Userinfo/per_center.vue')['default']
     Popover: typeof import('./src/components/common/Popover.vue')['default']
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
     RadiusForIos: typeof import('./src/components/Document/Attribute/PopoverMenu/RadiusForIos.vue')['default']
@@ -98,6 +100,7 @@ declare module '@vue/runtime-core' {
     ShapeList: typeof import('./src/components/Document/Navigation/ShapeList.vue')['default']
     ShapePath: typeof import('./src/components/Document/Content/ShapePath.vue')['default']
     ShapeTab: typeof import('./src/components/Document/Navigation/ShapeTab.vue')['default']
+    ShapeTitle: typeof import('./src/components/Document/Content/shapeTitle.vue')['default']
     Share: typeof import('./src/components/Document/Toolbar/Share/Share.vue')['default']
     ShareMe: typeof import('./src/components/AppHome/Main/ShareMe.vue')['default']
     StarFile: typeof import('./src/components/AppHome/Main/StarFile.vue')['default']

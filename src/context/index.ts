@@ -8,7 +8,7 @@ import {ShapeEditor} from "@kcdesign/data/editor/shape";
 import {uploadExForm} from "@kcdesign/data/io/export";
 import {Selection} from "./selection";
 import {WorkSpace} from "./workspace";
-
+import * as share_api from '@/apis/share';
 export class Context extends Watchable(Object) {
     private m_data: Document;
     private m_selection: Selection;
@@ -61,10 +61,27 @@ export class Context extends Watchable(Object) {
     }
 
     // debug
-    upload() {
-        const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2ODM5NjA2ODUsIm5iZiI6MTY4MzM1NTg4NSwiaWF0IjoxNjgzMzU1ODg1LCJkYXRhIjp7ImRhdGEiOnsiaWQiOiI4Iiwibmlja25hbWUiOiJJY2UuWiJ9fX0.AZsb_9SYPWAoQHjFD1S0PqY5Kq34yFtmhQ4hKN0BceE"
-        uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', token, "47330851083522048", (successed, doc_id) => {
-            console.log(successed, doc_id);
+    upload(id?: string) {
+        const token = localStorage.getItem('token')
+        if(token)
+         uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', token, id ? id : '', async (successed, doc_id) => {
+            if(successed) {
+                localStorage.setItem('docId', doc_id)
+            }
         })
     }
+
+    async documentInfo(id: string) {
+        try {
+            if(id) {
+                const {data} = await share_api.getDocumentInfoAPI({doc_id: id})
+                return data
+            }else {
+                console.log('没有该文档');
+            }
+        
+        }catch(err) {
+            return console.log(err);
+        }
+    } 
 }

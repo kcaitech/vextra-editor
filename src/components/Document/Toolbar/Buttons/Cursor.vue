@@ -12,6 +12,7 @@ const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
 const selected = ref<Action>(Action.AutoV);
 const selects = ref<Action>(Action.AutoV);
+const visible = ref(false)
 const props = defineProps<{
   active: boolean,
   d: Action
@@ -32,12 +33,12 @@ function showMenu() {
   if (popoverVisible.value) return popoverVisible.value = false;
   if (button.value?.toolButtonEl) {
     const el = button.value?.toolButtonEl;
-    
+    visible.value = false
     popoverVisible.value = true;
     nextTick(() => {
       if (popover.value) {      
         popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 2 + 'px';
+        popover.value.style.top = el.offsetHeight + 9 + 'px';
        
       } 
     })
@@ -60,6 +61,17 @@ function onMenuBlur(e: MouseEvent) {
       document.removeEventListener('click', onMenuBlur);
     }, 10)
   }  
+}
+var timer: any = null
+const onMouseenter = () => {
+  timer = setTimeout(() => {
+    visible.value = true
+    clearTimeout(timer)
+  }, 600)
+}
+const onMouseleave = () => {
+  clearTimeout(timer)
+  visible.value = false
 }
 
 onUpdated(()=> {
@@ -87,11 +99,12 @@ onUpdated(()=> {
     effect="dark"
     :content="props.d === Action.AutoV ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
     placement="bottom"
-    :show-after="500"
+    :show-after="600"
     :offset="10"
     :hide-after="0"
+    :visible="popoverVisible ? false : visible"
   >
-  <ToolButton ref="button" @click="() => {select(selects)}" :selected="props.active">
+  <ToolButton ref="button" @click="() => {select(selects)}" :selected="props.active"  @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
     <div class="svg-container" >
       <svg-icon :icon-class="props.d === selected ? props.d: selects"></svg-icon>
     </div>

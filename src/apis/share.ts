@@ -4,7 +4,7 @@ import httpRequest from '@/request/index'
 //获取分享列表
 export function getShareListAPI(params = {}, opts = {}) {
     return httpRequest({
-        url: `/documents/shares`,
+        url: `/documents/shares/all`,
         method: 'get',
         params: params,
         ...opts
@@ -55,7 +55,7 @@ export function getDocumentInfoAPI(params = {}, opts = {}) {
 export function setShateTypeAPI(params = {}, opts = {}) {
     return httpRequest({
         url: '/documents/shares/set',
-        method: 'post',
+        method: 'put',
         data: params,
         ...opts
     })

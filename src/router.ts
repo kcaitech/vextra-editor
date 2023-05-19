@@ -5,7 +5,7 @@ import { SKIP_LOGIN } from '@/utils/setting';
 const AppVue = () => import("@/App.vue");
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
-const AppHome = () => import("@/components/AppHome/AppHome.vue");
+const Apphome = () => import("@/components/AppHome/index.vue");
 const Login = () => import("@/components/Login/Login.vue");
 const Recently = () => import("@/components/AppHome/Main/Recently.vue");
 const StarFile = () => import("@/components/AppHome/Main/StarFile.vue");
@@ -13,6 +13,7 @@ const ShareMe = () => import("@/components/AppHome/Main/ShareMe.vue");
 const MeShare = () => import("@/components/AppHome/Main/MeShare.vue");
 const RecycleBin = () => import("@/components/AppHome/Main/RecycleBin.vue");
 const Apply = () => import("@/components/Apply/index.vue")
+const per_center=()=>import('@/components/Userinfo/per_center.vue')
 
 const routes = [
     {
@@ -38,7 +39,7 @@ const routes = [
     {
         path: "/apphome",
         name: "apphome",
-        component: AppHome,
+        component: Apphome,
         redirect: '/apphome/recently',
         children: [
             {
@@ -72,6 +73,11 @@ const routes = [
         path: "/apply",
         name: "apply",
         component: Apply
+    },
+    {
+        path: "/pcenter",
+        name: "per_center",
+        component: per_center
     }
 ]
 

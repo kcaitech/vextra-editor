@@ -24,7 +24,7 @@ const props = defineProps<Props>();
                 <svg-icon icon-class="play"></svg-icon>
             </div>
         </ToolButton>
-        <Share></Share>
+        <Share :context="props.context"></Share>
         <UserAvatar user="kc"></UserAvatar>
         <Scale :context="props.context"></Scale>
     </div>

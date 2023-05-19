@@ -16,6 +16,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: "select", action: Action): void;
 }>();
+const visible = ref(false)
 function select(action: Action) {  
     emit('select', action);
 }
@@ -32,7 +33,7 @@ function showMenu(e: MouseEvent) {
     nextTick(() => {
       if (popover.value) {      
         popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 2 + 'px';
+        popover.value.style.top = el.offsetHeight + 9 + 'px';
       } 
     })
     document.addEventListener('click', onMenuBlur);
@@ -84,6 +85,17 @@ const isSelect = () => {
   props.workspace.setFrame({width: 100, height: 100})
 
 }
+var timer: any = null
+const onMouseenter = () => {
+  timer = setTimeout(() => {
+    visible.value = true
+    clearTimeout(timer)
+  }, 600)
+}
+const onMouseleave = () => {
+  clearTimeout(timer)
+  visible.value = false
+}
 
 </script>
 
@@ -108,8 +120,9 @@ const isSelect = () => {
     :show-after="500"
     :offset="10"
     :hide-after="0"
+    :visible="popoverVisible ? false : visible"
   >
-  <ToolButton ref="button" @click="isSelect" :selected="props.active">
+  <ToolButton ref="button" @click="isSelect" :selected="props.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
     <div class="svg-container">
       <svg-icon icon-class="frame"></svg-icon>
     </div>
