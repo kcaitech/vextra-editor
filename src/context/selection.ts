@@ -122,7 +122,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
-    getShapesByXY(position: XY, force: boolean = true): Shape[] { // force 暴力矿工，深度搜索。
+    /**
+     * @deprecated
+     */
+    getShapesByXY(position: PageXY, force: boolean = true): Shape[] { // force 暴力矿工，深度搜索。
         position = cloneDeep(position);
         const shapes: Shape[] = [];
         const page = this.m_selectPage!;
@@ -133,7 +136,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         if (childs?.length) deep(childs, position);
         return shapes;
 
-        function deep(source: Shape[], position: XY) {
+        function deep(source: Shape[], position: PageXY) {
             for (let i = 0; i < source.length; i++) {
                 const { x, y, width, height } = source[i].frame;
                 if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height && source[i].isVisible) shapes.push(source[i]);
@@ -258,20 +261,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         const page = this.m_selectPage;
         let shape: Shape | undefined;
         if (page) {
-            const childs = page.childs;
-            deep(childs);
+            shape = page.flat.get(id);
         }
         return shape;
-
-        function deep(cs: Shape[]) {
-            for (let i = 0; i < cs.length; i++) {
-                if (cs[i].id === id) shape = cs[i];
-                if (shape) return;
-                if ((cs[i] as GroupShape)?.childs?.length) {
-                    deep((cs[i] as GroupShape).childs);
-                }
-            }
-        }
     }
 
     /**
