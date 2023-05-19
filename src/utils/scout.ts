@@ -32,8 +32,6 @@ function scout(): Scout {
         } else {
             result = (path as SVGGeometryElement).isPointInFill(SVGPoint);
         }
-        console.log('--getTotalLength()--', (path as SVGGeometryElement).getTotalLength());
-
         return result;
     }
 
