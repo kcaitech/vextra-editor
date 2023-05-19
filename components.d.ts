@@ -32,7 +32,7 @@ declare module '@vue/runtime-core' {
     CtrlLine: typeof import('./src/components/Document/Selection/Controller/CtrlLine.vue')['default']
     CtrlPoint: typeof import('./src/components/Document/Selection/Controller/Points/CtrlPoint.vue')['default']
     CtrlPointForStraightLine: typeof import('./src/components/Document/Selection/Controller/Points/CtrlPointForStraightLine.vue')['default']
-    Cursor: typeof import('./src/components/Document/Selection/Text/Cursor.vue')['default']
+    Cursor: typeof import('./src/components/Document/Toolbar/Buttons/Cursor.vue')['default']
     Describes: typeof import('./src/components/Login/Describes.vue')['default']
     Design: typeof import('./src/components/Document/Attribute/Design.vue')['default']
     Document: typeof import('./src/components/Document/index.vue')['default']
