@@ -1,55 +1,3 @@
-<template>
-    <div class="header">
-        <div class="search">
-            <el-icon size="20" class="SearchIcon" style="margin: 10px;">
-                <Search />
-            </el-icon><input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`" />
-            <el-icon size="20" class="CloseIcon" style="margin: 10px;">
-                <Close />
-            </el-icon>
-            <div class="searchhistory" >
-                <div v-if="search!=''">
-                    <el-table :data="SearchList||[]" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果">
-                        <el-table-column prop="name" :label="t('home.file_name')"/>
-                        <el-table-column prop="updated_at" :label="t('home.modification_time')" />
-                        <el-table-column prop="size" :label="t('home.size')" />
-                    </el-table>
-                </div>
-                <div v-else>没有搜索记录</div>
-            </div>
-        </div>
-        <div class="right">
-            <div class="notice" @click="showInForm = true">
-                <svg-icon class="svg" icon-class="notice"></svg-icon>
-                <div class="num" v-if="num > 0" :class="{ after: num > 99 }"
-                    :style="{ paddingRight: num > 99 ? 9 + 'px' : 4 + 'px' }">{{ num > 99 ? 99 : num }}</div>
-            </div>
-            <div class="about">
-                <span>{{ t('system.about') }}</span>
-                <div class="about-items">
-                    <div>{{ t('system.help_manual') }}</div>
-                    <div>{{ t('system.about_software') }}</div>
-                </div>
-            </div>
-            <div class="user">
-                <el-avatar :src="circleUrl" @error="errorHandler">
-                    <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
-                </el-avatar>
-                <span style="display: block">{{ uname }}</span>
-                <div class="userinfo">
-                    <div @click="userinfo"><el-icon size="20">
-                            <User />
-                        </el-icon>{{ t('system.personal_center') }}</div>
-                    <div @click="loginout"><el-icon size="20">
-                            <SwitchButton />
-                        </el-icon>{{ t('system.login_out') }}</div>
-                </div>
-            </div>
-            <!-- <button @click="toDocument">跳转</button> -->
-            <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
-        </div>
-    </div>
-</template>
 
 <script setup lang="ts">
 import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
@@ -75,7 +23,7 @@ const closeInForm = () => {
 const getApplyList = async () => {
     try {
         const { data } = await share_api.getApplyListAPI()
-        if(data) {
+        if (data) {
             num.value = data.length
             applyList.value = data
         }
@@ -108,7 +56,7 @@ function getSearch() {
     input.addEventListener('focus', () => {
         SearchList = computed(() => SearchList.value.filter((data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())))
         historylist.style.display = 'block'
-    
+
     })
     historylist.addEventListener('blur', () => {
         search.value = ''
@@ -127,11 +75,11 @@ function getSearch() {
         close.style.display = 'none'
     })
 }
-function userinfo(){
+function userinfo() {
     router.push({ path: '/pcenter' })
 }
 
-function loginout(){
+function loginout() {
     localStorage.clear()
     router.push({ path: '/login' })
 }
@@ -140,7 +88,58 @@ onMounted(() => {
 })
 
 </script>
-
+<template>
+    <div class="header">
+        <div class="search">
+            <el-icon size="20" class="SearchIcon" style="margin: 10px;">
+                <Search />
+            </el-icon><input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`" />
+            <el-icon size="20" class="CloseIcon" style="margin: 10px;">
+                <Close />
+            </el-icon>
+            <div class="searchhistory">
+                <div v-if="search != ''">
+                    <el-table :data="SearchList || []" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果">
+                        <el-table-column prop="name" :label="t('home.file_name')" />
+                        <el-table-column prop="updated_at" :label="t('home.modification_time')" />
+                        <el-table-column prop="size" :label="t('home.size')" />
+                    </el-table>
+                </div>
+                <div v-else>没有搜索记录</div>
+            </div>
+        </div>
+        <div class="right">
+            <div class="notice" @click="showInForm = true">
+                <svg-icon class="svg" icon-class="notice"></svg-icon>
+                <div class="num" v-if="num > 0" :class="{ after: num > 99 }"
+                    :style="{ paddingRight: num > 99 ? 9 + 'px' : 4 + 'px' }">{{ num > 99 ? 99 : num }}</div>
+            </div>
+            <div class="about">
+                <span>{{ t('system.about') }}</span>
+                <div class="about-items">
+                    <div>{{ t('system.help_manual') }}</div>
+                    <div>{{ t('system.about_software') }}</div>
+                </div>
+            </div>
+            <div class="user">
+                <el-avatar :src="circleUrl" @error="errorHandler">
+                    <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
+                </el-avatar>
+                <span style="display: block" class="username">{{ uname }}</span>
+                <div class="userinfo">
+                    <div @click="userinfo"><el-icon size="20">
+                            <User />
+                        </el-icon>{{ t('system.personal_center') }}</div>
+                    <div @click="loginout"><el-icon size="20">
+                            <SwitchButton />
+                        </el-icon>{{ t('system.login_out') }}</div>
+                </div>
+            </div>
+            <!-- <button @click="toDocument">跳转</button> -->
+            <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
+        </div>
+    </div>
+</template>
 <style lang="scss" scoped>
 .header {
     width: calc(100vw - 381px - 50px);
@@ -306,6 +305,17 @@ onMounted(() => {
         .user:hover .userinfo {
             display: block;
         }
+
+        .user {
+            .username {
+                display: block;
+                white-space: nowrap;
+                width: 50px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 10px;
+            }
+        }
     }
 }
 
@@ -324,5 +334,4 @@ onMounted(() => {
     display: none;
     border-radius: 5px;
     text-align: center;
-}
-</style>
+}</style>
