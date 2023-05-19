@@ -1,152 +1,3 @@
-<script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
-import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
-import Inform from './Inform.vue'
-import * as share_api from '@/apis/share'
-import * as users_api from '@/apis/users'
-import { useI18n } from 'vue-i18n'
-import {router} from "@/router";
-const { t } = useI18n()
-const num = ref(0)
-const showInForm = ref(false)
-const applyList: any = ref([])
-const closeInForm = () => {
-    showInForm.value = false
-}
-const getApplyList = async () => {
-    try {
-        const { data } = await share_api.getApplyListAPI()
-        if(data) {
-            num.value = data.length
-            applyList.value = data
-        }
-        
-    } catch (err) {
-        console.log(err)
-    }
-}
-let timer: any = null
-getApplyList()
-
-
-const tableData = [
-    { name: 'wh sh', updated_at: '2020-11-11 18:20:11', size: '12kb' },
-    { name: 'aaa', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
-    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'er嗡嗡嗡', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'er三万五千', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'e威威r', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
-    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'er嗡嗡嗡', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'er三万五千', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'e威威r', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'wh搜索sssh', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'wh ww sh', updated_at: '2020-11-11', size: '12kb' },
-    { name: 'whq sh', updated_at: '2020-11-11', size: '12kb' },
-    { name: '啊啊啊er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '三十五er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '搜索我er', updated_at: '2020-11-11', size: '12kb' },
-    { name: '呃呃er', updated_at: '2020-11-11', size: '12kb' }
-
-]
-
-
-const errorHandler = () => true
-const state = reactive({
-    circleUrl: localStorage.getItem('avatar'),
-    uname: localStorage.getItem('nickname'),
-})
-const { circleUrl, uname, } = toRefs(state)
-
-const search = ref('')
-let documentsList = ref<any[]>([]);
-documentsList.value=tableData
-
-function getSearch() {
-
-    const historylist: any = document.querySelector('.searchhistory')
-    const close: any = document.querySelector('.CloseIcon')
-    const input: any = document.querySelector('.input')
-
-    input.addEventListener('focus', () => {
-        
-        documentsList = computed(() =>tableData.filter((data) =>!search.value ||data.name.toLowerCase().includes(search.value.toLowerCase())))
-        historylist.style.display = 'block'
-
-    })
-    input.addEventListener('blur', () => {
-        search.value = ''
-        historylist.style.display = 'none'
-    })
-
-    input.addEventListener('keyup', (e: any) => {
-        if (search.value !== '') {
-            close.style.display = 'block'
-        } else {
-            close.style.display = 'none'
-        }
-
-        // if (e.key === 'Enter') {
-        //     if (searchlist.length < 11) {
-        //         searchlist.unshift(input.value)
-        //     } else {
-        //         searchlist.pop()
-        //         searchlist.unshift(input.value)
-        //     }
-        // }
-    })
-    close.addEventListener('click', () => {
-        search.value = ''
-        close.style.display = 'none'
-    })
-}
-
-const toDocument = async() => {
-    try {
-        const { data } = await users_api.GetrecordsList()
-        router.push({
-            name: 'document',
-            query: {
-                id:  '49140601005805568'
-            }
-        })
-    } catch (err) {
-        console.log(err)
-    }
-}
-
-
-
-onMounted(() => {
-    getSearch()
-    timer = setInterval(() => {
-        getApplyList()
-    }, 60000)
-})
-onUnmounted(() => {
-    clearInterval(timer)
-})
-
-
-
-
-
-</script>
-
 <template>
     <div class="header">
         <div class="search">
@@ -156,25 +7,16 @@ onUnmounted(() => {
             <el-icon size="20" class="CloseIcon" style="margin: 10px;">
                 <Close />
             </el-icon>
-            <div class="searchhistory">
-                <div>
-                    <el-table :data="documentsList" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果">
-                        <el-table-column prop="name" :label="t('home.file_name')" />
+            <div class="searchhistory" >
+                <div v-if="search!=''">
+                    <el-table :data="SearchList||[]" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果">
+                        <el-table-column prop="name" :label="t('home.file_name')"/>
                         <el-table-column prop="updated_at" :label="t('home.modification_time')" />
                         <el-table-column prop="size" :label="t('home.size')" />
                     </el-table>
-                    <!-- <ul>
-                        <li v-for="(item, index) in documentsList" :key="index" >
-                            {{ item.name }}-{{ item.updated_at }}-{{ item.size }}
-                        </li>
-                    </ul> -->
-                    <!-- <span style="display: inline-block;font-size: 12px;font-weight: bold;">文件名称</span>
-                    <span style="display: inline-block;font-size: 12px;font-weight: bold;">打开时间</span>
-                    <span v-for="(item, index) in searchlist" :key="index">{{ item }}<br /></span> -->
                 </div>
-                <!-- <div v-else style="text-align: center;">没有内容</div> -->
+                <div v-else>没有搜索记录</div>
             </div>
-
         </div>
         <div class="right">
             <div class="notice" @click="showInForm = true">
@@ -195,19 +37,109 @@ onUnmounted(() => {
                 </el-avatar>
                 <span style="display: block">{{ uname }}</span>
                 <div class="userinfo">
-                    <div><el-icon size="20">
+                    <div @click="userinfo"><el-icon size="20">
                             <User />
                         </el-icon>{{ t('system.personal_center') }}</div>
-                    <div><el-icon size="20">
+                    <div @click="loginout"><el-icon size="20">
                             <SwitchButton />
                         </el-icon>{{ t('system.login_out') }}</div>
                 </div>
             </div>
-            <button @click="toDocument">跳转</button>
+            <!-- <button @click="toDocument">跳转</button> -->
             <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
         </div>
     </div>
 </template>
+
+<script setup lang="ts">
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
+import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
+import Inform from './Inform.vue'
+import * as share_api from '@/apis/share'
+import { useI18n } from 'vue-i18n'
+import { router } from '@/router'
+
+const { t } = useI18n()
+const tableData = ref<any[]>([])
+const state = reactive({
+    circleUrl: localStorage.getItem('avatar'),
+    uname: localStorage.getItem('nickname'),
+})
+const { circleUrl, uname, } = toRefs(state)
+const num = ref(0)
+const showInForm = ref(false)
+const applyList: any = ref([])
+const closeInForm = () => {
+    showInForm.value = false
+}
+const getApplyList = async () => {
+    try {
+        const { data } = await share_api.getApplyListAPI()
+        if(data) {
+            num.value = data.length
+            applyList.value = data
+        }
+    } catch (err) {
+        console.log(err)
+    }
+}
+let timer: any = null
+getApplyList()
+onMounted(() => {
+    timer = setInterval(() => {
+        getApplyList()
+    }, 60000)
+})
+onUnmounted(() => {
+    clearInterval(timer)
+})
+
+const errorHandler = () => true
+
+
+let search = ref('')
+let SearchList = ref<any[]>([]);
+
+function getSearch() {
+    const historylist: any = document.querySelector('.searchhistory')
+    const close: any = document.querySelector('.CloseIcon')
+    const input: any = document.querySelector('.input')
+
+    input.addEventListener('focus', () => {
+        SearchList = computed(() => SearchList.value.filter((data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())))
+        historylist.style.display = 'block'
+    
+    })
+    historylist.addEventListener('blur', () => {
+        search.value = ''
+        historylist.style.display = 'none'
+    })
+
+    input.addEventListener('keyup', (e: any) => {
+        if (search.value !== '') {
+            close.style.display = 'block'
+        } else {
+            close.style.display = 'none'
+        }
+    })
+    close.addEventListener('click', () => {
+        search.value = ''
+        close.style.display = 'none'
+    })
+}
+function userinfo(){
+    router.push({ path: '/pcenter' })
+}
+
+function loginout(){
+    localStorage.clear()
+    router.push({ path: '/login' })
+}
+onMounted(() => {
+    getSearch()
+})
+
+</script>
 
 <style lang="scss" scoped>
 .header {

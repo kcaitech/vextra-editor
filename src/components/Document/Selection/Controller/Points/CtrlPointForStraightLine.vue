@@ -62,6 +62,7 @@ function getCtrlElementType(event: MouseEvent) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
+    workspace.value.setCtrl('controller');
     const ct = getCtrlElementType(event);
     if (ct) {
       event.stopPropagation();
@@ -103,6 +104,7 @@ function onMouseMove(event: MouseEvent) {
 }
 function onMouseUp(event: MouseEvent) {
   if (event.button === 0) {
+    workspace.value.setCtrl('page');
     if (isDragging) {
       props.context.repo.commit({});
     }

@@ -63,7 +63,7 @@ export const home = {
     New_file: 'New file',
     recently_opened: 'Recently opened',
     star_file: 'Star file',
-    file_shared: 'The file I shared',
+    file_shared: 'My files',
     shared_file_received: 'Shared file received',
     file_shared_with_me: 'File shared with me',
     recycling_station: 'Recycling station',

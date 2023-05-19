@@ -4,8 +4,9 @@ import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
 import { Shape, GroupShape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
-import { scout, Scout, isTarget, finder } from "@/utils/scout";
+import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
 import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
+import { Artboard } from "@kcdesign/data";
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -167,54 +168,42 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return shapes;
     }
 
-    getClosetContainer(position: XY): GroupShape {
-        position = cloneDeep(position);
-        const page = this.m_selectPage!;
-        const groups: GroupShape[] = [page];
-        const childs = page.childs;
-        position.x -= page.frame.x;
-        position.y -= page.frame.y;
-        if (childs?.length) deep(childs, position);
-        return groups[0];
-
-        function deep(source: Shape[], position: XY) {
-            for (let i = 0; i < source.length; i++) {
-                const { x, y, width, height } = source[i].frame;
-                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height) {
-                    if ([ShapeType.Artboard].includes(source[i].type)) {
-                        groups.unshift(source[i] as GroupShape);
-                    }
-                }
-                const suppos = { x: position.x - x, y: position.y - y }
-                if (source[i].childs?.length) deep(source[i].childs, suppos);
-            }
+    getClosetArtboard(position: PageXY, except?: Shape, scope?: Shape[]): Shape {
+        let result: Shape = this.selectedPage!; // 任何一个元素,至少在一个容器内
+        const range: Shape[] = scope || this.selectedPage?.childs || [];
+        const artboard = artboardFinder(this.scout!, range, position, except);
+        if (artboard) {
+            result = artboard;
         }
+        return result;
     }
 
+
     selectShape(shape?: Shape, ctrl?: boolean, meta?: boolean) {
-        if (!shape) {
+        if (!shape) { // 取消所有已经选择的图形
             this.m_selectShapes.length = 0;
+            this.m_cursorStart = -1;
+            this.m_cursorEnd = -1;
+            this.notify(Selection.CHANGE_SHAPE);
+        } else {
+            if (shape.isLocked) return;
+            if (ctrl || meta) {
+                if (this.isSelectedShape(shape)) {
+                    this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
+                } else {
+                    this.m_selectShapes.push(shape);
+                }
+                this.notify(Selection.CHANGE_SHAPE);
+                return;
+            }
+            this.m_selectShapes.length = 0;
+            this.m_selectShapes.push(shape);
             this.m_cursorStart = -1;
             this.m_cursorEnd = -1;
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
-            return;
         }
-        if (ctrl || meta) {
-            if (this.isSelectedShape(shape)) {
-                this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
-            } else {
-                this.m_selectShapes.push(shape);
-            }
-            this.notify(Selection.CHANGE_SHAPE);
-            return;
-        }
-        this.m_selectShapes.length = 0;
-        this.m_selectShapes.push(shape);
-        this.m_cursorStart = -1;
-        this.m_cursorEnd = -1;
-        this.m_hoverShape = undefined;
-        this.notify(Selection.CHANGE_SHAPE);
+
     }
     unSelectShape(shape: Shape) {
         if (!this.isSelectedShape(shape)) return;

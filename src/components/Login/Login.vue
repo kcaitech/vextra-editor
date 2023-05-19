@@ -20,6 +20,7 @@ async function onmessage(e: any) {
         localStorage.setItem('token', linfo.data.token)
         localStorage.setItem('avatar', linfo.data.avatar)
         localStorage.setItem('nickname', linfo.data.nickname)
+        localStorage.setItem('id', linfo.data.id)
         isLoading.value = false
         router.push({ name: 'apphome' })
     }

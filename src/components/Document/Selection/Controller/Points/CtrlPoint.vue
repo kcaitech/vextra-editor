@@ -66,6 +66,7 @@ function onMouseDown(event: MouseEvent) {
     const ct = getCtrlElementType(event);
     if (ct) {
       event.stopPropagation();
+      workspace.value.setCtrl('controller');
       if (!pointContainer.value) return;
       const { clientX, clientY } = event;
       setStatus(ct);
@@ -111,6 +112,7 @@ function onMouseUp(event: MouseEvent) {
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
     setStatus();
+    workspace.value.setCtrl('page');
     workspace.value.resetCursor();
   }
 }

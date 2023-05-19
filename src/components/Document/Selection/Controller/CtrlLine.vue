@@ -10,7 +10,7 @@ import { GroupShape, Shape } from "@kcdesign/data/data/shape";
 import { createLine, getAxle } from "@/utils/common";
 import CtrlPoint from "./Points/CtrlPointForStraightLine.vue";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
-import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/contentFn";
+import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/wheel";
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 interface Props {
@@ -126,14 +126,14 @@ function mousemove(e: MouseEvent) {
 function transform(shapes: Shape[], start: XY, end: XY) {
     const ps = matrix.inverseCoord(start.x, start.y);
     const pe = matrix.inverseCoord(end.x, end.y);
-    const origin = props.context.selection.getClosetContainer(ps);
-    const targetParent = props.context.selection.getClosetContainer(pe);
+    const origin = props.context.selection.getClosetArtboard(ps);
+    const targetParent = props.context.selection.getClosetArtboard(pe);
     // 对选中的每个图层进行变换
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].isLocked) continue;
         translate(shapes[i], pe.x - ps.x, pe.y - ps.y);
         if (origin.id !== targetParent.id) {
-            shapeMoveNoTransaction(shapes[i], targetParent);
+            shapeMoveNoTransaction(shapes[i], (targetParent as any));
         }
     }
     props.context.repo.transactCtx.fireNotify(); // 通常情况下,当事务结束(commit),系统会根据事务中的改动更新视图. 而移动的过程中,整个移动(transform)的事务并未结束,即尚未commit,此时视图无法得到更新, 可以用此方法更新事务过程中的视图 ---before end transaction---

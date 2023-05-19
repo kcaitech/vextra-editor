@@ -4,7 +4,7 @@ import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
 import { Page } from '@kcdesign/data/data/page';
-import { Selection } from '@/context/selection'
+import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from './ColSplitView.vue';

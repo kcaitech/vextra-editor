@@ -34,12 +34,12 @@ function workspaceUpdate(t?: number) {
 if (props.site)
   surplusX.value = document.documentElement.clientWidth - props.site.x
 
-onMounted(() => {
+onMounted(() => {  
   props.context.workspace.menuMount(true);
   props.context.workspace.watch(workspaceUpdate);
   document.addEventListener('mousedown', handleClickOutside);
 })
-onUnmounted(() => {
+onUnmounted(() => {  
   props.context.workspace.unwatch(workspaceUpdate);
   document.removeEventListener('mousedown', handleClickOutside);
 })

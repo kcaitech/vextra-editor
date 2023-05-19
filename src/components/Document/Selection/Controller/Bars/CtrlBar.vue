@@ -14,7 +14,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
-    (e: 'transform', type: CtrlElementType, p1: XY,p2: XY): void
+    (e: 'transform', type: CtrlElementType, p1: XY, p2: XY): void
 }>();
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
@@ -36,6 +36,7 @@ function setStatus(s: boolean) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
     if (event.button === 0) {
+        workspace.value.setCtrl('controller');
         event.stopPropagation();
         const { clientX, clientY } = event;
         setStatus(true);
@@ -62,6 +63,7 @@ function onMouseMove(event: MouseEvent) {
 }
 function onMouseUp(event: MouseEvent) {
     if (event.button === 0) {
+        workspace.value.setCtrl('page');
         if (isDragging) {
             props.context.repo.commit({});
         }
