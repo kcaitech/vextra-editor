@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
     volumes:
       - kcdesign_client:/usr/share/nginx/html
-      - ~/kcdesign/nginx:/etc/nginx/conf.d
+      - /home/kcai/kcdesign/nginx:/etc/nginx/conf.d
     networks:
       - kcdesign
     ports:
@@ -27,3 +27,8 @@ services:
 networks:
   kcdesign:
     driver: bridge
+volumes:
+  jenkins_home:
+  kcdesign_client:
+  kcdesign_electron:
+  kcdesign_server:

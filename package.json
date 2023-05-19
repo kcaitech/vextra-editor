@@ -5,6 +5,9 @@
   "description": "My application description",
   "author": "kcaisoft.com",
   "main": "background.js",
+  "publishConfig": {
+    "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
+  },
   "scripts": {
     "dev:web": "vue-cli-service --public=protodesign.cn serve",
     "build:web": "vue-cli-service build",
@@ -19,7 +22,6 @@
     "element-plus": "^2.3.0",
     "express": "^4.18.2",
     "express-ws": "^5.0.2",
-    "i": "^0.3.7",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
     "node-stream-zip": "*",
