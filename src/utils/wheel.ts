@@ -147,4 +147,5 @@ function forNewShape(context: Context, dx: number, dy: number, setupPint?: PageX
     }
     context.repo.transactCtx.fireNotify();
 }
+
 export { Wheel, fourWayWheel, forCtrlRect, isDrag, forNewShape }

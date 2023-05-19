@@ -2,7 +2,7 @@ import { layoutText, locateText } from "@/layout/text";
 import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
 import { Document } from "@kcdesign/data/data/document";
 import { Page } from "@kcdesign/data/data/page";
-import { Shape, GroupShape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
+import { Shape, TextShape } from "@kcdesign/data/data/shape";
 import { cloneDeep } from "lodash";
 import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
 // import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";

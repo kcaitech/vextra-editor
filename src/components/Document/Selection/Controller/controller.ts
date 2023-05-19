@@ -26,18 +26,18 @@ export function useController(context: Context) {
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
-            const ps = matrix.inverseCoord(start.x, start.y);
-            const pe = matrix.inverseCoord(end.x, end.y);
+            const ps: PageXY = matrix.inverseCoord(start.x, start.y);
+            const pe: PageXY = matrix.inverseCoord(end.x, end.y);
             const selection = context.selection;
             let targetParent;
             const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
+
             if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
                 targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
             } else {
                 targetParent = context.selection.getClosetArtboard(pe);
             }
             const m = getCloesetContainer(shapes[0]).id != targetParent.id;
-            // console.log('checking', getCloesetContainer(shapes[0]).name, targetParent.name);
             if (m && asyncTransfer) {
                 asyncTransfer.migrate(targetParent);
             }
@@ -60,7 +60,8 @@ export function useController(context: Context) {
             }
             p = p.parent;
         }
-        return result
+        // console.log('-result-', result.name);
+        return result;
     }
     function updater(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
@@ -76,8 +77,8 @@ export function useController(context: Context) {
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
             const action = workspace.value.action;
-            workspace.value.setCtrl('controller');
             if (action == Action.AutoV) {
+                workspace.value.setCtrl('controller');
                 wheel = fourWayWheel(context, { rolling: forCtrlRect });
                 document.addEventListener('mousemove', mousemove);
                 document.addEventListener('mouseup', mouseup);
@@ -168,11 +169,11 @@ export function useController(context: Context) {
         workspace.value.setCtrl('page');
     }
     function transform(start: ClientXY, end: ClientXY) {
-        const ps = matrix.inverseCoord(start.x, start.y);
-        const pe = matrix.inverseCoord(end.x, end.y);
+        const ps: PageXY = matrix.inverseCoord(start.x, start.y);
+        const pe: PageXY = matrix.inverseCoord(end.x, end.y);
         if (asyncTransfer) {
             asyncTransfer.trans(ps, pe);
-            migrate(shapes, ps, pe);
+            migrate(shapes, start, end);
         }
     }
     function pickerFromSelectedShapes() {

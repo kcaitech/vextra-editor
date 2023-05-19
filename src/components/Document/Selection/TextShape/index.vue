@@ -8,7 +8,6 @@ import TextInput from './TextInput.vue';
 import SelectView from "./SelectView.vue";
 import { genRectPath, throttle } from './common';
 import { useController } from '../Controller/controller';
-import { fa } from 'element-plus/es/locale';
 
 const props = defineProps<{
     shape: TextShape,
@@ -66,7 +65,7 @@ function _update() {
 
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
-    if (isDblClick() && !editing) {
+    if (!editing && isDblClick()) {
         editing = true;
         props.context.workspace.contentEdit(editing);
     }
