@@ -81,6 +81,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_selecting: boolean = false; // 编辑器是否正在选择图形
     private m_setting: boolean = false; // 是否正在设置属性
     private m_page_dragging: boolean = false; // 编辑器正在拖动页面
+    private m_content_editing: boolean = false; // 编辑器正在内容编辑
     private m_menu_mount: boolean = false;
     private m_popover: boolean = false;
     private m_rootId: string = 'content';
@@ -152,13 +153,19 @@ export class WorkSpace extends Watchable(Object) {
     get isPageDragging() {
         return this.m_page_dragging;
     }
+    get isEditing() {
+        return this.m_content_editing;
+    }
+    contentEdit(v: boolean) {
+        this.m_content_editing = v;
+    }
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
     }
     setCtrl(v: 'page' | 'controller') {
         this.m_controller = v;
     }
-    preToTranslating(from?: MouseEvent) {
+    preToTranslating(from: MouseEvent | false) {
         if (from) {
             this.m_pre_to_translating = true;
             this.m_mousedown_on_page = from;
@@ -188,24 +195,32 @@ export class WorkSpace extends Watchable(Object) {
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
-        event.preventDefault();
         if (event.code === KeyboardKeys.R) {
+            event.preventDefault();
             this.keydown_r();
         } else if (event.code === KeyboardKeys.V) {
+            event.preventDefault();
             this.keydown_v();
         } else if (event.code === KeyboardKeys.L) {
+            event.preventDefault();
             this.keydown_l(shiftKey);
         } else if (event.code === KeyboardKeys.Z) {
+            event.preventDefault();
             this.keydown_z(this.context.repo, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
+            event.preventDefault();
             this.keydown_k();
         } else if (event.code === KeyboardKeys.O) {
+            event.preventDefault();
             this.keydown_o();
         } else if (event.code === KeyboardKeys.F) {
+            event.preventDefault();
             this.keydown_f();
         } else if (event.code === KeyboardKeys.Digit0) {
+            event.preventDefault();
             this.keydown_0(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.G) {
+            event.preventDefault();
             this.keydown_g(ctrlKey, metaKey, shiftKey);
         }
     }

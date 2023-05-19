@@ -18,7 +18,8 @@ type Posi = {
     name: string,
     shape: Shape,
     rotate: number | undefined,
-    select: boolean
+    select: boolean,
+    maxW: number
 }
 const reflush = ref(0);
 const index = ref(-1)
@@ -68,25 +69,27 @@ function watchShapes() { // 监听相关shape的变化
 
 const setPosition = () => {
     const shapes = props.data.childs
-    let titleArr = shapes.filter(t => {
-        return t.type === 'group' || t.type === 'artboard'
-    })
-    if (titleArr) (
-        position = titleArr.map((item: Shape) => {
-            let select = false
+    // let titleArr = shapes.filter(t => {
+    //     return t.type === 'group' || t.type === 'artboard'
+    // })
+    if (shapes) (
+        position = shapes.map((item: Shape, i: number) => {
             const selected = props.context.selection.selectedShapes;
-            if (selected.includes(item)) {
-                select = true;
-            }else {
-                select = false
+            const minWidth = document.querySelector(`[data-minW="${i}"]`);
+            let minW = item.frame.width
+            if(minWidth){
+                minWidth.innerHTML = item.name
+                minW = (minWidth as HTMLSpanElement).offsetWidth + 4
             }
+            let select = false
             const { x: sx, y: sy, height, width } = item.frame2Page();
             let x = sx
             let y = sy
             let name = item.name
             let rotate = item.rotation
+            let maxW = minW
             const shape: Shape = item
-            return { x, y, width, name, shape, rotate, select };
+            return { x, y, width, name, shape, rotate, select, maxW };
         })
     )
 }
@@ -118,6 +121,7 @@ const onChangeName = (e: Event, i: number) => {
         inputWidth.value = (dataSpan as HTMLSpanElement).offsetWidth + 2
     }
     if (esc.value) return
+    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
 }
 const reName = (e: Event, shape: Shape) => {
     const value = (e.target as HTMLInputElement).value
@@ -146,6 +150,13 @@ const keySaveInput = (e: KeyboardEvent) => {
         index.value = -1
     }
 }
+const unHoverShape = () => {
+
+}
+const hoverShape = (shape: Shape) => {
+    const hoveredShape = props.context.selection.hoveredShape
+
+}
 
 
 onMounted(() => {
@@ -159,12 +170,14 @@ watchEffect(() => updater())
 <template>
     <div class="shapeName" :style="{ transform: matrix.toString() }" :reflush="reflush !== 0 ? reflush : undefined">
         <div class="text" v-for="(c, i) in position" :key="i" :style="{
-            position: 'absolute', maxWidth: `${c.width}px`,
-            transform: `translate(${c.x}px, ${c.y - 17}px) rotate(${c.rotate}deg)`
+            position: 'absolute', width: c.shape.frame.width + 'px', maxWidth: c.shape.frame.width + 'px',
+            transform: `translate(${c.x}px, ${c.y}px) rotate(${c.rotate}deg)`
         }">
-            <span v-if="index !== i" @dblclick="e => onRename(e, c.shape, i)" :class="{selected: c.select}">{{ c.name }}</span>
+            <span v-if="index !== i" :style="{width: c.maxW+ 'px', maxWidth: c.shape.frame.width + 'px',}" @dblclick="e => onRename(e, c.shape, i)" :class="{selected:true}"
+                @mouseenter="hoverShape(c.shape)" @mouseleave="unHoverShape">{{ c.name }}</span>
+            <span v-if="index !== i"  :data-minW="i" style="position: relative; visibility: hidden; top: -10000px;">{{ c.name }}</span>
             <input v-if="isInput && index === i" class="input" @change="e => reName(e, c.shape)" @input="e => onChangeName(e, i)"
-                :style="{ maxWidth: c.width + 'px', width: inputWidth + 'px' }" :data-index="i" type="text">
+                :style="{ maxWidth: c.shape.frame.width + 'px', width: inputWidth + 'px' }" :data-index="i" type="text">
             <span :data-span="i" v-if="isInput && index === i"
                 style="position: relative; visibility: hidden; top: -100px;"></span>
         </div>
@@ -176,7 +189,7 @@ watchEffect(() => updater())
     font-size: var(--font-default-fontsize);
 
     .text {
-        text-overflow: ellipsis;
+        // text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
         padding-left: 2px;

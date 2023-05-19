@@ -8,6 +8,7 @@ import {ShapeEditor} from "@kcdesign/data/editor/shape";
 import {uploadExForm} from "@kcdesign/data/io/export";
 import {Selection} from "./selection";
 import {WorkSpace} from "./workspace";
+import * as share_api from '@/apis/share';
 export class Context extends Watchable(Object) {
     private m_data: Document;
     private m_selection: Selection;
@@ -70,4 +71,17 @@ export class Context extends Watchable(Object) {
         })
     }
 
+    async documentInfo(id: string) {
+        try {
+            if(id) {
+                const {data} = await share_api.getDocumentInfoAPI({doc_id: id})
+                return data
+            }else {
+                console.log('没有该文档');
+            }
+        
+        }catch(err) {
+            return console.log(err);
+        }
+    } 
 }

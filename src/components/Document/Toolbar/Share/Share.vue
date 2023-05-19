@@ -6,8 +6,10 @@ interface Props {
     context: Context
 }
 const props = defineProps<Props>();
+const docID = localStorage.getItem('docId') || ''
 const showFileShare = ref<boolean>(false);
 const pageHeight = ref(0)
+const shareSwitch = ref(false)
 const onShare = () => {
   if(showFileShare.value) {
     showFileShare.value = false
@@ -18,13 +20,25 @@ const onShare = () => {
 const closeShare = () => {
   showFileShare.value = false
 }
+const onSwitch = (state: boolean) => {
+  shareSwitch.value = state
+  
+}
 
 // 实时获取页面的高度
 const getPageHeight = () => {
   pageHeight.value = window.innerHeight
 }
+
 onMounted(() => {
   getPageHeight()
+  props.context.documentInfo(docID).then((res) => {
+    if(res.document) {
+      shareSwitch.value = res.document.doc_type === 0 ? false : true
+    }else {
+      shareSwitch.value = false
+    }
+  })
   window.addEventListener('resize', getPageHeight);
 })
 onUnmounted(() => {
@@ -37,7 +51,7 @@ onUnmounted(() => {
     <div class="share" @click.stop="onShare">
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
-    <FileShare v-if="showFileShare" @close="closeShare" :pageHeight="pageHeight"></FileShare>
+    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" @switch-state="onSwitch" :pageHeight="pageHeight"></FileShare>
   </div>
 </template>
 

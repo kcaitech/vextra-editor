@@ -9,34 +9,32 @@ const { t } = useI18n()
 const radio = ref('1')
 const textarea = ref('')
 const disabled = ref(false)
-const maxShare = ref(0)
-const idRead = ref(0)
-const idEdit = ref(0)
 const docInfo: any = ref({})
 const route = useRoute()
 const linkValid = ref(true)
 let permType = undefined
 const onSave = () => {
     disabled.value = true
-    if (maxShare.value >= 5) {
+    if (docInfo.value.shares_count >= 5) {
         ElMessage({
             message: `${t('apply.maximum_share')}`
         })
+        router.push('/')
     }
     if (radio.value === '1') {
-        idRead.value++
-        if (idRead.value > 3) {
+        if (docInfo.value.application_count.value >= 3) {
             ElMessage({
                 message: `${t('apply.request_access')}`
             })
+            return
         }
     }
     if (radio.value === '2') {
-        idEdit.value++
-        if (idEdit.value > 3) {
+        if (docInfo.value.application_count >= 3) {
             ElMessage({
                 message: `${t('apply.request_access')}`
             })
+            return
         }
     }
     postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
@@ -50,7 +48,6 @@ watch(textarea, () => {
 const getDocumentAuthority = async () => {
     const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
     permType = data.perm_type
-    console.log(permType);
     if(permType !== 0) {
         router.push({
             name: 'document',
@@ -64,8 +61,23 @@ const getDocumentAuthority = async () => {
 
 getDocumentAuthority()
 const getDocumentInfo = async () => {
-    const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
-    docInfo.value = data.data
+    try{
+        const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
+        docInfo.value = data.data
+        if(docInfo.value.application_count >= 3) {
+            ElMessage({
+                message: `${t('apply.request_access')}`
+            })
+        }
+        if(docInfo.value.document.doc_type === 0) {
+            linkValid.value = false
+        }else {
+            linkValid.value = true
+        }
+    }catch (err) {
+        console.log(err);
+        
+    }
 }
 getDocumentInfo()
 const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
@@ -76,7 +88,7 @@ let timer: any = null
 onMounted(() => {  
     timer = setInterval(() => {
     getDocumentAuthority()
-    }, 60000) 
+    }, 10000) 
 })
 onUnmounted(() => {
     clearInterval(timer)
@@ -84,7 +96,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container">
+    <div class="container" v-if="docInfo.document">
         <div class="header">
             <div class="svgBox" @click="() => { router.push({ name: 'apphome' }) }">
                 <svg-icon class="svg" icon-class="home_0508"></svg-icon>

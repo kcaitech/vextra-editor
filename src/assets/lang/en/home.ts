@@ -81,7 +81,8 @@ export const home = {
     comment: 'Add comment',
     groups: 'Group up',
     ungroup: 'Ungroup',
-    search_layer: 'Search layer'
+    search_layer: 'Search layer',
+    prompt: 'Founder change the file permissions, document is refreshed'
 }
 
 export const navi = {

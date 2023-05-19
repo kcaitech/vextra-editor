@@ -81,7 +81,8 @@ export const home = {
     comment: '评论',
     groups: '编组',
     ungroup: '解组',
-    search_layer: '搜索图层'
+    search_layer: '搜索图层',
+    prompt: '创建者变更了文档权限，文档即将刷新'
 }
 
 export const navi = {
