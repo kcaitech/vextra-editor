@@ -7,7 +7,6 @@ import * as users_api from '@/apis/users'
 import { useI18n } from 'vue-i18n'
 import {router} from "@/router";
 const { t } = useI18n()
-const docID = '49140601005805568'
 const num = ref(0)
 const showInForm = ref(false)
 const applyList: any = ref([])
@@ -16,9 +15,11 @@ const closeInForm = () => {
 }
 const getApplyList = async () => {
     try {
-        const { data } = await share_api.getApplyListAPI({ doc_id: docID })
-        num.value = data.length
-        applyList.value = data
+        const { data } = await share_api.getApplyListAPI()
+        if(data) {
+            num.value = data.length
+            applyList.value = data
+        }
         
     } catch (err) {
         console.log(err)

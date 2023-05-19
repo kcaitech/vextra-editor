@@ -18,11 +18,10 @@ import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { importDocument } from "@kcdesign/data";
-import { DocumentInfo } from "@/context/user"
+import { ElMessage } from 'element-plus'
 
 const { t } = useI18n();
 
-const docID = localStorage.getItem('docId') || ''
 const curPage = shallowRef<Page | undefined>(undefined);
 const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
 (window as any).__context = context.value;
@@ -48,7 +47,9 @@ const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
 let permType: any = undefined
 const docInfo: any = ref({})
-
+let docID = ''
+const showHint = ref(false)
+const countdown = ref(10)
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -192,6 +193,13 @@ const getDocumentInfo = async () => {
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
         // documentKey.value = data
         //获取文档类型是否为私有文档且有无权限
+        if(!docInfo.value)  {
+            //无效链接
+            ElMessage({
+                message: `${t('apply.link_not')}`
+            })
+            router.push('/')
+        }  
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -229,14 +237,27 @@ const getDocumentAuthority = async () => {
     try {
         const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
         permType = data.data.perm_type
+        if (permType === 0) {
+            router.push({
+                name: 'apply',
+                query: {
+                    id: route.query.id
+                }
+            })
+        }
     } catch (err) {
         console.log(err);
     }
 }
 
+
+
 let uploadTimer: any = null
 uploadTimer = setInterval(() => {
-    context.value.upload(docID)
+    docID = localStorage.getItem('docId') || ''
+    if(docID) {
+        context.value.upload(docID)
+    }
 }, 60000)
 
 let timer: any = null
@@ -262,6 +283,7 @@ onMounted(() => {
 
     if (route.query.id) {
         getDocumentInfo()
+        
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
             getDocumentAuthority()
@@ -319,6 +341,10 @@ onUnmounted(() => {
             </div>
         </template>
     </ColSplitView>
+    <div v-if="showHint" class="notification">
+      <span>{{ t('home.prompt') }}</span>
+      <span v-if="countdown > 0">{{ countdown }}</span>
+    </div>
     <!-- <div id="bottom" v-if="showBottom"></div> -->
 </template>
 <style>
@@ -424,6 +450,15 @@ onUnmounted(() => {
             height: 12px;
         }
     }
+}
+.notification {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    padding: 10px;
 }
 
 // #bottom {

@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import * as share_api from '@/apis/share'
 const { t } = useI18n()
 
-const docID = localStorage.getItem('docId')
 const applyList: any = ref([])
 const container = ref<HTMLDivElement>()
 const posi = ref({
@@ -12,22 +11,24 @@ const posi = ref({
   right: 10
 })
 enum Audit {
-  Pass,
-  unPass
+  unPass,
+  Pass
 }
+let docID = ''
 const timestamp  = Date.now()
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`,`${t('share.editable')}`])
 const getApplyList = async (time?: number) => {  
+    docID = localStorage.getItem('docId') || ''
     const { data } = await share_api.getApplyListAPI({ doc_id: docID })
     applyList.value = data
 }
 const consent = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.Pass)
-  getApplyList()
+  applyList.value.splice(index, 1)
 }
 const refuse = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.unPass)
-  getApplyList()
+  applyList.value.splice(index, 1)
 }
 const promissionApplyAudit = async (id: string, type: number) => {
   await share_api.promissionApplyAuditAPI({apply_id: id, approval_code: type})

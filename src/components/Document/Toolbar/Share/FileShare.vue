@@ -9,9 +9,11 @@ import { DocInfo } from "@/context/user"
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
+  shareSwitch: boolean
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
+  (e: 'switchState', nVal: boolean): void
 }>()
 enum permissions {
   noAuthority,
@@ -23,7 +25,7 @@ const route = useRoute()
 const docID = localStorage.getItem('docId')
 const url = location.href + `?id=${docID}`
 
-const value1 = ref(false)
+const value1 = ref(props.shareSwitch)
 const selectValue = ref(`${t('share.need_to_apply_for_confirmation')}`)
 const authority = ref(false)
 const docInfo = ref<DocInfo>()
@@ -34,7 +36,7 @@ const readOnly = ref(`${t('share.readOnly')}`)
 const remove = ref(`${t('share.remove')}`)
 const founder = ref(false)
 const userInfo = ref<User>()
-let shareList: any = reactive([])
+let shareList: any = ref([])
 
 const handleTop = ref<number>()
 const posi = ref({
@@ -88,10 +90,7 @@ const getDocumentInfo = async() => {
     const {data} = await share_api.getDocumentInfoAPI({doc_id: docID})
     if(data) {
       docInfo.value = data
-      console.log(docInfo.value);
-      
     }
-
   }catch(err) {
     console.log(err);
   }
@@ -111,14 +110,14 @@ const selectAuthority = (i: number, e: Event) => {
   })
 }
 const onEditable = (id: number, type: number, index: number) => {
-  if(shareList[index].perm_type === type) return
+  if(shareList.value[index].perm_type === type) return
   putShareAuthority(id, type)
-  shareList[index].perm_type = type
+  shareList.value[index].perm_type = type
 }
 const onReadOnly = (id: number, type: number, index: number) => {
-  if(shareList[index].perm_type === type) return
+  if(shareList.value[index].perm_type === type) return
   putShareAuthority(id, type)
-  shareList[index].perm_type = type
+  shareList.value[index].perm_type = type
 }
 const onRemove = (id: number, i: number) => {
   delShare(id)
@@ -126,7 +125,7 @@ const onRemove = (id: number, i: number) => {
 const getShareList = async () => {
   try {
     const { data } = await share_api.getShareListAPI({ doc_id: docID })
-    shareList = data
+    shareList.value = data
   } catch(err) {
     console.log(err);
   }
@@ -154,17 +153,17 @@ const setShateType = async (type: number) => {
   }
 }
 
-watch(selectValue, (nVal, oVal) => {
-  if (nVal == DocType[docType.Critical]) {
-    setShateType(docType.Critical)
-  } else if (nVal == DocType[docType.Edit]) {
-    setShateType(docType.Edit)
-  }else if (nVal == DocType[docType.Read]) {
-    setShateType(docType.Read)
-  } else if (nVal == DocType[docType.Share]) {
-    setShateType(docType.Share)
-  }
-})
+// watch(selectValue, (nVal, oVal) => {
+//   if (nVal == DocType[docType.Critical]) {
+//     setShateType(docType.Critical)
+//   } else if (nVal == DocType[docType.Edit]) {
+//     setShateType(docType.Edit)
+//   }else if (nVal == DocType[docType.Read]) {
+//     setShateType(docType.Read)
+//   } else if (nVal == DocType[docType.Share]) {
+//     setShateType(docType.Share)
+//   }
+// })
 watch(value1, (nVal, oVal) => {
   if(nVal) {
     if(selectValue.value == DocType[docType.Critical]) {
@@ -176,10 +175,10 @@ watch(value1, (nVal, oVal) => {
     }else if(selectValue.value == DocType[docType.Share]){
       setShateType(docType.Share)
     }
+    emit('switchState', nVal)
   }else {
-    console.log('进来就执行了');
-    
     setShateType(docType.Private)
+    emit('switchState', nVal)
   }
 })
 
@@ -191,20 +190,28 @@ watchEffect(() => {
   }
 })
 
-getShareList()
 const copyLink = async() => {
   if (navigator.clipboard && window.isSecureContext) {
-        return navigator.clipboard.writeText(url).then(() => {
+    return navigator.clipboard.writeText(url).then(() => {
+      if(selectValue.value == DocType[docType.Critical]) {
+        setShateType(docType.Critical)
+      }else if(selectValue.value == DocType[docType.Edit]){
+        setShateType(docType.Edit)
+      }else if(selectValue.value == DocType[docType.Read]){
+        setShateType(docType.Read)
+      }else if(selectValue.value == DocType[docType.Share]){
+        setShateType(docType.Share)
+      }
+          ElMessage({
+      message: `${t('share.copy_success')}`,
+      type: 'success',
+    })
+    },() => {
         ElMessage({
-          message: `${t('share.copy_success')}`,
+          message: `${t('share.copy_failure')}`,
           type: 'success',
         })
-        },() => {
-            ElMessage({
-              message: `${t('share.copy_failure')}`,
-              type: 'success',
-            })
-        })
+    })
   }else {
         const textArea = document.createElement('textarea')
         textArea.value = url
@@ -231,6 +238,8 @@ watch(() => props.pageHeight, () => {
 })
 watchEffect(() => {
 getDocumentInfo()
+getShareList()
+
   nextTick(() => {
     handleTop.value = props.pageHeight / 2
     if(card.value) {
@@ -254,7 +263,7 @@ onUnmounted(() => {
 </script>
 <template>
   <div ref="card" class="card" :style="{top:  props.pageHeight / 2}">
-    <el-card class="box-card" :style="{ width: founder ? 300 + 'px' : 400 + 'px'}">
+    <el-card class="box-card" :style="{ width: 400 + 'px'}" v-if="!founder && docInfo">
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
@@ -265,7 +274,7 @@ onUnmounted(() => {
         </div>
       </template>
       <!-- 内容 -->
-      <div class="contain" v-if="!founder && docInfo">
+      <div class="contain">
         <!-- 开关 -->
         <div class="share-switch">
           <span>{{ t('share.share_switch') }}:</span>
@@ -304,7 +313,7 @@ onUnmounted(() => {
                 <div class="name">{{ item.user.nickname }}</div>
               </div>
               <div class="item-right" @click="e => selectAuthority(ids, e)">
-                <div class="authority">{{ permission[item.perm_type] }}</div>
+                <div class="authority">{{ permission[item.share_info.perm_type] }}</div>
                 <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
                 <div class="popover" v-if="authority && index === ids" ref="popover"
                   :style="{ top: posi.top + 'px', right: 30 + 'px' }">
@@ -317,7 +326,19 @@ onUnmounted(() => {
           </el-scrollbar>
         </div>
       </div>
-      <div class="contain" v-else-if="founder">
+    </el-card>
+
+    <el-card class="box-card" :style="{ width: 300 + 'px'}"  v-if="founder">
+      <!-- 标题 -->
+      <template #header>
+        <div class="card-header">
+          <span>{{ t('share.file_sharing') }}</span>
+          <el-button class="button" text @click="closeShare">
+            <div class="close"> X </div>
+          </el-button>
+        </div>
+      </template>
+    <div class="contain">
         <!-- 文件名 -->
         <div class="unfounder">
           <span>{{ t('share.file_name') }}:</span>
@@ -510,4 +531,5 @@ onUnmounted(() => {
 .box-card {
   width: 400px;
 }
+
 </style>
