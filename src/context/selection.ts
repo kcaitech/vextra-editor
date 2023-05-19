@@ -299,6 +299,12 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             return;
         }
         if (index < 0) index = 0;
+        const shape = this.m_selectShapes[0];
+        const length = shape.text.length;
+        if (index >= length) {
+            index = length - 1;
+            before = false;
+        }
         if (index !== this.m_cursorStart || index !== this.m_cursorEnd || before !== this.m_cursorAtBefore) {
             this.m_cursorStart = index;
             this.m_cursorEnd = index;
@@ -311,16 +317,20 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
             return;
         }
+        const shape = this.m_selectShapes[0];
+        const length = shape.text.length;
         if (start < 0) start = 0;
-        // const shape = this.m_selectShapes[0] as TextShape;
-        // const paras = shape.text.paras;
-        // const count = paras.reduce((count, p) => {
-        //     return count + p.length;
-        // }, 0);
-        // if (end > count) end = count;
+        else if (start >= length) {
+            start = length - 1;
+        }
+        if (end < 0) end = 0;
+        else if (end >= length) {
+            end = length - 1;
+        }
         if (start !== this.m_cursorStart || end !== this.m_cursorEnd) {
             this.m_cursorStart = start;
             this.m_cursorEnd = end;
+            this.m_cursorAtBefore = false;
             this.notify(Selection.CHANGE_TEXT);
         }
     }
