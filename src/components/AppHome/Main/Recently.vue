@@ -135,7 +135,7 @@ const Removefile = async (index: number) => {
 }
 
 onMounted(() => {
-    getUserdata();
+    getUserdata()
 
 })
 </script>

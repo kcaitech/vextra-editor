@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, watchEffect } from 'vue'
 import { ElMessage } from 'element-plus'
 import { router } from '../../router'
 import { useRoute } from 'vue-router'
@@ -39,7 +39,7 @@ const onSave = () => {
             })
         }
     }
-    postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), remarks: textarea })
+    postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
 }
 watch(radio, () => {
     disabled.value = false
@@ -48,17 +48,27 @@ watch(textarea, () => {
     disabled.value = false
 })
 const getDocumentAuthority = async () => {
-    const { data } = await share_api.getDocumentAuthorityAPI({ doc_ic: route.query.id })
+    const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
     permType = data.perm_type
-}
-getDocumentAuthority()
-const getDocumentInfo = async () => {
-    const data = await share_api.getDocumentInfoAPI({ doc_ic: route.query.id })
-    docInfo.value = data.data
+    console.log(permType);
+    if(permType !== 0) {
+        router.push({
+            name: 'document',
+            query: {
+                id: route.query.id
+            }
+        })
+    }
 }
 
+
+getDocumentAuthority()
+const getDocumentInfo = async () => {
+    const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
+    docInfo.value = data.data
+}
 getDocumentInfo()
-const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, remarks: any }) => {
+const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
     await share_api.postDocumentAuthorityAPI(data)
 }
 let timer: any = null

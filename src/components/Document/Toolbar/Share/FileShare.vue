@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { defineEmits, ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect, defineProps } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { User } from '@/context/user'
-import * as share_api from '@/apis/share'
-import { ElMessage } from 'element-plus'
+import { defineEmits, ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect, defineProps } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { User } from '@/context/user';
+import * as share_api from '@/apis/share';
+import { ElMessage } from 'element-plus';
+import { useRoute } from 'vue-router';
+import { DocInfo } from "@/context/user"
 const { t } = useI18n()
 const props = defineProps<{
-  docInfo: any,
-  pageHeight: number
+  pageHeight: number,
 }>()
 const emit = defineEmits<{
-  (e: 'close'): void
+  (e: 'close'): void,
 }>()
 enum permissions {
   noAuthority,
@@ -18,11 +19,14 @@ enum permissions {
   reviewable,
   editable
 }
-const url = location.href + `?id=${props.docInfo.document.id}`
-const docID = '1672502400000'
-const value1 = ref(true)
+const route = useRoute()
+const docID = localStorage.getItem('docId')
+const url = location.href + `?id=${docID}`
+
+const value1 = ref(false)
 const selectValue = ref(`${t('share.need_to_apply_for_confirmation')}`)
 const authority = ref(false)
+const docInfo = ref<DocInfo>()
 const index = ref(0)
 const card = ref<HTMLDivElement>()
 const editable = ref(`${t('share.editable')}`)
@@ -30,7 +34,8 @@ const readOnly = ref(`${t('share.readOnly')}`)
 const remove = ref(`${t('share.remove')}`)
 const founder = ref(false)
 const userInfo = ref<User>()
-let shareList: any = ref([])
+let shareList: any = reactive([])
+
 const handleTop = ref<number>()
 const posi = ref({
   top: 0,
@@ -62,8 +67,10 @@ const options = [
     label: `${t('share.anyone_can_comment')}`
   }
 ]
-const DocType = reactive([`${t('share.need_to_apply_for_confirmation')}`, `${t('share.shareable')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
+const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
+userInfo.value = ((window as any).skuser as User);
+
 const closeShare = (e: MouseEvent) => {
   e.stopPropagation()
   emit('close')
@@ -76,6 +83,20 @@ const handleClick = (e: MouseEvent) => {
   }
 
 }
+const getDocumentInfo = async() => {
+  try {
+    const {data} = await share_api.getDocumentInfoAPI({doc_id: docID})
+    if(data) {
+      docInfo.value = data
+      console.log(docInfo.value);
+      
+    }
+
+  }catch(err) {
+    console.log(err);
+  }
+} 
+
 const selectAuthority = (i: number, e: Event) => {
   e.stopPropagation()
   if (authority.value) {
@@ -90,47 +111,86 @@ const selectAuthority = (i: number, e: Event) => {
   })
 }
 const onEditable = (id: number, type: number, index: number) => {
+  if(shareList[index].perm_type === type) return
   putShareAuthority(id, type)
-  shareList.value[index].perm_type = type;
+  shareList[index].perm_type = type
 }
 const onReadOnly = (id: number, type: number, index: number) => {
+  if(shareList[index].perm_type === type) return
   putShareAuthority(id, type)
-  shareList.value[index].perm_type = type;
+  shareList[index].perm_type = type
 }
 const onRemove = (id: number, i: number) => {
   delShare(id)
-  shareList.value.splice(i, 1)
 }
 const getShareList = async () => {
-  const { data } = await share_api.getShareListAPI({ doc_id: docID })
-  shareList.value = data
+  try {
+    const { data } = await share_api.getShareListAPI({ doc_id: docID })
+    shareList = data
+  } catch(err) {
+    console.log(err);
+  }
 }
 const delShare = async (id: number) => {
-  await share_api.delShareAuthorityAPI({ share_id: id })
+  try {
+    await share_api.delShareAuthorityAPI({ share_id: id })
+    getShareList()
+  }catch(err) {
+    console.log(err);
+  }
 }
 const putShareAuthority = async (id: number, type: number) => {
-  await share_api.putShareAuthorityAPI({ share_id: id, perm_type: type })
+  try {
+    await share_api.putShareAuthorityAPI({ share_id: id, perm_type: type })
+  }catch(err) {
+    console.log(err);
+  }
 }
 const setShateType = async (type: number) => {
-  await share_api.setShateTypeAPI({ doc_id: docID, doc_type: type })
+  try {
+    await share_api.setShateTypeAPI({ doc_id: docID, doc_type: type })
+  }catch(err) {
+    console.log(err);
+  }
 }
+
 watch(selectValue, (nVal, oVal) => {
   if (nVal == DocType[docType.Critical]) {
     setShateType(docType.Critical)
   } else if (nVal == DocType[docType.Edit]) {
     setShateType(docType.Edit)
-  } else if (nVal == DocType[docType.Private]) {
-    setShateType(docType.Private)
-  } else if (nVal == DocType[docType.Read]) {
+  }else if (nVal == DocType[docType.Read]) {
     setShateType(docType.Read)
   } else if (nVal == DocType[docType.Share]) {
     setShateType(docType.Share)
   }
 })
-watchEffect(() => {
-  setShateType(docType.Private)
+watch(value1, (nVal, oVal) => {
+  if(nVal) {
+    if(selectValue.value == DocType[docType.Critical]) {
+      setShateType(docType.Critical)
+    }else if(selectValue.value == DocType[docType.Edit]){
+      setShateType(docType.Edit)
+    }else if(selectValue.value == DocType[docType.Read]){
+      setShateType(docType.Read)
+    }else if(selectValue.value == DocType[docType.Share]){
+      setShateType(docType.Share)
+    }
+  }else {
+    console.log('进来就执行了');
+    
+    setShateType(docType.Private)
+  }
 })
-userInfo.value = ((window as any).skuser as User);
+
+watchEffect(() => {
+  if(route.query.id) {
+    if(docInfo.value) {
+      docInfo.value.user.id !== userInfo.value?.userInfo.id ? founder.value = true : founder.value = false
+    }
+  }
+})
+
 getShareList()
 const copyLink = async() => {
   if (navigator.clipboard && window.isSecureContext) {
@@ -158,7 +218,6 @@ const copyLink = async() => {
         })
         textArea.remove()
       }
- 
 }
 handleTop.value = props.pageHeight / 2
 watch(() => props.pageHeight, () => {
@@ -171,6 +230,7 @@ watch(() => props.pageHeight, () => {
   })
 })
 watchEffect(() => {
+getDocumentInfo()
   nextTick(() => {
     handleTop.value = props.pageHeight / 2
     if(card.value) {
@@ -181,6 +241,9 @@ watchEffect(() => {
 })
 
 onMounted(() => {  
+  if(!value1.value) {
+    setShateType(docType.Private)
+  }
   document.addEventListener('click', handleClick);
 })
 
@@ -202,7 +265,7 @@ onUnmounted(() => {
         </div>
       </template>
       <!-- 内容 -->
-      <div class="contain" v-if="!founder">
+      <div class="contain" v-if="!founder && docInfo">
         <!-- 开关 -->
         <div class="share-switch">
           <span>{{ t('share.share_switch') }}:</span>
@@ -211,7 +274,7 @@ onUnmounted(() => {
         <!-- 文件名 -->
         <div class="file-name">
           <span style="margin-right: 12px;">{{ t('share.file_name') }}:</span>
-          <p class="name">{{props.docInfo.document.name}}</p>
+          <p class="name">{{docInfo!.document.name}}</p>
         </div>
         <!-- 权限设置 -->
         <div class="purview">
@@ -254,25 +317,25 @@ onUnmounted(() => {
           </el-scrollbar>
         </div>
       </div>
-      <div class="contain" v-else>
+      <div class="contain" v-else-if="founder">
         <!-- 文件名 -->
         <div class="unfounder">
           <span>{{ t('share.file_name') }}:</span>
-          <p class="name">{{props.docInfo.document.name}}</p>
+          <p class="name">{{docInfo!.document.name}}</p>
         </div>
         <!-- 创建者 -->
         <div class="unfounder">
           <span>{{ t('share.founder') }}:</span>
-          <p class="name">{{props.docInfo.user.nickname}}</p>
+          <p class="name">{{docInfo!.user.nickname}}</p>
         </div>
         <!-- 文档权限 -->
         <div class="unfounder">
           <span>{{ t('share.document_permission') }}:</span>
-          <p class="name">{{DocType[2]}}</p>
+          <p class="name">{{DocType[1]}}</p>
         </div>
         <!-- 链接按钮 -->
         <div class="button bottom">
-          <el-button color="#0d99ff" size="small">{{ t('share.copy_link') }}</el-button>
+          <el-button color="#0d99ff" size="small" @click="copyLink">{{ t('share.copy_link') }}</el-button>
         </div>
       </div>
     </el-card>

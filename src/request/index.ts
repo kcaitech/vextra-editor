@@ -14,10 +14,9 @@ declare module "axios" {
 
 // 创建一个 axios 实例
 const service = axios.create({
-    //  baseURL: 'http://192.168.0.15:8080/api/v1',
-    //baseURL: 'http://api.protodesign.cn/api/v1', // 所有的请求地址前缀部分
-    // baseURL: 'https://mock.apifox.cn/m1/2612240-0-1d5a81b5', // 所有的请求地址前缀部分
-    baseURL: 'http://protodesign.cn/api/v1',
+    // baseURL: 'http://192.168.0.10:10000/api/v1',
+    baseURL: 'http://protodesign.cn/api/v1', // 所有的请求地址前缀部分
+    //  baseURL: 'https://mock.apifox.cn/m1/2612240-0-1d5a81b5', // 所有的请求地址前缀部分
     timeout: 60000, // 请求超时时间毫秒
 })
 
@@ -27,6 +26,7 @@ const service = axios.create({
 service.interceptors.request.use(function (config) {
     // 在发送请求之前做些什么
     const token = localStorage.getItem('token')
+    // const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2ODQ4MjE2MzAsIm5iZiI6MTY4NDIxNjgzMCwiaWF0IjoxNjg0MjE2ODMwLCJkYXRhIjp7ImRhdGEiOnsiaWQiOiI4Iiwibmlja25hbWUiOiJJY2UuWiJ9fX0.A3yAAChDLYRTvfSgNwcAzIVdBBvkat8NMJQD0JOySYs'
     if (token) {
         // config.headers['TOKEN'] = token;
         config.headers.Authorization = `Bearer ${token}`

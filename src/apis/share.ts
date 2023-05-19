@@ -55,7 +55,7 @@ export function getDocumentInfoAPI(params = {}, opts = {}) {
 export function setShateTypeAPI(params = {}, opts = {}) {
     return httpRequest({
         url: '/documents/shares/set',
-        method: 'post',
+        method: 'put',
         data: params,
         ...opts
     })

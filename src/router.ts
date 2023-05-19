@@ -13,6 +13,7 @@ const ShareMe = () => import("@/components/AppHome/Main/ShareMe.vue");
 const MeShare = () => import("@/components/AppHome/Main/MeShare.vue");
 const RecycleBin = () => import("@/components/AppHome/Main/RecycleBin.vue");
 const Apply = () => import("@/components/Apply/index.vue")
+const per_center=()=>import('@/components/Userinfo/per_center.vue')
 
 const routes = [
     {
@@ -72,6 +73,11 @@ const routes = [
         path: "/apply",
         name: "apply",
         component: Apply
+    },
+    {
+        path: "/pcenter",
+        name: "per_center",
+        component: per_center
     }
 ]
 

@@ -37,14 +37,15 @@
                 </el-avatar>
                 <span style="display: block">{{ uname }}</span>
                 <div class="userinfo">
-                    <div><el-icon size="20">
+                    <div @click="userinfo"><el-icon size="20">
                             <User />
                         </el-icon>{{ t('system.personal_center') }}</div>
-                    <div><el-icon size="20">
+                    <div @click="loginout"><el-icon size="20">
                             <SwitchButton />
                         </el-icon>{{ t('system.login_out') }}</div>
                 </div>
             </div>
+            <!-- <button @click="toDocument">跳转</button> -->
             <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
         </div>
     </div>
@@ -56,6 +57,7 @@ import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
 import { useI18n } from 'vue-i18n'
+import { router } from '@/router'
 
 const { t } = useI18n()
 const tableData = ref<any[]>([])
@@ -104,7 +106,6 @@ function getSearch() {
     const input: any = document.querySelector('.input')
 
     input.addEventListener('focus', () => {
-       
         SearchList = computed(() => SearchList.value.filter((data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())))
         historylist.style.display = 'block'
     
@@ -126,8 +127,14 @@ function getSearch() {
         close.style.display = 'none'
     })
 }
+function userinfo(){
+    router.push({ path: '/pcenter' })
+}
 
-
+function loginout(){
+    localStorage.clear()
+    router.push({ path: '/login' })
+}
 onMounted(() => {
     getSearch()
 })

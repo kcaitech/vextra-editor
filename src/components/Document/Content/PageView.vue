@@ -6,6 +6,7 @@ import { ShapeType } from '@kcdesign/data/data/typesdefine';
 import { defineProps, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
+import shapeTitle from './shapeTitle.vue';
 
 const props = defineProps<{
     context: Context,
@@ -30,6 +31,7 @@ function pageViewRegister(mount: boolean) {
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
+    
 })
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
@@ -56,6 +58,7 @@ onUnmounted(() => {
         <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>
+    <shapeTitle :matrix="props.matrix" :context="props.context" :data="props.data"></shapeTitle>
 </template>
 
 <style scoped>
@@ -64,4 +67,5 @@ svg {
     transform-origin: top left;
     background-color: var(--center-content-bg-color);
 }
+
 </style>
