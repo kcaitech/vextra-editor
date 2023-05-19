@@ -14,6 +14,9 @@ export interface IGraphy {
 
 export class GraphArray extends Array<IGraphy> {
     public attr: SpanAttr | undefined;
+    get graphCount() {
+        return this.length;
+    }
 }
 export class Line extends Array<GraphArray> {
     public maxFontSize: number = 0;
@@ -308,7 +311,7 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
             const line = p[i];
             if (y >= line.lineHeight) {
                 y -= line.lineHeight;
-                index += line.length;
+                index += line.graphCount;
                 continue;
             }
             // index span
@@ -319,7 +322,7 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
                 }
                 const lastGraph = span[span.length - 1];
                 if (x >= (lastGraph.x + lastGraph.cw)) {
-                    index += span.length;
+                    index += span.graphCount;
                     if (i === len - 1) {
                         // before = true;
                         if (lastGraph.char === '\n') index--; // 忽略回车
@@ -388,14 +391,14 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 return [p0, p1]
             }
             if (index >= line.graphCount) {
-                index -= line.length;
+                index -= line.graphCount;
                 continue;
             }
 
             for (let i = 0, len = line.length; i < len; i++) {
                 const span = line[i];
-                if (index >= span.length) {
-                    index -= span.length;
+                if (index >= span.graphCount) {
+                    index -= span.graphCount;
                     continue;
                 }
 
