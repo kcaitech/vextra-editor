@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { GroupShape, Shape } from '@kcdesign/data/data/shape';
+import { GroupShape, Shape } from '@kcdesign/data';
 import { defineProps, watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget } from '@/utils/common';

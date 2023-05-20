@@ -9,13 +9,13 @@ import {
 } from '@element-plus/icons-vue'
 import { router } from '@/router'
 import { FilePicker } from '../common/filepicker';
-import { Repository } from '@kcdesign/data/data/transact';
+import { Repository } from '@kcdesign/data';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
-import { importSketch } from '@kcdesign/data/io';
+import { importSketch } from '@kcdesign/data';
 import { Zip } from "@pal/zip";
-import { newDocument } from '@kcdesign/data/editor/creator';
+import { newDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
-import { DocEditor } from '@kcdesign/data/editor';
+import { DocEditor } from '@kcdesign/data';
 const { t } = useI18n();
 
 const picker = new FilePicker((file) => {

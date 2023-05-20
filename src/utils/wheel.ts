@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { translate, expandTo, translateTo } from "@kcdesign/data/editor/frame";
+import { translate, expandTo, translateTo } from "@kcdesign/data"; // TODO
 
 interface Wheel {
     remove: () => undefined

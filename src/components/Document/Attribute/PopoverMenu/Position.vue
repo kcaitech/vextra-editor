@@ -4,9 +4,9 @@ import { ref, defineProps, onMounted, reactive, computed, onUnmounted, onBeforeU
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data/data/shape';
+import { Shape } from '@kcdesign/data';
 import { genOptions } from '@/utils/common';
-import { ResizingConstraints } from '@kcdesign/data/data/model';
+import { ResizingConstraints } from '@kcdesign/data';
 
 type Side = 'top' | 'right' | 'bottom' | 'left' | 'width' | 'height'| 'center';
 interface Controller {

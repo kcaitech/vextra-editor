@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
-import { Page } from '@kcdesign/data/data/page';
+import { Page } from '@kcdesign/data';
 import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
@@ -11,8 +11,8 @@ import ColSplitView from './ColSplitView.vue';
 import { SCREEN_SIZE } from '@/utils/setting';
 import { WorkSpace } from '@/context/workspace';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document } from '@kcdesign/data/data/document';
-import { Repository } from '@kcdesign/data/data/transact';
+import { Document } from '@kcdesign/data';
+import { Repository } from '@kcdesign/data';
 import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';

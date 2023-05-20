@@ -1,13 +1,12 @@
-import { Shape } from "@kcdesign/data/data/shape";
-import { Fill, FillType, Gradient } from "@kcdesign/data/data/style";
+import { Shape } from "@kcdesign/data";
+import { Fill, FillType, Gradient } from "@kcdesign/data";
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
-import { objectId } from "@kcdesign/data/basic/objectid";
-import * as types from "@kcdesign/data/data/classes"
+import { objectId } from "@kcdesign/data";
 
 const handler: { [key: string]: (h: Function, shape: Shape, fill: Fill, path: string) => any } = {};
-handler[types.FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
+handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
     const frame = shape.frame;
     return h("path", {
@@ -19,7 +18,7 @@ handler[types.FillType.SolidColor] = function (h: Function, shape: Shape, fill: 
     });
 }
 
-handler[types.FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
+handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
     const frame = shape.frame;
     const elArr = new Array();

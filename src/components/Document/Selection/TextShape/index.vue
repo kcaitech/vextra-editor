@@ -1,14 +1,13 @@
 <script setup lang='ts'>
 import { defineProps, watch, onMounted, onUnmounted, ref, reactive } from 'vue';
 import { Selection } from '@/context/selection';
-import { Matrix } from '@kcdesign/data/basic/matrix';
-import { TextShape } from '@kcdesign/data/data/shape';
+import { Matrix } from '@kcdesign/data';
+import { TextShape } from '@kcdesign/data';
 import { Context } from '@/context';
 import TextInput from './TextInput.vue';
 import SelectView from "./SelectView.vue";
 import { genRectPath, throttle } from './common';
 import { useController } from '../Controller/controller';
-import { fa } from 'element-plus/es/locale';
 
 const props = defineProps<{
     shape: TextShape,

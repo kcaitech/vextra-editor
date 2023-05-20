@@ -1,8 +1,8 @@
-import { TextShape } from "@kcdesign/data/data/shape";
+import { TextShape } from "@kcdesign/data";
 import { layoutText } from "@/layout/text";
-import { Color } from "@kcdesign/data/data/classes";
+import { Color } from "@kcdesign/data";
 import { getTextPath } from "@/textpath";
-import { Path } from "@kcdesign/data/data/path";
+import { Path } from "@kcdesign/data";
 
 function toRGBA(color: Color): string {
     return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";

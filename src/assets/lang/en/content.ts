@@ -1,4 +1,4 @@
-import { ShapeType } from "@kcdesign/data/data/typesdefine";
+import { ShapeType } from "@kcdesign/data";
 export const shape: any = {
     group_shape: "Group",
     page: "Page",

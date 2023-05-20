@@ -2,9 +2,9 @@
 import { Context } from '@/context';
 import { defineProps, computed, onMounted, onUnmounted, watchEffect } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Matrix } from '@kcdesign/data';
 import { getBarStyle } from '@/utils/rectFn';
-import { AsyncBaseAction } from "@kcdesign/data/editor/controller";
+import { AsyncBaseAction } from "@kcdesign/data";
 import { Shape } from '@kcdesign/data';
 import { PageXY, ClientXY } from '@/context/selection';
 interface Props {

@@ -8,9 +8,9 @@
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref } from 'vue';
 import { Context } from '@/context';
-import { Shape, ShapeType } from '@kcdesign/data/data/shape';
-import { Color, Fill, ContextSettings } from "@kcdesign/data/data/style";
-import { FillType, BlendMode } from '@kcdesign/data/data/classes';
+import { Shape, ShapeType } from '@kcdesign/data';
+import { Color, Fill, ContextSettings } from "@kcdesign/data";
+import { FillType, BlendMode } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';

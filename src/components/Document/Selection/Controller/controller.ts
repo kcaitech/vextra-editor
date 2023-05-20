@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
@@ -8,7 +8,7 @@ import { Selection } from "@/context/selection";
 import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
 import { forGroupHover, groupPassthrough } from "@/utils/scout";
 import { Action, WorkSpace } from "@/context/workspace";
-import { AsyncTransfer } from "@kcdesign/data/editor/controller";
+import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);

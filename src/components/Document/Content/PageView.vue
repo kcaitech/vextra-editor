@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Matrix } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Page } from '@kcdesign/data/data/page';
-import { ShapeType } from '@kcdesign/data/data/typesdefine';
+import { Page } from '@kcdesign/data';
+import { ShapeType } from '@kcdesign/data';
 import { defineProps, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";

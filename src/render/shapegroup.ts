@@ -1,23 +1,22 @@
-import { BoolOp, GroupShape, Shape, TextShape } from "@kcdesign/data/data/shape";
+import { BoolOp, GroupShape, Shape, TextShape } from "@kcdesign/data";
 import { difference, intersection, subtract, union } from "./boolop";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
-import * as types from "@kcdesign/data/data/classes"
 import { renderText2Path } from "./text";
 
 function opPath(bop: BoolOp, path0: string, path1: string): string {
     let path = "";
     switch (bop) {
-        case types.BoolOp.Diff:
+        case BoolOp.Diff:
             path = difference(path0, path1);
             break;
-        case types.BoolOp.Intersect:
+        case BoolOp.Intersect:
             path = intersection(path0, path1);
             break;
-        case types.BoolOp.Subtract:
+        case BoolOp.Subtract:
             path = subtract(path0, path1);
             break;
-        case types.BoolOp.Union:
+        case BoolOp.Union:
             path = union(path0, path1);
             break;
         // case BoolOp.SimpleUnion:
@@ -49,7 +48,7 @@ export function render2path(shape: Shape, offsetX?: number, offsetY?: number, co
         const frame1 = child1.frame;
         const path1 = render2path(child1, offsetX + frame1.x, offsetY + frame1.y, consumed);
         const pathop = child1.boolOp;
-        if (pathop === types.BoolOp.None) {
+        if (pathop === BoolOp.None) {
             joinPath = joinPath + path1;
         } else {
             joinPath = joinPath.length === 0 ? path1 : opPath(pathop, joinPath, path1)

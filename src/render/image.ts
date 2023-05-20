@@ -1,4 +1,4 @@
-import { ImageShape } from "@kcdesign/data/data/shape";
+import { ImageShape } from "@kcdesign/data";
 
 export function render(h: Function, shape: ImageShape, url: string, reflush?: number) {
     // <image :xlink:href="url" :x="frame.x" :y="frame.y" :width="frame.width" :height="frame.height" :reflush="reflush" />)

@@ -3,9 +3,9 @@ import { Context } from '@/context';
 import { ref, defineProps, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
 import { XY, ClientXY, PageXY } from '@/context/selection';
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Matrix } from '@kcdesign/data';
 import { getAngle } from '@/utils/common';
-import { AsyncLineAction } from '@kcdesign/data/editor/controller';
+import { AsyncLineAction } from '@kcdesign/data';
 interface Props {
   context: Context,
   axle: XY,

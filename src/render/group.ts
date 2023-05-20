@@ -1,4 +1,4 @@
-import { GroupShape, ShapeType } from "@kcdesign/data/data/shape";
+import { GroupShape, ShapeType } from "@kcdesign/data";
 
 export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>): Array<any> {
     const childs: Array<any> = [];
