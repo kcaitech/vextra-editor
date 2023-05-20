@@ -36,19 +36,31 @@ export function useController(context: Context) {
             } else {
                 targetParent = context.selection.getClosetArtboard(pe);
             }
-            const m = shapes[0].parent?.id != targetParent.id;
-            // console.log('checking', shapes[0].parent?.name, targetParent.name);
+            const m = getCloesetContainer(shapes[0]).id != targetParent.id;
+            // console.log('checking', getCloesetContainer(shapes[0]).name, targetParent.name);
             if (m && asyncTransfer) {
                 asyncTransfer.migrate(targetParent);
             }
         }
     }
-    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 35); // 停留35ms之后做环境判断和迁移
+    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 80); // 停留80ms之后做环境判断和迁移
     function downpoint() {
         return startPosition;
     }
-    function downpoint_pagy() {
+    function downpoint_page() {
         return startPositionOnPage;
+    }
+    function getCloesetContainer(shape: Shape): Shape {
+        let result = context.selection.selectedPage!
+        let p = shape?.parent;
+        while (p) {
+            if (p.type == ShapeType.Artboard) {
+                result = p as any;
+                break;
+            }
+            p = p.parent;
+        }
+        return result
     }
     function updater(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
@@ -268,5 +280,5 @@ export function useController(context: Context) {
         document.removeEventListener('mousedown', mousedown);
         timerClear();
     })
-    return { isDblClick, isEditing, isDrag, downpoint, downpoint_pagy }
+    return { isDblClick, isEditing, isDrag, downpoint, downpoint_page }
 }

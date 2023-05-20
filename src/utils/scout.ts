@@ -1,10 +1,6 @@
 import { PageXY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
-import { debounce } from 'lodash';
-import { translate, adjustLT2, adjustLB2, adjustRT2, adjustRB2, translateTo } from "@kcdesign/data/editor/frame";
-import { Selection } from '@/context/selection';
-
 interface Scout {
     path: SVGPathElement,
     remove: () => void;
@@ -71,12 +67,8 @@ function getPathOnPageString(shape: Shape): string { // path坐标系：页面
 }
 
 // 判定点是否在图形内
-function isTarget(scout: Scout | undefined, shape: Shape, p: PageXY): boolean {
-    if (scout) {
-        return scout.isPointInShape(shape, p);
-    } else {
-        return false;
-    }
+function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
+    return scout.isPointInShape(shape, p);
 }
 
 // 扁平化一个编组的树结构
@@ -155,7 +147,7 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, sele
 }
 
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
-// 注：子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上
+// 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
 function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape): Shape | undefined {
     let result: Shape | undefined;
     for (let j = 0; j < g.length; j++) {
@@ -167,16 +159,9 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
                     return forGroupHover(scout, c, position, selected);
                 } else {
                     let target = g[j]; // c[j]必定会存在至少一个parent是Group
-                    while (target?.parent && target?.parent?.type === ShapeType.Group) {
-                        const c = (target.parent as GroupShape).childs;
+                    while (target?.parent && target?.parent?.type == ShapeType.Group) {
                         if (selected) {
-                            let isBroSelected: boolean = false;
-                            for (let i = 0; i < c.length; i++) {
-                                const item = c[i];
-                                if (item.id == selected.id) {
-                                    isBroSelected = true;
-                                }
-                            }
+                            const isBroSelected: boolean = isPartSelect(target?.parent, selected);
                             if (isBroSelected) break;
                         }
                         target = target.parent;
@@ -189,9 +174,21 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
     }
     return result;
 }
-function isPartSelect(shape: Shape): boolean {
-    
-    return false;
+// 判断一个编组中是否已经有子元素被选中
+function isPartSelect(shape: Shape, selected: Shape): boolean {
+    let result: boolean = false;
+    const c = (shape as GroupShape).childs;
+    if (c) {
+        for (let i = 0; i < c.length; i++) {
+            if (c[i].id == selected.id) {
+                return result = true;
+            }
+            if (c[i]?.childs?.length) {
+                result = isPartSelect(c[i], selected);
+            }
+        }
+    }
+    return result;
 }
 function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Shape): Shape | undefined {
     let result: Shape | undefined = undefined;
@@ -220,26 +217,6 @@ function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Sha
     return result
 }
 
-function _migrate(ps: PageXY, pe: PageXY, selection: Selection): Shape | undefined {
-    const selectedShapes: Shape[] = selection.selectedShapes;
-    const artboardOnStart = selection.getClosetArtboard(ps, undefined, selectedShapes); // 点击位置存在容器
-    let targetParent: Shape | undefined;
-    if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
-        targetParent = selection.getClosetArtboard(pe, artboardOnStart);
-    } else {
-        targetParent = selection.getClosetArtboard(pe);
-    }
-    if (targetParent.id != artboardOnStart.id) {
-        return targetParent;
-    }
-}
-
-const migrate = debounce(_migrate, 300);
-function test() {
-    return 'emit'
-}
-const _test = debounce(test, 300);
-
 function canBeTarget(shape: Shape): boolean { // 可以被选择的前提是没有被锁定和isVisible可视
     if (shape.isVisible != undefined && shape.isLocked != undefined) {
         return shape.isVisible && !shape.isLocked;
@@ -247,4 +224,4 @@ function canBeTarget(shape: Shape): boolean { // 可以被选择的前提是没�
         return false;
     }
 }
-export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, artboardFinder, migrate, _test }
+export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, artboardFinder }
