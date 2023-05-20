@@ -89,10 +89,10 @@ function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
 function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape | undefined {
     // scope 编组子元素
     let shape: Shape | undefined;
-    for (let i = 0; i < scope.length; i++) {
+    for (let i = scope.length - 1; i > -1; i--) {
         if (scope[i].type === ShapeType.Group) {
             const items: Shape[] = delayering(scope[i]); // 扁平一个编组的树结构
-            for (let j = 0; j < items.length; j++) {
+            for (let j = items.length - 1; j > -1; j--) {
                 if (isTarget(scout, items[j], position)) {
                     shape = scope[i];
                     break;
@@ -109,7 +109,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     return shape;
 }
 
-function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, selected: Shape, init?: Shape[]): Shape[] {
+function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, selected: Shape, isCtrl: boolean, init?: Shape[]): Shape[] {
     // force：找到点上的所有图形，否则找到一个就不再寻找
     // O(n + dk)
     const result = init || [];
@@ -122,14 +122,14 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, sele
                 const c = item.childs as Shape[];
                 if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
                     if (c.length) {
-                        result.push(...finder(scout, c, position, false, selected, result));
+                        result.push(...finder(scout, c, position, false, selected, isCtrl, result));
                         if (!force && result.length) return result;
                     } else {
                         result.push(item);
                         if (!force && result.length) return result;
                     }
                 } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
-                    const g = forGroupHover(scout, item.childs, position, selected);
+                    const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
                     if (g) {
                         result.push(g);
                         if (!force) return result;
@@ -148,23 +148,31 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, sele
 
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
 // 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
-function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape): Shape | undefined {
+function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
     let result: Shape | undefined;
-    for (let j = 0; j < g.length; j++) {
+    for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
         if (g[j].isVisible) {
             const childIsTarget = isTarget(scout, g[j], position);
             if (childIsTarget) {
                 if (g[j].type === ShapeType.Group) {
                     const c: Shape[] = (g[j] as GroupShape).childs;
-                    return forGroupHover(scout, c, position, selected);
+                    return forGroupHover(scout, c, position, selected, isCtrl);
                 } else {
-                    let target = g[j]; // c[j]必定会存在至少一个parent是Group
-                    while (target?.parent && target?.parent?.type == ShapeType.Group) {
+                    let target = g[j];
+                    if (isCtrl) { //如果shift键被按下，不冒泡
+                        return g[j];
+                    }
+                    let max = 0;
+                    while (target?.parent && target?.parent?.type == ShapeType.Group && max <= 10000) {
                         if (selected) {
                             const isBroSelected: boolean = isPartSelect(target?.parent, selected);
                             if (isBroSelected) break;
                         }
                         target = target.parent;
+                        max++;
+                    }
+                    if (max == 10000) {
+                        throw new Error('overflow');
                     }
                     result = target!;
                     break;

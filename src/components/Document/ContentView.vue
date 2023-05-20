@@ -49,6 +49,7 @@ const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
+const mouseOnClient: ClientXY = { x: 0, y: 0 };
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
 const selectionIsCtrl = computed(() => !spacePressed.value);
@@ -130,7 +131,7 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
 }
 function onMouseWheel(e: WheelEvent) {
     const xy = offset2Root();
-    const { ctrlKey, metaKey, shiftKey, deltaMode } = e;
+    const { ctrlKey, metaKey, shiftKey, deltaMode, deltaX, deltaY } = e;
     const offsetX = e.x - xy.x;
     const offsetY = e.y - xy.y;
     e.preventDefault();
@@ -142,14 +143,18 @@ function onMouseWheel(e: WheelEvent) {
                 scale_delta_ = 1 / scale_delta;
             }
             matrix.trans(-offsetX, -offsetY);
-            matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
+            matrix.scale(Math.sign(deltaY) <= 0 ? scale_delta : scale_delta_);
             matrix.trans(offsetX, offsetY);
         } else {
-            const delta = e.deltaY > 0 ? -wheel_step : wheel_step;
-            if (shiftKey) {
-                matrix.trans(delta, 0);
+            if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 待适配
+                matrix.trans(-deltaX, -deltaY);
             } else {
-                matrix.trans(0, delta);
+                const delta = deltaY > 0 ? -wheel_step : wheel_step;
+                if (shiftKey) {
+                    matrix.trans(delta, 0);
+                } else {
+                    matrix.trans(0, delta);
+                }
             }
         }
     }
@@ -157,11 +162,13 @@ function onMouseWheel(e: WheelEvent) {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    if (e.code === KeyboardKeys.Space) {
+    if (e.code == KeyboardKeys.Space) {
         spacePressed.value = true;
         workspace.value.setCtrl('page');
         workspace.value.pageDragging(true);
         props.context.selection.unHoverShape();
+    } else if (e.code == 'MetaLeft' || e.code == 'ControlLeft') {
+        // console.log('search');
     }
 
 }
@@ -263,13 +270,15 @@ function insertFrame() {
     }
     workspace.value.setAction(Action.AutoV);
 }
+// function _search() {
 
+// }
 function search(e: MouseEvent) { // 检索图形
     if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
-    const { clientX, clientY } = e;
+    const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = offset2Root();
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, false); // xy: PageXY
+    const shapes = props.context.selection.getShapesByXY_beta(xy, false, metaKey || ctrlKey); // xy: PageXY
     const hoveredShape = shapes[0]; // 确保shapes的长度等于0或者1，如果大于1说明在找到的情况下还继续遍历了
     if (hoveredShape) {
         const selected = props.context.selection.selectedShapes;
@@ -277,6 +286,8 @@ function search(e: MouseEvent) { // 检索图形
             const isSelected = selected.find((s: Shape) => s.id == hoveredShape.id);
             if (!isSelected) {
                 props.context.selection.hoverShape(hoveredShape);
+            } else {
+                props.context.selection.unHoverShape();
             }
         } else {
             props.context.selection.hoverShape(hoveredShape);
@@ -499,14 +510,14 @@ function shapeCreateEnd() { // 造图结束
     if (newShape) {
         removeCreator();
         newShape = undefined;
-        workspace.value.setAction(Action.AutoV);
-        workspace.value.creating(false);
     }
 }
 function removeCreator() { // 移除创造器
     if (asyncCreator) {
         asyncCreator = asyncCreator.close();
     }
+    workspace.value.setAction(Action.AutoV);
+    workspace.value.creating(false);
 }
 // mouseleave
 function onMouseLeave() {

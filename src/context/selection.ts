@@ -145,7 +145,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             }
         }
     }
-    getShapesByXY_beta(position: PageXY, force: boolean, scope?: Shape[]): Shape[] { // 基于SVGGeometryElement的图形检索
+    getShapesByXY_beta(position: PageXY, force: boolean, isCtrl: boolean, scope?: Shape[]): Shape[] { // 基于SVGGeometryElement的图形检索
         // force 深度检索。检索在某一位置的所有visible图形，返回的shape[]长度可以大于1
         // !force：只检索可见图形，被裁剪的、unVisible的不检索，返回的shape[]长度等于1或0，更适用于hover判定、左键点击。
         // scope 检索范围限定，如果没有限定范围则在全域(page)下寻找
@@ -154,7 +154,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             position = cloneDeep(position);
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
-            shapes.push(...finder(this.scout, childs, position, force, this.selectedShapes[0]));
+            shapes.push(...finder(this.scout, childs, position, force, this.selectedShapes[0], isCtrl));
         }
         return shapes;
     }

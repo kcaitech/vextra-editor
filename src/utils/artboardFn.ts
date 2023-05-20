@@ -14,8 +14,8 @@ export function landFinderOnPage(pageMatrix: Matrix, center: XY, width: number, 
     const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point
     const offset = 40;
     let pure: boolean = false;
-
-    while (!pure) {
+    let max = 0;
+    while (!pure && max <= 100000) {
         pure = true;
         const { x: sx, y: sy } = start, w = width, h = height;
         const selectorPoints: [XY, XY, XY, XY, XY] = [
@@ -43,6 +43,10 @@ export function landFinderOnPage(pageMatrix: Matrix, center: XY, width: number, 
         }
 
         !pure && (start.x += offset); // 不是净土，挪一下，再找。
+        max++;
+    }
+    if (max == 100000) {
+        throw new Error('overflow');
     }
     return start; // 找到了净土的起点
 }

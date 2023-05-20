@@ -288,7 +288,6 @@ export function layoutText(shape: TextShape): TextLayout {
             case TextVerAlign.Bottom: return frame.height - contentHeight;
         }
     })(vAlign);
-
     return { yOffset, paras }
 }
 

@@ -5,6 +5,7 @@ export const shape: any = {
     line: 'Line',
     oval: 'Oval',
     artboard: 'Artboard',
-    arrow: 'Arrow'
+    arrow: 'Arrow',
+    text: 'text'
 }
 shape[ShapeType.Rectangle] = 'Rectangle';

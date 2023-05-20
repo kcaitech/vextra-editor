@@ -87,7 +87,7 @@ function mouseleave() {
 }
 function mousemove() {
     if (scaling) return;
-    workspace.value.setCursor(props.ctrlType, props.rotate);
+    workspace.value.setCursorStyle(props.ctrlType, props.rotate);
 }
 function windowBlur() {
     if (isDragging) {
