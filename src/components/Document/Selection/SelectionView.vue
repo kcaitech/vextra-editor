@@ -164,7 +164,15 @@ function pathMousedown(e: MouseEvent) {
             e.stopPropagation();
             props.context.workspace.preToTranslating(e);
             const hoveredShape = props.context.selection.hoveredShape;
-            props.context.selection.selectShape(hoveredShape);
+            if (e.shiftKey) {
+                if (hoveredShape) {
+                    const selected = props.context.selection.selectedShapes;
+                    props.context.selection.rangeSelectShape([...selected, hoveredShape])
+                }
+            } else {
+                props.context.selection.selectShape(hoveredShape);
+            }
+
         }
     }
 }

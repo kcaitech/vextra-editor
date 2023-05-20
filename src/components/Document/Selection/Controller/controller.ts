@@ -159,7 +159,7 @@ export function useController(context: Context) {
                 isDragging = false;
                 workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
             } else {
-                pickerFromSelectedShapes();
+                pickerFromSelectedShapes(e);
             }
             if (wheel) wheel = wheel.remove(); // 卸载滚轮
             document.removeEventListener('mousemove', mousemove);
@@ -175,11 +175,13 @@ export function useController(context: Context) {
             migrate(shapes, start, end);
         }
     }
-    function pickerFromSelectedShapes() {
+    function pickerFromSelectedShapes(e: MouseEvent) {
         const selected = context.selection.selectedShapes;
         if (selected.length > 1) {
-            const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, selected).reverse()[0];
-            context.selection.selectShape(target);
+            if (!e.shiftKey) {
+                const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, selected).reverse()[0];
+                context.selection.selectShape(target);
+            }
         } else if (selected.length === 1) {
             if (selected[0].type === ShapeType.Group) {
                 const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage, selected[0]);
