@@ -5,7 +5,7 @@ import { Matrix } from '@kcdesign/data/basic/matrix';
 import { TextShape } from '@kcdesign/data/data/shape';
 import { onUnmounted, ref, watch, defineProps, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
-import { throttle } from './common';
+import { throttle } from '../../common';
 import { handleKeyEvent } from './keyhandler';
 
 const props = defineProps<{

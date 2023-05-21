@@ -3,16 +3,20 @@ import { defineProps, watch, onMounted, onUnmounted, ref, reactive } from 'vue';
 import { Selection } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { TextShape } from '@kcdesign/data/data/shape';
+import { Shape } from "@kcdesign/data";
 import { Context } from '@/context';
-import TextInput from './TextInput.vue';
-import SelectView from "./SelectView.vue";
-import { genRectPath, throttle } from './common';
+import TextInput from './Text/TextInput.vue';
+import SelectView from "./Text/SelectView.vue";
+import { genRectPath, throttle } from '../common';
 import { useController } from '../Controller/controller';
+import { Point } from "../SelectionView.vue";
 
 const props = defineProps<{
-    shape: TextShape,
+    context: Context,
+    controllerFrame: Point[],
+    rotate: number,
     matrix: number[],
-    context: Context
+    shape: Shape
 }>();
 
 watch(() => props.shape, (value, old) => {
@@ -159,10 +163,10 @@ onUnmounted(() => {
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
         @mouseenter="mouseenter" @mouseleave="mouseleave">
-        <SelectView :context="props.context" :shape="props.shape" :matrix="submatrix.toArray()"></SelectView>
+        <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
         <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
     </svg>
-    <TextInput :context="props.context" :shape="props.shape" :matrix="submatrix.toArray()"></TextInput>
+    <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>
 
 <style lang='scss' scoped></style>

@@ -4,8 +4,6 @@ import { ShapeType } from "@kcdesign/data/data/typesdefine";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
-import { debounce } from "lodash";
-
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',

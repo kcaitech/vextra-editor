@@ -5,7 +5,7 @@ import { TextShape } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { ref, reactive, onMounted, onUnmounted, defineProps, watch } from 'vue';
 import { Selection } from '@/context/selection';
-import { genRectPath, throttle } from './common';
+import { genRectPath, throttle } from '../../common';
 const props = defineProps<{
     shape: TextShape,
     matrix: number[],

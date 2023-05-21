@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref, nextTick } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -7,7 +7,7 @@ import { Page } from '@kcdesign/data/data/page';
 import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
-import ColSplitView from './ColSplitView.vue';
+import ColSplitView from '@/components/common/ColSplitView.vue';
 import { SCREEN_SIZE } from '@/utils/setting';
 import { WorkSpace } from '@/context/workspace';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
@@ -193,13 +193,13 @@ const getDocumentInfo = async () => {
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
         // documentKey.value = data
         //获取文档类型是否为私有文档且有无权限
-        if(!docInfo.value)  {
+        if (!docInfo.value) {
             //无效链接
             ElMessage({
                 message: `${t('apply.link_not')}`
             })
             router.push('/')
-        }  
+        }
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -255,7 +255,7 @@ const getDocumentAuthority = async () => {
 let uploadTimer: any = null
 uploadTimer = setInterval(() => {
     docID = localStorage.getItem('docId') || ''
-    if(docID) {
+    if (docID) {
         context.value.upload(docID)
     }
 }, 60000)
@@ -283,7 +283,7 @@ onMounted(() => {
 
     if (route.query.id) {
         getDocumentInfo()
-        
+
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
             getDocumentAuthority()
@@ -342,8 +342,8 @@ onUnmounted(() => {
         </template>
     </ColSplitView>
     <div v-if="showHint" class="notification">
-      <span>{{ t('home.prompt') }}</span>
-      <span v-if="countdown > 0">{{ countdown }}</span>
+        <span>{{ t('home.prompt') }}</span>
+        <span v-if="countdown > 0">{{ countdown }}</span>
     </div>
     <!-- <div id="bottom" v-if="showBottom"></div> -->
 </template>
@@ -451,6 +451,7 @@ onUnmounted(() => {
         }
     }
 }
+
 .notification {
     position: fixed;
     top: 30px;
