@@ -79,6 +79,10 @@ function styleSheetController(): StyleSheetController {
       src = (result as string);
       if (type === 'auto') {
         str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto;`;
+      } else if (type === 'grab') {
+        str += 'cursor: grab';
+      } else if (type === 'grabbing') {
+        str += 'cursor: grabbing';
       } else {
         str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0]} ${hot[1]}, auto;`;
       }

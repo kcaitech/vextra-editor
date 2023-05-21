@@ -165,6 +165,7 @@ function onKeyDown(e: KeyboardEvent) {
         workspace.value.setCtrl('page');
         workspace.value.pageDragging(true);
         props.context.selection.unHoverShape();
+        setClass('grab-0');
     } else if (e.code == 'MetaLeft' || e.code == 'ControlLeft') {
         _search(true);
     }
@@ -304,7 +305,6 @@ function search(e: MouseEvent) { // 检索图形
 }
 
 function pageViewDragStart(e: MouseEvent) {
-    // setClass('grabbing-0');
     state = STATE_CHECKMOVE;
     prePt.x = e.screenX;
     prePt.y = e.screenY;
@@ -313,6 +313,7 @@ function pageViewDragStart(e: MouseEvent) {
 function pageViewDragging(e: MouseEvent) {
     const isController = workspace.value.controller == 'page';
     if (isController) {
+        setClass('grabbing-0');
         const dx = e.screenX - prePt.x;
         const dy = e.screenY - prePt.y;
         if (state === STATE_MOVEING) {
@@ -332,7 +333,7 @@ function pageViewDragging(e: MouseEvent) {
 }
 
 function pageViewDragEnd() {
-    // setClass('grab-0');
+    setClass('grab-0');
     state = STATE_NONE;
 }
 
