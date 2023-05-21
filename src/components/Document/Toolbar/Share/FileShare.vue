@@ -23,7 +23,7 @@ enum permissions {
 }
 const route = useRoute()
 const docID = localStorage.getItem('docId')
-const url = location.href + `?id=${docID}`
+const url = route.query.id ? location.href : location.href + `?id=${docID}`
 
 const value1 = ref(props.shareSwitch)
 const selectValue = ref(`${t('share.need_to_apply_for_confirmation')}`)

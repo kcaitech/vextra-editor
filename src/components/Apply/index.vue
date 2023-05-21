@@ -102,7 +102,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container" v-if="docInfo.document">
+    <div class="container">
         <div class="header">
             <div class="svgBox" @click="() => { router.push({ name: 'apphome' }) }">
                 <svg-icon class="svg" icon-class="home_0508"></svg-icon>
@@ -111,7 +111,7 @@ onUnmounted(() => {
                 <img src="../../assets/pd-logo-svg.svg">
             </div>
         </div>
-        <div class="context" v-if="linkValid">
+        <div class="context" v-if="linkValid && docInfo.document">
             <span style="font-weight: bold;">{{ docInfo.document.name }}</span>
             <div class="svg-file">
                 <svg-icon class="svg" icon-class="file-rectangle"></svg-icon>
