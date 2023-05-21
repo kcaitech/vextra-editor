@@ -3,7 +3,7 @@ import { defineProps, watchEffect, onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Shape, ShapeType } from "@kcdesign/data/data/shape";
-import { ControllerType, ctrlMap } from "./Controller";
+import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, Action } from "@/context/workspace";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
 
