@@ -32,6 +32,7 @@ declare module '@vue/runtime-core' {
     CtrlBar: typeof import('./src/components/Document/Selection/Controller/Bars/CtrlBar.vue')['default']
     CtrlLine: typeof import('./src/components/Document/Selection/Controller/CtrlLine.vue')['default']
     CtrlPoint: typeof import('./src/components/Document/Selection/Controller/Points/CtrlPoint.vue')['default']
+    'CtrlPoint.SVG': typeof import('./src/components/Document/Selection/Controller/Points/CtrlPoint.SVG.vue')['default']
     CtrlPointForStraightLine: typeof import('./src/components/Document/Selection/Controller/Points/CtrlPointForStraightLine.vue')['default']
     CtrlRect: typeof import('./src/components/Document/Selection/Controller/CtrlRect.vue')['default']
     'CtrlRect.SVG': typeof import('./src/components/Document/Selection/Controller/CtrlRect.SVG.vue')['default']

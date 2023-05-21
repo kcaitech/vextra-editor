@@ -11,7 +11,7 @@ import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
-import { Shape } from "@kcdesign/data";
+import { Shape, ShapeFrame } from "@kcdesign/data";
 interface Props {
   context: Context,
   controllerFrame: Point[],
@@ -26,25 +26,44 @@ const visible = ref<boolean>(true);
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-
+let viewBox = '';
+let groupTrans = '';
+let frame: ShapeFrame;
 // #region 绘制控件
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
   return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
 function updateControllerView() {
-  boundrectPath.value = genRectPath(props.controllerFrame);
-  const p0 = props.controllerFrame[0];
+  const framePoint = props.controllerFrame;
+  boundrectPath.value = genRectPath(framePoint);
+  const p0 = framePoint[0];
   bounds.left = p0.x;
   bounds.top = p0.y;
   bounds.right = p0.x;
   bounds.bottom = p0.y;
-  props.controllerFrame.reduce((bounds, point) => {
+  framePoint.reduce((bounds, point) => {
     if (point.x < bounds.left) bounds.left = point.x;
     else if (point.x > bounds.right) bounds.right = point.x;
     if (point.y < bounds.top) bounds.top = point.y;
     else if (point.y > bounds.bottom) bounds.bottom = point.y;
     return bounds;
-  }, bounds)
+  }, bounds);
+  viewBox = genViewBox(bounds);
+  const shape = props.shape;
+  frame = props.shape.frame;
+  if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
+    const cx = frame.x + frame.width / 2;
+    const cy = frame.y + frame.height / 2;
+    groupTrans = "translate(" + bounds.left + "px," + bounds.top + "px) "
+    groupTrans += "translate(" + cx + "px," + cy + "px) "
+    if (shape.isFlippedHorizontal) groupTrans += "rotateY(180deg) "
+    if (shape.isFlippedVertical) groupTrans += "rotateX(180deg) "
+    if (shape.rotation) groupTrans += "rotate(" + shape.rotation + "deg) "
+    groupTrans += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
+  }
+  else {
+    groupTrans = `translate(${bounds.left}px,${bounds.top}px)`;
+  }
 }
 // #endregion
 
@@ -98,15 +117,26 @@ onUnmounted(() => {
   document.removeEventListener('keydown', keyboardHandle);
 })
 
-watchEffect(() => { updater() })
+watchEffect(() => { updater() });
 </script>
 <template>
   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-    xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
+    xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
     :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
     :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
     <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
+    <g :style="{ transform: groupTrans }">
+      <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" rx="2" ry="2" :x="-4" :y="-4"></rect>
+      <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" :x="frame.width - 4" :y="-4" rx="2"
+        ry="2"></rect>
+      <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" :x="frame.width - 4"
+        :y="frame.height - 4" rx="2" ry="2">
+      </rect>
+      <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" :y="frame.height - 4" :x="-4" rx="2"
+        ry="2">
+      </rect>
+    </g>
   </svg>
 </template>
 <style lang='scss' scoped>
