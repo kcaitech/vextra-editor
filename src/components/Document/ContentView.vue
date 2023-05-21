@@ -169,9 +169,8 @@ function onKeyDown(e: KeyboardEvent) {
         workspace.value.pageDragging(true);
         props.context.selection.unHoverShape();
     } else if (e.code == 'MetaLeft' || e.code == 'ControlLeft') {
-        // console.log('search');
+        _search(true);
     }
-
 }
 function onKeyUp(e: KeyboardEvent) {
     if (spacePressed.value && e.code == KeyboardKeys.Space) {
@@ -183,6 +182,8 @@ function onKeyUp(e: KeyboardEvent) {
         }
         spacePressed.value = false;
         workspace.value.pageDragging(false);
+    } else if (e.code == 'MetaLeft' || e.code == 'ControlLeft') {
+        _search(false);
     }
 }
 
@@ -271,16 +272,8 @@ function insertFrame() {
     }
     workspace.value.setAction(Action.AutoV);
 }
-// function _search() {
-
-// }
-function search(e: MouseEvent) { // 检索图形
-    if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
-    const { clientX, clientY, metaKey, ctrlKey } = e;
-    const { x, y } = offset2Root();
-    const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, false, metaKey || ctrlKey); // xy: PageXY
-    const hoveredShape = shapes[0]; // 确保shapes的长度等于0或者1，如果大于1说明在找到的情况下还继续遍历了
+function selectShapes(shapes: Shape[]) {
+    const hoveredShape = shapes[0];
     if (hoveredShape) {
         const selected = props.context.selection.selectedShapes;
         if (selected.length) {
@@ -296,6 +289,21 @@ function search(e: MouseEvent) { // 检索图形
     } else {
         props.context.selection.unHoverShape();
     }
+}
+function _search(auto: boolean) {
+    const { x, y } = workspace.value.root;
+    const { x: mx, y: my } = mouseOnClient;
+    const xy: PageXY = matrix.inverseCoord(mx - x, my - y);
+    const shapes = props.context.selection.getShapesByXY_beta(xy, false, auto);
+    selectShapes(shapes);
+}
+function search(e: MouseEvent) { // 检索图形
+    if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
+    const { clientX, clientY, metaKey, ctrlKey } = e;
+    const { x, y } = workspace.value.root;
+    const xy = matrix.inverseCoord(clientX - x, clientY - y);
+    const shapes = props.context.selection.getShapesByXY_beta(xy, false, metaKey || ctrlKey); // xy: PageXY
+    selectShapes(shapes);
 }
 
 function pageViewDragStart(e: MouseEvent) {
@@ -434,6 +442,11 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
 function wheelSetup() { // 安装滚轮
     wheel = fourWayWheel(props.context, { rolling: forNewShape }, mousedownOnPageXY);
 }
+function updateMouse(e: MouseEvent) {
+    const { clientX, clientY } = e;
+    mouseOnClient.x = clientX;
+    mouseOnClient.y = clientY;
+}
 // #region mouse event flow
 // mousedown(target：contentview)
 function onMouseDown(e: MouseEvent) {
@@ -482,6 +495,7 @@ function onMouseMove_CV(e: MouseEvent) {
             }
         }
     }
+    updateMouse(e);
 }
 // mouseup(target：document)
 function onMouseUp(e: MouseEvent) {
