@@ -132,30 +132,28 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
 }
 function onMouseWheel(e: WheelEvent) {
     const xy = offset2Root();
-    const { ctrlKey, metaKey, shiftKey, deltaMode, deltaX, deltaY } = e;
+    const { ctrlKey, metaKey, shiftKey, deltaX, deltaY } = e;
     const offsetX = e.x - xy.x;
     const offsetY = e.y - xy.y;
     e.preventDefault();
-    if (deltaMode === 0) {
-        if (ctrlKey || metaKey) { // 缩放
-            if (Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
-                scale_delta_ = 1
-            } else {
-                scale_delta_ = 1 / scale_delta;
-            }
-            matrix.trans(-offsetX, -offsetY);
-            matrix.scale(Math.sign(deltaY) <= 0 ? scale_delta : scale_delta_);
-            matrix.trans(offsetX, offsetY);
+    if (ctrlKey || metaKey) { // 缩放
+        if (Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
+            scale_delta_ = 1
         } else {
-            if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 待适配
-                matrix.trans(-deltaX, -deltaY);
+            scale_delta_ = 1 / scale_delta;
+        }
+        matrix.trans(-offsetX, -offsetY);
+        matrix.scale(Math.sign(deltaY) <= 0 ? scale_delta : scale_delta_);
+        matrix.trans(offsetX, offsetY);
+    } else {
+        if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 待适配，临时适配方案
+            matrix.trans(-deltaX, -deltaY);
+        } else {
+            const delta = deltaY > 0 ? -wheel_step : wheel_step;
+            if (shiftKey) {
+                matrix.trans(delta, 0);
             } else {
-                const delta = deltaY > 0 ? -wheel_step : wheel_step;
-                if (shiftKey) {
-                    matrix.trans(delta, 0);
-                } else {
-                    matrix.trans(0, delta);
-                }
+                matrix.trans(0, delta);
             }
         }
     }
