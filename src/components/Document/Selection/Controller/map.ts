@@ -1,6 +1,6 @@
-// import CtrlRect from "./CtrlRect.vue";
+import CtrlRect from "./CtrlRect.vue";
 import CtrlLine from "./CtrlLine.vue";
-import CtrlRect from "./CtrlRect.SVG.vue";
+// import CtrlRect from "./CtrlRect.SVG.vue";
 import CtrlText from "./CtrlText.vue"
 export enum ControllerType { // 控件类型
     Rect = 'rect',

@@ -88,7 +88,7 @@ export function useController(context: Context) {
         const selected = context.selection.selectedShapes;
         if (selected.length === 1) {
             const item = selected[0];
-            if (item.type == ShapeType.Group) {
+            if (item.type === ShapeType.Group) {
                 const scope = (item as GroupShape).childs;
                 const scout = context.selection.scout;
                 const target = groupPassthrough(scout!, scope, startPositionOnPage);
