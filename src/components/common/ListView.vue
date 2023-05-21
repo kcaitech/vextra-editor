@@ -29,7 +29,7 @@ const props = defineProps<{
     location?: string,
     allowDrag?: boolean,
     shapeHeight?: number,
-    pageHeight?:number,
+    pageHeight?: number,
     draging: "shapeList" | "pageList"
 }>();
 
@@ -527,29 +527,29 @@ function mouseMove(Event: MouseEvent) {
             listTop.value = document.documentElement.offsetHeight - props.shapeHeight
             scrollHeight.value = Math.abs(scroll.y) + props.shapeHeight - container.value!.offsetTop
             listBottom.value = document.documentElement.offsetHeight - clientY
-        }else if(props.pageHeight && props.draging === 'pageList') {
+        } else if (props.pageHeight && props.draging === 'pageList') {
             const top = container.value?.getBoundingClientRect()
             listTop.value = top?.top! - 75
             listBottom.value = clientY - (props.pageHeight + top?.top! - 15)
             scrollHeight.value = Math.abs(scroll.y) + props.pageHeight
         }
-            if(scroll.y < 0 && clientY - listTop.value < 90 && clientY - listTop.value > 60) {
-                timer = setInterval(() => {
-                    scroll.y = scroll.y + 1   
-                    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
-                    clampScroll(0, scroll.y)
-                    layoutUp[props.orientation]();
-                    if(scroll.y === 0) clearInterval(timer)
-                }, 10)
-            }else if(scroll.y <= 0 && listBottom.value < 30 && listBottom.value > 0 && props.source.length() * props.itemHeight > scrollHeight.value) {
-                timer = setInterval(() => {
-                    scroll.y = scroll.y - 1   
-                    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y: scroll.y - scroll.y % 30);
-                    clampScroll(0, scroll.y)
-                    layoutUp[props.orientation]();
-                    if(scroll.y === 0) clearInterval(timer)
-                }, 10)
-            }
+        if (scroll.y < 0 && clientY - listTop.value < 90 && clientY - listTop.value > 60) {
+            timer = setInterval(() => {
+                scroll.y = scroll.y + 1
+                substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
+                clampScroll(0, scroll.y)
+                layoutUp[props.orientation]();
+                if (scroll.y === 0) clearInterval(timer)
+            }, 10)
+        } else if (scroll.y <= 0 && listBottom.value < 30 && listBottom.value > 0 && props.source.length() * props.itemHeight > scrollHeight.value) {
+            timer = setInterval(() => {
+                scroll.y = scroll.y - 1
+                substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
+                clampScroll(0, scroll.y)
+                layoutUp[props.orientation]();
+                if (scroll.y === 0) clearInterval(timer)
+            }, 10)
+        }
         const text = (currentHoverTarget.value as Element).closest('.contain')?.children
         const shapew = text && text[3].clientWidth
         if (shapew && props.draging === 'shapeList') {
@@ -625,31 +625,31 @@ onUnmounted(() => {
     <div class="container" @wheel.prevent="onMouseWheel" @mouseenter="mouseenter" @mouseleave="mouseleave" ref="container">
         <!-- items container -->
         <div :class="orientation" :style="{
-                transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
-                width: orientation === 'horizontal' ? measureWidth + 'px' : 'auto',
-                height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
-            }" ref="contents">
+            transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
+            width: orientation === 'horizontal' ? measureWidth + 'px' : 'auto',
+            height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
+        }" ref="contents">
             <component class="listitem" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
                 v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
                 @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)" :style="{ left: c.x + 'px', top: c.y + 'px' }" />
             <div class="port" v-if="destinationVisible" :style="{
-                    top: destination.y + 'px',
-                    width: destination.length + 'px',
-                }"></div>
+                top: destination.y + 'px',
+                width: destination.length + 'px',
+            }"></div>
             <div class="substitute" v-if="substituteVisible" :style="{
-                    top: `${substitute.y}px`,
-                    left: `${substitute.x}px`
-                }">{{ substitute.context || substituteName }}</div>
+                top: `${substitute.y}px`,
+                left: `${substitute.x}px`
+            }">{{ substitute.context || substituteName }}</div>
         </div>
         <!-- scroll -->
         <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{
             opacity: scrollBar.mount && (listMouseOver || scrolling) ? 1 : 0,
         }">
             <div ref="bar" @mousedown.stop="onScrollBarMouseDown" class="scroll-bar" :style="{
-                    top: scrollBar.y + 'px',
-                    left: scrollBar.x + 'px',
-                    height: scrollBar.length + 'px'
-                }"></div>
+                top: scrollBar.y + 'px',
+                left: scrollBar.x + 'px',
+                height: scrollBar.length + 'px'
+            }"></div>
         </div>
     </div>
 </template>

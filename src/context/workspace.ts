@@ -3,6 +3,9 @@ import { Repository } from "@kcdesign/data/data/transact";
 import { ShapeType } from "@kcdesign/data/data/typesdefine";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { Context } from "./index";
+import { Root } from "@/utils/content";
+import { debounce } from "lodash";
+
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -93,24 +96,30 @@ export class WorkSpace extends Watchable(Object) {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
+    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
     constructor(context: Context) {
         super();
         this.context = context
     }
-    get root() { //return contentView HTMLElement
-        const root = { x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
-        let content: any = document.querySelectorAll('#content');
-        content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
-        if (content) {
-            const { x, y, bottom, right } = content.getBoundingClientRect();
-            root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
-            root.x = x;
-            root.y = y;
-            root.bottom = bottom;
-            root.right = right;
-            root.element = content;
+    get root(): Root { //return contentView HTMLElement info
+        const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构0.6s后会进行root数据更新)；
+        if (root.init) {
+            return root;
+        } else { // 如果未初始化，则查找一次，在contentView的一个生命周期内，只查找一次或零次Dom；
+            let content: any = document.querySelectorAll('#content');
+            content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
+            if (content) {
+                const { x, y, bottom, right } = content.getBoundingClientRect();
+                root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
+                root.x = x;
+                root.y = y;
+                root.bottom = bottom;
+                root.right = right;
+                root.element = content;
+                root.init = true;
+            }
+            return root;
         }
-        return root;
     }
     get pageView() {//return pageView HTMLElement
         const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
@@ -159,6 +168,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isEditing() {
         return this.m_content_editing;
+    }
+    updateRoot(root: Root) {
+        this.m_root = root;
     }
     contentEdit(v: boolean) {
         this.m_content_editing = v;
@@ -348,7 +360,6 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     setCursorStyle(type: CtrlElementType | string, deg: number) {
-
         if (this.m_creating || this.m_selecting) {
             // todo
         } else {

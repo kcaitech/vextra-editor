@@ -20,6 +20,7 @@ import { v4 as uuid } from "uuid";
 import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
 import { fourWayWheel, Wheel, forNewShape } from '@/utils/wheel';
 import { AsyncCreator } from '@kcdesign/data/editor/controller';
+import { updateRoot } from '@/utils/content';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -555,6 +556,9 @@ const stopWatch = watch(() => props.page, (cur, old) => {
 
     initMatrix(cur)
 })
+const resizeObserver = new ResizeObserver(() => {
+    root.value && updateRoot(props.context, root.value);
+})
 onMounted(() => {
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
@@ -576,9 +580,13 @@ onUnmounted(() => {
     rootRegister(false);
     stopWatch();
     props.context.selection.scout?.remove();
+    resizeObserver.disconnect();
 })
 renderinit().then(() => {
     inited.value = true;
+    nextTick(() => {
+        root.value && resizeObserver.observe(root.value);
+    })
 })
 </script>
 
