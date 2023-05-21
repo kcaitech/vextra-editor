@@ -5,7 +5,7 @@ import { Page } from '@kcdesign/data/data/page';
 import { reactive, defineProps, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
-import { PageXY, ClientXY } from '@/context/selection';
+import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { init as renderinit } from '@/render';
 import { Action, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/workspace';
 import ContextMenu from '../common/ContextMenu.vue';
@@ -50,7 +50,7 @@ const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
-const mouseOnClient: ClientXY = { x: 0, y: 0 };
+const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
 const selectionIsCtrl = computed(() => !spacePressed.value);
@@ -66,7 +66,7 @@ const rootId = ref<string>('content');
 let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
-function offset2Root() { // === props.context.workspace.root
+function offset2Root() { // == props.context.workspace.root
     let el = root.value as HTMLElement;
     let x = el.offsetLeft
     let y = el.offsetTop
@@ -91,7 +91,7 @@ function rootRegister(mount: boolean) {
 
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
     const { clientX, clientY } = e;
-    const { x, y } = offset2Root();
+    const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x; //页面坐标系上的点
     mousedownOnPageXY.y = xy.y;
@@ -101,7 +101,7 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
 
 function getMouseOnPageXY(e: MouseEvent): PageXY { // 获取鼠标在页面上的点击位置
     const { clientX, clientY } = e;
-    const { x, y } = offset2Root();
+    const { x, y } = workspace.value.root;
     return matrix.inverseCoord(clientX - x, clientY - y);
 }
 
@@ -131,7 +131,7 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
     }
 }
 function onMouseWheel(e: WheelEvent) {
-    const xy = offset2Root();
+    const xy = workspace.value.root;
     const { ctrlKey, metaKey, shiftKey, deltaX, deltaY } = e;
     const offsetX = e.x - xy.x;
     const offsetY = e.y - xy.y;
@@ -343,7 +343,7 @@ function contextMenuMount(e: MouseEvent) {
     workspace.menuMount(false);
     site.x = e.clientX
     site.y = e.clientY
-    const { x, y } = offset2Root();
+    const { x, y } = workspace.value.root;
     contextMenuPosition.x = e.clientX - x;
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
@@ -410,7 +410,7 @@ function select(e: MouseEvent) {
         createSelector(e);
     } else {
         const { clientX, clientY } = e;
-        const root = offset2Root();
+        const root = workspace.value.root;
         const { x: cx, y: cy } = { x: clientX - root.x, y: clientY - root.y };
         const { x: sx, y: sy } = mousedownOnClientXY;
         const dx = cx - sx;
@@ -424,7 +424,7 @@ function select(e: MouseEvent) {
 }
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
     const { clientX, clientY } = e;
-    const { x: rx, y: ry } = offset2Root();
+    const { x: rx, y: ry } = workspace.value.root;
     const { x: mx, y: my } = { x: clientX - rx, y: clientY - ry };
     const { x: sx, y: sy } = mousedownOnClientXY;
     const left = Math.min(sx, mx);

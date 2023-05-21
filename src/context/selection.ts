@@ -17,7 +17,11 @@ export interface XY {
     x: number,
     y: number
 }
-export interface ClientXY { // 视口坐标系的xy
+export interface ClientXYRaw { // 视口坐标系的xy
+    x: number,
+    y: number
+}
+export interface ClientXY { // 视口坐标系的xy，相对root
     x: number,
     y: number
 }
