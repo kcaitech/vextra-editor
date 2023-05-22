@@ -6,19 +6,20 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
 const emit = defineEmits<{
-  (e: 'close'): void
+  (e: 'close'): void,
+  (e: 'reviewed'): void
 }>()
 const props = defineProps<{
   applyList: any
 }>()
-const applyList: any = ref(props.applyList)
+const applyListInfo: any = ref(props.applyList)
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 enum Audit {
-  Pass,
-  unPass
+  unPass,
+  Pass
 }
 watch(props.applyList, () => {
-  applyList.value = props.applyList
+  applyListInfo.value = props.applyList
 }, { deep: true })
 
 const formatDate = computed(() => {
@@ -29,15 +30,17 @@ const formatDate = computed(() => {
     return `${hours}:${minutes}`
   }
 })
-const consent = (id: number, index: number) => {
+const consent = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.Pass)
-  applyList.value[index].approval_result = 1;
+  emit('reviewed')
+  applyListInfo.value[index].apply.status = 1;
 }
-const refuse = (id: number, index: number) => {
+const refuse = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.unPass)
-  applyList.value[index].approval_result = 2;
+  applyListInfo.value[index].apply.status = 2;
+  emit('reviewed')
 }
-const promissionApplyAudit = async (id: number, type: number) => {
+const promissionApplyAudit = async (id: string, type: number) => {
   try {
     await share_api.promissionApplyAuditAPI({ apply_id: id, approval_code: type })
   } catch (error) {
@@ -64,32 +67,32 @@ const close = () => {
     </template>
     <div class="contain">
       <el-scrollbar height="400px" style="padding-right: 10px;">
-        <div class="inform-item" v-for="(item, i) in applyList" :key="i">
+        <div class="inform-item" v-for="(item, i) in applyListInfo" :key="i">
           <div class="avatar"><img :src="item.user.avatar" alt=""></div>
           <div class="item-container">
             <div class="item-title">
               <span>{{ item.user.nickname }}</span>
-              <span>{{ formatDate(item.created_at) }}</span>
+              <span>{{ formatDate(item.apply.created_at) }}</span>
             </div>
             <el-tooltip class="box-item" effect="light" placement="bottom-end">
               <template #content>
                 <div class="custom-tooltip">
-                  {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{ permission[item.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.remarks }}</div>
+                  {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{ permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
               </template>
               <div class="item-text">
-                {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{ permission[item.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.remarks }}</div>
+                {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{ permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
             </el-tooltip>
           </div>
-          <div class="botton" v-if="item.approval_result === 0">
-            <el-button color="#0d99ff" size="small" @click="consent(item.id, i)">{{ t('apply.agree') }}</el-button>
-            <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.id, i)">{{ t('apply.refuse') }}</el-button>
+          <div class="botton" v-if="item.apply.status === 0">
+            <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, i)">{{ t('apply.agree') }}</el-button>
+            <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.apply.id, i)">{{ t('apply.refuse') }}</el-button>
           </div>
           <div class="botton" v-else>
-            <p v-if="item.approval_result === 1">{{ t('apply.have_agreed') }}</p>
-            <p v-else-if="item.approval_result === 2">{{ t('apply.rejected') }}</p>
+            <p v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</p>
+            <p v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
           </div>
         </div>
-        <div class="text" v-if="applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
+        <div class="text" v-if="applyListInfo.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
       </el-scrollbar>
     </div>
   </el-card>

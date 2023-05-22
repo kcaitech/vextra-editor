@@ -45,7 +45,7 @@ const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
-let permType: any = undefined
+const permType: any = ref()
 const docInfo: any = ref({})
 let docID = ''
 const showHint = ref(false)
@@ -235,8 +235,8 @@ const getDocumentInfo = async () => {
 const getDocumentAuthority = async () => {
     try {
         const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
-        permType = data.data.perm_type
-        if (permType === 0) {
+        permType.value = data.data.perm_type
+        if (permType.value === 0) {
             router.push({
                 name: 'apply',
                 query: {
@@ -261,7 +261,7 @@ if(route.query.id) {
 let uploadTimer: any = null
 uploadTimer = setInterval(() => {
     docID = localStorage.getItem('docId') || ''
-    if (docID) {
+    if (docID && permType.value !== 1) {
         context.value.upload(docID)
     }
 }, 60000)

@@ -6,6 +6,7 @@ import * as share_api from '@/apis/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
+import {router} from '@/router'
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
@@ -24,7 +25,7 @@ enum permissions {
 }
 const route = useRoute()
 const docID = props.docId ? props.docId : localStorage.getItem('docId')
-const url = location.href + `?id=${docID}`
+const url = route.path !== '/document' ? `http://protodesign.cn/#/document?id=${docID}` : route.query.id ? location.href : location.href + `?id=${docID}`
 
 const value1 = ref(props.shareSwitch)
 const selectValue = ref(`${t('share.need_to_apply_for_confirmation')}`)
@@ -109,15 +110,15 @@ const selectAuthority = (i: number, e: Event) => {
     posi.value.top = Math.max(el.parentElement!.offsetHeight, 35) * (i + 2)
   })
 }
-const onEditable = (id: string, type: number, index: number) => {
-  if(shareList.value[index].perm_type === type) return
+const onEditable = (id: any, type: number, index: number) => {
+  if(shareList.value[index].share_info.perm_type === type) return
   putShareAuthority(id, type)
-  shareList.value[index].perm_type = type
+  shareList.value[index].share_info.perm_type = type
 }
 const onReadOnly = (id: string, type: number, index: number) => {
-  if(shareList.value[index].perm_type === type) return
+  if(shareList.value[index].share_info.perm_type === type) return
   putShareAuthority(id, type)
-  shareList.value[index].perm_type = type
+  shareList.value[index].share_info.perm_type = type
 }
 const onRemove = (id: string, i: number) => {
   delShare(id)
@@ -142,6 +143,7 @@ const delShare = async (id: string) => {
 const putShareAuthority = async (id: string, type: number) => {
   try {
     await share_api.putShareAuthorityAPI({ share_id: id, perm_type: type })
+    getShareList()
   }catch(err) {
     console.log(err);
   }
@@ -185,8 +187,9 @@ watch(value1, (nVal, oVal) => {
 
 watchEffect(() => {
   if(route.query.id) {
+    const userId = localStorage.getItem('userId')
     if(docInfo.value) {
-      docInfo.value.user.id != userInfo.value?.userInfo.id ? founder.value = true : founder.value = false
+      docInfo.value.user.id != userId ? founder.value = true : founder.value = false
     }
   }
 })
@@ -320,9 +323,9 @@ onUnmounted(() => {
                 <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
                 <div class="popover" v-if="authority && index === ids" ref="popover"
                   :style="{ top: posi.top + 'px', right: 30 + 'px' }">
-                  <div @click="onEditable(item.id, permissions.editable, ids)">{{ editable }}</div>
-                  <div @click="onReadOnly(item.id, permissions.readOnly, ids)">{{ readOnly }}</div>
-                  <div @click="onRemove(item.id, ids)">{{ remove }}</div>
+                  <div @click="onEditable(item.share_info.id, permissions.editable, ids)">{{ editable }}</div>
+                  <div @click="onReadOnly(item.share_info.id, permissions.readOnly, ids)">{{ readOnly }}</div>
+                  <div @click="onRemove(item.share_info.id, ids)">{{ remove }}</div>
                 </div>
               </div>
             </div>

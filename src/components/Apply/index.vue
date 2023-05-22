@@ -93,6 +93,7 @@ let timer: any = null
 
 onMounted(() => {  
     timer = setInterval(() => {
+    getDocumentInfo()
     getDocumentAuthority()
     }, 10000) 
 })

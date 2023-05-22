@@ -34,6 +34,7 @@ const getApplyList = async () => {
 let timer: any = null
 getApplyList()
 onMounted(() => {
+    getSearch()
     timer = setInterval(() => {
         getApplyList()
     }, 60000)
@@ -83,9 +84,9 @@ function loginout() {
     localStorage.clear()
     router.push({ path: '/login' })
 }
-onMounted(() => {
-    getSearch()
-})
+const reviewed = () => {
+    getApplyList()
+}
 
 </script>
 <template>
@@ -136,7 +137,7 @@ onMounted(() => {
                 </div>
             </div>
             <!-- <button @click="toDocument">跳转</button> -->
-            <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
+            <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList" @reviewed="reviewed"></Inform>
         </div>
     </div>
 </template>
