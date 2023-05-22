@@ -9,7 +9,8 @@ import { DocInfo } from "@/context/user"
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
-  shareSwitch: boolean
+  shareSwitch: boolean,
+  docId?: string
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -22,8 +23,8 @@ enum permissions {
   editable
 }
 const route = useRoute()
-const docID = localStorage.getItem('docId')
-const url = route.query.id ? location.href : location.href + `?id=${docID}`
+const docID = props.docId ? props.docId : localStorage.getItem('docId')
+const url = location.href + `?id=${docID}`
 
 const value1 = ref(props.shareSwitch)
 const selectValue = ref(`${t('share.need_to_apply_for_confirmation')}`)
@@ -83,7 +84,6 @@ const handleClick = (e: MouseEvent) => {
   if (e.target instanceof Element && !e.target.closest('.popover')) {
     authority.value = false
   }
-
 }
 const getDocumentInfo = async() => {
   try {
@@ -186,9 +186,7 @@ watch(value1, (nVal, oVal) => {
 watchEffect(() => {
   if(route.query.id) {
     if(docInfo.value) {
-      console.log(userInfo.value?.userInfo.id,'id');
-      
-      docInfo.value.user.id !== userInfo.value?.userInfo.id ? founder.value = true : founder.value = false
+      docInfo.value.user.id != userInfo.value?.userInfo.id ? founder.value = true : founder.value = false
     }
   }
 })
@@ -530,6 +528,7 @@ onUnmounted(() => {
 }
 .card {
   position: absolute;
+  z-index: 1000;
   left: 50%;
   transform: translate(-50%, -50%);
 }

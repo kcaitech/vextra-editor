@@ -45,7 +45,7 @@
                         </el-icon>{{ t('system.login_out') }}</div>
                 </div>
             </div>
-            <button @click="toDocument">跳转</button>
+            <!-- <button @click="toDocument">跳转</button> -->
             <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
         </div>
     </div>
@@ -93,15 +93,6 @@ onMounted(() => {
 onUnmounted(() => {
     clearInterval(timer)
 })
-
-const toDocument = () => {
-    router.push({
-        name: 'document',
-        query: {
-            id: "50297094598037504"
-        }
-    })
-}
 
 const errorHandler = () => true
 

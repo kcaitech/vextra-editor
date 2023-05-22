@@ -33,7 +33,6 @@ const picker = new FilePicker((file) => {
     })
 });
 
-
 function newFile() {
     const repo = new Repository();
     const nd = newDocument(t('system.new_file'), repo);

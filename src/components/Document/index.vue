@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref, nextTick } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref, nextTick, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -209,7 +209,7 @@ const getDocumentInfo = async () => {
             })
         }
         await importDocument({
-            endPoint: "http://192.168.0.10:9000",
+            endPoint: "http://192.168.0.18:9000",
             region: "zhuhai-1",
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
@@ -250,13 +250,19 @@ const getDocumentAuthority = async () => {
     }
 }
 
-
+watchEffect(() => {
+if(route.query.id) {
+    const id = (route.query.id as string)
+    context.value.upload(id)
+}else {
+    context.value.upload()
+}
+})
 
 let uploadTimer: any = null
 uploadTimer = setInterval(() => {
     docID = localStorage.getItem('docId') || ''
     if(docID) {
-        
         context.value.upload(docID)
     }
 }, 60000)
@@ -267,8 +273,6 @@ onMounted(() => {
         context.value.selection.watch(selectionWatcher);
     }
     if ((window as any).sketchDocument) {
-        context.value.upload()
-
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
         if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
             document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
@@ -283,8 +287,7 @@ onMounted(() => {
     }
 
     if (route.query.id) {
-        getDocumentInfo()
-        
+        getDocumentInfo()        
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
             getDocumentAuthority()
