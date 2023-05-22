@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { Artboard } from '@kcdesign/data/data/artboard';
-import { Page } from '@kcdesign/data/data/page';
-import { GroupShape } from '@kcdesign/data/data/shape';
+import { Artboard } from '@kcdesign/data';
+import { Page } from '@kcdesign/data';
+import { GroupShape } from '@kcdesign/data';
 import { defineProps, computed, onMounted, onUnmounted, ref } from 'vue';
 // import Icon from "@/components/common/Icon.vue";
 import { Context } from '@/context';

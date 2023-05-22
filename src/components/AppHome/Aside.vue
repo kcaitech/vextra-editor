@@ -11,28 +11,28 @@ import {
 } from '@element-plus/icons-vue'
 import { router } from '@/router'
 import { FilePicker } from '../common/filepicker';
-import { Repository } from '@kcdesign/data/data/transact';
+import { Repository } from '@kcdesign/data';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
-import { importSketch } from '@kcdesign/data/io';
+import { importSketch } from '@kcdesign/data';
 import { Zip } from "@pal/zip";
-import { uploadExForm } from "@kcdesign/data/io/export";
-import { newDocument } from '@kcdesign/data/editor/creator';
+import { uploadExForm } from "@kcdesign/data";
+import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
-import { DocEditor } from '@kcdesign/data/editor';
+import { DocEditor } from '@kcdesign/data';
 const { t } = useI18n();
-const token:any = localStorage.getItem('token')
+const token: any = localStorage.getItem('token');
 
 const picker = new FilePicker((file) => {
     if (!file) return;
     const lzdata = new LzDataLocal(new Zip(file));
     const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document) => {
+    importSketch(file.name, lzdata, repo).then((document: any) => {
         window.document.title = document.name;
         (window as any).skrepo = repo;
         (window as any).sketchDocument = document;
         uploadExForm(document, 'ws://192.168.0.10:10000/api/v1', token, "", (successed, doc_id) => {
-        console.log(successed, doc_id);
-    })
+            console.log(successed, doc_id);
+        })
         router.push({ name: 'document' });
     })
 });
@@ -40,7 +40,7 @@ const picker = new FilePicker((file) => {
 
 function newFile() {
     const repo = new Repository();
-    const nd = newDocument(t('system.new_file'), repo);
+    const nd = createDocument(t('system.new_file'), repo);
     const editor = new DocEditor(nd, repo);
     const page = editor.create(t('system.page1'));
     editor.insert(0, page);

@@ -1,7 +1,6 @@
-import { objectId } from "@kcdesign/data/basic/objectid";
-import { ShapeFrame } from "@kcdesign/data/data/shape";
-import { Color, Gradient, GradientType, Stop } from "@kcdesign/data/data/style";
-import * as types from "@kcdesign/data/data/classes"
+import { objectId } from "@kcdesign/data";
+import { ShapeFrame } from "@kcdesign/data";
+import { Color, Gradient, GradientType, Stop } from "@kcdesign/data";
 
 const defaultColor = new Color(0, 0, 0, 0)
 
@@ -21,7 +20,7 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
     const id = "gradient" + objectId(value);
     let style;
     let node: any;
-    if (value.gradientType == types.GradientType.Linear) {
+    if (value.gradientType == GradientType.Linear) {
         const stopSCount = value.stops.length;
         const childs = [];
         for (let i = 0; i < stopSCount; i++) {
@@ -36,7 +35,7 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
             y2: value.to.y,
         }, childs);
     }
-    else if (value.gradientType == types.GradientType.Radial) {
+    else if (value.gradientType == GradientType.Radial) {
         const stopSCount = value.stops.length;
         const childs = [];
         for (let i = 0; i < stopSCount; i++) {
@@ -60,7 +59,7 @@ export function render(h: Function, value: Gradient, frame:ShapeFrame): {id:stri
         },
             childs);
     }
-    else if (value.gradientType == types.GradientType.Angular) {
+    else if (value.gradientType == GradientType.Angular) {
         let gradient = "";
         const sc = value.stops.length;
         const calcSmoothColor = () => {

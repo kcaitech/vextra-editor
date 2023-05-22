@@ -9,8 +9,8 @@ import BorderStyleSelected from './BorderStyleSelected.vue';
 import BorderApexStyleItem from './BorderApexStyleItem.vue';
 import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue'
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data/data/shape';
-import { Border, BorderPosition, BorderStyle, MarkerType } from "@kcdesign//data/data/style";
+import { Shape } from '@kcdesign/data';
+import { Border, BorderPosition, BorderStyle, MarkerType } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 
 const props = defineProps<{

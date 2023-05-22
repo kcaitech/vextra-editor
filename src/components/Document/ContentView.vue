@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Matrix } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Page } from '@kcdesign/data/data/page';
+import { Page } from '@kcdesign/data';
 import { reactive, defineProps, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
@@ -11,15 +11,15 @@ import { Action, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/works
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { ShapeType } from '@kcdesign/data/data/typesdefine';
-import { Shape } from "@kcdesign/data/data/shape";
-import { ShapeFrame } from '@kcdesign/data/data/baseclasses';
+import { ShapeType } from '@kcdesign/data';
+import { Shape } from "@kcdesign/data";
+import { ShapeFrame } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { AsyncCreator } from '@kcdesign/data/editor/controller';
+import { AsyncCreator } from '@kcdesign/data';
 import { updateRoot } from '@/utils/content';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();

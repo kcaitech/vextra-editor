@@ -1,8 +1,8 @@
 <script setup lang='ts'>
 import { defineProps, watch, onMounted, onUnmounted, ref, reactive } from 'vue';
 import { Selection } from '@/context/selection';
-import { Matrix } from '@kcdesign/data/basic/matrix';
-import { TextShape } from '@kcdesign/data/data/shape';
+import { Matrix } from '@kcdesign/data';
+import { TextShape } from '@kcdesign/data';
 import { Shape } from "@kcdesign/data";
 import { Context } from '@/context';
 import TextInput from './Text/TextInput.vue';

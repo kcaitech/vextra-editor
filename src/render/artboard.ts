@@ -1,6 +1,6 @@
-import { Artboard } from "@kcdesign/data/data/artboard";
-import { ShapeType } from "@kcdesign/data/data/shape";
-import { Color } from "@kcdesign/data/data/style";
+import { Artboard } from "@kcdesign/data";
+import { ShapeType } from "@kcdesign/data";
+import { Color } from "@kcdesign/data";
 import { renderGroupChilds as gR } from "@/render/group";
 
 const defaultColor = new Color(1, 255, 255, 255)

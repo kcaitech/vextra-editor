@@ -1,4 +1,4 @@
-import { ShapeType } from "@kcdesign/data/data/classes";
+import { ShapeType } from "@kcdesign/data";
 import Rectangle from "./Rectangle.vue";
 import ShapeGroup from "./ShapeGroup.vue"
 import ShapePath from "./ShapePath.vue"

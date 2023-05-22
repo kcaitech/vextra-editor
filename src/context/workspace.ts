@@ -1,8 +1,8 @@
-import { Watchable } from "@kcdesign/data/data/basic";
-import { Repository } from "@kcdesign/data/data/transact";
-import { ShapeType } from "@kcdesign/data/data/typesdefine";
-import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Context } from "./index";
+import { Watchable } from "@kcdesign/data";
+import { Repository } from "@kcdesign/data";
+import { ShapeType } from "@kcdesign/data";
+import { Matrix } from '@kcdesign/data';
+import { Context, RepoWraper } from "./index";
 import { Root } from "@/utils/content";
 export enum Action {
     Auto = 'auto',
@@ -298,7 +298,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
     }
-    keydown_z(repo: Repository, ctrl?: boolean, shift?: boolean, meta?: boolean) {
+    keydown_z(repo: RepoWraper, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         if ((ctrl || meta) && !shift) {
             repo.canUndo() && repo.undo();
         } else if ((ctrl || meta) && shift) {

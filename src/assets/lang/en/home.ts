@@ -1,4 +1,4 @@
-import { BorderPosition } from "@kcdesign/data/data/typesdefine";
+import { BorderPosition } from "@kcdesign/data";
 
 export const product = {
     name: 'ProtoDesign'

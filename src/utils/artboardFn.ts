@@ -1,6 +1,6 @@
 import { XY } from '@/context/selection';
-import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Shape } from '@kcdesign/data/data/shape';
+import { Matrix } from '@kcdesign/data';
+import { Shape } from '@kcdesign/data';
 import { isTarget } from './common';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';

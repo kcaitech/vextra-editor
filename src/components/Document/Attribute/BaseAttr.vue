@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, ref, watch, onUpdated } from 'vue'
-import { Shape, ShapeType, RectShape } from '@kcdesign/data/data/shape';
+import { Shape, ShapeType, RectShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
 import { Context } from '@/context';
 import { computed } from '@vue/reactivity';
-import { RectRadius } from '@kcdesign/data/data/baseclasses'
+import { RectRadius } from '@kcdesign/data'
 import { cloneDeep } from 'lodash';
 import { useI18n } from 'vue-i18n';
 
