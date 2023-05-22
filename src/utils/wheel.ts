@@ -87,11 +87,9 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
                     if (m_effects) {
                         const { type, effect: f } = m_effects;
                         if (type === EffectType.NEW_SHAPE) {
-                            f(curPoint)
+                            f(curPoint);
                         } else if (type === EffectType.TRANS) {
-                            console.log('s c', startPoint, curPoint);
-
-                            f(startPoint, curPoint);
+                            f(-dx, -dy);
                         }
                     } else if (effects?.rolling) {
                         effects.rolling(context, dx, dy, startPoint, curPoint);

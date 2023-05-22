@@ -390,7 +390,7 @@ function onMouseWheel(e: WheelEvent) {
         layoutDown[props.orientation]();
     }
 }
-function mouseenter() { //鼠标进入list， list即获取页面焦点
+function mouseenter() {
     listMouseOver.value = true;
 }
 function mouseleave() {
@@ -507,8 +507,9 @@ function mouseDownOnItem(index: number, e: MouseEvent) {
     document.addEventListener('mouseup', mouseUp);
 }
 let timer: any = null
-function mouseMove(Event: MouseEvent) {
-    const { clientX, clientY } = Event;
+function mouseMove(event: MouseEvent) {
+    event.stopPropagation();
+    const { clientX, clientY } = event;
     if (timer) clearInterval(timer)
     if (Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y) < 6 && !draging.value) return;
     draging.value = true;

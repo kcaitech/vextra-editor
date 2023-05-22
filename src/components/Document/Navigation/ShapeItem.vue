@@ -64,7 +64,6 @@ function selectShape(e: MouseEvent) {
 function hoverShape(e: MouseEvent) {
     const working = !props.data.context.workspace.isTranslating;
     if (working) {
-        e.stopPropagation();
         emit("hovershape", props.data.shape);
         isVisible.value = true;
     }
