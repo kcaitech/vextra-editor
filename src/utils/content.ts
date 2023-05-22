@@ -1,6 +1,7 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY } from "@/context/selection";
+import { Shape, ShapeType } from "@kcdesign/data";
 interface Root {
   init: boolean
   x: number
@@ -20,4 +21,12 @@ function _updateRoot(context: Context, element: HTMLElement) {
   context.workspace.updateRoot(root);
 }
 const updateRoot = debounce(_updateRoot, updateRootTime);
-export { Root, updateRoot }
+
+// 根据类型给图形命名
+function getName(type: ShapeType, brothers: Shape[], t: Function): string {
+  const name = t(`shape.${type}`);
+  const renamebrothers = brothers.filter((item: Shape) => item.type === type);
+  const repeats: number = renamebrothers.length;
+  return (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
+}
+export { Root, updateRoot, getName }
