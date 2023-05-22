@@ -313,7 +313,6 @@ function pageViewDragStart(e: MouseEvent) {
 function pageViewDragging(e: MouseEvent) {
     const isController = workspace.value.controller == 'page';
     if (isController) {
-        setClass('grabbing-0');
         const dx = e.screenX - prePt.x;
         const dy = e.screenY - prePt.y;
         if (state === STATE_MOVEING) {
@@ -343,7 +342,7 @@ function contextMenuMount(e: MouseEvent) {
     workspace.menuMount(false);
     site.x = e.clientX
     site.y = e.clientY
-    const { x, y } = workspace.value.root;
+    const { x, y } = workspace.root;
     contextMenuPosition.x = e.clientX - x;
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
