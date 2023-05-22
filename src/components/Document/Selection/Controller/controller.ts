@@ -2,7 +2,7 @@ import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { ClientXY, PageXY } from "@/context/selection";
-import { fourWayWheel, Wheel, forCtrlRect } from "@/utils/wheel";
+import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
@@ -78,7 +78,7 @@ export function useController(context: Context) {
             const action = workspace.value.action;
             if (action == Action.AutoV) {
                 workspace.value.setCtrl('controller');
-                wheel = fourWayWheel(context, { rolling: forCtrlRect });
+                wheel = fourWayWheel(context, undefined, startPositionOnPage);
                 document.addEventListener('mousemove', mousemove);
                 document.addEventListener('mouseup', mouseup);
             }
@@ -100,6 +100,9 @@ export function useController(context: Context) {
             }
         }
     }
+    function isMouseOnContent(e: MouseEvent): boolean {
+        return (e.target as Element)?.closest(`#content`) ? true : false;
+    }
     function mousedown(e: MouseEvent) {
         if (context.workspace.isEditing) {
             context.selection.selectShape(context.selection.hoveredShape);
@@ -115,7 +118,7 @@ export function useController(context: Context) {
                 initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
                 preTodo(e);
             } else {
-                if ((e.target as Element)?.closest(`#content`)) {
+                if (isMouseOnContent(e)) {
                     if (!context.selection.hoveredShape) {
                         context.selection.selectShape();
                     }
@@ -131,10 +134,12 @@ export function useController(context: Context) {
                 workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
                 context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
                 if (!editing) { // 处于编辑状态时，不拖动图形
-                    transform(startPosition, mousePosition);
-                }
-                if (wheel) {
-                    wheel.moving(e);
+                    if (wheel && asyncTransfer) {
+                        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.trans });
+                        if (!isOut) {
+                            transform(startPosition, mousePosition);
+                        }
+                    }
                 }
                 startPosition = { ...mousePosition };
             } else {

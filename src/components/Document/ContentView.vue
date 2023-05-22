@@ -18,7 +18,7 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
-import { fourWayWheel, Wheel, forNewShape } from '@/utils/wheel';
+import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { AsyncCreator } from '@kcdesign/data/editor/controller';
 import { updateRoot } from '@/utils/content';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -213,10 +213,10 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
 function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
     const { x, y } = getMouseOnPageXY(e);
     if (newShape) {
-        if (wheel) {
-            const isOut = wheel.moving(e);
+        if (wheel && asyncCreator) {
+            const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
             if (!isOut) {
-                asyncCreator?.setFrame({ x, y });
+                asyncCreator.setFrame({ x, y });
             }
         }
     } else {
@@ -437,7 +437,7 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
     selector.value = true;
 }
 function wheelSetup() { // 安装滚轮
-    wheel = fourWayWheel(props.context, { rolling: forNewShape }, mousedownOnPageXY);
+    wheel = fourWayWheel(props.context, { rolling: undefined }, mousedownOnPageXY);
 }
 function updateMouse(e: MouseEvent) {
     const { clientX, clientY } = e;

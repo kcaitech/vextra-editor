@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { defineProps, computed, onMounted, onUnmounted, watchEffect } from 'vue';
-import { CtrlElementType } from '@/context/workspace';
+import { CtrlElementType, AsyncBaseAction } from '@kcdesign/data/editor/controller';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getBarStyle } from '@/utils/rectFn';
-import { AsyncBaseAction } from "@kcdesign/data/editor/controller";
 import { Shape } from '@kcdesign/data';
 import { PageXY, ClientXY } from '@/context/selection';
 interface Props {
@@ -95,7 +94,6 @@ function windowBlur() {
             asyncBaseAction = asyncBaseAction.close();
         }
         setStatus(false);
-        props.context.repo.commit({});
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         workspace.value.resetCursor();
