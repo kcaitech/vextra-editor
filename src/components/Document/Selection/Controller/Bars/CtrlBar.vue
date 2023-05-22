@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { defineProps, defineEmits, computed, onMounted, onUnmounted, watchEffect } from 'vue';
-import { CtrlElementType } from '@/context/workspace';
-import { XY } from '@/context/selection';
+import { defineProps, computed, onMounted, onUnmounted, watchEffect } from 'vue';
+import { CtrlElementType, AsyncBaseAction } from '@kcdesign/data/editor/controller';
 import { Matrix } from '@kcdesign/data/basic/matrix';
-import { getBarStyle } from '@/utils/rectFn'
+import { getBarStyle } from '@/utils/rectFn';
+import { Shape } from '@kcdesign/data';
+import { PageXY, ClientXY } from '@/context/selection';
 interface Props {
     context: Context,
     ctrlType: CtrlElementType,
@@ -13,17 +14,15 @@ interface Props {
     height: number
 }
 const props = defineProps<Props>();
-const emit = defineEmits<{
-    (e: 'transform', type: CtrlElementType, p1: XY, p2: XY): void
-}>();
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
 const dragActiveDis = 3;
 let isDragging = false;
-let startPosition = { x: 0, y: 0 };
+let startPosition: ClientXY = { x: 0, y: 0 };
 let root = { x: 0, y: 0 };
 let scaling: boolean = false;
 let barStyle: string = '';
+let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 
 function setStatus(s: boolean) {
     scaling = s;
@@ -36,8 +35,8 @@ function setStatus(s: boolean) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
     if (event.button === 0) {
-        workspace.value.setCtrl('controller');
         event.stopPropagation();
+        workspace.value.setCtrl('controller');
         const { clientX, clientY } = event;
         setStatus(true);
         matrix.reset(workspace.value.matrix);
@@ -49,15 +48,20 @@ function onMouseDown(event: MouseEvent) {
 }
 function onMouseMove(event: MouseEvent) {
     const { clientX, clientY } = event;
-    const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
+    const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
     if (isDragging) {
-        emit('transform', props.ctrlType, startPosition, mouseOnPage);
-        props.context.repo.transactCtx.fireNotify();
+        if (asyncBaseAction) {
+            matrix.reset(workspace.value.matrix);
+            const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y); // page
+            const p2Onpage: PageXY = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
+            asyncBaseAction.execute(props.ctrlType, p1OnPage, p2Onpage);
+        }
         startPosition = { ...mouseOnPage };
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            props.context.repo.start('transform', {});
+            const shapes: Shape[] = props.context.selection.selectedShapes;
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes);
         }
     }
 }
@@ -65,9 +69,11 @@ function onMouseUp(event: MouseEvent) {
     if (event.button === 0) {
         workspace.value.setCtrl('page');
         if (isDragging) {
-            props.context.repo.commit({});
+            if (asyncBaseAction) {
+                asyncBaseAction = asyncBaseAction.close();
+            }
+            isDragging = false;
         }
-        isDragging = false;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         setStatus(false);
@@ -80,12 +86,14 @@ function mouseleave() {
 }
 function mousemove() {
     if (scaling) return;
-    workspace.value.setCursor(props.ctrlType, props.rotate);
+    workspace.value.setCursorStyle(props.ctrlType, props.rotate);
 }
 function windowBlur() {
     if (isDragging) {
+        if (asyncBaseAction) {
+            asyncBaseAction = asyncBaseAction.close();
+        }
         setStatus(false);
-        props.context.repo.commit({});
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         workspace.value.resetCursor();
@@ -118,7 +126,7 @@ watchEffect(() => {
         width: 100%;
         position: absolute;
         height: 1px;
-        border-bottom: 1px solid #2561D9;
+        border-bottom: 1.5px solid #2561D9;
         top: 7px;
         box-sizing: border-box;
     }

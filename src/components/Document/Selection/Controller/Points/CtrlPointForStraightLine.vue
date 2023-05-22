@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { ref, defineProps, defineEmits, computed, onMounted, onUnmounted } from 'vue';
+import { ref, defineProps, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
-import { XY } from '@/context/selection';
+import { XY, ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data/basic/matrix';
 import { getAngle } from '@/utils/common';
+import { AsyncLineAction } from '@kcdesign/data/editor/controller';
 interface Props {
   context: Context,
   axle: XY,
@@ -12,19 +13,18 @@ interface Props {
   pointType: CtrlElementType
 }
 const props = defineProps<Props>();
-const emit = defineEmits<{
-  (e: 'transform', type: CtrlElementType, p2: XY, deg: number, aType: 'rotate' | 'scale'): void
-}>();
+
 const matrix = new Matrix();
 const workspace = computed(() => props.context.workspace);
 const dragActiveDis = 3;
 const pointContainer = ref<HTMLElement>();
 let isDragging = false;
-let startPosition = { x: 0, y: 0 };
+let startPosition: ClientXY = { x: 0, y: 0 };
 let root = { x: 0, y: 0 };
 let scaling: boolean = false;
 let rotating: boolean = false;
 let clt: CtrlElementType;
+let asyncLineEditor: AsyncLineAction | undefined = undefined;
 const rotatePositon = computed(() => {
   const map = new Map([
     [CtrlElementType.LineStart, 'lt'],
@@ -80,7 +80,7 @@ function onMouseDown(event: MouseEvent) {
 }
 function onMouseMove(event: MouseEvent) {
   const { clientX, clientY } = event;
-  const mouseOnPage = { x: clientX - root.x, y: clientY - root.y };
+  const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
   let aType: 'rotate' | 'scale' = 'scale';
   if (isDragging) {
     let deg = 0;
@@ -89,16 +89,22 @@ function onMouseMove(event: MouseEvent) {
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-      workspace.value.setCursor(clt, props.rotate);
+      workspace.value.setCursorStyle(clt, props.rotate);
       aType = 'rotate';
     }
-    emit('transform', props.pointType, mouseOnPage, deg, aType);
-    props.context.repo.transactCtx.fireNotify();
+    if (asyncLineEditor) {
+      matrix.reset(workspace.value.matrix);
+      const end: PageXY = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
+      asyncLineEditor.execute(props.pointType, end, deg, aType);
+    }
     startPosition = { ...mouseOnPage };
   } else {
     if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
-      isDragging = true;
-      props.context.repo.start('transform', {});
+      const shape = props.context.selection.selectedShapes[0];
+      if (shape) {
+        asyncLineEditor = props.context.editor.controller().asyncLineEditor(shape);
+        isDragging = true;
+      }
     }
   }
 }
@@ -106,9 +112,11 @@ function onMouseUp(event: MouseEvent) {
   if (event.button === 0) {
     workspace.value.setCtrl('page');
     if (isDragging) {
-      props.context.repo.commit({});
+      if (asyncLineEditor) {
+        asyncLineEditor = asyncLineEditor.close();
+      }
+      isDragging = false;
     }
-    isDragging = false;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
     setStatus();
@@ -122,12 +130,14 @@ function mouseleave() {
 function mousemove(event: MouseEvent) {
   if (rotating || scaling) return;
   const ct = getCtrlElementType(event);
-  workspace.value.setCursor(ct, props.rotate);
+  workspace.value.setCursorStyle(ct, props.rotate);
 }
 function windowBlur() {
   if (isDragging) {
     setStatus();
-    props.context.repo.commit({});
+    if (asyncLineEditor) {
+      asyncLineEditor = asyncLineEditor.close();
+    }
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
     workspace.value.resetCursor();

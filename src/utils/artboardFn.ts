@@ -4,7 +4,6 @@ import { Shape } from '@kcdesign/data/data/shape';
 import { isTarget } from './common';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
@@ -15,8 +14,8 @@ export function landFinderOnPage(pageMatrix: Matrix, center: XY, width: number, 
     const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point
     const offset = 40;
     let pure: boolean = false;
-
-    while (!pure) {
+    let max = 0;
+    while (!pure && max <= 100000) {
         pure = true;
         const { x: sx, y: sy } = start, w = width, h = height;
         const selectorPoints: [XY, XY, XY, XY, XY] = [
@@ -44,6 +43,10 @@ export function landFinderOnPage(pageMatrix: Matrix, center: XY, width: number, 
         }
 
         !pure && (start.x += offset); // 不是净土，挪一下，再找。
+        max++;
+    }
+    if (max == 100000) {
+        throw new Error('overflow');
     }
     return start; // 找到了净土的起点
 }

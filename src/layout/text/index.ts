@@ -14,6 +14,9 @@ export interface IGraphy {
 
 export class GraphArray extends Array<IGraphy> {
     public attr: SpanAttr | undefined;
+    get graphCount() {
+        return this.length;
+    }
 }
 export class Line extends Array<GraphArray> {
     public maxFontSize: number = 0;
@@ -84,20 +87,37 @@ export function layoutLines(para: Para, width: number): LineArray {
         const c = text.charCodeAt(textIdx);
         if (c === 0x0A) {
             // '\n'
+            if (!graphArray) {
+                graphArray = new GraphArray();
+                graphArray.attr = span;
+            }
+            graphArray.push({
+                char: '\n',
+                metrics: undefined,
+                cw: 0, // ?
+                ch: span.fontSize ?? 0,
+                index: textIdx,
+                x: curX
+            });
             textIdx++;
             spanOffset++;
             if (spanOffset >= span.length) {
                 spanOffset = 0;
                 spanIdx++;
-                if (graphArray && graphArray.length > 0) {
-                    line.push(graphArray);
-                    line.graphCount += graphArray.length;
-                    graphArray = undefined; //new GraphArray();
-                }
             }
             if (preSpanIdx !== spanIdx) {
                 line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
             }
+
+            line.push(graphArray);
+            line.graphCount += graphArray.length;
+            graphArray = undefined; //new GraphArray();
+            lineArray.push(line);
+            line = new Line();
+            if (preSpanIdx === spanIdx || spanIdx >= spansCount) {
+                line.maxFontSize = span.fontSize ?? 0;
+            }
+
             preSpanIdx = spanIdx;
             continue;
         }
@@ -129,7 +149,7 @@ export function layoutLines(para: Para, width: number): LineArray {
                 line.graphCount += graphArray.length;
                 graphArray = undefined;
             }
-            if (preSpanIdx !== spanIdx) {
+            if (preSpanIdx !== spanIdx || spanIdx >= spansCount) {
                 line.maxFontSize = Math.max(line.maxFontSize, span.fontSize ?? 0)
             }
         }
@@ -160,6 +180,7 @@ export function layoutLines(para: Para, width: number): LineArray {
             if (spanOffset >= span.length) {
                 spanOffset = 0;
                 spanIdx++;
+                if (spanIdx >= spansCount) line.maxFontSize = span.fontSize ?? 0;
             }
             else {
                 line.maxFontSize = span.fontSize ?? 0;
@@ -267,7 +288,6 @@ export function layoutText(shape: TextShape): TextLayout {
             case TextVerAlign.Bottom: return frame.height - contentHeight;
         }
     })(vAlign);
-
     return { yOffset, paras }
 }
 
@@ -290,21 +310,23 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
             const line = p[i];
             if (y >= line.lineHeight) {
                 y -= line.lineHeight;
-                index += line.length;
+                index += line.graphCount;
                 continue;
             }
             // index span
             for (let i = 0, len = line.length; i < len; i++) {
                 const span = line[i];
                 if (span.length === 0) {
-                    // error??
-                    if (i === len - 1) before = true;
-                    continue;
+                    throw new Error("layout result error, graph array is empty")
                 }
                 const lastGraph = span[span.length - 1];
                 if (x >= (lastGraph.x + lastGraph.cw)) {
-                    index += span.length;
-                    if (i === len - 1) before = true;
+                    index += span.graphCount;
+                    if (i === len - 1) {
+                        // before = true;
+                        if (lastGraph.char === '\n') index--; // 忽略回车
+                        else before = true;
+                    }
                     continue;
                 }
                 // index graph
@@ -323,8 +345,15 @@ export function locateText(layout: TextLayout, x: number, y: number): { index: n
                 }
                 // get end
                 const endgraph = span[end];
-                if (x > endgraph.x + endgraph.cw / 2) end++; // 修正鼠标位置
-                if (i === len - 1 && end === span.length) before = true;
+                if (endgraph.char === '\n') {
+                    end--;
+                }
+                else if (x > endgraph.x + endgraph.cw / 2) {
+                    end++; // 修正鼠标位置
+                }
+                if (i === len - 1 && end === span.length) {
+                    before = true;
+                }
                 index += end;
                 break;
             }
@@ -361,14 +390,14 @@ export function locateCursor(layout: TextLayout, index: number, cursorAtBefore: 
                 return [p0, p1]
             }
             if (index >= line.graphCount) {
-                index -= line.length;
+                index -= line.graphCount;
                 continue;
             }
 
             for (let i = 0, len = line.length; i < len; i++) {
                 const span = line[i];
-                if (index >= span.length) {
-                    index -= span.length;
+                if (index >= span.graphCount) {
+                    index -= span.graphCount;
                     continue;
                 }
 
@@ -425,7 +454,7 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
         const span = line[si];
         const graph = span[gi];
         const minX = graph.x;
-        let minY = line.y + (line.lineHeight - graph.ch) / 2;
+        const minY = line.y; // + (line.lineHeight - graph.ch) / 2;
         const maxY = line.y + line.lineHeight;
         let maxX = graph.x + graph.cw;
 
@@ -437,8 +466,8 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
 
             maxX = graph.x + graph.cw;
 
-            const y = line.y + (line.lineHeight - graph.ch) / 2;
-            if (minY > y) minY = y;
+            // const y = line.y + (line.lineHeight - graph.ch) / 2;
+            // if (minY > y) minY = y;
 
             count -= (last - gi + 1);
             gi = 0;
@@ -463,6 +492,11 @@ function _locateRange(layout: TextLayout, pi: number, li: number, si: number, gi
 }
 
 export function locateRange(layout: TextLayout, start: number, end: number): { x: number, y: number }[] {
+    if (end < start) {
+        const tmp = start;
+        start = end;
+        end = tmp;
+    }
     if (start < 0) start = 0;
     if (end <= start) return [];
     const count = end - start;
