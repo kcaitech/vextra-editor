@@ -1,34 +1,65 @@
-import {Watchable} from "@kcdesign/data/data/basic";
-import {Document} from "@kcdesign/data/data/document";
-import {Page} from "@kcdesign/data/data/page";
-import {Shape} from "@kcdesign/data/data/shape";
-import {Repository} from "@kcdesign/data/data/transact";
-import {DocEditor, Editor, PageEditor} from "@kcdesign/data/editor";
-import {ShapeEditor} from "@kcdesign/data/editor/shape";
-import {uploadExForm} from "@kcdesign/data/io/export";
-import {Selection} from "./selection";
-import {WorkSpace} from "./workspace";
+import { Watchable } from "@kcdesign/data";
+import { Document } from "@kcdesign/data";
+import { Page } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
+import { Repository } from "@kcdesign/data";
+import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
+import { ShapeEditor } from "@kcdesign/data";
+import { uploadExForm } from "@kcdesign/data";
+import { Selection } from "./selection";
+import { WorkSpace } from "./workspace";
 import * as share_api from '@/apis/share';
+
+// 仅暴露必要的方法
+export class RepoWraper {
+    private m_repo: Repository;
+    constructor(repo: Repository) {
+        this.m_repo = repo;
+    }
+    canRedo(): boolean {
+        return this.m_repo.canRedo();
+    }
+    canUndo(): boolean {
+        return this.m_repo.canUndo();
+    }
+    undo() {
+        this.m_repo.undo();
+    }
+    redo() {
+        this.m_repo.redo();
+    }
+    /**
+     * @deprecated
+     */
+    get transactCtx() { // TODO 
+        return this.m_repo.transactCtx;
+    }
+    /**
+     * @deprecated
+     * @param cmd 
+     */
+    commit(cmd: any) {
+        this.m_repo.commit(cmd);
+    }
+}
+
 export class Context extends Watchable(Object) {
     private m_data: Document;
     private m_selection: Selection;
-    private m_editor?: Editor;
-    private m_repo: Repository;
+    private m_editor: Editor;
+    private m_repo: RepoWraper;
     private m_workspace: WorkSpace;
 
     constructor(data: Document, repo: Repository) {
         super();
         this.m_data = data;
         this.m_selection = new Selection(data);
-        this.m_repo = repo;
+        this.m_repo = new RepoWraper(repo);
         this.m_workspace = new WorkSpace(this);
+        this.m_editor = new Editor(this.m_data, repo, this.m_selection);
     }
 
     get editor(): Editor {
-        if (this.m_editor === undefined) {
-            this.m_editor = new Editor(this.m_data, this.m_repo, this.m_selection);
-            this.notify();
-        }
         return this.m_editor;
     }
 
@@ -48,7 +79,7 @@ export class Context extends Watchable(Object) {
         return this.m_data;
     }
 
-    get repo(): Repository {
+    get repo(): RepoWraper {
         return this.m_repo;
     }
 
@@ -63,25 +94,26 @@ export class Context extends Watchable(Object) {
     // debug
     upload(id?: string) {
         const token = localStorage.getItem('token')
-        if(token)
-         uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', token, id ? id : '', async (successed, doc_id) => {
-            if(successed) {
-                localStorage.setItem('docId', doc_id)
-            }
-        })
+        if (token) {
+            uploadExForm(this.m_data, 'ws://192.168.0.18:10000/api/v1', token, id ? id : '', async (successed, doc_id) => {
+                if (successed) {
+                    localStorage.setItem('docId', doc_id)
+                }
+            })
+        }
     }
 
     async documentInfo(id: string) {
         try {
-            if(id) {
-                const {data} = await share_api.getDocumentInfoAPI({doc_id: id})
+            if (id) {
+                const { data } = await share_api.getDocumentInfoAPI({ doc_id: id })
                 return data
-            }else {
+            } else {
                 console.log('没有该文档');
             }
-        
-        }catch(err) {
+
+        } catch (err) {
             return console.log(err);
         }
-    } 
+    }
 }

@@ -1,4 +1,4 @@
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape } from "@kcdesign/data";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
 

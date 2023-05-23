@@ -1,10 +1,17 @@
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { translate, expandTo, translateTo } from "@kcdesign/data/editor/frame";
+export enum EffectType {
+    NEW_SHAPE = 'new shape',
+    TRANS = 'trans'
+}
 
+export interface MoveEffect {
+    type: EffectType,
+    effect: Function
+}
 interface Wheel {
     remove: () => undefined
-    moving: (event: MouseEvent) => boolean;
+    moving: (event: MouseEvent, effects?: MoveEffect) => boolean;
 }
 interface Area {
     top: number
@@ -17,15 +24,14 @@ interface Effects {
     rolling?: (context: Context, dx: number, dy: number, setupPint?: PageXY, curPoint?: PageXY) => void;
     tail?: (context: Context) => void;
 }
-
 // return一个轮子，在该滚动的时候滚动(目前指鼠标脱离innerArea时)，滚动时可以根据传入的effects干一些调用处想要处理的的事情...
 function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY): Wheel {
-    const workspace = context.workspace, selection = context.selection;
+    const workspace = context.workspace;
     const innerArea: Area = { top: 0, right: 0, bottom: 0, left: 0 };
     let op = 'inner'; // 原先所处的区域
     let np = 'inner'; // 现在所处的区域
     let timer: any = null;
-    const period: number = 6; // 帧率 1000 / period; (这里的帧率指fireNotify调用的次数)
+    const period: number = 6; // 帧率 1000 / period; (这里的帧率指fireNotify调用的频率)
     const step: number = 6; // 每秒滚动的距离为 (1000 / period) * step * 单位
     const startPoint: PageXY = { x: 0, y: 0 }; // 安装轮子的位置（坐标系：Page）
     let curPoint: PageXY = { x: 0, y: 0 }; // 鼠标当前的位置（坐标系：Page）
@@ -43,7 +49,7 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
         // console.log('-wheel setup-');
     }
     // retrun isOut;
-    function moving(event: MouseEvent): boolean { // 鼠标移动触发
+    function moving(event: MouseEvent, m_effects?: MoveEffect): boolean { // 鼠标移动触发
         let isOut: boolean = false;
         const { clientX, clientY } = event;
         const { top, right, bottom, left } = innerArea;
@@ -78,7 +84,14 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
                     workspace.matrixTransformation();
                     curPoint = workspace.matrix.inverseCoord(clientX - wx, clientY - wy); // 这边还有一点问题，先放一下！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
                     // #region 这个区域为动态副作用区域：滚动是一定要滚动的，至于滚动要伴随什么变化，交给传进来的effects?.rolling
-                    if (effects?.rolling) {
+                    if (m_effects) {
+                        const { type, effect: f } = m_effects;
+                        if (type === EffectType.NEW_SHAPE) {
+                            f(curPoint);
+                        } else if (type === EffectType.TRANS) {
+                            f(-dx, -dy);
+                        }
+                    } else if (effects?.rolling) {
                         effects.rolling(context, dx, dy, startPoint, curPoint);
                     }
                     // #endregion
@@ -101,17 +114,6 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
     return { remove, moving }
 }
 
-// for CtrlRect
-function forCtrlRect(context: Context, dx: number, dy: number) {
-    const m = context.workspace.matrix;
-    dx = dx / m.m00, dy = dy / m.m00; // 单位动态，为 1 * (matrix value) * px;
-    const shapes = context.selection.selectedShapes;
-    for (let i = 0; i < shapes.length; i++) {
-        const item = shapes[i];
-        translate(item, -dx, -dy);
-    }
-    context.repo.transactCtx.fireNotify();
-}
 function getTxybyNp(np: string, step: number): { dx: number, dy: number } {
     let dx = 0, dy = 0;
     if (np.includes('right')) {
@@ -132,20 +134,4 @@ function isDrag(n: ClientXY, o: ClientXY, threshold: number = 3) {
     const diff = Math.hypot(dx, dy);
     return diff > threshold;
 }
-// for new shape
-function forNewShape(context: Context, dx: number, dy: number, setupPint?: PageXY, curPoint?: PageXY) {
-    const newShape = context.selection.selectedShapes[0];
-    if (newShape && setupPint && curPoint) {
-        const { x: sx, y: sy } = setupPint;
-        const { x: px, y: py } = curPoint;
-        const x1 = { x: Math.min(sx, px), y: Math.min(sy, py) };
-        const x2 = { x: Math.max(sx, px), y: Math.max(sy, py) };
-        const height = x2.y - x1.y;
-        const width = x2.x - x1.x;
-        expandTo(newShape, width, height);
-        translateTo(newShape, x1.x, x1.y);
-    }
-    context.repo.transactCtx.fireNotify();
-}
-
-export { Wheel, fourWayWheel, forCtrlRect, isDrag, forNewShape }
+export { Wheel, fourWayWheel, isDrag }

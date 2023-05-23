@@ -1,7 +1,8 @@
 <script setup lang='ts'>
 import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
-import { CtrlElementType, WorkSpace } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
+import { CtrlElementType } from "@kcdesign/data";
 import { ClientXY } from "@/context/selection";
 import CtrlBar from "./Bars/CtrlBar.vue";
 import CtrlPoint from "./Points/CtrlPoint.vue";
@@ -10,11 +11,13 @@ import { createRect, getAxle, getRectWH } from "@/utils/common";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { useController } from "./controller";
+import { Shape } from "@kcdesign/data";
 interface Props {
     context: Context,
-    isController: boolean
     controllerFrame: Point[],
-    rotate: number
+    rotate: number,
+    matrix: number[],
+    shape: Shape
 }
 const props = defineProps<Props>();
 const { isDblClick, isDrag, isEditing } = useController(props.context);
@@ -118,7 +121,7 @@ watchEffect(() => { updater() })
     <div :class="{ 'ctrl-rect': true, 'un-visible': !visible, editing }" @mousedown="mousedown" :style="controllerStyle"
         data-area="controller">
         <CtrlBar v-for="(bar, index) in  bars" :key="index" :context="props.context" :width="bar.width" :height="bar.height"
-            :ctrl-type="bar.type" :rotate="props.rotate" ></CtrlBar>
+            :ctrl-type="bar.type" :rotate="props.rotate"></CtrlBar>
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"
             :rotate="props.rotate" :controller-frame="props.controllerFrame"></CtrlPoint>
     </div>

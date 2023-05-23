@@ -1,4 +1,4 @@
-import { LzData } from "@kcdesign/data/io/lzdata";
+import { LzData } from "@kcdesign/data";
 import { Zip } from "@pal/zip";
 
 interface IJSON {

@@ -11,7 +11,7 @@ import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
-import { Page } from "@kcdesign/data/data/page";
+import { Page } from "@kcdesign/data";
 const { t } = useI18n();
 
 const props = defineProps<{ context: Context, page: Page }>();

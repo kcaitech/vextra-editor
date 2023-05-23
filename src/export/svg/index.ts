@@ -1,5 +1,5 @@
-import { GroupShape, ImageShape, PathShape, Shape, FlattenShape, SymbolRefShape, TextShape } from "@kcdesign/data/data/shape";
-import { Artboard } from "@kcdesign/data/data/artboard";
+import { GroupShape, ImageShape, PathShape, Shape, FlattenShape, SymbolRefShape, TextShape } from "@kcdesign/data";
+import { Artboard } from "@kcdesign/data";
 import { render as art } from "@/render/artboard";
 import { render as group } from "@/render/group";
 import { render as shapegroup } from "@/render/shapegroup";
@@ -8,7 +8,7 @@ import { render as path } from "@/render/pathshape";
 import { render as rect } from "@/render/rectangle";
 import { render as text } from "@/render/text";
 import { render as symref } from "@/render/symbolref";
-import { ShapeType, BoolOp } from "@kcdesign/data/data/classes";
+import { ShapeType, BoolOp } from "@kcdesign/data";
 
 const comsMap: Map<ShapeType, any> = new Map();
 

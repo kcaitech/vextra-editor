@@ -10,11 +10,13 @@ import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
+import { Shape } from "@kcdesign/data";
 interface Props {
     context: Context,
-    isController: boolean
     controllerFrame: Point[],
-    rotate: number
+    rotate: number,
+    matrix: number[],
+    shape: Shape
 }
 const props = defineProps<Props>();
 const { isDblClick, isDrag, isEditing } = useController(props.context);

@@ -1,8 +1,5 @@
 import { createRouter, createWebHashHistory, onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
-import { ref } from 'vue';
 import { SKIP_LOGIN } from '@/utils/setting';
-// import { Document } from "@kcdesign/data/document";
-const AppVue = () => import("@/App.vue");
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
 const Apphome = () => import("@/components/AppHome/index.vue");
@@ -18,7 +15,7 @@ const per_center=()=>import('@/components/Userinfo/per_center.vue')
 const routes = [
     {
         path: '/',
-        redirect: SKIP_LOGIN ? '/apphome/recently' : '/login'
+        redirect: '/apphome/recently'
     },
     {
         path: "/login",

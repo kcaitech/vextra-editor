@@ -1,8 +1,9 @@
-import { Watchable } from "@kcdesign/data/data/basic";
-import { Repository } from "@kcdesign/data/data/transact";
-import { ShapeType } from "@kcdesign/data/data/typesdefine";
-import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Context } from "./index";
+import { Watchable } from "@kcdesign/data";
+import { Repository } from "@kcdesign/data";
+import { ShapeType } from "@kcdesign/data";
+import { Matrix } from '@kcdesign/data';
+import { Context, RepoWraper } from "./index";
+import { Root } from "@/utils/content";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -11,7 +12,8 @@ export enum Action {
     AddLine = 'add-line',
     AddEllipse = 'add-ellipse',
     AddArrow = 'add-arrow',
-    AddFrame = 'add-frame'
+    AddFrame = 'add-frame',
+    AddText = 'add-text'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -27,7 +29,8 @@ export enum KeyboardKeys { // 键盘按键类型
     O = 'KeyO',
     F = 'KeyF',
     Digit0 = 'Digit0',
-    G = 'KeyG'
+    G = 'KeyG',
+    T = 'KeyT'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -46,6 +49,7 @@ export enum CtrlElementType { // 控制元素类型
     LineEnd = 'line-end',
     LineStartR = 'line-start-rotate',
     LineEndR = 'line-end-rotate',
+    Text = 'text'
 }
 
 const A2R = new Map([
@@ -53,7 +57,8 @@ const A2R = new Map([
     [Action.AddRect, ShapeType.Rectangle],
     [Action.AddEllipse, ShapeType.Oval],
     [Action.AddLine, ShapeType.Line],
-    [Action.AddFrame, ShapeType.Artboard]
+    [Action.AddFrame, ShapeType.Artboard],
+    [Action.AddText, ShapeType.Text]
 ]);
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
@@ -89,24 +94,30 @@ export class WorkSpace extends Watchable(Object) {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
+    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
     constructor(context: Context) {
         super();
         this.context = context
     }
-    get root() { //return contentView HTMLElement
-        const root = { x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
-        let content: any = document.querySelectorAll('#content');
-        content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
-        if (content) {
-            const { x, y, bottom, right } = content.getBoundingClientRect();
-            root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
-            root.x = x;
-            root.y = y;
-            root.bottom = bottom;
-            root.right = right;
-            root.element = content;
+    get root(): Root { //return contentView HTMLElement info
+        const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构0.6s后会进行root数据更新)；
+        if (root.init) {
+            return root;
+        } else { // 如果未初始化，则查找一次，在contentView的一个生命周期内，只查找一次或零次Dom；
+            let content: any = document.querySelectorAll('#content');
+            content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
+            if (content) {
+                const { x, y, bottom, right } = content.getBoundingClientRect();
+                root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
+                root.x = x;
+                root.y = y;
+                root.bottom = bottom;
+                root.right = right;
+                root.element = content;
+                root.init = true;
+            }
+            return root;
         }
-        return root;
     }
     get pageView() {//return pageView HTMLElement
         const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
@@ -155,6 +166,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isEditing() {
         return this.m_content_editing;
+    }
+    updateRoot(root: Root) {
+        this.m_root = root;
     }
     contentEdit(v: boolean) {
         this.m_content_editing = v;
@@ -222,6 +236,9 @@ export class WorkSpace extends Watchable(Object) {
         } else if (event.code === KeyboardKeys.G) {
             event.preventDefault();
             this.keydown_g(ctrlKey, metaKey, shiftKey);
+        } else if (event.code === KeyboardKeys.T) {
+            event.preventDefault();
+            this.keydown_t();
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -230,7 +247,9 @@ export class WorkSpace extends Watchable(Object) {
     setAction(action: Action) {
         if (action === Action.AutoV && WorkSpace.ESC_EVENT_POINTER) {
             document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
-        } else this.escSetup();
+        } else {
+            this.escSetup()
+        }
         this.m_current_action = action;
         this.notify();
     }
@@ -279,7 +298,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
     }
-    keydown_z(repo: Repository, ctrl?: boolean, shift?: boolean, meta?: boolean) {
+    keydown_z(repo: RepoWraper, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         if ((ctrl || meta) && !shift) {
             repo.canUndo() && repo.undo();
         } else if ((ctrl || meta) && shift) {
@@ -299,6 +318,11 @@ export class WorkSpace extends Watchable(Object) {
     keydown_f() {
         this.escSetup();
         this.m_current_action = Action.AddFrame;
+        this.notify();
+    }
+    keydown_t() {
+        this.escSetup();
+        this.m_current_action = Action.AddText;
         this.notify();
     }
     keydown_0(ctrl: boolean, meta: boolean) {
@@ -333,33 +357,35 @@ export class WorkSpace extends Watchable(Object) {
             WorkSpace.ESC_EVENT_POINTER = undefined;
         }
     }
-    setCursor(type: CtrlElementType, deg: number) {
+    setCursorStyle(type: CtrlElementType | string, deg: number) {
         if (this.m_creating || this.m_selecting) {
             // todo
         } else {
             let name = 'auto-0';
-            if (type === CtrlElementType.RectRBR) {
+            if (type == CtrlElementType.RectRBR) {
                 name = `rotate-${0 + deg}`;
-            } else if (type === CtrlElementType.RectLBR) {
+            } else if (type == CtrlElementType.RectLBR) {
                 name = `rotate-${90 + deg}`;
-            } else if (type === CtrlElementType.RectLTR) {
+            } else if (type == CtrlElementType.RectLTR) {
                 name = `rotate-${180 + deg}`;
-            } else if (type === CtrlElementType.RectRTR) {
+            } else if (type == CtrlElementType.RectRTR) {
                 name = `rotate-${270 + deg}`;
-            } else if (type === CtrlElementType.RectLT || type === CtrlElementType.RectRB) {
+            } else if (type == CtrlElementType.RectLT || type === CtrlElementType.RectRB) {
                 name = `scale-${45 + deg}`;
-            } else if (type === CtrlElementType.RectRT || type === CtrlElementType.RectLB) {
+            } else if (type == CtrlElementType.RectRT || type === CtrlElementType.RectLB) {
                 name = `scale-${135 + deg}`;
-            } else if (type === CtrlElementType.LineStart || type === CtrlElementType.LineEnd) {
+            } else if (type == CtrlElementType.LineStart || type === CtrlElementType.LineEnd) {
                 name = 'extend-0';
-            } else if (type === CtrlElementType.LineStartR) {
+            } else if (type == CtrlElementType.LineStartR) {
                 name = `rotate-${135 + deg}`;
-            } else if (type === CtrlElementType.LineEndR) {
+            } else if (type == CtrlElementType.LineEndR) {
                 name = `rotate-${315 + deg}`;
-            } else if (type === CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
+            } else if (type == CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
                 name = `scale-${90 + deg}`
-            } else if (type === CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
+            } else if (type == CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
                 name = `scale-${0 + deg}`
+            } else if (type == CtrlElementType.Text) {
+                name = `scan-0`
             }
             this.notify(WorkSpace.CURSOR_CHANGE, name);
         }

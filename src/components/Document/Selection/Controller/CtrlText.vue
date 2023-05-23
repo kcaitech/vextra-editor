@@ -1,18 +1,22 @@
 <script setup lang='ts'>
 import { defineProps, watch, onMounted, onUnmounted, ref, reactive } from 'vue';
 import { Selection } from '@/context/selection';
-import { Matrix } from '@kcdesign/data/basic/matrix';
-import { TextShape } from '@kcdesign/data/data/shape';
+import { Matrix } from '@kcdesign/data';
+import { TextShape } from '@kcdesign/data';
+import { Shape } from "@kcdesign/data";
 import { Context } from '@/context';
-import TextInput from './TextInput.vue';
-import SelectView from "./SelectView.vue";
-import { genRectPath, throttle } from './common';
+import TextInput from './Text/TextInput.vue';
+import SelectView from "./Text/SelectView.vue";
+import { genRectPath, throttle } from '../common';
 import { useController } from '../Controller/controller';
+import { Point } from "../SelectionView.vue";
 
 const props = defineProps<{
-    shape: TextShape,
+    context: Context,
+    controllerFrame: Point[],
+    rotate: number,
     matrix: number[],
-    context: Context
+    shape: Shape
 }>();
 
 watch(() => props.shape, (value, old) => {
@@ -68,6 +72,7 @@ function onMouseDown(e: MouseEvent) {
     if (!editing && isDblClick()) {
         editing = true;
         props.context.workspace.contentEdit(editing);
+        props.context.workspace.setCursorStyle('text', 0);
     }
     if (!editing) return;
     props.context.workspace.setCtrl('controller');
@@ -117,6 +122,14 @@ function onMouseMove(e: MouseEvent) {
         selection.selectText(downIndex.index, locate.index);
     }
 }
+function mouseenter() {
+    if (editing) {
+        props.context.workspace.setCursorStyle('text', 0);
+    }
+}
+function mouseleave() {
+    props.context.workspace.resetCursor();
+}
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
 }
@@ -148,11 +161,12 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible">
-        <SelectView :context="props.context" :shape="props.shape" :matrix="submatrix.toArray()"></SelectView>
+        :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
+        @mouseenter="mouseenter" @mouseleave="mouseleave">
+        <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
         <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
     </svg>
-    <TextInput :context="props.context" :shape="props.shape" :matrix="submatrix.toArray()"></TextInput>
+    <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>
 
 <style lang='scss' scoped></style>

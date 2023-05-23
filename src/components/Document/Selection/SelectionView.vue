@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { defineProps, watchEffect, onMounted, onUnmounted, reactive, ref } from "vue";
+import { defineProps, watchEffect, onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Shape, ShapeType, TextShape } from "@kcdesign/data/data/shape";
-import { ControllerType, ctrlMap } from "./Controller";
+import { Matrix } from '@kcdesign/data';
+import { Shape, ShapeType, TextShape } from "@kcdesign/data";
+import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, Action } from "@/context/workspace";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
-import TextSelectVue from "./TextShape/index.vue"
 
 export interface Point {
     x: number,
@@ -26,10 +25,8 @@ const watcher = () => {
 const props = defineProps<{
     context: Context,
     matrix: number[],
-    isController: boolean,
 }>();
 
-const shapes: Array<Shape> = [];
 const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
 const controllerFrame = ref<Point[]>([]);
@@ -65,77 +62,77 @@ function watchShapes() { // 监听选区相关shape的变化
 }
 
 function updater() {
-    // console.log('updater', Date.now());
     matrix.reset(props.matrix);
     watchShapes();
     createController();
     createShapeTracing();
 }
-function createController() {
+function createController() { // 计算点位以及空间类型判定
     const selection: Shape[] = props.context.selection.selectedShapes;
-    if (!selection.length) {
+    if (selection.length === 0) {
         controller.value = false;
-        return;
-    }
-    if (selection.length === 1) { // 单选
-        const shape = selection[0];
-        const m = shape.matrix2Page();
-        const frame = shape.frame;
-        // p1 p2
-        // p4 p3
-        const points = [
-            { x: 0, y: 0, type: CtrlElementType.RectLT },
-            { x: frame.width, y: 0, type: CtrlElementType.RectRT },
-            { x: frame.width, y: frame.height, type: CtrlElementType.RectRB },
-            { x: 0, y: frame.height, type: CtrlElementType.RectLB }
-        ];
-        controllerFrame.value = points.map(p => {
-            let _s = m.computeCoord(p.x, p.y);
-            let _p = matrix.computeCoord(_s.x, _s.y);
-            p.x = _p.x; p.y = _p.y;
-            return p;
-        });
-        // rotate.value = getHorizontalAngle(points[0], points[1]);
-        if (selection[0].type === ShapeType.Line) {
-            controllerType.value = ControllerType.Line;
-            rotate.value = getHorizontalAngle(points[0], points[2]);
-        } else {
-            controllerType.value = ControllerType.Rect;
-            rotate.value = getHorizontalAngle(points[0], points[1]);
-        }
-    } else { // 多选
-        const __points: [number, number][] = [];
-        selection.forEach(p => {
-            const m = p.matrix2Page();
-            const frame = p.frame;
-            let _ps: [number, number][] = [
-                [0, 0],
-                [frame.width, 0],
-                [frame.width, frame.height],
-                [0, frame.height]
+    } else {
+        if (selection.length === 1) { // 单选
+            const shape = selection[0];
+            const m = shape.matrix2Page();
+            const frame = shape.frame;
+            // p1 p2
+            // p4 p3
+            const points = [
+                { x: 0, y: 0, type: CtrlElementType.RectLT },
+                { x: frame.width, y: 0, type: CtrlElementType.RectRT },
+                { x: frame.width, y: frame.height, type: CtrlElementType.RectRB },
+                { x: 0, y: frame.height, type: CtrlElementType.RectLB }
             ];
-            _ps = _ps.map(p => {
-                let _s = m.computeCoord(p[0], p[1])
+            controllerFrame.value = points.map(p => {
+                let _s = m.computeCoord(p.x, p.y);
                 let _p = matrix.computeCoord(_s.x, _s.y);
-
-                return [_p.x, _p.y];
+                p.x = _p.x; p.y = _p.y;
+                return p;
             });
-            __points.push(..._ps);
-            const bounding = createHorizontalBox(__points);
-            if (bounding) {
-                controllerFrame.value = [
-                    { x: bounding.left, y: bounding.top, type: CtrlElementType.RectLT },
-                    { x: bounding.right, y: bounding.top, type: CtrlElementType.RectRT },
-                    { x: bounding.right, y: bounding.bottom, type: CtrlElementType.RectRB },
-                    { x: bounding.left, y: bounding.bottom, type: CtrlElementType.RectLB }
-                ]
+            if (selection[0].type === ShapeType.Line) {
+                controllerType.value = ControllerType.Line;
+                rotate.value = getHorizontalAngle(points[0], points[1]);
+            } else if (selection[0].type === ShapeType.Text) {
+                controllerType.value = ControllerType.Text;
+                rotate.value = getHorizontalAngle(points[0], points[2]); // 线条的水平夹角与其他图形有区别
+            } else {
+                controllerType.value = ControllerType.Rect;
+                rotate.value = getHorizontalAngle(points[0], points[1]);
             }
-            rotate.value = 0; // 多选时，rect只为水平状态
-        });
-        controllerType.value = ControllerType.Rect;
+        } else { // 多选
+            const __points: [number, number][] = [];
+            selection.forEach(p => {
+                const m = p.matrix2Page();
+                const frame = p.frame;
+                let _ps: [number, number][] = [
+                    [0, 0],
+                    [frame.width, 0],
+                    [frame.width, frame.height],
+                    [0, frame.height]
+                ];
+                _ps = _ps.map(p => {
+                    let _s = m.computeCoord(p[0], p[1])
+                    let _p = matrix.computeCoord(_s.x, _s.y);
 
+                    return [_p.x, _p.y];
+                });
+                __points.push(..._ps);
+                const bounding = createHorizontalBox(__points);
+                if (bounding) {
+                    controllerFrame.value = [
+                        { x: bounding.left, y: bounding.top, type: CtrlElementType.RectLT },
+                        { x: bounding.right, y: bounding.top, type: CtrlElementType.RectRT },
+                        { x: bounding.right, y: bounding.bottom, type: CtrlElementType.RectRB },
+                        { x: bounding.left, y: bounding.bottom, type: CtrlElementType.RectLB }
+                    ]
+                }
+            });
+            rotate.value = 0; // 多选时，rect只为水平状态
+            controllerType.value = ControllerType.Rect; // 且控件类型都为矩形控件
+        }
+        controller.value = true;
     }
-    controller.value = true;
 }
 function createShapeTracing() { // 描边
     tracing.value = false;
@@ -164,7 +161,15 @@ function pathMousedown(e: MouseEvent) {
             e.stopPropagation();
             props.context.workspace.preToTranslating(e);
             const hoveredShape = props.context.selection.hoveredShape;
-            props.context.selection.selectShape(hoveredShape);
+            if (e.shiftKey) {
+                if (hoveredShape) {
+                    const selected = props.context.selection.selectedShapes;
+                    props.context.selection.rangeSelectShape([...selected, hoveredShape])
+                }
+            } else {
+                props.context.selection.selectShape(hoveredShape);
+            }
+
         }
     }
 }
@@ -176,7 +181,6 @@ onMounted(() => {
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
-    shapes.length = 0;
 })
 watchEffect(updater)
 </script>
@@ -192,11 +196,8 @@ watchEffect(updater)
         </path>
     </svg>
     <!-- 控制 -->
-    <component v-if="controller && !context.selection.isSelectText"
-        :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)" :context="props.context"
-        :controller-frame="controllerFrame" :is-controller="props.isController" :rotate="rotate">
+    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
+        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
+        :shape="context.selection.selectedShapes[0]">
     </component>
-
-    <TextSelectVue v-if="context.selection.isSelectText" :shape="(context.selection.selectedShapes[0] as TextShape)"
-        :matrix="props.matrix" :context="props.context"></TextSelectVue>
 </template>

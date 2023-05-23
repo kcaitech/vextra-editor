@@ -1,6 +1,6 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="ShareList||[]" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
+    <el-table :data="ShareList||[]" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容" @row-click="toDocument">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document.updated_at" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -9,45 +9,52 @@
                 <el-icon :size=" 20 " content="标星" v-if=" !ShareList[scope.$index].document_favorites.is_favorite ">
                     <el-tooltip content="标星" show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
-                            @click=" Starfile(scope.$index) ">
+                            @click.stop=" Starfile(scope.$index) ">
                         </svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 " v-else>
                     <el-tooltip content="取消标星" show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
-                            @click=" Starfile(scope.$index) ">
+                            @click.stop=" Starfile(scope.$index) ">
                         </svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
                     <el-tooltip content="分享" show-after="1000">
-                        <Share @click=" Sharefile(scope.$index) " />
+                        <Share @click.stop=" Sharefile(scope) " />
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
                     <el-tooltip content="退出共享" show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="exitshar"
-                            @click=" Exitshar(scope.$index) ">
+                            @click.stop=" Exitshar(scope.$index) ">
                         </svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
             </template>
         </el-table-column>
     </el-table>
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { Share, Remove } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { pushScopeId, reactive, ref, onMounted } from 'vue'
+import { pushScopeId, reactive, ref, onMounted, onUnmounted } from 'vue'
 import * as share_api from "@/apis/share"
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+import { router } from '@/router'
+import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 
 let ShareList = ref<any[]>([]);
 const isLoading = ref(false);
-
+const showFileShare = ref<boolean>(false);
+const shareSwitch = ref(true)
+const pageHeight = ref(0)
+const docId = ref('')
 
 async function ShareLists() {
     // loading
@@ -97,8 +104,22 @@ const Starfile = async (index: number) => {
 
 }
 
-const Sharefile = (index: number) => {
-    console.log(index)
+const Sharefile = (scope: any) => {
+    if(showFileShare.value) {
+    showFileShare.value = false
+    return
+  }
+  docId.value = scope.row.document.id  
+  showFileShare.value = true
+}
+const closeShare = () => {
+  showFileShare.value = false
+}
+const getPageHeight = () => {
+  pageHeight.value = window.innerHeight
+}
+const onSwitch = (state: boolean) => {
+    shareSwitch.value = state
 }
 
 const Exitshar = async (index: number) => {
@@ -110,12 +131,25 @@ const Exitshar = async (index: number) => {
         ElMessage.error('退出失败')
     }
     
-    
+}
+
+const toDocument = (row: any) => {
+    const docId = row.document.id
+    router.push({
+        name: 'document',
+        query: {
+            id: docId
+        }
+    })
 }
 
 onMounted(() => {
     ShareLists()
-
+    getPageHeight()
+    window.addEventListener('resize', getPageHeight);
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', getPageHeight);
 })
 </script>
 <style lang="scss" scoped>
@@ -157,5 +191,14 @@ onMounted(() => {
 :deep(.el-table__row) {
     height: 56px;
     font-weight: 18px;
+}
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 </style>

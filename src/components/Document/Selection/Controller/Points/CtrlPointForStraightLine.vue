@@ -3,9 +3,9 @@ import { Context } from '@/context';
 import { ref, defineProps, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
 import { XY, ClientXY, PageXY } from '@/context/selection';
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Matrix } from '@kcdesign/data';
 import { getAngle } from '@/utils/common';
-import { AsyncLineAction } from '@kcdesign/data/editor/controller';
+import { AsyncLineAction } from '@kcdesign/data';
 interface Props {
   context: Context,
   axle: XY,
@@ -64,7 +64,7 @@ function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
     workspace.value.setCtrl('controller');
     const ct = getCtrlElementType(event);
-    if (ct) {      
+    if (ct) {
       event.stopPropagation();
       if (!pointContainer.value) return;
       const { clientX, clientY } = event;
@@ -89,7 +89,7 @@ function onMouseMove(event: MouseEvent) {
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-      workspace.value.setCursor(clt, props.rotate);
+      workspace.value.setCursorStyle(clt, props.rotate);
       aType = 'rotate';
     }
     if (asyncLineEditor) {
@@ -130,7 +130,7 @@ function mouseleave() {
 function mousemove(event: MouseEvent) {
   if (rotating || scaling) return;
   const ct = getCtrlElementType(event);
-  workspace.value.setCursor(ct, props.rotate);
+  workspace.value.setCursorStyle(ct, props.rotate);
 }
 function windowBlur() {
   if (isDragging) {

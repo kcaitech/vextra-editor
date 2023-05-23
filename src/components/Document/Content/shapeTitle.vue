@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { defineProps, watchEffect, onMounted, onUnmounted, ref, reactive, nextTick, computed } from "vue";
 import { Context } from "@/context";
-import { Page } from '@kcdesign/data/data/page';
-import { Shape, ShapeFrame } from "@kcdesign/data/data/shape";
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Page } from '@kcdesign/data';
+import { Shape, ShapeFrame } from "@kcdesign/data";
+import { Matrix } from '@kcdesign/data';
 import { Selection } from "@/context/selection";
 
 const props = defineProps<{
@@ -69,11 +69,11 @@ function watchShapes() { // 监听相关shape的变化
 
 const setPosition = () => {
     const shapes = props.data.childs
-    // let titleArr = shapes.filter(t => {
-    //     return t.type === 'group' || t.type === 'artboard'
-    // })
-    if (shapes) (
-        position = shapes.map((item: Shape, i: number) => {
+    let titleArr = shapes.filter(t => {
+        return t.type === 'group' || t.type === 'artboard'
+    })
+    if (titleArr) (
+        position = titleArr.map((item: Shape, i: number) => {
             const selected = props.context.selection.selectedShapes;
             const minWidth = document.querySelector(`[data-minW="${i}"]`);
             let minW = item.frame.width

@@ -1,5 +1,5 @@
-import { Color } from "@kcdesign/data/data/baseclasses";
-import { Shape } from "@kcdesign/data/data/shape";
+import { Color } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
 import { toHex } from "@/utils/color"
 export function render(h: Function, shape: Shape, reflush?: number) {
     if (!shape.isVisible) return;

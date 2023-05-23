@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { defineProps, computed, onMounted, onUnmounted, watchEffect } from 'vue';
-import { CtrlElementType } from '@/context/workspace';
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Matrix } from '@kcdesign/data';
 import { getBarStyle } from '@/utils/rectFn';
-import { AsyncBaseAction } from "@kcdesign/data/editor/controller";
+import { AsyncBaseAction, CtrlElementType } from "@kcdesign/data";
 import { Shape } from '@kcdesign/data';
 import { PageXY, ClientXY } from '@/context/selection';
 interface Props {
@@ -87,7 +86,7 @@ function mouseleave() {
 }
 function mousemove() {
     if (scaling) return;
-    workspace.value.setCursor(props.ctrlType, props.rotate);
+    workspace.value.setCursorStyle(props.ctrlType, props.rotate);
 }
 function windowBlur() {
     if (isDragging) {
@@ -95,7 +94,6 @@ function windowBlur() {
             asyncBaseAction = asyncBaseAction.close();
         }
         setStatus(false);
-        props.context.repo.commit({});
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         workspace.value.resetCursor();

@@ -46,18 +46,24 @@ watch(textarea, () => {
     disabled.value = false
 })
 const getDocumentAuthority = async () => {
-    const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
-    permType = data.perm_type
-    if(permType !== 0) {
-        router.push({
-            name: 'document',
-            query: {
-                id: route.query.id
+    try {
+        const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+        if(data) {
+            permType = data.perm_type
+            if(permType !== 0) {
+                router.push({
+                    name: 'document',
+                    query: {
+                        id: route.query.id
+                    }
+                })
             }
-        })
+        }
+    } catch(err) {
+        console.log(err);
+        
     }
 }
-
 
 getDocumentAuthority()
 const getDocumentInfo = async () => {
@@ -96,7 +102,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container" v-if="docInfo.document">
+    <div class="container">
         <div class="header">
             <div class="svgBox" @click="() => { router.push({ name: 'apphome' }) }">
                 <svg-icon class="svg" icon-class="home_0508"></svg-icon>
@@ -105,7 +111,7 @@ onUnmounted(() => {
                 <img src="../../assets/pd-logo-svg.svg">
             </div>
         </div>
-        <div class="context" v-if="linkValid">
+        <div class="context" v-if="linkValid && docInfo.document">
             <span style="font-weight: bold;">{{ docInfo.document.name }}</span>
             <div class="svg-file">
                 <svg-icon class="svg" icon-class="file-rectangle"></svg-icon>

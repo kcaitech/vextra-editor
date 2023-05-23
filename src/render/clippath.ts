@@ -1,4 +1,4 @@
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape } from "@kcdesign/data";
 // import { EL, h } from "./basic";
 
 // let g_clippath_id = 0; // 要用稳定的id，避免不必要的dom更新

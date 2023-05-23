@@ -17,11 +17,12 @@ import Rect from "./Buttons/Rect.vue";
 import Ellipse from "./Buttons/Ellipse.vue";
 import Line from "./Buttons/Path.vue";
 import Arrow from "./Buttons/Arrow.vue";
+import CreateText from "./Buttons/CreateText.vue";
 import { Action, WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 
-const props = defineProps<{ 
+const props = defineProps<{
     context: Context,
     selection: Selection
 }>();
@@ -34,7 +35,7 @@ function select(action: Action) {
     workspace.value.setAction(action);
 }
 
-function update() {    
+function update() {
     selected.value = workspace.value.action;
 }
 // hooks
@@ -51,34 +52,13 @@ onUnmounted(() => {
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
         <div class="vertical-line" />
         <Frame :workspace="workspace" :active="selected === Action.AddFrame" @select="select"></Frame>
-        <Rect @select="select" :active="selected === Action.AddRect" ></Rect>
-        <Ellipse @select="select" :active="selected === Action.AddEllipse" ></Ellipse>
-        <Line @select="select" :active="selected === Action.AddLine" ></Line>
-        <Arrow @select="select" :active="selected === Action.AddArrow" ></Arrow>
-        <el-tooltip
-            class="box-item"
-            effect="dark"
-            :content="`${t('attr.text')} &nbsp;&nbsp; T`"
-            placement="bottom"
-            :show-after="500"
-            :offset="10"
-            :hide-after="0"
-        >
-            <ToolButton>
-                <div class="temp">
-                    <svg-icon icon-class="text"></svg-icon>
-                </div>
-            </ToolButton>
-        </el-tooltip>
-        <el-tooltip
-            class="box-item"
-            effect="dark"
-            :content="`${t('home.picture')} &nbsp;&nbsp; Shift+Ctrl+K`"
-            placement="bottom"
-            :show-after="500"
-            :offset="10"
-            :hide-after="0"
-        >
+        <Rect @select="select" :active="selected === Action.AddRect"></Rect>
+        <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
+        <Line @select="select" :active="selected === Action.AddLine"></Line>
+        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
+        <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
+        <el-tooltip class="box-item" effect="dark" :content="`${t('home.picture')} &nbsp;&nbsp; Shift+Ctrl+K`"
+            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
             <ToolButton>
                 <div class="temp">
                     <svg-icon icon-class="picture"></svg-icon>
@@ -86,15 +66,8 @@ onUnmounted(() => {
             </ToolButton>
         </el-tooltip>
         <div class="vertical-line" />
-        <el-tooltip
-            class="box-item"
-            effect="dark"
-            :content="`${t('navi.comps')} &nbsp;&nbsp; Shift+I`"
-            placement="bottom"
-            :show-after="500"
-            :offset="10"
-            :hide-after="0"
-        >
+        <el-tooltip class="box-item" effect="dark" :content="`${t('navi.comps')} &nbsp;&nbsp; Shift+I`" placement="bottom"
+            :show-after="500" :offset="10" :hide-after="0">
             <ToolButton>
                 <div class="temp">
                     <svg-icon icon-class="resource"></svg-icon>
@@ -103,39 +76,40 @@ onUnmounted(() => {
         </el-tooltip>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
-    
 </template>
 
 <style scoped lang="scss">
-    .editor-tools {
+.editor-tools {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 40px;
+
+    .temp {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+        color: #ffffff;
         box-sizing: border-box;
         display: flex;
-        flex-direction: row;
         align-items: center;
-        height: 40px;
-      
-        .temp {
-            width: 28px;
-            height: 28px;
-            font-size: 12px;
-            color: #ffffff;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
-            > svg {
-                width: 14px;
-                height: 14px;
-            }
-        }
-        .vertical-line {
-            width: 1px;
-            height: 28px;
-            background-color: grey;
-            flex: 0 0 auto;
-            margin-left: 5px;
-            margin-right: 5px;
+        justify-content: center;
+        padding: 4px;
+
+        >svg {
+            width: 14px;
+            height: 14px;
         }
     }
+
+    .vertical-line {
+        width: 1px;
+        height: 28px;
+        background-color: grey;
+        flex: 0 0 auto;
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+}
 </style>

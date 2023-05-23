@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { layoutText, locateCursor, locateText } from "@/layout/text";
 import { TextShape } from "@kcdesign/data";
-import { ShapeEditor } from "@kcdesign/data/editor/shape";
+import { ShapeEditor } from "@kcdesign/data";
 
 const keydelays = 150;
 function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): T {
@@ -156,6 +156,7 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
             selection.selectShape(shape);
             clearTimeout(timer);
         })
+        context.workspace.resetCursor();
         context.workspace.contentEdit(false);
     }
 

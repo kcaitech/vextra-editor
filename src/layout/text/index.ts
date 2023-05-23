@@ -1,7 +1,7 @@
-import { TextShape } from "@kcdesign/data/data/shape";
-import { Para, Span, SpanAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "@kcdesign/data/data/text";
+import { TextShape } from "@kcdesign/data";
+import { Para, Span, SpanAttr, TextBehaviour, TextHorAlign, TextVerAlign } from "@kcdesign/data";
 import { measure } from "./measure";
-import { BasicArray } from "@kcdesign/data/data/basic";
+import { BasicArray } from "@kcdesign/data";
 
 export interface IGraphy {
     char: string,
@@ -288,7 +288,6 @@ export function layoutText(shape: TextShape): TextLayout {
             case TextVerAlign.Bottom: return frame.height - contentHeight;
         }
     })(vAlign);
-
     return { yOffset, paras }
 }
 

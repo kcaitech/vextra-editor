@@ -1,8 +1,8 @@
 import { layoutText, locateText } from "@/layout/text";
-import { ISave4Restore, Watchable } from "@kcdesign/data/data/basic";
-import { Document } from "@kcdesign/data/data/document";
-import { Page } from "@kcdesign/data/data/page";
-import { Shape, TextShape } from "@kcdesign/data/data/shape";
+import { ISave4Restore, Watchable } from "@kcdesign/data";
+import { Document } from "@kcdesign/data";
+import { Page } from "@kcdesign/data";
+import { Shape, TextShape } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
 import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
 // import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
@@ -17,7 +17,11 @@ export interface XY {
     x: number,
     y: number
 }
-export interface ClientXY { // 视口坐标系的xy
+export interface ClientXYRaw { // 视口坐标系的xy
+    x: number,
+    y: number
+}
+export interface ClientXY { // 视口坐标系的xy，相对root
     x: number,
     y: number
 }
@@ -145,7 +149,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             }
         }
     }
-    getShapesByXY_beta(position: PageXY, force: boolean, scope?: Shape[]): Shape[] { // 基于SVGGeometryElement的图形检索
+    getShapesByXY_beta(position: PageXY, force: boolean, isCtrl: boolean, scope?: Shape[]): Shape[] { // 基于SVGGeometryElement的图形检索
         // force 深度检索。检索在某一位置的所有visible图形，返回的shape[]长度可以大于1
         // !force：只检索可见图形，被裁剪的、unVisible的不检索，返回的shape[]长度等于1或0，更适用于hover判定、左键点击。
         // scope 检索范围限定，如果没有限定范围则在全域(page)下寻找
@@ -154,7 +158,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             position = cloneDeep(position);
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
-            shapes.push(...finder(this.scout, childs, position, force, this.selectedShapes[0]));
+            shapes.push(...finder(this.scout, childs, position, force, this.selectedShapes[0], isCtrl));
         }
         return shapes;
     }

@@ -11,7 +11,7 @@ import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
-import { Page } from "@kcdesign/data/data/page";
+import { Page } from "@kcdesign/data";
 const props = defineProps<{ context: Context, page: Page }>();
 
 const structure = ref<{pagelistHeight: number, pagelistHeightBackup: number}>({pagelistHeight: 150, pagelistHeightBackup: 30});
