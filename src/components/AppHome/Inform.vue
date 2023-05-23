@@ -12,15 +12,11 @@ const emit = defineEmits<{
 const props = defineProps<{
   applyList: any
 }>()
-const applyListInfo: any = ref(props.applyList)
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 enum Audit {
   unPass,
   Pass
 }
-watch(props.applyList, () => {
-  applyListInfo.value = props.applyList
-}, { deep: true })
 
 const formatDate = computed(() => {
   return function (value: string): string {
@@ -32,17 +28,15 @@ const formatDate = computed(() => {
 })
 const consent = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.Pass)
-  emit('reviewed')
-  applyListInfo.value[index].apply.status = 1;
 }
 const refuse = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.unPass)
-  applyListInfo.value[index].apply.status = 2;
-  emit('reviewed')
 }
 const promissionApplyAudit = async (id: string, type: number) => {
   try {
     await share_api.promissionApplyAuditAPI({ apply_id: id, approval_code: type })
+    emit('reviewed')
+
   } catch (error) {
     ElMessage({
       message: `${t('apply.authorization_failure')}`
@@ -67,7 +61,7 @@ const close = () => {
     </template>
     <div class="contain">
       <el-scrollbar height="400px" style="padding-right: 10px;">
-        <div class="inform-item" v-for="(item, i) in applyListInfo" :key="i">
+        <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
           <div class="avatar"><img :src="item.user.avatar" alt=""></div>
           <div class="item-container">
             <div class="item-title">
@@ -92,7 +86,7 @@ const close = () => {
             <p v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
           </div>
         </div>
-        <div class="text" v-if="applyListInfo.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
+        <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
       </el-scrollbar>
     </div>
   </el-card>
@@ -224,5 +218,5 @@ const close = () => {
   z-index: 9;
   position: absolute;
   top: 50px;
-  right: 90px;
+  right: 130px;
 }</style>

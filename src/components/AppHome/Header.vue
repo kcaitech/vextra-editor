@@ -16,7 +16,7 @@ const state = reactive({
 const { circleUrl, uname, } = toRefs(state)
 const num = ref(0)
 const showInForm = ref(false)
-const applyList: any = ref([])
+const applyList = ref<any[]>([])
 const closeInForm = () => {
     showInForm.value = false
 }

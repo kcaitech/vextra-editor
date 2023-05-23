@@ -13,31 +13,39 @@ const docInfo: any = ref({})
 const route = useRoute()
 const linkValid = ref(true)
 let permType = undefined
+const applyList = ref<any[]>([])
+const status = ref(0)
 const onSave = () => {
     disabled.value = true
     if (docInfo.value.shares_count >= 5) {
         ElMessage({
             message: `${t('apply.maximum_share')}`
         })
-        router.push('/')
-    }
-    if (radio.value === '1') {
-        if (docInfo.value.application_count.value >= 3) {
-            ElMessage({
-                message: `${t('apply.request_access')}`
-            })
-            return
+        setTimeout(() => {
+            router.push('/')
+        }, 2000)
+    }else {
+        if (radio.value === '1') {
+            if (docInfo.value.application_count.value >= 3) {
+                ElMessage({
+                    message: `${t('apply.request_access')}`
+                })
+                return
+            }else {
+                postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
+            }
+        }else if (radio.value === '2') {
+            if (docInfo.value.application_count >= 3) {
+                ElMessage({
+                    message: `${t('apply.request_access')}`
+                })
+                return
+            }else {
+                postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
+            }
         }
     }
-    if (radio.value === '2') {
-        if (docInfo.value.application_count >= 3) {
-            ElMessage({
-                message: `${t('apply.request_access')}`
-            })
-            return
-        }
-    }
-    postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
+    
 }
 watch(radio, () => {
     disabled.value = false
@@ -70,11 +78,6 @@ const getDocumentInfo = async () => {
     try{
         const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
         docInfo.value = data.data
-        if(docInfo.value.application_count >= 3) {
-            ElMessage({
-                message: `${t('apply.request_access')}`
-            })
-        }
         if(docInfo.value.document.doc_type === 0) {
             linkValid.value = false
         }else {
@@ -85,6 +88,27 @@ const getDocumentInfo = async () => {
         
     }
 }
+//获取申请列表
+const getApplyList = async () => {
+    try {
+        const { data } = await share_api.getApplyListAPI({ doc_id: route.query.id })
+        if (data) {
+            status.value = data.apply.status
+        }
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+watch(status,() => {
+    if(status.value === 2) {
+        ElMessage({
+            message: `${t('apply.not_passed')}`
+        })
+        disabled.value = false
+    }
+})
+
 getDocumentInfo()
 const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
     await share_api.postDocumentAuthorityAPI(data)
@@ -94,6 +118,7 @@ let timer: any = null
 onMounted(() => {  
     timer = setInterval(() => {
     getDocumentInfo()
+    getApplyList()
     getDocumentAuthority()
     }, 10000) 
 })
@@ -249,6 +274,9 @@ onUnmounted(() => {
                 display: flex;
                 justify-content: center;
                 margin-top: 20px;
+                .el-button.is-disabled {
+                    cursor: pointer;
+                }
             }
         }
     }
