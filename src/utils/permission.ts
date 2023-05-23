@@ -8,7 +8,13 @@ router.beforeEach((to, from, next) => {
         if (to.path === '/login') {
             next('/')
         } else {
-            next()
+            if(to.path === from.path) {
+                // 刷新当前页面的操作
+                next(false); // 阻止路由跳转
+                next(); // 继续路由跳转
+            } else {
+                next(); // 继续路由跳转
+            }
         }
     } else {
         if (whiteList.find(function (item) {
@@ -19,4 +25,5 @@ router.beforeEach((to, from, next) => {
             next('/login')
         }
     }
+    
 })
