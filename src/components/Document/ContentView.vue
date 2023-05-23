@@ -16,6 +16,7 @@ import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { updateRoot, getName } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
+import Loading from '@/components/common/Loading.vue'
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -549,10 +550,6 @@ onUnmounted(() => {
     props.context.selection.scout?.remove();
     resizeObserver.disconnect();
 })
-renderinit().then(() => {
-    inited.value = true;
-    nextTick(() => { root.value && resizeObserver.observe(root.value) });
-})
 </script>
 <template>
     <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
@@ -567,6 +564,7 @@ renderinit().then(() => {
         </ContextMenu>
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
     </div>
+    <Loading v-else></Loading>
 </template>
 <style scoped lang="scss">
 div {

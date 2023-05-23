@@ -65,6 +65,7 @@ declare module '@vue/runtime-core' {
     LeftTabs: typeof import('./src/components/Document/Navigation/LeftTabs.vue')['default']
     Line: typeof import('./src/components/Document/Content/Line.vue')['default']
     ListView: typeof import('./src/components/common/ListView.vue')['default']
+    Loading: typeof import('./src/components/common/Loading.vue')['default']
     Login: typeof import('./src/components/Login/Login.vue')['default']
     Main: typeof import('./src/components/AppHome/Main.vue')['default']
     Menu: typeof import('./src/components/Document/Menu/index.vue')['default']
