@@ -75,8 +75,8 @@ let listviewSource = new class implements IDataSource<ItemData> {
 const shapelist = ref<List>();
 const ListBody = ref<HTMLDivElement>()
 const ListH = ref<number>(0)
-function notifySourceChange(t?: number) {
-    if (t === Selection.CHANGE_SHAPE) {
+function notifySourceChange(t?: number | string) {
+    if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
             let parent = item.parent
