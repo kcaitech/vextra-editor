@@ -11,7 +11,7 @@ interface Root {
   element: any
   center: ClientXY
 }
-const updateRootTime = 600;
+const updateRootTime = 300;
 function _updateRoot(context: Context, element: HTMLElement) {
   const { x, y, right, bottom } = element.getBoundingClientRect();
   const root: Root = {
@@ -42,7 +42,7 @@ function isInner(context: Context, shape: Shape) {
     [0, height]
   ]
   point = point.map(p => {
-    const _s = s2pMatirx.computeCoord(p[0], p[1])
+    const _s = s2pMatirx.computeCoord(p[0], p[1]);
     const _p = pMatrix.computeCoord(_s.x, _s.y);
     return [_p.x, _p.y];
   })

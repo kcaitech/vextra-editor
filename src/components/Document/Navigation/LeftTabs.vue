@@ -1,15 +1,9 @@
-<!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-03-08 09:42:33
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-09 16:13:35
--->
 <script setup lang="ts">
 import { defineProps, ref } from "vue";
 import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
-import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
+// import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
 const { t } = useI18n();
@@ -27,10 +21,11 @@ const tabs: { title: string, id: Tab }[] = [
     }, {
         title: t('navi.comps'),
         id: 'Comps'
-    }, {
-        title: t('navi.resource'),
-        id: 'Resource'
-    }
+    },
+    // {
+    //     title: t('navi.resource'),
+    //     id: 'Resource'
+    // }
 ]
 
 function toggle(id: Tab) {
@@ -47,7 +42,7 @@ function toggle(id: Tab) {
         <div class="body">
             <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"></ShapeTab>
             <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
-            <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
+            <!-- <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab> -->
         </div>
     </div>
 </template>
@@ -63,6 +58,7 @@ function toggle(id: Tab) {
         display: flex;
         flex-direction: row;
         padding-left: 13px;
+
         >.tab {
             font-weight: var(--font-default-bold);
             font-size: 10px;
