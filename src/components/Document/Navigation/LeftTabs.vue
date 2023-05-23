@@ -60,12 +60,9 @@ function toggle(id: Tab) {
 
     .tab-controller {
         height: 36px;
-        width: 100%;
         display: flex;
         flex-direction: row;
-        margin-left: 13px;
-        overflow: hidden;
-
+        padding-left: 13px;
         >.tab {
             font-weight: var(--font-default-bold);
             font-size: 10px;

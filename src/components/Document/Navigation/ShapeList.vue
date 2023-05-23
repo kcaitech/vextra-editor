@@ -11,6 +11,7 @@ import { ShapeType } from '@kcdesign/data';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
+import { isInner } from "@/utils/content";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -202,6 +203,10 @@ const isRead = (read: boolean, shape: Shape) => {
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 function shapeScrollToContentView(shape: Shape) {
+    if (isInner(props.context, shape)) {
+        props.context.selection.selectShape(shape);
+        return;
+    }
     const workspace = props.context.workspace;
     const { x: sx, y: sy, height, width } = shape.frame2Page();
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
