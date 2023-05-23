@@ -3,12 +3,14 @@ import { onMounted, ref, onUnmounted, defineProps } from 'vue';
 import FileShare from './FileShare.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 
 const { t } = useI18n()
 interface Props {
     context: Context
 }
-const docID = localStorage.getItem('docId') || ''
+const route = useRoute()
+const docID = route.query.id || localStorage.getItem('docId')
 const props = defineProps<Props>();
 const showFileShare = ref<boolean>(false);
 const pageHeight = ref(0)
@@ -39,7 +41,7 @@ const getPageHeight = () => {
 
 onMounted(() => {
   getPageHeight()
-  props.context.documentInfo(docID).then((res) => {
+  props.context.documentInfo((docID as string)).then((res) => {
     if(res.document) {
       selectValue.value = res.document.doc_type !== 0 ? res.document.doc_type : res.document.doc_type
     }

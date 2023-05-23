@@ -20,7 +20,6 @@ import { useI18n } from 'vue-i18n';
 import { importDocument } from "@kcdesign/data";
 import { ElMessage } from 'element-plus'
 import { Warning } from '@element-plus/icons-vue'
-import { watch } from 'original-fs';
 
 const { t } = useI18n();
 
@@ -243,8 +242,6 @@ enum PermissionChange {
 const getDocumentAuthority = async () => {
     try {
         const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
-        console.log(data,'dat');
-        
         if(data.data.perm_type !== permType.value) {
             if(data.data.perm_type === 1) {
                 permissionChange.value = PermissionChange.update
