@@ -69,11 +69,11 @@ function watchShapes() { // 监听相关shape的变化
 
 const setPosition = () => {
     const shapes = props.data.childs
-    // let titleArr = shapes.filter(t => {
-    //     return t.type === 'group' || t.type === 'artboard'
-    // })
-    if (shapes) (
-        position = shapes.map((item: Shape, i: number) => {
+    let titleArr = shapes.filter(t => {
+        return t.type === 'group' || t.type === 'artboard'
+    })
+    if (titleArr) (
+        position = titleArr.map((item: Shape, i: number) => {
             const selected = props.context.selection.selectedShapes;
             const minWidth = document.querySelector(`[data-minW="${i}"]`);
             let minW = item.frame.width

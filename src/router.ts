@@ -15,7 +15,7 @@ const per_center=()=>import('@/components/Userinfo/per_center.vue')
 const routes = [
     {
         path: '/',
-        redirect: SKIP_LOGIN ? '/apphome/recently' : '/login'
+        redirect: '/apphome/recently'
     },
     {
         path: "/login",

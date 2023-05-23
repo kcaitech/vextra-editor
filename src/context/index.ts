@@ -94,12 +94,13 @@ export class Context extends Watchable(Object) {
     // debug
     upload(id?: string) {
         const token = localStorage.getItem('token')
-        if (token)
-            uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', token, id ? id : '', async (successed, doc_id) => {
+        if (token) {
+            uploadExForm(this.m_data, 'ws://192.168.0.18:10000/api/v1', token, id ? id : '', async (successed, doc_id) => {
                 if (successed) {
                     localStorage.setItem('docId', doc_id)
                 }
             })
+        }
     }
 
     async documentInfo(id: string) {

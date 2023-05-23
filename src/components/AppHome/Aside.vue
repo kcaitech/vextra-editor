@@ -37,7 +37,6 @@ const picker = new FilePicker((file) => {
     })
 });
 
-
 function newFile() {
     const repo = new Repository();
     const nd = createDocument(t('system.new_file'), repo);
@@ -47,9 +46,6 @@ function newFile() {
     window.document.title = nd.name;
     (window as any).skrepo = repo;
     (window as any).sketchDocument = nd;
-    uploadExForm(nd, 'ws://192.168.0.10:10000/api/v1', token, "", (successed, doc_id) => {
-        console.log(successed, doc_id);
-    })
     router.push({ name: 'document' });
 }
 
