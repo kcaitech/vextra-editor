@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { GroupShape, Matrix } from '@kcdesign/data';
+import { GroupShape, Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Page } from '@kcdesign/data';
 import { reactive, defineProps, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
@@ -11,15 +10,13 @@ import { Action, KeyboardKeys, ResultByAction, WorkSpace } from '@/context/works
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
-import { Shape } from "@kcdesign/data";
-import { ShapeFrame } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
-import { landFinderOnPage, scrollToContentView } from '@/utils/artboardFn';
+import { scrollToContentView } from '@/utils/artboardFn';
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { AsyncCreator } from '@kcdesign/data';
 import { updateRoot, getName } from '@/utils/content';
+import { insertFrameTemplate } from '@/utils/artboardFn';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -241,15 +238,9 @@ async function setClass(name: string) {
 }
 
 function insertFrame() {
-    const x = 600
-    const y = 400
-    const width = 100;
-    const height = 100;
-    const shapeFrame = new ShapeFrame(x, y, width, height);
-    const artboard = initShape(shapeFrame);
-    // 新增容器之后使容器在可视区域
-    nextTick(() => { artboard && scrollToContentView(artboard, props.context) });
-    workspace.value.setAction(Action.AutoV);
+    const brothers = props.context.selection.selectedPage?.childs || [];
+    const name = getName(ShapeType.Artboard, brothers, t);
+    insertFrameTemplate(props.context, name);
 }
 function selectShapes(shapes: Shape[]) {
     const hoveredShape = shapes[0];

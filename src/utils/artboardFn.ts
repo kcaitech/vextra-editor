@@ -2,7 +2,6 @@ import { XY, PageXY } from '@/context/selection';
 import { Matrix, ShapeFrame, Shape, ShapeType } from '@kcdesign/data';
 import { isTarget } from './common';
 import { Context } from '@/context';
-import { nextTick } from 'vue';
 import { Action } from '@/context/workspace';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
@@ -46,7 +45,7 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
         !pure && (start.x += offset); // 不是净土，挪一下，再找。
         max++;
     }
-    if (max == 100000) {
+    if (max === 100000) {
         throw new Error('overflow');
     }
     return start; // 找到了净土的起点
@@ -57,8 +56,7 @@ export function scrollToContentView(shape: Shape, context: Context) {
     const selection = context.selection, workspace = context.workspace;
     const { x: sx, y: sy, height, width } = shape.frame2Page();
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2);
-    const { x, y, bottom, right } = workspace.root;
-    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 };
+    const contentViewCenter = workspace.root.center;
     const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
     if (transX || transY) {
         selection.unHoverShape();
@@ -79,12 +77,26 @@ export function scrollToContentView(shape: Shape, context: Context) {
     }
 }
 
-export function insertFrameOnLand(context: Context) {
+export function insertFrameTemplate(context: Context, name: string) {
     const selection = context.selection, workspace = context.workspace;
     const shapes: Shape[] = selection.selectedPage?.childs || [];
     const type = ShapeType.Artboard;
     const parent = selection.selectedPage;
-    // 新增容器之后使容器在可视区域
-    // nextTick(() => { artboard && scrollToContentView(artboard, context) });
+    if (parent) {
+        const editor = context.editor.editor4Page(parent);
+        const { width, height } = workspace.frameSize;
+        const matrix = workspace.matrix;
+        const frame = new ShapeFrame(0, 0, width, height);
+        const { x, y } = landFinderOnPage(matrix, context, frame);
+        frame.x = x, frame.y = y;
+        let artboard: Shape | false = editor.create(type, name, frame);
+        artboard = editor.insert(parent, shapes.length, artboard);
+        if (artboard) {
+            const timer = setTimeout(() => {
+                artboard && scrollToContentView(artboard, context);
+                clearTimeout(timer);
+            })
+        }
+    }
     workspace.setAction(Action.AutoV);
 }
