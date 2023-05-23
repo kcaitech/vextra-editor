@@ -1,27 +1,37 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="Getfavorites || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容" @row-click="toDocument">
+    <el-table :data="Getfavorites || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
+        @row-click="toDocument">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">
-                <el-icon :size=" 20 " v-if=" Getfavorites[scope.$index].document_favorites.is_favorite == false ">
-                    <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
-                        @click.stop=" Starfile(scope.$index) "></svg-icon>
+                <el-icon :size=" 20 " v-if=" !Getfavorites[scope.$index].document_favorites.is_favorite ">
+                    <el-tooltip :content=" t('home.star') " :show-after=" 1000 ">
+                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
+                            @click.stop=" Starfile(scope.$index) ">
+                        </svg-icon>
+                    </el-tooltip>
                 </el-icon>&nbsp;
-                <el-icon :size=" 20 " v-else>
-                    <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
-                        @click.stop=" Starfile(scope.$index) "></svg-icon>
+                <el-icon :size=" 20 " style="display:inline-block;" v-else>
+                    <el-tooltip :content=" t('home.de_star') " :show-after=" 1000 ">
+                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
+                            @click.stop=" Starfile(scope.$index) ">
+                        </svg-icon>
+                    </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <Share @click.stop=" Sharefile(scope) " />
+                    <el-tooltip :content=" t('home.share') " :show-after=" 1000 ">
+                        <Share @click.stop=" Sharefile(scope) " />
+                    </el-tooltip>
                 </el-icon>&nbsp;
             </template>
         </el-table-column>
     </el-table>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " @switch-state=" onSwitch "
+        :shareSwitch=" shareSwitch " :pageHeight=" pageHeight "></FileShare>
+    <div v-if=" showFileShare " class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
@@ -100,18 +110,18 @@ const toDocument = (row: any) => {
     })
 }
 const Sharefile = (scope: any) => {
-    if(showFileShare.value) {
-    showFileShare.value = false
-    return
-  }
-  docId.value = scope.row.document.id  
-  showFileShare.value = true
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = scope.row.document.id
+    showFileShare.value = true
 }
 const closeShare = () => {
-  showFileShare.value = false
+    showFileShare.value = false
 }
 const getPageHeight = () => {
-  pageHeight.value = window.innerHeight
+    pageHeight.value = window.innerHeight
 }
 const onSwitch = (state: boolean) => {
     shareSwitch.value = state
@@ -123,7 +133,7 @@ onMounted(() => {
     window.addEventListener('resize', getPageHeight);
 })
 onUnmounted(() => {
-  window.removeEventListener('resize', getPageHeight);
+    window.removeEventListener('resize', getPageHeight);
 })
 </script>
 <style lang="scss" scoped>
@@ -166,6 +176,7 @@ onUnmounted(() => {
     height: 56px;
     font-weight: 18px;
 }
+
 .overlay {
     position: absolute;
     top: 0;

@@ -82,7 +82,10 @@ export const home = {
     groups: 'Group up',
     ungroup: 'Ungroup',
     search_layer: 'Search layer',
-    prompt: 'Founder change the file permissions, document is refreshed'
+    prompt: 'Founder change the file permissions, document is refreshed',
+    star:'Star',
+    de_star:'Delete star',
+    de_access_record:'Delete access record'
 }
 
 export const navi = {

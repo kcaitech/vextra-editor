@@ -10,29 +10,35 @@
             style="text-align: center;">
             <template #default=" scope: any ">
                 <el-icon :size=" 20 " v-if=" !getDoucmentList[scope.$index].document_favorites.is_favorite ">
-                    <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
-                        @click.stop=" Starfile(scope.$index) ">{{ getDoucmentList[scope.$index].document_favorites.is_favorite
-                        }}</svg-icon>
+                    <el-tooltip :content=" t('home.star') " :show-after=" 1000 ">
+                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
+                            @click.stop=" Starfile(scope.$index) ">
+                        </svg-icon>
+                    </el-tooltip>
                 </el-icon>&nbsp;
-                <el-icon :size=" 20 " v-else>
-                    <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
-                        @click.stop=" Starfile(scope.$index) "></svg-icon>
+                <el-icon :size=" 20 " style="display: inline-block;" v-else>
+                    <el-tooltip :content=" t('home.de_star') " :show-after=" 1000 ">
+                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
+                            @click.stop=" Starfile(scope.$index) ">
+                        </svg-icon>
+                    </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <Share @click.stop=" Sharefile(scope) " />
+                    <el-tooltip :content=" t('home.share') " :show-after=" 1000 ">
+                        <Share @click.stop=" Sharefile(scope) " />
+                    </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip content="删除" :show-after="1000">
+                    <el-tooltip :content=" t('home.delete') " :show-after=" 1000 ">
                         <Delete @click.stop=" Deletefile(scope.$index) " />
                     </el-tooltip>
                 </el-icon>&nbsp;
             </template>
         </el-table-column>
-        <append>aaaa</append>
     </el-table>
-    <append>aaaa</append>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " @switch-state=" onSwitch "
+        :shareSwitch=" shareSwitch " :pageHeight=" pageHeight "></FileShare>
+    <div v-if=" showFileShare " class="overlay"></div>
 </template>
 
 <script setup lang="ts">
@@ -109,18 +115,18 @@ const Starfile = async (index: number) => {
 }
 
 const Sharefile = (scope: any) => {
-    if(showFileShare.value) {
-    showFileShare.value = false
-    return
-  }
-  docId.value = scope.row.document.id  
-  showFileShare.value = true
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = scope.row.document.id
+    showFileShare.value = true
 }
 const closeShare = () => {
-  showFileShare.value = false
+    showFileShare.value = false
 }
 const getPageHeight = () => {
-  pageHeight.value = window.innerHeight
+    pageHeight.value = window.innerHeight
 }
 const onSwitch = (state: boolean) => {
     shareSwitch.value = state
@@ -153,7 +159,7 @@ onMounted(() => {
     window.addEventListener('resize', getPageHeight);
 })
 onUnmounted(() => {
-  window.removeEventListener('resize', getPageHeight);
+    window.removeEventListener('resize', getPageHeight);
 })
 
 </script>
@@ -197,6 +203,7 @@ onUnmounted(() => {
     height: 50px;
     font-weight: 18px;
 }
+
 .overlay {
     position: absolute;
     top: 0;
