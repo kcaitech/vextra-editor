@@ -16,7 +16,6 @@ import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { updateRoot, getName } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
-import Loading from '@/components/common/Loading.vue'
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -527,6 +526,14 @@ const stopWatch = watch(() => props.page, (cur, old) => {
 const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
     root.value && updateRoot(props.context, root.value);
 })
+renderinit().then(() => {
+    inited.value = true;
+    // const timer = setTimeout(() => {
+    //     clearTimeout(timer);
+    //     inited.value = true;
+    //     nextTick(() => { root.value && resizeObserver.observe(root.value) });
+    // }, 900)
+})
 onMounted(() => {
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
@@ -564,7 +571,6 @@ onUnmounted(() => {
         </ContextMenu>
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
     </div>
-    <Loading v-else></Loading>
 </template>
 <style scoped lang="scss">
 div {
