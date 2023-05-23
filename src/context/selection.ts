@@ -108,7 +108,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             if (id === this.m_selectPage?.id) {
                 index = index === this.m_document.pagesList.length ? 0 : index;
                 await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
-                    this.m_artboart_lists.delete(id);
                     this.selectPage(p);
                 });
             }
