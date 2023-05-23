@@ -19,6 +19,7 @@ import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { importDocument } from "@kcdesign/data";
 import { ElMessage } from 'element-plus'
+import { Warning } from '@element-plus/icons-vue'
 
 const { t } = useI18n();
 
@@ -45,7 +46,7 @@ const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
-let permType: any = undefined
+const permType = ref<number>()
 const docInfo: any = ref({})
 let docID = ''
 const showHint = ref(false)
@@ -189,6 +190,7 @@ const getDocumentInfo = async () => {
     try {
         const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
         docInfo.value = dataInfo.data
+        permType.value = dataInfo.data.document_permission.perm_type
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
         // documentKey.value = data
         //获取文档类型是否为私有文档且有无权限
@@ -208,7 +210,8 @@ const getDocumentInfo = async () => {
             })
         }
         await importDocument({
-            endPoint: "http://192.168.0.18:9000",
+            endPoint: "http://storage.protodesign.cn",
+            // endPoint: "http://192.168.0.18:9000",
             region: "zhuhai-1",
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
@@ -231,23 +234,64 @@ const getDocumentInfo = async () => {
         console.log(err);
     }
 }
-
+enum PermissionChange {
+    update,
+    close,
+    delete
+}
 const getDocumentAuthority = async () => {
     try {
         const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
-        permType = data.data.perm_type
-        if (permType === 0) {
-            router.push({
-                name: 'apply',
-                query: {
-                    id: route.query.id
-                }
-            })
+        if(data.data.perm_type !== permType.value) {
+            if(data.data.perm_type === 1) {
+                permissionChange.value = PermissionChange.update
+                showNotification(data.data.perm_type)
+            }else if(data.data.perm_type === 3) {
+                permissionChange.value = PermissionChange.update
+                showNotification(data.data.perm_type)
+            }else if(data.data.perm_type === 0) {
+                permissionChange.value = PermissionChange.close
+                showNotification(data.data.perm_type)
+            }
         }
+        if(data.code === 400 && (data as any).message === '文档不存在') {
+            permissionChange.value = PermissionChange.delete
+            showNotification(0)
+        }
+        permType.value = data.data.perm_type
+       
     } catch (err) {
         console.log(err);
     }
 }
+
+const permissionChange = ref(-1)
+// 权限被修改后的倒计时
+const startCountdown = (type?: number) => {
+    const timer = setInterval(() => {
+    if (countdown.value > 1) {
+        countdown.value--;
+    } else {
+        hideNotification(type);
+        clearInterval(timer);
+    }
+    }, 1000);
+}
+const hideNotification = (type?: number) => {
+    showHint.value = false;
+    countdown.value = 10;
+    if(type === 0) {
+        router.push('/')
+    }else {
+        router.go(0)
+    }
+}
+const showNotification = (type?:number) => {
+    showHint.value = true;
+    startCountdown(type);
+}
+
+
 
 watchEffect(() => {
 if(route.query.id) {
@@ -261,7 +305,7 @@ if(route.query.id) {
 let uploadTimer: any = null
 uploadTimer = setInterval(() => {
     docID = localStorage.getItem('docId') || ''
-    if (docID) {
+    if (docID && permType.value !== 1) {
         context.value.upload(docID)
     }
 }, 60000)
@@ -290,7 +334,7 @@ onMounted(() => {
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
             getDocumentAuthority()
-        }, 60000)
+        }, 30000)
         return
     }
 })
@@ -345,8 +389,11 @@ onUnmounted(() => {
         </template>
     </ColSplitView>
     <div v-if="showHint" class="notification">
-        <span>{{ t('home.prompt') }}</span>
-        <span v-if="countdown > 0">{{ countdown }}</span>
+        <el-icon :size="13"><Warning /></el-icon>
+        <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
+        <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
+        <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
+        <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
     <!-- <div id="bottom" v-if="showBottom"></div> -->
 </template>
@@ -457,12 +504,20 @@ onUnmounted(() => {
 
 .notification {
     position: fixed;
-    top: 30px;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 50px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #f5f5f5;
+    color: red;
+    background-color: #fff;
     border: 1px solid #ccc;
-    padding: 10px;
+    padding: 7px 30px;
+    border-radius: 4px;
+    .text {
+        margin: 0 15px 0 10px;
+    }
 }
 
 // #bottom {

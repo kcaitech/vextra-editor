@@ -16,7 +16,7 @@ const state = reactive({
 const { circleUrl, uname, } = toRefs(state)
 const num = ref(0)
 const showInForm = ref(false)
-const applyList: any = ref([])
+const applyList = ref<any[]>([])
 const closeInForm = () => {
     showInForm.value = false
 }
@@ -24,8 +24,8 @@ const getApplyList = async () => {
     try {
         const { data } = await share_api.getApplyListAPI()
         if (data) {
-            num.value = data.length
             applyList.value = data
+            num.value = applyList.value.filter(item => item.apply.status === 0).length
         }
     } catch (err) {
         console.log(err)
@@ -34,6 +34,7 @@ const getApplyList = async () => {
 let timer: any = null
 getApplyList()
 onMounted(() => {
+    getSearch()
     timer = setInterval(() => {
         getApplyList()
     }, 60000)
@@ -83,9 +84,9 @@ function loginout() {
     localStorage.clear()
     router.push({ path: '/login' })
 }
-onMounted(() => {
-    getSearch()
-})
+const reviewed = () => {
+    getApplyList()
+}
 
 </script>
 <template>
@@ -136,7 +137,7 @@ onMounted(() => {
                 </div>
             </div>
             <!-- <button @click="toDocument">跳转</button> -->
-            <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList"></Inform>
+            <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList" @reviewed="reviewed"></Inform>
         </div>
     </div>
 </template>
