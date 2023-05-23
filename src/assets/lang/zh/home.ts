@@ -82,7 +82,12 @@ export const home = {
     groups: '编组',
     ungroup: '解组',
     search_layer: '搜索图层',
-    prompt: '创建者变更了文档权限，文档即将刷新'
+    prompt: '创建者变更了文档权限，文档即将刷新',
+    visit: '创建者取消了文件的访问权限，文档即将退出',
+    delete_file: '创建者删除了该文档，文档即将退出',
+    star:'标星',
+    de_star:'取消标星',
+    de_access_record:'移除记录'
 }
 
 export const navi = {

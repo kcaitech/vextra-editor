@@ -16,7 +16,7 @@ export function getShareListAPI(params = {}, opts = {}) {
 //获取文档列表
 export function getDoucmentListAPI() {
     return httpRequest({
-        url: '/documents',
+        url: '/documents/',
         method: 'get'
     })
 }

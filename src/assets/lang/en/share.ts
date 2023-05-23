@@ -46,5 +46,6 @@ export const apply = {
     have_agreed: 'Have agreed',
     rejected: 'Rejected',
     no_message_received: 'No message received',
-    link_not: 'Link does not exist'
+    link_not: 'Link does not exist',
+    not_passed: 'The application failed, please modify the information or contact the creator and re-apply'
 }

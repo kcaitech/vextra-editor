@@ -46,5 +46,6 @@ export const apply = {
     have_agreed: '已同意',
     rejected: '已拒绝',
     no_message_received: '未收到任何消息',
-    link_not: '链接不存在'
+    link_not: '链接不存在',
+    not_passed: '申请未通过，请修改信息或联系创建者后重新申请'
 }

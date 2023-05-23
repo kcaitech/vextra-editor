@@ -59,6 +59,7 @@ onMounted(async () => {
   const resavatar = await user_api.GetInfo()
   localStorage.setItem('avatar', resavatar.data.avatar)
   localStorage.setItem('nickname', resavatar.data.nickname)
+  localStorage.setItem('userId', resavatar.data.id)
   // setTimeout(() => {
   //     importDocumentTest()
   // }, 2000)

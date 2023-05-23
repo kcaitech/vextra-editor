@@ -19,7 +19,7 @@ const timestamp  = Date.now()
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`,`${t('share.editable')}`])
 const getApplyList = async (time?: number) => {  
     docID = localStorage.getItem('docId') || ''
-    const { data } = await share_api.getApplyListAPI({ doc_id: docID })
+    const { data } = await share_api.getApplyListAPI({ doc_id: docID, start_time: time })
     applyList.value = data
 }
 const consent = (id: string, index: number) => {
@@ -41,7 +41,7 @@ let timer: any = null
 getApplyList(timestamp)
 onMounted(() => {    
     timer = setInterval(() => {
-        getApplyList()
+        getApplyList(timestamp)
     }, 10000)
 })
 onUnmounted(() => {
