@@ -6,7 +6,7 @@ import { ShapeType } from '@kcdesign/data';
 import { defineProps, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
-import shapeTitle from './shapeTitle.vue';
+import ShapeTitle from './ShapeTitle.vue';
 
 const props = defineProps<{
     context: Context,
@@ -58,7 +58,7 @@ onUnmounted(() => {
         <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>
-    <!-- <shapeTitle :matrix="props.matrix" :context="props.context" :data="props.data"></shapeTitle> -->
+    <ShapeTitle :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitle>
 </template>
 
 <style scoped>
