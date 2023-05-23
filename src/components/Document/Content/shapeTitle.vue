@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { defineProps, watchEffect, onMounted, onUnmounted, ref, reactive, nextTick, computed } from "vue";
 import { Context } from "@/context";
-import { Page } from '@kcdesign/data/data/page';
-import { Shape, ShapeFrame } from "@kcdesign/data/data/shape";
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Page } from '@kcdesign/data';
+import { Shape, ShapeFrame } from "@kcdesign/data";
+import { Matrix } from '@kcdesign/data';
 import { Selection } from "@/context/selection";
 
 const props = defineProps<{

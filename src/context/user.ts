@@ -1,4 +1,4 @@
-import { Watchable } from "@kcdesign/data/data/basic";
+import { Watchable } from "@kcdesign/data";
 interface userInfo {
     id: string
     nickname: string

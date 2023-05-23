@@ -11,11 +11,13 @@ const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
   shareSwitch: boolean,
-  docId?: string
+  docId?: string,
+  selectValue: number
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
-  (e: 'switchState', nVal: boolean): void
+  (e: 'switchState', nVal: boolean): void,
+  (e: 'selectType', nVal: number): void
 }>()
 enum permissions {
   noAuthority,
@@ -28,7 +30,6 @@ const docID = props.docId ? props.docId : localStorage.getItem('docId')
 const url = route.path !== '/document' ? `http://protodesign.cn/#/document?id=${docID}` : route.query.id ? location.href : location.href + `?id=${docID}`
 
 const value1 = ref(props.shareSwitch)
-const selectValue = ref(`${t('share.need_to_apply_for_confirmation')}`)
 const authority = ref(false)
 const docInfo = ref<DocInfo>()
 const index = ref(0)
@@ -55,24 +56,27 @@ enum docType {
 const popover = ref<HTMLDivElement>()
 const options = [
   {
-    value: `${t('share.need_to_apply_for_confirmation')}`,
+    value: 0,
     label: `${t('share.need_to_apply_for_confirmation')}`
   },
   {
-    value: `${t('share.anyone_can_read_it')}`,
+    value: 1,
     label: `${t('share.anyone_can_read_it')}`
   },
   {
-    value: `${t('share.anyone_can_edit_it')}`,
-    label: `${t('share.anyone_can_edit_it')}`
+    value: 2,
+    label: `${t('share.anyone_can_comment')}`
   },
   {
-    value: `${t('share.anyone_can_comment')}`,
-    label: `${t('share.anyone_can_comment')}`
+    value: 3,
+    label: `${t('share.anyone_can_edit_it')}`
   }
 ]
+const selectIndex = ref(props.selectValue)
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
+const selectValue = ref(DocType[props.selectValue])
+
 userInfo.value = ((window as any).skuser as User);
 
 const closeShare = (e: MouseEvent) => {
@@ -111,14 +115,14 @@ const selectAuthority = (i: number, e: Event) => {
   })
 }
 const onEditable = (id: any, type: number, index: number) => {
-  if(shareList.value[index].share_info.perm_type === type) return
+  if(shareList.value[index].document_permission.perm_type === type) return
   putShareAuthority(id, type)
-  shareList.value[index].share_info.perm_type = type
+  shareList.value[index].document_permission.perm_type = type
 }
 const onReadOnly = (id: string, type: number, index: number) => {
-  if(shareList.value[index].share_info.perm_type === type) return
+  if(shareList.value[index].document_permission.perm_type === type) return
   putShareAuthority(id, type)
-  shareList.value[index].share_info.perm_type = type
+  shareList.value[index].document_permission.perm_type = type
 }
 const onRemove = (id: string, i: number) => {
   delShare(id)
@@ -156,26 +160,30 @@ const setShateType = async (type: number) => {
   }
 }
 
-// watch(selectValue, (nVal, oVal) => {
-//   if (nVal == DocType[docType.Critical]) {
-//     setShateType(docType.Critical)
-//   } else if (nVal == DocType[docType.Edit]) {
-//     setShateType(docType.Edit)
-//   }else if (nVal == DocType[docType.Read]) {
-//     setShateType(docType.Read)
-//   } else if (nVal == DocType[docType.Share]) {
-//     setShateType(docType.Share)
-//   }
-// })
+watch(selectValue, (nVal, oVal) => {
+  if(value1.value) {
+    const index = DocType.findIndex(item => item === nVal)
+    if(index === docType.Critical) {
+        setShateType(docType.Critical)
+      }else if(index === docType.Edit){
+        setShateType(docType.Edit)
+      }else if(index === docType.Read){
+        setShateType(docType.Read)
+      }else if(index === docType.Share){
+        setShateType(docType.Share)
+      }
+      emit('selectType', index)
+  }
+})
 watch(value1, (nVal, oVal) => {
   if(nVal) {
-    if(selectValue.value == DocType[docType.Critical]) {
+    if(props.selectValue === docType.Critical) {
       setShateType(docType.Critical)
-    }else if(selectValue.value == DocType[docType.Edit]){
+    }else if(props.selectValue === docType.Edit){
       setShateType(docType.Edit)
-    }else if(selectValue.value == DocType[docType.Read]){
+    }else if(props.selectValue === docType.Read){
       setShateType(docType.Read)
-    }else if(selectValue.value == DocType[docType.Share]){
+    }else if(props.selectValue === docType.Share){
       setShateType(docType.Share)
     }
     emit('switchState', nVal)
@@ -197,18 +205,7 @@ watchEffect(() => {
 const copyLink = async() => {
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(url).then(() => {
-      if(value1.value) {
-        if(selectValue.value == DocType[docType.Critical]) {
-          setShateType(docType.Critical)
-        }else if(selectValue.value == DocType[docType.Edit]){
-          setShateType(docType.Edit)
-        }else if(selectValue.value == DocType[docType.Read]){
-          setShateType(docType.Read)
-        }else if(selectValue.value == DocType[docType.Share]){
-          setShateType(docType.Share)
-        }
-      }
-          ElMessage({
+      ElMessage({
       message: `${t('share.copy_success')}`,
       type: 'success',
     })
@@ -258,6 +255,16 @@ getShareList()
 onMounted(() => {  
   if(!value1.value) {
     setShateType(docType.Private)
+  }else {
+    if(props.selectValue === docType.Critical) {
+      setShateType(docType.Critical)
+    }else if(props.selectValue === docType.Edit){
+      setShateType(docType.Edit)
+    }else if(props.selectValue === docType.Read){
+      setShateType(docType.Read)
+    }else if(props.selectValue === docType.Share){
+      setShateType(docType.Share)
+    }
   }
   document.addEventListener('click', handleClick);
 })
@@ -296,7 +303,7 @@ onUnmounted(() => {
           <span>{{ t('share.permission_setting') }}:</span>
           <el-select v-model="selectValue" style="width: 180px;" class="m-2">
             <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value" :label="item.label"
-              :value="item.value" />
+              :value="item.label" />
           </el-select>
           <el-button color="#0d99ff" size="small" @click="copyLink">{{ t('share.copy_link') }}</el-button>
         </div>
@@ -319,13 +326,13 @@ onUnmounted(() => {
                 <div class="name">{{ item.user.nickname }}</div>
               </div>
               <div class="item-right" @click="e => selectAuthority(ids, e)">
-                <div class="authority">{{ permission[item.share_info.perm_type] }}</div>
+                <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
                 <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
                 <div class="popover" v-if="authority && index === ids" ref="popover"
                   :style="{ top: posi.top + 'px', right: 30 + 'px' }">
-                  <div @click="onEditable(item.share_info.id, permissions.editable, ids)">{{ editable }}</div>
-                  <div @click="onReadOnly(item.share_info.id, permissions.readOnly, ids)">{{ readOnly }}</div>
-                  <div @click="onRemove(item.share_info.id, ids)">{{ remove }}</div>
+                  <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">{{ editable }}</div>
+                  <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">{{ readOnly }}</div>
+                  <div @click="onRemove(item.document_permission.id, ids)">{{ remove }}</div>
                 </div>
               </div>
             </div>

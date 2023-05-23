@@ -6,10 +6,10 @@ import EditorTools from "./EditorTools.vue";
 import UserInfo from './UserInfo.vue';
 
 const props = defineProps<{ context: Context }>();
-const repo = shallowRef(props.context.repo);
+// const repo = shallowRef(props.context.repo);
 const selection = shallowRef(props.context.selection);
 function watcher() {
-    repo.value = props.context.repo;
+    // repo.value = props.context.repo;
 }
 onMounted(() => {
     props.context.watch(watcher);

@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data/basic/matrix';
+import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
@@ -8,7 +8,7 @@ import { Selection } from "@/context/selection";
 import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
 import { forGroupHover, groupPassthrough } from "@/utils/scout";
 import { Action, WorkSpace } from "@/context/workspace";
-import { AsyncTransfer } from "@kcdesign/data/editor/controller";
+import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
@@ -103,12 +103,12 @@ export function useController(context: Context) {
     function isMouseOnContent(e: MouseEvent): boolean {
         return (e.target as Element)?.closest(`#content`) ? true : false;
     }
-    function mousedown(e: MouseEvent) {
+    function mousedown(e: MouseEvent) {        
         if (context.workspace.isEditing) {
             context.selection.selectShape(context.selection.hoveredShape);
         }
         const working = !context.workspace.isPageDragging && !context.workspace.isEditing;
-        if (working) {
+        if (working) {            
             if (isElement(e)) {
                 matrix.reset(workspace.value.matrix);
                 setPosition(e);
@@ -135,7 +135,7 @@ export function useController(context: Context) {
                 context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
                 if (!editing) { // 处于编辑状态时，不拖动图形
                     if (wheel && asyncTransfer) {
-                        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.trans });
+                        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
                         if (!isOut) {
                             transform(startPosition, mousePosition);
                         }

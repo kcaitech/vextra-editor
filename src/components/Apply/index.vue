@@ -13,7 +13,6 @@ const docInfo: any = ref({})
 const route = useRoute()
 const linkValid = ref(true)
 let permType = undefined
-const applyList = ref<any[]>([])
 const status = ref(0)
 const onSave = () => {
     disabled.value = true
@@ -34,7 +33,7 @@ const onSave = () => {
             }else {
                 postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
             }
-        }else if (radio.value === '2') {
+        }else if (radio.value === '3') {
             if (docInfo.value.application_count >= 3) {
                 ElMessage({
                     message: `${t('apply.request_access')}`
@@ -77,26 +76,20 @@ getDocumentAuthority()
 const getDocumentInfo = async () => {
     try{
         const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
-        docInfo.value = data.data
-        if(docInfo.value.document.doc_type === 0) {
-            linkValid.value = false
-        }else {
-            linkValid.value = true
+        if(data) {
+            docInfo.value = data.data
+            console.log(data.data,'data');
+            
+            status.value = docInfo.value.apply_list[0].status
+            if(docInfo.value.document.doc_type === 0) {
+                linkValid.value = false
+            }else {
+                linkValid.value = true
+            }
         }
     }catch (err) {
         console.log(err);
         
-    }
-}
-//获取申请列表
-const getApplyList = async () => {
-    try {
-        const { data } = await share_api.getApplyListAPI({ doc_id: route.query.id })
-        if (data) {
-            status.value = data.apply.status
-        }
-    } catch (err) {
-        console.log(err)
     }
 }
 
@@ -118,7 +111,6 @@ let timer: any = null
 onMounted(() => {  
     timer = setInterval(() => {
     getDocumentInfo()
-    getApplyList()
     getDocumentAuthority()
     }, 10000) 
 })

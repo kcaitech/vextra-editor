@@ -3,7 +3,7 @@ import { defineProps, reactive, ref, defineEmits,computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
-import { Shape } from "@kcdesign/data/data/shape";
+import { Shape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 const { t } = useI18n();

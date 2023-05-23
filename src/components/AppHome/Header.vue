@@ -24,8 +24,8 @@ const getApplyList = async () => {
     try {
         const { data } = await share_api.getApplyListAPI()
         if (data) {
-            num.value = data.length
             applyList.value = data
+            num.value = applyList.value.filter(item => item.apply.status === 0).length
         }
     } catch (err) {
         console.log(err)

@@ -2,14 +2,18 @@
 import { onMounted, ref, onUnmounted, defineProps } from 'vue';
 import FileShare from './FileShare.vue';
 import { Context } from '@/context';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n()
 interface Props {
     context: Context
 }
-const props = defineProps<Props>();
 const docID = localStorage.getItem('docId') || ''
+const props = defineProps<Props>();
 const showFileShare = ref<boolean>(false);
 const pageHeight = ref(0)
-const shareSwitch = ref(false)
+const shareSwitch = ref(true)
+const selectValue = ref(1)
 const onShare = () => {
   if(showFileShare.value) {
     showFileShare.value = false
@@ -24,6 +28,9 @@ const onSwitch = (state: boolean) => {
   shareSwitch.value = state
   
 }
+const onSelectType = (type: number) => {
+  selectValue.value = type
+}
 
 // 实时获取页面的高度
 const getPageHeight = () => {
@@ -34,9 +41,7 @@ onMounted(() => {
   getPageHeight()
   props.context.documentInfo(docID).then((res) => {
     if(res.document) {
-      shareSwitch.value = res.document.doc_type === 0 ? false : true
-    }else {
-      shareSwitch.value = false
+      selectValue.value = res.document.doc_type !== 0 ? res.document.doc_type : res.document.doc_type
     }
   })
   window.addEventListener('resize', getPageHeight);
@@ -51,7 +56,7 @@ onUnmounted(() => {
     <div class="share" @click.stop="onShare">
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
-    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" @switch-state="onSwitch" :pageHeight="pageHeight"></FileShare>
+    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue" @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight"></FileShare>
   </div>
 </template>
 

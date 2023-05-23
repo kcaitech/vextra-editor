@@ -1,4 +1,4 @@
-import { BorderPosition } from "@kcdesign/data/data/typesdefine"
+import { BorderPosition } from "@kcdesign/data"
 
 export const product = {
     name: 'ProtoDesign'
@@ -82,7 +82,9 @@ export const home = {
     groups: '编组',
     ungroup: '解组',
     search_layer: '搜索图层',
-    prompt: '创建者变更了文档权限，文档即将刷新'
+    prompt: '创建者变更了文档权限，文档即将刷新',
+    visit: '创建者取消了文件的访问权限，文档即将退出',
+    delete_file: '创建者删除了该文档，文档即将退出'
 }
 
 export const navi = {

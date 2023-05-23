@@ -7,7 +7,7 @@
 import { defineProps } from "vue";
 import { Context } from "@/context";
 import Tabs from "@/components/Document/Navigation/LeftTabs.vue";
-import { Page } from "@kcdesign/data/data/page";
+import { Page } from "@kcdesign/data";
 
 const props = defineProps<{ context: Context, page: Page }>();
 

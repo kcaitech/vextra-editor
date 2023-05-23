@@ -1,8 +1,8 @@
-import { Shape } from '@kcdesign/data/data/shape';
-import { Border } from '@kcdesign/data/data/style';
-import { MarkerType } from '@kcdesign/data/data/classes'
-import { toHex } from "@/utils/color"
-import { Color } from "@kcdesign/data/data/baseclasses";
+import { Shape } from '@kcdesign/data';
+import { Border } from '@kcdesign/data';
+import { MarkerType } from '@kcdesign/data';
+import { toHex } from "@/utils/color";
+import { Color } from "@kcdesign/data";
 const handler: { [key: string]: (h: Function, shape: Shape, fill: string, stroke: string, fillColor: Color, path: string, border?: Border) => any } = {};
 
 handler[MarkerType.FilledArrow] = function (h: Function, shape: Shape, fill: string, stroke: string, fillColor: Color, path: string, border?: Border): any {

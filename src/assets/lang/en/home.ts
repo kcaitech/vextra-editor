@@ -1,4 +1,4 @@
-import { BorderPosition } from "@kcdesign/data/data/typesdefine";
+import { BorderPosition } from "@kcdesign/data";
 
 export const product = {
     name: 'ProtoDesign'
@@ -82,7 +82,9 @@ export const home = {
     groups: 'Group up',
     ungroup: 'Ungroup',
     search_layer: 'Search layer',
-    prompt: 'Founder change the file permissions, document is refreshed'
+    prompt: 'Founder change the file permissions, document is refreshed',
+    visit: 'Founder cancelled file access, document will exit',
+    delete_file: 'The creator deleted the document and it is about to exit'
 }
 
 export const navi = {

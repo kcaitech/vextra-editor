@@ -1,5 +1,5 @@
 // 蜻蜓队长：用于比较两个方案性能强弱，开发阶段使用
-// import { Shape } from "@kcdesign/data/data/shape";
+// import { Shape } from "@kcdesign/data";
 // import { CanvasKitScout } from "./scout_beta";
 // import { Scout } from "./scout";
 // function compare(canvaskitScout: CanvasKitScout, scout: Scout) {

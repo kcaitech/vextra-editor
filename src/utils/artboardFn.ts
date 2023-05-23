@@ -1,15 +1,17 @@
-import { XY } from '@/context/selection';
-import { Matrix } from '@kcdesign/data/basic/matrix';
-import { Shape } from '@kcdesign/data/data/shape';
+import { XY, PageXY } from '@/context/selection';
+import { Matrix, ShapeFrame, Shape, ShapeType } from '@kcdesign/data';
 import { isTarget } from './common';
-import { Selection } from '@/context/selection';
-import { WorkSpace } from '@/context/workspace';
+import { Context } from '@/context';
+import { Action } from '@/context/workspace';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
 // 直到没有🍌为止，得到最后的XY;
 
-export function landFinderOnPage(pageMatrix: Matrix, center: XY, width: number, height: number, shapes: Shape[]): XY {
+export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: ShapeFrame): PageXY {
+    const shapes: Shape[] = context.selection.selectedPage?.childs || [];
+    const { width, height } = frame;
+    let center = context.workspace.root.center;
     center = pageMatrix.inverseCoord(center.x, center.y);
     const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point
     const offset = 40;
@@ -36,27 +38,25 @@ export function landFinderOnPage(pageMatrix: Matrix, center: XY, width: number, 
                 { x: 0, y: h },
                 { x: 0, y: 0 },
             ].map(p => m.computeCoord(p.x, p.y));
-
             if (isTarget(selectorPoints, ps)) {
                 pure = false; // 存在🍌，不是净土！
             }
         }
-
         !pure && (start.x += offset); // 不是净土，挪一下，再找。
         max++;
     }
-    if (max == 100000) {
+    if (max === 100000) {
         throw new Error('overflow');
     }
     return start; // 找到了净土的起点
 }
 
 // 使容器滚动到可视区域
-export function scrollToContentView(shape: Shape, selection: Selection, workspace: WorkSpace) {
+export function scrollToContentView(shape: Shape, context: Context) {
+    const selection = context.selection, workspace = context.workspace;
     const { x: sx, y: sy, height, width } = shape.frame2Page();
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2);
-    const { x, y, bottom, right } = workspace.root;
-    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 };
+    const contentViewCenter = workspace.root.center;
     const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
     if (transX || transY) {
         selection.unHoverShape();
@@ -75,4 +75,28 @@ export function scrollToContentView(shape: Shape, selection: Selection, workspac
         }
         workspace.matrixTransformation();
     }
+}
+
+export function insertFrameTemplate(context: Context, name: string) {
+    const selection = context.selection, workspace = context.workspace;
+    const shapes: Shape[] = selection.selectedPage?.childs || [];
+    const type = ShapeType.Artboard;
+    const parent = selection.selectedPage;
+    if (parent) {
+        const editor = context.editor.editor4Page(parent);
+        const { width, height } = workspace.frameSize;
+        const matrix = workspace.matrix;
+        const frame = new ShapeFrame(0, 0, width, height);
+        const { x, y } = landFinderOnPage(matrix, context, frame);
+        frame.x = x, frame.y = y;
+        let artboard: Shape | false = editor.create(type, name, frame);
+        artboard = editor.insert(parent, shapes.length, artboard);
+        if (artboard) {
+            const timer = setTimeout(() => {
+                artboard && scrollToContentView(artboard, context);
+                clearTimeout(timer);
+            })
+        }
+    }
+    workspace.setAction(Action.AutoV);
 }

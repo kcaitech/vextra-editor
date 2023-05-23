@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Repository } from "@kcdesign/data/data/transact";
+import { Repository } from "@kcdesign/data";
 import { ref } from "@vue/reactivity";
 import { defineProps, onBeforeUpdate, onMounted, onUnmounted } from "vue"
 // import Icon from "@/components/common/Icon.vue";
