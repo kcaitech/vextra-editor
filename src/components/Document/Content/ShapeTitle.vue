@@ -83,7 +83,7 @@ const setPosition = () => { // 核心函数
     }
 }
 function setOrigin() { // 这个动作是让container与页面坐标系重合
-    matrix.reset(props.context.workspace.workspace.matrix);
+    matrix.reset(props.context.workspace.matrix);
     matrix.preTrans(props.data.frame.x, props.data.frame.y);
     origin.x = matrix.m02;
     origin.y = matrix.m12;
