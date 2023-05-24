@@ -72,7 +72,8 @@ const options = [
     label: `${t('share.anyone_can_edit_it')}`
   }
 ]
-const selectIndex = ref(props.selectValue)
+console.log(props.shareSwitch,props.selectValue);
+
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const selectValue = ref(DocType[props.selectValue])

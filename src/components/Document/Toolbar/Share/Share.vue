@@ -44,6 +44,8 @@ onMounted(() => {
   props.context.documentInfo((docID as string)).then((res) => {
     if(res.document) {
       selectValue.value = res.document.doc_type !== 0 ? res.document.doc_type : res.document.doc_type
+      console.log(selectValue.value,'va');
+      
     }
   })
   window.addEventListener('resize', getPageHeight);

@@ -347,6 +347,7 @@ onUnmounted(() => {
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
     clearInterval(uploadTimer);
+    localStorage.removeItem('docId')
 })
 
 </script>

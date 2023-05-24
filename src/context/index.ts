@@ -9,6 +9,7 @@ import { uploadExForm } from "@kcdesign/data";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
 import * as share_api from '@/apis/share';
+import { message } from "@/utils/message";
 
 // 仅暴露必要的方法
 export class RepoWraper {
