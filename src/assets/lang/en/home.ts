@@ -84,7 +84,10 @@ export const home = {
     search_layer: 'Search layer',
     prompt: 'Founder change the file permissions, document is refreshed',
     visit: 'Founder cancelled file access, document will exit',
-    delete_file: 'The creator deleted the document and it is about to exit'
+    delete_file: 'The creator deleted the document and it is about to exit',
+    star:'Star',
+    de_star:'Delete star',
+    de_access_record:'Delete access record'
 }
 
 export const navi = {

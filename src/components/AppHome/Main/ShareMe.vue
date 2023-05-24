@@ -2,7 +2,7 @@
     <!-- 表格布局 -->
     <el-table :data="ShareList||[]" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容" @row-click="toDocument">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
-        <el-table-column prop="document.updated_at" :label="t('home.modification_time')" />
+        <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">

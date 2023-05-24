@@ -64,13 +64,12 @@ const x = localStorage.getItem('index')
                 <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
             </div>
             <div class="new">
-
                 <button class="newfile" @click="newFile"> <el-icon :size="22">
                         <Plus />
-                    </el-icon>{{ t('home.New_file') }}</button>
+                    </el-icon><span>{{ t('home.New_file') }}</span></button>
                 <button class="openfile" @click="picker.invoke()"><el-icon :size="22">
                         <Folder />
-                    </el-icon>{{ t('home.open_local_file') }}</button>
+                    </el-icon><span>{{ t('home.open_local_file') }}</span></button>
             </div>
             <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
                 <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1)">
@@ -136,6 +135,13 @@ a {
                 letter-spacing: 2px;
                 font-weight: bold;
                 border-radius: 5px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                span{
+                    margin-left: 10px;
+                }
 
 
                 &.newfile {
@@ -144,7 +150,7 @@ a {
                 }
 
                 &:active {
-                    background: rgb(203, 203, 203);
+                    background: rgb(143, 143, 255);
                 }
             }
 

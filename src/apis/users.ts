@@ -110,7 +110,7 @@ export function ExitSharing(params = {}, ops = {}) {
 //移动文件到回收站
 export function MoveFile(params = {}, ops = {}) {
     return httpRequest({
-        url: 'documents',
+        url: 'documents/',
         method: 'delete',
         params:params,
         ...ops
