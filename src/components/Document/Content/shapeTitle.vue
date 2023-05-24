@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { defineProps, watchEffect, onMounted, onUnmounted, ref, nextTick, computed } from "vue";
+import { defineProps, watchEffect, onMounted, onUnmounted, ref, nextTick, computed, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix, Page, Shape } from "@kcdesign/data";
+import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection";
+import { ro } from "element-plus/es/locale";
 
 const props = defineProps<{
     context: Context
@@ -13,38 +14,100 @@ const props = defineProps<{
 interface Title {
     id: string
     content: string
+    x: number
+    y: number
+    width: number
+    shape: Shape
+    rotate: number
 }
 const matrix = new Matrix(props.matrix);
-const reflush = ref(0);
 const index = ref(-1)
 const isInput = ref(false)
 const inputWidth = ref(0)
 const selectTitle = ref(false)
 const esc = ref<boolean>(false)
-const titles: Title[] = [];
+const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
-
 const watcher = () => {
-    reflush.value++;
     updater();
 }
 
 function updater() {
     watchShapes();
-    setPosition()
+    setOrigin();
+    setPosition();
+
+}
+function handleWorkspaceUpdate(t: any) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        setOrigin();
+        setPosition();
+    }
+}
+const setPosition = () => {
+    const artboards: Shape[] = props.context.selection.selectedPage!.artboardList;
+    const len = artboards.length;
+    if (len) {
+        titles.length = 0;
+        for (let i = 0; i < len; i++) {
+            const artboard = artboards[i];
+            if (artboard.parent?.type === ShapeType.Page) {
+                const m = artboard.matrix2Page();
+                const f2p = artboard.frame2Page();
+                const frame = artboard.frame;
+                const matrix = props.context.workspace.matrix;
+                let lt = { x: 0, y: 0 }; // page
+                let rotate = artboard.rotation || 0;
+                rotate = rotate < 0 ? rotate + 360 : rotate;
+                if (rotate < 135 && rotate >= 45) {
+                    lt = m.computeCoord({ x: 0, y: 0 + frame.height });
+                    rotate -= 90;
+                } else if (rotate < 225 && rotate >= 135) {
+                    lt = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
+                    rotate -= 180;
+                } else if (rotate < 315 && rotate >= 225) {
+                    lt = m.computeCoord({ x: 0 + frame.width, y: 0 });
+                    rotate += 90;
+                } else if (rotate < 360 && rotate > 315) {
+                    lt = m.computeCoord({ x: 0, y: 0 });
+                } else if (rotate < 45 && rotate >= 0) {
+                    lt = m.computeCoord({ x: 0, y: 0 });
+                }
+                lt = matrix.computeCoord({ x: lt.x, y: lt.y }); //client
+                lt.y -= origin.y;
+                lt.x -= origin.x;
+                lt.y -= 14;
+                const width = f2p.width;
+                titles.push({
+                    id: artboard.id,
+                    content: artboard.name,
+                    x: lt.x,
+                    y: lt.y,
+                    width,
+                    shape: artboard,
+                    rotate
+                })
+            }
+        }
+    }
+}
+function setOrigin() {
+    const workspace = props.context.workspace;
+    matrix.reset(workspace.matrix);
+    matrix.preTrans(props.data.frame.x, props.data.frame.y);
+    origin.x = matrix.m02;
+    origin.y = matrix.m12;
 }
 
 const watchedShapes = new Map();
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection.selectedPage?.childs;
-
     if (selection) {
         selection.forEach((v) => {
             needWatchShapes.set(v.id, v);
         })
     }
-
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
         v.unwatch(watcher);
@@ -55,11 +118,6 @@ function watchShapes() { // 监听相关shape的变化
         v.watch(watcher);
         watchedShapes.set(k, v);
     })
-}
-
-const setPosition = () => {
-    const shapes = props.data.childs
-
 }
 const onRename = (e: Event, shape: Shape, i: number) => {
     index.value = i
@@ -118,20 +176,17 @@ const keySaveInput = (e: KeyboardEvent) => {
         index.value = -1
     }
 }
-function handleWorkspaceUpdate(t: any) {
-    const workspace = props.context.workspace;
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        matrix.reset(workspace.matrix);
-        matrix.preTrans(props.data.frame.x, props.data.frame.y);
-        origin.x = matrix.m02;
-        origin.y = matrix.m12;
-    }
+function hover(shape: Shape) {
+    props.context.selection.hoverShape(shape);
 }
-
+function leave() {
+    props.context.selection.unHoverShape();
+}
 onMounted(() => {
     props.context.workspace.watch(handleWorkspaceUpdate)
     props.context.selection.watch(updater);
     props.data.watch(watcher);
+    setOrigin();
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(handleWorkspaceUpdate);
@@ -141,24 +196,35 @@ onUnmounted(() => {
 watchEffect(() => updater());
 </script>
 <template>
-    <div class="container" :reflush="reflush !== 0 ? reflush : undefined"
-        :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
-        <div class="title-container"></div>
+    <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
+        <div v-for="(t, index) in titles" class="title-container" :key="index" @mouseenter="() => hover(t.shape)"
+            @mouseleave="leave"
+            :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${50}px`, transform: `rotate(${t.rotate}deg)` }">
+            {{ t.content }}
+        </div>
     </div>
 </template>
 <style lang="scss" scoped>
 .container {
     position: absolute;
-    font-size: var(--font-default-fontsize);
-    background-color: rgba(0, 0, 55, 0.1);
-    border: 1px solid salmon;
+    overflow: visible;
 
     .title-container {
-        position: relative;
-        height: 28px;
-        width: 106px;
-        background-color: aquamarine;
-        opacity: 0;
+        display: flex;
+        align-items: flex-end;
+        min-width: 10px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        position: absolute;
+        font-size: var(--font-default-fontsize);
+        height: 14px;
+        transform-origin: bottom left;
+        color: grey;
+    }
+
+    .title-container:hover {
+        color: var(--active-color);
     }
 }
 </style>
