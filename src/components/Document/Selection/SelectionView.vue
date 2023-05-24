@@ -111,9 +111,8 @@ function createController() { // 计算点位以及空间类型判定
                     [0, frame.height]
                 ];
                 _ps = _ps.map(p => {
-                    let _s = m.computeCoord(p[0], p[1])
+                    let _s = m.computeCoord(p[0], p[1]);
                     let _p = matrix.computeCoord(_s.x, _s.y);
-
                     return [_p.x, _p.y];
                 });
                 __points.push(..._ps);

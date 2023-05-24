@@ -528,11 +528,7 @@ const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom fra
 })
 renderinit().then(() => {
     inited.value = true;
-    // const timer = setTimeout(() => {
-    //     clearTimeout(timer);
-    //     inited.value = true;
-    //     nextTick(() => { root.value && resizeObserver.observe(root.value) });
-    // }, 900)
+    nextTick(() => { root.value && resizeObserver.observe(root.value) });
 })
 onMounted(() => {
     initMatrix(props.page);

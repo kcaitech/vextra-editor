@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { Matrix } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Page } from '@kcdesign/data';
-import { ShapeType } from '@kcdesign/data';
+import { Selection } from '@/context/selection';
+import { Page, ShapeType, Shape } from '@kcdesign/data';
 import { defineProps, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
-import shapeTitle from './shapeTitle.vue';
 
 const props = defineProps<{
     context: Context,
     data: Page,
     matrix: number[],
 }>();
-const matrixWithFrame = new Matrix()
+const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
+let renderItems: Shape[] = [];
 const watcher = () => {
+    renderItems = props.data.childs;
     reflush.value++;
 }
 function pageViewRegister(mount: boolean) {
@@ -27,6 +28,11 @@ function pageViewRegister(mount: boolean) {
         rootId.value = 'pageview';
     }
     props.context.workspace.setPageViewId(rootId.value);
+}
+function updateRenderItems(t?: number) {
+    if (t === Selection.CHANGE_SHAPE) {
+        // console.log('更新一下items啦');
+    }
 }
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
@@ -40,10 +46,13 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
 })
 onMounted(() => {
     props.data.watch(watcher);
+    props.context.selection.watch(updateRenderItems);
     pageViewRegister(true);
+    watcher();
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
+    props.context.selection.unwatch(updateRenderItems);
     stopWatchPage();
     pageViewRegister(false);
 })
@@ -55,10 +64,9 @@ onUnmounted(() => {
         :viewBox='"0 0 " + data.frame.width + " " + data.frame.height' :width="data.frame.width" :height="data.frame.height"
         :style="{ transform: matrixWithFrame.toString() }" overflow="visible" :reflush="reflush !== 0 ? reflush : undefined"
         :data-area="rootId">
-        <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
+        <component v-for="c in renderItems" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>
-    <!-- <shapeTitle :matrix="props.matrix" :context="props.context" :data="props.data"></shapeTitle> -->
 </template>
 
 <style scoped>

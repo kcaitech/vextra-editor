@@ -374,9 +374,9 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     setCursorStyle(type: CtrlElementType | string, deg: number) {
-        if (this.m_creating || this.m_selecting) {
+        if (this.m_creating || this.m_selecting || this.m_scaling) {
             // todo
-        } else {
+        } else {            
             let name = 'auto-0';
             if (type == CtrlElementType.RectRBR) {
                 name = `rotate-${0 + deg}`;
