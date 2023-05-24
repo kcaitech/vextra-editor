@@ -4,7 +4,6 @@ import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection";
-import { ro } from "element-plus/es/locale";
 
 const props = defineProps<{
     context: Context
@@ -44,56 +43,47 @@ function handleWorkspaceUpdate(t: any) {
         setPosition();
     }
 }
-const setPosition = () => {
-    const artboards: Shape[] = props.context.selection.selectedPage!.artboardList;
+const setPosition = () => { // 核心函数
+    const artboards: Shape[] = props.context.selection.selectedPage!.artboardList; // 只要遍历容器就可以了，直接拿这个，这个数组里面有全部容器，如果拿childs，会存在多余的遍历
     const len = artboards.length;
     if (len) {
         titles.length = 0;
         for (let i = 0; i < len; i++) {
             const artboard = artboards[i];
-            if (artboard.parent?.type === ShapeType.Page) {
-                const m = artboard.matrix2Page();
-                const f2p = artboard.frame2Page();
+            if (artboard.parent?.type === ShapeType.Page) { // 只给页面的直接子元素上标题
+                const m = artboard.matrix2Page(); // 图形到页面的转换矩阵
+                const f2p = artboard.frame2Page(); // 
                 const frame = artboard.frame;
-                const matrix = props.context.workspace.matrix;
-                let lt = { x: 0, y: 0 }; // page
+                const matrix = props.context.workspace.matrix; // 页面坐标系转换矩阵
+                let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系
                 let rotate = artboard.rotation || 0;
-                rotate = rotate < 0 ? rotate + 360 : rotate;
+                rotate = rotate < 0 ? rotate + 360 : rotate; // 这些关于角度的计算把图画出来就会比较清楚
                 if (rotate < 135 && rotate >= 45) {
-                    lt = m.computeCoord({ x: 0, y: 0 + frame.height });
+                    anchor = m.computeCoord({ x: 0, y: 0 + frame.height }); // 将 [图形坐标系] 的锚点通过 [图形到页面的转换矩阵] 转换到 [页面坐标系]，下面的也是
                     rotate -= 90;
                 } else if (rotate < 225 && rotate >= 135) {
-                    lt = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
+                    anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
                     rotate -= 180;
                 } else if (rotate < 315 && rotate >= 225) {
-                    lt = m.computeCoord({ x: 0 + frame.width, y: 0 });
+                    anchor = m.computeCoord({ x: 0 + frame.width, y: 0 });
                     rotate += 90;
                 } else if (rotate < 360 && rotate > 315) {
-                    lt = m.computeCoord({ x: 0, y: 0 });
+                    anchor = m.computeCoord({ x: 0, y: 0 });
                 } else if (rotate < 45 && rotate >= 0) {
-                    lt = m.computeCoord({ x: 0, y: 0 });
+                    anchor = m.computeCoord({ x: 0, y: 0 });
                 }
-                lt = matrix.computeCoord({ x: lt.x, y: lt.y }); //client
-                lt.y -= origin.y;
-                lt.x -= origin.x;
-                lt.y -= 14;
+                anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y }); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
+                anchor.y -= origin.y;
+                anchor.x -= origin.x;
+                anchor.y -= 14; // 顶上去14像素
                 const width = f2p.width;
-                titles.push({
-                    id: artboard.id,
-                    content: artboard.name,
-                    x: lt.x,
-                    y: lt.y,
-                    width,
-                    shape: artboard,
-                    rotate
-                })
+                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate });
             }
         }
     }
 }
-function setOrigin() {
-    const workspace = props.context.workspace;
-    matrix.reset(workspace.matrix);
+function setOrigin() { // 这个动作是让container与页面坐标系重合
+    matrix.reset(props.context.workspace.workspace.matrix);
     matrix.preTrans(props.data.frame.x, props.data.frame.y);
     origin.x = matrix.m02;
     origin.y = matrix.m12;
@@ -176,8 +166,9 @@ const keySaveInput = (e: KeyboardEvent) => {
         index.value = -1
     }
 }
+// hover不上原因是参数shape的内存地址不对，想不到比较好的方案就先放着，包括选中和拖动也是。先把重命名做好～
 function hover(shape: Shape) {
-    props.context.selection.hoverShape(shape);
+    // props.context.selection.hoverShape(shape);
 }
 function leave() {
     props.context.selection.unHoverShape();
@@ -186,7 +177,6 @@ onMounted(() => {
     props.context.workspace.watch(handleWorkspaceUpdate)
     props.context.selection.watch(updater);
     props.data.watch(watcher);
-    setOrigin();
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(handleWorkspaceUpdate);
@@ -196,7 +186,9 @@ onUnmounted(() => {
 watchEffect(() => updater());
 </script>
 <template>
+    <!-- container -->
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
+        <!-- 这一块，建议参考Listview组件，类比一下，按照这个形式(ShapeTitle -> ShapeList、title -> Shapetitle)，这样就可以按照shapelist 的重命名方式来重命名title -->
         <div v-for="(t, index) in titles" class="title-container" :key="index" @mouseenter="() => hover(t.shape)"
             @mouseleave="leave"
             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${50}px`, transform: `rotate(${t.rotate}deg)` }">
