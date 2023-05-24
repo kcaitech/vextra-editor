@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { ref, watch, onMounted, onUnmounted, watchEffect } from 'vue'
-import { ElMessage } from 'element-plus'
 import { router } from '../../router'
 import { useRoute } from 'vue-router'
 import * as share_api from '../../apis/share'
 import { useI18n } from 'vue-i18n'
+import { Warning } from '@element-plus/icons-vue'
 const { t } = useI18n()
 const radio = ref('1')
 const textarea = ref('')
@@ -14,38 +14,35 @@ const route = useRoute()
 const linkValid = ref(true)
 let permType = undefined
 const status = ref(0)
+const messages = ref<string>(t('apply.request_access'))
+const execute= ref(false)
+
 const onSave = () => {
     disabled.value = true
+    execute.value = true
+    if(execute.value) {
+        getDocumentInfo()    
+    }
+}
+
+const promptMessage = () => {
+    console.log(111);
+    
     if (docInfo.value.shares_count >= 5) {
-        ElMessage({
-            message: `${t('apply.maximum_share')}`
-        })
+        messages.value = t('apply.maximum_share')
+        showNotification()
         setTimeout(() => {
             router.push('/')
-        }, 2000)
+        }, 3000)
     }else {
         if (radio.value === '1') {
-            if (docInfo.value.application_count.value >= 3) {
-                ElMessage({
-                    message: `${t('apply.request_access')}`
-                })
-                return
-            }else {
-                postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
-            }
+            postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
         }else if (radio.value === '3') {
-            if (docInfo.value.application_count >= 3) {
-                ElMessage({
-                    message: `${t('apply.request_access')}`
-                })
-                return
-            }else {
-                postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
-            }
+            postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
         }
     }
-    
 }
+
 watch(radio, () => {
     disabled.value = false
 })
@@ -78,33 +75,66 @@ const getDocumentInfo = async () => {
         const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
         if(data) {
             docInfo.value = data.data
-            status.value = docInfo.value.apply_list[0].status
             if(docInfo.value.document.doc_type === 0) {
                 linkValid.value = false
             }else {
                 linkValid.value = true
             }
+            if(execute.value) {
+                promptMessage()
+            }
+            if(docInfo.value.apply_list[0].status === 2) {
+                status.value = 0
+                status.value = docInfo.value.apply_list[0].status
+            }
         }
+        execute.value = false
     }catch (err) {
         console.log(err);
-        
+        execute.value = false
     }
 }
 
 watch(status,() => {
     if(status.value === 2) {
-        ElMessage({
-            message: `${t('apply.not_passed')}`
-        })
+        messages.value = t('apply.not_passed')
+        showNotification()
         disabled.value = false
     }
 })
 
 getDocumentInfo()
 const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
-    await share_api.postDocumentAuthorityAPI(data)
+    const res = await share_api.postDocumentAuthorityAPI(data)
+    
+    if(res.code === 400 && (res as any).message === '申请次数已达上限') {
+        messages.value = t('apply.request_access')
+        showNotification()
+    }
 }
 let timer: any = null
+
+//提示信息
+const showHint = ref(false)
+const countdown = ref(4)
+const startCountdown = (type?: number) => {
+    const timer = setInterval(() => {
+    if (countdown.value > 1) {
+        countdown.value--;
+    } else {
+        hideNotification(type);
+        clearInterval(timer);
+    }
+    }, 1000);
+}
+const hideNotification = (type?: number) => {
+    showHint.value = false;
+    countdown.value = 4;
+}
+const showNotification = (type?:number) => {
+    showHint.value = true;
+    startCountdown(type);
+}
 
 onMounted(() => {  
     timer = setInterval(() => {
@@ -114,6 +144,8 @@ onMounted(() => {
 })
 onUnmounted(() => {
     clearInterval(timer)
+    showHint.value = false;
+    countdown.value = 4;
 })
 </script>
 
@@ -163,6 +195,10 @@ onUnmounted(() => {
             <span>{{ t('apply.no_file_access_permission') }}</span>
             <span class="text">{{ t('apply.file_deleted') }}</span>
         </div>
+    </div>
+    <div v-if="showHint" class="notification">
+        <el-icon :size="13"><Warning /></el-icon>
+        <span class="text">{{ messages }}</span>
     </div>
 </template>
 <style lang="scss" scoped>
@@ -270,4 +306,22 @@ onUnmounted(() => {
             }
         }
     }
-}</style>
+}
+.notification {
+    position: fixed;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: red;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 7px 30px;
+    border-radius: 4px;
+    .text {
+        margin: 0 15px 0 10px;
+    }
+}
+</style>
