@@ -87,7 +87,9 @@ export const home = {
     delete_file: '创建者删除了该文档，文档即将退出',
     star:'标星',
     de_star:'取消标星',
-    de_access_record:'移除记录'
+    de_access_record:'移除记录',
+    addComment: '添加评论',
+
 }
 
 export const navi = {

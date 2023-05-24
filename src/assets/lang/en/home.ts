@@ -87,7 +87,8 @@ export const home = {
     delete_file: 'The creator deleted the document and it is about to exit',
     star:'Star',
     de_star:'Delete star',
-    de_access_record:'Delete access record'
+    de_access_record:'Delete access record',
+    addComment: 'Add comment',
 }
 
 export const navi = {
