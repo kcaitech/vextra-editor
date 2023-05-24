@@ -26,13 +26,12 @@ const onSave = () => {
 }
 
 const promptMessage = () => {
-    console.log(111);
-    
     if (docInfo.value.shares_count >= 5) {
         messages.value = t('apply.maximum_share')
         showNotification()
-        setTimeout(() => {
+        const routeTimer = setTimeout(() => {
             router.push('/')
+            clearTimeout(routeTimer)
         }, 3000)
     }else {
         if (radio.value === '1') {
@@ -118,12 +117,12 @@ let timer: any = null
 const showHint = ref(false)
 const countdown = ref(4)
 const startCountdown = (type?: number) => {
-    const timer = setInterval(() => {
+    const tipstimer = setInterval(() => {
     if (countdown.value > 1) {
         countdown.value--;
     } else {
         hideNotification(type);
-        clearInterval(timer);
+        clearInterval(tipstimer);
     }
     }, 1000);
 }
