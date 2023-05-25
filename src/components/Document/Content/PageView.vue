@@ -45,7 +45,7 @@ function updateItems() {
         renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
     } else {
         if (renderItems[0].id === 'tool-group') {
-            console.log('解除');
+            console.log('tool-group-unmount');
         }
         renderItems = props.data.childs;
     }
