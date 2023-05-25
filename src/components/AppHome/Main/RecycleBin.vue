@@ -8,13 +8,13 @@
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">
                 <el-icon :size=" 20 ">
-                    <el-tooltip content="还原" show-after="1000">
+                    <el-tooltip :content="t('home.restore')" :show-after="1000" :hide-after="0">
                         <svg-icon class="svg restore" style="width: 20px; height: 20px;" icon-class="restore"
                             @click.stop.prevent=" Restorefile(scope.$index) "></svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip content="彻底删除" show-after="1000">
+                    <el-tooltip :content="t('home.completely_delete')" :show-after="1000" :hide-after="0">
                         <Delete @click.stop.prevent=" Deletefile(scope.$index) " />
                     </el-tooltip>
                 </el-icon>&nbsp;
@@ -22,14 +22,14 @@
         </el-table-column>
     </el-table>
     <!-- 确认删除弹框 -->
-    <el-dialog v-model=" dialogVisible " title="彻底删除" width="30%" align-center>
-        <span>删除执行后，文件将无法恢复找回，确认要删除吗？</span>
+    <el-dialog v-model=" dialogVisible " :title="t('home.completely_delete')" width="500" align-center>
+        <span>{{t('home.delete_tips')}}</span>
         <template #footer>
             <span class="dialog-footer">
                 <el-button type="primary" @click=" Qdeletefile " style="background-color: none;">
-                    确定删除
+                    {{ t('home.delete_ok') }}
                 </el-button>
-                <el-button @click=" dialogVisible = false ">取消</el-button>
+                <el-button @click=" dialogVisible = false ">{{t('home.cancel')}}</el-button>
             </span>
         </template>
     </el-dialog>
@@ -54,7 +54,7 @@ async function GetrecycleLists() {
     isLoading.value = true
     const { data } = await user_api.GetrecycleList()
     if (data == null) {
-        ElMessage.error("文档列表获取失败")
+        ElMessage.error(t('home.failed_list_tips'))
     } else {
         for (let i = 0; i < data.length; i++) {
             let { document: { size }, document_access_record: { last_access_time } } = data[i]
@@ -87,10 +87,10 @@ const Restorefile = async (index: number) => {
 
     const { code } = await user_api.RecoverFile({ doc_id: id })
     if (code === 0) {
-        ElMessage.success('还原成功')
+        ElMessage.success(t('home.restore_ok'))
         GetrecycleLists()
     } else {
-        ElMessage.error('还原失败')
+        ElMessage.error(t('home.restore_no'))
     }
 }
 

@@ -69,7 +69,7 @@ async function getDoucment() {
     isLoading.value = true
     const { data } = await share_api.getDoucmentListAPI()
     if (data == null) {
-        ElMessage.error("文档列表获取失败")
+        ElMessage.error(t('home.failed_list_tips'))
     } else {
         for (let i = 0; i < data.length; i++) {
             let { document: { size }, document_access_record: { last_access_time } } = data[i]
@@ -103,12 +103,12 @@ const Starfile = async (index: number) => {
     if (getDoucmentList.value[index].document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_ok'))
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_cancel'))
         }
     }
 
@@ -136,10 +136,10 @@ const Deletefile = async (index: number) => {
     const { document: { id } } = getDoucmentList.value[index]
     const { code } = await user_api.MoveFile({ doc_id: id })
     if (code === 0) {
-        ElMessage.success('文件已移至回收站')
+        ElMessage.success(t('home.delete_ok_tips'))
         getDoucment()
     } else {
-        ElMessage.error('移除失败')
+        ElMessage.error(t('home.delete_no_tips'))
     }
 }
 

@@ -74,6 +74,8 @@ export const home = {
     star_marking: 'Star marking',
     share: 'Share',
     delete: 'Delete',
+    delete_ok_tips:'File moved to trash',
+    delete_no_tips:'Removal failed',
     test: 'Test',
     file_star_marking: 'File has been marked star, can be viewed in the star list!',
     rect: 'Rectangle',
@@ -87,7 +89,25 @@ export const home = {
     delete_file: 'The creator deleted the document and it is about to exit',
     star:'Star',
     de_star:'Delete star',
-    de_access_record:'Delete access record'
+    star_ok:'Starred document',
+    star_cancel:'Document unstarred',
+    de_access_record:'Delete access record',
+    access_record_ok:'Removed successfully',
+    access_record_no:'Removal failed',
+    exit_share:'Exit share',
+    restore:'Restore',
+    completely_delete:'Completely delete',
+    delete_tips:'After deleting, the file cannot be recovered. Are you sure you want to delete it?',
+    delete_ok:'confirm delete',
+    cancel:'cancel',
+    failed_list_tips:'Failed to get file list',
+    restore_ok:'Restored successfully',
+    restore_no:'Restore failed',
+    delete_file_ok:'Successfully deleted',
+    delete_file_no:'Failed to delete',
+    other_tips:'Please make sure the network connection is normal',
+    
+
 }
 
 export const navi = {

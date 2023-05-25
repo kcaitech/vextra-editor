@@ -56,7 +56,7 @@ async function getUserdata() {
     isLoading.value = true
     const { data } = await user_api.GetfavoritesList()
     if (data == null) {
-        ElMessage.error("文档列表获取失败")
+        ElMessage.error(t('home.failed_list_tips'))
     } else {
         for (let i = 0; i < data.length; i++) {
             let { document: { size }, document_access_record: { last_access_time } } = data[i]

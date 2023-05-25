@@ -1,14 +1,15 @@
 
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted } from 'vue'
 import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
+import * as user_api from '@/apis/users'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
+import { ElMessage } from 'element-plus'
 
 const { t } = useI18n()
-const tableData = ref<any[]>([])
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
     uname: localStorage.getItem('nickname'),
@@ -31,14 +32,16 @@ const getApplyList = async () => {
         console.log(err)
     }
 }
+
 let timer: any = null
 getApplyList()
+
 onMounted(() => {
-    getSearch()
     timer = setInterval(() => {
         getApplyList()
     }, 60000)
 })
+
 onUnmounted(() => {
     clearInterval(timer)
 })
@@ -47,35 +50,80 @@ const errorHandler = () => true
 
 
 let search = ref('')
-let SearchList = ref<any[]>([]);
+let SearchList = ref<any[]>([])
+let lists = ref<any[]>([])
 
-function getSearch() {
+function searchhistoryshow() {
+    const historylist: any = document.querySelector('.searchhistory')
+    historylist.style.display = "block"
+    getUserdata()
+
+}
+
+function closeclick() {
     const historylist: any = document.querySelector('.searchhistory')
     const close: any = document.querySelector('.CloseIcon')
-    const input: any = document.querySelector('.input')
-
-    input.addEventListener('focus', () => {
-        SearchList = computed(() => SearchList.value.filter((data) => !search.value || data.name.toLowerCase().includes(search.value.toLowerCase())))
-        historylist.style.display = 'block'
-
-    })
-    historylist.addEventListener('blur', () => {
-        search.value = ''
-        historylist.style.display = 'none'
-    })
-
-    input.addEventListener('keyup', (e: any) => {
-        if (search.value !== '') {
-            close.style.display = 'block'
-        } else {
-            close.style.display = 'none'
-        }
-    })
-    close.addEventListener('click', () => {
-        search.value = ''
-        close.style.display = 'none'
-    })
+    search.value = ''
+    close.style.display = "none"
+    historylist.style.display = "none"
 }
+
+const getUserdata = async () => {
+    if (location.hash.toLowerCase() == "#/apphome/recently") {
+        const { data } = await user_api.GetDocumentsList()
+        lists.value = data
+    }
+    if (location.hash.toLowerCase() == "#/apphome/starfile") {
+        const { data } = await await user_api.GetfavoritesList()
+        lists.value = data
+    }
+    if (location.hash.toLowerCase() == "#/apphome/meshare") {
+        const { data } = await share_api.getDoucmentListAPI()
+        lists.value = data
+    }
+    if (location.hash.toLowerCase() == "#/apphome/shareme") {
+        const { data } = await user_api.ShareLists()
+        lists.value = data
+    }
+    if (location.hash.toLowerCase() == "#/apphome/recyclebin") {
+        const { data } = await user_api.GetrecycleList()
+        lists.value = data
+    }
+    if (lists.value == null) {
+        ElMessage.error("文档列表获取失败")
+    } else {
+        for (let i = 0; i < lists.value.length; i++) {
+            let { document: { size }, document_access_record: { last_access_time } } = lists.value[i]
+            lists.value[i].document.size = sizeTostr(size)
+            lists.value[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+        }
+
+    }
+}
+
+function screenout() {
+    const close: any = document.querySelector('.CloseIcon')
+    if (search.value != '') {
+        close.style.display = "block"
+    } else {
+        close.style.display = "none"
+    }
+    SearchList.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(search.value.toLowerCase()))
+}
+
+function sizeTostr(size: any) {
+    if ((size / 1024 / 1024 / 1024) > 1) {
+        size = (size / 1024 / 1024 / 1024).toFixed(2) + "GB"
+    } else if ((size / 1024 / 1024) > 1) {
+        size = (size / 1024 / 1024).toFixed(2) + "MB"
+    } else if ((size / 1024) > 1) {
+        size = (size / 1024).toFixed(2) + "KB"
+    } else {
+        size = Math.round(size * 100) / 100 + "B"
+    }
+    return size
+}
+
 function userinfo() {
     router.push({ path: '/pcenter' })
 }
@@ -84,9 +132,29 @@ function loginout() {
     localStorage.clear()
     router.push({ path: '/login' })
 }
+
 const reviewed = () => {
     getApplyList()
 }
+
+const toDocument = (row: any) => {
+    const docId = row.document.id
+    const Name = 'document'
+    const query = { id: docId }
+    const url = router.resolve({ name: Name, query: query }).href
+    window.open(url, '_blank')
+}
+
+document.addEventListener('click', (el) => {
+    const nullcontent: any = document.querySelector('.nullcontent')
+    const content: any = document.querySelector('.content')
+   console.log(el);
+   
+    // if (!isClickInsideSearchPanel) {
+    //     searchPanel.style.display = 'none';
+    // }
+
+})
 
 </script>
 <template>
@@ -94,19 +162,22 @@ const reviewed = () => {
         <div class="search">
             <el-icon size="20" class="SearchIcon" style="margin: 10px;">
                 <Search />
-            </el-icon><input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`" />
-            <el-icon size="20" class="CloseIcon" style="margin: 10px;">
+            </el-icon><input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`"
+                @focus="searchhistoryshow" @input="screenout" />
+            <el-icon size="20" class="CloseIcon" style="margin: 10px;" @click="closeclick">
                 <Close />
             </el-icon>
             <div class="searchhistory">
-                <div v-if="search != ''">
-                    <el-table :data="SearchList || []" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果">
-                        <el-table-column prop="name" :label="t('home.file_name')" />
-                        <el-table-column prop="updated_at" :label="t('home.modification_time')" />
-                        <el-table-column prop="size" :label="t('home.size')" />
+                <div class="content" v-if="search != ''">
+                    <el-table :data="SearchList || []" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果"
+                        @row-click="toDocument">
+                        <el-table-column prop="document.name" :label="t('home.file_name')" />
+                        <el-table-column prop="document_access_record.last_access_time"
+                            :label="t('home.modification_time')" />
+                        <el-table-column prop="document.size" :label="t('home.size')" />
                     </el-table>
                 </div>
-                <div v-else>没有搜索记录</div>
+                <div class="nullcontent" v-else style="line-height: 300px; font-size: 12px;">没有搜索记录</div>
             </div>
         </div>
         <div class="right">
@@ -335,4 +406,5 @@ const reviewed = () => {
     display: none;
     border-radius: 5px;
     text-align: center;
-}</style>
+}
+</style>

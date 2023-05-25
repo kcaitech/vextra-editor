@@ -74,6 +74,8 @@ export const home = {
     star_marking: '标星',
     share: '分享',
     delete: '删除',
+    delete_ok_tips:'文件已移至回收站',
+    delete_no_tips:'移除失败',
     test: '测试',
     file_star_marking: '文件已被标星，可在标星列表中查看！',
     rect: '矩形',
@@ -87,7 +89,24 @@ export const home = {
     delete_file: '创建者删除了该文档，文档即将退出',
     star:'标星',
     de_star:'取消标星',
-    de_access_record:'移除记录'
+    star_ok:'已设为星标文档',
+    star_cancel:'已取消星标文档',
+    de_access_record:'移除记录',
+    access_record_ok:'移除成功',
+    access_record_no:'移除失败',
+    exit_share:'退出共享',
+    restore:'还原',
+    completely_delete:'彻底删除',
+    delete_tips:'删除执行后，文件将无法恢复找回，确认要删除吗？',
+    delete_ok:'确定删除',
+    cancel:'取消',
+    failed_list_tips:'文件列表获取失败',
+    restore_ok:'还原成功',
+    restore_no:'还原失败',
+    delete_file_ok:'删除成功',
+    delete_file_no:'删除失败',
+    other_tips:'请确保网络联系正常',
+
 }
 
 export const navi = {
