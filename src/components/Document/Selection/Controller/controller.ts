@@ -77,7 +77,7 @@ export function useController(context: Context) {
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
             const action = workspace.value.action;
-            if (action == Action.AutoV) {
+            if (action == Action.AutoV || action == Action.AutoK) {
                 workspace.value.setCtrl('controller');
                 wheel = fourWayWheel(context, undefined, startPositionOnPage);
                 document.addEventListener('mousemove', mousemove);
