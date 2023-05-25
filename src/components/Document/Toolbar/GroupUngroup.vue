@@ -7,8 +7,8 @@ import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
 import { useI18n } from 'vue-i18n';
 import { getName } from '@/utils/content';
-const { t } = useI18n()
-
+import { debounce } from 'lodash';
+const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const editor = computed(() => {
     if (props.selection.selectedPage == undefined) {
@@ -16,7 +16,6 @@ const editor = computed(() => {
     }
     return props.context.editor4Page(props.selection.selectedPage);
 })
-
 const NOGROUP = 0;
 const GROUP = 1;
 const UNGROUP = 2;
@@ -26,7 +25,28 @@ const state = ref(0);
 //     if (state.value !== NOGROUP) preState.value = state.value;
 //     state.value = s;
 // }
-const updater = (t?: number) => {
+function _updater(t?: number) {
+    // const len = props.selection.selectedShapes.length;
+    // if (len === 0) {
+    //     setState(NOGROUP);
+    // } else if (len === 1) {
+    //     const shape = props.selection.selectedShapes[0];
+    //     if (shape instanceof GroupShape && !(shape instanceof Artboard || shape instanceof Page)) {
+    //         setState(UNGROUP);
+    //     } else {
+    //         setState(NOGROUP);
+    //     }
+    // } else {
+    //     let val = GROUP;
+    //     for (let i = 0; i < len; i++) {
+    //         const shape = props.selection.selectedShapes[i];
+    //         if (shape instanceof Artboard || shape instanceof Page) {
+    //             val = UNGROUP;
+    //             break;
+    //         }
+    //     }
+    //     setState(val);
+    // }
     if (t === Selection.CHANGE_SHAPE) {
         state.value = 0;
         const selection = props.selection;
@@ -51,28 +71,8 @@ const updater = (t?: number) => {
             }
         }
     }
-    // const len = props.selection.selectedShapes.length;
-    // if (len === 0) {
-    //     setState(NOGROUP);
-    // } else if (len === 1) {
-    //     const shape = props.selection.selectedShapes[0];
-    //     if (shape instanceof GroupShape && !(shape instanceof Artboard || shape instanceof Page)) {
-    //         setState(UNGROUP);
-    //     } else {
-    //         setState(NOGROUP);
-    //     }
-    // } else {
-    //     let val = GROUP;
-    //     for (let i = 0; i < len; i++) {
-    //         const shape = props.selection.selectedShapes[i];
-    //         if (shape instanceof Artboard || shape instanceof Page) {
-    //             val = UNGROUP;
-    //             break;
-    //         }
-    //     }
-    //     setState(val);
-    // }
 }
+const updater = debounce(_updater, 200);
 function workspaceUpdate(t?: number) {
     if (t === WorkSpace.GROUP) {
         groupClick();
