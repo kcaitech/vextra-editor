@@ -179,7 +179,7 @@ const isLock = (lock: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    editor.value.setLock();
+    editor.value.toggleLock();
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
@@ -189,7 +189,7 @@ const isRead = (read: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    editor.value.setVisible();
+    editor.value.toggleVisible();
     if (!read) {
         props.context.selection.unSelectShape(shape);
         props.context.selection.unHoverShape();
