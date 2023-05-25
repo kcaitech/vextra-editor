@@ -17,7 +17,6 @@ const reflush = ref(0);
 const rootId = ref<string>('pageview');
 let renderItems: Shape[] = [];
 const watcher = () => {
-    renderItems = props.data.childs;
     reflush.value++;
 }
 function pageViewRegister(mount: boolean) {
@@ -31,8 +30,26 @@ function pageViewRegister(mount: boolean) {
 }
 function updateRenderItems(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
-        // console.log('更新一下items啦');
+        updateItems();
     }
+}
+function updateItems() {
+    const selection = props.context.selection;
+    const shapes = selection.selectedShapes;
+    const len = shapes.length;
+    if (len > 1) {
+        const editor = props.context.editor.editor4Page(props.data);
+        const toolGroup = editor.createGroup();
+        toolGroup.childs.push(...shapes);
+        toolGroup.id = 'tool-group';
+        renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
+    } else {
+        if (renderItems[0].id === 'tool-group') {
+            console.log('解除');
+        }
+        renderItems = props.data.childs;
+    }
+    reflush.value++;
 }
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
@@ -49,6 +66,7 @@ onMounted(() => {
     props.context.selection.watch(updateRenderItems);
     pageViewRegister(true);
     watcher();
+    renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);

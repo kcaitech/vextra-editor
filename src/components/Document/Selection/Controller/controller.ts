@@ -24,6 +24,7 @@ export function useController(context: Context) {
     let editing: boolean = false;
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
+    const trans = { x: 0, y: 0 };
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
             const ps: PageXY = matrix.inverseCoord(start.x, start.y);
@@ -103,12 +104,12 @@ export function useController(context: Context) {
     function isMouseOnContent(e: MouseEvent): boolean {
         return (e.target as Element)?.closest(`#content`) ? true : false;
     }
-    function mousedown(e: MouseEvent) {        
+    function mousedown(e: MouseEvent) {
         if (context.workspace.isEditing) {
             context.selection.selectShape(context.selection.hoveredShape);
         }
         const working = !context.workspace.isPageDragging && !context.workspace.isEditing;
-        if (working) {            
+        if (working) {
             if (isElement(e)) {
                 matrix.reset(workspace.value.matrix);
                 setPosition(e);
@@ -137,7 +138,7 @@ export function useController(context: Context) {
                     if (wheel && asyncTransfer) {
                         const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
                         if (!isOut) {
-                            transform(startPosition, mousePosition);
+                            transform(e, startPosition, mousePosition);
                         }
                     }
                 }
@@ -160,6 +161,17 @@ export function useController(context: Context) {
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
                     _migrate(shapes, startPosition, mousePosition);
                     asyncTransfer = asyncTransfer.close();
+                    // const len = shapes.length;
+
+                    // if (len === 1) {
+                    //     asyncTransfer = asyncTransfer.close();
+                    // }
+                    // else if (len > 1) {
+                    //     const m = matrix.inverseCoord({ x: mousePosition.x, y: mousePosition.y });
+                    //     for (let i = 0; i < len; i++) {
+                    //         asyncTransfer.trans(startPositionOnPage, m);
+                    //     }
+                    // }
                 }
                 isDragging = false;
                 workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
@@ -172,9 +184,24 @@ export function useController(context: Context) {
         }
         workspace.value.setCtrl('page');
     }
-    function transform(start: ClientXY, end: ClientXY) {
+    function transform(event: MouseEvent, start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.inverseCoord(start.x, start.y);
         const pe: PageXY = matrix.inverseCoord(end.x, end.y);
+        // if (shapes.length > 1) {
+        //     const tool = document.getElementById('tool-group');
+        //     if (tool) {
+        //         const tx = ps.x - pe.x;
+        //         const ty = ps.y - pe.y;
+        //         trans.x -= tx;
+        //         trans.y -= ty;
+        //         tool.style.transform = `translate(${trans.x}px, ${trans.y}px)`;
+        //     }
+        // } else {
+        //     if (asyncTransfer) {
+        //         asyncTransfer.trans(ps, pe);
+        //         migrate(shapes, start, end);
+        //     }
+        // }
         if (asyncTransfer) {
             asyncTransfer.trans(ps, pe);
             migrate(shapes, start, end);
@@ -226,6 +253,7 @@ export function useController(context: Context) {
         }
     }
     function initController() {
+        trans.x = 0, trans.y = 0;
         initTimer(); // 控件生成之后立马开始进行双击预定，该预定将在duration(ms)之后取消
     }
     function initTimer() {

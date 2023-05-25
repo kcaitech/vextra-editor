@@ -15,7 +15,7 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
 }
 
 export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
-    const childs:Array<any> = renderGroupChilds(h, shape, comsMap);
+    const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
     const frame = shape.frame;
 
     const props: any = {}
@@ -35,6 +35,8 @@ export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, a
     else {
         props.transform = `translate(${frame.x},${frame.y})`
     }
-
+    if (shape.id === 'tool-group') {
+        props.id = 'tool-group';
+    }
     return h('g', props, childs);
 }
