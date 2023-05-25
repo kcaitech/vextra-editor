@@ -57,10 +57,10 @@ function toggle(id: Tab) {
         height: 32px;
         display: flex;
         flex-direction: row;
-        padding-left: 13px;
+        overflow: hidden;
 
         >.tab {
-            min-width: 36px;
+            min-width: 24px;
             font-weight: var(--font-default-bold);
             font-size: 10px;
             margin-right: 4px;
@@ -69,15 +69,12 @@ function toggle(id: Tab) {
             line-height: 24px;
             color: var(--grey-dark);
             transition: 0.1s;
+            margin-left: 13px;
         }
 
         >.tab:hover {
             color: var(--theme-color);
         }
-
-        // >.tab:not(:first-child) {
-        //     margin-left: 13px;
-        // }
 
         >.active {
             color: var(--theme-color);
