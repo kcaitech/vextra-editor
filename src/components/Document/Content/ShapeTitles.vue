@@ -35,7 +35,6 @@ function updater() {
     watchShapes();
     setOrigin();
     setPosition();
-
 }
 function handleWorkspaceUpdate(t: any) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {

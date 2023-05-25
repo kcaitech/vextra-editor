@@ -138,7 +138,7 @@ export function useController(context: Context) {
                     if (wheel && asyncTransfer) {
                         const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
                         if (!isOut) {
-                            transform(e, startPosition, mousePosition);
+                            transform(startPosition, mousePosition);
                         }
                     }
                 }
@@ -162,7 +162,6 @@ export function useController(context: Context) {
                     _migrate(shapes, startPosition, mousePosition);
                     asyncTransfer = asyncTransfer.close();
                     // const len = shapes.length;
-
                     // if (len === 1) {
                     //     asyncTransfer = asyncTransfer.close();
                     // }
@@ -184,28 +183,28 @@ export function useController(context: Context) {
         }
         workspace.value.setCtrl('page');
     }
-    function transform(event: MouseEvent, start: ClientXY, end: ClientXY) {
+    function transform(start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.inverseCoord(start.x, start.y);
         const pe: PageXY = matrix.inverseCoord(end.x, end.y);
-        // if (shapes.length > 1) {
-        //     const tool = document.getElementById('tool-group');
-        //     if (tool) {
-        //         const tx = ps.x - pe.x;
-        //         const ty = ps.y - pe.y;
-        //         trans.x -= tx;
-        //         trans.y -= ty;
-        //         tool.style.transform = `translate(${trans.x}px, ${trans.y}px)`;
-        //     }
-        // } else {
-        //     if (asyncTransfer) {
-        //         asyncTransfer.trans(ps, pe);
-        //         migrate(shapes, start, end);
-        //     }
-        // }
-        if (asyncTransfer) {
-            asyncTransfer.trans(ps, pe);
-            migrate(shapes, start, end);
+        if (shapes.length > 1) {
+            const tool = context.workspace.toolGroup;
+            if (tool) {
+                const tx = ps.x - pe.x;
+                const ty = ps.y - pe.y;
+                trans.x -= tx;
+                trans.y -= ty;
+                tool.style.transform = `translate(${trans.x}px, ${trans.y}px)`;
+            }
+        } else {
+            if (asyncTransfer) {
+                asyncTransfer.trans(ps, pe);
+                migrate(shapes, start, end);
+            }
         }
+        // if (asyncTransfer) {
+        //     asyncTransfer.trans(ps, pe);
+        //     migrate(shapes, start, end);
+        // }
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selected = context.selection.selectedShapes;

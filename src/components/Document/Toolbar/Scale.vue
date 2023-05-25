@@ -9,7 +9,7 @@ let scale = ref<string>('100');
 function init() {
     scale.value = (props.context.workspace.matrix.toArray()[0] * 100).toFixed(0);
 }
-function watcher() {    
+function watcher() {
     scale.value = (props.context.workspace.matrix.toArray()[0] * 100).toFixed(0);
 }
 onMounted(() => {
@@ -24,14 +24,13 @@ onUnmounted(() => {
     <div class="scale-display-warp">
         <span>{{ scale }}%</span>
     </div>
-    
 </template>
 <style lang='scss' scoped>
 .scale-display-warp {
-    width: 64px;
+    min-width: 32px;
     height: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
     color: var(--theme-color-anti);
     font-size: var(--font-default-fontsize);

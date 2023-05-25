@@ -3,9 +3,10 @@ import { Matrix } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Page, ShapeType, Shape } from '@kcdesign/data';
-import { defineProps, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
+import { defineProps, onMounted, onUnmounted, ref, watch, watchEffect, nextTick } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
+import { setToolGroup } from "@/utils/pageview";
 import ShapeTitles from './ShapeTitles.vue';
 const props = defineProps<{
     context: Context,
@@ -15,7 +16,7 @@ const props = defineProps<{
 const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
-let renderItems: Shape[] = [];
+let renderItems: Shape[] = []; // 渲染数据，里面除了真实的data数据之外，还有工具对象
 const watcher = () => {
     reflush.value++;
 }
@@ -35,6 +36,7 @@ function updateRenderItems(t?: number) {
 }
 function updateItems() {
     const selection = props.context.selection;
+    const workspace = props.context.workspace;
     const shapes = selection.selectedShapes;
     const len = shapes.length;
     if (len > 1) {
@@ -43,8 +45,11 @@ function updateItems() {
         toolGroup.childs.push(...shapes);
         toolGroup.id = 'tool-group';
         renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
+        nextTick(() => { setToolGroup(props.context) });
+        console.log('tool-group-mount');
     } else {
         if (renderItems[0].id === 'tool-group') {
+            workspace.toolGroupUnmount();
             console.log('tool-group-unmount');
         }
         renderItems = props.data.childs;
@@ -54,25 +59,25 @@ function updateItems() {
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
-
 })
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
     pageViewRegister(true);
+    renderItems = props.data.childs;
 })
 onMounted(() => {
     props.data.watch(watcher);
     props.context.selection.watch(updateRenderItems);
     pageViewRegister(true);
-    watcher();
     renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
     props.context.selection.unwatch(updateRenderItems);
-    stopWatchPage();
     pageViewRegister(false);
+    stopWatchPage();
+    renderItems = [];
 })
 </script>
 

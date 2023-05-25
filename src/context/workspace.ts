@@ -1,8 +1,7 @@
 import { Watchable } from "@kcdesign/data";
-import { Repository } from "@kcdesign/data";
 import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
-import { Context, RepoWraper } from "./index";
+import { Context } from "./index";
 import { Root } from "@/utils/content";
 export enum Action {
     Auto = 'auto',
@@ -95,6 +94,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_tool_group: SVGAElement | undefined;
     constructor(context: Context) {
         super();
         this.context = context
@@ -166,6 +166,15 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isEditing() {
         return this.m_content_editing;
+    }
+    get toolGroup() {
+        return this.m_tool_group;
+    }
+    toolGroupMount(toolGroupMount: SVGAElement) {
+        this.m_tool_group = toolGroupMount;
+    }
+    toolGroupUnmount() {
+        this.m_tool_group = undefined;
     }
     updateRoot(root: Root) {
         this.m_root = root;
@@ -376,7 +385,7 @@ export class WorkSpace extends Watchable(Object) {
     setCursorStyle(type: CtrlElementType | string, deg: number) {
         if (this.m_creating || this.m_selecting || this.m_scaling) {
             // todo
-        } else {            
+        } else {
             let name = 'auto-0';
             if (type == CtrlElementType.RectRBR) {
                 name = `rotate-${0 + deg}`;
@@ -399,9 +408,9 @@ export class WorkSpace extends Watchable(Object) {
             } else if (type == CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
                 name = `scale-${90 + deg}`
             } else if (type == CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
-                name = `scale-${0 + deg}`
+                name = `scale-${0 + deg}`;
             } else if (type == CtrlElementType.Text) {
-                name = `scan-0`
+                name = `scan-0`;
             }
             this.notify(WorkSpace.CURSOR_CHANGE, name);
         }

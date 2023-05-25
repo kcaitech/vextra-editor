@@ -54,25 +54,33 @@ function toggle(id: Tab) {
     box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
     .tab-controller {
-        height: 36px;
+        height: 32px;
         display: flex;
         flex-direction: row;
         padding-left: 13px;
 
         >.tab {
+            min-width: 36px;
             font-weight: var(--font-default-bold);
             font-size: 10px;
-            min-width: 42px;
             margin-right: 4px;
             margin-top: 4px;
-            padding: 4px;
-            text-align: center;
+            text-align: left;
             line-height: 24px;
+            color: var(--grey-dark);
+            transition: 0.1s;
         }
 
+        >.tab:hover {
+            color: var(--theme-color);
+        }
+
+        // >.tab:not(:first-child) {
+        //     margin-left: 13px;
+        // }
+
         >.active {
-            border-radius: 4px 4px 0 0;
-            background-color: var(--grey-dark);
+            color: var(--theme-color);
         }
 
     }
