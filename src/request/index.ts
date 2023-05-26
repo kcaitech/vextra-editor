@@ -14,8 +14,9 @@ declare module "axios" {
 
 // 创建一个 axios 实例
 const service = axios.create({
-    baseURL: 'http://192.168.0.10:10000/api/v1',
-    // baseURL: 'http://api.protodesign.cn/api/v1', // 所有的请求地址前缀部分
+    // baseURL: 'http://192.168.0.10:10000/api/v1',
+    // baseURL: 'http://192.168.0.18:10000/api/v1',
+    baseURL: 'http://api.protodesign.cn/api/v1', // 所有的请求地址前缀部分
     //  baseURL: 'https://mock.apifox.cn/m1/2612240-0-1d5a81b5', // 所有的请求地址前缀部分
     timeout: 60000, // 请求超时时间毫秒
 })

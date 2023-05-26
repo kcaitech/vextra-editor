@@ -530,7 +530,7 @@ renderinit().then(() => {
     inited.value = true;
     nextTick(() => { root.value && resizeObserver.observe(root.value) });
 })
-onMounted(() => {
+onMounted(() => {    
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);

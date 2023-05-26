@@ -40,7 +40,7 @@ function handleWorkspaceUpdate(t: any) {
         setPosition();
     }
 }
-const setPosition = () => { // 核心函数
+const setPosition = () => {
     const artboards: Shape[] = props.context.selection.selectedPage!.artboardList; // 只要遍历容器就可以了，直接拿这个，这个数组里面有全部容器，如果拿childs，会存在多余的遍历
     const len = artboards.length;
     if (len) {
@@ -50,13 +50,13 @@ const setPosition = () => { // 核心函数
             if (artboard.parent?.type === ShapeType.Page) { // 只给页面的直接子元素上标题
                 const selecte = props.context.selection.selectedShapes;
                 const hovered = props.context.selection.hoveredShape;
-                if(selecte[0] && artboard.id === selecte[0].id) {
+                if (selecte[0] && artboard.id === selecte[0].id) {
                     selected.value = true
-                }else if(hovered && artboard.id === hovered.id) {
+                } else if (hovered && artboard.id === hovered.id) {
                     selected.value = true
-                }else{
-                    selected.value = false   
-                }            
+                } else {
+                    selected.value = false
+                }
                 const m = artboard.matrix2Page(); // 图形到页面的转换矩阵
                 const f2p = artboard.frame2Page(); // 
                 const frame = artboard.frame;
@@ -125,9 +125,11 @@ const rename = (value: string, shape: Shape) => {
     props.context.selection.rename();
 }
 
-// hover不上原因是参数shape的内存地址不对，想不到比较好的方案就先放着，包括选中和拖动也是。先把重命名做好～
 function hover(shape: Shape) {
-    props.context.selection.hoverShape(shape);
+    const s = props.context.selection.selectedPage?.artboards.get(shape.id);
+    if (s) {
+        props.context.selection.hoverShape(s);
+    }
 }
 function leave() {
     props.context.selection.unHoverShape();
@@ -147,11 +149,10 @@ watchEffect(() => updater());
 <template>
     <!-- container -->
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
-        <!-- 这一块，建议参考Listview组件，类比一下，按照这个形式(ShapeTitle -> ShapeList、title -> Shapetitle)，这样就可以按照shapelist 的重命名方式来重命名title -->
         <div v-for="(t, index) in titles" class="title-container" :key="index"
             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth" @rename="rename"
-            @hover="hover" @leave="leave" :shape="t.shape" :selected="selected"></ArtboardName>
+                @hover="hover" @leave="leave" :shape="t.shape" :selected="selected"></ArtboardName>
         </div>
     </div>
 </template>
@@ -172,6 +173,7 @@ watchEffect(() => updater());
         height: 14px;
         transform-origin: bottom left;
         color: grey;
+        z-index: 9;
     }
 
     .title-container:hover {

@@ -66,7 +66,7 @@ function updater() {
     createController();
     createShapeTracing();
 }
-function createController() { // 计算点位以及空间类型判定
+function createController() { // 计算点位以及控件类型判定
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (selection.length === 0) {
         controller.value = false;
@@ -132,7 +132,7 @@ function createController() { // 计算点位以及空间类型判定
         controller.value = true;
     }
 }
-function createShapeTracing() { // 描边
+function createShapeTracing() { // 描边    
     tracing.value = false;
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
     if (hoveredShape) {

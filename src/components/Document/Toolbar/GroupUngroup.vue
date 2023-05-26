@@ -20,33 +20,7 @@ const NOGROUP = 0;
 const GROUP = 1;
 const UNGROUP = 2;
 const state = ref(0);
-// const preState = ref(0);
-// function setState(s: number) {
-//     if (state.value !== NOGROUP) preState.value = state.value;
-//     state.value = s;
-// }
 function _updater(t?: number) {
-    // const len = props.selection.selectedShapes.length;
-    // if (len === 0) {
-    //     setState(NOGROUP);
-    // } else if (len === 1) {
-    //     const shape = props.selection.selectedShapes[0];
-    //     if (shape instanceof GroupShape && !(shape instanceof Artboard || shape instanceof Page)) {
-    //         setState(UNGROUP);
-    //     } else {
-    //         setState(NOGROUP);
-    //     }
-    // } else {
-    //     let val = GROUP;
-    //     for (let i = 0; i < len; i++) {
-    //         const shape = props.selection.selectedShapes[i];
-    //         if (shape instanceof Artboard || shape instanceof Page) {
-    //             val = UNGROUP;
-    //             break;
-    //         }
-    //     }
-    //     setState(val);
-    // }
     if (t === Selection.CHANGE_SHAPE) {
         state.value = 0;
         const selection = props.selection;
@@ -123,22 +97,25 @@ const ungroupClick = () => {
 </script>
 
 <template>
-    <el-tooltip v-if="state" class="box-item" effect="dark"
-        :content="state & GROUP ? `${t('home.groups')} &nbsp;&nbsp; Ctrl+G` : `${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Shift+G`"
-        placement="bottom" :show-after="500" :offset="5" :hide-after="0">
-        <div class="group">
-            <ToolButton :onclick="groupClick" :valid="true" :selected="false" v-if="state & GROUP">
-                <svg-icon icon-class="group"></svg-icon>
-            </ToolButton>
-            <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" v-if="state & UNGROUP">
-                <svg-icon icon-class="ungroup"></svg-icon>
-            </ToolButton>
-        </div>
-    </el-tooltip>
+    <div style="width: 80px; height: 40px;">
+        <el-tooltip v-if="state" class="box-item" effect="dark"
+            :content="state & GROUP ? `${t('home.groups')} &nbsp;&nbsp; Ctrl+G` : `${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Shift+G`"
+            placement="bottom" :show-after="500" :offset="5" :hide-after="0">
+            <div class="group">
+                <div class="vertical-line" v-if="state"></div>
+                <ToolButton :onclick="groupClick" :valid="true" :selected="false" v-if="state & GROUP">
+                    <svg-icon icon-class="group"></svg-icon>
+                </ToolButton>
+                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" v-if="state & UNGROUP">
+                    <svg-icon icon-class="ungroup"></svg-icon>
+                </ToolButton>
+            </div>
+        </el-tooltip>
+    </div>
 </template>
 
 <style scoped lang="scss">
-div.group {
+.group {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -156,6 +133,15 @@ div.group {
             height: 55%;
             width: 55%;
         }
+    }
+
+    .vertical-line {
+        width: 1.5px;
+        height: 28px;
+        background-color: grey;
+        flex: 0 0 auto;
+        margin-left: 5px;
+        margin-right: 5px;
     }
 
 }
