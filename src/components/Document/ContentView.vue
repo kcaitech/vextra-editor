@@ -132,6 +132,7 @@ function onMouseWheel(e: WheelEvent) {
             }
         }
     }
+    search(e)
     workspace.value.matrixTransformation();
 }
 function onKeyDown(e: KeyboardEvent) {
@@ -517,10 +518,8 @@ function initMatrix(cur: Page) {
 const stopWatch = watch(() => props.page, (cur, old) => {
     old.unwatch(watcher)
     cur.watch(watcher)
-
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
-
     initMatrix(cur)
 })
 const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
@@ -530,7 +529,7 @@ renderinit().then(() => {
     inited.value = true;
     nextTick(() => { root.value && resizeObserver.observe(root.value) });
 })
-onMounted(() => {    
+onMounted(() => {
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);

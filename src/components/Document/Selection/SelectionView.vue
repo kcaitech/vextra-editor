@@ -62,14 +62,17 @@ function watchShapes() { // 监听选区相关shape的变化
 function updater() { // 自动更新、可控更新
     const shouldSelectionViewUpdate = props.context.workspace.shouldSelectionViewUpdate;
     if (!shouldSelectionViewUpdate) return;
-    matrix.reset(props.matrix);
     watchShapes();
+    matrix.reset(props.matrix);
     createController();
     createShapeTracing();
 }
 function handleWorkSpaceUpdate(t?: any) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
-        updater();
+        matrix.reset(props.matrix);
+        watchShapes();
+        createController();
+        createShapeTracing();
     }
 }
 function createController() { // 计算点位以及控件类型判定
@@ -177,20 +180,17 @@ function pathMousedown(e: MouseEvent) {
         }
     }
 }
-
 // hooks
 onMounted(() => {
     props.context.selection.watch(updater);
     props.context.workspace.watch(handleWorkSpaceUpdate);
 })
-
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     props.context.workspace.unwatch(handleWorkSpaceUpdate);
 })
-watchEffect(updater)
+watchEffect(updater);
 </script>
-
 <template>
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
