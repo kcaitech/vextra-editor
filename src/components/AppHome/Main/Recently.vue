@@ -1,8 +1,8 @@
 
 <template>
     <!-- 表格布局 -->
-    <el-table :data="documentsList || []" height="83vh" style="width: 100%" v-if="viewmodel" v-loading="isLoading"
-        empty-text="没有内容" @row-click="toDocument">
+    <el-table :data="documentsList" height="83vh" style="width: 100%" v-if="viewmodel" v-loading="isLoading"
+        empty-text="没有内容" @row-dblclick="toDocument">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -70,7 +70,7 @@ const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
-let documentsList = ref<any[]>([])
+const documentsList = ref<any[]>([])
 const selectValue = ref(1)
 
 async function getUserdata() {
@@ -78,7 +78,7 @@ async function getUserdata() {
     isLoading.value = true
     const { data } = await user_api.GetDocumentsList()
     if (data == null) {
-        ElMessage.error("文档列表获取失败")
+        ElMessage.error(t('home.failed_list_tips'))
     } else {
         for (let i = 0; i < data.length; i++) {
             let { document: { size }, document_access_record: { last_access_time } } = data[i]
@@ -111,12 +111,12 @@ const Starfile = async (index: number) => {
     if (documentsList.value[index].document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: true })
         if (code === 0) {
-            ElMessage.success('已设为星标文档')
+            ElMessage.success(t('home.star_ok'))
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: false })
         if (code === 0) {
-            ElMessage.success('已取消星标文档')
+            ElMessage.success(t('home.star_cancel'))
         }
     }
 
@@ -151,9 +151,9 @@ const Removefile = async (index: number) => {
     const { code } = (await user_api.DeleteList({ access_record_id: id }))
     if (code === 0) {
         documentsList.value.splice(index, 1)
-        ElMessage.success('移除成功')
+        ElMessage.success(t('home.access_record_ok'))
     } else {
-        ElMessage.error('移除失败')
+        ElMessage.error(t('home.access_record_no'))
     }
 
 }

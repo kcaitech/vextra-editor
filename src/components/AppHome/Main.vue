@@ -13,14 +13,14 @@ const {t} = useI18n()
         <div>
             <span>{{ t('home.automatically_open') }}</span>
         </div>
-        <div>
+        <!-- <div>
             <el-icon size="25">
                 <Menu />
             </el-icon>
             <el-icon size="25">
                 <Operation size="30" />
             </el-icon>
-        </div>
+        </div> -->
     </div>
     <el-divider />
     <div class="main">

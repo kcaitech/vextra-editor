@@ -1,7 +1,7 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="Getfavorites || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-        @row-click="toDocument">
+    <el-table :data="Getfavorites" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
+    @row-dblclick="toDocument">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -43,7 +43,7 @@ import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 const { t } = useI18n()
 
-let Getfavorites = ref<any[]>([]);
+const Getfavorites = ref<any[]>([]);
 const isLoading = ref(false);
 const docId = ref('')
 const showFileShare = ref<boolean>(false);
@@ -56,7 +56,7 @@ async function getUserdata() {
     isLoading.value = true
     const { data } = await user_api.GetfavoritesList()
     if (data == null) {
-        ElMessage.error("文档列表获取失败")
+        ElMessage.error(t('home.failed_list_tips'))
     } else {
         for (let i = 0; i < data.length; i++) {
             let { document: { size }, document_access_record: { last_access_time } } = data[i]
@@ -88,12 +88,12 @@ const Starfile = async (index: number) => {
     if (Getfavorites.value[index].document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_ok'))
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_cancel'))
             getUserdata()
         }
     }
