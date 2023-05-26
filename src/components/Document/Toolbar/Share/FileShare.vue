@@ -35,11 +35,12 @@ const docInfo = ref<DocInfo>()
 const index = ref(0)
 const card = ref<HTMLDivElement>()
 const editable = ref(`${t('share.editable')}`)
+const reviewable = ref(`${t('share.reviewable')}`)
 const readOnly = ref(`${t('share.readOnly')}`)
 const remove = ref(`${t('share.remove')}`)
 const founder = ref(false)
 const userInfo = ref<User>()
-let shareList: any = ref([])
+const shareList = ref<any[]>([])
 
 const handleTop = ref<number>()
 const posi = ref({
@@ -72,7 +73,6 @@ const options = [
     label: `${t('share.anyone_can_edit_it')}`
   }
 ]
-console.log(props.shareSwitch,props.selectValue);
 
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
@@ -116,12 +116,14 @@ const selectAuthority = (i: number, e: Event) => {
   })
 }
 const onEditable = (id: any, type: number, index: number) => {
-  if(shareList.value[index].document_permission.perm_type === type) return
+  putShareAuthority(id, type)
+  shareList.value[index].document_permission.perm_type = type
+}
+const onReviewable = (id: any, type: number, index: number) => {
   putShareAuthority(id, type)
   shareList.value[index].document_permission.perm_type = type
 }
 const onReadOnly = (id: string, type: number, index: number) => {
-  if(shareList.value[index].document_permission.perm_type === type) return
   putShareAuthority(id, type)
   shareList.value[index].document_permission.perm_type = type
 }
@@ -156,6 +158,13 @@ const putShareAuthority = async (id: string, type: number) => {
 const setShateType = async (type: number) => {
   try {
     await share_api.setShateTypeAPI({ doc_id: docID, doc_type: type })
+    for (let i = 0; i < shareList.value.length; i++) {
+      if(type === 1) {
+        shareList.value[i].document_permission.perm_type = type
+      }else {
+        shareList.value[i].document_permission.perm_type = type -1
+      }
+    }
   }catch(err) {
     console.log(err);
   }
@@ -332,6 +341,7 @@ onUnmounted(() => {
                 <div class="popover" v-if="authority && index === ids" ref="popover"
                   :style="{ top: posi.top + 'px', right: 30 + 'px' }">
                   <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">{{ editable }}</div>
+                  <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">{{ reviewable }}</div>
                   <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">{{ readOnly }}</div>
                   <div @click="onRemove(item.document_permission.id, ids)">{{ remove }}</div>
                 </div>
@@ -366,7 +376,7 @@ onUnmounted(() => {
         <!-- 文档权限 -->
         <div class="unfounder">
           <span>{{ t('share.document_permission') }}:</span>
-          <p class="name">{{DocType[docInfo.document_permission.perm_type + 1]}}</p>
+          <p class="name">{{permission[docInfo.document_permission.perm_type]}}</p>
         </div>
         <!-- 链接按钮 -->
         <div class="button bottom">

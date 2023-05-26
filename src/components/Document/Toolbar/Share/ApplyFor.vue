@@ -20,7 +20,7 @@ const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, 
 const getApplyList = async (time?: number) => {  
     docID = localStorage.getItem('docId') || ''
     const { data } = await share_api.getApplyListAPI({ doc_id: docID, start_time: time })
-    applyList.value = data
+    applyList.value = [...applyList.value, ...data]
 }
 const consent = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.Pass)

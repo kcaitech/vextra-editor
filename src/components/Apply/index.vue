@@ -36,6 +36,8 @@ const promptMessage = () => {
     }else {
         if (radio.value === '1') {
             postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
+        }else if (radio.value === '2') {
+            postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
         }else if (radio.value === '3') {
             postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
         }
@@ -175,13 +177,14 @@ onUnmounted(() => {
                     <div class="my-4 flex items-center text-sm">
                         <el-radio-group v-model="radio" class="ml-4">
                             <el-radio label="1" size="small">{{ t('apply.read_only') }}</el-radio>
+                            <el-radio label="2" size="small">{{ t('share.reviewable') }}</el-radio>
                             <el-radio label="3" size="small">{{ t('share.editable') }}</el-radio>
                         </el-radio-group>
                     </div>
                 </div>
                 <div class="textarea">
                     <span>{{ t('apply.remarks') }}:</span>
-                    <el-input class="text" v-model="textarea" :autosize="{ minRows: 3, maxRows: 6 }" maxlength="50"
+                    <el-input class="text" v-model="textarea" :autosize="{ minRows: 4, maxRows: 6 }" maxlength="50"
                         size="small" :placeholder="t('apply.please_remarks')" show-word-limit type="textarea" />
                 </div>
                 <div class="button"><el-button :disabled="disabled" color="#0d99ff" size="small"
@@ -262,7 +265,7 @@ onUnmounted(() => {
         }
 
         .file-info {
-            width: 250px;
+            width: 305px;
             height: 200px;
             margin-top: 40px;
             border-radius: 4px;
@@ -282,7 +285,6 @@ onUnmounted(() => {
 
             .textarea {
                 display: flex;
-
                 span {
                     display: block;
                     width: 60px;

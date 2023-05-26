@@ -20,6 +20,7 @@ import { useI18n } from 'vue-i18n';
 import { importDocument } from "@kcdesign/data";
 import { ElMessage } from 'element-plus'
 import { Warning } from '@element-plus/icons-vue'
+import { FILE_DOWNLOAD } from '@/utils/setting';
 
 const { t } = useI18n();
 
@@ -188,19 +189,19 @@ function keyToggleTB() {
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
-        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
+        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })   
         docInfo.value = dataInfo.data
         permType.value = dataInfo.data.document_permission.perm_type
-        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
-        // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限
-        if (!docInfo.value) {
+        if (dataInfo.code === 400) {
             //无效链接
             ElMessage({
                 message: `${t('apply.link_not')}`
             })
             router.push('/')
-        }
+        }  
+        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
+        // documentKey.value = data
+        //获取文档类型是否为私有文档且有无权限   
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -210,8 +211,7 @@ const getDocumentInfo = async () => {
             })
         }
         await importDocument({
-            // endPoint: "http://storage.protodesign.cn",
-            endPoint: "http://192.168.0.18:9000",
+            endPoint: FILE_DOWNLOAD,
             region: "zhuhai-1",
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
@@ -242,6 +242,10 @@ enum PermissionChange {
 const getDocumentAuthority = async () => {
     try {
         const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+        if(data.code === 400) {
+            permissionChange.value = PermissionChange.delete
+            showNotification(0)
+        }
         if(data.data.perm_type !== permType.value) {
             if(data.data.perm_type === 1) {
                 permissionChange.value = PermissionChange.update
@@ -253,10 +257,6 @@ const getDocumentAuthority = async () => {
                 permissionChange.value = PermissionChange.close
                 showNotification(data.data.perm_type)
             }
-        }
-        if(data.code === 400 && (data as any).message === '文档不存在') {
-            permissionChange.value = PermissionChange.delete
-            showNotification(0)
         }
         permType.value = data.data.perm_type
        

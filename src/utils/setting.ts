@@ -6,3 +6,10 @@ export const SCREEN_SIZE = {
 export const WEAKEN_ANIMATION = false; // 弱化动画
 
 export const SKIP_LOGIN = false; // 跳过登录过程，直接进入个人首页，开发使用
+
+//上传下载接口
+const production = true
+export const FILE_UPLOAD = production ? 'ws://api.protodesign.cn/api/v1' : 'ws://192.168.0.10:10000/api/v1';
+export const FILE_DOWNLOAD = production ? "http://storage.protodesign.cn" : "http://192.168.0.18:9000";
+//请求根路径
+export const BASE_URL = production ? 'http://api.protodesign.cn/api/v1' : 'http://192.168.0.10:10000/api/v1';
