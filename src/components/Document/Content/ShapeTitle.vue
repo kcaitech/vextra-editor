@@ -20,9 +20,9 @@ interface Title {
     shape: Shape
     rotate: number
     maxWidth: number
+    selected: boolean
 }
 const matrix = new Matrix(props.matrix);
-const selected = ref(false)
 const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
 const watcher = () => {
@@ -51,12 +51,13 @@ const setPosition = () => { // 核心函数
             if (artboard.parent?.type === ShapeType.Page) { // 只给页面的直接子元素上标题
                 const selecte = props.context.selection.selectedShapes;
                 const hovered = props.context.selection.hoveredShape;
+                let selected = false
                 if(selecte[0] && artboard.id === selecte[0].id) {
-                    selected.value = true
+                    selected = true
                 }else if(hovered && artboard.id === hovered.id) {
-                    selected.value = true
+                    selected = true
                 }else{
-                    selected.value = false   
+                    selected = false   
                 }            
                 const m = artboard.matrix2Page(); // 图形到页面的转换矩阵
                 const f2p = artboard.frame2Page(); // 
@@ -82,10 +83,10 @@ const setPosition = () => { // 核心函数
                 anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y }); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
-                anchor.y -= 15; // 顶上去14像素
+                anchor.y -= 16; // 顶上去16像素
                 const width = f2p.width;
                 const maxWidth = frame.width
-                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth });
+                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth, selected });
             }
         }
     }
@@ -152,7 +153,7 @@ watchEffect(() => updater());
         <div v-for="(t, index) in titles" class="title-container" :key="index"
             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth" @rename="rename"
-            @hover="hover" @leave="leave" :shape="t.shape" :selected="selected"></ArtboardName>
+            @hover="hover" @leave="leave" :shape="t.shape" :selected="t.selected"></ArtboardName>
         </div>
     </div>
 </template>
@@ -170,13 +171,9 @@ watchEffect(() => updater());
         white-space: nowrap;
         position: absolute;
         font-size: var(--font-default-fontsize);
-        height: 14px;
+        height: 15px;
         transform-origin: bottom left;
         color: grey;
-    }
-
-    .title-container:hover {
-        color: var(--active-color);
     }
 }
 </style>

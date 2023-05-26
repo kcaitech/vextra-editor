@@ -250,6 +250,9 @@ const getDocumentAuthority = async () => {
             if(data.data.perm_type === 1) {
                 permissionChange.value = PermissionChange.update
                 showNotification(data.data.perm_type)
+            }else if(data.data.perm_type === 2) {
+                permissionChange.value = PermissionChange.update
+                showNotification(data.data.perm_type)
             }else if(data.data.perm_type === 3) {
                 permissionChange.value = PermissionChange.update
                 showNotification(data.data.perm_type)

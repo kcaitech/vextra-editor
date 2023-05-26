@@ -117,7 +117,7 @@ const selectShape = () => {
             background-color: transparent;
         }
         .rename {
-            height: 13px;
+            height: 15px;
             outline-style: none;
             font-size: 9px;
             border: 1px solid var(--active-color);
