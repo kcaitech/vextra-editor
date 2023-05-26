@@ -28,6 +28,7 @@ declare module '@vue/runtime-core' {
     ColorPicker: typeof import('./src/components/common/ColorPicker.vue')['default']
     ColSplitView: typeof import('./src/components/common/ColSplitView.vue')['default']
     Comment: typeof import('./src/components/Document/Toolbar/Buttons/Comment.vue')['default']
+    CommentInput: typeof import('./src/components/Document/Content/CommentInput.vue')['default']
     CommentItem: typeof import('./src/components/Document/Navigation/Comment/CommentItem.vue')['default']
     CommentMenu: typeof import('./src/components/Document/Navigation/Comment/CommentMenu.vue')['default']
     CommentTab: typeof import('./src/components/Document/Navigation/Comment/CommentTab.vue')['default']

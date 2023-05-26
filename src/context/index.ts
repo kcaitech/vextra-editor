@@ -10,6 +10,7 @@ import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
 import * as share_api from '@/apis/share';
 import { router } from '@/router';
+import { FILE_UPLOAD } from '@/utils/setting';
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -96,9 +97,7 @@ export class Context extends Watchable(Object) {
     upload(id?: string) {
         const token = localStorage.getItem('token')
         if(token)
-        
-         uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', token, id ? id : '', async (successed, doc_id) => {
-            // uploadExForm(this.m_data, 'ws://api.protodesign.cn/api/v1', token, id ? id : '', async (successed, doc_id) => {
+            uploadExForm(this.m_data, FILE_UPLOAD, token, id ? id : '', async (successed, doc_id) => {
             if(successed) {
                 localStorage.setItem('docId', doc_id)
                 if (!id) {

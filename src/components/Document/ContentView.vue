@@ -16,6 +16,7 @@ import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { updateRoot, getName } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
+import CommentInput from './Content/CommentInput.vue';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -566,6 +567,7 @@ renderinit().then(() => {
             </PageViewContextMenuItems>
         </ContextMenu>
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
+        <!-- <CommentInput :context="props.context"></CommentInput> -->
     </div>
 </template>
 <style scoped lang="scss">
