@@ -219,11 +219,11 @@ export function useController(context: Context) {
         } else if (selected.length === 1) {
             if (selected[0].type === ShapeType.Group) {
                 const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage, selected[0], e.metaKey || e.ctrlKey);
-                if (!isHasTarget) context.selection.selectShape();
+                if (!isHasTarget) context.selection.resetSelectShapes();
             } else {
                 const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, e.metaKey || e.ctrlKey, selected)[0];
                 if (!target) {
-                    context.selection.selectShape();
+                    context.selection.resetSelectShapes();
                 }
             }
         }
