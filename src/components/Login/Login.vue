@@ -5,6 +5,7 @@ import * as user_api from '@/apis/users'
 import { onMounted, ref } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
+import { ElMessage } from 'element-plus'
 
 const { t } = useI18n();
 const isLoading = ref(false);
@@ -24,31 +25,41 @@ async function onmessage(e: any) {
         localStorage.setItem('userId', linfo.data.id)
         isLoading.value = false
         router.push({ name: 'apphome' })
+    } else {
+        ElMessage.error('登录失败')
+        const tips: any = document.querySelector('#login_container')
+        tips.style.lineHeight = '300px'
+        tips.innerHTML = '登录失败,点击刷新'
+        tips.addEventListener('click', () => {
+            wxcode()
+        })
+
     }
 }
 
-onMounted(() => {
+function wxcode() {
+    new (window as any).WxLogin({
+        self_redirect: true,
+        id: "login_container",
+        appid: "wx42bb87f7f2e86a6e",
+        scope: "snsapi_login",
+        redirect_uri: encodeURIComponent("http://protodesign.cn/html/GetCode.html"),
+        state: "STATE",
+        style: "",
+        href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAzMDBweDtoZWlnaHQ6IDMwMHB4O30=',
+    })
+}
 
+onMounted(() => {
     setTimeout(() => {
         isLoading.value = true
-        new (window as any).WxLogin({
-            self_redirect: true,
-            id: "login_container",
-            appid: "wx42bb87f7f2e86a6e",
-            scope: "snsapi_login",
-            redirect_uri: encodeURIComponent("http://protodesign.cn/html/GetCode.html"),
-            state: "STATE",
-            style: "",
-            href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAzMDBweDtoZWlnaHQ6IDMwMHB4O30=',
-        })
+        wxcode()
         const login: any = document.querySelector('iframe')
         login.addEventListener('load', function () {
             isLoading.value = false
         })
     }, 500);
-
     window.addEventListener('message', onmessage, false)
-
 })
 
 </script>
@@ -96,7 +107,8 @@ html {
         border-radius: 5px;
         z-index: 2;
         box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
-        div{
+
+        div {
             width: 300px;
             height: 300px;
         }
