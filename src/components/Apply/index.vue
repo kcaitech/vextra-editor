@@ -13,7 +13,7 @@ const docInfo: any = ref({})
 const route = useRoute()
 const linkValid = ref(true)
 let permType = undefined
-const status = ref(0)
+const status = ref(2)
 const messages = ref<string>(t('apply.request_access'))
 const execute= ref(false)
 
@@ -82,8 +82,9 @@ const getDocumentInfo = async () => {
             if(execute.value) {
                 promptMessage()
             }
-            if(docInfo.value.apply_list[0].status === 2) {
-                status.value = 0
+            if(docInfo.value.apply_list[0].status === 2 && status.value !== 2) {
+                status.value = docInfo.value.apply_list[0].status
+            }else if(docInfo.value.apply_list[0].status !== 2) {
                 status.value = docInfo.value.apply_list[0].status
             }
         }

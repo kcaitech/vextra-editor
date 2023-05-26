@@ -10,7 +10,7 @@ interface Props {
     context: Context
 }
 const route = useRoute()
-const docID = route.query.id
+const docID = (route.query.id as string)
 const props = defineProps<Props>();
 const showFileShare = ref<boolean>(false);
 const pageHeight = ref(0)

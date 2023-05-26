@@ -26,8 +26,8 @@ enum permissions {
   editable
 }
 const route = useRoute()
-const docID = props.docId ? props.docId : localStorage.getItem('docId')
-const url = route.path !== '/document' ? `http://protodesign.cn/#/document?id=${docID}` : route.query.id ? location.href : location.href + `?id=${docID}`
+const docID = props.docId ? props.docId : route.query.id
+const url = route.path !== '/document' ? `http://protodesign.cn/#/document?id=${docID}` : location.href 
 
 const value1 = ref(props.shareSwitch)
 const authority = ref(false)
@@ -366,7 +366,7 @@ onUnmounted(() => {
         <!-- 文档权限 -->
         <div class="unfounder">
           <span>{{ t('share.document_permission') }}:</span>
-          <p class="name">{{DocType[1]}}</p>
+          <p class="name">{{DocType[docInfo.document_permission.perm_type + 1]}}</p>
         </div>
         <!-- 链接按钮 -->
         <div class="button bottom">

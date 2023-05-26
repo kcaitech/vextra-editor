@@ -89,6 +89,7 @@ export const home = {
     de_star:'Delete star',
     de_access_record:'Delete access record',
     addComment: 'Add comment',
+    page_sort: 'Sort by page'
 }
 
 export const navi = {

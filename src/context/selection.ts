@@ -109,7 +109,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             if (id === this.m_selectPage?.id) {
                 index = index === this.m_document.pagesList.length ? 0 : index;
                 await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
-                    this.m_artboart_lists.delete(id);
                     this.selectPage(p);
                 });
             }
@@ -201,9 +200,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     }
     unSelectShape(shape: Shape) {
-        if (!this.isSelectedShape(shape)) return;
-        this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
-        this.notify(Selection.CHANGE_SHAPE);
+        const index = this.m_selectShapes.findIndex((s: Shape) => s === shape);
+        if (index > -1) {
+            this.m_selectShapes.splice(index, 1);
+            this.notify(Selection.CHANGE_SHAPE);
+        }
     }
 
     rangeSelectShape(shapes: Shape[]) {

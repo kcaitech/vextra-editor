@@ -89,7 +89,7 @@ export const home = {
     de_star:'取消标星',
     de_access_record:'移除记录',
     addComment: '添加评论',
-
+    page_sort: '按页面排序'
 }
 
 export const navi = {

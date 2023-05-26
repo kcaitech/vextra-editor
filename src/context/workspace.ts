@@ -222,7 +222,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_l(shiftKey);
         } else if (event.code === KeyboardKeys.Z) {
             event.preventDefault();
-            this.keydown_z(this.context.repo, ctrlKey, shiftKey, metaKey);
+            this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
             event.preventDefault();
             this.keydown_k();
@@ -303,9 +303,25 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
     }
-    keydown_z(repo: RepoWraper, ctrl?: boolean, shift?: boolean, meta?: boolean) {
+    keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
+        const repo = context.repo;
         if ((ctrl || meta) && !shift) {
             repo.canUndo() && repo.undo();
+            const selection = context.selection;
+            const shapes = context.selection.selectedShapes;
+            const flat = context.selection.selectedPage!.flatShapes;
+            if (shapes.length) {
+                if (flat.length) {
+                    for (let i = 0; i < shapes.length; i++) {
+                        const item = shapes[i];
+                        if (!flat.find(i => i.id === item.id)) {
+                            selection.unSelectShape(item);
+                        }
+                    }
+                } else {
+                    selection.resetSelectShapes();
+                }
+            }
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
         }

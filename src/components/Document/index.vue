@@ -210,8 +210,8 @@ const getDocumentInfo = async () => {
             })
         }
         await importDocument({
-            endPoint: "http://storage.protodesign.cn",
-            // endPoint: "http://192.168.0.18:9000",
+            // endPoint: "http://storage.protodesign.cn",
+            endPoint: "http://192.168.0.18:9000",
             region: "zhuhai-1",
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
