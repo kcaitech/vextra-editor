@@ -5,7 +5,7 @@ import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, Action } from "@/context/workspace";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
-
+import { WorkSpace } from "@/context/workspace";
 export interface Point {
     x: number,
     y: number,
@@ -59,12 +59,18 @@ function watchShapes() { // 监听选区相关shape的变化
         watchedShapes.set(k, v);
     })
 }
-
-function updater() {
+function updater() { // 自动更新、可控更新
+    const shouldSelectionViewUpdate = props.context.workspace.shouldSelectionViewUpdate;
+    if (!shouldSelectionViewUpdate) return;
     matrix.reset(props.matrix);
     watchShapes();
     createController();
     createShapeTracing();
+}
+function handleWorkSpaceUpdate(t?: any) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        updater();
+    }
 }
 function createController() { // 计算点位以及控件类型判定
     const selection: Shape[] = props.context.selection.selectedShapes;
@@ -175,10 +181,12 @@ function pathMousedown(e: MouseEvent) {
 // hooks
 onMounted(() => {
     props.context.selection.watch(updater);
+    props.context.workspace.watch(handleWorkSpaceUpdate);
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
+    props.context.workspace.unwatch(handleWorkSpaceUpdate);
 })
 watchEffect(updater)
 </script>

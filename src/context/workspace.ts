@@ -75,6 +75,7 @@ export class WorkSpace extends Watchable(Object) {
     static CHECKSTATUS = 9;
     static GROUP = 10;
     static UNGROUP = 11;
+    static SELECTION_VIEW_UPDATE = 12;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -97,6 +98,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
     private m_tool_group: SVGAElement | undefined;
+    private m_should_selection_view_update: boolean = true;
     constructor(context: Context) {
         super();
         this.context = context
@@ -171,6 +173,15 @@ export class WorkSpace extends Watchable(Object) {
     }
     get toolGroup() {
         return this.m_tool_group;
+    }
+    get shouldSelectionViewUpdate() {
+        return this.m_should_selection_view_update;
+    }
+    selectionViewUpdate() {
+        this.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+    }
+    setSelectionViewUpdater(isWork: boolean) {
+        this.m_should_selection_view_update = isWork;
     }
     toolGroupMount(toolGroupMount: SVGAElement) {
         this.m_tool_group = toolGroupMount;

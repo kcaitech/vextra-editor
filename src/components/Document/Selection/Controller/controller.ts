@@ -148,6 +148,7 @@ export function useController(context: Context) {
                     if (!editing) {
                         isDragging = true;
                         asyncTransfer = context.editor.controller().asyncTransfer(shapes);
+                        workspace.value.setSelectionViewUpdater(false);
                     }
                 }
             }
@@ -160,20 +161,22 @@ export function useController(context: Context) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
                     _migrate(shapes, startPosition, mousePosition);
-                    asyncTransfer = asyncTransfer.close();
-                    // const len = shapes.length;
-                    // if (len === 1) {
-                    //     asyncTransfer = asyncTransfer.close();
-                    // }
-                    // else if (len > 1) {
-                    //     const m = matrix.inverseCoord({ x: mousePosition.x, y: mousePosition.y });
-                    //     for (let i = 0; i < len; i++) {
-                    //         asyncTransfer.trans(startPositionOnPage, m);
-                    //     }
-                    // }
+                    const len = shapes.length;
+                    if (len > 1) {
+                        const m = matrix.inverseCoord({ x: mousePosition.x, y: mousePosition.y });
+                        asyncTransfer.trans(startPositionOnPage, m);
+                        const tool = context.workspace.toolGroup;
+                        if (tool) {
+                            tool.removeAttribute('style');
+                            trans.x = 0, trans.y = 0;
+                        }
+                    }
+                    asyncTransfer = asyncTransfer?.close();
                 }
                 isDragging = false;
                 workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
+                workspace.value.setSelectionViewUpdater(true);
+                workspace.value.selectionViewUpdate();
             } else {
                 pickerFromSelectedShapes(e);
             }

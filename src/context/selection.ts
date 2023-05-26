@@ -47,6 +47,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_RENAME = 4;
     static CHANGE_TEXT = 5;
     static PAGE_RENAME = 6;
+    static UPDATE_RENDER_ITEM = 7;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -174,7 +175,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return result;
     }
-
 
     selectShape(shape?: Shape, ctrl?: boolean, meta?: boolean) {
         if (!shape) { // 取消所有已经选择的图形
