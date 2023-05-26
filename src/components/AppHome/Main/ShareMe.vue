@@ -1,32 +1,33 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="ShareList||[]" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容" @row-click="toDocument">
+    <el-table :data="ShareList" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
+        @row-dblclick="toDocument">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">
                 <el-icon :size=" 20 " content="标星" v-if=" !ShareList[scope.$index].document_favorites.is_favorite ">
-                    <el-tooltip :content="t('home.star')" show-after="1000">
+                    <el-tooltip :content=" t('home.star') " show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
                             @click.stop=" Starfile(scope.$index) ">
                         </svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 " v-else>
-                    <el-tooltip :content="t('home.de_star')" show-after="1000">
+                    <el-tooltip :content=" t('home.de_star') " show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
                             @click.stop=" Starfile(scope.$index) ">
                         </svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip :content="t('home.de_star')" show-after="1000">
+                    <el-tooltip :content=" t('home.de_star') " show-after="1000">
                         <Share @click.stop=" Sharefile(scope) " />
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip :content="t('home.exit_share')" show-after="1000">
+                    <el-tooltip :content=" t('home.exit_share') " show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="exitshar"
                             @click.stop=" Exitshar(scope.$index) ">
                         </svg-icon>
@@ -35,8 +36,10 @@
             </template>
         </el-table-column>
     </el-table>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
+        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
+    </FileShare>
+    <div v-if=" showFileShare " class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
@@ -49,12 +52,13 @@ const { t } = useI18n()
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 
-let ShareList = ref<any[]>([]);
+const ShareList = ref<any[]>([]);
 const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
+const selectValue = ref(1)
 
 async function ShareLists() {
     // loading
@@ -70,7 +74,7 @@ async function ShareLists() {
         }
     }
     ShareList.value = data
-    // unloading  
+    // // unloading  
     isLoading.value = false;
 }
 
@@ -93,44 +97,48 @@ const Starfile = async (index: number) => {
     if (ShareList.value[index].document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_ok'))
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_cancel'))
         }
     }
 
 }
 
 const Sharefile = (scope: any) => {
-    if(showFileShare.value) {
-    showFileShare.value = false
-    return
-  }
-  docId.value = scope.row.document.id  
-  showFileShare.value = true
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = scope.row.document.id
+    selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
+    showFileShare.value = true
 }
 const closeShare = () => {
-  showFileShare.value = false
+    showFileShare.value = false
 }
 const getPageHeight = () => {
-  pageHeight.value = window.innerHeight
+    pageHeight.value = window.innerHeight
 }
 const onSwitch = (state: boolean) => {
     shareSwitch.value = state
 }
+const onSelectType = (type: number) => {
+    selectValue.value = type
+}
 
 const Exitshar = async (index: number) => {
-    const {document:{id}} = ShareList.value[index]
-    const { code } = await user_api.ExitSharing({ share_id:id})
-    if(!code){
+    const { document: { id } } = ShareList.value[index]
+    const { code } = await user_api.ExitSharing({ share_id: id })
+    if (!code) {
         ElMessage.success('退出成功')
-    }else{
+    } else {
         ElMessage.error('退出失败')
     }
-    
+
 }
 
 const toDocument = (row: any) => {
@@ -149,7 +157,7 @@ onMounted(() => {
     window.addEventListener('resize', getPageHeight);
 })
 onUnmounted(() => {
-  window.removeEventListener('resize', getPageHeight);
+    window.removeEventListener('resize', getPageHeight);
 })
 </script>
 <style lang="scss" scoped>
@@ -192,6 +200,7 @@ onUnmounted(() => {
     height: 56px;
     font-weight: 18px;
 }
+
 .overlay {
     position: absolute;
     top: 0;
@@ -200,5 +209,4 @@ onUnmounted(() => {
     height: 100%;
     z-index: 999;
     background-color: rgba(0, 0, 0, 0.5);
-}
-</style>
+}</style>

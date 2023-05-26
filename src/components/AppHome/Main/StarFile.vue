@@ -1,7 +1,7 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="Getfavorites || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-        @row-click="toDocument">
+    <el-table :data="Getfavorites" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
+    @row-dblclick="toDocument">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -29,9 +29,8 @@
             </template>
         </el-table-column>
     </el-table>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " @switch-state=" onSwitch "
-        :shareSwitch=" shareSwitch " :pageHeight=" pageHeight "></FileShare>
-    <div v-if=" showFileShare " class="overlay"></div>
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
@@ -44,12 +43,13 @@ import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 const { t } = useI18n()
 
-let Getfavorites = ref<any[]>([]);
+const Getfavorites = ref<any[]>([]);
 const isLoading = ref(false);
 const docId = ref('')
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
+const selectValue = ref(1)
 
 async function getUserdata() {
     // loading
@@ -88,12 +88,12 @@ const Starfile = async (index: number) => {
     if (Getfavorites.value[index].document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_ok'))
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_cancel'))
             getUserdata()
         }
     }
@@ -110,12 +110,13 @@ const toDocument = (row: any) => {
     })
 }
 const Sharefile = (scope: any) => {
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
-    }
+    if(showFileShare.value) {
+    showFileShare.value = false
+    return
+  }
     docId.value = scope.row.document.id
-    showFileShare.value = true
+    selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type  
+  showFileShare.value = true
 }
 const closeShare = () => {
     showFileShare.value = false
@@ -125,6 +126,9 @@ const getPageHeight = () => {
 }
 const onSwitch = (state: boolean) => {
     shareSwitch.value = state
+}
+const onSelectType = (type: number) => {
+  selectValue.value = type
 }
 
 onMounted(() => {

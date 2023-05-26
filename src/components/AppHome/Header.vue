@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { onMounted, reactive, toRefs, ref, onUnmounted } from 'vue'
 import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
@@ -49,9 +48,9 @@ onUnmounted(() => {
 const errorHandler = () => true
 
 
-let search = ref('')
-let SearchList = ref<any[]>([])
-let lists = ref<any[]>([])
+const search = ref('')
+const SearchList = ref<any[]>([])
+const lists = ref<any[]>([])
 
 function searchhistoryshow() {
     const historylist: any = document.querySelector('.searchhistory')
@@ -90,7 +89,7 @@ const getUserdata = async () => {
         lists.value = data
     }
     if (lists.value == null) {
-        ElMessage.error("文档列表获取失败")
+        ElMessage.error(t('home.failed_list_tips'))
     } else {
         for (let i = 0; i < lists.value.length; i++) {
             let { document: { size }, document_access_record: { last_access_time } } = lists.value[i]
@@ -145,16 +144,16 @@ const toDocument = (row: any) => {
     window.open(url, '_blank')
 }
 
-document.addEventListener('click', (el) => {
-    const nullcontent: any = document.querySelector('.nullcontent')
-    const content: any = document.querySelector('.content')
-   console.log(el);
-   
-    // if (!isClickInsideSearchPanel) {
-    //     searchPanel.style.display = 'none';
-    // }
+// document.addEventListener('click', (el) => {
+//     const nullcontent: any = document.querySelector('.nullcontent')
+//     const content: any = document.querySelector('.content')
+//     console.log(el);
 
-})
+//     // if (!isClickInsideSearchPanel) {
+//     //     searchPanel.style.display = 'none';
+//     // }
+
+// })
 
 </script>
 <template>
@@ -169,15 +168,17 @@ document.addEventListener('click', (el) => {
             </el-icon>
             <div class="searchhistory">
                 <div class="content" v-if="search != ''">
-                    <el-table :data="SearchList || []" style="width: 100%;" height="300" size="small" empty-text="没有匹配的结果"
-                        @row-click="toDocument">
-                        <el-table-column prop="document.name" :label="t('home.file_name')" />
-                        <el-table-column prop="document_access_record.last_access_time"
-                            :label="t('home.modification_time')" />
-                        <el-table-column prop="document.size" :label="t('home.size')" />
+                    <el-table :data="SearchList" style="width: 100%;" height="300" size="small"
+                        :empty-text="t('search.search_results')" @row-click="toDocument">
+                        <el-table-column prop="document.name" :label="t('home.file_name')" header-align="center"
+                            align="center" />
+                        <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')"
+                            header-align="center" align="center" />
+                        <!-- <el-table-column prop="document.size" :label="t('home.size')" header-align="center" align="center" /> -->
                     </el-table>
                 </div>
-                <div class="nullcontent" v-else style="line-height: 300px; font-size: 12px;">没有搜索记录</div>
+                <div class="nullcontent" v-else style="line-height: 300px; font-size: 12px;">{{ t('search.search_history')
+                }}</div>
             </div>
         </div>
         <div class="right">
@@ -197,7 +198,7 @@ document.addEventListener('click', (el) => {
                 <el-avatar :src="circleUrl" @error="errorHandler">
                     <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
                 </el-avatar>
-                <span style="display: block" class="username">{{ uname }}</span>
+                <!-- <span style="display: block" class="username">{{ uname }}</span> -->
                 <div class="userinfo">
                     <div @click="userinfo"><el-icon size="20">
                             <User />
@@ -406,5 +407,8 @@ document.addEventListener('click', (el) => {
     display: none;
     border-radius: 5px;
     text-align: center;
-}
-</style>
+
+    content {
+        text-align: center;
+    }
+}</style>

@@ -1,7 +1,6 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="GetrecycleList || []" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-        @row-click="toDocument">
+    <el-table :data="GetrecycleList" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -43,7 +42,7 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 const { t } = useI18n()
 
-let GetrecycleList = ref<any[]>([])
+const GetrecycleList = ref<any[]>([])
 const isLoading = ref(false)
 const dialogVisible = ref(false)
 let fileid = 0
@@ -105,32 +104,18 @@ const Qdeletefile = async () => {
         const { document: { id } } = GetrecycleList.value[fileid]
     const { code } = await user_api.DeleteFile({ doc_id: id })
     if (code === 0) {
-        ElMessage.success('删除成功')
+        ElMessage.success(t('home.delete_file_ok'))
         dialogVisible.value = false
         GetrecycleLists()
     } else {
         dialogVisible.value = false
-        ElMessage.error('删除失败')
+        ElMessage.error(t('home.delete_file_no'))
     }
     } catch (error) {
         dialogVisible.value = false
-        ElMessage.error('请确保网络联系正常')
+        ElMessage.error(t('other_tips'))
     }
     
-}
-
-
-
-
-//回收站列表屏蔽点击打开的动作
-const toDocument = (row: any) => {
-    const docId = row.document.id
-    router.push({
-        name: 'document',
-        query: {
-            id: docId
-        }
-    })
 }
 
 onMounted(() => {

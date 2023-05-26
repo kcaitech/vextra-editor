@@ -58,7 +58,7 @@ onUnmounted(() => {
         <component v-for="c in data.childs" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>
-    <!-- <shapeTitle :matrix="props.matrix" :context="props.context" :data="props.data"></shapeTitle> -->
+    <shapeTitle :matrix="props.matrix" :context="props.context" :data="props.data"></shapeTitle>
 </template>
 
 <style scoped>

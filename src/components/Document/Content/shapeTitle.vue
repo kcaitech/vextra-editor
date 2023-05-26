@@ -30,9 +30,7 @@ const esc = ref<boolean>(false)
 let position: Posi[] = reactive([])
 
 const watcher = () => {
-    reflush.value++;
     updater();
-
 }
 const matrix = new Matrix();
 
@@ -42,6 +40,7 @@ function updater(t?: number) {
     // selectShape()
     // SET POSITION
     setPosition()
+    reflush.value++;
 }
 
 const watchedShapes = new Map();
@@ -75,6 +74,7 @@ const setPosition = () => {
     if (titleArr) (
         position = titleArr.map((item: Shape, i: number) => {
             const selected = props.context.selection.selectedShapes;
+            const hovered = props.context.selection.hoveredShape;
             const minWidth = document.querySelector(`[data-minW="${i}"]`);
             let minW = item.frame.width
             if(minWidth){
@@ -82,6 +82,13 @@ const setPosition = () => {
                 minW = (minWidth as HTMLSpanElement).offsetWidth + 4
             }
             let select = false
+            if(selected[0] && item.id === selected[0].id) {
+                select = true
+            }else if(hovered && item.id === hovered.id) {
+                select = true
+            }else{
+                select = false   
+            }
             const { x: sx, y: sy, height, width } = item.frame2Page();
             let x = sx
             let y = sy
@@ -151,11 +158,16 @@ const keySaveInput = (e: KeyboardEvent) => {
     }
 }
 const unHoverShape = () => {
-
+    // props.context.selection.unHoverShape();
 }
-const hoverShape = (shape: Shape) => {
-    const hoveredShape = props.context.selection.hoveredShape
 
+const hoverShape = (shape: Shape, e: MouseEvent) => {
+    props.context.selection.hoverShape(shape)
+}
+
+const selectShape = (shape: Shape, e:Event) => {
+    e.stopPropagation()
+    props.context.selection.selectShape(shape);
 }
 
 
@@ -171,15 +183,16 @@ watchEffect(() => updater())
     <div class="shapeName" :style="{ transform: matrix.toString() }" :reflush="reflush !== 0 ? reflush : undefined">
         <div class="text" v-for="(c, i) in position" :key="i" :style="{
             position: 'absolute', width: c.shape.frame.width + 'px', maxWidth: c.shape.frame.width + 'px',
-            transform: `translate(${c.x}px, ${c.y}px) rotate(${c.rotate}deg)`
+            transform: `translate(${c.x}px, ${c.y - 17}px) rotate(${c.rotate}deg)`
         }">
-            <span v-if="index !== i" :style="{width: c.maxW+ 'px', maxWidth: c.shape.frame.width + 'px',}" @dblclick="e => onRename(e, c.shape, i)" :class="{selected:true}"
-                @mouseenter="hoverShape(c.shape)" @mouseleave="unHoverShape">{{ c.name }}</span>
-            <span v-if="index !== i"  :data-minW="i" style="position: relative; visibility: hidden; top: -10000px;">{{ c.name }}</span>
+            <!-- 标题 -->
+            <span v-if="index !== i" :style="{width: c.maxW+ 'px', maxWidth: c.shape.frame.width + 'px',}" @dblclick="e => onRename(e, c.shape, i)" :class="{selected:c.select}"
+                @mouseenter="(e) => hoverShape(c.shape, e)" @mouseleave="unHoverShape" @click="e => selectShape(c.shape, e)">{{ c.name }}</span>
+            <span v-if="index !== i"  :data-minW="i" style="position: relative; visibility: hidden; top: 0px;">{{ c.name }}</span>
+            <!-- 输入框 -->
             <input v-if="isInput && index === i" class="input" @change="e => reName(e, c.shape)" @input="e => onChangeName(e, i)"
                 :style="{ maxWidth: c.shape.frame.width + 'px', width: inputWidth + 'px' }" :data-index="i" type="text">
-            <span :data-span="i" v-if="isInput && index === i"
-                style="position: relative; visibility: hidden; top: -100px;"></span>
+            <span :data-span="i" v-if="isInput && index === i" style="position: relative; visibility: hidden; top: 0px;"></span>
         </div>
     </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted, defineProps } from 'vue';
+import { onMounted, ref, onUnmounted, defineProps, watch } from 'vue';
 import FileShare from './FileShare.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
@@ -10,7 +10,7 @@ interface Props {
     context: Context
 }
 const route = useRoute()
-const docID = route.query.id || localStorage.getItem('docId')
+const docID = route.query.id
 const props = defineProps<Props>();
 const showFileShare = ref<boolean>(false);
 const pageHeight = ref(0)
@@ -38,14 +38,20 @@ const onSelectType = (type: number) => {
 const getPageHeight = () => {
   pageHeight.value = window.innerHeight
 }
-
-onMounted(() => {
-  getPageHeight()
-  props.context.documentInfo((docID as string)).then((res) => {
+const getSelectValue = (val: string) => {
+  props.context.documentInfo(val).then((res) => {
     if(res.document) {
       selectValue.value = res.document.doc_type !== 0 ? res.document.doc_type : res.document.doc_type
     }
   })
+}
+watch(() => route.query.id, (val) => {
+  getSelectValue((val as string))
+})
+
+onMounted(() => {
+  getPageHeight()
+  route.query.id && getSelectValue((route.query.id as string))
   window.addEventListener('resize', getPageHeight);
 })
 onUnmounted(() => {

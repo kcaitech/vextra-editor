@@ -126,3 +126,23 @@ export function ShareLists(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//设置用户头像
+export function Setusericon(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/users/info/avatar',
+        method: 'put',
+        data:data,
+        ...ops
+    })
+}
+
+//设置用户昵称
+export function Setusernickname(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/users/info/nickname',
+        method: 'put',
+        data:data,
+        ...ops
+    })
+}
