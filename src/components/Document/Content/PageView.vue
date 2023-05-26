@@ -46,11 +46,9 @@ function updateItems() {
         toolGroup.id = 'tool-group';
         renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
         nextTick(() => { setToolGroup(props.context) });
-        // console.log('tool-group-mount');
     } else {
         if (renderItems[0].id === 'tool-group') {
             workspace.toolGroupUnmount();
-            // console.log('tool-group-unmount');
         }
         renderItems = props.data.childs;
     }
