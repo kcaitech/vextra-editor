@@ -4,6 +4,7 @@ import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection";
+import ArtboardName from "./ArtboardName.vue";
 
 const props = defineProps<{
     context: Context
@@ -18,13 +19,10 @@ interface Title {
     width: number
     shape: Shape
     rotate: number
+    maxWidth: number
 }
 const matrix = new Matrix(props.matrix);
-const index = ref(-1)
-const isInput = ref(false)
-const inputWidth = ref(0)
-const selectTitle = ref(false)
-const esc = ref<boolean>(false)
+const selected = ref(false)
 const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
 const watcher = () => {
@@ -50,6 +48,15 @@ const setPosition = () => { // 核心函数
         for (let i = 0; i < len; i++) {
             const artboard = artboards[i];
             if (artboard.parent?.type === ShapeType.Page) { // 只给页面的直接子元素上标题
+                const selecte = props.context.selection.selectedShapes;
+                const hovered = props.context.selection.hoveredShape;
+                if(selecte[0] && artboard.id === selecte[0].id) {
+                    selected.value = true
+                }else if(hovered && artboard.id === hovered.id) {
+                    selected.value = true
+                }else{
+                    selected.value = false   
+                }            
                 const m = artboard.matrix2Page(); // 图形到页面的转换矩阵
                 const f2p = artboard.frame2Page(); // 
                 const frame = artboard.frame;
@@ -74,9 +81,10 @@ const setPosition = () => { // 核心函数
                 anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y }); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
-                anchor.y -= 14; // 顶上去14像素
+                anchor.y -= 15; // 顶上去14像素
                 const width = f2p.width;
-                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate });
+                const maxWidth = frame.width
+                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth });
             }
         }
     }
@@ -108,66 +116,18 @@ function watchShapes() { // 监听相关shape的变化
         watchedShapes.set(k, v);
     })
 }
-const onRename = (e: Event, shape: Shape, i: number) => {
-    index.value = i
-    isInput.value = true
-    nextTick(() => {
-        const select = document.querySelector(`[data-index="${i}"]`);
-        const dataSpan = document.querySelector(`[data-span="${i}"]`);
-        if (select) {
-            const curInput = (select as HTMLInputElement)
-            curInput.value = shape.name;
-            if (dataSpan) {
-                dataSpan.innerHTML = shape.name
-                inputWidth.value = (dataSpan as HTMLSpanElement).offsetWidth + 2
-            }
-            curInput.focus();
-            curInput.select();
-            curInput.addEventListener('blur', stopInput);
-            curInput.addEventListener('keydown', keySaveInput);
-        }
-    })
-}
-const onChangeName = (e: Event, i: number) => {
-    const value = (e.target as HTMLInputElement).value
-    const dataSpan = document.querySelector(`[data-span="${i}"]`);
-    if (dataSpan) {
-        dataSpan.innerHTML = value
-        inputWidth.value = (dataSpan as HTMLSpanElement).offsetWidth + 2
-    }
-    if (esc.value) return
-    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
-}
-const reName = (e: Event, shape: Shape) => {
-    const value = (e.target as HTMLInputElement).value
-    if (esc.value) return
-    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
+
+const rename = (value: string, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
     editor.value.setName(value)
     props.context.selection.rename();
 }
-const stopInput = () => {
-    esc.value = false
-    isInput.value = false
-    index.value = -1
-}
 
-const keySaveInput = (e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
-        esc.value = false
-        isInput.value = false
-        index.value = -1
-    } else if (e.code === 'Escape') {
-        esc.value = true
-        isInput.value = false
-        index.value = -1
-    }
-}
 // hover不上原因是参数shape的内存地址不对，想不到比较好的方案就先放着，包括选中和拖动也是。先把重命名做好～
 function hover(shape: Shape) {
-    // props.context.selection.hoverShape(shape);
+    props.context.selection.hoverShape(shape);
 }
 function leave() {
     props.context.selection.unHoverShape();
@@ -188,10 +148,10 @@ watchEffect(() => updater());
     <!-- container -->
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <!-- 这一块，建议参考Listview组件，类比一下，按照这个形式(ShapeTitle -> ShapeList、title -> Shapetitle)，这样就可以按照shapelist 的重命名方式来重命名title -->
-        <div v-for="(t, index) in titles" class="title-container" :key="index" @mouseenter="() => hover(t.shape)"
-            @mouseleave="leave"
-            :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${50}px`, transform: `rotate(${t.rotate}deg)` }">
-            {{ t.content }}
+        <div v-for="(t, index) in titles" class="title-container" :key="index"
+            :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
+            <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth" @rename="rename"
+            @hover="hover" @leave="leave" :shape="t.shape" :selected="selected"></ArtboardName>
         </div>
     </div>
 </template>

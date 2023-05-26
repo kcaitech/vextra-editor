@@ -50,9 +50,8 @@
             </el-card>
         </el-col>
     </el-row>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " @switch-state=" onSwitch "
-        :shareSwitch=" shareSwitch " :pageHeight=" pageHeight "></FileShare>
-    <div v-if=" showFileShare " class="overlay"></div>
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 
 <script setup lang="ts">
@@ -72,6 +71,7 @@ const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
 let documentsList = ref<any[]>([])
+const selectValue = ref(1)
 
 async function getUserdata() {
     // loading
@@ -123,12 +123,13 @@ const Starfile = async (index: number) => {
 }
 
 const Sharefile = (scope: any) => {
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
-    }
-    docId.value = scope.row.document.id
-    showFileShare.value = true
+    if(showFileShare.value) {
+    showFileShare.value = false
+    return
+  }
+    docId.value = scope.row.document.id 
+    selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
+  showFileShare.value = true
 }
 const closeShare = () => {
     showFileShare.value = false
@@ -138,6 +139,9 @@ const getPageHeight = () => {
 }
 const onSwitch = (state: boolean) => {
     shareSwitch.value = state
+}
+const onSelectType = (type: number) => {
+  selectValue.value = type
 }
 
 //移除对应文件的历史记录

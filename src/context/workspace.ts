@@ -12,7 +12,8 @@ export enum Action {
     AddEllipse = 'add-ellipse',
     AddArrow = 'add-arrow',
     AddFrame = 'add-frame',
-    AddText = 'add-text'
+    AddText = 'add-text',
+    AddComment = 'add-comment'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -29,7 +30,8 @@ export enum KeyboardKeys { // 键盘按键类型
     F = 'KeyF',
     Digit0 = 'Digit0',
     G = 'KeyG',
-    T = 'KeyT'
+    T = 'KeyT',
+    C = 'KeyC'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -248,6 +250,9 @@ export class WorkSpace extends Watchable(Object) {
         } else if (event.code === KeyboardKeys.T) {
             event.preventDefault();
             this.keydown_t();
+        } else if (event.code === KeyboardKeys.C) {
+            event.preventDefault();
+            this.keydown_c();
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -348,6 +353,11 @@ export class WorkSpace extends Watchable(Object) {
     keydown_t() {
         this.escSetup();
         this.m_current_action = Action.AddText;
+        this.notify();
+    }
+    keydown_c() {
+        this.escSetup();
+        this.m_current_action = Action.AddComment;
         this.notify();
     }
     keydown_0(ctrl: boolean, meta: boolean) {

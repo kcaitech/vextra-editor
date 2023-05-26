@@ -18,6 +18,7 @@ import Ellipse from "./Buttons/Ellipse.vue";
 import Line from "./Buttons/Path.vue";
 import Arrow from "./Buttons/Arrow.vue";
 import CreateText from "./Buttons/CreateText.vue";
+import Comment from "./Buttons/Comment.vue"
 import { Action, WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -75,6 +76,7 @@ onUnmounted(() => {
             </ToolButton>
         </el-tooltip>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
+        <Comment @select="select" :active="selected === Action.AddComment"></Comment>
     </div>
 </template>
 

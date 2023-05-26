@@ -46,6 +46,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_SHAPE_HOVER = 3;
     static CHANGE_RENAME = 4;
     static CHANGE_TEXT = 5;
+    static PAGE_RENAME = 6;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -120,7 +121,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             this.notify(Selection.CHANGE_RENAME, this.selectedPage?.id);
         }
     }
-
+    rename() {
+        this.notify(Selection.PAGE_RENAME);
+    }
 
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
