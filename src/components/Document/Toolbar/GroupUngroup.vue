@@ -49,7 +49,10 @@ function _updater(t?: number) {
 const updater = debounce(_updater, 200);
 function workspaceUpdate(t?: number) {
     if (t === WorkSpace.GROUP) {
+        props.context.workspace.setSelectionViewUpdater(false);
         groupClick();
+        props.context.workspace.setSelectionViewUpdater(true);
+        props.context.workspace.selectionViewUpdate();
     } else if (t === WorkSpace.UNGROUP) {
         ungroupClick();
     }
