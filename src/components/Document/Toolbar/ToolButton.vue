@@ -1,10 +1,6 @@
-<!--
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-28 09:58:44
- * @FilePath: \kcdesign\src\components\Document\Toolbar\ToolButton.vue
--->
 <template>
-    <div ref="toolButtonEl" :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!props.selected }">
+    <div ref="toolButtonEl"
+        :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!props.selected }">
         <slot />
     </div>
 </template>
@@ -18,7 +14,7 @@ defineExpose({
     toolButtonEl
 })
 
-const invalid = computed(() => {    
+const invalid = computed(() => {
     return props.valid === undefined ? false : !props.valid;
 })
 
@@ -38,6 +34,7 @@ const invalid = computed(() => {
     cursor: pointer;
     box-sizing: border-box;
     color: #ffffff;
+    transition: 0.12s;
 }
 
 .tool-button:hover,
@@ -52,6 +49,7 @@ const invalid = computed(() => {
 .tool-button-selected {
     background-color: var(--active-color);
 }
+
 .tool-button-selected:hover {
     background-color: var(--active-color);
 }

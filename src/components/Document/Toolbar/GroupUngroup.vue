@@ -65,51 +65,61 @@ onUnmounted(() => {
 })
 
 const groupClick = () => {
-    props.context.workspace.setSelectionViewUpdater(false);
-    const selection = props.selection;
-    const shapes = selection.selectedShapes;
-    const page = selection.selectedPage;
-    if (shapes.length) {
-        const name = getName(ShapeType.Group, page?.flatShapes || [], t);
-        const group = editor.value.group(props.selection.selectedShapes, name);
-        if (group) {
-            props.selection.selectShape(group);
+    if (state.value & GROUP) {
+        props.context.workspace.setSelectionViewUpdater(false);
+        const selection = props.selection;
+        const shapes = selection.selectedShapes;
+        const page = selection.selectedPage;
+        if (shapes.length) {
+            const name = getName(ShapeType.Group, page?.flatShapes || [], t);
+            const group = editor.value.group(props.selection.selectedShapes, name);
+            if (group) {
+                props.selection.selectShape(group);
+            }
         }
+        props.context.workspace.setSelectionViewUpdater(true);
+        props.context.workspace.selectionViewUpdate();
     }
-    props.context.workspace.setSelectionViewUpdater(true);
-    props.context.workspace.selectionViewUpdate();
 }
 const ungroupClick = () => {
-    const selection = props.selection;
-    const shapes = selection.selectedShapes;
-    if (shapes.length) {
-        const groups = shapes.filter(i => i.type === ShapeType.Group);
-        const others: Shape[] = shapes.filter(i => i.type !== ShapeType.Group);
-        if (groups.length) {
-            for (let i = 0, len = groups.length; i < len; i++) {
-                const g = groups[i];
-                const c = editor.value.ungroup(g as GroupShape);
-                if (c) {
-                    others.push(...c);
+    if (state.value & UNGROUP) {
+        const selection = props.selection;
+        const shapes = selection.selectedShapes;
+        if (shapes.length) {
+            const groups = shapes.filter(i => i.type === ShapeType.Group);
+            const others: Shape[] = shapes.filter(i => i.type !== ShapeType.Group);
+            if (groups.length) {
+                for (let i = 0, len = groups.length; i < len; i++) {
+                    const g = groups[i];
+                    const c = editor.value.ungroup(g as GroupShape);
+                    if (c) {
+                        others.push(...c);
+                    }
                 }
+                selection.rangeSelectShape(others);
             }
-            selection.rangeSelectShape(others);
         }
+    } else {
+        console.log('不满足解体条件');
     }
 }
 </script>
 
 <template>
-    <div style="width: 80px; height: 40px;">
-        <el-tooltip v-if="state" class="box-item" effect="dark"
-            :content="state & GROUP ? `${t('home.groups')} &nbsp;&nbsp; Ctrl+G` : `${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Shift+G`"
-            placement="bottom" :show-after="500" :offset="5" :hide-after="0">
+    <div class="container">
+        <div class="vertical-line"></div>
+        <el-tooltip class="box-item" effect="dark" :content="`${t('home.groups')} &nbsp;&nbsp; Ctrl+G`" placement="bottom"
+            :show-after="500" :offset="5" :hide-after="0">
             <div class="group">
-                <div class="vertical-line" v-if="state"></div>
-                <ToolButton :onclick="groupClick" :valid="true" :selected="false" v-if="state & GROUP">
+                <ToolButton :onclick="groupClick" :valid="true" :selected="false" :class="{ active: state & GROUP }">
                     <svg-icon icon-class="group"></svg-icon>
                 </ToolButton>
-                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" v-if="state & UNGROUP">
+            </div>
+        </el-tooltip>
+        <el-tooltip class="box-item" effect="dark" :content="`${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Shift+G`"
+            placement="bottom" :show-after="500" :offset="5" :hide-after="0">
+            <div class="group">
+                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
                     <svg-icon icon-class="ungroup"></svg-icon>
                 </ToolButton>
             </div>
@@ -118,34 +128,46 @@ const ungroupClick = () => {
 </template>
 
 <style scoped lang="scss">
-.group {
+.container {
+    width: 80px;
+    height: 40px;
     display: flex;
-    flex-direction: row;
+    justify-content: center;
     align-items: center;
-    height: 100%;
-    width: 40px;
 
-    >div {
-        height: 100%;
+    .group {
         display: flex;
-        justify-content: center;
+        flex-direction: row;
         align-items: center;
-        color: #ffffff;
+        height: 100%;
+        width: 40px;
 
-        >svg {
-            height: 55%;
-            width: 55%;
+        >div {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: gray;
+            transition: 0.1s;
+
+            >svg {
+                height: 55%;
+                width: 55%;
+            }
+        }
+
+        >.active {
+            color: #ffffff;
         }
     }
 
     .vertical-line {
-        width: 1.5px;
+        width: 1px;
         height: 28px;
         background-color: grey;
         flex: 0 0 auto;
         margin-left: 5px;
         margin-right: 5px;
     }
-
 }
 </style>

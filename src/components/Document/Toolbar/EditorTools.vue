@@ -1,10 +1,3 @@
-<!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-02-27 14:56:57
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-28 09:57:17
- * @FilePath: \kcdesign\src\components\Document\Toolbar\EditorTools.vue
--->
 <script setup lang="ts">
 import { defineProps, onMounted, onUnmounted, ref, computed } from "vue";
 import { Context } from '@/context';
