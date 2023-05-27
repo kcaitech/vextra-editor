@@ -34,7 +34,7 @@ const invalid = computed(() => {
     cursor: pointer;
     box-sizing: border-box;
     color: #ffffff;
-    transition: 0.12s;
+    transition: 0.06s;
 }
 
 .tool-button:hover,

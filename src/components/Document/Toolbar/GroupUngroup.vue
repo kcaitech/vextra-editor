@@ -46,7 +46,7 @@ function _updater(t?: number) {
         }
     }
 }
-const updater = debounce(_updater, 200);
+const updater = debounce(_updater, 150);
 function workspaceUpdate(t?: number) {
     if (t === WorkSpace.GROUP) {
         groupClick();
