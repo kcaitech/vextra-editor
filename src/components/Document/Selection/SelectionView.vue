@@ -67,7 +67,7 @@ function updater() { // 针对描边与控件的可控更新
         execute();
     }
 }
-function execute() {
+function execute() { // 更新机执行器
     watchShapes();
     createShapeTracing();
     createController();
