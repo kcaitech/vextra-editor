@@ -87,6 +87,8 @@ const setPosition = () => {
                 titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth });
             }
         }
+    } else {
+        titles.length = 0;
     }
 }
 function setOrigin() { // 这个动作是让container与页面坐标系重合

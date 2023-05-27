@@ -30,19 +30,6 @@ export class RepoWraper {
     redo() {
         this.m_repo.redo();
     }
-    /**
-     * @deprecated
-     */
-    get transactCtx() { // TODO 
-        return this.m_repo.transactCtx;
-    }
-    /**
-     * @deprecated
-     * @param cmd 
-     */
-    commit(cmd: any) {
-        this.m_repo.commit(cmd);
-    }
 }
 
 export class Context extends Watchable(Object) {
@@ -96,18 +83,18 @@ export class Context extends Watchable(Object) {
     // debug
     upload(id?: string) {
         const token = localStorage.getItem('token')
-        if(token)
+        if (token)
             uploadExForm(this.m_data, FILE_UPLOAD, token, id ? id : '', async (successed, doc_id) => {
-            if(successed) {
-                localStorage.setItem('docId', doc_id)
-                if (!id) {
-                    router.replace({
-                        path: '/document',
-                        query: {id: doc_id}
-                    })
+                if (successed) {
+                    localStorage.setItem('docId', doc_id)
+                    if (!id) {
+                        router.replace({
+                            path: '/document',
+                            query: { id: doc_id }
+                        })
+                    }
                 }
-            }
-        })
+            })
     }
 
     async documentInfo(id: string) {

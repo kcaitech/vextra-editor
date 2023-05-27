@@ -47,8 +47,10 @@ function updateItems() {
         renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
         nextTick(() => { setToolGroup(props.context) });
     } else {
-        if (renderItems[0].id === 'tool-group') {
-            workspace.toolGroupUnmount();
+        if (renderItems.length) {
+            if (renderItems[0].id === 'tool-group') {
+                workspace.toolGroupUnmount();
+            }
         }
         renderItems = props.data.childs;
     }
