@@ -16,26 +16,25 @@ export interface Bar {
     height: number,
     type: CtrlElementType
 }
-const reflush = ref(0);
-const watcher = () => {
-    reflush.value++;
-    updater();
+interface TracingFrame {
+    path: string,
+    viewBox: string,
+    height: number,
+    width: number
 }
-const props = defineProps<{
-    context: Context,
-    matrix: number[],
-}>();
-
+interface Props {
+    context: Context
+    matrix: number[]
+}
+const reflush = ref(0);
+const props = defineProps<Props>();
 const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
 const controllerFrame = ref<Point[]>([]);
-const tracing = ref<boolean>(false);
 const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
-let tracingPath: string;
-let tracingViewBox: string;
-let tracingHeight: number;
-let tracingWidth: number;
+const tracing = ref<boolean>(false);
+let tracingFrame: TracingFrame = { path: '', viewBox: '', height: 0, width: 0, };
 const watchedShapes = new Map();
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -50,32 +49,64 @@ function watchShapes() { // 监听选区相关shape的变化
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
+        v.unwatch(shapesWatcher);
         watchedShapes.delete(k);
     })
     needWatchShapes.forEach((v, k) => {
         if (watchedShapes.has(k)) return;
-        v.watch(watcher);
+        v.watch(shapesWatcher);
         watchedShapes.set(k, v);
     })
 }
-function updater() { // 自动更新、可控更新
+function updater() { // 针对描边与控件的可控更新
+    matrix.reset(props.matrix); // 必须要有一定会执行的代码用来触发watchEffect执行
+    // 更新前检查阀门是否开启(ps：在持续性动作中，因为只需要在终点更新即可，所以在动作执行过程中，阀门会关闭，并在持续性动作结束前再次开启)；
+    // 阀门开启后可以根据所有监听的notify更新，关闭则只能通过WorkSpace.SELECTION_VIEW_UPDATE进行更新
     const shouldSelectionViewUpdate = props.context.workspace.shouldSelectionViewUpdate;
-    if (!shouldSelectionViewUpdate) return;
-    watchShapes();
-    matrix.reset(props.matrix);
-    createController();
-    createShapeTracing();
-}
-function handleWorkSpaceUpdate(t?: any) {
-    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
-        matrix.reset(props.matrix);
-        watchShapes();
-        createController();
-        createShapeTracing();
+    if (shouldSelectionViewUpdate) {
+        execute();
     }
 }
-function createController() { // 计算点位以及控件类型判定
+function execute() {
+    watchShapes();
+    createShapeTracing();
+    createController();
+    reflush.value++; // 数据完毕，触发视图更新
+}
+function shapesWatcher() { // 选区图形有任何变化改变都要更新
+    updater();
+}
+function workspaceWatcher(t?: any) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) { // 由workspace主动触发更新，可跳过是否可以更新的检查
+        matrix.reset(props.matrix); // 先将坐标系确定在页面坐标系
+        execute();
+    }
+}
+function selectionWatcher() { // selection的部分动作可触发更新
+    updater()
+}
+function createShapeTracing() { // 描边    
+    const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
+    if (hoveredShape) {
+        const selected = props.context.selection.selectedShapes;
+        if (selected.includes(hoveredShape)) {
+            tracing.value = false;
+        } else {
+            const path = hoveredShape.getPath(true);
+            const m2page = hoveredShape.matrix2Page();
+            path.transform(m2page);
+            path.transform(matrix);
+            const { x, y, right, bottom } = props.context.workspace.root;
+            const w = right - x;
+            const h = bottom - y;
+            tracingFrame = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
+            tracing.value = true;
+        }
+    } else {
+        tracing.value = false;
+    }
+}
+function createController() { // 计算控件点位以及类型判定
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (selection.length === 0) {
         controller.value = false;
@@ -98,10 +129,10 @@ function createController() { // 计算点位以及控件类型判定
                 p.x = _p.x; p.y = _p.y;
                 return p;
             });
-            if (selection[0].type === ShapeType.Line) {
+            if (shape.type === ShapeType.Line) { // 控件类型判定
                 controllerType.value = ControllerType.Line;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
-            } else if (selection[0].type === ShapeType.Text) {
+            } else if (shape.type === ShapeType.Text) {
                 controllerType.value = ControllerType.Text;
                 rotate.value = getHorizontalAngle(points[0], points[2]); // 线条的水平夹角与其他图形有区别
             } else {
@@ -141,53 +172,32 @@ function createController() { // 计算点位以及控件类型判定
         controller.value = true;
     }
 }
-function createShapeTracing() { // 描边    
-    tracing.value = false;
-    const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
-    if (hoveredShape) {
-        const selected = props.context.selection.selectedShapes;
-        if (selected.includes(hoveredShape)) {
-            tracing.value = false;
-            return;
-        }
-        tracing.value = true;
-        const path = hoveredShape.getPath(true);
-        const m2page = hoveredShape.matrix2Page();
-        path.transform(m2page);
-        path.transform(matrix);
-        const { x, y, right, bottom } = props.context.workspace.root;
-        tracingWidth = right - x;
-        tracingHeight = bottom - y;
-        tracingViewBox = `${0} ${0} ${tracingWidth} ${tracingHeight}`;
-        tracingPath = path.toString();
-    }
-}
-function pathMousedown(e: MouseEvent) {
-    if (props.context.workspace.action == Action.AutoV) {
-        if (e.button == 0) {
+
+function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
+    if (props.context.workspace.action === Action.AutoV) {
+        if (e.button === 0) {
             e.stopPropagation();
             props.context.workspace.preToTranslating(e);
             const hoveredShape = props.context.selection.hoveredShape;
-            if (e.shiftKey) {
+            if (e.shiftKey) { // 多选
                 if (hoveredShape) {
                     const selected = props.context.selection.selectedShapes;
-                    props.context.selection.rangeSelectShape([...selected, hoveredShape])
+                    props.context.selection.rangeSelectShape([...selected, hoveredShape]);
                 }
-            } else {
+            } else { // 单选并取消在此之前已选的shape
                 props.context.selection.selectShape(hoveredShape);
             }
-
         }
     }
 }
 // hooks
 onMounted(() => {
-    props.context.selection.watch(updater);
-    props.context.workspace.watch(handleWorkSpaceUpdate);
+    props.context.selection.watch(selectionWatcher);
+    props.context.workspace.watch(workspaceWatcher);
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(updater);
-    props.context.workspace.unwatch(handleWorkSpaceUpdate);
+    props.context.selection.unwatch(selectionWatcher);
+    props.context.workspace.unwatch(workspaceWatcher);
 })
 watchEffect(updater);
 </script>
@@ -195,10 +205,10 @@ watchEffect(updater);
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :width="tracingWidth" :height="tracingHeight" :viewBox="tracingViewBox"
+        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
         @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px)"
         :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingPath" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;">
+        <path :d="tracingFrame.path" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;">
         </path>
     </svg>
     <!-- 控制 -->
