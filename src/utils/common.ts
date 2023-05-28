@@ -1,5 +1,9 @@
 import { XY } from '@/context/selection';
-
+import { v4 as uuid } from "uuid";
+// 简易id
+export function simpleId(): string {
+  return uuid().split('-')[3];
+}
 // 获取Select的options
 export function genOptions(items: string[][]) {
   return items.map((item: string[], index: number) => {

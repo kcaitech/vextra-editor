@@ -9,3 +9,8 @@ export const shape: any = {
     text: '文字'
 }
 shape[ShapeType.Rectangle] = '矩形';
+
+export const color = {
+    solid: '纯色',
+    esc: '按ESC退出'
+}

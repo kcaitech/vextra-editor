@@ -8,7 +8,7 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
-
+declare module "*/dom-to-image.js";
 // 声明静态资源作为模块
 declare module "*.png";
 declare module "*.svg";

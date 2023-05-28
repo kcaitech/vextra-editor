@@ -111,9 +111,9 @@ export const home = {
 }
 
 export const search = {
-    search_results:'No matching results',
-    search_history:'No search history'
-   
+    search_results: 'No matching results',
+    search_history: 'No search history'
+
 }
 
 export const navi = {

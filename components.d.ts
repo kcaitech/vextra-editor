@@ -25,7 +25,7 @@ declare module '@vue/runtime-core' {
     BorderPositionItem: typeof import('./src/components/Document/Attribute/Border/BorderPositionItem.vue')['default']
     BorderStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderStyleItem.vue')['default']
     BorderStyleSelected: typeof import('./src/components/Document/Attribute/Border/BorderStyleSelected.vue')['default']
-    ColorPicker: typeof import('./src/components/common/ColorPicker.vue')['default']
+    ColorPicker: typeof import('./src/components/common/ColorPicker/index.vue')['default']
     ColSplitView: typeof import('./src/components/common/ColSplitView.vue')['default']
     Comment: typeof import('./src/components/Document/Toolbar/Buttons/Comment.vue')['default']
     CommentInput: typeof import('./src/components/Document/Content/CommentInput.vue')['default']

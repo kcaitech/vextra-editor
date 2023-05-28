@@ -63,7 +63,7 @@ const A2R = new Map([
 ]);
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
-    static ESC_EVENT_POINTER: any = undefined; // 用于存储esc事件的指针
+    static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
     static INSERT_FRAME = 1; // notify类型：插入容器模版、更新光标、重置光标、矩阵变换
     static CURSOR_CHANGE = 2;
     static RESET_CURSOR = 3;
@@ -76,6 +76,7 @@ export class WorkSpace extends Watchable(Object) {
     static GROUP = 10;
     static UNGROUP = 11;
     static SELECTION_VIEW_UPDATE = 12;
+    static REMOVE_COLOR_PICKER = 13;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -99,9 +100,13 @@ export class WorkSpace extends Watchable(Object) {
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
+    private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     constructor(context: Context) {
         super();
         this.context = context
+    }
+    get matrix() {
+        return this.m_matrix;
     }
     get root(): Root { //return contentView HTMLElement info
         const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构0.6s后会进行root数据更新)；
@@ -138,9 +143,6 @@ export class WorkSpace extends Watchable(Object) {
     get action() {
         return this.m_current_action;
     }
-    get matrix() {
-        return this.m_matrix;
-    }
     get clipBoard() {
         return this.m_clip_board;
     }
@@ -159,6 +161,9 @@ export class WorkSpace extends Watchable(Object) {
     get ispopover() {
         return this.m_popover;
     }
+    get isColorPickerMount() {
+        return this.m_color_picker;
+    }
     get isTranslating() {
         return this.m_translating;
     }
@@ -176,6 +181,15 @@ export class WorkSpace extends Watchable(Object) {
     }
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
+    }
+    colorPickerSetup(id: string) {
+        this.m_color_picker = id;
+    }
+    removeColorPicker() {
+        if (this.m_color_picker) {
+            this.notify(WorkSpace.REMOVE_COLOR_PICKER);
+            this.m_color_picker = undefined;
+        }
     }
     selectionViewUpdate() {
         this.notify(WorkSpace.SELECTION_VIEW_UPDATE);
@@ -270,8 +284,8 @@ export class WorkSpace extends Watchable(Object) {
         this.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     setAction(action: Action) {
-        if (action === Action.AutoV && WorkSpace.ESC_EVENT_POINTER) {
-            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        if (action === Action.AutoV && WorkSpace.P_ESC_EVENT) {
+            document.removeEventListener('keydown', WorkSpace.P_ESC_EVENT);
         } else {
             this.escSetup()
         }
@@ -390,17 +404,17 @@ export class WorkSpace extends Watchable(Object) {
     }
 
     escSetup() { // 安装取消当前状态的键盘事件(Esc)，在开启一个状态的时候应该考虑关闭状态的处理！
-        if (WorkSpace.ESC_EVENT_POINTER) {
-            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        if (WorkSpace.P_ESC_EVENT) {
+            document.removeEventListener('keydown', WorkSpace.P_ESC_EVENT);
         }
-        WorkSpace.ESC_EVENT_POINTER = this.esc.bind(this);
-        document.addEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        WorkSpace.P_ESC_EVENT = this.esc.bind(this);
+        document.addEventListener('keydown', WorkSpace.P_ESC_EVENT);
     }
     esc(event: KeyboardEvent) {
         if (event.code === 'Escape') {
             this.setAction(Action.AutoV);
-            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
-            WorkSpace.ESC_EVENT_POINTER = undefined;
+            document.removeEventListener('keydown', WorkSpace.P_ESC_EVENT);
+            WorkSpace.P_ESC_EVENT = null;
         }
     }
     setCursorStyle(type: CtrlElementType | string, deg: number) {

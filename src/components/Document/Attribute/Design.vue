@@ -4,7 +4,7 @@ import { Selection } from '@/context/selection';
 import { Shape } from '@kcdesign/data';
 import { ShapeType } from "@kcdesign/data"
 import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
-import ColorPicker from '../../common/ColorPicker.vue';
+import ColorPicker from '../../common/ColorPicker/index.vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import ShapeBaseAttr from './BaseAttr.vue';
@@ -56,7 +56,7 @@ onUnmounted(() => {
         <div v-else class="back-setting-container">
             <span>{{ t('attr.background') }}</span>
             <div class="setting">
-                <ColorPicker class="color" :color="backgroundColor"></ColorPicker>
+                <ColorPicker class="color" :color="backgroundColor" :context="props.context"></ColorPicker>
                 <input type="text" :value="'#EFEFEF'" :spellcheck="false">
                 <input type="text" :value="1">
             </div>
