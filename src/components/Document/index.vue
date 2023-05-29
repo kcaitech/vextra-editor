@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, shallowRef, computed, ref, watchEffect, watch } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -240,7 +240,7 @@ uploadTimer = setInterval(() => {
     if (docID && permType.value !== 1) {
         upload(docID)
     }
-}, 60000)
+}, 5000)
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -280,6 +280,7 @@ const getDocumentInfo = async () => {
             if (document) {
                 window.document.title = document.name;
                 context.value = new Context(document, repo);
+                console.log('context init');
                 context.value.watch(selectionWatcher);
                 switchPage(context.value.data.pagesList[0]?.id);
             }
@@ -295,7 +296,9 @@ function upload(id?: string) {
     if (token) {
         const data = context.value.data;
         if (data) {
-            console.log('-upload-data-', data);
+            data.pagesMgr.get(data.pagesList[0].id).then((p) => {
+                console.log('p.child', p?.childs?.length);
+            })
             uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
                 if (successed) {
                     localStorage.setItem('docId', doc_id);
@@ -317,9 +320,7 @@ function setScreenSize() {
     }
 }
 function init() {
-    if (context.value) {
-        context.value.selection.watch(selectionWatcher);
-    }
+    context.value.selection.watch(selectionWatcher);
     if ((window as any).sketchDocument) {
         switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
         document.addEventListener('keydown', keyboardEventHandler);
@@ -339,6 +340,7 @@ function init() {
 }
 onMounted(() => {
     init();
+    setScreenSize();
 })
 onUnmounted(() => {
     window.document.title = t('product.name');
@@ -351,7 +353,6 @@ onUnmounted(() => {
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
-    setScreenSize();
 })
 
 </script>
