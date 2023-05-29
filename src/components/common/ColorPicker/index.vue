@@ -329,7 +329,7 @@ onUnmounted(() => {
   width: 16px;
   height: 16px;
   border-radius: 2px;
-  box-shadow: 0 0 2px var(--theme-color);
+  box-shadow: 0 0 2px var(--theme-color) inset;
 
   .popover {
     position: absolute;
