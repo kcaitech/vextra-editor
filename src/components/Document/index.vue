@@ -226,14 +226,6 @@ const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
-watchEffect(() => {
-    if (route.query.id) {
-        const id = (route.query.id as string);
-        upload(id);
-    } else {
-        upload();
-    }
-})
 let uploadTimer: any = null
 uploadTimer = setInterval(() => {
     const docID = localStorage.getItem('docId') || '';
@@ -280,6 +272,7 @@ const getDocumentInfo = async () => {
             if (document) {
                 window.document.title = document.name;
                 context.value = new Context(document, repo);
+                curPage.value = undefined;
                 console.log('context init');
                 context.value.watch(selectionWatcher);
                 switchPage(context.value.data.pagesList[0]?.id);
@@ -291,6 +284,10 @@ const getDocumentInfo = async () => {
         loading.value = false;
     }
 }
+function foo() {
+    return context.value.data;
+}
+(window as any).foo = foo;
 function upload(id?: string) {
     const token = localStorage.getItem('token');
     if (token) {
@@ -354,7 +351,14 @@ onUnmounted(() => {
     showHint.value = false;
     countdown.value = 10;
 })
-
+watchEffect(() => {
+    if (route.query.id) {
+        const id = (route.query.id as string);
+        upload(id);
+    } else {
+        upload();
+    }
+})
 </script>
 
 <template>
