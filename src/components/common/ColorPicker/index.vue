@@ -14,6 +14,7 @@ interface Props {
 }
 interface Emits {
   (e: 'change', color: Color): void;
+  (e: 'choosecolor', color: number[]): void;
 }
 interface RGBA {
   R: number
@@ -36,9 +37,7 @@ interface DotPosition {
 const INDICATOR_WIDTH = 12;
 
 const props = defineProps<Props>();
-const emit = defineEmits<{
-  (e: 'choosecolor', color: number[]): void;
-}>();
+const emit = defineEmits<Emits>();
 const { t } = useI18n();
 const saturation = ref<HTMLElement>();
 const hueEl = ref<HTMLElement>();
@@ -122,16 +121,16 @@ function xTohex(rgb: [number, number, number]): string {
   return str
 }
 
-function alphaIndicatorMouseDown() {
+function mousedown4AlphaIndicator() {
   if (sliders.value) {
     const { left, right } = sliders.value.getBoundingClientRect();
     lineAttribute.begin = left;
     lineAttribute.end = right;
   }
-  document.addEventListener('mousemove', documentMouseMoveForAlpha);
-  document.addEventListener('mouseup', documentMouseUp);
+  document.addEventListener('mousemove', mousemove4Alpha);
+  document.addEventListener('mouseup', mouseup);
 }
-function documentMouseMoveForAlpha(e: MouseEvent) {
+function mousemove4Alpha(e: MouseEvent) {
   if (e.screenX >= lineAttribute.begin && e.screenX <= lineAttribute.end - INDICATOR_WIDTH) {
     alphaIndicatorAttr.x = e.screenX - lineAttribute.begin;
   } else if (e.screenX < lineAttribute.begin) {
@@ -141,7 +140,7 @@ function documentMouseMoveForAlpha(e: MouseEvent) {
   }
   setAlpha(alphaIndicatorAttr.x);
 }
-function documentMouseMoveForHue(e: MouseEvent) {
+function mousemove4Hue(e: MouseEvent) {
   if (e.x >= lineAttribute.begin && e.x <= lineAttribute.end - INDICATOR_WIDTH) {
     hueIndicatorAttr.x = e.x - lineAttribute.begin
   } else if (e.x < lineAttribute.begin) {
@@ -158,8 +157,8 @@ function setHueIndicatorPosition(e: MouseEvent) {
     lineAttribute.end = right;
     hueIndicatorAttr.x = Math.min(Math.max(e.x - INDICATOR_WIDTH / 2, 0) - x, lineAttribute.length - INDICATOR_WIDTH);
     setRGB(hueIndicatorAttr.x);
-    document.addEventListener('mousemove', documentMouseMoveForHue);
-    document.addEventListener('mouseup', documentMouseUp);
+    document.addEventListener('mousemove', mousemove4Hue);
+    document.addEventListener('mouseup', mouseup);
   }
 }
 function setAlphaIndicatorPosition(e: MouseEvent) {
@@ -214,10 +213,10 @@ function setRGB(indicator: number) {
 function setAlpha(indicator: number) {
   rgba.alpha = Number((indicator / lineAttribute.length).toFixed(2));
 }
-function documentMouseUp() {
-  document.removeEventListener('mousemove', documentMouseMoveForAlpha)
-  document.removeEventListener('mousemove', documentMouseMoveForHue)
-  document.removeEventListener('mouseup', documentMouseUp)
+function mouseup() {
+  document.removeEventListener('mousemove', mousemove4Alpha)
+  document.removeEventListener('mousemove', mousemove4Hue)
+  document.removeEventListener('mouseup', mouseup)
 }
 function eyedropper() {
   if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
@@ -314,7 +313,7 @@ onUnmounted(() => {
             <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
               :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
               <div class="alphaIndicator" ref="alphaIndicator" :style="{ left: alphaIndicatorAttr.x + 'px' }"
-                @mousedown="alphaIndicatorMouseDown"></div>
+                @mousedown="mousedown4AlphaIndicator"></div>
             </div>
           </div>
         </div>

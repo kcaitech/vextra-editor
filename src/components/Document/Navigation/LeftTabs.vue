@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref,computed, onMounted, onUnmounted } from "vue";
+import { defineProps, ref, computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
@@ -42,7 +42,7 @@ function update() {
 }
 
 const selectComment = () => {
-    if(selected.value === Action.AddComment) {
+    if (selected.value === Action.AddComment) {
         currentTab.value = 'Comment'
     }
 }
@@ -94,7 +94,6 @@ onUnmounted(() => {
             text-align: left;
             line-height: 24px;
             color: var(--grey-dark);
-            transition: 0.1s;
             margin-left: 13px;
         }
 

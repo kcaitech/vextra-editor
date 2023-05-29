@@ -89,7 +89,6 @@ export class Eyedropper {
       const tooltip = drawTooltip(tip);
       document.body.appendChild(tooltip);
       setTimeout(() => tooltip?.parentNode?.removeChild(tooltip), 2000);
-      // 添加监听
       this.canvas.addEventListener('mousemove', this.mousemove);
       this.canvas.addEventListener('mousedown', this.mousedown);
       document.addEventListener('keydown', this.keydown);

@@ -86,7 +86,6 @@ function toggle(id: Tab) {
             text-align: left;
             line-height: 24px;
             color: var(--grey-dark);
-            transition: 0.1s;
         }
 
         >.tab:hover {

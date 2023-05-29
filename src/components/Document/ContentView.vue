@@ -59,18 +59,6 @@ const rootId = ref<string>('content');
 let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
-function offset2Root() { // == props.context.workspace.root
-    let el = root.value as HTMLElement;
-    let x = el.offsetLeft
-    let y = el.offsetTop
-    el = el.offsetParent as HTMLElement;
-    while (el) {
-        x += el.offsetLeft
-        y += el.offsetTop
-        el = el.offsetParent as HTMLElement;
-    }
-    return { x, y }
-}
 function rootRegister(mount: boolean) {
     if (mount) {
         const id = (uuid().split('-').at(-1)) || 'content';
@@ -513,7 +501,7 @@ function windowBlur() {
 
 // hooks
 function initMatrix(cur: Page) {
-    let info = matrixMap.get(cur.id)
+    let info = matrixMap.get(cur.id);
     if (!info) {
         const m = new Matrix();
         m.trans(-cur.frame.x, -cur.frame.y)
