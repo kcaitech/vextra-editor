@@ -273,6 +273,7 @@ const getDocumentInfo = async () => {
                 context = new Context(document, repo);
                 context.watch(selectionWatcher);
                 switchPage(context.data.pagesList[0]?.id);
+                localStorage.setItem('docId', route.query.id as string);
             }
         })
     } catch (err) {
@@ -287,6 +288,9 @@ function upload(id?: string) {
         if (context) {
             const data = context.data;
             if (data) {
+                // data.pagesMgr.get(data.pagesList[0].id).then((p) => {
+                //     console.log('p.child', p?.childs?.length);
+                // })
                 uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
                     if (successed) {
                         localStorage.setItem('docId', doc_id);
