@@ -47,7 +47,8 @@ onUnmounted(() => {
 .container {
     display: flex;
     align-items: center;
-    width: 56px;
+    width: 50px;
+    justify-content: space-around;
 
     .home {
         cursor: pointer;
