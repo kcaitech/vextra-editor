@@ -233,7 +233,7 @@ uploadTimer = setInterval(() => {
     if (docID && permType.value !== 1) {
         upload(docID);
     }
-}, 6000)
+}, 18000)
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
