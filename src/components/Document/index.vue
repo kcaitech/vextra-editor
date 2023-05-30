@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref, watchEffect, watch } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -7,7 +7,6 @@ import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
-import { WorkSpace } from '@/context/workspace';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, uploadExForm, Repository, Page } from '@kcdesign/data';
 import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
@@ -19,24 +18,22 @@ import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue'
 const { t } = useI18n();
-
 const curPage = shallowRef<Page | undefined>(undefined);
-const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
+const context = shallowRef<Context | undefined>(undefined);
 (window as any).__context = context.value;
-const workspace = computed<WorkSpace>(() => context.value.workspace);
-const middleWidth = ref<number>(0.8)
-const middleMinWidth = ref<number>(0.3)
-const route = useRoute()
+const middleWidth = ref<number>(0.8);
+const middleMinWidth = ref<number>(0.3);
+const route = useRoute();
 const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
 const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
-const permType = ref<number>()
-const docInfo: any = ref({})
-const showHint = ref(false)
-const countdown = ref(10)
+const permType = ref<number>();
+const docInfo: any = ref({});
+const showHint = ref(false);
+const countdown = ref(10);
 const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
@@ -45,7 +42,6 @@ const loading = ref<boolean>(false);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
-
     if (isFullScreen === null) {
         element.requestFullscreen && element.requestFullscreen();
         localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
@@ -87,34 +83,41 @@ function mouseleave(t: 'left' | 'right') {
         }, delay);
     }
 }
-
 function switchPage(id?: string) {
     if (!id) return
-    const ctx: Context = context.value;
-    const pagesMgr = ctx.data.pagesMgr;
-    pagesMgr.get(id).then((page: Page | undefined) => {
-        if (page) {
-            ctx.selection.selectPage(page);
-            (window as any).__context = ctx;
-            curPage.value = page;
-        }
-    })
+    if (context.value) {
+        const ctx: Context = context.value;
+        const pagesMgr = ctx.data.pagesMgr;
+        pagesMgr.get(id).then((page: Page | undefined) => {
+            if (page) {
+                curPage.value = undefined;
+                ctx.selection.selectPage(page);
+                (window as any).__context = ctx;
+                curPage.value = page;
+            }
+        })
+    }
 }
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_PAGE) {
-        const ctx: Context = context.value as Context;
-        curPage.value = ctx.selection.selectedPage;
+        if (context.value) {
+            const ctx: Context = context.value;
+            curPage.value = ctx.selection.selectedPage;
+        }
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
     const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
-    workspace.value.keyboardHandle(evevt); // 编辑器相关的键盘事件
-    if (code === 'Backslash') {
-        if (ctrlKey || metaKey) {
-            shiftKey ? keyToggleTB() : keyToggleLR();
+    if (context.value) {
+        context.value.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
+        if (code === 'Backslash') {
+            if (ctrlKey || metaKey) {
+                shiftKey ? keyToggleTB() : keyToggleLR();
+            }
         }
     }
+
 }
 const showHiddenRight = () => {
     if (showRight.value) {
@@ -131,7 +134,6 @@ const showHiddenRight = () => {
         showRight.value = true
     }
 }
-
 const showHiddenLeft = () => {
     if (showLeft.value) {
         Left.value.leftMin = 0
@@ -170,7 +172,6 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
-
 enum PermissionChange {
     update,
     close,
@@ -201,7 +202,7 @@ const getDocumentAuthority = async () => {
         console.log(err);
     }
 }
-const permissionChange = ref(-1)
+const permissionChange = ref(-1);
 // 权限被修改后的倒计时
 const startCountdown = (type?: number) => {
     const timer = setInterval(() => {
@@ -230,24 +231,22 @@ let uploadTimer: any = null
 uploadTimer = setInterval(() => {
     const docID = localStorage.getItem('docId') || '';
     if (docID && permType.value !== 1) {
-        upload(docID)
+        upload(docID);
     }
 }, 5000)
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
-        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
-        docInfo.value = dataInfo.data
-        permType.value = dataInfo.data.document_permission.perm_type
+        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+        docInfo.value = dataInfo.data;
+        permType.value = dataInfo.data.document_permission.perm_type;
         if (dataInfo.code === 400) {
             //无效链接
-            ElMessage({
-                message: `${t('apply.link_not')}`
-            })
-            router.push('/')
+            ElMessage({ message: `${t('apply.link_not')}` });
+            router.push('/');
         }
-        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
+        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
         //获取文档类型是否为私有文档且有无权限   
         if (docInfo.value.document_permission.perm_type === 0) {
@@ -272,41 +271,37 @@ const getDocumentInfo = async () => {
             if (document) {
                 window.document.title = document.name;
                 context.value = new Context(document, repo);
-                curPage.value = undefined;
-                console.log('context init');
                 context.value.watch(selectionWatcher);
                 switchPage(context.value.data.pagesList[0]?.id);
             }
         })
     } catch (err) {
-        console.log(err);
+        new Error(`${err}`);
     } finally {
         loading.value = false;
     }
 }
-function foo() {
-    return context.value.data;
-}
-(window as any).foo = foo;
 function upload(id?: string) {
     const token = localStorage.getItem('token');
     if (token) {
-        const data = context.value.data;
-        if (data) {
-            data.pagesMgr.get(data.pagesList[0].id).then((p) => {
-                console.log('p.child', p?.childs?.length);
-            })
-            uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
-                if (successed) {
-                    localStorage.setItem('docId', doc_id);
-                    if (!id) {
-                        router.replace({
-                            path: '/document',
-                            query: { id: doc_id }
-                        })
+        if (context.value) {
+            const data = context.value.data;
+            if (data) {
+                data.pagesMgr.get(data.pagesList[0].id).then((p) => {
+                    console.log('p.child', p?.childs?.length);
+                })
+                uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
+                    if (successed) {
+                        localStorage.setItem('docId', doc_id);
+                        if (!id) {
+                            router.replace({
+                                path: '/document',
+                                query: { id: doc_id }
+                            })
+                        }
                     }
-                }
-            })
+                })
+            }
         }
     }
 }
@@ -317,33 +312,32 @@ function setScreenSize() {
     }
 }
 function init() {
-    context.value.selection.watch(selectionWatcher);
-    if ((window as any).sketchDocument) {
-        switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
-        document.addEventListener('keydown', keyboardEventHandler);
-        return;
-    }
-    if (!(window as any).sketchDocument && !route.query.id) {
-        router.push('/');
-        return;
-    }
-    if (route.query.id) {
+    if (route.query.id) { // 从远端读取文件
         getDocumentInfo();
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
-            getDocumentAuthority()
+            getDocumentAuthority();
         }, 30000)
+    } else { // 从本地读取文件
+        if ((window as any).sketchDocument) {
+            context.value = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
+            context.value.selection.watch(selectionWatcher);
+            switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+            document.addEventListener('keydown', keyboardEventHandler);
+        } else {
+            router.push('/');
+        }
     }
 }
 onMounted(() => {
-    init();
     setScreenSize();
+    init();
 })
 onUnmounted(() => {
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
-    context.value.selection.unwatch(selectionWatcher);
+    context.value?.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
     clearInterval(uploadTimer);
@@ -364,7 +358,7 @@ watchEffect(() => {
 <template>
     <Loading v-if="loading"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
-        <Toolbar :context="context" v-if="!loading" />
+        <Toolbar :context="context" v-if="!loading && context" />
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
@@ -374,7 +368,7 @@ watchEffect(() => {
         :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
-            <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
+            <Navigation v-if="curPage !== undefined && context" id="navigation" :context="context" @switchpage="switchPage"
                 @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
                 :page="(curPage as Page)">
             </Navigation>
@@ -385,11 +379,11 @@ watchEffect(() => {
             </div>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined && context" id="content" :context="context" :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
+            <Attribute id="attributes" v-if="context" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
                 @mouseleave="() => { mouseleave('right') }"></Attribute>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
                 :style="{ opacity: showRight ? 1 : 0.6 }">
