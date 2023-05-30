@@ -16,7 +16,8 @@ import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
-import Loading from '@/components/common/Loading.vue'
+import Loading from '@/components/common/Loading.vue';
+import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -115,9 +116,13 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
+        } else if (code === 'KeyS') {
+            if (ctrlKey || metaKey) {
+                evevt.preventDefault();
+                context.workspace.documentSave();
+            }
         }
     }
-
 }
 const showHiddenRight = () => {
     if (showRight.value) {
@@ -228,12 +233,17 @@ const showNotification = (type?: number) => {
     startCountdown(type);
 }
 let uploadTimer: any = null
-uploadTimer = setInterval(() => {
-    const docID = localStorage.getItem('docId') || '';
-    if (docID && permType.value !== 1) {
-        upload(docID);
+function polling() {
+    if (uploadTimer) {
+        clearTimeout(uploadTimer);
     }
-}, 18000)
+    uploadTimer = setTimeout(() => {
+        const docID = localStorage.getItem('docId') || '';
+        if (docID && permType.value !== 1) {
+            upload(docID);
+        }
+    }, 60000);
+}
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -271,9 +281,11 @@ const getDocumentInfo = async () => {
             if (document) {
                 window.document.title = document.name;
                 context = new Context(document, repo);
-                context.watch(selectionWatcher);
+                context.selection.watch(selectionWatcher);
+                context.workspace.watch(workspaceWatcher);
                 switchPage(context.data.pagesList[0]?.id);
                 localStorage.setItem('docId', route.query.id as string);
+                polling();
             }
         })
     } catch (err) {
@@ -299,6 +311,7 @@ function upload(id?: string) {
                             })
                         }
                     }
+                    polling();
                     context?.workspace.endSave();
                 })
             }
@@ -317,16 +330,28 @@ function init() {
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
             getDocumentAuthority();
-        }, 30000)
+        }, 30000);
     } else { // 从本地读取文件
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
             context.selection.watch(selectionWatcher);
+            context.workspace.watch(workspaceWatcher);
             upload();
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
         } else {
             router.push('/');
+        }
+    }
+}
+function workspaceWatcher(t: number) {
+    if (t === WorkSpace.DOCUMENT_SAVE) {
+        const docID = localStorage.getItem('docId') || '';
+        if (docID && permType.value !== 1) {
+            if (uploadTimer) {
+                clearTimeout(uploadTimer);
+            }
+            upload(docID);
         }
     }
 }
@@ -339,9 +364,10 @@ onUnmounted(() => {
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     context?.selection.unwatch(selectionWatcher);
+    context?.workspace.unwatch(workspaceWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
-    clearInterval(uploadTimer);
+    clearTimeout(uploadTimer);
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
