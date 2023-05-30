@@ -291,6 +291,7 @@ function upload(id?: string) {
                 // data.pagesMgr.get(data.pagesList[0].id).then((p) => {
                 //     console.log('p.child', p?.childs?.length);
                 // })
+                context.workspace.startSvae();
                 uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
                     if (successed) {
                         localStorage.setItem('docId', doc_id);
@@ -301,6 +302,7 @@ function upload(id?: string) {
                             })
                         }
                     }
+                    context?.workspace.endSave();
                 })
             }
         }

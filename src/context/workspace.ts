@@ -77,6 +77,8 @@ export class WorkSpace extends Watchable(Object) {
     static UNGROUP = 11;
     static SELECTION_VIEW_UPDATE = 12;
     static REMOVE_COLOR_PICKER = 13;
+    static START_SAVE = 14;
+    static END_SAVE = 15;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -181,6 +183,12 @@ export class WorkSpace extends Watchable(Object) {
     }
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
+    }
+    startSvae() {
+        this.notify(WorkSpace.START_SAVE);
+    }
+    endSave() {
+        this.notify(WorkSpace.END_SAVE);
     }
     colorPickerSetup(id: string) {
         this.m_color_picker = id;

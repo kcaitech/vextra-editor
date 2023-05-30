@@ -8,7 +8,6 @@ interface Props {
     context: Context
 }
 const props = defineProps<Props>();
-
 </script>
 
 <template>
@@ -27,20 +26,6 @@ const props = defineProps<Props>();
 
     div {
         margin: auto 4px;
-    }
-}
-
-.svg-container {
-    cursor: pointer;
-    width: 28px;
-    height: 28px;
-    color: #fff;
-    border: 1px solid #fff;
-    border-radius: 50%;
-
-    >svg {
-        width: 100%;
-        height: 100%;
     }
 }
 </style>

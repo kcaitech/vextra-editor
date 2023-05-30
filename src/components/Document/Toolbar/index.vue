@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { defineProps, shallowRef } from "vue"
 import { Context } from '@/context';
-import Home from "./OpenFile.vue";
+import Home from "./BackToHome.vue";
 import EditorTools from "./EditorTools.vue";
 import UserInfo from './UserInfo.vue';
 const props = defineProps<{ context: Context }>();
