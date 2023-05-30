@@ -233,7 +233,7 @@ uploadTimer = setInterval(() => {
     if (docID && permType.value !== 1) {
         upload(docID);
     }
-}, 5000)
+}, 6000)
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -283,14 +283,13 @@ const getDocumentInfo = async () => {
     }
 }
 function upload(id?: string) {
+    console.log('emit');
+
     const token = localStorage.getItem('token');
     if (token) {
         if (context) {
             const data = context.data;
             if (data) {
-                // data.pagesMgr.get(data.pagesList[0].id).then((p) => {
-                //     console.log('p.child', p?.childs?.length);
-                // })
                 context.workspace.startSvae();
                 uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
                     if (successed) {
@@ -360,14 +359,15 @@ watchEffect(() => {
 </script>
 
 <template>
-    <Loading v-if="loading"></Loading>
+    <Loading v-if="loading || !context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context" v-if="!loading && context" />
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" v-if="!loading" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+    <ColSplitView id="center" v-if="!loading && context"
+        :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
         :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">

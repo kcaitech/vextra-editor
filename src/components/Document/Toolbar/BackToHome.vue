@@ -65,8 +65,8 @@ onUnmounted(() => {
     }
 
     .save {
-        width: 16px;
-        height: 16px;
+        width: 8px;
+        height: 8px;
     }
 }
 </style>
