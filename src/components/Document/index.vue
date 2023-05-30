@@ -19,8 +19,8 @@ import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue'
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
-const context = shallowRef<Context | undefined>(undefined);
-(window as any).__context = context.value;
+let context: Context | undefined;
+(window as any).__context = context;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
@@ -85,8 +85,8 @@ function mouseleave(t: 'left' | 'right') {
 }
 function switchPage(id?: string) {
     if (!id) return
-    if (context.value) {
-        const ctx: Context = context.value;
+    if (context) {
+        const ctx: Context = context;
         const pagesMgr = ctx.data.pagesMgr;
         pagesMgr.get(id).then((page: Page | undefined) => {
             if (page) {
@@ -100,8 +100,8 @@ function switchPage(id?: string) {
 }
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_PAGE) {
-        if (context.value) {
-            const ctx: Context = context.value;
+        if (context) {
+            const ctx: Context = context;
             curPage.value = ctx.selection.selectedPage;
         }
     }
@@ -109,8 +109,8 @@ function selectionWatcher(t: number) {
 function keyboardEventHandler(evevt: KeyboardEvent) {
     const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
-    if (context.value) {
-        context.value.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
+    if (context) {
+        context.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
         if (code === 'Backslash') {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
@@ -270,9 +270,9 @@ const getDocumentInfo = async () => {
         await importDocument(importDocumentParams, path, "", "", repo).then((document) => {
             if (document) {
                 window.document.title = document.name;
-                context.value = new Context(document, repo);
-                context.value.watch(selectionWatcher);
-                switchPage(context.value.data.pagesList[0]?.id);
+                context = new Context(document, repo);
+                context.watch(selectionWatcher);
+                switchPage(context.data.pagesList[0]?.id);
             }
         })
     } catch (err) {
@@ -284,12 +284,9 @@ const getDocumentInfo = async () => {
 function upload(id?: string) {
     const token = localStorage.getItem('token');
     if (token) {
-        if (context.value) {
-            const data = context.value.data;
+        if (context) {
+            const data = context.data;
             if (data) {
-                data.pagesMgr.get(data.pagesList[0].id).then((p) => {
-                    console.log('p.child', p?.childs?.length);
-                })
                 uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
                     if (successed) {
                         localStorage.setItem('docId', doc_id);
@@ -320,8 +317,9 @@ function init() {
         }, 30000)
     } else { // 从本地读取文件
         if ((window as any).sketchDocument) {
-            context.value = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
-            context.value.selection.watch(selectionWatcher);
+            context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
+            context.selection.watch(selectionWatcher);
+            upload();
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
         } else {
@@ -337,7 +335,7 @@ onUnmounted(() => {
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
-    context.value?.selection.unwatch(selectionWatcher);
+    context?.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
     clearInterval(uploadTimer);
