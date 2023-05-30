@@ -283,8 +283,6 @@ const getDocumentInfo = async () => {
     }
 }
 function upload(id?: string) {
-    console.log('emit');
-
     const token = localStorage.getItem('token');
     if (token) {
         if (context) {
