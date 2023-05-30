@@ -263,8 +263,10 @@ export class WorkSpace extends Watchable(Object) {
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (event.code === KeyboardKeys.R) {
-            event.preventDefault();
-            this.keydown_r();
+            if (!metaKey && !ctrlKey) {
+                event.preventDefault();
+                this.keydown_r();
+            }
         } else if (event.code === KeyboardKeys.V) {
             event.preventDefault();
             this.keydown_v();

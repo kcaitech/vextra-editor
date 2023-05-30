@@ -300,6 +300,9 @@ function upload(id?: string) {
         if (context) {
             const data = context.data;
             if (data) {
+                // data.pagesMgr.get(data.pagesList[0].id).then((page) => {
+                //     console.log('child length', page?.childs.length);
+                // })
                 context.workspace.startSvae();
                 uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
                     if (successed) {

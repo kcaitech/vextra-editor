@@ -23,6 +23,8 @@ const props = defineProps<Props>();
     box-sizing: border-box;
     display: flex;
     flex-direction: row;
+    position: absolute;
+    right: 8px;
 
     div {
         margin: auto 4px;
