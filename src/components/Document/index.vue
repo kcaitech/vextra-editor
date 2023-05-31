@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page } from '@kcdesign/data';
+import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal } from '@kcdesign/data';
 import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
@@ -227,14 +227,8 @@ const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
-let uploadTimer: any = null
-uploadTimer = setInterval(() => {
-    const docID = localStorage.getItem('docId') || '';
-    if (docID && permType.value !== 1) {
-        upload(docID);
-    }
-}, 5000)
 //获取文档信息
+let coopLocal: ICoopLocal | null = null;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -248,7 +242,7 @@ const getDocumentInfo = async () => {
         }
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限   
+        //获取文档类型是否为私有文档且有无权限
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -274,6 +268,8 @@ const getDocumentInfo = async () => {
                 context.watch(selectionWatcher);
                 switchPage(context.data.pagesList[0]?.id);
                 localStorage.setItem('docId', route.query.id as string);
+                coopLocal = new CoopLocal(document, repo, "ws://192.168.0.10:10000/api/v1/documents/ws", localStorage.getItem('token') || "", (route.query.id as string), "0");
+                coopLocal.start();
             }
         })
     } catch (err) {
@@ -282,31 +278,25 @@ const getDocumentInfo = async () => {
         loading.value = false;
     }
 }
+
 function upload(id?: string) {
     const token = localStorage.getItem('token');
-    if (token) {
-        if (context) {
-            const data = context.data;
-            if (data) {
-                // data.pagesMgr.get(data.pagesList[0].id).then((p) => {
-                //     console.log('p.child', p?.childs?.length);
-                // })
-                context.workspace.startSvae();
-                uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
-                    if (successed) {
-                        localStorage.setItem('docId', doc_id);
-                        if (!id) {
-                            router.replace({
-                                path: '/document',
-                                query: { id: doc_id }
-                            })
-                        }
-                    }
-                    context?.workspace.endSave();
+    if (!token || !context || !context.data) {
+        return
+    }
+    context.workspace.startSave();
+    uploadExForm(context.data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
+        if (successed) {
+            localStorage.setItem('docId', doc_id);
+            if (!id) {
+                router.replace({
+                    path: '/document',
+                    query: { id: doc_id }
                 })
             }
         }
-    }
+        context?.workspace.endSave();
+    })
 }
 let timer: any = null;
 function setScreenSize() {
@@ -338,24 +328,18 @@ onMounted(() => {
     init();
 })
 onUnmounted(() => {
+    try {
+        coopLocal?.close();
+    } catch (err) {}
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     context?.selection.unwatch(selectionWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
-    clearInterval(uploadTimer);
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
-})
-watchEffect(() => {
-    if (route.query.id) {
-        const id = (route.query.id as string);
-        upload(id);
-    } else {
-        upload();
-    }
 })
 </script>
 
