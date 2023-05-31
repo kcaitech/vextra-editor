@@ -268,7 +268,7 @@ const getDocumentInfo = async () => {
                 context.watch(selectionWatcher);
                 switchPage(context.data.pagesList[0]?.id);
                 localStorage.setItem('docId', route.query.id as string);
-                coopLocal = new CoopLocal(document, repo, "ws://192.168.0.10:10000/api/v1/documents/ws", localStorage.getItem('token') || "", (route.query.id as string), "0");
+                coopLocal = new CoopLocal(document, repo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
                 coopLocal.start();
             }
         })
