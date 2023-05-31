@@ -21,8 +21,10 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     if (reflush) {
         props.reflush = reflush;
     }
-
-    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
+    
+    if (shape.isNoTransform()) {
+        props.transform = `translate(${frame.x},${frame.y})`;
+    } else {
         const cx = frame.x + frame.width / 2;
         const cy = frame.y + frame.height / 2;
         const style: any = {}
@@ -32,9 +34,6 @@ export function render(h: Function, shape: Shape, reflush?: number) {
         if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
         style.transform += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
         props.style = style;
-    }
-    else {
-        props.transform = `translate(${frame.x},${frame.y})`
     }
 
     if (childs.length == 0) {
