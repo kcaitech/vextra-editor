@@ -10,10 +10,9 @@ import { ElMessage } from 'element-plus'
 
 const { t } = useI18n()
 const state = reactive({
-    circleUrl: localStorage.getItem('avatar'),
-    uname: localStorage.getItem('nickname'),
+    circleUrl: localStorage.getItem('avatar')
 })
-const { circleUrl, uname, } = toRefs(state)
+const { circleUrl } = toRefs(state)
 const num = ref(0)
 const showInForm = ref(false)
 const applyList = ref<any[]>([])
@@ -51,21 +50,31 @@ const errorHandler = () => true
 const search = ref('')
 const SearchList = ref<any[]>([])
 const lists = ref<any[]>([])
+const isShow = ref(false)
+
+document.addEventListener('click', function (e: any) {
+    const historylist: HTMLElement = document.querySelector('.searchhistory')!
+    if (document.querySelector('.searchhistory')!) {
+        const isClickedInsidehistorylist = historylist.contains(e.target as HTMLElement)
+        if (!isClickedInsidehistorylist && e.target.tagName != 'INPUT') {
+            closeclick()
+        }
+    }
+})
 
 function searchhistoryshow() {
-    const historylist: any = document.querySelector('.searchhistory')
-    historylist.style.display = "block"
     getUserdata()
-
+    isShow.value = true
 }
 
+
 function closeclick() {
-    const historylist: any = document.querySelector('.searchhistory')
     const close: any = document.querySelector('.CloseIcon')
     search.value = ''
     close.style.display = "none"
-    historylist.style.display = "none"
+    isShow.value = false
 }
+
 
 const getUserdata = async () => {
     if (location.hash.toLowerCase() == "#/apphome/recently") {
@@ -124,6 +133,7 @@ function sizeTostr(size: any) {
 }
 
 function userinfo() {
+    localStorage.setItem('location', location.href)
     router.push({ path: '/pcenter' })
 }
 
@@ -144,17 +154,6 @@ const toDocument = (row: any) => {
     window.open(url, '_blank')
 }
 
-// document.addEventListener('click', (el) => {
-//     const nullcontent: any = document.querySelector('.nullcontent')
-//     const content: any = document.querySelector('.content')
-//     console.log(el);
-
-//     // if (!isClickInsideSearchPanel) {
-//     //     searchPanel.style.display = 'none';
-//     // }
-
-// })
-
 </script>
 <template>
     <div class="header">
@@ -166,7 +165,7 @@ const toDocument = (row: any) => {
             <el-icon size="20" class="CloseIcon" style="margin: 10px;" @click="closeclick">
                 <Close />
             </el-icon>
-            <div class="searchhistory">
+            <div class="searchhistory" v-if="isShow">
                 <div class="content" v-if="search != ''">
                     <el-table :data="SearchList" style="width: 100%;" height="300" size="small"
                         :empty-text="t('search.search_results')" @row-click="toDocument">
@@ -195,10 +194,9 @@ const toDocument = (row: any) => {
                 </div>
             </div>
             <div class="user">
-                <el-avatar :src="circleUrl" @error="errorHandler">
+                <el-avatar :src="circleUrl" @error="errorHandler" fill>
                     <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
                 </el-avatar>
-                <!-- <span style="display: block" class="username">{{ uname }}</span> -->
                 <div class="userinfo">
                     <div @click="userinfo"><el-icon size="20">
                             <User />
@@ -336,7 +334,6 @@ const toDocument = (row: any) => {
         }
 
         span {
-            display: inline-block;
             width: 40px;
             text-align: center;
 
@@ -404,11 +401,11 @@ const toDocument = (row: any) => {
     background: white;
     z-index: 9999;
     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    display: none;
     border-radius: 5px;
     text-align: center;
 
     content {
         text-align: center;
     }
-}</style>
+}
+</style>

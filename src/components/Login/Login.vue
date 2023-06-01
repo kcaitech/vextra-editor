@@ -2,7 +2,7 @@
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
 import * as user_api from '@/apis/users'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
@@ -16,6 +16,7 @@ async function onmessage(e: any) {
     }
     isLoading.value = true
     let code = e.data.code
+    //此处获取邀请码，并添加到请求参数中
     const linfo: any = await user_api.PostLogin({ code: code });
     if (linfo.code === 0 && linfo.data.token !== '') {
         localStorage.setItem('token', linfo.data.token)
@@ -60,6 +61,10 @@ onMounted(() => {
         })
     }, 500);
     window.addEventListener('message', onmessage, false)
+})
+
+onUnmounted(()=>{
+    window.removeEventListener('message',onmessage)
 })
 
 </script>

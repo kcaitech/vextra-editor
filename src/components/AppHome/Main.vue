@@ -2,16 +2,19 @@
 import { Menu, Operation } from '@element-plus/icons-vue'
 import { RouterView } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref } from 'vue';
+import { update } from 'lodash';
 
 const {t} = useI18n()
 
-
+const titleid = ref(localStorage.getItem('index'))
+console.log(titleid.value);
 </script>
 
 <template>
     <div class="title">
         <div>
-            <span>{{ t('home.automatically_open') }}</span>
+            <span>{{ titleid }}</span>
         </div>
         <!-- <div>
             <el-icon size="25">

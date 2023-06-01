@@ -1,53 +1,62 @@
 <template>
     <div class="nav">
-        <div class="home"><el-icon size="25">
+        <!-- <div class="home"><el-icon size="25">
                 <House />
-            </el-icon><span>返回首页</span></div>
-        <div class="close" @click="router.push({ path: '/apphome' })"><el-icon size="25">
+            </el-icon><span>{{ t('percenter.return_home') }}</span></div> -->
+        <div class="close" @click="closePersonalCenter"><el-icon size="25">
                 <Close />
             </el-icon></div>
     </div>
 
-    <h1>个人中心</h1>
+    <h1>{{ t('percenter.personal_center') }}</h1>
     <div class="icon">
-        <span class="jbxx">基本信息</span>
+        <span class="jbxx">{{ t('percenter.essential_information') }}</span>
         <div class="one">
             <div class="two">
                 <div class="three">
-                    <div class="tx"><el-avatar :src="circleUrl" @error="errorHandler">
+                    <div class="tx"><el-avatar :src=circleUrl @error="errorHandler">
                             <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
                         </el-avatar></div>
                     <div class="text">
-                        <span style="font-size: 14px;font-weight: bold;">头像</span>
-                        <span style="font-size: 12px;color: #b3b3b3;">上传2M以内PNG或JPG格式图片</span>
+                        <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.head_portrait') }}</span>
+                        <span style="font-size: 12px;color: #b3b3b3;">{{ t('percenter.avatar_restriction') }}</span>
                     </div>
                 </div>
-                <a href="" class="btn" @click.prevent="openDialog">修改头像</a>
+                <a href="" class="btn" @click.prevent="openDialog">{{ t('percenter.modify_profile_picture') }}</a>
             </div>
         </div>
         <div class="one">
             <div class="two">
                 <div class="three">
                     <div class="text">
-                        <span style="font-size: 14px;font-weight: bold;">用户名</span>
-                        <span style="font-size: 12px;color: #b3b3b3;" v-if="shownicknameinput">{{ uname }}</span>
-                        <input class="newname" type="text" :value="uname" @change="newname" @blur="shownicknameinput = true"
-                            v-else />
+                        <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.username') }}</span>
+                        <span style="font-size: 12px;color: #b3b3b3; line-height: 22px; margin-top: 2px;"
+                            v-if="!shownicknameinput">{{
+                                uname }}</span>
+                        <div v-else>
+                            <input class="newname" type="text" :value=uname @input="tips">
+                            <span></span>
+                        </div>
+
                     </div>
+
                 </div>
-                <a href="" class="btn" @click.prevent="shownicknameinput = false">编辑用户名</a>
+                <a href="" class="btn" @click.prevent="updatename" v-if="!shownicknameinput">{{
+                    t('percenter.edit_user_name') }}</a>
+                <div v-if="shownicknameinput">
+                    <button class="affirm" @click="changename">{{ t('percenter.affirm') }}</button>
+                    <button class="cancel" @click="shownicknameinput = false">{{ t('percenter.cancel') }}</button>
+                </div>
             </div>
         </div>
         <div class="one">
             <div class="two">
                 <div class="three">
                     <div class="text">
-                        <span style="font-size: 14px;font-weight: bold;">用户ID</span>
+                        <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.userID') }}</span>
                         <span style="font-size: 12px;color: #b3b3b3;">{{ id }}</span>
-
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -58,16 +67,26 @@ import { House, Close } from '@element-plus/icons-vue'
 import { router } from '@/router';
 import * as user_api from '@/apis/users'
 import { ElMessage, inputEmits } from 'element-plus';
+import { update } from 'lodash';
+import { useI18n } from 'vue-i18n';
+import e from 'express';
 
-const shownicknameinput = ref(true)
+interface CustomResponse {
+    code: number;
+    data: {
+        avatar: string;
+    };
+    message: string;
+}
 
+const { t } = useI18n();
+const shownicknameinput = ref(false)
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
     uname: localStorage.getItem('nickname'),
     id: localStorage.getItem('id')
 })
 const { circleUrl, uname, id } = toRefs(state)
-
 const errorHandler = () => true
 
 function openDialog() {
@@ -76,10 +95,9 @@ function openDialog() {
     input.accept = '.jpg, .png, .jpeg'
     input.addEventListener('change', handleFileSelected)
     input.click()
-
 }
 
-async function handleFileSelected(event: any) {
+async function handleFileSelected(event: any,) {
     const file = event.target.files[0]
     const fileName = file.name
     const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
@@ -89,52 +107,132 @@ async function handleFileSelected(event: any) {
         if (file && file.size <= maxSizeInBytes && allowedFormats.includes(fileExtension)) {
             const formData = new FormData()
             formData.append('file', file)
-            const { code, data: { avatar } } = await user_api.Setusericon(formData)
+            const { code, data: { avatar }, message }: CustomResponse = await user_api.Setusericon(formData)
             if (code == 0) {
+                circleUrl.value = avatar
+                ElMessage.success(t('percenter.successtips'))
                 localStorage.setItem('avatar', avatar)
-                location.reload()
             } else {
-                ElMessage.error('上传失败')
+                ElMessage.error(message)
             }
         } else {
             // 文件大小超出限制
-            ElMessage.error('文件大小或格式超出限制')
+            ElMessage.error(t('percenter.errortips'))
         }
     } catch (error) {
-        ElMessage.error('请检测网络是否正常')
+        ElMessage.error(t('home.other_tips'))
     }
-
 }
 
+function updatename() {
+    shownicknameinput.value = true
+    setTimeout(() => {
+        const input: any = document.querySelector('.newname')
+        input.focus()
+    }, 100);
+}
 
-async function newname() {
-    const name: any = document.querySelector('.newname')
-    const pattern = /^.{1,12}$/
-    if (pattern.test(name.value)) {
-        try {
-            const { code } = await user_api.Setusernickname({ nickname: name.value })
-            if (code == 0) {
-                ElMessage.success('用户已修改')
-                localStorage.setItem('nickname',name.value)
-                location.reload()
-            } else {
-                ElMessage.error('用户名修改失败')
+async function changename() {
+    const input: any = document.querySelector('.newname')
+    const pattern = /^.{1,20}$/
+    if (pattern.test(input.value)) {
+        if (input.value != uname.value) {
+            try {
+                const { code, message } = await user_api.Setusernickname({ nickname: input.value })
+                if (code == 0) {
+                    uname.value = input.value
+                    ElMessage.success(t('percenter.successtips'))
+                    shownicknameinput.value = false
+                    localStorage.setItem('nickname', input.value)
+                } else {
+                    ElMessage.error(message)
+                }
+            } catch (error) {
+                ElMessage.error(t('home.other_tips'))
             }
-        } catch (error) {
-            ElMessage.error('请检测网络是否正常')
+        } else {
+            shownicknameinput.value = false
         }
-    }else{
-        ElMessage.error('请输入6-12个字符')
     }
+}
 
+function tips(e: any) {
+    const tips: any = document.querySelector('.newname + span')
+    if (e.srcElement.value == '') {
+        tips.innerHTML = t('percenter.usernametips_null')
+    } else if (e.srcElement.value.length <= 20) {
+        tips.innerHTML = ''
+    } else {
+        tips.innerHTML = t('percenter.usernametips_length')
+    }
+}
+
+function closePersonalCenter() {
+    if (localStorage.getItem('location')) {
+        (window as any).location.href = localStorage.getItem('location')
+    }
 }
 
 </script>
 <style lang="scss" scoped>
+.newname {
+    outline: none;
+    height: 22px;
+    box-sizing: border-box;
+
+    &:hover {
+        border-radius: 2px;
+        border: 2px rgb(69, 69, 255) solid;
+        border-color: rgb(69, 69, 255);
+    }
+
+    &:focus {
+        border-radius: 2px;
+        border: 2px rgb(69, 69, 255) solid;
+        border-color: rgb(69, 69, 255);
+    }
+}
+
+.newname+span {
+    font-size: 12px;
+    line-height: 22px;
+    margin-left: 5px;
+    color: red;
+}
+
+button {
+    width: 60px;
+    margin-left: 10px;
+    border: 1px silver solid;
+    border-radius: 2px;
+}
+
+
+.affirm {
+    background: rgb(69, 69, 255);
+    color: white;
+    border-color: rgb(69, 69, 255);
+
+    &:hover {
+        background: rgba(80, 80, 255, 0.884);
+    }
+}
+
+.cancel {
+    background: rgb(255, 255, 255);
+    color: black;
+
+    &:hover {
+        background: rgba(208, 208, 208, 0.167);
+    }
+}
+
+
 .nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-direction: row-reverse;
     margin: 20px;
 
     .home {
@@ -166,7 +264,7 @@ h1 {
         display: inline-block;
         font-weight: bold;
         margin-bottom: 20px;
-        
+
     }
 
     .one {
@@ -200,7 +298,8 @@ h1 {
         }
 
         .btn {
-            font-size: 14px;
+            font-size: 12px;
+            font-weight: 600;
             width: auto;
             height: 40px;
             line-height: 40px;

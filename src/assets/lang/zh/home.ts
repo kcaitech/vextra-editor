@@ -95,6 +95,8 @@ export const home = {
     access_record_ok: '移除成功',
     access_record_no: '移除失败',
     exit_share: '退出共享',
+    exit_share_success:'退出成功',
+    exit_share_fail:'退出失败',
     restore: '还原',
     completely_delete: '彻底删除',
     delete_tips: '删除执行后，文件将无法恢复找回，确认要删除吗？',
@@ -105,8 +107,10 @@ export const home = {
     restore_no: '还原失败',
     delete_file_ok: '删除成功',
     delete_file_no: '删除失败',
-    other_tips: '请确保网络联系正常',
+    other_tips: '请确保网络连接正常',
     addComment: '添加评论',
+    rename:'重命名',
+    rename_ok:'确定'
 }
 
 export const search = {

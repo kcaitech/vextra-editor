@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory, onBeforeRouteLeave, onBeforeRouteUp
 import { SKIP_LOGIN } from '@/utils/setting';
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
-const Apphome = () => import("@/components/AppHome/index.vue");
+const Apphome = () => import("@/components/AppHome/Apphome.vue");
 const Login = () => import("@/components/Login/Login.vue");
 const Recently = () => import("@/components/AppHome/Main/Recently.vue");
 const StarFile = () => import("@/components/AppHome/Main/StarFile.vue");

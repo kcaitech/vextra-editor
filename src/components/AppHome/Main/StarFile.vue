@@ -14,7 +14,7 @@
                         </svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
-                <el-icon :size=" 20 " style="display:inline-block;" v-else>
+                <el-icon :size=" 20 " v-else>
                     <el-tooltip :content=" t('home.de_star') " :show-after=" 1000 ">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
                             @click.stop=" Starfile(scope.$index) ">
