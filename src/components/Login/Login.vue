@@ -16,6 +16,7 @@ async function onmessage(e: any) {
     isLoading.value = true
     let code = e.data.code
     const linfo: any = await user_api.PostLogin({ code: code });
+    
     if (linfo.code === 0 && linfo.data.token !== '') {
         localStorage.setItem('token', linfo.data.token)
         localStorage.setItem('avatar', linfo.data.avatar)

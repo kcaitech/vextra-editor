@@ -158,6 +158,20 @@ export const attr: any = {
     'adapt': '适应容器大小'
 }
 
+export const login = {
+    login_failure: '登录失效，请重新登录'
+}
+
+export const comment = {
+    reply: '回复',
+    delete: '删除',
+    settled: '解决',
+    edit_content: '编辑内容',
+    quick_reply: '快速回复',
+    last: '上一条',
+    next: '下一条'
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';

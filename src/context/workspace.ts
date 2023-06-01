@@ -76,6 +76,7 @@ export class WorkSpace extends Watchable(Object) {
     static CHECKSTATUS = 9;
     static GROUP = 10;
     static UNGROUP = 11;
+    static SHUTDOWN_COMMENT = 12
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -97,6 +98,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_comment_input: boolean = false;
     constructor(context: Context) {
         super();
         this.context = context
@@ -169,6 +171,9 @@ export class WorkSpace extends Watchable(Object) {
     get isEditing() {
         return this.m_content_editing;
     }
+    get isCommentInput() {
+        return this.m_comment_input;
+    }
     updateRoot(root: Root) {
         this.m_root = root;
     }
@@ -195,6 +200,12 @@ export class WorkSpace extends Watchable(Object) {
         this.m_menu_mount = mount;
         if (!mount) {
             this.notify(WorkSpace.SHUTDOWN_MENU);
+        }
+    }
+    commentInput(visible: boolean) {
+        this.m_comment_input = visible;
+        if(!visible) {
+            this.notify(WorkSpace.SHUTDOWN_COMMENT)
         }
     }
     popoverVisible(visible: boolean) {
