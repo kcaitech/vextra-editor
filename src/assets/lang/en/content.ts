@@ -9,3 +9,8 @@ export const shape: any = {
     text: 'text',
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
+
+export const color = {
+    solid: 'Solid',
+    esc: 'Press ESC to exit'
+}

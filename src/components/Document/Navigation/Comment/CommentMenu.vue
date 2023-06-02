@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, onMounted, onUnmounted } from 'vue'
+type commentListMenu = {
+    text: string
+    status: boolean
+}
 const props = defineProps<{
-    Items: string[]
+    Items: commentListMenu[]
 }>()
 const emit = defineEmits<{
     (e:'close'): void
+    (e: 'commentMenuStatus', status: boolean, index: number): void
 }>()
 const i = ref(-1)
 
@@ -22,9 +27,8 @@ const handleClick = (e: Event) => {
   e.target instanceof Element && !e.target.closest('.menu-container') && emit('close');
 }
 
-const onClick = () => {
-    console.log(props.Items);
-    
+const onClick = (index: number, status: boolean) => {
+    emit('commentMenuStatus', !status, index)
 }
 
 onMounted(() => {  
@@ -39,9 +43,9 @@ onUnmounted(() => {
 <template>
     <div class="menu-container">
         <template v-for="(item, index) in props.Items" :key="index">
-            <div class="menu-item" :class="{active: i === index}" @mouseenter="e => hoverShape(e, index)" @mouseleave="e => unHoverShape(e, index)" @click="onClick">
-                <div class="choose" :style="{visibility: 'hidden'}" :class="{choose_active: i === index}"></div>
-                <div>{{ item }}</div>
+            <div class="menu-item" :class="{active: i === index}" @mouseenter="e => hoverShape(e, index)" @mouseleave="e => unHoverShape(e, index)" @click="onClick(index,item.status)">
+                <div class="choose" :style="{visibility: item.status ? 'visible' : 'hidden'}" :class="{choose_active: i === index}"></div>
+                <div>{{ item.text }}</div>
             </div>
             <div class="line" v-if="index === 0"></div>
         </template>

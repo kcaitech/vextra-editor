@@ -1,7 +1,7 @@
 const toStyle = (obj: any) => {
     const keys = Object.keys(obj);
     return keys.reduce((pre, cur) => {
-        return pre += `${cur}:${obj[cur]};` 
+        return pre += `${cur}:${obj[cur]};`
     }, '')
 }
 type MessageType = "success" | "info" | "danger";
@@ -57,7 +57,7 @@ export const message = (type: MessageType, context: string) => {
     body.appendChild(el);
     dropIn(el, fadeDur);
 
-    const preToOut = setTimeout(() => {        
+    const preToOut = setTimeout(() => {
         fadeOut(el);
         clearTimeout(preToOut);
     }, duration * 1000);
@@ -75,7 +75,7 @@ export const message = (type: MessageType, context: string) => {
     function fadeOut(el: HTMLDivElement) {
         el.style.opacity = '0';
         const remove = setTimeout(() => {
-            body.removeChild(el);
+            el?.parentNode?.removeChild(el);
             clearTimeout(remove);
         }, fadeDur * 1000 + 10);
     }

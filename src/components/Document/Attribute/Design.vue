@@ -4,13 +4,14 @@ import { Selection } from '@/context/selection';
 import { Shape } from '@kcdesign/data';
 import { ShapeType } from "@kcdesign/data"
 import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
-import ColorPicker from '../../common/ColorPicker.vue';
+import ColorPicker from '../../common/ColorPicker/index.vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
 import Text from './Text/Text.vue';
+import { debounce } from 'lodash';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 
@@ -19,19 +20,21 @@ const shape = shallowRef<Shape>();
 const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
 const shapeType = ref();
 
-function selectionChange(t: number) {
+function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         shape.value = undefined;
-    }
-    else if (t === Selection.CHANGE_SHAPE) {
+    } else if (t === Selection.CHANGE_SHAPE) {
         if (props.context.selection.selectedShapes.length === 1) {
             shape.value = props.context.selection.selectedShapes[0];
             shapeType.value = shape.value.type
-        }
-        else {
+        } else {
             shape.value = undefined;
         }
     }
+}
+const change = debounce(_change, 100);
+function selectionChange(t: number) {
+    change(t);
 }
 const backgroundColor = new Color(1, 239, 239, 239);
 onMounted(() => {
@@ -40,7 +43,6 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selectionChange);
 })
-
 </script>
 
 <template>
@@ -54,7 +56,7 @@ onUnmounted(() => {
         <div v-else class="back-setting-container">
             <span>{{ t('attr.background') }}</span>
             <div class="setting">
-                <ColorPicker class="color" :color="backgroundColor"></ColorPicker>
+                <ColorPicker class="color" :color="backgroundColor" :context="props.context"></ColorPicker>
                 <input type="text" :value="'#EFEFEF'" :spellcheck="false">
                 <input type="text" :value="1">
             </div>
@@ -106,4 +108,5 @@ section {
             }
         }
     }
-}</style>
+}
+</style>

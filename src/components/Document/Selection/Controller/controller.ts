@@ -24,6 +24,7 @@ export function useController(context: Context) {
     let editing: boolean = false;
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
+    const trans = { x: 0, y: 0 };
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
             const ps: PageXY = matrix.inverseCoord(start.x, start.y);
@@ -76,7 +77,7 @@ export function useController(context: Context) {
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
             const action = workspace.value.action;
-            if (action == Action.AutoV) {
+            if (action == Action.AutoV || action == Action.AutoK) {
                 workspace.value.setCtrl('controller');
                 wheel = fourWayWheel(context, undefined, startPositionOnPage);
                 document.addEventListener('mousemove', mousemove);
@@ -103,12 +104,12 @@ export function useController(context: Context) {
     function isMouseOnContent(e: MouseEvent): boolean {
         return (e.target as Element)?.closest(`#content`) ? true : false;
     }
-    function mousedown(e: MouseEvent) {        
+    function mousedown(e: MouseEvent) {
         if (context.workspace.isEditing) {
             context.selection.selectShape(context.selection.hoveredShape);
         }
         const working = !context.workspace.isPageDragging && !context.workspace.isEditing;
-        if (working) {            
+        if (working) {
             if (isElement(e)) {
                 matrix.reset(workspace.value.matrix);
                 setPosition(e);
@@ -147,6 +148,7 @@ export function useController(context: Context) {
                     if (!editing) {
                         isDragging = true;
                         asyncTransfer = context.editor.controller().asyncTransfer(shapes);
+                        workspace.value.setSelectionViewUpdater(false);
                     }
                 }
             }
@@ -159,10 +161,22 @@ export function useController(context: Context) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
                     _migrate(shapes, startPosition, mousePosition);
-                    asyncTransfer = asyncTransfer.close();
+                    const len = shapes.length;
+                    if (len > 1) {
+                        const m = matrix.inverseCoord({ x: mousePosition.x, y: mousePosition.y });
+                        asyncTransfer.trans(startPositionOnPage, m);
+                        const tool = context.workspace.toolGroup;
+                        if (tool) {
+                            tool.removeAttribute('style');
+                            trans.x = 0, trans.y = 0;
+                        }
+                    }
+                    asyncTransfer = asyncTransfer?.close();
                 }
                 isDragging = false;
                 workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
+                workspace.value.setSelectionViewUpdater(true);
+                workspace.value.selectionViewUpdate();
             } else {
                 pickerFromSelectedShapes(e);
             }
@@ -175,10 +189,25 @@ export function useController(context: Context) {
     function transform(start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.inverseCoord(start.x, start.y);
         const pe: PageXY = matrix.inverseCoord(end.x, end.y);
-        if (asyncTransfer) {
-            asyncTransfer.trans(ps, pe);
-            migrate(shapes, start, end);
+        if (shapes.length > 1) {
+            const tool = context.workspace.toolGroup;
+            if (tool) {
+                const tx = ps.x - pe.x;
+                const ty = ps.y - pe.y;
+                trans.x -= tx;
+                trans.y -= ty;
+                tool.style.transform = `translate(${trans.x}px, ${trans.y}px)`;
+            }
+        } else {
+            if (asyncTransfer) {
+                asyncTransfer.trans(ps, pe);
+                migrate(shapes, start, end);
+            }
         }
+        // if (asyncTransfer) {
+        //     asyncTransfer.trans(ps, pe);
+        //     migrate(shapes, start, end);
+        // }
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selected = context.selection.selectedShapes;
@@ -190,11 +219,11 @@ export function useController(context: Context) {
         } else if (selected.length === 1) {
             if (selected[0].type === ShapeType.Group) {
                 const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage, selected[0], e.metaKey || e.ctrlKey);
-                if (!isHasTarget) context.selection.selectShape();
+                if (!isHasTarget) context.selection.resetSelectShapes();
             } else {
                 const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, e.metaKey || e.ctrlKey, selected)[0];
                 if (!target) {
-                    context.selection.selectShape();
+                    context.selection.resetSelectShapes();
                 }
             }
         }
@@ -226,6 +255,7 @@ export function useController(context: Context) {
         }
     }
     function initController() {
+        trans.x = 0, trans.y = 0;
         initTimer(); // 控件生成之后立马开始进行双击预定，该预定将在duration(ms)之后取消
     }
     function initTimer() {

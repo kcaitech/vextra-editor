@@ -15,12 +15,10 @@ import { Repository } from '@kcdesign/data';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
 import { importSketch } from '@kcdesign/data';
 import { Zip } from "@pal/zip";
-import { uploadExForm } from "@kcdesign/data";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
 const { t } = useI18n();
-const token: any = localStorage.getItem('token');
 
 const picker = new FilePicker((file) => {
     if (!file) return;
@@ -139,7 +137,7 @@ a {
                 justify-content: center;
                 align-items: center;
 
-                span{
+                span {
                     margin-left: 10px;
                 }
 

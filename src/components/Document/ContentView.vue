@@ -62,18 +62,6 @@ let asyncCreator: AsyncCreator | undefined;
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
 const commentInput = ref(false)
 
-function offset2Root() { // == props.context.workspace.root
-    let el = root.value as HTMLElement;
-    let x = el.offsetLeft
-    let y = el.offsetTop
-    el = el.offsetParent as HTMLElement;
-    while (el) {
-        x += el.offsetLeft
-        y += el.offsetTop
-        el = el.offsetParent as HTMLElement;
-    }
-    return { x, y }
-}
 function rootRegister(mount: boolean) {
     if (mount) {
         const id = (uuid().split('-').at(-1)) || 'content';
@@ -109,7 +97,7 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         return shape;
     }
 }
-function onMouseWheel(e: WheelEvent) {
+function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const xy = workspace.value.root;
     const { ctrlKey, metaKey, shiftKey, deltaX, deltaY } = e;
@@ -136,32 +124,39 @@ function onMouseWheel(e: WheelEvent) {
             }
         }
     }
+    search(e) // 滚动过程进行常规图形检索
     workspace.value.matrixTransformation();
 }
-function onKeyDown(e: KeyboardEvent) {
+function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.code === KeyboardKeys.Space) {
-        spacePressed.value = true;
-        workspace.value.setCtrl('page');
-        workspace.value.pageDragging(true);
-        props.context.selection.unHoverShape();
-        setClass('grab-0');
+        preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
-        _search(true);
+        _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
     }
 }
 function onKeyUp(e: KeyboardEvent) {
     if (spacePressed.value && e.code === KeyboardKeys.Space) {
-        const action: Action = props.context.workspace.action;
-        if (action.startsWith('add')) {
-            setClass('cross-0');
-        } else {
-            setClass('auto-0');
-        }
-        spacePressed.value = false;
-        workspace.value.pageDragging(false);
+        endDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
-        _search(false);
+        _search(false);// 根据鼠标当前位置进行一次冒泡式图形检索
     }
+}
+function preToDragPage() { // 编辑器准备拖动页面
+    spacePressed.value = true;
+    workspace.value.setCtrl('page');
+    workspace.value.pageDragging(true);
+    props.context.selection.unHoverShape();
+    setClass('grab-0');
+}
+function endDragPage() { // 编辑器完成拖动页面
+    const action: Action = props.context.workspace.action;
+    if (action.startsWith('add')) {
+        setClass('cross-0');
+    } else {
+        setClass('auto-0');
+    }
+    spacePressed.value = false;
+    workspace.value.pageDragging(false);
 }
 function pageEditorOnMoveEnd(e: MouseEvent) {
     const { x, y } = getMouseOnPageXY(e);
@@ -257,14 +252,14 @@ function selectShapes(shapes: Shape[]) {
         selection.unHoverShape();
     }
 }
-function _search(auto: boolean) {
+function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix.inverseCoord(mx - x, my - y);
     const shapes = props.context.selection.getShapesByXY_beta(xy, false, auto);
     selectShapes(shapes);
 }
-function search(e: MouseEvent) { // 检索图形
+function search(e: MouseEvent) { // 常规图形检索
     if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = workspace.value.root;
@@ -578,7 +573,7 @@ const closeComment = (e: MouseEvent) => {
 
 // hooks
 function initMatrix(cur: Page) {
-    let info = matrixMap.get(cur.id)
+    let info = matrixMap.get(cur.id);
     if (!info) {
         const m = new Matrix();
         m.trans(-cur.frame.x, -cur.frame.y)
@@ -590,14 +585,16 @@ function initMatrix(cur: Page) {
 const stopWatch = watch(() => props.page, (cur, old) => {
     old.unwatch(watcher)
     cur.watch(watcher)
-
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
-
     initMatrix(cur)
 })
 const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
     root.value && updateRoot(props.context, root.value);
+})
+renderinit().then(() => {
+    inited.value = true;
+    nextTick(() => { root.value && resizeObserver.observe(root.value) });
 })
 onMounted(() => {
     initMatrix(props.page);
@@ -621,10 +618,6 @@ onUnmounted(() => {
     stopWatch();
     props.context.selection.scout?.remove();
     resizeObserver.disconnect();
-})
-renderinit().then(() => {
-    inited.value = true;
-    nextTick(() => { root.value && resizeObserver.observe(root.value) });
 })
 </script>
 <template>

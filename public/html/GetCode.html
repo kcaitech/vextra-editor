@@ -7,9 +7,12 @@
     <title>微信登录</title>
 </head>
 <body >
+    <p>登录中...</p>
     <script>
         let code = location.search.slice(6, -12)
         window.top.postMessage({ code: code, type: "GetWxCode" }, '*')
     </script>
+    <style>
+    </style>
 </body>
 </html>

@@ -26,7 +26,7 @@ const onRename = () => {
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
-            if(inputSpan.value) {
+            if (inputSpan.value) {
                 inputSpan.value.innerHTML = props.name
                 inputWidth.value = inputSpan.value.offsetWidth + 2
             }
@@ -69,7 +69,7 @@ const onInputBlur = (e: MouseEvent) => {
 
 const onInputName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value
-    if(inputSpan.value) {
+    if (inputSpan.value) {
         inputSpan.value.innerHTML = value
         inputWidth.value = inputSpan.value.offsetWidth + 2
     }
@@ -98,38 +98,44 @@ const selectShape = () => {
 </script>
 
 <template>
-    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @click="selectShape">
-        <div class="name" :class="{selected: selected, active: hover}" :style="{maxWidth: props.maxWidth + 'px'}" @dblclick="onRename">{{ props.name }}</div>
-        <input v-if="isInput" type="text" :style="{maxWidth: props.maxWidth + 'px', width: inputWidth + 'px'}" ref="nameInput" class="rename"
-        @input="onInputName" @change="ChangeReName">
+    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="selectShape"
+        @mousemove.stop data-area="controller">
+        <div class="name" :class="{ selected: selected, active: hover }" :style="{ maxWidth: props.maxWidth + 'px' }"
+            @dblclick="onRename">{{ props.name }}</div>
+        <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
+            ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
         <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan"></span>
     </div>
 </template>
 
 <style scoped lang="scss">
-    .container-name {
-        .name {
-            width: 100%;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            padding-left: 2px;
-            background-color: transparent;
-        }
-        .rename {
-            height: 15px;
-            outline-style: none;
-            font-size: 9px;
-            border: 1px solid var(--active-color);
-            padding: 0 1px;
-            margin-right: 1px;
-            box-sizing: border-box;
-        }
-        .selected {
-            color: var(--active-color)
-        }
-        .active {
-            color: var(--active-color)
-        }
+      
+.container-name {
+    .name {
+        width: 100%;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        padding-left: 2px;
+        background-color: transparent;
     }
+
+    .rename {
+        height: 15px;
+        outline-style: none;
+        font-size: 9px;
+        border: 1px solid var(--active-color);
+        padding: 0 1px;
+        margin-right: 1px;
+        box-sizing: border-box;
+    }
+
+    .selected {
+        color: #2561D9;
+    }
+
+    .active {
+        color: #2561D9;
+    }
+}
 </style>

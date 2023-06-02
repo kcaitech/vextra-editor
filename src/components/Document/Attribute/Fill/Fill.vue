@@ -1,20 +1,13 @@
-<!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-03-03 14:52:04
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-03 17:44:28
- * @FilePath: \kcdesign\src\components\Document\Attribute\TypeHeader.vue
--->
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref } from 'vue';
 import { Context } from '@/context';
-import { Shape, ShapeType } from '@kcdesign/data';
+import { Shape } from '@kcdesign/data';
 import { Color, Fill, ContextSettings } from "@kcdesign/data";
 import { FillType, BlendMode } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
-import ColorPicker from '@/components/common/ColorPicker.vue';
+import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
 
 interface FillItem {
@@ -40,26 +33,6 @@ function toHex(r: number, g: number, b: number) {
 }
 
 let shapeId: string = "";
-
-// function updateData() {
-//     shapeId = props.shape.id;
-//     fills.length = 0;
-//     if (props.shape?.type === ShapeType.Artboard) {
-//         const color = (props.shape as any).backgroundColor;
-//         const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-//         const fill = new Fill(true, FillType.SolidColor, color, contextSettings);
-//         const f = { id: 0, fill };
-//         fills.push(f);
-//     } else {
-//         const style = props.shape.style;
-//         for (let i = 0, len = style.fills.length; i < len; i++) {
-//             const fill = style.fills[i];
-//             const f = { id: i, fill };
-//             fills.push(f);
-//         }
-//     }
-
-// }
 function updateData() {
     shapeId = props.shape.id;
     fills.length = 0;
@@ -95,9 +68,9 @@ function addFill(): void {
     editor.value.addFill(fill);
 }
 const isNoFile = () => {
-    if(fills.length === 0) {
+    if (fills.length === 0) {
         addFill()
-    }    
+    }
 }
 
 function deleteFill(idx: number) {
@@ -114,7 +87,6 @@ function setColor(idx: number, clr: string, alpha: number) {
         message('danger', t('system.illegal_input'));
         return;
     }
-
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
@@ -123,7 +95,7 @@ function setColor(idx: number, clr: string, alpha: number) {
 
 function onColorChange(idx: number, e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
-    if(value.slice(0, 1) !== '#') {
+    if (value.slice(0, 1) !== '#') {
         value = "#" + value
     }
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
@@ -139,17 +111,17 @@ function onColorChange(idx: number, e: Event) {
 
 function onAlphaChange(idx: number, e: Event) {
     let value = (e.currentTarget as any)['value']
-    if(alpheFill.value) {
-        if(value?.slice(-1) === '%'){
+    if (alpheFill.value) {
+        if (value?.slice(-1) === '%') {
             value = Number(value?.slice(0, -1))
             if (value >= 0) {
-                if(value > 100) {
+                if (value > 100) {
                     value = 100
                 }
                 value = value.toFixed(2) / 100
                 const color = fills[idx].fill.color;
                 let clr = toHex(color.red, color.green, color.blue);
-                if(clr.slice(0, 1) !== '#') {
+                if (clr.slice(0, 1) !== '#') {
                     clr = "#" + clr
                 }
                 setColor(idx, clr, value);
@@ -157,16 +129,16 @@ function onAlphaChange(idx: number, e: Event) {
             } else {
                 message('danger', t('system.illegal_input'));
                 return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
-            }     
-        }else if (!isNaN(Number(value))) {
+            }
+        } else if (!isNaN(Number(value))) {
             if (value >= 0) {
-                if(value > 100) {
+                if (value > 100) {
                     value = 100
                 }
                 value = Number((Number(value)).toFixed(2)) / 100
                 const color = fills[idx].fill.color;
                 let clr = toHex(color.red, color.green, color.blue);
-                if(clr.slice(0, 1) !== '#') {
+                if (clr.slice(0, 1) !== '#') {
                     clr = "#" + clr
                 }
                 setColor(idx, clr, value);
@@ -174,16 +146,16 @@ function onAlphaChange(idx: number, e: Event) {
             } else {
                 message('danger', t('system.illegal_input'));
                 return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
-            }   
+            }
         } else {
             message('danger', t('system.illegal_input'));
             return (e.target as HTMLInputElement).value = (fills[idx].fill.color.alpha * 100) + '%'
-        } 
+        }
     }
 }
 function getColorFromPicker(rgb: number[], idx: number) {
     let clr = toHex(rgb[0], rgb[1], rgb[2]);
-    if(clr.slice(0, 1) !== '#') {
+    if (clr.slice(0, 1) !== '#') {
         clr = "#" + clr
     }
     const alpha = fills[idx].fill.color.alpha;
@@ -232,10 +204,12 @@ onBeforeUpdate(() => {
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" @choosecolor="c => getColorFromPicker(c, idx)"></ColorPicker>
+                    <ColorPicker :color="f.fill.color" :context="props.context"
+                        @choosecolor="c => getColorFromPicker(c, idx)"></ColorPicker>
                     <input :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
                         @change="(e) => onColorChange(idx, e)" />
-                    <input ref="alpheFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'" @change="(e) => onAlphaChange(idx, e)" />
+                    <input ref="alpheFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'"
+                        @change="(e) => onAlphaChange(idx, e)" />
                 </div>
                 <div style="width: 22px;"></div>
                 <div class="delete" @click="deleteFill(idx)">
@@ -304,6 +278,7 @@ onBeforeUpdate(() => {
             }
 
             .hidden {
+                flex: 0 0 18px;
                 width: 18px;
                 height: 18px;
                 background-color: transparent;
@@ -342,6 +317,7 @@ onBeforeUpdate(() => {
                 align-items: center;
                 width: 22px;
                 height: 22px;
+
                 >svg {
                     width: 11px;
                     height: 11px;

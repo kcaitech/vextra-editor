@@ -95,7 +95,7 @@ export function insertFrameTemplate(context: Context, name: string) {
             const timer = setTimeout(() => {
                 artboard && scrollToContentView(artboard, context);
                 clearTimeout(timer);
-            })
+            }, 100)
         }
     }
     workspace.setAction(Action.AutoV);

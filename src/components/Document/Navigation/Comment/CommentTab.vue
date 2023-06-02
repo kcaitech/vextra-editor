@@ -6,19 +6,25 @@ import CommentMenu from "./CommentMenu.vue";
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
-
+type commentListMenu = {
+    text: string
+    status: boolean
+}
 const commentMenu = ref<boolean>(false)
-let commentMenuItems: string[] = []
+const commentMenuItems = ref<commentListMenu[]>([{ text: `${t('comment.sort')}`, status: false},{ text: `${t('comment.show_about_me')}`, status: false},{ text: `${t('comment.show_resolved_comments')}`, status: false}])
 const showMenu = () => {
     if(commentMenu.value) {
         commentMenu.value = false
         return
     }
-    commentMenuItems = ['按页面排序', '仅显示关于我的','显示已解决评论']
     commentMenu.value = true
 }
 const closeMenu = () => {
     commentMenu.value = false
+}
+
+const handleMenuStatus = (status: boolean, index: number) => {
+    commentMenuItems.value[index].status = status
 }
 </script>
 
@@ -29,7 +35,7 @@ const closeMenu = () => {
             <div class="drop-dowm" @click.stop="showMenu">
                 <svg-icon icon-class="comment-dropdown"></svg-icon>
             </div>
-            <CommentMenu v-if="commentMenu" :Items="commentMenuItems" @close="closeMenu"></CommentMenu>
+            <CommentMenu v-if="commentMenu" :Items="commentMenuItems" @close="closeMenu" @comment-menu-status="handleMenuStatus"></CommentMenu>
         </div>
         <div class="comment-list">
             <el-scrollbar>

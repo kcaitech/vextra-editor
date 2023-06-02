@@ -1,8 +1,8 @@
 
 <template>
     <!-- 表格布局 -->
-    <el-table :data="getDoucmentList || []" height="83vh" style="width: 100%" v-loading="isLoading" v-infinite-scroll="load"
-        empty-text="没有内容" @row-click="toDocument">
+    <el-table :data="getDoucmentList"  max-height=84vh style="width: 100%" v-loading="isLoading"
+        empty-text="没有内容" @row-dblclick="toDocument" >
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -36,8 +36,10 @@
             </template>
         </el-table-column>
     </el-table>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
+        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
+    </FileShare>
+    <div v-if=" showFileShare " class="overlay"></div>
 </template>
 
 <script setup lang="ts">
@@ -52,24 +54,19 @@ import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 
 const { t } = useI18n()
 const isLoading = ref(false)
-let getDoucmentList = ref<any[]>([])
-const showFileShare = ref<boolean>(false);
+const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
-
 const selectValue = ref(1)
-isLoading.value = true;
-function load() {
+const getDoucmentList = ref<any[]>([])
 
-}
-
+//获取服务器我的文件列表
 async function getDoucment() {
-    // loading
-    isLoading.value = true
+    // isLoading.value = true
     const { data } = await share_api.getDoucmentListAPI()
     if (data == null) {
-        ElMessage.error("文档列表获取失败")
+        ElMessage.error(t('home.failed_list_tips'))
     } else {
         for (let i = 0; i < data.length; i++) {
             let { document: { size }, document_access_record: { last_access_time } } = data[i]
@@ -78,11 +75,10 @@ async function getDoucment() {
         }
     }
     getDoucmentList.value = data
-    // unloading
-    isLoading.value = false
-
+    // isLoading.value = false
 }
 
+//转换文件大小格式
 function sizeTostr(size: any) {
     if ((size / 1024 / 1024 / 1024) > 1) {
         size = (size / 1024 / 1024 / 1024).toFixed(2) + "GB"
@@ -96,33 +92,33 @@ function sizeTostr(size: any) {
     return size
 }
 
-
+//变更当前文件标星状态
 const Starfile = async (index: number) => {
     getDoucmentList.value[index].document_favorites.is_favorite = getDoucmentList.value[index].document_favorites.is_favorite === true ? false : true
     const doc_id = getDoucmentList.value[index].document.id
     if (getDoucmentList.value[index].document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_ok'))
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
-            ElMessage.success("已取消星标文档")
+            ElMessage.success(t('home.star_cancel'))
         }
     }
-
 }
 
 const Sharefile = (scope: any) => {
-    if(showFileShare.value) {
-    showFileShare.value = false
-    return
-  }
-    docId.value = scope.row.document.id  
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = scope.row.document.id
     selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
-  showFileShare.value = true
+    showFileShare.value = true
 }
+
 const closeShare = () => {
     showFileShare.value = false
 }
@@ -133,17 +129,17 @@ const onSwitch = (state: boolean) => {
     shareSwitch.value = state
 }
 const onSelectType = (type: number) => {
-  selectValue.value = type
+    selectValue.value = type
 }
 
 const Deletefile = async (index: number) => {
     const { document: { id } } = getDoucmentList.value[index]
     const { code } = await user_api.MoveFile({ doc_id: id })
     if (code === 0) {
-        ElMessage.success('文件已移至回收站')
+        ElMessage.success(t('home.delete_ok_tips'))
         getDoucment()
     } else {
-        ElMessage.error('移除失败')
+        ElMessage.error(t('home.delete_no_tips'))
     }
 }
 
