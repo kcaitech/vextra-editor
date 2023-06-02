@@ -2,14 +2,17 @@
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
 import * as user_api from '@/apis/users'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
 
 const { t } = useI18n();
 const isLoading = ref(false);
-
+const showCode = ref(false)
+const code = ref()
+const codevalue = ref('')
+const failed = ref<boolean>(false);
 async function onmessage(e: any) {
     if (e.data?.type !== "GetWxCode") {
         return
@@ -17,24 +20,35 @@ async function onmessage(e: any) {
     isLoading.value = true
     let code = e.data.code
     //此处获取邀请码，并添加到请求参数中
-    const linfo: any = await user_api.PostLogin({ code: code });
+    const tips: any = document.querySelector('#login_container')
+    const linfo: any = await user_api.PostLogin({ code: code, invite_code: codevalue.value });
     if (linfo.code === 0 && linfo.data.token !== '') {
         localStorage.setItem('token', linfo.data.token)
         localStorage.setItem('avatar', linfo.data.avatar)
         localStorage.setItem('nickname', linfo.data.nickname)
-        localStorage.setItem('id', linfo.data.id)
         localStorage.setItem('userId', linfo.data.id)
         isLoading.value = false
         router.push({ name: 'apphome' })
-    } else {
-        ElMessage.error(t('home.login_failed'))
-        const tips: any = document.querySelector('#login_container')
-        tips.style.lineHeight = '300px'
+    } else if (linfo.code === 400) {
+        ElMessage.error(linfo.message)
+        failed.value = true;
         tips.innerHTML = `${t('home.login_refresh')}`
         tips.addEventListener('click', () => {
             wxcode()
+            failed.value = false;
         })
 
+    } else {
+        ElMessage.error(t('home.login_failed'))
+        tips.style.lineHeight = '300px'
+        tips.style.background = '#00000030'
+        tips.style.margin = '20px 0'
+        tips.innerHTML = `${t('home.login_refresh')}`
+        tips.addEventListener('click', () => {
+            wxcode()
+            tips.style.background = ''
+            tips.style.lineHeight = ''
+        })
     }
 }
 
@@ -58,23 +72,29 @@ onMounted(() => {
         const login: any = document.querySelector('iframe')
         login.addEventListener('load', function () {
             isLoading.value = false
+            showCode.value = true
+            nextTick(() => {
+                code.value.focus()
+            })
+
         })
     }, 500);
     window.addEventListener('message', onmessage, false)
 })
 
-onUnmounted(()=>{
-    window.removeEventListener('message',onmessage)
+onUnmounted(() => {
+    window.removeEventListener('message', onmessage)
 })
 
 </script>
 
 <template>
-    <html>
+    <html lang="en">
     <Describes />
     <div class="login">
         <span>{{ t('system.wx_login') }}</span>
-        <div id="login_container" v-loading="isLoading"></div>
+        <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
+        <span class="Invitation_code" v-if="showCode">邀请码：<input ref="code" v-model="codevalue" maxlength="8" /></span>
         <p>{{ t('system.login_read') }}
             <a href="">{{ t('system.read_TOS') }}</a>&nbsp;
             <a href="">{{ t('system.read_Privacy') }}</a>
@@ -86,6 +106,16 @@ onUnmounted(()=>{
 </template>
 
 <style lang='scss' scoped>
+.login_container_hover {
+    background-color: #00000030;
+    line-height: 300px;
+    margin: 20px 0;
+}
+
+.login_container_hover:hover {
+    background-color: #00000010;
+}
+
 html {
     overflow: auto;
     display: flex;
@@ -125,6 +155,37 @@ html {
             margin-top: 40px;
             margin-bottom: 20px;
             letter-spacing: 10px;
+        }
+
+        .Invitation_code {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: 5px;
+
+            input {
+                width: 65px;
+                font-size: 14px;
+                font-weight: 600;
+                color: rgba(0, 0, 0, 0.8);
+                text-align: center;
+                border-radius: 2px;
+                border: 2px rgb(65, 65, 65) solid;
+                outline: none;
+
+                &:hover {
+                    border-radius: 2px;
+                    border: 2px rgb(69, 69, 255) solid;
+                    border-color: rgb(69, 69, 255);
+                }
+
+                &:focus {
+                    border-radius: 2px;
+                    border: 2px rgb(69, 69, 255) solid;
+                    border-color: rgb(69, 69, 255);
+                }
+            }
+
         }
 
         p {

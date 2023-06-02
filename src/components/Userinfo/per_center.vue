@@ -71,7 +71,7 @@ const shownicknameinput = ref(false)
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
     uname: localStorage.getItem('nickname'),
-    id: localStorage.getItem('id')
+    id: localStorage.getItem('userId')
 })
 const { circleUrl, uname, id } = toRefs(state)
 const errorHandler = () => true
