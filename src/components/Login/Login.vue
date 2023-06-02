@@ -18,6 +18,7 @@ async function onmessage(e: any) {
     let code = e.data.code
     //此处获取邀请码，并添加到请求参数中
     const linfo: any = await user_api.PostLogin({ code: code });
+    
     if (linfo.code === 0 && linfo.data.token !== '') {
         localStorage.setItem('token', linfo.data.token)
         localStorage.setItem('avatar', linfo.data.avatar)

@@ -14,7 +14,7 @@ import Sash from "@/components/common/Sash.vue";
 import { Page } from "@kcdesign/data";
 const props = defineProps<{ context: Context, page: Page }>();
 
-const structure = ref<{pagelistHeight: number, pagelistHeightBackup: number}>({pagelistHeight: 150, pagelistHeightBackup: 30});
+const structure = ref<{pagelistHeight: number, pagelistHeightBackup: number}>({pagelistHeight: 162, pagelistHeightBackup: 36});
 const container = ref<HTMLDivElement>();
 const sash = ref<HTMLDivElement>();
 const containerHeight = ref<number>(0);
@@ -24,7 +24,7 @@ function dragStart() {
     structure.value.pagelistHeightBackup = structure.value.pagelistHeight
 }
 function onDragOffset(offset: number) {
-    const newheight = Math.min(containerHeight.value - 100, Math.max(66, structure.value.pagelistHeightBackup + Number(offset)));
+    const newheight = Math.min(containerHeight.value - 100, Math.max(70, structure.value.pagelistHeightBackup + Number(offset)));
     structure.value.pagelistHeight = newheight
 }
 function pageListFold(fold: boolean) {

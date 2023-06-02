@@ -17,6 +17,7 @@ import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { updateRoot, getName } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
+import PageCommentItem from './Content/PageCommentItem.vue'
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -59,6 +60,8 @@ const rootId = ref<string>('content');
 let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
+const commentInput = ref(false)
+
 function rootRegister(mount: boolean) {
     if (mount) {
         const id = (uuid().split('-').at(-1)) || 'content';
@@ -408,6 +411,11 @@ function onMouseDown(e: MouseEvent) {
         } else {
             wheelSetup();
             isMouseLeftPress = true;
+            if(workspace.value.action !== Action.AddComment) {
+                if(commentInput.value) {
+                    commentInput.value = false;
+                }
+            }
         }
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
@@ -424,7 +432,7 @@ function onMouseMove(e: MouseEvent) {
                 pageViewDragging(e); // 拖拽页面
             } else {
                 if (workspace.value.action != Action.AutoV) {
-                    contentEditOnMoving(e); // 新增图形、切片                    
+                    contentEditOnMoving(e); // 新增图形、切片     
                 }
             }
         }
@@ -445,6 +453,7 @@ function onMouseMove_CV(e: MouseEvent) {
             }
         }
     }
+    
     updateMouse(e);
 }
 // mouseup(target：document)
@@ -453,7 +462,14 @@ function onMouseUp(e: MouseEvent) {
         if (spacePressed.value) {
             pageViewDragEnd();
         } else {
-            pageEditorOnMoveEnd(e);
+            if(workspace.value.action === Action.AddComment) {
+                addComment(e)
+            }else {
+                if(commentInput.value) {
+                    commentInput.value = false;
+                }
+                pageEditorOnMoveEnd(e);
+            }
             selectEnd();
             removeWheel();
             isMouseLeftPress = false;
@@ -497,6 +513,62 @@ function windowBlur() {
     isMouseLeftPress = false;
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
+}
+
+const commentPosition: ClientXY = reactive({ x: 0, y: 0 });
+type CommentInputEl = InstanceType<typeof CommentInput>;
+const commentEl = ref<CommentInputEl>();
+const rootWidth = ref(root.value?.clientWidth)
+//添加评论
+const addComment = (e: MouseEvent) => {
+    e.stopPropagation()
+    if(workspace.value.isCommentInput) {
+        workspace.value.commentInput(false)
+        return
+    }
+    if(commentInput.value) return
+        commentInput.value = true;
+        const { x, y } = workspace.value.root;
+        commentPosition.x = e.clientX - x + 40;
+        commentPosition.y = e.clientY - y - 45;
+        rootWidth.value = root.value && root.value.clientWidth
+        document.addEventListener('keydown', commentEsc);
+}
+
+const getCommentInputXY = (e: MouseEvent) => {
+    const { x, y } = workspace.value.root;
+    commentPosition.x = e.clientX - x + 37;
+    commentPosition.y = e.clientY - y - 40;
+}
+
+const commentEsc = (e: KeyboardEvent) => {
+    if (e.code === 'Escape') {
+        document.removeEventListener('keydown', commentEsc);
+        commentInput.value = false;
+    }
+}
+
+const mouseDownCommentInput = (e: MouseEvent) => {
+    document.addEventListener("mousemove", mouseMoveInput);
+    document.addEventListener("mouseup", mouseUpCommentInput);
+}
+
+const mouseMoveInput = (e: MouseEvent) => {
+    e.stopPropagation()
+    getCommentInputXY(e)
+}
+
+const mouseUpCommentInput = () => {
+    document.removeEventListener('mousemove', mouseMoveInput);
+    document.removeEventListener('mouseup', mouseUpCommentInput);
+}
+
+const closeComment = (e: MouseEvent) => {
+    if(!spacePressed.value) {
+        if(e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
+            commentInput.value = false;
+        }
+    }
 }
 
 // hooks
@@ -560,7 +632,9 @@ onUnmounted(() => {
             </PageViewContextMenuItems>
         </ContextMenu>
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
-        <!-- <CommentInput :context="props.context"></CommentInput> -->
+        <CommentInput v-if="commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y"
+         ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"></CommentInput>
+        <PageCommentItem v-if="!commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y" :rootWidth="rootWidth"></PageCommentItem>
     </div>
 </template>
 <style scoped lang="scss">

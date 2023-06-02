@@ -187,6 +187,24 @@ export const attr: any = {
     'fixed_top_bottom': 'Fixed top and bottom',
     'adapt': 'Resize to fit'
 }
+
+export const login = {
+    login_failure: 'Login failure'
+}
+
+export const comment = {
+    reply: 'Reply',
+    delete: 'Delete',
+    settled: 'solve',
+    edit_content: 'Edit content',
+    quick_reply: 'Quick reply',
+    last: 'Last',
+    next: 'Next',
+    sort: 'Sort by page',
+    show_about_me: 'Show about me',
+    show_resolved_comments: 'Show resolved comments'
+}
+
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';
