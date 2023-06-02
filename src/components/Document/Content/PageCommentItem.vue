@@ -56,7 +56,7 @@ const closeComment = (e?: MouseEvent) => {
 </script>
 
 <template>
-    <div class="container" ref="comment" :style="{ top: props.y - 10 + 'px', left: props.x - 42 + 'px'}">
+    <div class="container" ref="comment" :style="{ top: props.y - 10 + 'px', left: props.x - 42 + 'px'}" @mouseup.stop>
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover"
         :style="{transform: `scale(${markScale})`}" :class="{shadow: commentScale === 1 }">
             <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/getbgSw8iaiagB4ChgXIiax3eYG9U8iaWVkTZemvaTZRXZz6oad8tl7qXWxLxgfFQxWUZVPj1oXI5lGQpicNOnZPoMg/132" alt="">
@@ -79,7 +79,7 @@ const closeComment = (e?: MouseEvent) => {
         align-items: center;
         width: 35px;
         height: 35px;
-        border-radius: calc(16px);
+        border-radius: calc(14px);
         border-bottom-left-radius: 0;
         background-color: #fff;
         box-shadow: 0px 5px 10px rgba(0,0,0,0.15);

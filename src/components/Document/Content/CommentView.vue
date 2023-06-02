@@ -86,6 +86,17 @@ function workspaceUpdate(t?: number) {
     emit('close');
   }
 }
+
+const previousArticle = () => {
+    console.log('上一条评论');
+    
+}
+
+const nextArticle = () => {
+    console.log('下一条评论');
+    
+}
+
 watchEffect(commentPosition)
 
 defineExpose({
@@ -107,9 +118,9 @@ onUnmounted(() => {
     :class="{ popup_left: offside, popup_right: !offside }">
         <div class="popup-heard">
             <div class="button-shift">
-                <el-button plain class="custom-button">{{t('comment.last')}}</el-button>
+                <el-button plain class="custom-button" @click="previousArticle">{{t('comment.last')}}</el-button>
                 <div class="button-icon"></div>
-                <el-button plain class="custom-button">{{t('comment.next')}}</el-button>
+                <el-button plain class="custom-button" @click="nextArticle">{{t('comment.next')}}</el-button>
             </div>
             <div class="comment-commands">
                 <el-button-group class="ml-4">

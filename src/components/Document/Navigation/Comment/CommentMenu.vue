@@ -22,6 +22,11 @@ const handleClick = (e: Event) => {
   e.target instanceof Element && !e.target.closest('.menu-container') && emit('close');
 }
 
+const onClick = () => {
+    console.log(props.Items);
+    
+}
+
 onMounted(() => {  
   document.addEventListener('click', handleClick);
 })
@@ -34,7 +39,7 @@ onUnmounted(() => {
 <template>
     <div class="menu-container">
         <template v-for="(item, index) in props.Items" :key="index">
-            <div class="menu-item" :class="{active: i === index}" @mouseenter="e => hoverShape(e, index)" @mouseleave="e => unHoverShape(e, index)">
+            <div class="menu-item" :class="{active: i === index}" @mouseenter="e => hoverShape(e, index)" @mouseleave="e => unHoverShape(e, index)" @click="onClick">
                 <div class="choose" :style="{visibility: 'hidden'}" :class="{choose_active: i === index}"></div>
                 <div>{{ item }}</div>
             </div>

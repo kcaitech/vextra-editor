@@ -69,7 +69,10 @@ onUnmounted(() => {
 
 <template>
     <div ref="comment" class="comment-input" :style="{ top: props.y + 'px', left: offside ? surplusX + 'px' : props.x + 'px' }">
-        <div :class="{ icon_left: !offside, icon_right: offside }" ref="inputIcon"  @mousedown="mouseDownCommentInput"></div>
+        <div :class="{ icon_left: !offside, icon_right: offside }" ref="inputIcon"  @mousedown="mouseDownCommentInput">
+            <div class="line1"></div>
+            <div class="line2"></div>
+        </div>
         <div class="textarea">
             <el-input
                 ref="input"
@@ -101,9 +104,9 @@ onUnmounted(() => {
             left: -40px;
             width: 30px;
             height: 30px;
-            border-radius: calc(15px);
+            border-radius: calc(13px);
             border-bottom-left-radius: 0;
-            background-color: var(--active-color);
+            background-color: #fff;
             box-shadow: 0px 5px 10px rgba(0,0,0,0.15);
         }
         .icon_right {
@@ -112,9 +115,9 @@ onUnmounted(() => {
             right: -40px;
             width: 30px;
             height: 30px;
-            border-radius: calc(15px);
+            border-radius: calc(13px);
             border-bottom-left-radius: 0;
-            background-color: var(--active-color);
+            background-color: #fff;
             box-shadow: 0px 5px 10px rgba(0,0,0,0.15);
         }
         .textarea {
@@ -135,6 +138,26 @@ onUnmounted(() => {
                 border-radius: 50%;
             }
         }
+    }
+    .line1 {
+        position: absolute;
+        left: 7px;
+        top: 11px;
+        width: 40%;
+        height: 3px;
+        border: 1px solid #fff;
+        box-sizing: border-box;
+        background-color:  rgb(0, 0, 0,.8);
+    }
+    .line2 {
+        position: absolute;
+        left: 7px;
+        top: 16px;
+        width: 50%;
+        height: 3px;
+        border: 1px solid #fff;
+        box-sizing: border-box;
+        background-color:  rgb(0, 0, 0,.8);
     }
     :deep(.el-textarea__inner) {
         border: none;
