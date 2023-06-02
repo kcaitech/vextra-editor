@@ -34,6 +34,7 @@ const inputPosition = () => {
 const sendBright = computed(() => textarea.value.trim().length > 0)
 
 const carriageReturn = (event: KeyboardEvent) => {
+    event.stopPropagation()
     const { code, ctrlKey, shiftKey } = event;
     if(event.key === 'Enter') {
         if(ctrlKey) {

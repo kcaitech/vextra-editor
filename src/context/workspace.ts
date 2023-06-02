@@ -81,6 +81,7 @@ export class WorkSpace extends Watchable(Object) {
     static END_SAVE = 15;
     static DOCUMENT_SAVE = 16;
     static SHUTDOWN_COMMENT = 17;
+    static SELECT_LIST_TAB = 18;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -413,7 +414,7 @@ export class WorkSpace extends Watchable(Object) {
     keydown_c() {
         this.escSetup();
         this.m_current_action = Action.AddComment;
-        this.notify();
+        this.notify(WorkSpace.SELECT_LIST_TAB);
     }
     keydown_0(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) {

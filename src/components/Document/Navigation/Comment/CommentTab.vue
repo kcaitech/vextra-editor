@@ -11,7 +11,11 @@ type commentListMenu = {
     status: boolean
 }
 const commentMenu = ref<boolean>(false)
-const commentMenuItems = ref<commentListMenu[]>([{ text: `${t('comment.sort')}`, status: false},{ text: `${t('comment.show_about_me')}`, status: false},{ text: `${t('comment.show_resolved_comments')}`, status: false}])
+const commentMenuItems = ref<commentListMenu[]>([
+    { text: `${t('comment.sort')}`, status: false},
+    { text: `${t('comment.show_about_me')}`, status: false},
+    { text: `${t('comment.show_resolved_comments')}`, status: false}
+])
 const showMenu = () => {
     if(commentMenu.value) {
         commentMenu.value = false
@@ -31,7 +35,7 @@ const handleMenuStatus = (status: boolean, index: number) => {
 <template>
     <div class="comment-container">
         <div class="comment-title">
-            <div class="title">评论区</div>
+            <div class="title">{{t('comment.comment_area')}}</div>
             <div class="drop-dowm" @click.stop="showMenu">
                 <svg-icon icon-class="comment-dropdown"></svg-icon>
             </div>

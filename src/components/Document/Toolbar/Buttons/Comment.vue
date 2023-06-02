@@ -1,16 +1,18 @@
 <script lang="ts" setup>
 import ToolButton from '../ToolButton.vue';
 import { defineEmits, defineProps } from 'vue';
-import { Action } from '@/context/workspace';
+import { Action, WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n()
 const props = defineProps<{
   active: boolean,
+  workspace: WorkSpace,
 }>();
 const emit = defineEmits<{
   (e: "select", action: Action): void;
 }>();
 function select(action: Action) {
+  props.workspace.keydown_c()
   emit('select', action);
 }
 </script>

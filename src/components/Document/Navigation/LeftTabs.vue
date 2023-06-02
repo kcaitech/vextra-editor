@@ -36,9 +36,11 @@ const tabs: { title: string, id: Tab }[] = [
     // }
 ]
 
-function update() {
-    selected.value = workspace.value.action;
-    selectComment()
+function update(t: number) {
+    if(t === WorkSpace.SELECT_LIST_TAB) {
+        selected.value = workspace.value.action;
+        selectComment()
+    }
 }
 
 const selectComment = () => {

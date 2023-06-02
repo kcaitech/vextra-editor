@@ -60,6 +60,7 @@ function handleClickOutside(event: MouseEvent) {
 }
 
 const carriageReturn = (event: KeyboardEvent) => {
+    event.stopPropagation()
     const { code, ctrlKey, shiftKey } = event;
     if(event.key === 'Enter') {
         if(ctrlKey) {
@@ -202,6 +203,7 @@ onUnmounted(() => {
                 height: 30px;
                 .el-button {
                     border: none;
+                    border-radius: 4px;
                     width: 30px;
                     height: 30px;
                     &:hover {

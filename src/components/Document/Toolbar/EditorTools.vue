@@ -68,7 +68,7 @@ onUnmounted(() => {
                 </div>
             </ToolButton>
         </el-tooltip>
-        <Comment @select="select" :active="selected === Action.AddComment"></Comment>
+        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
 </template>
