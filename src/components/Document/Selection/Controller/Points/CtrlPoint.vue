@@ -71,7 +71,6 @@ function calcOrigin() {
     width: p3OnPage.x - p1OnPage.x,
     height: p3OnPage.y - p1OnPage.y
   };
-  console.log('emit', origin_frame);
 }
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
