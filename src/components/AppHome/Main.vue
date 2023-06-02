@@ -1,14 +1,8 @@
 <script setup lang="ts">
-import { Menu, Operation } from '@element-plus/icons-vue'
 import { RouterView } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import { onBeforeUpdate, onMounted, onUnmounted, onUpdated, ref } from 'vue';
-import { update } from 'lodash';
-
-const {t} = useI18n()
+import { ref } from 'vue';
 
 const titleid = ref(localStorage.getItem('index'))
-console.log(titleid.value);
 </script>
 
 <template>
@@ -16,14 +10,6 @@ console.log(titleid.value);
         <div>
             <span>{{ titleid }}</span>
         </div>
-        <!-- <div>
-            <el-icon size="25">
-                <Menu />
-            </el-icon>
-            <el-icon size="25">
-                <Operation size="30" />
-            </el-icon>
-        </div> -->
     </div>
     <el-divider />
     <div class="main">
