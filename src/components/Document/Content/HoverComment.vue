@@ -43,7 +43,7 @@ const onClick = (e: MouseEvent) => {
 </script>
 
 <template>
-    <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @click="onClick" :style="{transform: `scale(${props.scale})`}">
+    <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @click="onClick" :style="{transform: `scale(${props.scale})`}" @mouseup.stop>
         <div class="avatar">
             <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/getbgSw8iaiagB4ChgXIiax3eYG9U8iaWVkTZemvaTZRXZz6oad8tl7qXWxLxgfFQxWUZVPj1oXI5lGQpicNOnZPoMg/132" alt="">
         </div>
@@ -129,7 +129,7 @@ const onClick = (e: MouseEvent) => {
                     .el-button {
                         border: none;
                         padding: 0;
-                        border-radius: 0;
+                        border-radius: 2px;
                         width: 20px;
                         height: 20px;
                         &:hover {

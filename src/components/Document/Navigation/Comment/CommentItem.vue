@@ -112,7 +112,7 @@ onMounted(() => {
                         border: none;
                         background-color: transparent;
                         padding: 0;
-                        border-radius: 0;
+                        border-radius: 2px;
                         width: 20px;
                         height: 20px;
                         &:hover {

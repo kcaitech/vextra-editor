@@ -9,6 +9,7 @@ const props = defineProps<{
     x: number
     y: number
     rootWidth?: number
+    cursorClass: string
 }>()
 const commentPopupEl = ref<CommentViewEl>()
 const ShowComment = ref(false)
@@ -56,14 +57,14 @@ const closeComment = (e?: MouseEvent) => {
 </script>
 
 <template>
-    <div class="container" ref="comment" :style="{ top: props.y - 10 + 'px', left: props.x - 42 + 'px'}" @mouseup.stop>
+    <div class="container" ref="comment" :style="{ top: props.y - 10 + 'px', left: props.x - 42 + 'px'}"  @mouseup.stop>
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover"
         :style="{transform: `scale(${markScale})`}" :class="{shadow: commentScale === 1 }">
             <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/getbgSw8iaiagB4ChgXIiax3eYG9U8iaWVkTZemvaTZRXZz6oad8tl7qXWxLxgfFQxWUZVPj1oXI5lGQpicNOnZPoMg/132" alt="">
         </div>
         <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment" @unHoverComment="unHoverComment"></HoverComment>
-        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="props.x" :y="props.y" :rootWidth="props.rootWidth" 
-        :rootHeight="rootHeight" :context="props.context" @close="closeComment" @mousedown.stop></CommentView>
+        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="props.x" :y="props.y" :rootWidth="props.rootWidth"
+        :rootHeight="rootHeight" :context="props.context" @close="closeComment"></CommentView>
     </div>
 </template>
 

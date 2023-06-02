@@ -47,6 +47,7 @@ const onDelete = (e: Event) => {
 }
 
 const carriageReturn = (event: KeyboardEvent) => {
+    event.stopPropagation()
     const { code, ctrlKey, shiftKey } = event;
     if(event.key === 'Enter') {
         if(ctrlKey) {
@@ -150,7 +151,7 @@ const carriageReturn = (event: KeyboardEvent) => {
                     border: none;
                     padding: 0;
                     width: 20px;
-                    border-radius: 0;
+                    border-radius: 2px;
                     height: 20px;
                     &:hover {
                         background-color: rgba(0,0,0,0.08);

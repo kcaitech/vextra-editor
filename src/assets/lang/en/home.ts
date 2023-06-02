@@ -196,7 +196,8 @@ export const comment = {
     next: 'Next',
     sort: 'Sort by page',
     show_about_me: 'Show about me',
-    show_resolved_comments: 'Show resolved comments'
+    show_resolved_comments: 'Show resolved comments',
+    comment_area: 'Comment section'
 }
 
 attr[BorderPosition.Inner] = 'Inner';
