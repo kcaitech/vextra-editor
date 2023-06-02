@@ -1,14 +1,12 @@
 <template>
     <div class="nav">
-        <!-- <div class="home"><el-icon size="25">
-                <House />
-            </el-icon><span>{{ t('percenter.return_home') }}</span></div> -->
         <div class="close" @click="closePersonalCenter"><el-icon size="25">
                 <Close />
             </el-icon></div>
+            <h1>{{ t('percenter.personal_center') }}</h1>
     </div>
 
-    <h1>{{ t('percenter.personal_center') }}</h1>
+   
     <div class="icon">
         <span class="jbxx">{{ t('percenter.essential_information') }}</span>
         <div class="one">
@@ -63,21 +61,10 @@
 </template>
 <script setup lang="ts">
 import { reactive, toRefs, ref } from 'vue'
-import { House, Close } from '@element-plus/icons-vue'
-import { router } from '@/router';
+import { Close } from '@element-plus/icons-vue'
 import * as user_api from '@/apis/users'
-import { ElMessage, inputEmits } from 'element-plus';
-import { update } from 'lodash';
+import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
-import e from 'express';
-
-interface CustomResponse {
-    code: number;
-    data: {
-        avatar: string;
-    };
-    message: string;
-}
 
 const { t } = useI18n();
 const shownicknameinput = ref(false)
@@ -107,7 +94,7 @@ async function handleFileSelected(event: any,) {
         if (file && file.size <= maxSizeInBytes && allowedFormats.includes(fileExtension)) {
             const formData = new FormData()
             formData.append('file', file)
-            const { code, data: { avatar }, message }: CustomResponse = await user_api.Setusericon(formData)
+            const { code, data: { avatar }, message } = await user_api.Setusericon(formData) as any;
             if (code == 0) {
                 circleUrl.value = avatar
                 ElMessage.success(t('percenter.successtips'))
@@ -138,7 +125,7 @@ async function changename() {
     if (pattern.test(input.value)) {
         if (input.value != uname.value) {
             try {
-                const { code, message } = await user_api.Setusernickname({ nickname: input.value })
+                const { code, message } = await user_api.Setusernickname({ nickname: input.value }) as any
                 if (code == 0) {
                     uname.value = input.value
                     ElMessage.success(t('percenter.successtips'))
@@ -233,11 +220,11 @@ button {
     justify-content: space-between;
     align-items: center;
     flex-direction: row-reverse;
-    margin: 20px;
-
-    .home {
-        display: flex;
-        align-items: center;
+    margin: 0 0 20px 0;
+    background: rgb(240, 240, 240);
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+    .close {
+       margin: 0 20px;
     }
 
     .close:hover {
@@ -248,11 +235,12 @@ button {
 h1 {
     text-align: center;
     letter-spacing: 5px;
+    margin: 10px 20px;
 }
 
 .icon {
     position: absolute;
-    top: 15%;
+    top: 10%;
     left: 50%;
     padding: 20px;
     transform: translate(-50%);

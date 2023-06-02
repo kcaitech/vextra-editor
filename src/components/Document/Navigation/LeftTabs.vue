@@ -1,16 +1,10 @@
-<!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-03-08 09:42:33
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-09 16:13:35
--->
 <script setup lang="ts">
-import { defineProps, ref,computed, onMounted, onUnmounted } from "vue";
+import { defineProps, ref, computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
-import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
-import CommentTab from "./CommentTab.vue";
+import CommentTab from "./Comment/CommentTab.vue";
+// import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
 import { Action, WorkSpace } from '@/context/workspace';
@@ -32,12 +26,14 @@ const tabs: { title: string, id: Tab }[] = [
         title: t('navi.comps'),
         id: 'Comps'
     }, {
-        title: t('navi.resource'),
-        id: 'Resource'
-    }, {
         title: t('home.comment'),
         id: 'Comment'
     }
+    ,
+    // {
+    //     title: t('navi.resource'),
+    //     id: 'Resource'
+    // }
 ]
 
 function update() {
@@ -46,7 +42,7 @@ function update() {
 }
 
 const selectComment = () => {
-    if(selected.value === Action.AddComment) {
+    if (selected.value === Action.AddComment) {
         currentTab.value = 'Comment'
     }
 }
@@ -71,7 +67,7 @@ onUnmounted(() => {
         <div class="body">
             <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"></ShapeTab>
             <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
-            <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab>
+            <!-- <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab> -->
             <CommentTab :context="props.context" v-if="currentTab === 'Comment'"></CommentTab>
         </div>
     </div>
@@ -84,27 +80,29 @@ onUnmounted(() => {
     box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
     .tab-controller {
-        height: 36px;
-        width: 100%;
+        height: 32px;
         display: flex;
         flex-direction: row;
-        margin-left: 13px;
         overflow: hidden;
 
         >.tab {
+            min-width: 24px;
             font-weight: var(--font-default-bold);
             font-size: 10px;
-            min-width: 42px;
             margin-right: 4px;
             margin-top: 4px;
-            padding: 4px;
-            text-align: center;
+            text-align: left;
             line-height: 24px;
+            color: var(--grey-dark);
+            margin-left: 13px;
+        }
+
+        >.tab:hover {
+            color: var(--theme-color);
         }
 
         >.active {
-            border-radius: 4px 4px 0 0;
-            background-color: var(--grey-dark);
+            color: var(--theme-color);
         }
 
     }

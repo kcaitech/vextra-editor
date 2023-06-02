@@ -110,13 +110,17 @@ export const home = {
     other_tips: 'Please make sure the network connection is normal',
     addComment: 'Add comment',
     rename:'Rename',
-    rename_ok:'OK'
+    rename_ok:'OK',
+    page_sort: 'Sort by page',
+    login_failed:'Login failure',
+    login_refresh:'Click refresh QR code'
 }
 
 export const search = {
     search_results:'No matching results',
-    search_history:'No search history'
+    search_history:'No search history',
 }
+
 
 export const navi = {
     shape: 'Shape',

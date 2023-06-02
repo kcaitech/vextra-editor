@@ -69,7 +69,11 @@ function updater(t?: number) {
 }
 function workspaceUpdate(t?: number) {
     if (t === WorkSpace.TRANSLATING) {
-        visible.value = !workspace.value.isTranslating;
+        if (!workspace.value.isTranslating) {
+            visible.value = true;
+        } else {
+            visible.value = false;
+        }
     }
 }
 function mousedown(e: MouseEvent) {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { GroupShape, Shape } from '@kcdesign/data';
+import { Shape } from '@kcdesign/data';
 import { defineProps, watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget } from '@/utils/common';
@@ -38,6 +38,10 @@ function select() {
         let ids = 0;
         while (ids < childs.length) {
             if (selectedShapes.find(i => i.id === childs[ids].id)) {
+                ids++;
+                continue;
+            }
+            if (childs[ids].isLocked || !childs[ids].isVisible) {
                 ids++;
                 continue;
             }

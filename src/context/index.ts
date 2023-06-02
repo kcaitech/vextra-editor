@@ -5,12 +5,8 @@ import { Shape } from "@kcdesign/data";
 import { Repository } from "@kcdesign/data";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
 import { ShapeEditor } from "@kcdesign/data";
-import { uploadExForm } from "@kcdesign/data";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
-import * as share_api from '@/apis/share';
-import { router } from '@/router';
-
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: Repository;
@@ -28,19 +24,6 @@ export class RepoWraper {
     }
     redo() {
         this.m_repo.redo();
-    }
-    /**
-     * @deprecated
-     */
-    get transactCtx() { // TODO 
-        return this.m_repo.transactCtx;
-    }
-    /**
-     * @deprecated
-     * @param cmd 
-     */
-    commit(cmd: any) {
-        this.m_repo.commit(cmd);
     }
 }
 
@@ -90,38 +73,5 @@ export class Context extends Watchable(Object) {
 
     get workspace() {
         return this.m_workspace;
-    }
-
-    // debug
-    upload(id?: string) {
-        const token = localStorage.getItem('token')
-        if(token)
-        
-        //  uploadExForm(this.m_data, 'ws://192.168.0.10:10000/api/v1', token, id ? id : '', async (successed, doc_id) => {
-            uploadExForm(this.m_data, 'ws://api.protodesign.cn/api/v1', token, id ? id : '', async (successed, doc_id) => {
-            if(successed) {
-                localStorage.setItem('docId', doc_id)
-                if (!id) {
-                    router.replace({
-                        path: '/document',
-                        query: {id: doc_id}
-                    })
-                }
-            }
-        })
-    }
-
-    async documentInfo(id: string) {
-        try {
-            if (id) {
-                const { data } = await share_api.getDocumentInfoAPI({ doc_id: id })
-                return data
-            } else {
-                console.log('没有该文档');
-            }
-
-        } catch (err) {
-            return console.log(err);
-        }
     }
 }

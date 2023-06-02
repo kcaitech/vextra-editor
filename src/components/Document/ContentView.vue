@@ -13,10 +13,10 @@ import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
-import { scrollToContentView } from '@/utils/artboardFn';
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { updateRoot, getName } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
+import CommentInput from './Content/CommentInput.vue';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -39,9 +39,7 @@ const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix = reactive(props.context.workspace.matrix); // 一切图形可视变换的根源！！！
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
-const watcher = () => {
-    reflush.value++;
-}
+const watcher = () => { reflush.value++ };
 const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
@@ -61,18 +59,6 @@ const rootId = ref<string>('content');
 let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
-function offset2Root() { // == props.context.workspace.root
-    let el = root.value as HTMLElement;
-    let x = el.offsetLeft
-    let y = el.offsetTop
-    el = el.offsetParent as HTMLElement;
-    while (el) {
-        x += el.offsetLeft
-        y += el.offsetTop
-        el = el.offsetParent as HTMLElement;
-    }
-    return { x, y }
-}
 function rootRegister(mount: boolean) {
     if (mount) {
         const id = (uuid().split('-').at(-1)) || 'content';
@@ -108,12 +94,12 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         return shape;
     }
 }
-function onMouseWheel(e: WheelEvent) {
+function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
+    e.preventDefault();
     const xy = workspace.value.root;
     const { ctrlKey, metaKey, shiftKey, deltaX, deltaY } = e;
     const offsetX = e.x - xy.x;
     const offsetY = e.y - xy.y;
-    e.preventDefault();
     if (ctrlKey || metaKey) { // 缩放
         if (Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
             scale_delta_ = 1
@@ -124,7 +110,7 @@ function onMouseWheel(e: WheelEvent) {
         matrix.scale(Math.sign(deltaY) <= 0 ? scale_delta : scale_delta_);
         matrix.trans(offsetX, offsetY);
     } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 待适配，临时适配方案
+        if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
             matrix.trans(-deltaX, -deltaY);
         } else {
             const delta = deltaY > 0 ? -wheel_step : wheel_step;
@@ -135,41 +121,45 @@ function onMouseWheel(e: WheelEvent) {
             }
         }
     }
+    search(e) // 滚动过程进行常规图形检索
     workspace.value.matrixTransformation();
 }
-
-function onKeyDown(e: KeyboardEvent) {
-    if (e.code == KeyboardKeys.Space) {
-        spacePressed.value = true;
-        workspace.value.setCtrl('page');
-        workspace.value.pageDragging(true);
-        props.context.selection.unHoverShape();
-        setClass('grab-0');
-    } else if (e.code == 'MetaLeft' || e.code == 'ControlLeft') {
-        _search(true);
+function onKeyDown(e: KeyboardEvent) { // 键盘监听
+    if (e.code === KeyboardKeys.Space) {
+        preToDragPage();
+    } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
+        _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
     }
 }
 function onKeyUp(e: KeyboardEvent) {
-    if (spacePressed.value && e.code == KeyboardKeys.Space) {
-        const action: Action = props.context.workspace.action;
-        if (action.startsWith('add')) {
-            setClass('cross-0');
-        } else {
-            setClass('auto-0');
-        }
-        spacePressed.value = false;
-        workspace.value.pageDragging(false);
-    } else if (e.code == 'MetaLeft' || e.code == 'ControlLeft') {
-        _search(false);
+    if (spacePressed.value && e.code === KeyboardKeys.Space) {
+        endDragPage();
+    } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
+        _search(false);// 根据鼠标当前位置进行一次冒泡式图形检索
     }
 }
-
+function preToDragPage() { // 编辑器准备拖动页面
+    spacePressed.value = true;
+    workspace.value.setCtrl('page');
+    workspace.value.pageDragging(true);
+    props.context.selection.unHoverShape();
+    setClass('grab-0');
+}
+function endDragPage() { // 编辑器完成拖动页面
+    const action: Action = props.context.workspace.action;
+    if (action.startsWith('add')) {
+        setClass('cross-0');
+    } else {
+        setClass('auto-0');
+    }
+    spacePressed.value = false;
+    workspace.value.pageDragging(false);
+}
 function pageEditorOnMoveEnd(e: MouseEvent) {
     const { x, y } = getMouseOnPageXY(e);
     const deltaX = Math.abs(x - mousedownOnPageXY.x);
     const deltaY = Math.abs(y - mousedownOnPageXY.y);
     const shapeFrame = new ShapeFrame(x, y, deltaX, deltaY);
-
     const diff = Math.hypot(deltaX, deltaY);
     if (diff > dragActiveDis) {// 抬起之前存在拖动
         if (newShape) {
@@ -236,38 +226,37 @@ async function setClass(name: string) {
     const _n = await styler.value.getClass(name);
     cursorClass.value = _n;
 }
-
 function insertFrame() {
     const brothers = props.context.selection.selectedPage?.childs || [];
     const name = getName(ShapeType.Artboard, brothers, t);
     insertFrameTemplate(props.context, name);
 }
 function selectShapes(shapes: Shape[]) {
-    const hoveredShape = shapes[0];
+    const hoveredShape = shapes[0], selection = props.context.selection;
     if (hoveredShape) {
-        const selected = props.context.selection.selectedShapes;
+        const selected = selection.selectedShapes;
         if (selected.length) {
             const isSelected = selected.find((s: Shape) => s.id == hoveredShape.id);
             if (!isSelected) {
-                props.context.selection.hoverShape(hoveredShape);
+                selection.hoverShape(hoveredShape);
             } else {
-                props.context.selection.unHoverShape();
+                selection.unHoverShape();
             }
         } else {
-            props.context.selection.hoverShape(hoveredShape);
+            selection.hoverShape(hoveredShape);
         }
     } else {
-        props.context.selection.unHoverShape();
+        selection.unHoverShape();
     }
 }
-function _search(auto: boolean) {
+function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix.inverseCoord(mx - x, my - y);
     const shapes = props.context.selection.getShapesByXY_beta(xy, false, auto);
     selectShapes(shapes);
 }
-function search(e: MouseEvent) { // 检索图形
+function search(e: MouseEvent) { // 常规图形检索
     if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = workspace.value.root;
@@ -275,13 +264,11 @@ function search(e: MouseEvent) { // 检索图形
     const shapes = props.context.selection.getShapesByXY_beta(xy, false, metaKey || ctrlKey); // xy: PageXY
     selectShapes(shapes);
 }
-
 function pageViewDragStart(e: MouseEvent) {
     state = STATE_CHECKMOVE;
     prePt.x = e.screenX;
     prePt.y = e.screenY;
 }
-
 function pageViewDragging(e: MouseEvent) {
     const isController = workspace.value.controller == 'page';
     if (isController) {
@@ -302,12 +289,10 @@ function pageViewDragging(e: MouseEvent) {
         }
     }
 }
-
 function pageViewDragEnd() {
     setClass('grab-0');
     state = STATE_NONE;
 }
-
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
     const selection = props.context.selection;
@@ -365,17 +350,14 @@ function contextMenuMount(e: MouseEvent) {
 function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') contextMenuUnmount();
 }
-
 async function stylerForCursorMount() {
     await styler.value.setup();
     cursorClass.value = await styler.value.getClass('auto-0');
 }
-
 function contextMenuUnmount() {
     document.removeEventListener('keydown', esc);
     contextMenu.value = false;
 }
-
 function select(e: MouseEvent) {
     if (props.context.workspace.select) {
         createSelector(e);
@@ -391,7 +373,6 @@ function select(e: MouseEvent) {
             props.context.workspace.selecting(true);
         }
     }
-
 }
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
     const { clientX, clientY } = e;
@@ -481,6 +462,11 @@ function onMouseUp(e: MouseEvent) {
         document.removeEventListener('mouseup', onMouseUp);
     }
 }
+// mouseleave
+function onMouseLeave() {
+    props.context.selection.unHoverShape();
+}
+// #endregion
 function selectEnd() {
     if (props.context.workspace.select) {
         props.context.workspace.selecting(false);
@@ -503,12 +489,6 @@ function removeCreator() { // 移除创造器
     workspace.value.setAction(Action.AutoV);
     workspace.value.creating(false);
 }
-// mouseleave
-function onMouseLeave() {
-    props.context.selection.unHoverShape();
-}
-// #endregion
-
 // 窗口失焦 
 function windowBlur() {
     shapeCreateEnd();
@@ -521,7 +501,7 @@ function windowBlur() {
 
 // hooks
 function initMatrix(cur: Page) {
-    let info = matrixMap.get(cur.id)
+    let info = matrixMap.get(cur.id);
     if (!info) {
         const m = new Matrix();
         m.trans(-cur.frame.x, -cur.frame.y)
@@ -533,14 +513,16 @@ function initMatrix(cur: Page) {
 const stopWatch = watch(() => props.page, (cur, old) => {
     old.unwatch(watcher)
     cur.watch(watcher)
-
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
-
     initMatrix(cur)
 })
-const resizeObserver = new ResizeObserver(() => {
+const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
     root.value && updateRoot(props.context, root.value);
+})
+renderinit().then(() => {
+    inited.value = true;
+    nextTick(() => { root.value && resizeObserver.observe(root.value) });
 })
 onMounted(() => {
     initMatrix(props.page);
@@ -565,14 +547,7 @@ onUnmounted(() => {
     props.context.selection.scout?.remove();
     resizeObserver.disconnect();
 })
-renderinit().then(() => {
-    inited.value = true;
-    nextTick(() => {
-        root.value && resizeObserver.observe(root.value);
-    })
-})
 </script>
-
 <template>
     <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave">
@@ -585,9 +560,9 @@ renderinit().then(() => {
             </PageViewContextMenuItems>
         </ContextMenu>
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
+        <!-- <CommentInput :context="props.context"></CommentInput> -->
     </div>
 </template>
-
 <style scoped lang="scss">
 div {
     background-color: var(--center-content-bg-color);

@@ -70,7 +70,7 @@ function toggle(id: Tab) {
     box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
     .controller {
-        height: 36px;
+        height: 32px;
         width: 100%;
         flex: 0 0 auto;
         display: flex;
@@ -80,17 +80,21 @@ function toggle(id: Tab) {
         >.tab {
             font-weight: var(--font-default-bold);
             font-size: 10px;
-            min-width: 42px;
+            min-width: 36px;
             margin-right: 4px;
             margin-top: 4px;
-            padding: 4px;
-            text-align: center;
+            text-align: left;
             line-height: 24px;
+            color: var(--grey-dark);
+        }
+
+        >.tab:hover {
+            color: var(--theme-color);
         }
 
         >.active {
             border-radius: 4px 4px 0 0;
-            background-color: var(--grey-dark);
+            color: var(--theme-color);
         }
     }
 

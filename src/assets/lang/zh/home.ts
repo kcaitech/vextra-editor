@@ -110,7 +110,10 @@ export const home = {
     other_tips: '请确保网络连接正常',
     addComment: '添加评论',
     rename:'重命名',
-    rename_ok:'确定'
+    rename_ok:'确定',
+    page_sort: '按页面排序',
+    login_failed:'登录失败',
+    login_refresh:'点击刷新二维码'
 }
 
 export const search = {

@@ -15,12 +15,11 @@ import { Repository } from '@kcdesign/data';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
 import { importSketch } from '@kcdesign/data';
 import { Zip } from "@pal/zip";
-import { uploadExForm } from "@kcdesign/data";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
+import avatar from '@/assets/pd-logo-svg.svg';
 const { t } = useI18n();
-
 
 const picker = new FilePicker((file) => {
     if (!file) return;
@@ -61,9 +60,7 @@ const x = localStorage.getItem('index')?.toString().slice(0,1)
     <el-row class="tac">
         <el-col :span="12">
             <div class="logo">
-                <el-icon size="50">
-                    <Clock />
-                </el-icon>
+                <img :src="avatar" alt="ProtoDesign" />
                 <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
             </div>
             <div class="new">

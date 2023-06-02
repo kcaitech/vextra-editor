@@ -1,8 +1,7 @@
 import { Watchable } from "@kcdesign/data";
-import { Repository } from "@kcdesign/data";
 import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
-import { Context, RepoWraper } from "./index";
+import { Context } from "./index";
 import { Root } from "@/utils/content";
 export enum Action {
     Auto = 'auto',
@@ -64,7 +63,7 @@ const A2R = new Map([
 ]);
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
-    static ESC_EVENT_POINTER: any = undefined; // 用于存储esc事件的指针
+    static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
     static INSERT_FRAME = 1; // notify类型：插入容器模版、更新光标、重置光标、矩阵变换
     static CURSOR_CHANGE = 2;
     static RESET_CURSOR = 3;
@@ -76,6 +75,11 @@ export class WorkSpace extends Watchable(Object) {
     static CHECKSTATUS = 9;
     static GROUP = 10;
     static UNGROUP = 11;
+    static SELECTION_VIEW_UPDATE = 12;
+    static REMOVE_COLOR_PICKER = 13;
+    static START_SAVE = 14;
+    static END_SAVE = 15;
+    static DOCUMENT_SAVE = 16;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -97,9 +101,16 @@ export class WorkSpace extends Watchable(Object) {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_tool_group: SVGAElement | undefined;
+    private m_should_selection_view_update: boolean = true;
+    private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
+    private m_saving: boolean = false;
     constructor(context: Context) {
         super();
         this.context = context
+    }
+    get matrix() {
+        return this.m_matrix;
     }
     get root(): Root { //return contentView HTMLElement info
         const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构0.6s后会进行root数据更新)；
@@ -136,9 +147,6 @@ export class WorkSpace extends Watchable(Object) {
     get action() {
         return this.m_current_action;
     }
-    get matrix() {
-        return this.m_matrix;
-    }
     get clipBoard() {
         return this.m_clip_board;
     }
@@ -157,6 +165,9 @@ export class WorkSpace extends Watchable(Object) {
     get ispopover() {
         return this.m_popover;
     }
+    get isColorPickerMount() {
+        return this.m_color_picker;
+    }
     get isTranslating() {
         return this.m_translating;
     }
@@ -168,6 +179,46 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isEditing() {
         return this.m_content_editing;
+    }
+    get toolGroup() {
+        return this.m_tool_group;
+    }
+    get shouldSelectionViewUpdate() {
+        return this.m_should_selection_view_update;
+    }
+    startSvae() {
+        this.m_saving = true;
+        this.notify(WorkSpace.START_SAVE);
+    }
+    endSave() {
+        this.m_saving = false;
+        this.notify(WorkSpace.END_SAVE);
+    }
+    documentSave() {
+        if (!this.m_saving) {
+            this.notify(WorkSpace.DOCUMENT_SAVE);
+        }
+    }
+    colorPickerSetup(id: string) {
+        this.m_color_picker = id;
+    }
+    removeColorPicker() {
+        if (this.m_color_picker) {
+            this.notify(WorkSpace.REMOVE_COLOR_PICKER);
+            this.m_color_picker = undefined;
+        }
+    }
+    selectionViewUpdate() {
+        this.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+    }
+    setSelectionViewUpdater(isWork: boolean) {
+        this.m_should_selection_view_update = isWork;
+    }
+    toolGroupMount(toolGroupMount: SVGAElement) {
+        this.m_tool_group = toolGroupMount;
+    }
+    toolGroupUnmount() {
+        this.m_tool_group = undefined;
     }
     updateRoot(root: Root) {
         this.m_root = root;
@@ -212,8 +263,10 @@ export class WorkSpace extends Watchable(Object) {
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (event.code === KeyboardKeys.R) {
-            event.preventDefault();
-            this.keydown_r();
+            if (!metaKey && !ctrlKey) {
+                event.preventDefault();
+                this.keydown_r();
+            }
         } else if (event.code === KeyboardKeys.V) {
             event.preventDefault();
             this.keydown_v();
@@ -222,7 +275,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_l(shiftKey);
         } else if (event.code === KeyboardKeys.Z) {
             event.preventDefault();
-            this.keydown_z(this.context.repo, ctrlKey, shiftKey, metaKey);
+            this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
             event.preventDefault();
             this.keydown_k();
@@ -250,8 +303,8 @@ export class WorkSpace extends Watchable(Object) {
         this.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     setAction(action: Action) {
-        if (action === Action.AutoV && WorkSpace.ESC_EVENT_POINTER) {
-            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        if (action === Action.AutoV && WorkSpace.P_ESC_EVENT) {
+            document.removeEventListener('keydown', WorkSpace.P_ESC_EVENT);
         } else {
             this.escSetup()
         }
@@ -303,9 +356,25 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
     }
-    keydown_z(repo: RepoWraper, ctrl?: boolean, shift?: boolean, meta?: boolean) {
+    keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
+        const repo = context.repo;
         if ((ctrl || meta) && !shift) {
             repo.canUndo() && repo.undo();
+            const selection = context.selection;
+            const shapes = context.selection.selectedShapes;
+            const flat = context.selection.selectedPage!.flatShapes;
+            if (shapes.length) {
+                if (flat.length) {
+                    for (let i = 0; i < shapes.length; i++) {
+                        const item = shapes[i];
+                        if (!flat.find(i => i.id === item.id)) {
+                            selection.unSelectShape(item);
+                        }
+                    }
+                } else {
+                    selection.resetSelectShapes();
+                }
+            }
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
         }
@@ -354,21 +423,21 @@ export class WorkSpace extends Watchable(Object) {
     }
 
     escSetup() { // 安装取消当前状态的键盘事件(Esc)，在开启一个状态的时候应该考虑关闭状态的处理！
-        if (WorkSpace.ESC_EVENT_POINTER) {
-            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        if (WorkSpace.P_ESC_EVENT) {
+            document.removeEventListener('keydown', WorkSpace.P_ESC_EVENT);
         }
-        WorkSpace.ESC_EVENT_POINTER = this.esc.bind(this);
-        document.addEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
+        WorkSpace.P_ESC_EVENT = this.esc.bind(this);
+        document.addEventListener('keydown', WorkSpace.P_ESC_EVENT);
     }
     esc(event: KeyboardEvent) {
         if (event.code === 'Escape') {
             this.setAction(Action.AutoV);
-            document.removeEventListener('keydown', WorkSpace.ESC_EVENT_POINTER);
-            WorkSpace.ESC_EVENT_POINTER = undefined;
+            document.removeEventListener('keydown', WorkSpace.P_ESC_EVENT);
+            WorkSpace.P_ESC_EVENT = null;
         }
     }
     setCursorStyle(type: CtrlElementType | string, deg: number) {
-        if (this.m_creating || this.m_selecting) {
+        if (this.m_creating || this.m_selecting || this.m_scaling) {
             // todo
         } else {
             let name = 'auto-0';
@@ -393,9 +462,9 @@ export class WorkSpace extends Watchable(Object) {
             } else if (type == CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
                 name = `scale-${90 + deg}`
             } else if (type == CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
-                name = `scale-${0 + deg}`
+                name = `scale-${0 + deg}`;
             } else if (type == CtrlElementType.Text) {
-                name = `scan-0`
+                name = `scan-0`;
             }
             this.notify(WorkSpace.CURSOR_CHANGE, name);
         }

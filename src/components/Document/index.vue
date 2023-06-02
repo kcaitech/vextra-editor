@@ -1,60 +1,48 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, computed, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
-import { Page } from '@kcdesign/data';
 import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
-import { SCREEN_SIZE } from '@/utils/setting';
-import { WorkSpace } from '@/context/workspace';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document } from '@kcdesign/data';
-import { Repository } from '@kcdesign/data';
+import { Document, importDocument, uploadExForm, Repository, Page } from '@kcdesign/data';
+import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
-import { importDocument } from "@kcdesign/data";
-import { ElMessage } from 'element-plus'
-import { Warning } from '@element-plus/icons-vue'
-
+import { ElMessage } from 'element-plus';
+import { Warning } from '@element-plus/icons-vue';
+import Loading from '@/components/common/Loading.vue';
+import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
-
 const curPage = shallowRef<Page | undefined>(undefined);
-const context = shallowRef<Context>(new Context(((window as any).sketchDocument as Document), ((window as any).skrepo as Repository)));
-(window as any).__context = context.value;
-const workspace = computed<WorkSpace>(() => context.value.workspace);
-const middleWidth = ref<number>(0.8)
-const middleMinWidth = ref<number>(0.3)
-const route = useRoute()
-const Right = ref({
-    rightMin: 250,
-    rightMinWidth: 0.1,
-    rightWidth: 0.1
-})
-
-const Left = ref({
-    leftMin: 250,
-    leftWidth: 0.1,
-    leftMinWidth: 0.1
-})
-
+let context: Context | undefined;
+(window as any).__context = context;
+const middleWidth = ref<number>(0.8);
+const middleMinWidth = ref<number>(0.3);
+const route = useRoute();
+const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
+const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
 const showBottom = ref<boolean>(true);
-const permType = ref<number>()
-const docInfo: any = ref({})
-let docID = ''
-const showHint = ref(false)
-const countdown = ref(10)
+const permType = ref<number>();
+const docInfo: any = ref({});
+const showHint = ref(false);
+const countdown = ref(10);
+const leftTriggleVisible = ref<boolean>(false);
+const rightTriggleVisible = ref<boolean>(false);
+let timerForLeft: any;
+let timeForRight: any;
+const loading = ref<boolean>(false);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
-
     if (isFullScreen === null) {
         element.requestFullscreen && element.requestFullscreen();
         localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
@@ -63,10 +51,6 @@ function screenSetting() {
         localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
     }
 }
-const leftTriggleVisible = ref<boolean>(false);
-const rightTriggleVisible = ref<boolean>(false);
-let timerForLeft: any;
-let timeForRight: any;
 function mouseenter(t: 'left' | 'right') {
     if (t === 'left') {
         if (timerForLeft) {
@@ -100,33 +84,43 @@ function mouseleave(t: 'left' | 'right') {
         }, delay);
     }
 }
-
 function switchPage(id?: string) {
     if (!id) return
-    const ctx: Context = context.value;
-    const pagesMgr = ctx.data.pagesMgr;
-    pagesMgr.get(id).then((page: Page | undefined) => {
-        if (page) {
-            ctx.selection.selectPage(page);
-            curPage.value = page;
-        }
-    })
+    if (context) {
+        const ctx: Context = context;
+        const pagesMgr = ctx.data.pagesMgr;
+        pagesMgr.get(id).then((page: Page | undefined) => {
+            if (page) {
+                curPage.value = undefined;
+                ctx.selection.selectPage(page);
+                (window as any).__context = ctx;
+                curPage.value = page;
+            }
+        })
+    }
 }
 function selectionWatcher(t: number) {
     if (t === Selection.CHANGE_PAGE) {
-        const ctx: Context = context.value as Context;
-        curPage.value = ctx.selection.selectedPage;
+        if (context) {
+            const ctx: Context = context;
+            curPage.value = ctx.selection.selectedPage;
+        }
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
     const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
-
-    workspace.value.keyboardHandle(evevt); // 编辑器相关的键盘事件
-
-    if (code === 'Backslash') {
-        if (ctrlKey || metaKey) {
-            shiftKey ? keyToggleTB() : keyToggleLR()
+    if (context) {
+        context.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
+        if (code === 'Backslash') {
+            if (ctrlKey || metaKey) {
+                shiftKey ? keyToggleTB() : keyToggleLR();
+            }
+        } else if (code === 'KeyS') {
+            if (ctrlKey || metaKey) {
+                evevt.preventDefault();
+                context.workspace.documentSave();
+            }
         }
     }
 }
@@ -145,7 +139,6 @@ const showHiddenRight = () => {
         showRight.value = true
     }
 }
-
 const showHiddenLeft = () => {
     if (showLeft.value) {
         Left.value.leftMin = 0
@@ -184,56 +177,6 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
-
-//获取文档信息
-const getDocumentInfo = async () => {
-    try {
-        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
-        docInfo.value = dataInfo.data
-        permType.value = dataInfo.data.document_permission.perm_type
-        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id })
-        // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限
-        if (!docInfo.value) {
-            //无效链接
-            ElMessage({
-                message: `${t('apply.link_not')}`
-            })
-            router.push('/')
-        }
-        if (docInfo.value.document_permission.perm_type === 0) {
-            router.push({
-                name: 'apply',
-                query: {
-                    id: route.query.id
-                }
-            })
-        }
-        await importDocument({
-            endPoint: "http://storage.protodesign.cn",
-            // endPoint: "http://192.168.0.18:9000",
-            region: "zhuhai-1",
-            accessKey: data.access_key,
-            secretKey: data.secret_access_key,
-            sessionToken: data.session_token,
-            bucketName: "document"
-        }, docInfo.value.document.path, "", "").then((document) => {
-            if (document) {
-                const repo = new Repository();
-                window.document.title = document.name;
-                context.value = new Context((document as Document), (repo as Repository));
-                context.value.watch(selectionWatcher);
-                switchPage(context.value.data.pagesList[0]?.id);
-            }
-        })
-
-        if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
-            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
 enum PermissionChange {
     update,
     close,
@@ -242,132 +185,221 @@ enum PermissionChange {
 const getDocumentAuthority = async () => {
     try {
         const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
-        if(data.data.perm_type !== permType.value) {
-            if(data.data.perm_type === 1) {
+        if (data.code === 400) {
+            permissionChange.value = PermissionChange.delete
+            showNotification(0)
+        }
+        if (data.data.perm_type !== permType.value) {
+            if (data.data.perm_type === 1) {
                 permissionChange.value = PermissionChange.update
                 showNotification(data.data.perm_type)
-            }else if(data.data.perm_type === 3) {
+            } else if (data.data.perm_type === 3) {
                 permissionChange.value = PermissionChange.update
                 showNotification(data.data.perm_type)
-            }else if(data.data.perm_type === 0) {
+            } else if (data.data.perm_type === 0) {
                 permissionChange.value = PermissionChange.close
                 showNotification(data.data.perm_type)
             }
         }
-        if(data.code === 400 && (data as any).message === '文档不存在') {
-            permissionChange.value = PermissionChange.delete
-            showNotification(0)
-        }
         permType.value = data.data.perm_type
-       
+
     } catch (err) {
         console.log(err);
     }
 }
-
-const permissionChange = ref(-1)
+const permissionChange = ref(-1);
 // 权限被修改后的倒计时
 const startCountdown = (type?: number) => {
     const timer = setInterval(() => {
-    if (countdown.value > 1) {
-        countdown.value--;
-    } else {
-        hideNotification(type);
-        clearInterval(timer);
-    }
+        if (countdown.value > 1) {
+            countdown.value--;
+        } else {
+            hideNotification(type);
+            clearInterval(timer);
+        }
     }, 1000);
 }
 const hideNotification = (type?: number) => {
     showHint.value = false;
     countdown.value = 10;
-    if(type === 0) {
+    if (type === 0) {
         router.push('/')
-    }else {
+    } else {
         router.go(0)
     }
 }
-const showNotification = (type?:number) => {
+const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
-
-
-
-watchEffect(() => {
-if(route.query.id) {
-    const id = (route.query.id as string)
-    context.value.upload(id)
-}else {
-    context.value.upload()
-}
-})
-
 let uploadTimer: any = null
-uploadTimer = setInterval(() => {
-    docID = localStorage.getItem('docId') || ''
-    if (docID && permType.value !== 1) {
-        context.value.upload(docID)
+function polling() {
+    if (uploadTimer) {
+        clearTimeout(uploadTimer);
     }
-}, 60000)
-
-let timer: any = null
-onMounted(() => {
-    if (context.value) {
-        context.value.selection.watch(selectionWatcher);
-    }
-    if ((window as any).sketchDocument) {
-        switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
-        if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
-            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    uploadTimer = setTimeout(() => {
+        const docID = localStorage.getItem('docId') || '';
+        if (docID && permType.value !== 1) {
+            upload(docID);
         }
-        document.addEventListener('keydown', keyboardEventHandler);
-        return
+    }, 60000);
+}
+//获取文档信息
+const getDocumentInfo = async () => {
+    try {
+        loading.value = true;
+        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+        docInfo.value = dataInfo.data;
+        permType.value = dataInfo.data.document_permission.perm_type;
+        if (dataInfo.code === 400) {
+            //无效链接
+            ElMessage({ message: `${t('apply.link_not')}` });
+            router.push('/');
+        }
+        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+        // documentKey.value = data
+        //获取文档类型是否为私有文档且有无权限   
+        if (docInfo.value.document_permission.perm_type === 0) {
+            router.push({
+                name: 'apply',
+                query: {
+                    id: route.query.id
+                }
+            })
+        }
+        const repo = new Repository();
+        const importDocumentParams = {
+            endPoint: FILE_DOWNLOAD,
+            region: "zhuhai-1",
+            accessKey: data.access_key,
+            secretKey: data.secret_access_key,
+            sessionToken: data.session_token,
+            bucketName: "document"
+        }
+        const path = docInfo.value.document.path;
+        await importDocument(importDocumentParams, path, "", "", repo).then((document) => {
+            if (document) {
+                window.document.title = document.name;
+                context = new Context(document, repo);
+                context.selection.watch(selectionWatcher);
+                context.workspace.watch(workspaceWatcher);
+                switchPage(context.data.pagesList[0]?.id);
+                localStorage.setItem('docId', route.query.id as string);
+                polling();
+            }
+        })
+    } catch (err) {
+        new Error(`${err}`);
+    } finally {
+        loading.value = false;
     }
-
-    if (!(window as any).sketchDocument && !route.query.id) {
-        router.push('/');
-        return;
+}
+function upload(id?: string) {
+    const token = localStorage.getItem('token');
+    if (token) {
+        if (context) {
+            const data = context.data;
+            if (data) {
+                // data.pagesMgr.get(data.pagesList[0].id).then((page) => {
+                //     console.log('child length', page?.childs.length);
+                // })
+                context.workspace.startSvae();
+                uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
+                    if (successed) {
+                        localStorage.setItem('docId', doc_id);
+                        if (!id) {
+                            router.replace({
+                                path: '/document',
+                                query: { id: doc_id }
+                            })
+                        }
+                    }
+                    polling();
+                    context?.workspace.endSave();
+                })
+            }
+        }
     }
-
-    if (route.query.id) {
-        getDocumentInfo()        
+}
+let timer: any = null;
+function setScreenSize() {
+    if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
+        document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    }
+}
+function init() {
+    if (route.query.id) { // 从远端读取文件
+        getDocumentInfo();
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
-            getDocumentAuthority()
-        }, 30000)
-        return
+            getDocumentAuthority();
+        }, 30000);
+    } else { // 从本地读取文件
+        if ((window as any).sketchDocument) {
+            context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
+            context.selection.watch(selectionWatcher);
+            context.workspace.watch(workspaceWatcher);
+            upload();
+            switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+            document.addEventListener('keydown', keyboardEventHandler);
+        } else {
+            router.push('/');
+        }
     }
+}
+function workspaceWatcher(t: number) {
+    if (t === WorkSpace.DOCUMENT_SAVE) {
+        const docID = localStorage.getItem('docId') || '';
+        if (docID && permType.value !== 1) {
+            if (uploadTimer) {
+                clearTimeout(uploadTimer);
+            }
+            upload(docID);
+        }
+    }
+}
+onMounted(() => {
+    setScreenSize();
+    init();
 })
 onUnmounted(() => {
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
-    context.value.selection.unwatch(selectionWatcher);
-    context.value.unwatch(selectionWatcher);
+    context?.selection.unwatch(selectionWatcher);
+    context?.workspace.unwatch(workspaceWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
-    clearInterval(uploadTimer);
+    clearTimeout(uploadTimer);
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
 })
-
+watchEffect(() => {
+    if (route.query.id) {
+        const id = (route.query.id as string);
+        upload(id);
+    } else {
+        upload();
+    }
+})
 </script>
 
 <template>
+    <Loading v-if="loading || !context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
-        <Toolbar :context="context" />
+        <Toolbar :context="context" v-if="!loading && context" />
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView ref="colSplitView" id="center"
+    <ColSplitView id="center" v-if="!loading && context"
         :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
         :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
-            <Navigation v-if="curPage !== undefined" id="navigation" :context="context" @switchpage="switchPage"
+            <Navigation v-if="curPage !== undefined && context" id="navigation" :context="context" @switchpage="switchPage"
                 @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
                 :page="(curPage as Page)">
             </Navigation>
@@ -378,11 +410,11 @@ onUnmounted(() => {
             </div>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined && context" id="content" :context="context" :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
+            <Attribute id="attributes" v-if="context" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
                 @mouseleave="() => { mouseleave('right') }"></Attribute>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
                 :style="{ opacity: showRight ? 1 : 0.6 }">
@@ -392,13 +424,14 @@ onUnmounted(() => {
         </template>
     </ColSplitView>
     <div v-if="showHint" class="notification">
-        <el-icon :size="13"><Warning /></el-icon>
+        <el-icon :size="13">
+            <Warning />
+        </el-icon>
         <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
         <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
         <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
         <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
-    <!-- <div id="bottom" v-if="showBottom"></div> -->
 </template>
 <style>
 :root {
@@ -432,7 +465,7 @@ onUnmounted(() => {
     position: absolute;
     top: 45px;
     right: 10px;
-    z-index: 99;
+    z-index: 999;
 }
 
 #center {
@@ -518,19 +551,9 @@ onUnmounted(() => {
     border: 1px solid #ccc;
     padding: 7px 30px;
     border-radius: 4px;
+
     .text {
         margin: 0 15px 0 10px;
     }
 }
-
-// #bottom {
-//     transition: 0.18s;
-//     flex-flow: row nowrap;
-//     width: 100%;
-//     height: 30px;
-//     min-height: 30px;
-//     align-self: flex-end;
-//     background-color: var(--theme-color);
-//     z-index: 99;
-// }
 </style>

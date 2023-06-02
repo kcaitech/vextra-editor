@@ -11,6 +11,7 @@ import { ShapeType } from '@kcdesign/data';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
+import { isInner } from "@/utils/content";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -74,8 +75,8 @@ let listviewSource = new class implements IDataSource<ItemData> {
 const shapelist = ref<List>();
 const ListBody = ref<HTMLDivElement>()
 const ListH = ref<number>(0)
-function notifySourceChange(t?: number) {
-    if (t === Selection.CHANGE_SHAPE) {
+function notifySourceChange(t?: number | string) {
+    if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
             let parent = item.parent
@@ -178,7 +179,7 @@ const isLock = (lock: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    editor.value.setLock();
+    editor.value.toggleLock();
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
@@ -188,7 +189,7 @@ const isRead = (read: boolean, shape: Shape) => {
     const editor = computed(() => {
         return props.context.editor4Shape(shape);
     });
-    editor.value.setVisible();
+    editor.value.toggleVisible();
     if (!read) {
         props.context.selection.unSelectShape(shape);
         props.context.selection.unHoverShape();
@@ -202,6 +203,10 @@ const isRead = (read: boolean, shape: Shape) => {
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 function shapeScrollToContentView(shape: Shape) {
+    if (isInner(props.context, shape)) {
+        props.context.selection.selectShape(shape);
+        return;
+    }
     const workspace = props.context.workspace;
     const { x: sx, y: sy, height, width } = shape.frame2Page();
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置

@@ -27,10 +27,10 @@ async function onmessage(e: any) {
         isLoading.value = false
         router.push({ name: 'apphome' })
     } else {
-        ElMessage.error('登录失败')
+        ElMessage.error(t('home.login_failed'))
         const tips: any = document.querySelector('#login_container')
         tips.style.lineHeight = '300px'
-        tips.innerHTML = '登录失败,点击刷新'
+        tips.innerHTML = `${t('home.login_refresh')}`
         tips.addEventListener('click', () => {
             wxcode()
         })

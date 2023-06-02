@@ -1,16 +1,10 @@
-<!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-03-03 14:52:04
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-03 17:58:48
--->
 <script setup lang="ts">
 import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
-import ColorPicker from '@/components/common/ColorPicker.vue';
+import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { useI18n } from 'vue-i18n';
 import { Color, Border, ContextSettings, BorderStyle, MarkerType } from '@kcdesign/data';
 import { FillType, BlendMode, BorderPosition } from '@kcdesign/data';
@@ -72,9 +66,9 @@ function addBorder() {
     editor.value.addBorder(border);
 }
 const isNoBorder = () => {
-    if(borders.length === 0) {
+    if (borders.length === 0) {
         addBorder()
-    }    
+    }
 }
 function deleteBorder(idx: number) {
     editor.value.deleteBorder(idx);
@@ -82,12 +76,11 @@ function deleteBorder(idx: number) {
 function toggleVisible(idx: number) {
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
-    const color = border.color;
-    setBorder(idx, { isEnabled, color: color });
+    editor.value.setBorderVisiable(idx, isEnabled);
 }
 function onColorChange(e: Event, idx: number) {
     let value = (e.target as HTMLInputElement)?.value;
-    if(value.slice(0, 1) !== '#') {
+    if (value.slice(0, 1) !== '#') {
         value = "#" + value
     }
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
@@ -104,58 +97,48 @@ function onColorChange(e: Event, idx: number) {
     const b = Number.parseInt(hex[3], 16);
     const alpha = border.color.alpha;
     const color = new Color(alpha, r, g, b);
-    const isEnabled = border.isEnabled;
-    setBorder(idx, { isEnabled, color });
+    editor.value.setBorderColor(idx, color);
 }
 function onAlphaChange(e: Event, idx: number) {
     let alpha = (e.currentTarget as any)['value']
-    if(alpheBorder.value) {
-        if(alpha?.slice(-1) === '%') {
+    if (alpheBorder.value) {
+        if (alpha?.slice(-1) === '%') {
             alpha = Number(alpha?.slice(0, -1))
             if (isNaN(alpha) || alpha < 0) {
                 message('danger', t('system.illegal_input'));
-                return (e.target as HTMLInputElement).value = (borders[idx].border.color.alpha * 100) + '%'
+                return (e.target as HTMLInputElement).value = (borders[idx].border.color.alpha * 100) + '%';
             }
-            if(alpha > 100) {
-                alpha = 100
+            if (alpha > 100) {
+                alpha = 100;
             }
             alpha = alpha.toFixed(2) / 100
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
-            const isEnabled = border.isEnabled;
-            setBorder(idx, { isEnabled, color });
-            return
-        }else {
-            if(!isNaN(Number(alpha)) && alpha >= 0) {
-                if(alpha > 100) {
+            editor.value.setBorderColor(idx, color);
+        } else {
+            if (!isNaN(Number(alpha)) && alpha >= 0) {
+                if (alpha > 100) {
                     alpha = 100
                 }
                 alpha = Number((Number(alpha)).toFixed(2)) / 100
                 const border = borders[idx].border;
                 const { red, green, blue } = border.color
                 const color = new Color(alpha, red, green, blue);
-                const isEnabled = border.isEnabled;
-                setBorder(idx, { isEnabled, color });
-                return
-            }else {
+                editor.value.setBorderColor(idx, color);
+            } else {
                 message('danger', t('system.illegal_input'));
                 return (e.target as HTMLInputElement).value = (borders[idx].border.color.alpha * 100) + '%'
             }
-
         }
     }
-}
-function setBorder(idx: number, options: { color: Color, isEnabled: boolean }) {
-    editor.value.setBorder(idx, options);
 }
 function getColorFromPicker(rgb: number[], idx: number) {
     const isEnabled = borders[idx].border.isEnabled;
     const alpha = borders[idx].border.color.alpha;
-    const color = new Color(alpha,rgb[0], rgb[1], rgb[2]);
+    const color = new Color(alpha, rgb[0], rgb[1], rgb[2]);
     editor.value.setBorder(idx, { isEnabled, color });
 }
-
 // hooks
 onMounted(() => {
     updateData();
@@ -188,9 +171,12 @@ onBeforeUpdate(() => {
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="b.border.color" @choosecolor="c => getColorFromPicker(c, idx)"/>
-                    <input :spellcheck="false" :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)" />
-                    <input ref="alpheBorder" style="text-align: center;" :value="(b.border.color.alpha * 100) + '%'" @change="e => onAlphaChange(e, idx)" />
+                    <ColorPicker :color="b.border.color" :context="props.context"
+                        @choosecolor="(c: any) => getColorFromPicker(c, idx)" />
+                    <input :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
+                        @change="e => onColorChange(e, idx)" />
+                    <input ref="alpheBorder" style="text-align: center;" :value="(b.border.color.alpha * 100) + '%'"
+                        @change="e => onAlphaChange(e, idx)" />
                 </div>
                 <div class="extra-action">
                     <BorderDetail :context="props.context" :shape="props.shape" :border="b.border" :index="idx">
@@ -260,8 +246,8 @@ onBeforeUpdate(() => {
             }
 
             .hidden {
-                flex: 0 0 16px;
-                height: 16px;
+                flex: 0 0 18px;
+                height: 18px;
                 background-color: transparent;
                 border-radius: 3px;
                 border: 1px solid var(--input-background);
@@ -306,6 +292,7 @@ onBeforeUpdate(() => {
                     width: 17px;
                     height: 22px;
                     transition: 0.2s;
+
                     >svg {
                         width: 11px;
                         height: 11px;

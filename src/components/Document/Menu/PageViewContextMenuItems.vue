@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, reactive, ref, defineEmits,computed } from 'vue';
+import { defineProps, reactive, ref, defineEmits, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
@@ -11,7 +11,7 @@ interface Props {
   context: Context,
   layers?: Shape[],
   items: string[],
-  site?:{ x: number, y: number }
+  site?: { x: number, y: number }
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -100,17 +100,17 @@ function edit() {
 function visible() {
   const visible = props.context.selection.selectedShapes;
   const editor = computed(() => {
-        return props.context.editor4Shape(visible[0]);
-    });
-    editor.value.setVisible()
-    isVisible.value = props.context.selection.selectedShapes[0].isVisible
+    return props.context.editor4Shape(visible[0]);
+  });
+  editor.value.toggleVisible();
+  isVisible.value = props.context.selection.selectedShapes[0].isVisible
 }
 function lock() {
   const lock = props.context.selection.selectedShapes;
   const editor = computed(() => {
-        return props.context.editor4Shape(lock[0]);
-    });
-  editor.value.setLock()
+    return props.context.editor4Shape(lock[0]);
+  });
+  editor.value.toggleLock();
   isLock.value = props.context.selection.selectedShapes[0].isLocked
 }
 function closeLayerSubMenu(e: MouseEvent) {
@@ -119,11 +119,12 @@ function closeLayerSubMenu(e: MouseEvent) {
 </script>
 <template>
   <div class="items-wrap">
-    <div v-if="props.items.includes('layers')" class="item layer-select" @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)"
-      @mouseleave="(e: MouseEvent) => closeLayerSubMenu(e)">
+    <div v-if="props.items.includes('layers')" class="item layer-select"
+      @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="(e: MouseEvent) => closeLayerSubMenu(e)">
       <span>{{ t('system.select_layer') }}</span>
       <div class="triangle"></div>
-      <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site" :context="props.context">
+      <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
+        :site="site" :context="props.context">
         <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
       </ContextMenu>
     </div>
@@ -141,8 +142,8 @@ function closeLayerSubMenu(e: MouseEvent) {
       <span>{{ t('system.paste') }}</span>
       <span class="shortkey">Ctrl + V</span>
     </div>
-    
-      <!-- 视图比例 -->
+
+    <!-- 视图比例 -->
     <div class="line" v-if="props.items.includes('half')"></div>
     <div class="item" v-if="props.items.includes('half')" @click="half"><span>50%</span></div>
     <div class="item" v-if="props.items.includes('hundred')" @click="hundred"><span>100%</span></div>
@@ -227,12 +228,12 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 隐藏/锁定 -->
     <div class="line" v-if="props.items.includes('visible')"></div>
     <div class="item" v-if="props.items.includes('visible')" @click="visible">
-      <div class="choose" :style="{visibility: isVisible ? 'visible' : 'hidden'}"></div>
+      <div class="choose" :style="{ visibility: isVisible ? 'visible' : 'hidden' }"></div>
       <span>{{ t('system.visible') }}</span>
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('lock')" @click="lock">
-      <div class="choose" :style="{visibility: isLock ? 'visible' : 'hidden'}"></div>
+      <div class="choose" :style="{ visibility: isLock ? 'visible' : 'hidden' }"></div>
       <span>{{ t('system.Lock') }}</span>
       <span></span>
     </div>
@@ -262,6 +263,7 @@ function closeLayerSubMenu(e: MouseEvent) {
       border-bottom: 5px solid transparent;
       border-left: 10px solid var(--theme-color-anti);
     }
+
     >.shortkey {
       margin-left: auto;
     }
@@ -280,16 +282,16 @@ function closeLayerSubMenu(e: MouseEvent) {
   .item:hover {
     background-color: var(--active-color);
   }
+
   .choose {
-  position: absolute;
-  left: 7px;
-  box-sizing: border-box;
-  width: 10px;
-  height: 6px;
-  border-width: 0 0 2px 2px;
-  border-style: solid;
-  border-color: var(--theme-color-anti);
-  transform: rotate(-45deg) translateY(-30%);
-}
-}
-</style>
+    position: absolute;
+    left: 7px;
+    box-sizing: border-box;
+    width: 10px;
+    height: 6px;
+    border-width: 0 0 2px 2px;
+    border-style: solid;
+    border-color: var(--theme-color-anti);
+    transform: rotate(-45deg) translateY(-30%);
+  }
+}</style>

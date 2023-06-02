@@ -2,9 +2,9 @@ import { PageXY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 interface Scout {
-    path: SVGPathElement,
-    remove: () => void;
-    isPointInShape: (shape: Shape, point: PageXY) => boolean;
+    path: SVGPathElement
+    remove: () => void
+    isPointInShape: (shape: Shape, point: PageXY) => boolean
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条闭合路径(d)上
@@ -22,8 +22,6 @@ function scout(): Scout {
         const d = getPathOnPageString(shape);
         SVGPoint.x = point.x, SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
-        // console.log('path', path);
-        // console.log('isPointInFill - path', (path as SVGGeometryElement).isPointInFill(SVGPoint));
         let result: boolean = false;
         if (shape.type === ShapeType.Line) {
             const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14);
