@@ -6,7 +6,6 @@ import * as share_api from '@/apis/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
-import { router } from '@/router'
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
@@ -86,8 +85,6 @@ const closeShare = (e: MouseEvent) => {
   emit('close')
 }
 const handleClick = (e: MouseEvent) => {
-  console.log('emit');
-
   e.stopPropagation()
   e.target instanceof Element && !e.target.closest('.box-card') && emit('close');
   if (e.target instanceof Element && !e.target.closest('.popover')) {

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import { ref } from 'vue';
-
-const titleid = ref(localStorage.getItem('index'))
+import { defineProps } from 'vue';
+interface Props {
+    title: string
+}
+const props = defineProps<Props>();
 </script>
 
 <template>
     <div class="title">
         <div>
-            <span>{{ titleid }}</span>
+            <span>{{ props.title }}</span>
         </div>
     </div>
     <el-divider />
