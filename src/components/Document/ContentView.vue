@@ -633,7 +633,7 @@ onUnmounted(() => {
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentInput v-if="commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y"
          ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"></CommentInput>
-        <PageCommentItem v-if="!commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y" :rootWidth="rootWidth" :cursorClass="cursorClass"></PageCommentItem>
+        <PageCommentItem v-if="!commentInput" :context="props.context" :x="commentPosition.x" @mouseDownCommentInput="mouseDownCommentInput" :y="commentPosition.y" :rootWidth="rootWidth" :cursorClass="cursorClass"></PageCommentItem>
     </div>
 </template>
 <style scoped lang="scss">
