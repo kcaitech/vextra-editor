@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import { defineProps } from 'vue';
+import {} from 'vue';
 interface Props {
     title: string
 }

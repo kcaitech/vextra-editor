@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { defineProps, defineEmits, onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";

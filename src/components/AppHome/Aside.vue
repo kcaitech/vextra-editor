@@ -19,7 +19,6 @@ import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
 import avatar from '@/assets/pd-logo-svg.svg';
-import { defineEmits } from 'vue';
 interface Emits {
     (e: 'settitle', title: string): void;
 }

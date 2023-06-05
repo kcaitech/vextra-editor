@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { router } from '@/router';

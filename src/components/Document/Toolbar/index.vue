@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, shallowRef } from "vue"
+import { shallowRef } from "vue"
 import { Context } from '@/context';
 import Home from "./BackToHome.vue";
 import EditorTools from "./EditorTools.vue";

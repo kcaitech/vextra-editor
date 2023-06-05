@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, watch, defineProps,defineEmits, onMounted, onUnmounted, onUpdated } from 'vue';
+import { ref, nextTick, watch,defineEmits, onMounted, onUnmounted, onUpdated } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { Action } from '@/context/workspace';
 import DropSelect from "./DropSelect.vue"

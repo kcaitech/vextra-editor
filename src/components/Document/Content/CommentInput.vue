@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, onMounted, onUnmounted, defineExpose, watchEffect, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed } from 'vue'
 import { Context } from '@/context';
 import { Back } from '@element-plus/icons-vue'
 const props = defineProps<{

@@ -6,7 +6,7 @@
  * @FilePath: \kcdesign\src\components\Document\Navigation\ShapeTab.vue
 -->
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";

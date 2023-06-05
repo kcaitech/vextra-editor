@@ -2,7 +2,7 @@
 import UserAvatar from './UserAvatar.vue';
 import Share from './Share/Share.vue';
 import Scale from './Scale.vue';
-import { defineProps } from 'vue';
+import {} from 'vue';
 import { Context } from '@/context';
 interface Props {
     context: Context

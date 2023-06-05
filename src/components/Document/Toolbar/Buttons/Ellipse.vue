@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ToolButton from '../ToolButton.vue';
-import { defineEmits, defineProps } from 'vue';
+import {} from 'vue';
 import { Action } from '@/context/workspace';
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()

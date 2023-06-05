@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, nextTick, reactive, defineEmits, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, nextTick, reactive, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';

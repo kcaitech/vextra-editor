@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { Context } from '@/context';
 import { Delete, Edit, Back } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'

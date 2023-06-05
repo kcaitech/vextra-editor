@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted, defineProps, watch } from 'vue';
+import { onMounted, ref, onUnmounted, watch } from 'vue';
 import FileShare from './FileShare.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';

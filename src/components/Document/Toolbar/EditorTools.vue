@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, ref, computed } from "vue";
+import { onMounted, onUnmounted, ref, computed } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import ToolButton from './ToolButton.vue';

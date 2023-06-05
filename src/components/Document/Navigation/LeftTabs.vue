@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";

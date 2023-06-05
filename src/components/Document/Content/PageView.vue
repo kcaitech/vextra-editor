@@ -3,7 +3,7 @@ import { Matrix } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Page, ShapeType, Shape } from '@kcdesign/data';
-import { defineProps, onMounted, onUnmounted, ref, watch, watchEffect, nextTick } from 'vue';
+import { onMounted, onUnmounted, ref, watch, watchEffect, nextTick } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
 import { setToolGroup } from "@/utils/pageview";

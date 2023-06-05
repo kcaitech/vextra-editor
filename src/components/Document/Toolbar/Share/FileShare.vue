@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect, defineProps } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect,} from 'vue';
 import { useI18n } from 'vue-i18n';
 import { User } from '@/context/user';
 import * as share_api from '@/apis/share';

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, defineProps, defineEmits } from 'vue';
+import { ref, nextTick, defineEmits } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { Tools } from '@/context/toolbar';
 

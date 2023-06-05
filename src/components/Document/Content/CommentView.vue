@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, defineEmits, onMounted, onUnmounted, defineExpose, watchEffect, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed, watch, nextTick } from 'vue'
 import { Context } from '@/context';
 import { Close, Delete, CircleCheck, Back } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';

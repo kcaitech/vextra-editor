@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref } from "vue";
+import { ref } from "vue";
 import { Context } from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";

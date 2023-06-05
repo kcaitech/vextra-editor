@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { defineProps, onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data";
