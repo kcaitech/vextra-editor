@@ -47,7 +47,8 @@ onUnmounted(() => {
 .container {
     display: flex;
     align-items: center;
-    width: 56px;
+    width: 42px;
+    justify-content: space-around;
 
     .home {
         cursor: pointer;
@@ -56,17 +57,21 @@ onUnmounted(() => {
         font-size: 12px;
         color: #ffffff;
         box-sizing: border-box;
-        padding: 4px;
+        padding: 2px;
+        display: flex;
+        align-items: center;
+        justify-items: center;
+        margin-top: 4px;
 
         >svg {
-            width: 100%;
-            height: 100%;
+            width: 88%;
+            height: 88%;
         }
     }
 
     .save {
-        width: 16px;
-        height: 16px;
+        width: 8px;
+        height: 8px;
     }
 }
 </style>

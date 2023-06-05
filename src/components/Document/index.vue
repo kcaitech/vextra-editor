@@ -16,7 +16,6 @@ import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
-import Loading from '@/components/common/Loading.vue'
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -115,9 +114,13 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
+        } else if (code === 'KeyS') {
+            if (ctrlKey || metaKey) {
+                evevt.preventDefault();
+                context.workspace.documentSave();
+            }
         }
     }
-
 }
 const showHiddenRight = () => {
     if (showRight.value) {
@@ -265,7 +268,7 @@ const getDocumentInfo = async () => {
             if (document) {
                 window.document.title = document.name;
                 context = new Context(document, repo);
-                context.watch(selectionWatcher);
+                context.selection.watch(selectionWatcher);
                 switchPage(context.data.pagesList[0]?.id);
                 localStorage.setItem('docId', route.query.id as string);
                 coopLocal = new CoopLocal(document, repo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
@@ -278,15 +281,14 @@ const getDocumentInfo = async () => {
         loading.value = false;
     }
 }
-
 function upload(id?: string) {
     const token = localStorage.getItem('token');
     if (!token || !context || !context.data) {
         return
     }
     context.workspace.startSave();
-    uploadExForm(context.data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
-        if (successed) {
+    uploadExForm(context.data, FILE_UPLOAD, token, id || '', (isSuccess, doc_id) => {
+        if (isSuccess) {
             localStorage.setItem('docId', doc_id);
             if (!id) {
                 router.replace({
@@ -310,7 +312,7 @@ function init() {
         document.addEventListener('keydown', keyboardEventHandler);
         timer = setInterval(() => {
             getDocumentAuthority();
-        }, 30000)
+        }, 30000);
     } else { // 从本地读取文件
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
@@ -344,14 +346,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Loading v-if="loading"></Loading>
+    <Loading v-if="loading || !context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context" v-if="!loading && context" />
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" v-if="!loading" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+    <ColSplitView id="center" v-if="!loading && context"
+        :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
         :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">

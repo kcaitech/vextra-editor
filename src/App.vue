@@ -20,6 +20,7 @@ html {
         user-select: none;
 
         >#app {
+            position: absolute;
             display: flex;
             flex-flow: column nowrap;
             width: 100%;
