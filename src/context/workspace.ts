@@ -358,22 +358,25 @@ export class WorkSpace extends Watchable(Object) {
     }
     keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         const repo = context.repo;
+        const page = context.selection.selectedPage;
+        if (!page) return;
         if ((ctrl || meta) && !shift) {
             repo.canUndo() && repo.undo();
             const selection = context.selection;
             const shapes = context.selection.selectedShapes;
-            const flat = context.selection.selectedPage!.flatShapes;
+            // const flat = context.selection.selectedPage!.flatShapes;
             if (shapes.length) {
-                if (flat.length) {
-                    for (let i = 0; i < shapes.length; i++) {
-                        const item = shapes[i];
-                        if (!flat.find(i => i.id === item.id)) {
-                            selection.unSelectShape(item);
-                        }
+                // if (flat.length) {
+                for (let i = 0; i < shapes.length; i++) {
+                    const item = shapes[i];
+                    const shape = page.getShape(item.id)
+                    if (!shape) {
+                        selection.unSelectShape(item);
                     }
-                } else {
-                    selection.resetSelectShapes();
                 }
+                // } else {
+                //     selection.resetSelectShapes();
+                // }
             }
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
