@@ -10,8 +10,8 @@ import { Color, Border, ContextSettings, BorderStyle, MarkerType } from '@kcdesi
 import { FillType, BlendMode, BorderPosition } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
-import { toHex } from "@/utils/color"
-
+import { toHex } from "@/utils/color";
+import { v4 } from 'uuid';
 interface BorderItem {
     id: number,
     border: Border
@@ -62,7 +62,8 @@ function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
+    const id = v4();
+    const border = new Border(id, true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
     editor.value.addBorder(border);
 }
 const isNoBorder = () => {
@@ -76,7 +77,7 @@ function deleteBorder(idx: number) {
 function toggleVisible(idx: number) {
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
-    editor.value.setBorderVisiable(idx, isEnabled);
+    editor.value.setBorderEnable(idx, isEnabled);
 }
 function onColorChange(e: Event, idx: number) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -133,9 +134,7 @@ function onAlphaChange(e: Event, idx: number) {
         }
     }
 }
-function getColorFromPicker(rgb: number[], idx: number) {
-    const alpha = borders[idx].border.color.alpha;
-    const color = new Color(alpha, rgb[0], rgb[1], rgb[2]);
+function getColorFromPicker(color: Color, idx: number) {
     editor.value.setBorderColor(idx, color);
 }
 // hooks
@@ -171,7 +170,7 @@ onBeforeUpdate(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="b.border.color" :context="props.context"
-                        @choosecolor="(c: any) => getColorFromPicker(c, idx)" />
+                        @change="(c: Color) => getColorFromPicker(c, idx)" />
                     <input :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
                         @change="e => onColorChange(e, idx)" />
                     <input ref="alpheBorder" style="text-align: center;" :value="(b.border.color.alpha * 100) + '%'"

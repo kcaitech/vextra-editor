@@ -4,13 +4,20 @@ import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { simpleId } from '@/utils/common';
+import { simpleId, debounceLog } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
 import { drawTooltip, toRGBA } from './utils';
+import { typical } from './typical';
 type RgbMeta = number[];
 interface Props {
   context: Context
   color: Color
+}
+interface Data {
+  rgba: RGBA
+  hueIndicatorAttr: Indicator
+  alphaIndicatorAttr: Indicator
+  dotPosition: DotPosition
 }
 interface Emits {
   (e: 'change', color: Color): void;
@@ -35,21 +42,17 @@ interface DotPosition {
   top: number
 }
 const INDICATOR_WIDTH = 12;
-
+const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
 const saturation = ref<HTMLElement>();
+const typicalColor = ref<Color[]>(typical);
 const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
-const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 }
-const data = reactive<{
-  rgba: RGBA
-  hueIndicatorAttr: Indicator
-  alphaIndicatorAttr: Indicator
-  dotPosition: DotPosition
-}>({
+const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
+const data = reactive<Data>({
   rgba: { R: 255, G: 0, B: 0, alpha: 1 },
   hueIndicatorAttr: { x: 0 },
   alphaIndicatorAttr: { x: lineAttribute.length - INDICATOR_WIDTH },
@@ -120,51 +123,64 @@ function xTohex(rgb: [number, number, number]): string {
   })
   return str
 }
-
-function mousedown4AlphaIndicator() {
-  if (sliders.value) {
-    const { left, right } = sliders.value.getBoundingClientRect();
-    lineAttribute.begin = left;
-    lineAttribute.end = right;
-  }
-  document.addEventListener('mousemove', mousemove4Alpha);
-  document.addEventListener('mouseup', mouseup);
-}
-function mousemove4Alpha(e: MouseEvent) {
-  if (e.screenX >= lineAttribute.begin && e.screenX <= lineAttribute.end - INDICATOR_WIDTH) {
-    alphaIndicatorAttr.x = e.screenX - lineAttribute.begin;
-  } else if (e.screenX < lineAttribute.begin) {
-    alphaIndicatorAttr.x = 0;
-  } else if (e.screenX > lineAttribute.end) {
-    alphaIndicatorAttr.x = lineAttribute.length - INDICATOR_WIDTH;
-  }
-  setAlpha(alphaIndicatorAttr.x);
-}
-function mousemove4Hue(e: MouseEvent) {
-  if (e.x >= lineAttribute.begin && e.x <= lineAttribute.end - INDICATOR_WIDTH) {
-    hueIndicatorAttr.x = e.x - lineAttribute.begin
-  } else if (e.x < lineAttribute.begin) {
-    hueIndicatorAttr.x = 0
-  } else if (e.x > lineAttribute.end) {
-    hueIndicatorAttr.x = lineAttribute.length - INDICATOR_WIDTH;
-  }
-  setRGB(hueIndicatorAttr.x);
-}
+// 设置色相
 function setHueIndicatorPosition(e: MouseEvent) {
   if (sliders.value) {
     const { x, right } = sliders.value.getBoundingClientRect();
     lineAttribute.begin = x;
     lineAttribute.end = right;
-    hueIndicatorAttr.x = Math.min(Math.max(e.x - INDICATOR_WIDTH / 2, 0) - x, lineAttribute.length - INDICATOR_WIDTH);
+    let placement = e.x - lineAttribute.begin;
+    if (placement < HALF_INDICATOR_WIDTH) {
+      placement = HALF_INDICATOR_WIDTH;
+    } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+      placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+    }
+    hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
     setRGB(hueIndicatorAttr.x);
     document.addEventListener('mousemove', mousemove4Hue);
     document.addEventListener('mouseup', mouseup);
   }
 }
+function mousemove4Hue(e: MouseEvent) {
+  let placement = e.x - lineAttribute.begin;
+  if (placement < HALF_INDICATOR_WIDTH) {
+    placement = HALF_INDICATOR_WIDTH;
+  } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+    placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+  }
+  hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+  setRGB(hueIndicatorAttr.x);
+}
+
+// 设置透明度
 function setAlphaIndicatorPosition(e: MouseEvent) {
-  alphaIndicatorAttr.x = Math.min(Math.max(e.offsetX - INDICATOR_WIDTH / 2, 0), lineAttribute.length - INDICATOR_WIDTH);
+  if (sliders.value) {
+    const { x, right } = sliders.value.getBoundingClientRect();
+    lineAttribute.begin = x;
+    lineAttribute.end = right;
+    let placement = e.x - lineAttribute.begin;
+    if (placement < HALF_INDICATOR_WIDTH) {
+      placement = HALF_INDICATOR_WIDTH;
+    } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+      placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+    }
+    alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+    setAlpha(alphaIndicatorAttr.x);
+    document.addEventListener('mousemove', mousemove4Alpha);
+    document.addEventListener('mouseup', mouseup);
+  }
+}
+function mousemove4Alpha(e: MouseEvent) {
+  let placement = e.x - lineAttribute.begin;
+  if (placement < HALF_INDICATOR_WIDTH) {
+    placement = HALF_INDICATOR_WIDTH;
+  } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+    placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+  }
+  alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
   setAlpha(alphaIndicatorAttr.x);
 }
+
 function setDotPosition(e: MouseEvent) {
   if (saturation.value) {
     const { x: saturationX, y: saturationY } = saturation.value.getBoundingClientRect();
@@ -173,46 +189,57 @@ function setDotPosition(e: MouseEvent) {
     dotPosition.top = my - saturationY - 5;
   }
 }
-
+// set color
 function setRGB(indicator: number) {
-  const start = 0 + INDICATOR_WIDTH / 2;
-  const end = lineAttribute.length - INDICATOR_WIDTH / 2;
+  const start = 0;
+  const end = lineAttribute.length - INDICATOR_WIDTH;
   if (start <= indicator && indicator <= end * 0.17) {
-    const rate = indicator / (end * 0.17)
+    const rate = indicator / (end * 0.17);
     rgba.R = 255;
     rgba.G = Math.floor(255 * rate);
     rgba.B = 0;
   } else if (end * 0.17 < indicator && indicator <= end * 0.33) {
-    const rate = (indicator - end * 0.17) / (end * 0.33 - end * 0.17)
+    const rate = (indicator - end * 0.17) / (end * 0.33 - end * 0.17);
     rgba.R = Math.floor(255 - 255 * rate);
     rgba.G = 255;
     rgba.B = 0;
   } else if (end * 0.33 < indicator && indicator <= end * 0.50) {
-    const rate = (indicator - end * 0.33) / (end * 0.50 - end * 0.33)
+    const rate = (indicator - end * 0.33) / (end * 0.50 - end * 0.33);
     rgba.R = 0;
     rgba.G = 255;
     rgba.B = Math.floor(255 * rate);
   } else if (end * 0.50 < indicator && indicator <= end * 0.67) {
-    const rate = (indicator - end * 0.50) / (end * 0.67 - end * 0.50)
+    const rate = (indicator - end * 0.50) / (end * 0.67 - end * 0.50);
     rgba.R = 0;
     rgba.G = Math.floor(255 - 255 * rate);
     rgba.B = 255;
   } else if (end * 0.67 < indicator && indicator <= end * 0.83) {
-    const rate = (indicator - end * 0.67) / (end * 0.83 - end * 0.67)
+    const rate = (indicator - end * 0.67) / (end * 0.83 - end * 0.67);
     rgba.R = Math.floor(255 * rate);
     rgba.G = 0;
     rgba.B = 255;
   } else {
-    const rate = (indicator - end * 0.83) / (end - end * 0.83)
+    const rate = (indicator - end * 0.83) / (end - end * 0.83);
     rgba.R = 255;
     rgba.G = 0;
     rgba.B = Math.floor(255 - 255 * rate);
   }
-  emit('choosecolor', [rgba.R, rgba.G, rgba.B])
+  const color = new Color(props.color.alpha, rgba.R, rgba.G, rgba.B);
+  emit('change', color);
 }
 function setAlpha(indicator: number) {
-  rgba.alpha = Number((indicator / lineAttribute.length).toFixed(2));
+  rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
+  const color = new Color(rgba.alpha, props.color.red, props.color.green, props.color.blue);
+  emit('change', color);
 }
+function setColor(color: Color) {
+  rgba.R = color.red;
+  rgba.G = color.green;
+  rgba.B = color.blue;
+  rgba.alpha = color.alpha;
+  emit('change', color);
+}
+// 鼠标抬起
 function mouseup() {
   document.removeEventListener('mousemove', mousemove4Alpha)
   document.removeEventListener('mousemove', mousemove4Hue)
@@ -225,6 +252,7 @@ function eyedropper() {
     systemEyeDropper();
   }
 }
+
 function blockUnmount() {
   const workspace = props.context.workspace;
   const exsit = workspace.isColorPickerMount;
@@ -299,6 +327,10 @@ onUnmounted(() => {
         <div class="black"></div>
         <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
       </div>
+      <div class="typical-container">
+        <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
+          :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+      </div>
       <div class="controller">
         <div class="eyedropper">
           <svg-icon icon-class="eyedropper" @click="eyedropper"></svg-icon>
@@ -312,8 +344,7 @@ onUnmounted(() => {
           <div class="alpha-bacground">
             <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
               :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
-              <div class="alphaIndicator" ref="alphaIndicator" :style="{ left: alphaIndicatorAttr.x + 'px' }"
-                @mousedown="mousedown4AlphaIndicator"></div>
+              <div class="alphaIndicator" ref="alphaIndicator" :style="{ left: alphaIndicatorAttr.x + 'px' }"></div>
             </div>
           </div>
         </div>
@@ -396,6 +427,24 @@ onUnmounted(() => {
         position: absolute;
         box-sizing: border-box;
         box-shadow: 0 0 0 0.5px #fff, inset 0 0 1px 1px rgb(0 0 0 / 30%), 0 0 1px 1px rgb(0 0 0 / 40%);
+      }
+    }
+
+    >.typical-container {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-around;
+      padding: 10px 10px 0 10px;
+      box-sizing: border-box;
+
+      >.block {
+        width: 16px;
+        height: 16px;
+        border-radius: 2px;
+        box-shadow: 0 0 2px var(--theme-color) inset;
+        cursor: pointer;
       }
     }
 
