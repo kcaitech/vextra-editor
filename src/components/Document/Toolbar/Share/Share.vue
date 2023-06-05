@@ -95,8 +95,8 @@ onUnmounted(() => {
     justify-content: center;
 
     >svg {
-      width: 80%;
-      height: 80%;
+      width: 54%;
+      height: 54%;
       color: #fff;
     }
   }

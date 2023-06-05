@@ -80,6 +80,9 @@ onUnmounted(() => {
     flex-direction: row;
     align-items: center;
     height: 40px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 
     .temp {
         width: 28px;

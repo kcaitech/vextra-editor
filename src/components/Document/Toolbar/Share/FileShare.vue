@@ -6,7 +6,6 @@ import * as share_api from '@/apis/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
-import { router } from '@/router';
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
@@ -550,7 +549,7 @@ onUnmounted(() => {
 }
 
 .card {
-  position: absolute;
+  position: fixed;
   z-index: 1000;
   left: 50%;
   transform: translate(-50%, -50%);

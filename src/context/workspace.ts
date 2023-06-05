@@ -79,6 +79,7 @@ export class WorkSpace extends Watchable(Object) {
     static REMOVE_COLOR_PICKER = 13;
     static START_SAVE = 14;
     static END_SAVE = 15;
+    static DOCUMENT_SAVE = 16;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -103,6 +104,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
+    private m_saving: boolean = false;
     constructor(context: Context) {
         super();
         this.context = context
@@ -184,11 +186,18 @@ export class WorkSpace extends Watchable(Object) {
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
-    startSave() {
+    startSvae() {
+        this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
     }
     endSave() {
+        this.m_saving = false;
         this.notify(WorkSpace.END_SAVE);
+    }
+    documentSave() {
+        if (!this.m_saving) {
+            this.notify(WorkSpace.DOCUMENT_SAVE);
+        }
     }
     colorPickerSetup(id: string) {
         this.m_color_picker = id;
@@ -254,8 +263,10 @@ export class WorkSpace extends Watchable(Object) {
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (event.code === KeyboardKeys.R) {
-            event.preventDefault();
-            this.keydown_r();
+            if (!metaKey && !ctrlKey) {
+                event.preventDefault();
+                this.keydown_r();
+            }
         } else if (event.code === KeyboardKeys.V) {
             event.preventDefault();
             this.keydown_v();

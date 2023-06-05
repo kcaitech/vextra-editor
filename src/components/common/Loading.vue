@@ -3,30 +3,39 @@
 </script>
 
 <template>
-  <div class="loader"></div>
+  <div class="container">
+    <div class="loader"></div>
+  </div>
 </template>
 
 <style scoped lang="scss">
-.loader {
+.container {
+  width: 60px;
+  height: 60px;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 2px solid transparent;
-  border-top: 2px solid grey;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  animation: spin 1s linear infinite;
-}
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
+  >.loader {
+    width: 100%;
+    height: 100%;
+    border: 2px solid transparent;
+    border-top: 2px solid grey;
+    border-left: 2px solid grey;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-sizing: border-box;
   }
 
-  to {
-    transform: rotate(360deg);
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
   }
 }
 </style>
