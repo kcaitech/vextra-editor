@@ -9,7 +9,7 @@ import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
-
+import { v4 as uuid } from "uuid";
 interface FillItem {
     id: number,
     fill: Fill
@@ -64,7 +64,7 @@ function setupWatcher() {
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const fill = new Fill(true, FillType.SolidColor, color, contextSettings);
+    const fill = new Fill(uuid(), true, FillType.SolidColor, color, contextSettings);
     editor.value.addFill(fill);
 }
 const isNoFile = () => {
@@ -78,7 +78,7 @@ function deleteFill(idx: number) {
 }
 
 function toggleVisible(idx: number) {
-    editor.value.setFillEnable(idx);
+    editor.value.toggleFillEnable(idx);
 }
 
 function setColor(idx: number, clr: string, alpha: number) {
