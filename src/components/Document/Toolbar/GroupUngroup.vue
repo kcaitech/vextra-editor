@@ -71,7 +71,7 @@ const groupClick = () => {
         const shapes = selection.selectedShapes;
         const page = selection.selectedPage;
         if (shapes.length) {
-            const name = getName(ShapeType.Group, page?.flatShapes || [], t);
+            const name = getName(ShapeType.Group, page?.childs || [], t);
             const group = editor.value.group(props.selection.selectedShapes, name);
             if (group) {
                 props.selection.selectShape(group);
