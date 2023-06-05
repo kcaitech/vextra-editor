@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
+import { computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
 import { CtrlElementType } from "@/context/workspace";
 import { ClientXY } from "@/context/selection";

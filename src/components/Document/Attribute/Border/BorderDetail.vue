@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Popover from '@/components/common/Popover.vue';
-import { ref, defineProps, computed, watch, onUpdated, onMounted } from 'vue';
+import { ref, computed, watch, onUpdated, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderPositonItem from './BorderPositionItem.vue';

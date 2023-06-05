@@ -95,6 +95,8 @@ export const home = {
     access_record_ok: '移除成功',
     access_record_no: '移除失败',
     exit_share: '退出共享',
+    exit_share_success:'退出成功',
+    exit_share_fail:'退出失败',
     restore: '还原',
     completely_delete: '彻底删除',
     delete_tips: '删除执行后，文件将无法恢复找回，确认要删除吗？',
@@ -105,9 +107,13 @@ export const home = {
     restore_no: '还原失败',
     delete_file_ok: '删除成功',
     delete_file_no: '删除失败',
-    other_tips: '请确保网络联系正常',
+    other_tips: '请确保网络连接正常',
     addComment: '添加评论',
-    page_sort: '按页面排序'
+    rename:'重命名',
+    rename_ok:'确定',
+    page_sort: '按页面排序',
+    login_failed:'登录失败',
+    login_refresh:'点击刷新二维码'
 }
 
 export const search = {
@@ -179,6 +185,24 @@ export const attr: any = {
     'fixed_top': '顶部固定',
     'fixed_top_bottom': '上下固定',
     'adapt': '适应容器大小'
+}
+
+export const login = {
+    login_failure: '登录失效，请重新登录'
+}
+
+export const comment = {
+    reply: '回复',
+    delete: '删除',
+    settled: '解决',
+    edit_content: '编辑内容',
+    quick_reply: '快速回复',
+    last: '上一条',
+    next: '下一条',
+    sort: '按页面排序',
+    show_about_me: '仅显示关于我的',
+    show_resolved_comments: '显示已解决评论',
+    comment_area: '评论区'
 }
 
 attr[BorderPosition.Inner] = '内部';

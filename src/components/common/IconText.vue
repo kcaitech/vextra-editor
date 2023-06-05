@@ -4,7 +4,7 @@
  * @FilePath: \kcdesign\src\components\common\IconText.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits, watch, ref, onMounted } from "vue";
+import { watch, ref, onMounted } from "vue";
 type Scale = { axleX: number, degX: number }
 const props = defineProps<{
     svgicon?: any,

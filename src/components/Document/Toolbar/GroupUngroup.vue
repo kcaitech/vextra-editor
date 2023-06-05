@@ -2,7 +2,7 @@
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { Shape, ShapeType, GroupShape } from '@kcdesign/data';
-import { defineProps, computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
 import { useI18n } from 'vue-i18n';

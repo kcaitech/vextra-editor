@@ -4,7 +4,7 @@
  * @FilePath: \kcdesign\src\components\Document\Navigation\PageItem.vue
 -->
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
+import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
 import { Selection } from "@/context/selection";
 import { Context } from "@/context";
 export interface ItemData {

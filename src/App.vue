@@ -18,7 +18,6 @@ html {
         width: 100%;
         height: 100%;
         user-select: none;
-
         >#app {
             position: absolute;
             display: flex;

@@ -95,6 +95,8 @@ export const home = {
     access_record_ok: 'Removed successfully',
     access_record_no: 'Removal failed',
     exit_share: 'Exit share',
+    exit_share_success:'Exit share success',
+    exit_share_fail:'Exit share failed',
     restore: 'Restore',
     completely_delete: 'Completely delete',
     delete_tips: 'After deleting, the file cannot be recovered. Are you sure you want to delete it?',
@@ -107,14 +109,18 @@ export const home = {
     delete_file_no: 'Failed to delete',
     other_tips: 'Please make sure the network connection is normal',
     addComment: 'Add comment',
-    page_sort: 'Sort by page'
+    rename:'Rename',
+    rename_ok:'OK',
+    page_sort: 'Sort by page',
+    login_failed:'Login failure',
+    login_refresh:'Click refresh QR code'
 }
 
 export const search = {
-    search_results: 'No matching results',
-    search_history: 'No search history'
-
+    search_results:'No matching results',
+    search_history:'No search history',
 }
+
 
 export const navi = {
     shape: 'Shape',
@@ -181,6 +187,25 @@ export const attr: any = {
     'fixed_top_bottom': 'Fixed top and bottom',
     'adapt': 'Resize to fit'
 }
+
+export const login = {
+    login_failure: 'Login failure'
+}
+
+export const comment = {
+    reply: 'Reply',
+    delete: 'Delete',
+    settled: 'solve',
+    edit_content: 'Edit content',
+    quick_reply: 'Quick reply',
+    last: 'Last',
+    next: 'Next',
+    sort: 'Sort by page',
+    show_about_me: 'Show about me',
+    show_resolved_comments: 'Show resolved comments',
+    comment_area: 'Comment section'
+}
+
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';

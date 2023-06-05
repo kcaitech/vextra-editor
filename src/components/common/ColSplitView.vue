@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, reactive, onMounted, onUnmounted, watchEffect } from "vue";
+import { ref, reactive, onMounted, onUnmounted, watchEffect } from "vue";
 import Sash from "@/components/common/Sash.vue";
 
 export interface SizeBound {

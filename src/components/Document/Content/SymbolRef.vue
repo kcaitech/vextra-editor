@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, defineProps, onMounted, onUnmounted, ref, watch } from 'vue';
+import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import comsMap from './comsmap'
 import { render as r } from "@/render/symbolref"
 import { SymbolRefShape } from '@kcdesign/data';

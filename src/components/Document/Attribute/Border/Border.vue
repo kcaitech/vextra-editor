@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { computed, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
@@ -134,10 +134,9 @@ function onAlphaChange(e: Event, idx: number) {
     }
 }
 function getColorFromPicker(rgb: number[], idx: number) {
-    const isEnabled = borders[idx].border.isEnabled;
     const alpha = borders[idx].border.color.alpha;
     const color = new Color(alpha, rgb[0], rgb[1], rgb[2]);
-    editor.value.setBorder(idx, { isEnabled, color });
+    editor.value.setBorderColor(idx, color);
 }
 // hooks
 onMounted(() => {

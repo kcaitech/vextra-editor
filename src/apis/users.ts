@@ -146,3 +146,13 @@ export function Setusernickname(data = {}, ops = {}) {
         ...ops
     })
 }
+
+//文件重命名
+export function Setfilename(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/name',
+        method: 'put',
+        data:data,
+        ...ops
+    })
+}
