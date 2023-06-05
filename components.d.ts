@@ -87,7 +87,6 @@ declare module '@vue/runtime-core' {
     PageView: typeof import('./src/components/Document/Content/PageView.vue')['default']
     PageViewContextMenuItems: typeof import('./src/components/Document/Menu/PageViewContextMenuItems.vue')['default']
     Path: typeof import('./src/components/Document/Toolbar/Buttons/Path.vue')['default']
-    Pattern: typeof import('./src/components/Document/Toolbar/Buttons/Pattern.vue')['default']
     Pen: typeof import('./src/components/Document/Toolbar/Buttons/Pen.vue')['default']
     Per_center: typeof import('./src/components/Userinfo/per_center.vue')['default']
     Popover: typeof import('./src/components/common/Popover.vue')['default']

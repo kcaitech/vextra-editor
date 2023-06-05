@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { ref, nextTick, defineEmits } from 'vue';
+import { ref, nextTick } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { useI18n } from 'vue-i18n';
 import FrameChild from './FrameChild.vue'
 import { Action, WorkSpace } from "@/context/workspace";
-
-const { t } = useI18n();
-
 type Button = InstanceType<typeof ToolButton>
 
+const { t } = useI18n();
 const props = defineProps<{
   workspace: WorkSpace,
   active: boolean

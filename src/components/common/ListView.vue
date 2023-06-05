@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineExpose, reactive, ref, computed, onUnmounted } from "vue";
+import { onMounted, reactive, ref, computed, onUnmounted } from "vue";
 import { Context } from "@/context";
 
 export interface IDataIter<T extends { id: string }> {
