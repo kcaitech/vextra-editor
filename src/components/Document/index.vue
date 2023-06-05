@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page } from '@kcdesign/data';
+import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal } from '@kcdesign/data';
 import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
@@ -16,8 +16,6 @@ import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
-import Loading from '@/components/common/Loading.vue';
-import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -232,19 +230,8 @@ const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
-let uploadTimer: any = null
-function polling() {
-    if (uploadTimer) {
-        clearTimeout(uploadTimer);
-    }
-    uploadTimer = setTimeout(() => {
-        const docID = localStorage.getItem('docId') || '';
-        if (docID && permType.value !== 1) {
-            upload(docID);
-        }
-    }, 60000);
-}
 //获取文档信息
+let coopLocal: ICoopLocal | null = null;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -258,7 +245,7 @@ const getDocumentInfo = async () => {
         }
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限   
+        //获取文档类型是否为私有文档且有无权限
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -282,10 +269,10 @@ const getDocumentInfo = async () => {
                 window.document.title = document.name;
                 context = new Context(document, repo);
                 context.selection.watch(selectionWatcher);
-                context.workspace.watch(workspaceWatcher);
                 switchPage(context.data.pagesList[0]?.id);
                 localStorage.setItem('docId', route.query.id as string);
-                polling();
+                coopLocal = new CoopLocal(document, repo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
+                coopLocal.start();
             }
         })
     } catch (err) {
@@ -296,30 +283,22 @@ const getDocumentInfo = async () => {
 }
 function upload(id?: string) {
     const token = localStorage.getItem('token');
-    if (token) {
-        if (context) {
-            const data = context.data;
-            if (data) {
-                // data.pagesMgr.get(data.pagesList[0].id).then((page) => {
-                //     console.log('child length', page?.childs.length);
-                // })
-                context.workspace.startSvae();
-                uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
-                    if (successed) {
-                        localStorage.setItem('docId', doc_id);
-                        if (!id) {
-                            router.replace({
-                                path: '/document',
-                                query: { id: doc_id }
-                            })
-                        }
-                    }
-                    polling();
-                    context?.workspace.endSave();
+    if (!token || !context || !context.data) {
+        return
+    }
+    context.workspace.startSave();
+    uploadExForm(context.data, FILE_UPLOAD, token, id || '', (isSuccess, doc_id) => {
+        if (isSuccess) {
+            localStorage.setItem('docId', doc_id);
+            if (!id) {
+                router.replace({
+                    path: '/document',
+                    query: { id: doc_id }
                 })
             }
         }
-    }
+        context?.workspace.endSave();
+    })
 }
 let timer: any = null;
 function setScreenSize() {
@@ -338,7 +317,6 @@ function init() {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
             context.selection.watch(selectionWatcher);
-            context.workspace.watch(workspaceWatcher);
             upload();
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
@@ -347,41 +325,23 @@ function init() {
         }
     }
 }
-function workspaceWatcher(t: number) {
-    if (t === WorkSpace.DOCUMENT_SAVE) {
-        const docID = localStorage.getItem('docId') || '';
-        if (docID && permType.value !== 1) {
-            if (uploadTimer) {
-                clearTimeout(uploadTimer);
-            }
-            upload(docID);
-        }
-    }
-}
 onMounted(() => {
     setScreenSize();
     init();
 })
 onUnmounted(() => {
+    try {
+        coopLocal?.close();
+    } catch (err) {}
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     context?.selection.unwatch(selectionWatcher);
-    context?.workspace.unwatch(workspaceWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
-    clearTimeout(uploadTimer);
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
-})
-watchEffect(() => {
-    if (route.query.id) {
-        const id = (route.query.id as string);
-        upload(id);
-    } else {
-        upload();
-    }
 })
 </script>
 

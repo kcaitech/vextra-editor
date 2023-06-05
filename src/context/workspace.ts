@@ -186,7 +186,7 @@ export class WorkSpace extends Watchable(Object) {
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
-    startSvae() {
+    startSave() {
         this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
     }
