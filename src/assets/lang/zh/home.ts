@@ -196,7 +196,10 @@ export const comment = {
     sort: '按页面排序',
     show_about_me: '仅显示关于我的',
     show_resolved_comments: '显示已解决评论',
-    comment_area: '评论区'
+    comment_area: '评论区',
+    input_comments: '输入评论',
+    check: '查看',
+    a_few_reply: '条回复'
 }
 
 attr[BorderPosition.Inner] = '内部';

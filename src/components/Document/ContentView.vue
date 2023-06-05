@@ -562,9 +562,11 @@ const mouseUpCommentInput = () => {
     document.removeEventListener('mouseup', mouseUpCommentInput);
 }
 
-const closeComment = (e: MouseEvent) => {
+const closeComment = (e?: MouseEvent) => {
     if(!spacePressed.value) {
-        if(e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
+        if(e && e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
+            commentInput.value = false;
+        }else if(!e) {
             commentInput.value = false;
         }
     }
@@ -633,7 +635,7 @@ onUnmounted(() => {
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentInput v-if="commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y"
          ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"></CommentInput>
-        <PageCommentItem v-if="!commentInput" :context="props.context" :x="commentPosition.x" @mouseDownCommentInput="mouseDownCommentInput" :y="commentPosition.y" :rootWidth="rootWidth" :cursorClass="cursorClass"></PageCommentItem>
+        <PageCommentItem :context="props.context" :x="commentPosition.x" @mouseDownCommentInput="mouseDownCommentInput" :y="commentPosition.y" :rootWidth="rootWidth"></PageCommentItem>
     </div>
 </template>
 <style scoped lang="scss">

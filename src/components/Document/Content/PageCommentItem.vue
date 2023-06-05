@@ -9,7 +9,6 @@ const props = defineProps<{
     x: number
     y: number
     rootWidth?: number
-    cursorClass: string
 }>()
 const emit = defineEmits<{
     (e: 'mouseDownCommentInput', event: MouseEvent): void
@@ -58,7 +57,7 @@ const mouseDownCommentInput = (e: MouseEvent) => {
 
 const closeComment = (e?: MouseEvent) => {
     if(e && e.target instanceof Element && e.target.closest('.comment-mark')) return
-
+    
     ShowComment.value = false
     showScale.value = false
 }

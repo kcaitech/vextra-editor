@@ -197,7 +197,10 @@ export const comment = {
     sort: 'Sort by page',
     show_about_me: 'Show about me',
     show_resolved_comments: 'Show resolved comments',
-    comment_area: 'Comment section'
+    comment_area: 'Comment section',
+    input_comments: 'Input comments',
+    check: 'check',
+    a_few_reply: 'reply'
 }
 
 attr[BorderPosition.Inner] = 'Inner';

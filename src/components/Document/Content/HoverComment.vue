@@ -72,8 +72,8 @@ const onClick = (e: MouseEvent) => {
             </div>
             <div class="box-context">Lorem ipsum dolor sit amet consectetur adipisicing elit. Blanditiis,  Lorem ipsum dolor, sit amet consectetur a</div>
             <div class="box-footer">
-                <div class="reply">0 条回复</div>
-                <div class="check">查看</div>
+                <div class="reply">0 {{t('comment.a_few_reply')}}</div>
+                <div class="check">{{t('comment.check')}}</div>
             </div>
         </div>
     </div>

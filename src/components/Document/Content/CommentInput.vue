@@ -2,6 +2,8 @@
 import { ref, defineProps, defineEmits, onMounted, onUnmounted, defineExpose, watchEffect, computed } from 'vue'
 import { Context } from '@/context';
 import { Back } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const props = defineProps<{
     context: Context
     x: number
@@ -10,7 +12,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-    (e: 'close', event: MouseEvent): void
+    (e: 'close', event?: MouseEvent): void
     (e: 'mouseDownCommentInput', event: MouseEvent): void
 }>()
 const textarea = ref('')
@@ -41,7 +43,7 @@ const carriageReturn = (event: KeyboardEvent) => {
             textarea.value = textarea.value + '\n'
         }else {
             event.preventDefault()
-            console.log('发送评论');
+            addComment()
         }
     }
 }
@@ -49,6 +51,11 @@ const carriageReturn = (event: KeyboardEvent) => {
 const mouseDownCommentInput = (e: MouseEvent) => {
     e.stopPropagation()
     emit('mouseDownCommentInput', e)
+}
+
+const addComment = () => {
+    console.log(11);
+    
 }
 
 defineExpose({
@@ -81,12 +88,12 @@ onUnmounted(() => {
                 v-model="textarea"
                 :autosize="{ minRows: 1, maxRows: 12 }"
                 type="textarea"
-                placeholder="输入评论"
+                :placeholder="t('comment.input_comments')"
                 resize="none"
                 size="small"
                 @keydown="carriageReturn"
             />
-            <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}"><el-icon :size="14"><Back /></el-icon></div>
+            <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><el-icon :size="14"><Back /></el-icon></div>
         </div>
     </div>
 </template>

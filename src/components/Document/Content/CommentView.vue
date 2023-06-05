@@ -28,9 +28,7 @@ const inputPopup = ref<HTMLInputElement>()
 const close = (e: MouseEvent) => {
     emit('close', e)
 }
-const getInputHeight = () => {
-    commentPosition()
-}
+
 const height = ref()
 
 const sendBright = computed(() => textarea.value.trim().length > 0)
@@ -61,14 +59,17 @@ function handleClickOutside(event: MouseEvent) {
 
 const carriageReturn = (event: KeyboardEvent) => {
     event.stopPropagation()
+    commentPosition()
     const { code, ctrlKey, shiftKey } = event;
     if(event.key === 'Enter') {
         if(ctrlKey) {
             textarea.value = textarea.value + '\n'
         }else {
             event.preventDefault()
-            console.log('发送评论');
+            addComment()
         }
+    }else if(code === 'Escape') {
+        emit('close')
     }
 }
 
@@ -95,6 +96,11 @@ const previousArticle = () => {
 
 const nextArticle = () => {
     console.log('下一条评论');
+    
+}
+
+const addComment = () => {
+    console.log(11);
     
 }
 
@@ -143,18 +149,17 @@ onUnmounted(() => {
         <div class="popup-footer">
             <div class="textarea" ref="textareaEl">
                 <el-input
-                    @input="getInputHeight"
                     ref="inputPopup"
                     class="input"
                     v-model="textarea"
                     :autosize="{ minRows: 1, maxRows: 12 }"
                     type="textarea"
-                    placeholder="输入评论"
+                    :placeholder="t('comment.input_comments')"
                     resize="none"
                     size="small"
                     @keydown="carriageReturn"
                 />
-                <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}"><el-icon :size="14"><Back /></el-icon></div>
+                <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><el-icon :size="14"><Back /></el-icon></div>
             </div>
         </div>
     </div>
