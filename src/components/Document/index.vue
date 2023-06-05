@@ -16,6 +16,7 @@ import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
+import Loading from '@/components/common/Loading.vue';
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -281,21 +282,28 @@ const getDocumentInfo = async () => {
         loading.value = false;
     }
 }
-function upload(id?: string) {
+function upload() {
     const token = localStorage.getItem('token');
     if (!token || !context || !context.data) {
         return
     }
     context.workspace.startSave();
-    uploadExForm(context.data, FILE_UPLOAD, token, id || '', (isSuccess, doc_id) => {
+    uploadExForm(context.data, FILE_UPLOAD, token, '', (isSuccess, doc_id) => {
         if (isSuccess) {
             localStorage.setItem('docId', doc_id);
-            if (!id) {
-                router.replace({
-                    path: '/document',
-                    query: { id: doc_id }
-                })
-            }
+            router.replace({
+                path: '/document',
+                query: { id: doc_id }
+            });
+            coopLocal = new CoopLocal(
+                (window as any).sketchDocument as Document,
+                ((window as any).skrepo as Repository),
+                `${FILE_UPLOAD}/documents/ws`,
+                localStorage.getItem('token') || "",
+                doc_id,
+                "0",
+            );
+            coopLocal.start();
         }
         context?.workspace.endSave();
     })
