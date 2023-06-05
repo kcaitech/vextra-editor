@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, reactive, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import { ref, nextTick, reactive, onMounted, onUnmounted, onBeforeUnmount, computed } from 'vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -7,7 +7,9 @@ import { WorkSpace } from '@/context/workspace';
 import { simpleId, debounceLog } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
 import { drawTooltip, toRGBA } from './utils';
-import { typical } from './typical';
+import { typical, model2label } from './typical';
+import { genOptions } from '@/utils/common';
+import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 type RgbMeta = number[];
 interface Props {
   context: Context
@@ -41,6 +43,7 @@ interface DotPosition {
   left: number
   top: number
 }
+type Model = 'RGB' | 'HSL' | 'HSB';
 const INDICATOR_WIDTH = 12;
 const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
 const props = defineProps<Props>();
@@ -52,6 +55,8 @@ const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
 const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
+let inputTarget: HTMLInputElement;
+let handleIndex = 0;
 const data = reactive<Data>({
   rgba: { R: 255, G: 0, B: 0, alpha: 1 },
   hueIndicatorAttr: { x: 0 },
@@ -59,7 +64,16 @@ const data = reactive<Data>({
   dotPosition: { left: -5, top: -5, }
 })
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
-
+const modelOptions: SelectSource[] = genOptions([
+  ['RGB', 'RGB'],
+  ['HSL', 'HSL'],
+  ['HSB', 'HSB']
+]);
+const labels = computed(() => {
+  return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
+});
+const values = computed<number[]>(() => [rgba.R, rgba.G, rgba.B, rgba.alpha]);
+const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
 const popoverEl = ref<HTMLDivElement>();
@@ -269,7 +283,8 @@ function systemEyeDropper() {
     rgba.R = rgb[0];
     rgba.G = rgb[1];
     rgba.B = rgb[2];
-    emit('choosecolor', rgb);
+    const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+    emit('change', c);
   }).catch(() => {
     throw new Error("failed");
   });
@@ -290,7 +305,8 @@ function eyeDropperInit(): Eyedropper {
         rgba.R = rgb[0];
         rgba.G = rgb[1];
         rgba.B = rgb[2];
-        emit('choosecolor', rgb);
+        const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+        emit('change', c);
       }
     }
   });
@@ -299,6 +315,39 @@ function workspaceWatcher(t: any) {
   if (t === WorkSpace.REMOVE_COLOR_PICKER) {
     removeColorPicker();
   }
+}
+function switchModel(item: SelectItem) {
+  model.value = item;
+}
+function inputClick(e: MouseEvent, hidx: number) {
+  const target = e.target as HTMLInputElement;
+  inputTarget = target;
+  handleIndex = hidx;
+  target.select();
+  target.addEventListener('keydown', keyboardWatcher);
+}
+function keyboardWatcher(e: KeyboardEvent) {
+  if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+    enter();
+  }
+}
+function enter() {
+  if (model.value.value === 'RGB') {
+    const v = inputTarget.value;
+    if (handleIndex === 0) {
+      rgba.R = Number(v);
+    } else if (handleIndex === 1) {
+      rgba.G = Number(v);
+    } else if (handleIndex === 2) {
+      rgba.B = Number(v);
+    } else if (handleIndex === 3) {
+      rgba.alpha = Number(v);
+    }
+  }
+  const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+  emit('change', color);
+  inputTarget.removeEventListener('keydown', keyboardWatcher);
+  inputTarget.blur();
 }
 onMounted(() => {
   props.context.workspace.watch(workspaceWatcher);
@@ -349,6 +398,32 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+      <div class="input-container">
+        <div class="model">
+          <Select :itemHeight="32" :source="modelOptions" :selected="model" @select="switchModel"></Select>
+        </div>
+        <div class="values">
+          <div class="wrap">
+            <div class="value">
+              <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
+                  @click="(e) => inputClick(e, idx)" />
+              </div>
+            </div>
+            <div class="label">
+              <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="recently-container">
+        <div class="inner">
+          <div class="header">最近使用</div>
+          <div class="typical-container">
+            <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
+              :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -360,11 +435,12 @@ onUnmounted(() => {
   height: 16px;
   border-radius: 2px;
   box-shadow: 0 0 2px var(--theme-color) inset;
+  font-weight: 500;
+  font-size: var(--font-default-fontsize);
 
   .popover {
     position: absolute;
     width: 240px;
-    height: 360px;
     box-sizing: border-box;
     background-color: #ffffff;
     box-shadow: 0 0px 10px 4px rgba($color: #000000, $alpha: 0.1);
@@ -454,7 +530,7 @@ onUnmounted(() => {
       display: flex;
       flex-direction: row;
       align-items: center;
-      padding: 10px;
+      padding: 10px 10px 0 10px;
       box-sizing: border-box;
       justify-content: space-around;
 
@@ -537,6 +613,113 @@ onUnmounted(() => {
         >svg {
           width: 80%;
           height: 80%;
+        }
+      }
+    }
+
+    .input-container {
+      width: 100%;
+      height: 36px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0 10px 0 10px;
+      box-sizing: border-box;
+
+      .model {
+        flex: 0 0 20%;
+
+        :deep(.select-container .trigger .value-wrap) {
+          padding: 0 10px 0 0;
+        }
+
+        :deep(.select-container .trigger) {
+          background-color: transparent;
+        }
+      }
+
+      .values {
+        flex: 0 0 80%;
+
+        .wrap {
+          width: 100%;
+          height: 100%;
+          padding: 0px 4px 0px 4px;
+          box-sizing: border-box;
+
+          .value {
+            width: 100%;
+            height: 50%;
+            display: flex;
+            align-items: center;
+            background-color: var(--grey-dark);
+            border-radius: 2px;
+
+            .item {
+              height: 100%;
+              width: 25%;
+              text-align: center;
+
+              >input {
+                width: 100%;
+                height: 100%;
+                border: none;
+                outline: none;
+                text-align: center;
+                padding: 0;
+                background-color: transparent;
+              }
+            }
+          }
+
+          .label {
+            width: 100%;
+            height: 50%;
+            display: flex;
+            align-items: center;
+
+            .item {
+              height: 100%;
+              width: 25%;
+              text-align: center;
+            }
+          }
+        }
+      }
+    }
+
+    >.recently-container {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 10px 10px 10px;
+      box-sizing: border-box;
+
+      .inner {
+        border-top: 1px solid #cecece;
+        width: 100%;
+
+        .header {
+          padding: 4px 0 8px 0;
+        }
+
+        >.typical-container {
+          width: 100%;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: space-between;
+          box-sizing: border-box;
+
+          >.block {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            box-shadow: 0 0 2px var(--theme-color) inset;
+            cursor: pointer;
+          }
         }
       }
     }

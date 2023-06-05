@@ -12,3 +12,13 @@ const t9 = new Color(1, 68, 114, 196);
 const t10 = new Color(1, 112, 173, 71);
 
 export const typical = [t1, t2, t3, t4, t5, t6, t7, t8, t9, t10];
+
+export const LABEL_RGB = ['R', 'G', 'B', 'A'];
+export const LABEL_HSL = ['H', 'S', 'L', 'A'];
+export const LABEL_HSB = ['H', 'S', 'B', 'A'];
+
+export const model2label = new Map([
+    ['RGB', LABEL_RGB],
+    ['HSL', LABEL_HSL],
+    ['HSB', LABEL_HSB]
+]);
