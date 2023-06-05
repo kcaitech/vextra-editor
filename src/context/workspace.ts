@@ -362,17 +362,16 @@ export class WorkSpace extends Watchable(Object) {
             repo.canUndo() && repo.undo();
             const selection = context.selection;
             const shapes = context.selection.selectedShapes;
-            const flat = context.selection.selectedPage!.flatShapes;
-            if (shapes.length) {
-                if (flat.length) {
+            const page = context.selection.selectedPage;
+            if (page) {
+                const flat = page.shapes;
+                if (shapes.length) {
                     for (let i = 0; i < shapes.length; i++) {
                         const item = shapes[i];
-                        if (!flat.find(i => i.id === item.id)) {
+                        if (!flat.get(item.id)) {
                             selection.unSelectShape(item);
                         }
                     }
-                } else {
-                    selection.resetSelectShapes();
                 }
             }
         } else if ((ctrl || meta) && shift) {

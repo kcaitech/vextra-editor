@@ -70,11 +70,14 @@ const groupClick = () => {
         const selection = props.selection;
         const shapes = selection.selectedShapes;
         const page = selection.selectedPage;
-        if (shapes.length) {
-            const name = getName(ShapeType.Group, page?.flatShapes || [], t);
-            const group = editor.value.group(props.selection.selectedShapes, name);
-            if (group) {
-                props.selection.selectShape(group);
+        if (page) {
+            if (shapes.length) {
+                const bro = Array.from(page.shapes.values());
+                const name = getName(ShapeType.Group, bro || [], t);
+                const group = editor.value.group(props.selection.selectedShapes, name);
+                if (group) {
+                    props.selection.selectShape(group);
+                }
             }
         }
         props.context.workspace.setSelectionViewUpdater(true);
@@ -99,8 +102,6 @@ const ungroupClick = () => {
                 selection.rangeSelectShape(others);
             }
         }
-    } else {
-        console.log('不满足解体条件');
     }
 }
 </script>
