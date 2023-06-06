@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, reactive, ref, defineEmits, computed } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';

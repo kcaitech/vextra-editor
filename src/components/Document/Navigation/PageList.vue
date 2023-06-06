@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { defineProps, defineEmits, onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -229,7 +229,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
                 </div>
             </div>
         </div>
-        <div class="body" ref="ListBody" :style="{ height: fold ? 0 : 'calc(100% - 30px)' }">
+        <div class="body" ref="ListBody" :style="{ height: fold ? 0 : 'calc(100% - 36px)' }">
             <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0"
                 :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
                 :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="MouseDown" @after-drag="afterDrag">

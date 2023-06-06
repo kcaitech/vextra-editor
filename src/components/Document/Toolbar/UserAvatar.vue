@@ -7,7 +7,7 @@
 -->
 <script setup lang="ts">
 import avatar from '@/assets/pd-logo-svg.svg';
-import { defineProps } from "vue";
+import {} from "vue";
 
 const props = defineProps<{ user: string }>();
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, ref, computed } from "vue";
+import { onMounted, onUnmounted, ref, computed } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import ToolButton from './ToolButton.vue';
@@ -68,7 +68,7 @@ onUnmounted(() => {
                 </div>
             </ToolButton>
         </el-tooltip>
-        <Comment @select="select" :active="selected === Action.AddComment"></Comment>
+        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
 </template>

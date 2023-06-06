@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { layoutText, locateRange, locateCursor } from '@/layout/text';
 import { TextShape } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
-import { ref, reactive, onMounted, onUnmounted, defineProps, watch } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { genRectPath, throttle } from '../../common';
 const props = defineProps<{

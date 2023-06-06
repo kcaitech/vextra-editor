@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, watchEffect, onMounted, onUnmounted, ref } from "vue";
+import { watchEffect, onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";

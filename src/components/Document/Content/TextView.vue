@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { TextShape } from '@kcdesign/data';
-import { h, defineProps, onMounted, onUnmounted, ref, watch } from 'vue';
+import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { render as r } from "@/render/text"
 
 const props = defineProps<{ data: TextShape }>();

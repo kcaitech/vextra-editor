@@ -21,35 +21,51 @@ async function onmessage(e: any) {
     let code = e.data.code
     //此处获取邀请码，并添加到请求参数中
     const tips: any = document.querySelector('#login_container')
-    const linfo: any = await user_api.PostLogin({ code: code, invite_code: codevalue.value });
-    if (linfo.code === 0 && linfo.data.token !== '') {
-        localStorage.setItem('token', linfo.data.token)
-        localStorage.setItem('avatar', linfo.data.avatar)
-        localStorage.setItem('nickname', linfo.data.nickname)
-        localStorage.setItem('userId', linfo.data.id)
-        isLoading.value = false
-        router.push({ name: 'apphome' })
-    } else if (linfo.code === 400) {
-        ElMessage.error(linfo.message)
+    user_api.PostLogin({ code: code, invite_code: codevalue.value }).then((linfo: any) => {
+        if (linfo) {
+            if (linfo.code === 0 && linfo.data.token !== '') {
+                localStorage.setItem('token', linfo.data.token)
+                localStorage.setItem('avatar', linfo.data.avatar)
+                localStorage.setItem('nickname', linfo.data.nickname)
+                localStorage.setItem('userId', linfo.data.id)
+                isLoading.value = false
+                router.push({ name: 'apphome' })
+            } else if (linfo.code === 400) {
+                ElMessage.error(linfo.message)
+                failed.value = true;
+                tips.innerHTML = `${t('home.login_refresh')}`
+                tips.addEventListener('click', () => {
+                    wxcode()
+                    failed.value = false;
+                })
+
+            } else {
+                ElMessage.error(t('home.login_failed'))
+                failed.value = true;
+                tips.innerHTML = `${t('home.login_refresh')}`
+                tips.addEventListener('click', () => {
+                    wxcode()
+                    failed.value = false;
+                })
+            }
+        } else {
+            ElMessage.error(t('home.login_failed'))
+            failed.value = true;
+            tips.innerHTML = `${t('home.login_refresh')}`
+            tips.addEventListener('click', () => {
+                wxcode()
+                failed.value = false;
+            })
+        }
+    }).catch(() => {
+        ElMessage.error(t('home.login_failed'))
         failed.value = true;
         tips.innerHTML = `${t('home.login_refresh')}`
         tips.addEventListener('click', () => {
             wxcode()
             failed.value = false;
         })
-
-    } else {
-        ElMessage.error(t('home.login_failed'))
-        tips.style.lineHeight = '300px'
-        tips.style.background = '#00000030'
-        tips.style.margin = '20px 0'
-        tips.innerHTML = `${t('home.login_refresh')}`
-        tips.addEventListener('click', () => {
-            wxcode()
-            tips.style.background = ''
-            tips.style.lineHeight = ''
-        })
-    }
+    })
 }
 
 function wxcode() {

@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import {ref, onMounted, watchEffect} from "vue"
+import { ref, defineEmits } from 'vue'
+import { Context } from '@/context';
 import { ChatDotSquare, Delete, CircleCheck } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+const props = defineProps<{
+    context: Context
+    scale: number
+}>()
+const emit = defineEmits<{
+    (e: 'unHoverComment'): void
+    (e: 'showComment', event: MouseEvent): void
+}>()
 const hover = ref(false)
 const hoverShape = (e: MouseEvent) => {
     hover.value = true
 }
-
 const unHoverShape = (e: MouseEvent) => {
     hover.value = false
+    emit('unHoverComment')
 }
 
 const onReply = (e: Event) => {
@@ -27,22 +36,24 @@ const onDelete = (e: Event) => {
     console.log('删除评论');
 }
 
-onMounted(() => {
-    
-})
+const onClick = (e: MouseEvent) => {
+    e.stopPropagation()
+    emit('showComment', e)
+}
 </script>
+
 <template>
-    <div class="comment-item-container" :class="{active: hover}" @mouseenter="hoverShape" @mouseleave="unHoverShape">
+    <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @click="onClick" :style="{transform: `scale(${props.scale})`}" @mouseup.stop>
         <div class="avatar">
             <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/getbgSw8iaiagB4ChgXIiax3eYG9U8iaWVkTZemvaTZRXZz6oad8tl7qXWxLxgfFQxWUZVPj1oXI5lGQpicNOnZPoMg/132" alt="">
         </div>
         <div class="content">
-            <div class="item-title">
+            <div class="box-heard">
                 <div class="name">
                     <div>丘吉尔 </div>&nbsp;&nbsp;
                     <div class="date"> 5月20日 13:14</div>
                 </div>
-                <div class="icon"  :style="{visibility: hover ? 'visible' : 'hidden'}">
+                <div class="icon" :style="{visibility: hover ? 'visible' : 'hidden'}">
                     <el-button-group class="ml-4">
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
@@ -59,25 +70,35 @@ onMounted(() => {
                     </el-button-group>
                 </div>
             </div>
-            <div class="text">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Illum aliquid accusantium veniam cumque, natus voluptate qui voluptatem eaque dicta consectetur fugit maiores iste, nobis explicabo laudantium soluta dolore neque unde!
-            </div>
-            <div class="bottom-info">
+            <div class="box-context">Lorem ipsum dolor sit amet consectetur adipisicing elit. Blanditiis,  Lorem ipsum dolor, sit amet consectetur a</div>
+            <div class="box-footer">
                 <div class="reply">0 条回复</div>
-                <div class="page">页面1</div>
+                <div class="check">查看</div>
             </div>
         </div>
     </div>
 </template>
+
 <style scoped lang="scss">
-    .comment-item-container {
-        font-size: var(--font-default-fontsize);
-        padding: var(--default-padding-half) 0;
-        padding-left: var(--default-padding-half);
-        display: flex;
-        .avatar {
-            width: 25px;
-            height: 25px;
+   .container-hover {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    box-sizing: border-box;
+    display: flex;
+    width: 330px;
+    padding: 12px;
+    background-color: #fff;
+    box-shadow: 0px 5px 10px rgba(0,0,0,0.15);
+    border-radius: calc(6px);
+    border-bottom-left-radius: 0;
+    font-size: var(--font-default-fontsize);
+    transition: 0.2s;
+    transform-origin: left bottom;
+    cursor: default;
+    .avatar {
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -91,17 +112,14 @@ onMounted(() => {
             }
         }
         .content {
-            flex: 1;
+            width: 270px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding-right: 5px;
-            .item-title {
+            .box-heard {
                 display: flex;
-                width: 100%;
-                height: 30px;
-                align-items: center;
                 justify-content: space-between;
+                margin: 5px 0;
                 .name {
                     display: flex;
                 }
@@ -110,7 +128,6 @@ onMounted(() => {
                     height: 20px;
                     .el-button {
                         border: none;
-                        background-color: transparent;
                         padding: 0;
                         border-radius: 2px;
                         width: 20px;
@@ -121,31 +138,34 @@ onMounted(() => {
                     }
                 }
             }
-            .text {
-                width: auto;
+            .box-context {
+                width: 270px;
+                text-overflow: ellipsis;
                 display: -webkit-box;
                 -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
                 overflow: hidden;
-                /* 使用未来规范的line-clamp属性 */
-                line-clamp: 4;
-                /* 兼容不同浏览器的前缀 */
-                -webkit-line-clamp: 4;
-                -moz-line-clamp: 4;
-                /* 显示省略号 */
-                text-overflow: ellipsis;
-                color:rgba(0, 0, 0, .5);
             }
-            .bottom-info {
-                display: flex;
+            .box-footer {
+                display: flex;                
                 margin-top: 10px;
                 justify-content: space-between;
-                .page {
+                align-items: center;
+                .reply {
                     color:rgba(0, 0, 0, .5);
+                }
+                .check {
+                    width: 55px;
+                    height: 25px;
+                    font-weight: bold;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border: 1px solid rgba(0, 0, 0, .5);
+                    border-radius: 4px;
                 }
             }
         }
-    }
-    .active {
-        background-color: var(--grey);
-    }
+   }
 </style>

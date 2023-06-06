@@ -19,6 +19,10 @@ import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
 import avatar from '@/assets/pd-logo-svg.svg';
+interface Emits {
+    (e: 'settitle', title: string): void;
+}
+const emits = defineEmits<Emits>();
 const { t } = useI18n();
 
 const picker = new FilePicker((file) => {
@@ -46,14 +50,8 @@ function newFile() {
 }
 
 function Setindex(a: any, b: any) {
-    let x = a + b
-    localStorage.setItem('index', x)
+    emits('settitle', b)
 }
-const x = localStorage.getItem('index')?.toString().slice(0,1)
-
-
-
-
 </script>
 
 <template>
@@ -71,8 +69,7 @@ const x = localStorage.getItem('index')?.toString().slice(0,1)
                         <Folder />
                     </el-icon><span>{{ t('home.open_local_file') }}</span></button>
             </div>
-            <el-menu :default-active="x == null ? x = '1' : x" active-text-color="#ffd04b" class="el-menu-vertical-demo"
-                text-color="#000000">
+            <el-menu active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
                 <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1, t('home.recently_opened'))">
                         <el-icon>
                             <Clock />

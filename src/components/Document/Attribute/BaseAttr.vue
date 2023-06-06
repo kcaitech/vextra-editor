@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, ref, watch, onUpdated } from 'vue'
+import { onMounted, onUnmounted, ref, watch, onUpdated } from 'vue'
 import { Shape, ShapeType, RectShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
@@ -101,19 +101,19 @@ function lockToggle() {
 }
 function radiusToggle() {
     isMoreForRadius.value = !isMoreForRadius.value
-    if(!isMoreForRadius.value) {
-        if(radius.value) {
+    if (!isMoreForRadius.value) {
+        if (radius.value) {
             let { rlb, rlt, rrb, rrt } = radius.value
-            if(rlt === rlb && rlt === rrb && rlt === rrt) {
+            if (rlt === rlb && rlt === rrb && rlt === rrt) {
                 multipleValues.value = false
-            }else {
+            } else {
                 multipleValues.value = true
             }
         }
-    }else {
+    } else {
         multipleValues.value = false
     }
-    
+
 }
 
 function fliph() {
@@ -131,21 +131,21 @@ function onChangeRotate(value: string) {
 }
 
 const onChangeRadian = (value: string, type: 'rrt' | 'rlt' | 'rrb' | 'rlb') => {
-    if(isMoreForRadius.value) {
+    if (isMoreForRadius.value) {
         value = Number.parseFloat(value).toFixed(fix);
-        const newRadian: number = Number.parseFloat(value) < Math.min(w.value, h.value) ? Number.parseFloat(value) :Math.min(w.value, h.value)
+        const newRadian: number = Number.parseFloat(value) < Math.min(w.value, h.value) ? Number.parseFloat(value) : Math.min(w.value, h.value)
         if (!radius.value) return;
         const newR = cloneDeep(radius.value);
-        newR[type] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+        newR[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
         editor.value.setRadius(newR);
-    }else {
+    } else {
         value = Number.parseFloat(value).toFixed(fix);
-        const newRadian: number = Number.parseFloat(value) < (Math.min(w.value, h.value) / 2) ? Number.parseFloat(value) :Math.min(w.value, h.value) / 2
+        const newRadian: number = Number.parseFloat(value) < (Math.min(w.value, h.value) / 2) ? Number.parseFloat(value) : Math.min(w.value, h.value) / 2
         if (!radius.value) return;
         const newR = cloneDeep(radius.value);
-        newR['rrt'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
-        newR['rlt'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
-        newR['rrb'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+        newR['rrt'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+        newR['rlt'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+        newR['rrb'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
         // newR['rlb'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
         editor.value.setRadius(newR);
     }
@@ -169,13 +169,13 @@ onUpdated(() => {
     } else {
         showRadian.value = true
     }
-    if(props.shape.typeId === 'artboard') {
+    if (props.shape.typeId === 'artboard') {
         shwoAdapt.value = true
-    }else {
+    } else {
         shwoAdapt.value = false
     }
-    
-    
+
+
 })
 
 // hooks
@@ -216,7 +216,7 @@ onUnmounted(() => {
             <div style="width: 22px;height: 22px;;" v-else></div>
         </div>
         <div class="tr">
-            <IconText class="td angle" svgicon="angle" :text="`${rotate}`+'°'" @onchange="onChangeRotate"
+            <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
             <div class="flip ml-24" @click="fliph" :class="{ bgColor: showBgFlipH }">
                 <svg-icon icon-class="fliph"></svg-icon>
@@ -227,20 +227,20 @@ onUnmounted(() => {
             <div style="width: 22px;height: 22px;;"></div>
         </div>
         <div class="tr" v-if="showRadius">
-            <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.rlt || 0" :frame="{ width: 12, height: 12 }"
-                @onchange="e => onChangeRadian(e, 'rlt')" />
+            <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.rlt || 0"
+                :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'rlt')" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
-            <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rrt || 0" :frame="{ width: 12, height: 12, rotate: 90 }"
-                 @onchange="e => onChangeRadian(e, 'rrt')" />
+            <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rrt || 0"
+                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rrt')" />
             <div class="more-for-radius" @click="radiusToggle" v-if="showRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="isMoreForRadius">
-            <IconText class="td frame" svgicon="radius" :text="radius?.rlb || 0" :frame="{ width: 12, height: 12, rotate: 270 }"
-                @onchange="e => onChangeRadian(e, 'rlb')" />
-            <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rrb || 0" :frame="{ width: 12, height: 12, rotate: 180 }"
-                @onchange="e => onChangeRadian(e, 'rrb')" />
+            <IconText class="td frame" svgicon="radius" :text="radius?.rlb || 0"
+                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'rlb')" />
+            <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rrb || 0"
+                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rrb')" />
             <RadiusForIos :context="props.context"></RadiusForIos>
         </div>
         <!-- <div class="tr" v-if="shapeType === 'rectangle'">
@@ -313,6 +313,7 @@ onUnmounted(() => {
                 height: 60%;
             }
         }
+
         .adapt {
             width: 22px;
             height: 22px;
@@ -325,6 +326,7 @@ onUnmounted(() => {
                 width: 50%;
                 height: 50%;
             }
+
             >svg:hover {
                 transform: scale(1.25);
             }

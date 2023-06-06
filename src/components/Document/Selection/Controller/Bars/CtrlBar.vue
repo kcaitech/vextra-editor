@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { defineProps, computed, onMounted, onUnmounted, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, watchEffect } from 'vue';
 import { Matrix } from '@kcdesign/data';
 import { getBarStyle } from '@/utils/rectFn';
 import { AsyncBaseAction, CtrlElementType } from "@kcdesign/data";

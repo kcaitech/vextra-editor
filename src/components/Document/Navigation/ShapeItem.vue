@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { defineProps, defineEmits, onBeforeMount, onBeforeUpdate, ref, computed, nextTick, InputHTMLAttributes } from "vue";
+import { onBeforeMount, onBeforeUpdate, ref, computed, nextTick, InputHTMLAttributes } from "vue";
 import { Shape, GroupShape } from '@kcdesign/data';
 import { Context } from "@/context";
 export interface ItemData {
