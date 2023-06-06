@@ -82,6 +82,9 @@ export class WorkSpace extends Watchable(Object) {
     static DOCUMENT_SAVE = 16;
     static SHUTDOWN_COMMENT = 17;
     static SELECT_LIST_TAB = 18;
+    static CTRL_DISAPPEAR = 19;
+    static CTRL_APPEAR_IMMEDIATELY = 20;
+    static CTRL_APPEAR = 21;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();

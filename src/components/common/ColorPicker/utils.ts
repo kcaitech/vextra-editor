@@ -1,6 +1,9 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
 import { Color } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
+import { debounce } from 'lodash';
+import { WorkSpace } from '@/context/workspace';
+import { Context } from '@/context';
 export interface HSB {
   h: number
   s: number
@@ -35,6 +38,7 @@ export function toHex(options: {
   }
   return "#" + toHex(options.red) + toHex(options.green) + toHex(options.blue);
 }
+export type Model = 'RGB' | 'HSL' | 'HSB';
 
 /**
  * 加载base64图片
@@ -379,4 +383,26 @@ export function RGB2HSB(color: Color): HSB {
   s = (max - min) / max;
   b = max / 255;
   return { h: h / 360, s: s, b: b };
+}
+export function validate(model: Model, field: number, value: number): boolean {
+  if (isNaN(value)) return false;
+  let result = true;
+  if (model === "RGB") {
+    if ([0, 1, 2].includes(field)) {
+      if (value > 255 || value < 0) result = false;
+    } else {
+      if (value < 0 || value > 100) {
+        result = false;
+      }
+    }
+  } else if (model === "HSB") {
+    if (field === 0) {
+      if (value > 360 || value < 0) result = false;
+    } else {
+      if (value < 0 || value > 100) {
+        result = false;
+      }
+    }
+  }
+  return result;
 }

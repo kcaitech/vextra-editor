@@ -6,7 +6,7 @@ import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
-import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2H, RGB2B, RGB2S, RGB2HSB } from './utils';
+import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, validate } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
@@ -43,7 +43,6 @@ interface DotPosition {
   left: number
   top: number
 }
-type Model = 'RGB' | 'HSL' | 'HSB';
 const INDICATOR_WIDTH = 12;
 const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
 const DOT_WIDTH = 10;
@@ -159,6 +158,7 @@ function setHueIndicatorPosition(e: MouseEvent) {
     setRGB(hueIndicatorAttr.x);
     document.addEventListener('mousemove', mousemove4Hue);
     document.addEventListener('mouseup', mouseup);
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   }
 }
 function mousemove4Hue(e: MouseEvent) {
@@ -188,6 +188,7 @@ function setAlphaIndicatorPosition(e: MouseEvent) {
     setAlpha(alphaIndicatorAttr.x);
     document.addEventListener('mousemove', mousemove4Alpha);
     document.addEventListener('mouseup', mouseup);
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   }
 }
 function mousemove4Alpha(e: MouseEvent) {
@@ -257,17 +258,21 @@ function setAlpha(indicator: number) {
   emit('change', color);
 }
 function setColor(color: Color) {
+  props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   rgba.R = color.red;
   rgba.G = color.green;
   rgba.B = color.blue;
   rgba.alpha = color.alpha;
   emit('change', color);
+  update_dot_indicator_position(color);
+  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 // 鼠标抬起
 function mouseup() {
   document.removeEventListener('mousemove', mousemove4Alpha)
   document.removeEventListener('mousemove', mousemove4Hue)
   document.removeEventListener('mouseup', mouseup)
+  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function eyedropper() {
   if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
@@ -340,49 +345,69 @@ function keyboardWatcher(e: KeyboardEvent) {
   if (e.code === 'Enter' || e.code === 'NumpadEnter') {
     enter();
   } else if (e.code === 'ArrowUp') {
-    const v = inputTarget.value;
-    if (handleIndex === 0) {
-      rgba.R = Number(v) + 1;
-    } else if (handleIndex === 1) {
-      rgba.G = Number(v) + 1;
-    } else if (handleIndex === 2) {
-      rgba.B = Number(v) + 1;
+    let v: string | number = inputTarget.value;
+    v = Number(v);
+    let _v = v + 1;
+    const valid = validate(model.value.value as any, handleIndex, _v);
+    if (valid) {
+      props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+      if (handleIndex === 0) {
+        rgba.R = Number(v) + 1;
+      } else if (handleIndex === 1) {
+        rgba.G = Number(v) + 1;
+      } else if (handleIndex === 2) {
+        rgba.B = Number(v) + 1;
+      }
+      const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+      emit('change', color);
+      update_dot_indicator_position(color);
+      props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     }
-    const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
-    emit('change', color);
-    update_dot_indicator_position(color);
   } else if (e.code === 'ArrowDown') {
-    const v = inputTarget.value;
-    if (handleIndex === 0) {
-      rgba.R = Number(v) - 1;
-    } else if (handleIndex === 1) {
-      rgba.G = Number(v) - 1;
-    } else if (handleIndex === 2) {
-      rgba.B = Number(v) - 1;
+    let v: string | number = inputTarget.value;
+    v = Number(v);
+    let _v = v - 1;
+    const valid = validate(model.value.value as any, handleIndex, _v);
+    if (valid) {
+      props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+      if (handleIndex === 0) {
+        rgba.R = Number(v) - 1;
+      } else if (handleIndex === 1) {
+        rgba.G = Number(v) - 1;
+      } else if (handleIndex === 2) {
+        rgba.B = Number(v) - 1;
+      }
+      const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+      emit('change', color);
+      update_dot_indicator_position(color);
+      props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     }
-    const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
-    emit('change', color);
-    update_dot_indicator_position(color);
   }
 }
 function enter() {
   if (model.value.value === 'RGB') {
-    const v = inputTarget.value;
-    if (handleIndex === 0) {
-      rgba.R = Number(v);
-    } else if (handleIndex === 1) {
-      rgba.G = Number(v);
-    } else if (handleIndex === 2) {
-      rgba.B = Number(v);
-    } else if (handleIndex === 3) {
-      rgba.alpha = Number(v);
+    let v: string | number = inputTarget.value;
+    const valid = validate(model.value.value, handleIndex, Number(v));
+    if (valid) {
+      props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+      v = Math.floor(Number(v));
+      if (handleIndex === 0) {
+        rgba.R = Number(v);
+      } else if (handleIndex === 1) {
+        rgba.G = Number(v);
+      } else if (handleIndex === 2) {
+        rgba.B = Number(v);
+      } else if (handleIndex === 3) {
+        rgba.alpha = Number(v);
+      }
+      const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+      emit('change', color);
+      update_dot_indicator_position(color);
+      props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     }
+    inputTarget.removeEventListener('keydown', keyboardWatcher);
+    inputTarget.blur();
   }
-  const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
-  emit('change', color);
-  update_dot_indicator_position(color);
-  inputTarget.removeEventListener('keydown', keyboardWatcher);
-  inputTarget.blur();
 }
 function update(color: Color) {
   const { red, green, blue, alpha } = color;
