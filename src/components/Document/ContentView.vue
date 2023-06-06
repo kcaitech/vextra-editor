@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { GroupShape, Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
-import { reactive, defineProps, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
@@ -402,7 +402,7 @@ function updateMouse(e: MouseEvent) {
 }
 // #region mouse event flow
 // mousedown(target：contentview)
-function onMouseDown(e: MouseEvent) {
+function onMouseDown(e: MouseEvent) {    
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button == 0) { // 左键按下
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
@@ -431,7 +431,7 @@ function onMouseMove(e: MouseEvent) {
             if (spacePressed.value) {
                 pageViewDragging(e); // 拖拽页面
             } else {
-                if (workspace.value.action != Action.AutoV) {
+                if (workspace.value.action != Action.AutoV && workspace.value.action != Action.AddComment) {
                     contentEditOnMoving(e); // 新增图形、切片     
                 }
             }
@@ -521,8 +521,10 @@ const rootWidth = ref(root.value?.clientWidth)
 //添加评论
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
-    if(workspace.value.isCommentInput) {
+    if(workspace.value.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {
         workspace.value.commentInput(false)
+        return
+    }else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
         return
     }
     if(commentInput.value) return

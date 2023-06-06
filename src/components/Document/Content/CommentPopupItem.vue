@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { defineProps, ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { Context } from '@/context';
 import { Delete, Edit, Back } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
-import { add } from 'lodash';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
+}>()
+
+const emit = defineEmits<{
+    (e: 'close') : void
 }>()
 const hover = ref(false)
 const textarea = ref('Lorem ipsum dolor sit amet consectetur adipisicing elit. Blanditiis,  Lorem ipsum dolor, sit amet consectetur a')
@@ -57,11 +60,13 @@ const carriageReturn = (event: KeyboardEvent) => {
             event.preventDefault()
             addComment()
         }
+    }else if(code === 'Escape') {
+        emit('close')
     }
 }
 
 const addComment = () => {
-    console.log(1111);
+    console.log('编辑添加评论');
     
 }
 </script>

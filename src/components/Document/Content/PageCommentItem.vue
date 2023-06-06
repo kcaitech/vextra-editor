@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, defineEmits } from 'vue'
+import { ref } from 'vue'
 import { Context } from '@/context';
 import HoverComment from './HoverComment.vue'
 import CommentView from './CommentView.vue'
@@ -36,19 +36,21 @@ const showComment = (e: MouseEvent) => {
     rootHeight.value = comment.value!.parentElement!.clientHeight
     ShowComment.value = true
     showScale.value = true
-    document.addEventListener('keydown', commentEsc);
+    // document.addEventListener('keydown', commentEsc);
 }
 
 const unHover = () => {
     markScale.value = 1
 }
 
-const commentEsc = (e: KeyboardEvent) => {
-    if (e.code === 'Escape') {
-        document.removeEventListener('keydown', commentEsc);
-        ShowComment.value = false;
-    }
-}
+// const commentEsc = (e: KeyboardEvent) => {
+//     e.stopPropagation()
+//     if (e.code === 'Escape') {
+//         document.removeEventListener('keydown', commentEsc);
+//         ShowComment.value = false;
+//         showScale.value = false
+//     }
+// }
 
 const mouseDownCommentInput = (e: MouseEvent) => {
     e.stopPropagation()
@@ -64,14 +66,14 @@ const closeComment = (e?: MouseEvent) => {
 </script>
 
 <template>
-    <div class="container" ref="comment" :style="{ top: props.y - 10 + 'px', left: props.x - 42 + 'px'}" >
+    <div class="container comment-mark-item" ref="comment" :style="{ top: props.y - 10 + 'px', left: props.x - 42 + 'px'}" >
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="mouseDownCommentInput"
         :style="{transform: `scale(${markScale})`}" :class="{shadow: commentScale === 1 }">
             <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/getbgSw8iaiagB4ChgXIiax3eYG9U8iaWVkTZemvaTZRXZz6oad8tl7qXWxLxgfFQxWUZVPj1oXI5lGQpicNOnZPoMg/132" alt="">
         </div>
         <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment" @unHoverComment="unHoverComment" @mouseup.stop></HoverComment>
         <CommentView v-if="ShowComment" ref="commentPopupEl" :x="props.x" :y="props.y" :rootWidth="props.rootWidth"
-        :rootHeight="rootHeight" :context="props.context" @close="closeComment" @mouseup.stop></CommentView>
+        :rootHeight="rootHeight" :context="props.context" @close="closeComment"></CommentView>
     </div>
 </template>
 

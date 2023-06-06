@@ -1,21 +1,26 @@
 <script setup lang="ts">
-import { defineProps, ref } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { Context } from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";
 import { useI18n } from 'vue-i18n';
+import * as comment_api from '@/apis/comment';
+import { useRoute } from 'vue-router';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 type commentListMenu = {
     text: string
-    status: boolean
+    status_p: boolean
 }
+const route = useRoute()
+const docID = (route.query.id as string)
 const commentMenu = ref<boolean>(false)
 const commentMenuItems = ref<commentListMenu[]>([
-    { text: `${t('comment.sort')}`, status: false},
-    { text: `${t('comment.show_about_me')}`, status: false},
-    { text: `${t('comment.show_resolved_comments')}`, status: false}
+    { text: `${t('comment.sort')}`, status_p: false},
+    { text: `${t('comment.show_about_me')}`, status_p: false},
+    { text: `${t('comment.show_resolved_comments')}`, status_p: false}
 ])
+const documentCommentList = ref<any[]>([])
 const showMenu = () => {
     if(commentMenu.value) {
         commentMenu.value = false
@@ -28,8 +33,38 @@ const closeMenu = () => {
 }
 
 const handleMenuStatus = (status: boolean, index: number) => {
-    commentMenuItems.value[index].status = status
+    commentMenuItems.value[index].status_p = status
 }
+
+const getDocumentComment = async(id :string) => {
+    try {
+       const {data} = await comment_api.getDocumentCommentAPI({doc_id: id})
+       data.forEach((obj: {childern: any[]; commentMenu: any; }) => {
+        obj.commentMenu = commentMenuItems.value
+        obj.childern = []
+       })
+       documentCommentList.value = data
+       documentCommentList.value.forEach(o => {
+        const childern = documentCommentList.value.find(item => item.id === o.parent_id)
+        o.childern = childern || []       
+       })
+    }catch(err) {
+        console.log(err);
+    }
+}
+
+const onResolve = (status: number, index: number) => {
+    documentCommentList.value[index].status = status
+}
+
+const onDelete = (index:number) => {
+    documentCommentList.value.splice(index, 1)
+    getDocumentComment(docID)
+}
+
+onMounted(() => {
+    getDocumentComment(docID)
+})
 </script>
 
 <template>
@@ -43,7 +78,8 @@ const handleMenuStatus = (status: boolean, index: number) => {
         </div>
         <div class="comment-list">
             <el-scrollbar>
-                <CommentItem v-for="item in 20" :key="item"></CommentItem>
+                <CommentItem v-for="(item, index) in documentCommentList" :key="item.id" :commentItem="item" :index="index"
+                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete"></CommentItem>
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect, defineProps } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect,} from 'vue';
 import { useI18n } from 'vue-i18n';
 import { User } from '@/context/user';
 import * as share_api from '@/apis/share';
@@ -72,6 +72,7 @@ const options = [
     label: `${t('share.anyone_can_edit_it')}`
   }
 ]
+console.log(props.shareSwitch, props.selectValue);
 
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])

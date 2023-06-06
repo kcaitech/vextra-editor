@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref } from 'vue';
+import { computed, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data';
 import { Color, Fill, ContextSettings } from "@kcdesign/data";

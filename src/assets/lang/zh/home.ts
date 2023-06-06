@@ -95,6 +95,8 @@ export const home = {
     access_record_ok: '移除成功',
     access_record_no: '移除失败',
     exit_share: '退出共享',
+    exit_share_success:'退出成功',
+    exit_share_fail:'退出失败',
     restore: '还原',
     completely_delete: '彻底删除',
     delete_tips: '删除执行后，文件将无法恢复找回，确认要删除吗？',
@@ -105,9 +107,13 @@ export const home = {
     restore_no: '还原失败',
     delete_file_ok: '删除成功',
     delete_file_no: '删除失败',
-    other_tips: '请确保网络联系正常',
+    other_tips: '请确保网络连接正常',
     addComment: '添加评论',
-    page_sort: '按页面排序'
+    rename:'重命名',
+    rename_ok:'确定',
+    page_sort: '按页面排序',
+    login_failed:'登录失败',
+    login_refresh:'点击刷新二维码'
 }
 
 export const search = {
@@ -199,7 +205,9 @@ export const comment = {
     comment_area: '评论区',
     input_comments: '输入评论',
     check: '查看',
-    a_few_reply: '条回复'
+    a_few_reply: '条回复',
+    month: '月',
+    day: '日'
 }
 
 attr[BorderPosition.Inner] = '内部';

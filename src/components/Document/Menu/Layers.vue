@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Shape } from "@kcdesign/data";
-import { defineProps, computed, defineEmits } from 'vue';
+import { computed } from 'vue';
 import { Context } from '@/context'
 interface Props {
   context: Context,

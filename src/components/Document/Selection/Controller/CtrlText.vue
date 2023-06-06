@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, watch, onMounted, onUnmounted, ref, reactive } from 'vue';
+import { watch, onMounted, onUnmounted, ref, reactive } from 'vue';
 import { Selection } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { TextShape } from '@kcdesign/data';

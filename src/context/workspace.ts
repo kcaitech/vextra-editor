@@ -256,7 +256,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     commentInput(visible: boolean) {
         this.m_comment_input = visible;
-        if(!visible) {
+        if (!visible) {
             this.notify(WorkSpace.SHUTDOWN_COMMENT)
         }
     }

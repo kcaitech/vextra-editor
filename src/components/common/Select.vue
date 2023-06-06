@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, defineProps, nextTick, defineEmits, watch } from 'vue';
+import { ref, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n'; 
 import { cloneDeep } from 'lodash';
 export interface SelectItem {

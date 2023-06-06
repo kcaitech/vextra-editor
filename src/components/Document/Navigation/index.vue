@@ -4,7 +4,7 @@
  * @FilePath: \kcdesign\src\components\Document\Navigation\index.vue
 -->
 <script setup lang="ts">
-import { defineProps } from "vue";
+import {} from "vue";
 import { Context } from "@/context";
 import Tabs from "@/components/Document/Navigation/LeftTabs.vue";
 import { Page } from "@kcdesign/data";

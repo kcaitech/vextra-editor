@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, defineProps, onMounted, onUnmounted, ref, watch } from 'vue';
+import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Shape, GroupShape } from "@kcdesign/data";
 import { render as r } from "@/render/shapegroup";
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ImageShape } from '@kcdesign/data';
-import { defineProps, ref, onMounted, onUnmounted, h, watch } from 'vue';
+import { ref, onMounted, onUnmounted, h, watch } from 'vue';
 import { render as r } from "@/render/image"
 
 const props = defineProps<{ data: ImageShape }>();

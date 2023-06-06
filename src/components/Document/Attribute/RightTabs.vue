@@ -1,11 +1,5 @@
-<!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-03-08 09:42:33
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-09 16:13:35
--->
 <script setup lang="ts">
-import { defineProps, ref } from "vue";
+import { ref } from "vue";
 import { Context } from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";

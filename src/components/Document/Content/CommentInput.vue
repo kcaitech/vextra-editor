@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, onMounted, onUnmounted, defineExpose, watchEffect, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed } from 'vue'
 import { Context } from '@/context';
 import { Back } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
+import * as comment_api from '@/apis/comment'
+import { useRoute } from 'vue-router';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -15,6 +17,8 @@ const emit = defineEmits<{
     (e: 'close', event?: MouseEvent): void
     (e: 'mouseDownCommentInput', event: MouseEvent): void
 }>()
+const route = useRoute()
+const docID = (route.query.id as string)
 const textarea = ref('')
 const comment = ref<HTMLDivElement>()
 const surplusX = ref<number>(0)
@@ -22,10 +26,18 @@ const commentWidth = 330
 const offside = ref(false)
 const input = ref<HTMLInputElement>()
 const inputIcon = ref<HTMLInputElement>()
+const isShaking = ref(false)
 
 function handleClickOutside(event: MouseEvent) {
   event.stopPropagation()
-  event.target instanceof Element && !event.target.closest('.comment-input') && emit('close', event);
+  const length = textarea.value.trim().length < 4
+  if(event.target instanceof Element && !event.target.closest('.comment-input') && length) {
+    emit('close', event);
+  }else if(event.target instanceof Element && !event.target.closest('.container-popup') && !length) {
+      startShake()
+      input.value && input.value.focus()
+      input.value && input.value.select()
+  }
 }
 
 const inputPosition = () => {
@@ -45,6 +57,10 @@ const carriageReturn = (event: KeyboardEvent) => {
             event.preventDefault()
             addComment()
         }
+    }else if(code === 'Escape' && textarea.value.trim().length < 4) {
+        emit('close')
+    }else if (code === 'Escape' && textarea.value.trim().length >= 4) {
+        startShake()
     }
 }
 
@@ -54,8 +70,24 @@ const mouseDownCommentInput = (e: MouseEvent) => {
 }
 
 const addComment = () => {
-    console.log(11);
+    console.log('添加评论');
+    const page = props.context.selection.selectedPage
+    const timestamp  = Date.now()
+    console.log(page?.id,'pageId');
     
+}
+
+const createComment = () => {
+
+}
+
+const startShake = () => {
+    input.value && input.value.select()
+    isShaking.value = true
+    const timer = setTimeout(() => {
+        isShaking.value = false;
+        clearTimeout(timer)
+      }, 500); // 停止时间可以根据需要进行调整
 }
 
 defineExpose({
@@ -81,7 +113,7 @@ onUnmounted(() => {
             <div class="line1"></div>
             <div class="line2"></div>
         </div>
-        <div class="textarea">
+        <div class="textarea" :class="{'shake': isShaking}">
             <el-input
                 ref="input"
                 class="input"
@@ -166,6 +198,32 @@ onUnmounted(() => {
         border: 1px solid #fff;
         box-sizing: border-box;
         background-color:  rgb(0, 0, 0,.8);
+    }
+    @keyframes shake {
+        0% {
+            transform: translateX(0);
+        }
+        20% {
+            transform: translateX(10px);
+        }
+        40% {
+            transform: translateX(0);
+        }
+        55% {
+            transform: translateX(7px);
+        }
+        70% {
+            transform: translateX(0);
+        }
+        85% {
+            transform: translateX(5px);
+        }
+        100% {
+            transform: translateX(0);
+        }
+    }
+    .shake {
+        animation: shake 0.7s;
     }
     :deep(.el-textarea__inner) {
         border: none;

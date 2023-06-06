@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, defineEmits, onMounted, onUnmounted, defineExpose, watchEffect, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
 import { Close, Delete, CircleCheck, Back } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
@@ -25,6 +25,7 @@ const commentTop = ref(-10)
 const scrollHeight = ref(0)
 const textareaEl = ref<HTMLDivElement>()
 const inputPopup = ref<HTMLInputElement>()
+const isShaking = ref(false)
 const close = (e: MouseEvent) => {
     emit('close', e)
 }
@@ -34,6 +35,7 @@ const height = ref()
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const commentPosition = () => {
     nextTick(() => {
+        inputPopup.value && inputPopup.value.focus()
         height.value = height.value ? textareaEl.value?.clientHeight : 52
         offside.value = props.rootWidth! - props.x < 330
         let t = 0
@@ -54,7 +56,15 @@ const commentPosition = () => {
 
 function handleClickOutside(event: MouseEvent) {
   event.stopPropagation()
-  event.target instanceof Element && !event.target.closest('.container-popup') && workspace.value.action === Action.AddComment && emit('close', event);
+  const action = workspace.value.action === Action.AddComment
+  const length = textarea.value.trim().length < 4
+  if(event.target instanceof Element && !event.target.closest('.container-popup') && action && length) {
+    emit('close', event);
+  }else if(event.target instanceof Element && !event.target.closest('.container-popup') && action && !length) {
+      startShake()
+      inputPopup.value && inputPopup.value.focus()
+      inputPopup.value && inputPopup.value.select()
+  }
 }
 
 const carriageReturn = (event: KeyboardEvent) => {
@@ -68,8 +78,10 @@ const carriageReturn = (event: KeyboardEvent) => {
             event.preventDefault()
             addComment()
         }
-    }else if(code === 'Escape') {
+    }else if(code === 'Escape' && textarea.value.trim().length < 4) {
         emit('close')
+    }else if (code === 'Escape' && textarea.value.trim().length >= 4) {
+        startShake()
     }
 }
 
@@ -84,7 +96,9 @@ const onDelete = (e: Event) => {
 }
 
 function workspaceUpdate(t?: number) {  
-  if (t === WorkSpace.SHUTDOWN_COMMENT) {
+    const length = textarea.value.trim().length < 4
+    props.context.workspace.commentInput(true);
+  if (t === WorkSpace.SHUTDOWN_COMMENT && length) {
     emit('close');
   }
 }
@@ -100,29 +114,54 @@ const nextArticle = () => {
 }
 
 const addComment = () => {
-    console.log(11);
+    console.log('添加评论');
     
 }
 
+const startShake = () => {
+    inputPopup.value && inputPopup.value.select()
+    isShaking.value = true
+    const timer = setTimeout(() => {
+        isShaking.value = false;
+        clearTimeout(timer)
+      }, 500); // 停止时间可以根据需要进行调整
+}
+
 watchEffect(commentPosition)
+const scrollup = (e: MouseEvent) => {
+}
+
+const closeComment = (e: KeyboardEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    if (e.code === 'Escape') {
+        emit('close')
+    }
+}
 
 defineExpose({
-    commentPopup
+    commentPopup,
+    textarea,
+    startShake
 })
 onMounted(() => {  
   props.context.workspace.commentInput(true);
   props.context.workspace.watch(workspaceUpdate);
-  document.addEventListener('mousedown', handleClickOutside);
+  document.addEventListener('mouseup', handleClickOutside);
+  document.addEventListener('mouseup', scrollup)
+  document.addEventListener('keydown', closeComment);
 })
 onUnmounted(() => {  
   props.context.workspace.unwatch(workspaceUpdate);
-  document.removeEventListener('mousedown', handleClickOutside);
+  document.removeEventListener('mouseup', handleClickOutside);
+  document.removeEventListener('mouseup', scrollup);
+  document.removeEventListener('keydown', closeComment);
 })
 </script>
 
 <template>
     <div class="container-popup" ref="commentPopup" :style="{ top: commentTop + 'px' }" 
-    :class="{ popup_left: offside, popup_right: !offside }">
+    :class="{ popup_left: offside, popup_right: !offside, 'shake': isShaking }">
         <div class="popup-heard">
             <div class="button-shift">
                 <el-button plain class="custom-button" @click="previousArticle">{{t('comment.last')}}</el-button>
@@ -144,7 +183,7 @@ onUnmounted(() => {
             </div>
         </div>
         <el-scrollbar :height="scrollHeight + 'px'">
-            <CommentPopupItem  v-for="item in 20" :key="item" :context="props.context"></CommentPopupItem>
+            <CommentPopupItem  v-for="item in 20" :key="item" :context="props.context" @close="() => emit('close')"></CommentPopupItem>
         </el-scrollbar>
         <div class="popup-footer">
             <div class="textarea" ref="textareaEl">
@@ -244,6 +283,32 @@ onUnmounted(() => {
     }
     .popup_left {
         right: 50px;
+    }
+    @keyframes shake {
+        0% {
+            transform: translateX(0);
+        }
+        20% {
+            transform: translateX(10px);
+        }
+        40% {
+            transform: translateX(0);
+        }
+        55% {
+            transform: translateX(7px);
+        }
+        70% {
+            transform: translateX(0);
+        }
+        85% {
+            transform: translateX(5px);
+        }
+        100% {
+            transform: translateX(0);
+        }
+    }
+    .shake {
+        animation: shake 0.7s;
     }
     
     .custom-button {

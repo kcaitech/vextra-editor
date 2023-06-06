@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape } from '@kcdesign/data';
 import { ShapeType } from "@kcdesign/data"
-import { defineProps, onMounted, onUnmounted, shallowRef, ref } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ColorPicker from '../../common/ColorPicker/index.vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';

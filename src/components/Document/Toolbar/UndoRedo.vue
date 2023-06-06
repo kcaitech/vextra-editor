@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Repository } from "@kcdesign/data";
 import { ref } from "@vue/reactivity";
-import { defineProps, onBeforeUpdate, onMounted, onUnmounted } from "vue"
+import { onBeforeUpdate, onMounted, onUnmounted } from "vue"
 // import Icon from "@/components/common/Icon.vue";
 import ToolButton from "./ToolButton.vue"
 const props = defineProps<{ repo?: Repository }>();

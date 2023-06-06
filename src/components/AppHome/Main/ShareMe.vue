@@ -131,13 +131,19 @@ const onSelectType = (type: number) => {
 }
 
 const Exitshar = async (index: number) => {
-    const { document: { id } } = ShareList.value[index]
-    const { code } = await user_api.ExitSharing({ share_id: id })
-    if (!code) {
-        ElMessage.success('退出成功')
-    } else {
-        ElMessage.error('退出失败')
+    const { document_permission: { id } } = ShareList.value[index]
+    try {
+        const { code } = await user_api.ExitSharing({ share_id: id })
+        if (!code) {
+            ElMessage.success(t('home.exit_share_success'))
+            ShareLists()
+        } else {
+            ElMessage.error(t('home.exit_share_fail'))
+        }
+    } catch (error) {
+        ElMessage.error(t('home.other_tips'))
     }
+
 
 }
 
@@ -209,4 +215,5 @@ onUnmounted(() => {
     height: 100%;
     z-index: 999;
     background-color: rgba(0, 0, 0, 0.5);
-}</style>
+}
+</style>

@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { defineProps, defineEmits, onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -102,7 +102,7 @@ const pageSource = new class implements IDataSource<ItemData> {
 const addPage = () => {
     const pageMgr = props.context.editor4Doc();
     const pageName = props.context.data.pagesList.length + 1
-    const page = pageMgr.create(`页面 ${pageName}`);
+    const page = pageMgr.create(`${t('navi.page')} ${pageName}`);
     const id = props.context.selection.selectedPage?.id
     const index = props.context.data.pagesList.findIndex((item) => item.id === id)
     pageMgr.insert(index + 1, page);

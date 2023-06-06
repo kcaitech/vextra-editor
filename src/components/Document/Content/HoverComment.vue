@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, defineEmits } from 'vue'
+import { ref } from 'vue'
 import { Context } from '@/context';
 import { ChatDotSquare, Delete, CircleCheck } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'

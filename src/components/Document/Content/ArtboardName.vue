@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, nextTick, defineEmits } from 'vue'
+import { ref, nextTick } from 'vue'
 import { Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 const props = defineProps<{

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import avatar from '@/assets/pd-logo-svg.svg';
 
 const { t } = useI18n();
 
@@ -7,7 +8,7 @@ const { t } = useI18n();
 
 <template>
     <div class="logo">
-        <img src="http://www.uimaker.com/uploads/allimg/200105/112501I08_0.png" alt="ProtoDesign" />
+        <img :src="avatar" alt="ProtoDesign" />
         <h1>{{t('system.product_name')}}</h1>
         <p>{{t('system.product_description')}}</p>
     </div>
@@ -23,6 +24,7 @@ const { t } = useI18n();
     flex-wrap: wrap;
     align-content: center;
     justify-content: center;
+    box-sizing: border-box;
 
     img {
         width: 160px;

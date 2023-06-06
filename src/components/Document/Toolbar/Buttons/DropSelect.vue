@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, defineProps } from 'vue';
+import {} from 'vue';
 import { useI18n } from 'vue-i18n'
 import { Action } from '@/context/workspace';
 const { t } = useI18n()
