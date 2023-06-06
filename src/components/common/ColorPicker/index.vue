@@ -4,9 +4,9 @@ import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { simpleId, debounceLog } from '@/utils/common';
+import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
-import { drawTooltip, toRGBA } from './utils';
+import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2H, RGB2B, RGB2S, RGB2HSB } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
@@ -46,6 +46,9 @@ interface DotPosition {
 type Model = 'RGB' | 'HSL' | 'HSB';
 const INDICATOR_WIDTH = 12;
 const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
+const DOT_WIDTH = 10;
+const HUE_WIDTH = 240;
+const HUE_HEIGHT = 180;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
@@ -55,13 +58,14 @@ const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
 const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
+const recent = ref<Color[]>([]);
 let inputTarget: HTMLInputElement;
 let handleIndex = 0;
 const data = reactive<Data>({
   rgba: { R: 255, G: 0, B: 0, alpha: 1 },
   hueIndicatorAttr: { x: 0 },
   alphaIndicatorAttr: { x: lineAttribute.length - INDICATOR_WIDTH },
-  dotPosition: { left: -5, top: -5, }
+  dotPosition: { left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2, }
 })
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
 const modelOptions: SelectSource[] = genOptions([
@@ -72,7 +76,7 @@ const modelOptions: SelectSource[] = genOptions([
 const labels = computed(() => {
   return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
-const values = computed<number[]>(() => [rgba.R, rgba.G, rgba.B, rgba.alpha]);
+const values = computed<number[]>(() => [rgba.R, rgba.G, rgba.B, rgba.alpha * 100]);
 const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
@@ -104,12 +108,14 @@ function colorPickerMount() {
       let el = popoverEl.value
       let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
       el.style.top = top + 'px';
-      el.style.left = -(46 + el.offsetWidth) + 'px';
+      el.style.left = -(36 + el.offsetWidth) + 'px';
+      init();
     }
   })
 }
 function removeColorPicker() {
   popoverVisible.value = false;
+  update_recent_color()
 }
 
 // 16进制色彩转10进制
@@ -203,6 +209,9 @@ function setDotPosition(e: MouseEvent) {
     dotPosition.top = my - saturationY - 5;
   }
 }
+function mousemove4Dot(e: MouseEvent) {
+
+}
 // set color
 function setRGB(indicator: number) {
   const start = 0;
@@ -240,6 +249,7 @@ function setRGB(indicator: number) {
   }
   const color = new Color(props.color.alpha, rgba.R, rgba.G, rgba.B);
   emit('change', color);
+  update(color);
 }
 function setAlpha(indicator: number) {
   rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
@@ -329,6 +339,30 @@ function inputClick(e: MouseEvent, hidx: number) {
 function keyboardWatcher(e: KeyboardEvent) {
   if (e.code === 'Enter' || e.code === 'NumpadEnter') {
     enter();
+  } else if (e.code === 'ArrowUp') {
+    const v = inputTarget.value;
+    if (handleIndex === 0) {
+      rgba.R = Number(v) + 1;
+    } else if (handleIndex === 1) {
+      rgba.G = Number(v) + 1;
+    } else if (handleIndex === 2) {
+      rgba.B = Number(v) + 1;
+    }
+    const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+    emit('change', color);
+    update_dot_indicator_position(color);
+  } else if (e.code === 'ArrowDown') {
+    const v = inputTarget.value;
+    if (handleIndex === 0) {
+      rgba.R = Number(v) - 1;
+    } else if (handleIndex === 1) {
+      rgba.G = Number(v) - 1;
+    } else if (handleIndex === 2) {
+      rgba.B = Number(v) - 1;
+    }
+    const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+    emit('change', color);
+    update_dot_indicator_position(color);
   }
 }
 function enter() {
@@ -346,11 +380,62 @@ function enter() {
   }
   const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
   emit('change', color);
+  update_dot_indicator_position(color);
   inputTarget.removeEventListener('keydown', keyboardWatcher);
   inputTarget.blur();
 }
+function update(color: Color) {
+  const { red, green, blue, alpha } = color;
+  rgba.R = red;
+  rgba.G = green;
+  rgba.B = blue;
+  rgba.alpha = alpha;
+}
+function update_recent_color() {
+  const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+  let nVal = updateRecently(color) || JSON.stringify([]);
+  nVal = JSON.parse(nVal);
+  if (nVal.length) {
+    recent.value = [];
+    for (let i = 0; i < nVal.length; i++) {
+      recent.value.push(parseColorFormStorage(nVal[i]));
+    }
+  }
+}
+function update_dot_indicator_position(color: Color) {
+  const { h, s, b } = RGB2HSB(color);
+  dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
+  dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_WIDTH / 2);
+  let hueIndicator = (lineAttribute.length * h) - (INDICATOR_WIDTH / 2);
+  if (hueIndicator < 0) {
+    hueIndicator = 0;
+  }
+  if (hueIndicator > (lineAttribute.length - INDICATOR_WIDTH)) {
+    hueIndicator = lineAttribute.length - INDICATOR_WIDTH;
+  }
+  hueIndicatorAttr.x = hueIndicator;
+}
+function init() {
+  const { red, green, blue, alpha } = props.color;
+  rgba.R = red;
+  rgba.G = green;
+  rgba.B = blue;
+  rgba.alpha = alpha;
+  let r = localStorage.getItem(key_storage);
+  r = JSON.parse(r || '[]');
+  if (r) {
+    if (r.length) {
+      recent.value = [];
+      for (let i = 0; i < r.length; i++) {
+        recent.value.push(parseColorFormStorage(r[i]));
+      }
+    }
+  }
+  update_dot_indicator_position(props.color);
+}
 onMounted(() => {
   props.context.workspace.watch(workspaceWatcher);
+  init();
 });
 onBeforeUnmount(() => {
   blockUnmount();
@@ -376,6 +461,7 @@ onUnmounted(() => {
         <div class="black"></div>
         <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
       </div>
+      <!-- 常用色 -->
       <div class="typical-container">
         <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
           :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
@@ -415,11 +501,12 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-      <div class="recently-container">
+      <!-- 最近使用 -->
+      <div class="recently-container" v-if="recent.length">
         <div class="inner">
-          <div class="header">最近使用</div>
+          <div class="header">{{ t('color.recently') }}</div>
           <div class="typical-container">
-            <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
+            <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
               :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
           </div>
         </div>
@@ -450,8 +537,8 @@ onUnmounted(() => {
       width: 100%;
       height: 32px;
       position: relative;
-      color: #cecece;
-      border-bottom: 1px solid #cecece;
+      color: #000000;
+      border-bottom: 1px solid var(--grey-dark);
       box-sizing: border-box;
 
       .color-type {
@@ -480,6 +567,7 @@ onUnmounted(() => {
       height: 180px;
       position: relative;
       cursor: pointer;
+      overflow: hidden;
 
       >.white {
         position: absolute;
@@ -566,6 +654,8 @@ onUnmounted(() => {
           background-size: auto 75%;
           border-radius: 5px 5px 5px 5px;
           cursor: pointer;
+          box-sizing: border-box;
+          border: 1px solid var(--grey-dark);
 
           >.alpha {
             position: relative;
@@ -574,7 +664,7 @@ onUnmounted(() => {
             border-radius: 5px 5px 5px 5px;
 
             >.alphaIndicator {
-              top: -1px;
+              top: -1.5px;
               width: 12px;
               height: 12px;
               border-radius: 50%;
@@ -609,25 +699,31 @@ onUnmounted(() => {
         display: flex;
         justify-content: center;
         align-items: center;
+        border-radius: 2px;
+        transition: 0.1s;
 
         >svg {
-          width: 80%;
-          height: 80%;
+          width: 60%;
+          height: 60%;
         }
+      }
+
+      .eyedropper:hover {
+        background-color: var(--grey-dark);
       }
     }
 
     .input-container {
       width: 100%;
-      height: 36px;
+      height: 46px;
       display: flex;
       flex-direction: row;
       align-items: center;
-      padding: 0 10px 0 10px;
+      padding: 0 10px 10px 10px;
       box-sizing: border-box;
 
       .model {
-        flex: 0 0 20%;
+        flex: 0 0 25%;
 
         :deep(.select-container .trigger .value-wrap) {
           padding: 0 10px 0 0;
@@ -639,7 +735,7 @@ onUnmounted(() => {
       }
 
       .values {
-        flex: 0 0 80%;
+        flex: 0 0 75%;
 
         .wrap {
           width: 100%;
@@ -649,11 +745,12 @@ onUnmounted(() => {
 
           .value {
             width: 100%;
-            height: 50%;
+            height: 60%;
             display: flex;
             align-items: center;
             background-color: var(--grey-dark);
             border-radius: 2px;
+            padding: 4px 0 4px 0;
 
             .item {
               height: 100%;
@@ -674,7 +771,7 @@ onUnmounted(() => {
 
           .label {
             width: 100%;
-            height: 50%;
+            height: 40%;
             display: flex;
             align-items: center;
 
@@ -694,7 +791,7 @@ onUnmounted(() => {
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 10px 10px 10px;
+      padding: 0 10px 10px 10px;
       box-sizing: border-box;
 
       .inner {
@@ -710,7 +807,6 @@ onUnmounted(() => {
           display: flex;
           flex-direction: row;
           align-items: center;
-          justify-content: space-between;
           box-sizing: border-box;
 
           >.block {
@@ -719,6 +815,10 @@ onUnmounted(() => {
             border-radius: 2px;
             box-shadow: 0 0 2px var(--theme-color) inset;
             cursor: pointer;
+          }
+
+          >.block:not(:first-child) {
+            margin-left: 6.2px;
           }
         }
       }

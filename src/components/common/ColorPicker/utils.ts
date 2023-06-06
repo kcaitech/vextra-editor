@@ -1,6 +1,11 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
+import { Color } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
-
+export interface HSB {
+  h: number
+  s: number
+  b: number
+}
 export function toRGBA(options: {
   red: number,
   green: number,
@@ -283,3 +288,95 @@ export const getCanvasRectColor = (ctx: any, rect: Rect, scale: number = 1) => {
   return colors;
 }
 
+// store
+export const key_storage = 'color_recently';
+const split = ':';
+export function updateRecently(color: Color) {
+  const store = JSON.parse(localStorage.getItem(key_storage) || JSON.stringify([]));
+  if (store.length) {
+    const item = parseColorForStorage(color);
+    const e_idx = store.findIndex((i: string) => i === item);
+    if (e_idx > -1) {
+      store.splice(e_idx, 1);
+      store.unshift(item);
+    } else {
+      store.unshift(item);
+    }
+    if (store.length > 10) {
+      setLocalStorageForColors(store.slice(0, 10));
+    } else {
+      setLocalStorageForColors(store);
+    }
+  } else {
+    const c = parseColorForStorage(color);
+    store.unshift(c);
+    setLocalStorageForColors(store);
+  }
+  return localStorage.getItem(key_storage);
+}
+function parseColorForStorage(color: Color): string {
+  return `${color.alpha}${split}${color.red}${split}${color.green}${split}${color.blue}`;
+}
+export function parseColorFormStorage(c: string): Color {
+  let _c: any[] = c.split(split);
+  _c = _c.map(i => Number(i));
+  return new Color(_c[0], _c[1], _c[2], _c[3]);
+}
+function setLocalStorageForColors(si: string[]) {
+  localStorage.setItem(key_storage, JSON.stringify(si));
+}
+
+// RGB => H
+export function RGB2H(color: Color) {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let h = 0;
+  if (max === min) {
+    h = 0;
+  } else if (max === red && green >= blue) {
+    h = 60 * ((green - blue) / (max - min)) + 0;
+  } else if (max === red && green < blue) {
+    h = 60 * ((green - blue) / (max - min)) + 360;
+  } else if (max === green) {
+    h = 60 * ((blue - red) / (max - min)) + 120;
+  } else if (max === blue) {
+    h = 60 * ((red - green) / (max - min)) + 240;
+  }
+  return h;
+}
+// RGB => S
+export function RGB2S(color: Color) {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  return (max - min) / max;
+}
+
+// RGB => B
+export function RGB2B(color: Color) {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  return max / 255;
+}
+// RGB => HSB
+export function RGB2HSB(color: Color): HSB {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let h = 0, s = 0, b = 0;
+  if (max === min) {
+    h = 0;
+  } else if (max === red && green >= blue) {
+    h = 60 * ((green - blue) / (max - min)) + 0;
+  } else if (max === red && green < blue) {
+    h = 60 * ((green - blue) / (max - min)) + 360;
+  } else if (max === green) {
+    h = 60 * ((blue - red) / (max - min)) + 120;
+  } else if (max === blue) {
+    h = 60 * ((red - green) / (max - min)) + 240;
+  }
+  s = (max - min) / max;
+  b = max / 255;
+  return { h: h / 360, s: s, b: b };
+}
