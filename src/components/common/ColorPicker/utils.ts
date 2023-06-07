@@ -6,6 +6,11 @@ export interface HSB {
   s: number
   b: number
 }
+export interface HSL {
+  h: number
+  s: number
+  l: number
+}
 export function toRGBA(options: {
   red: number,
   green: number,
@@ -476,5 +481,55 @@ export function HSB2RGB(H: number, S: number, V: number): RGB {
       return { R: _V, G: P, B: Q };
     default:
       return { R: 255, G: 0, B: 0 };
+  }
+}
+export function RGB2HSL(color: Color): HSL {
+  let { red, green, blue } = color;
+  red = red / 255;
+  green = green / 255;
+  blue = blue / 255;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let h = 0, s = 0, l = 0;
+  if (max === min) {
+    h = 0;
+  } else if (max === red && green >= blue) {
+    h = 60 * ((green - blue) / (max - min)) + 0;
+  } else if (max === red && green < blue) {
+    h = 60 * ((green - blue) / (max - min)) + 360;
+  } else if (max === green) {
+    h = 60 * ((blue - red) / (max - min)) + 120;
+  } else if (max === blue) {
+    h = 60 * ((red - green) / (max - min)) + 240;
+  }
+  l = ((max + min) / 2);
+  if (l === 0 || l === 1) {
+    s = 0;
+  } else {
+    s = (max - min) / (1 - Math.abs(2 * l - 1));
+  }
+  return { h, s, l };
+}
+export function HSL2RGB(hsl: HSL): RGB {
+  const { h, s, l } = hsl;
+  const C = (1 - Math.abs(2 * l - 1)) * s;
+  const hPrime = h / 60;
+  const X = C * (1 - Math.abs(hPrime % 2 - 1));
+  const m = l - C / 2;
+  if (hPrime <= 1) {
+    return withLight(C, X, 0)
+  } else if (hPrime <= 2) {
+    return withLight(X, C, 0)
+  } else if (hPrime <= 3) {
+    return withLight(0, C, X)
+  } else if (hPrime <= 4) {
+    return withLight(0, X, C)
+  } else if (hPrime <= 5) {
+    return withLight(X, 0, C)
+  } else {
+    return withLight(C, 0, X)
+  }
+  function withLight(r: number, g: number, b: number) {
+    return { R: Math.round((r + m) * 255), G: Math.round((g + m) * 255), B: Math.round((b + m) * 255) };
   }
 }

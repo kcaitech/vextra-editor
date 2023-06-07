@@ -7,7 +7,7 @@ import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
-import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, RGB2H, validate, getHRGB, HSB2RGB } from './utils';
+import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, RGB2H, validate, getHRGB, HSB2RGB, RGB2HSL, HSL2RGB } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
@@ -43,6 +43,12 @@ interface HSBA {
   V: number
   alpha: number
 }
+interface HSLA {
+  H: number
+  S: number
+  L: number
+  alpha: number
+}
 interface Indicator {
   x: number
 }
@@ -70,8 +76,8 @@ const HUE_HEIGHT = 180;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
-const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSB', 'HSB']]);
-// const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
+// const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSB', 'HSB']]);
+const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const saturationEL = ref<HTMLElement>();
 const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
 const typicalColor = ref<Color[]>(typical);
@@ -98,6 +104,11 @@ const hsba = computed<HSBA>(() => {
   const { h, s, b } = RGB2HSB(new Color(alpha, R, G, B));
   return { H: h, S: s, V: b, alpha };
 })
+const hsla = computed<HSLA>(() => {
+  const { R, G, B, alpha } = rgba;
+  const { h, s, l } = RGB2HSL(new Color(alpha, R, G, B));
+  return { H: h, S: s, L: l, alpha };
+})
 const labels = computed(() => {
   return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
@@ -106,6 +117,8 @@ const values = computed<number[]>(() => {
     return [rgba.R, rgba.G, rgba.B, rgba.alpha * 100];
   } else if (model.value.value === 'HSB') {
     return [Math.floor(hsba.value.H * 360), Math.floor(hsba.value.S * 100), Math.floor(hsba.value.V * 100), hsba.value.alpha * 100];
+  } else if (model.value.value === 'HSL') {
+    return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), hsla.value.alpha * 100];
   } else {
     return [rgba.R, rgba.G, rgba.B, rgba.alpha * 100];
   }
@@ -465,6 +478,23 @@ function enter() {
       rgba.G = rgb_form_n.G;
       rgba.B = rgb_form_n.B;
       rgba.alpha = n.alpha;
+    } else if (model.value.value === 'HSL') {
+      const { H, S, L, alpha } = hsla.value;
+      const n = { h: H, s: S, l: L, alpha };
+      if (handleIndex === 0) {
+        n.h = Number(v);
+      } else if (handleIndex === 1) {
+        n.s = Number(v) / 100;
+      } else if (handleIndex === 2) {
+        n.l = Number(v) / 100;
+      } else if (handleIndex === 3) {
+        n.alpha = Number(v) / 100;
+      }
+      const rgb_form_n = HSL2RGB(n);
+      rgba.R = rgb_form_n.R;
+      rgba.G = rgb_form_n.G;
+      rgba.B = rgb_form_n.B;
+      rgba.alpha = n.alpha;
     }
     const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
     emit('change', color);
@@ -523,6 +553,7 @@ function init() {
   }
   update_dot_indicator_position(props.color);
 }
+const color1 = ref('#409EFF')
 function selectionWatcher(t: any) {
   if (t === Selection.CHANGE_SHAPE) {
     props.context.workspace.removeColorPicker();
@@ -554,7 +585,6 @@ onUnmounted(() => {
         :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
         <div class="white"></div>
         <div class="black"></div>
-        <!-- <div class="white-l"></div> -->
         <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
       </div>
       <!-- 常用色 -->
@@ -675,16 +705,10 @@ onUnmounted(() => {
       >.black {
         position: absolute;
         width: 100%;
-        height: 100%;
+        height: 50%;
+        bottom: 0px;
         background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
       }
-
-      // >.white-l {
-      //   position: absolute;
-      //   width: 100%;
-      //   height: 100%;
-      //   background: linear-gradient(180deg, #fff, hsla(0, 0%, 100%, 0));
-      // }
 
       >.dot {
         width: 10px;
