@@ -37,7 +37,7 @@
     </el-table>
     <!-- 卡片布局 -->
     <el-row v-else>
-        <el-col v-for="(  item  ) in   documentsList   " :key=" item.id " :span=" 3 " style="margin:0px 20px 20px 0px;">
+        <el-col v-for="(    item    ) in     documentsList     " :key=" item.id " :span=" 3 " style="margin:0px 20px 20px 0px;">
             <el-card :body-style=" { padding: '0px' } " shadow="hover">
                 <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
                     class="image" />
@@ -50,8 +50,10 @@
             </el-card>
         </el-col>
     </el-row>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " @switch-state=" onSwitch "
+        :selectValue=" selectValue " @select-type=" onSelectType " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
+    </FileShare>
+    <div v-if=" showFileShare " class="overlay"></div>
 </template>
 
 <script setup lang="ts">
@@ -76,17 +78,21 @@ const selectValue = ref(1)
 async function getUserdata() {
     // loading
     isLoading.value = true
-    const { data } = await user_api.GetDocumentsList()
-    if (data == null) {
-        ElMessage.error(t('home.failed_list_tips'))
-    } else {
-        for (let i = 0; i < data.length; i++) {
-            let { document: { size }, document_access_record: { last_access_time } } = data[i]
-            data[i].document.size = sizeTostr(size)
-            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+    try {
+        const { data } = await user_api.GetDocumentsList() as any
+        if (data == null) {
+            ElMessage.error(t('home.failed_list_tips'))
+        } else {
+            for (let i = 0; i < data.length; i++) {
+                let { document: { size }, document_access_record: { last_access_time } } = data[i]
+                data[i].document.size = sizeTostr(size)
+                data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+            }
         }
+        documentsList.value = data
+    } catch (error) {
+        ElMessage.error("assaaa")
     }
-    documentsList.value = data
     // unloading  
     isLoading.value = false;
 }
@@ -105,7 +111,6 @@ function sizeTostr(size: any) {
 }
 
 const Starfile = async (index: number) => {
-
     const { document: { id } } = documentsList.value[index]
     documentsList.value[index].document_favorites.is_favorite = !documentsList.value[index].document_favorites.is_favorite ? true : false
     if (documentsList.value[index].document_favorites.is_favorite == true) {
@@ -119,17 +124,16 @@ const Starfile = async (index: number) => {
             ElMessage.success(t('home.star_cancel'))
         }
     }
-
 }
 
 const Sharefile = (scope: any) => {
-    if(showFileShare.value) {
-    showFileShare.value = false
-    return
-  }
-    docId.value = scope.row.document.id 
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = scope.row.document.id
     selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
-  showFileShare.value = true
+    showFileShare.value = true
 }
 const closeShare = () => {
     showFileShare.value = false
@@ -141,7 +145,7 @@ const onSwitch = (state: boolean) => {
     shareSwitch.value = state
 }
 const onSelectType = (type: number) => {
-  selectValue.value = type
+    selectValue.value = type
 }
 
 //移除对应文件的历史记录

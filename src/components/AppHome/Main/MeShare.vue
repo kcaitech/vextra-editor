@@ -41,7 +41,7 @@
             <li style="margin-top: 10px;" @click=" openDocument ">打开</li>
             <li @click=" openNewWindowDocument ">在新标签页打开</li>
             <li @click.stop=" rSharefile ">分享</li>
-            <li @click=" rStarfile ">标星</li>
+            <li @click=" rStarfile " ref="isshow">标星</li>
             <li @click=" rrename ">重命名</li>
             <li>创建文件副本</li>
             <li style="margin-bottom: 10px;" @click=" rDeletefile ">删除文件</li>
@@ -49,7 +49,7 @@
     </div>
     <!-- 重命名弹框 -->
     <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
-        <input class="newname" type="text" :value=" newname " ref="renameinput"/>
+        <input class="newname" type="text" :value=" newname " ref="renameinput" />
         <template #footer>
             <span class="dialog-footer">
                 <el-button type="primary" style="background-color: none;" @click=" rename1 ">
@@ -89,6 +89,7 @@ const dialogVisible = ref(false)
 const renameinput = ref()
 const newname = ref()
 const disabled = ref(false)
+const isshow = ref<HTMLElement>()
 
 //获取服务器我的文件列表
 async function getDoucment() {
@@ -283,6 +284,7 @@ const openNewWindowDocument = () => {
 }
 
 const rightmenu = (row: any, column: any, event: any) => {
+
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -293,6 +295,15 @@ const rightmenu = (row: any, column: any, event: any) => {
         rightmenu.style.top = top + 291 > viewportHeight ? (viewportHeight - 291) + 'px' : top + 'px'
         rightmenu.style.display = 'block'
     }
+    nextTick(() => {   
+        if (isshow.value){
+            if(row.document_favorites.is_favorite == true){
+                isshow.value.innerHTML = '取消标星'
+            }else{
+                isshow.value.innerHTML = '标星'
+            }
+        }    
+    })
     documentId.value = row
 }
 

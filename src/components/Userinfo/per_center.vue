@@ -1,12 +1,11 @@
 <template>
+    <div class="main">
     <div class="nav">
         <div class="close" @click="closePersonalCenter"><el-icon size="25">
                 <Close />
             </el-icon></div>
             <h1>{{ t('percenter.personal_center') }}</h1>
     </div>
-
-   
     <div class="icon">
         <span class="jbxx">{{ t('percenter.essential_information') }}</span>
         <div class="one">
@@ -58,6 +57,7 @@
             </div>
         </div>
     </div>
+</div>
 </template>
 <script setup lang="ts">
 import { reactive, toRefs, ref } from 'vue'
@@ -162,6 +162,11 @@ function closePersonalCenter() {
 
 </script>
 <style lang="scss" scoped>
+.main{
+    width: 100vw;
+    height: 100vh;
+    background: rgba(213, 213, 213, 0.2);
+}
 .newname {
     outline: none;
     height: 22px;
@@ -221,8 +226,9 @@ button {
     align-items: center;
     flex-direction: row-reverse;
     margin: 0 0 20px 0;
-    background: rgb(240, 240, 240);
-    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+    border-radius: 5px;
+    background: rgb(255, 255, 255);
+    box-shadow: rgba(255, 255, 255, 0.9) 0px 1px 3px, rgba(0, 0, 0, 0.5) 0px 1px 2px;
     .close {
        margin: 0 20px;
     }
@@ -246,6 +252,7 @@ h1 {
     transform: translate(-50%);
     box-sizing: border-box;
     border-radius: 5px;
+    background: white;
     box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
 
     .jbxx {

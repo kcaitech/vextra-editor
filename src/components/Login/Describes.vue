@@ -30,18 +30,23 @@ const { t } = useI18n();
         width: 160px;
         height: 160px;
         margin: 20px;
+        animation: moveDown 1.5s ;
     }
 
     h1 {
         font-size: 60PX;
+        height: 160px;
+        line-height: 160px;
         color: white;
         margin: 20px;
+        animation: moveDown 1.5s ;
     }
 
     p {
         font-size: 20PX;
         color: white;
         margin-top: 20px;
+        animation: moveup 1.5s ;
     }
 
 }
@@ -57,5 +62,27 @@ const { t } = useI18n();
         display: none;
     }
 
+}
+
+@keyframes moveDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-300px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes moveup {
+  0% {
+    opacity: 0;
+    transform: translateY(300px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style >
