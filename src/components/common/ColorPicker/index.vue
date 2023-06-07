@@ -705,8 +705,7 @@ onUnmounted(() => {
       >.black {
         position: absolute;
         width: 100%;
-        height: 50%;
-        bottom: 0px;
+        height: 100%;
         background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
       }
 
