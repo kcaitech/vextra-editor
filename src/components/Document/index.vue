@@ -265,17 +265,22 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        await importDocument(importDocumentParams, path, "", "", repo).then((document) => {
-            if (document) {
-                window.document.title = document.name;
-                context = new Context(document, repo);
-                context.selection.watch(selectionWatcher);
-                switchPage(context.data.pagesList[0]?.id);
-                localStorage.setItem('docId', route.query.id as string);
-                coopLocal = new CoopLocal(document, repo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
-                coopLocal.start();
-            }
-        })
+        const document = await importDocument(importDocumentParams, path, "", "", repo)
+        if (document) {
+            window.document.title = document.name;
+            context = new Context(document, repo);
+            context.selection.watch(selectionWatcher);
+            switchPage(context.data.pagesList[0]?.id);
+            localStorage.setItem('docId', route.query.id as string);
+            // 延时半秒
+            await new Promise<void>(resolve => {
+                setTimeout(() => {
+                    resolve()
+                }, 500)
+            })
+            coopLocal = new CoopLocal(document, repo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
+            coopLocal.start();
+        }
     } catch (err) {
         new Error(`${err}`);
     } finally {
