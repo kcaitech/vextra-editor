@@ -316,7 +316,10 @@ function upload() {
 let timer: any = null;
 function setScreenSize() {
     if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
-        document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        try {
+            document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+        }
+        catch(e) {} // API can only be initiated by a user gesture.
     }
 }
 function init() {
