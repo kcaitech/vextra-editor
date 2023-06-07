@@ -4,9 +4,10 @@ import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
+import { Selection } from '@/context/selection';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
-import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, validate } from './utils';
+import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, RGB2H, validate, getHRGB, HSB2RGB } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
@@ -25,10 +26,21 @@ interface Emits {
   (e: 'change', color: Color): void;
   (e: 'choosecolor', color: number[]): void;
 }
+export interface HRGB { // 色相
+  R: number
+  G: number
+  B: number
+}
 interface RGBA {
   R: number
   G: number
-  B: number,
+  B: number
+  alpha: number
+}
+interface HSBA {
+  H: number
+  S: number
+  V: number
   alpha: number
 }
 interface Indicator {
@@ -43,6 +55,13 @@ interface DotPosition {
   left: number
   top: number
 }
+interface Bounding {
+  x: number
+  y: number
+  right: number
+  bottom: number
+}
+type InputValue = number | string;
 const INDICATOR_WIDTH = 12;
 const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
 const DOT_WIDTH = 10;
@@ -51,7 +70,10 @@ const HUE_HEIGHT = 180;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
-const saturation = ref<HTMLElement>();
+const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSB', 'HSB']]);
+// const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
+const saturationEL = ref<HTMLElement>();
+const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
 const typicalColor = ref<Color[]>(typical);
 const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
@@ -64,18 +86,39 @@ const data = reactive<Data>({
   rgba: { R: 255, G: 0, B: 0, alpha: 1 },
   hueIndicatorAttr: { x: 0 },
   alphaIndicatorAttr: { x: lineAttribute.length - INDICATOR_WIDTH },
-  dotPosition: { left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2, }
+  dotPosition: { left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2 }
 })
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
-const modelOptions: SelectSource[] = genOptions([
-  ['RGB', 'RGB'],
-  ['HSL', 'HSL'],
-  ['HSB', 'HSB']
-]);
+const h_rgb = computed<HRGB>(() => {
+  const color = new Color(1, rgba.R, rgba.G, rgba.B);
+  return getHRGB(RGB2H(color));
+})
+const hsba = computed<HSBA>(() => {
+  const { R, G, B, alpha } = rgba;
+  const { h, s, b } = RGB2HSB(new Color(alpha, R, G, B));
+  return { H: h, S: s, V: b, alpha };
+})
 const labels = computed(() => {
   return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
-const values = computed<number[]>(() => [rgba.R, rgba.G, rgba.B, rgba.alpha * 100]);
+const values = computed<number[]>(() => {
+  if (model.value.value === 'RGB') {
+    return [rgba.R, rgba.G, rgba.B, rgba.alpha * 100];
+  } else if (model.value.value === 'HSB') {
+    return [Math.floor(hsba.value.H * 360), Math.floor(hsba.value.S * 100), Math.floor(hsba.value.V * 100), hsba.value.alpha * 100];
+  } else {
+    return [rgba.R, rgba.G, rgba.B, rgba.alpha * 100];
+  }
+});
+const hue = computed<number>(() => {
+  return Math.floor(((hueIndicatorAttr.x) / (lineAttribute.length - INDICATOR_WIDTH)) * 360);
+})
+const saturation = computed<number>(() => {
+  return (dotPosition.left + DOT_WIDTH / 2) / HUE_WIDTH;
+})
+const brightness = computed<number>(() => {
+  return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
+})
 const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
@@ -203,52 +246,55 @@ function mousemove4Alpha(e: MouseEvent) {
 }
 
 function setDotPosition(e: MouseEvent) {
-  if (saturation.value) {
-    const { x: saturationX, y: saturationY } = saturation.value.getBoundingClientRect();
+  if (saturationEL.value) {
+    const { x: saturationX, y: saturationY, right, bottom } = saturationEL.value.getBoundingClientRect();
     const { x: mx, y: my } = e;
     dotPosition.left = mx - saturationX - 5;
     dotPosition.top = my - saturationY - 5;
+    saturationELBounding.x = saturationX;
+    saturationELBounding.y = saturationY;
+    saturationELBounding.right = right;
+    saturationELBounding.bottom = bottom;
+    const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
+    rgba.R = R;
+    rgba.G = G;
+    rgba.B = B;
+    const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+    emit('change', color);
+    document.addEventListener('mousemove', mousemove4Dot);
+    document.addEventListener('mouseup', mouseup);
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   }
 }
 function mousemove4Dot(e: MouseEvent) {
-
+  const { x, y } = e;
+  const { x: saturationX, y: saturationY, right, bottom } = saturationELBounding;
+  if (x >= saturationX && y <= bottom && x <= right && y >= saturationY) {
+    dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+    dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+  } else if (x < saturationX && y <= bottom && y >= saturationY) {
+    dotPosition.left = -(DOT_WIDTH / 2);
+    dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+  } else if (x > right && y <= bottom && y >= saturationY) {
+    dotPosition.left = HUE_WIDTH - (DOT_WIDTH / 2);
+    dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+  } else if (y < saturationY && x >= saturationX && x <= right) {
+    dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+    dotPosition.top = -(DOT_WIDTH / 2);
+  } else if (y > bottom && x >= saturationX && x <= right) {
+    dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+    dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
+  }
+  const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
+  const color = new Color(rgba.alpha, R, G, B);
+  update(color);
+  emit('change', color);
 }
 // set color
 function setRGB(indicator: number) {
-  const start = 0;
-  const end = lineAttribute.length - INDICATOR_WIDTH;
-  if (start <= indicator && indicator <= end * 0.17) {
-    const rate = indicator / (end * 0.17);
-    rgba.R = 255;
-    rgba.G = Math.floor(255 * rate);
-    rgba.B = 0;
-  } else if (end * 0.17 < indicator && indicator <= end * 0.33) {
-    const rate = (indicator - end * 0.17) / (end * 0.33 - end * 0.17);
-    rgba.R = Math.floor(255 - 255 * rate);
-    rgba.G = 255;
-    rgba.B = 0;
-  } else if (end * 0.33 < indicator && indicator <= end * 0.50) {
-    const rate = (indicator - end * 0.33) / (end * 0.50 - end * 0.33);
-    rgba.R = 0;
-    rgba.G = 255;
-    rgba.B = Math.floor(255 * rate);
-  } else if (end * 0.50 < indicator && indicator <= end * 0.67) {
-    const rate = (indicator - end * 0.50) / (end * 0.67 - end * 0.50);
-    rgba.R = 0;
-    rgba.G = Math.floor(255 - 255 * rate);
-    rgba.B = 255;
-  } else if (end * 0.67 < indicator && indicator <= end * 0.83) {
-    const rate = (indicator - end * 0.67) / (end * 0.83 - end * 0.67);
-    rgba.R = Math.floor(255 * rate);
-    rgba.G = 0;
-    rgba.B = 255;
-  } else {
-    const rate = (indicator - end * 0.83) / (end - end * 0.83);
-    rgba.R = 255;
-    rgba.G = 0;
-    rgba.B = Math.floor(255 - 255 * rate);
-  }
-  const color = new Color(props.color.alpha, rgba.R, rgba.G, rgba.B);
+  const h = (indicator / (lineAttribute.length - INDICATOR_WIDTH)) * 360;
+  const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
+  const color = new Color(rgba.alpha, R, G, B);
   emit('change', color);
   update(color);
 }
@@ -269,6 +315,7 @@ function setColor(color: Color) {
 }
 // 鼠标抬起
 function mouseup() {
+  document.removeEventListener('mousemove', mousemove4Dot);
   document.removeEventListener('mousemove', mousemove4Alpha)
   document.removeEventListener('mousemove', mousemove4Hue)
   document.removeEventListener('mouseup', mouseup)
@@ -300,6 +347,7 @@ function systemEyeDropper() {
     rgba.B = rgb[2];
     const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
     emit('change', c);
+    update_dot_indicator_position(c);
   }).catch(() => {
     throw new Error("failed");
   });
@@ -309,7 +357,6 @@ function systemEyeDropper() {
 }
 // 自制取色器
 function eyeDropperInit(): Eyedropper {
-  // init
   const root = props.context.workspace.root.element;
   return new Eyedropper({
     container: root,
@@ -384,12 +431,13 @@ function keyboardWatcher(e: KeyboardEvent) {
     }
   }
 }
+// 输入框输入
 function enter() {
-  if (model.value.value === 'RGB') {
-    let v: string | number = inputTarget.value;
-    const valid = validate(model.value.value, handleIndex, Number(v));
-    if (valid) {
-      props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+  let v: string | number = inputTarget.value;
+  const valid = validate(model.value.value as any, handleIndex, Number(v));
+  if (valid) {
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+    if (model.value.value === 'RGB') {
       v = Math.floor(Number(v));
       if (handleIndex === 0) {
         rgba.R = Number(v);
@@ -398,16 +446,33 @@ function enter() {
       } else if (handleIndex === 2) {
         rgba.B = Number(v);
       } else if (handleIndex === 3) {
-        rgba.alpha = Number(v);
+        rgba.alpha = Number(v) / 100;
       }
-      const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
-      emit('change', color);
-      update_dot_indicator_position(color);
-      props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    } else if (model.value.value === 'HSB') {
+      const { H, S, V, alpha } = hsba.value;
+      const n = { H: H * 360, S, V, alpha };
+      if (handleIndex === 0) {
+        n.H = Number(v);
+      } else if (handleIndex === 1) {
+        n.S = Number(v) / 100;
+      } else if (handleIndex === 2) {
+        n.V = Number(v) / 100;
+      } else if (handleIndex === 3) {
+        n.alpha = Number(v) / 100;
+      }
+      const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
+      rgba.R = rgb_form_n.R;
+      rgba.G = rgb_form_n.G;
+      rgba.B = rgb_form_n.B;
+      rgba.alpha = n.alpha;
     }
-    inputTarget.removeEventListener('keydown', keyboardWatcher);
-    inputTarget.blur();
+    const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+    emit('change', color);
+    update_dot_indicator_position(color);
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
   }
+  inputTarget.removeEventListener('keydown', keyboardWatcher);
+  inputTarget.blur();
 }
 function update(color: Color) {
   const { red, green, blue, alpha } = color;
@@ -458,16 +523,21 @@ function init() {
   }
   update_dot_indicator_position(props.color);
 }
+function selectionWatcher(t: any) {
+  if (t === Selection.CHANGE_SHAPE) {
+    props.context.workspace.removeColorPicker();
+  }
+}
 onMounted(() => {
   props.context.workspace.watch(workspaceWatcher);
+  props.context.selection.watch(selectionWatcher);
   init();
 });
-onBeforeUnmount(() => {
-  blockUnmount();
-})
 onUnmounted(() => {
   eyeDropper.destroy();
+  blockUnmount();
   props.context.workspace.unwatch(workspaceWatcher);
+  props.context.selection.unwatch(selectionWatcher);
 })
 </script>
 
@@ -481,9 +551,10 @@ onUnmounted(() => {
       </div>
       <!-- 饱和度 -->
       <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-        :style="{ backgroundColor: `rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 1)` }" ref="saturation">
+        :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
         <div class="white"></div>
         <div class="black"></div>
+        <!-- <div class="white-l"></div> -->
         <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
       </div>
       <!-- 常用色 -->
@@ -605,8 +676,15 @@ onUnmounted(() => {
         position: absolute;
         width: 100%;
         height: 100%;
-        background: linear-gradient(0deg, #000, transparent);
+        background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
       }
+
+      // >.white-l {
+      //   position: absolute;
+      //   width: 100%;
+      //   height: 100%;
+      //   background: linear-gradient(180deg, #fff, hsla(0, 0%, 100%, 0));
+      // }
 
       >.dot {
         width: 10px;
@@ -680,7 +758,6 @@ onUnmounted(() => {
           border-radius: 5px 5px 5px 5px;
           cursor: pointer;
           box-sizing: border-box;
-          border: 1px solid var(--grey-dark);
 
           >.alpha {
             position: relative;
@@ -689,7 +766,7 @@ onUnmounted(() => {
             border-radius: 5px 5px 5px 5px;
 
             >.alphaIndicator {
-              top: -1.5px;
+              top: -1px;
               width: 12px;
               height: 12px;
               border-radius: 50%;

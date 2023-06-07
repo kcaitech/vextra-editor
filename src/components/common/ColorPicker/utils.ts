@@ -1,9 +1,6 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
 import { Color } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
-import { debounce } from 'lodash';
-import { WorkSpace } from '@/context/workspace';
-import { Context } from '@/context';
 export interface HSB {
   h: number
   s: number
@@ -380,9 +377,13 @@ export function RGB2HSB(color: Color): HSB {
   } else if (max === blue) {
     h = 60 * ((red - green) / (max - min)) + 240;
   }
-  s = (max - min) / max;
+  if (max === min && min === 0) {
+    s = 0;
+  } else {
+    s = (max - min) / max;
+  }
   b = max / 255;
-  return { h: h / 360, s: s, b: b };
+  return { h: h / 360, s, b };
 }
 export function validate(model: Model, field: number, value: number): boolean {
   if (isNaN(value)) return false;
@@ -405,4 +406,75 @@ export function validate(model: Model, field: number, value: number): boolean {
     }
   }
   return result;
+}
+interface HRGB {
+  R: number
+  G: number
+  B: number
+}
+export function getHRGB(h: number): HRGB {
+  const h_rgb = { R: 255, G: 0, B: 0 };
+  const start = 0;
+  const end = 360;
+  if (start <= h && h <= end * 0.17) {
+    const rate = h / (end * 0.17);
+    h_rgb.R = 255;
+    h_rgb.G = Math.floor(255 * rate);
+    h_rgb.B = 0;
+  } else if (end * 0.17 < h && h <= end * 0.33) {
+    const rate = (h - end * 0.17) / (end * 0.33 - end * 0.17);
+    h_rgb.R = Math.floor(255 - 255 * rate);
+    h_rgb.G = 255;
+    h_rgb.B = 0;
+  } else if (end * 0.33 < h && h <= end * 0.50) {
+    const rate = (h - end * 0.33) / (end * 0.50 - end * 0.33);
+    h_rgb.R = 0;
+    h_rgb.G = 255;
+    h_rgb.B = Math.floor(255 * rate);
+  } else if (end * 0.50 < h && h <= end * 0.67) {
+    const rate = (h - end * 0.50) / (end * 0.67 - end * 0.50);
+    h_rgb.R = 0;
+    h_rgb.G = Math.floor(255 - 255 * rate);
+    h_rgb.B = 255;
+  } else if (end * 0.67 < h && h <= end * 0.83) {
+    const rate = (h - end * 0.67) / (end * 0.83 - end * 0.67);
+    h_rgb.R = Math.floor(255 * rate);
+    h_rgb.G = 0;
+    h_rgb.B = 255;
+  } else {
+    const rate = (h - end * 0.83) / (end - end * 0.83);
+    h_rgb.R = 255;
+    h_rgb.G = 0;
+    h_rgb.B = Math.floor(255 - 255 * rate);
+  }
+  return h_rgb;
+}
+export interface RGB {
+  R: number
+  G: number
+  B: number
+}
+export function HSB2RGB(H: number, S: number, V: number): RGB {
+  const I = Math.floor((H / 60)) % 6;
+  const F = H === 360 ? 0 : (H / 60) - I; // 闭环
+  const P = Math.floor((V * 255) * (1 - S));
+  const Q = Math.floor((V * 255) * (1 - F * S));
+  const T = Math.floor((V * 255) * (1 - (1 - F) * S));
+  const _V = Math.floor(V * 255);
+  switch (I) {
+    case 0:
+      return { R: _V, G: T, B: P };
+    case 1:
+      return { R: Q, G: _V, B: P };
+    case 2:
+      return { R: P, G: _V, B: T };
+    case 3:
+      return { R: P, G: Q, B: _V };
+    case 4:
+      return { R: T, G: P, B: _V };
+    case 5:
+      return { R: _V, G: P, B: Q };
+    default:
+      return { R: 255, G: 0, B: 0 };
+  }
 }
