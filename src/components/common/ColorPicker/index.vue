@@ -67,7 +67,6 @@ interface Bounding {
   right: number
   bottom: number
 }
-type InputValue = number | string;
 const INDICATOR_WIDTH = 12;
 const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
 const DOT_WIDTH = 10;
@@ -76,7 +75,6 @@ const HUE_HEIGHT = 180;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
-// const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSB', 'HSB']]);
 const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const saturationEL = ref<HTMLElement>();
 const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
@@ -114,9 +112,9 @@ const labels = computed(() => {
 });
 const values = computed<number[]>(() => {
   if (model.value.value === 'RGB') {
-    return [rgba.R, rgba.G, rgba.B, rgba.alpha * 100];
+    return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), rgba.alpha * 100];
   } else if (model.value.value === 'HSB') {
-    return [Math.floor(hsba.value.H * 360), Math.floor(hsba.value.S * 100), Math.floor(hsba.value.V * 100), hsba.value.alpha * 100];
+    return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), hsba.value.alpha * 100];
   } else if (model.value.value === 'HSL') {
     return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), hsla.value.alpha * 100];
   } else {
@@ -299,21 +297,21 @@ function mousemove4Dot(e: MouseEvent) {
     dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
   }
   const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
-  const color = new Color(rgba.alpha, R, G, B);
-  update(color);
+  const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
+  update(R, G, B);
   emit('change', color);
 }
 // set color
 function setRGB(indicator: number) {
   const h = (indicator / (lineAttribute.length - INDICATOR_WIDTH)) * 360;
   const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
-  const color = new Color(rgba.alpha, R, G, B);
+  const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
   emit('change', color);
-  update(color);
+  update(R, G, B);
 }
 function setAlpha(indicator: number) {
   rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
-  const color = new Color(rgba.alpha, props.color.red, props.color.green, props.color.blue);
+  const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
   emit('change', color);
 }
 function setColor(color: Color) {
@@ -496,7 +494,7 @@ function enter() {
       rgba.B = rgb_form_n.B;
       rgba.alpha = n.alpha;
     }
-    const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+    const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
     emit('change', color);
     update_dot_indicator_position(color);
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
@@ -504,12 +502,10 @@ function enter() {
   inputTarget.removeEventListener('keydown', keyboardWatcher);
   inputTarget.blur();
 }
-function update(color: Color) {
-  const { red, green, blue, alpha } = color;
-  rgba.R = red;
-  rgba.G = green;
-  rgba.B = blue;
-  rgba.alpha = alpha;
+function update(R: number, G: number, B: number) {
+  rgba.R = R;
+  rgba.G = G;
+  rgba.B = B;
 }
 function update_recent_color() {
   const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
@@ -553,7 +549,6 @@ function init() {
   }
   update_dot_indicator_position(props.color);
 }
-const color1 = ref('#409EFF')
 function selectionWatcher(t: any) {
   if (t === Selection.CHANGE_SHAPE) {
     props.context.workspace.removeColorPicker();
@@ -610,6 +605,7 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+      <!-- model & values -->
       <div class="input-container">
         <div class="model">
           <Select :itemHeight="32" :source="modelOptions" :selected="model" @select="switchModel"></Select>

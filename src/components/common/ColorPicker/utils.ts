@@ -462,10 +462,10 @@ export interface RGB {
 export function HSB2RGB(H: number, S: number, V: number): RGB {
   const I = Math.floor((H / 60)) % 6;
   const F = H === 360 ? 0 : (H / 60) - I; // 闭环
-  const P = Math.floor((V * 255) * (1 - S));
-  const Q = Math.floor((V * 255) * (1 - F * S));
-  const T = Math.floor((V * 255) * (1 - (1 - F) * S));
-  const _V = Math.floor(V * 255);
+  const P = (V * 255) * (1 - S);
+  const Q = (V * 255) * (1 - F * S);
+  const T = (V * 255) * (1 - (1 - F) * S);
+  const _V = V * 255;
   switch (I) {
     case 0:
       return { R: _V, G: T, B: P };
@@ -530,6 +530,6 @@ export function HSL2RGB(hsl: HSL): RGB {
     return withLight(C, 0, X)
   }
   function withLight(r: number, g: number, b: number) {
-    return { R: Math.round((r + m) * 255), G: Math.round((g + m) * 255), B: Math.round((b + m) * 255) };
+    return { R: (r + m) * 255, G: (g + m) * 255, B: (b + m) * 255 };
   }
 }
