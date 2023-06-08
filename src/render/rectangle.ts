@@ -27,7 +27,7 @@ export function render(h: Function, shape: Shape, reflush?: number) {
         const cy = frame.y + frame.height / 2;
         const style: any = {}
         style.transform = "translate(" + cx + "px," + cy + "px) "
-        if (shape.scaleX !== undefined || shape.scaleY !== undefined) style.transform += "scale(" + (shape.scaleX || 1) + "," + (shape.scaleY || 1) + ") "
+        // if (shape.scaleX !== undefined || shape.scaleY !== undefined) style.transform += "scale(" + (shape.scaleX || 1) + "," + (shape.scaleY || 1) + ") "
         if (shape.isFlippedHorizontal) style.transform += "rotateY(180deg) "
         if (shape.isFlippedVertical) style.transform += "rotateX(180deg) "
         if (shape.rotation) style.transform += "rotate(" + shape.rotation + "deg) "
