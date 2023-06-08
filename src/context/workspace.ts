@@ -13,7 +13,8 @@ export enum Action {
     AddArrow = 'add-arrow',
     AddFrame = 'add-frame',
     AddText = 'add-text',
-    AddComment = 'add-comment'
+    AddComment = 'add-comment',
+    AddImage = 'add-image'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -52,14 +53,18 @@ export enum CtrlElementType { // 控制元素类型
     LineEndR = 'line-end-rotate',
     Text = 'text'
 }
-
+export interface Media {
+    buff: Uint8Array
+    base64: string
+}
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle],
     [Action.AddEllipse, ShapeType.Oval],
     [Action.AddLine, ShapeType.Line],
     [Action.AddFrame, ShapeType.Artboard],
-    [Action.AddText, ShapeType.Text]
+    [Action.AddText, ShapeType.Text],
+    [Action.AddImage, ShapeType.Image]
 ]);
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
@@ -111,6 +116,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_saving: boolean = false;
+    private m_image: Media | undefined = undefined;
     constructor(context: Context) {
         super();
         this.context = context
@@ -194,6 +200,12 @@ export class WorkSpace extends Watchable(Object) {
     }
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
+    }
+    setImage(file: Media) {
+        this.m_image = file;
+    }
+    getImageFromDoc() {
+        return this.m_image;
     }
     startSvae() {
         this.m_saving = true;
@@ -293,7 +305,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
             event.preventDefault();
-            this.keydown_k();
+            this.keydown_k(ctrlKey, shiftKey);
         } else if (event.code === KeyboardKeys.O) {
             event.preventDefault();
             this.keydown_o();
@@ -393,9 +405,13 @@ export class WorkSpace extends Watchable(Object) {
             repo.canRedo() && repo.redo();
         }
     }
-    keydown_k() {
+    keydown_k(ctrl: boolean, shift: boolean) {
         this.escSetup();
-        this.m_current_action = Action.AutoK;
+        if (ctrl && shift) {
+            this.m_current_action = Action.AddImage;
+        } else {
+            this.m_current_action = Action.AutoK;
+        }
         this.notify();
     }
     keydown_o() {

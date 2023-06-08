@@ -92,9 +92,16 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         const editor = props.context.editor.controller();
         const name = getName(type, parent.childs, t);
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-        const shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
-        selection.selectShape(shape);
-        return shape;
+        const media = workspace.value.getImageFromDoc();
+        if (type === ShapeType.Image && media) {
+            const shape = asyncCreator.init_media(page, (parent as GroupShape), name, frame, media);
+            selection.selectShape(shape);
+            return shape;
+        } else {
+            const shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+            selection.selectShape(shape);
+            return shape;
+        }
     }
 }
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
@@ -411,8 +418,8 @@ function onMouseDown(e: MouseEvent) {
         } else {
             wheelSetup();
             isMouseLeftPress = true;
-            if(workspace.value.action !== Action.AddComment) {
-                if(commentInput.value) {
+            if (workspace.value.action !== Action.AddComment) {
+                if (commentInput.value) {
                     commentInput.value = false;
                 }
             }
@@ -461,10 +468,10 @@ function onMouseUp(e: MouseEvent) {
         if (spacePressed.value) {
             pageViewDragEnd();
         } else {
-            if(workspace.value.action === Action.AddComment) {
+            if (workspace.value.action === Action.AddComment) {
                 addComment(e)
-            }else {
-                if(commentInput.value) {
+            } else {
+                if (commentInput.value) {
                     commentInput.value = false;
                 }
                 pageEditorOnMoveEnd(e);
@@ -521,17 +528,17 @@ const rootWidth = ref(root.value?.clientWidth)
 //添加评论
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
-    if(workspace.value.isCommentInput) {
+    if (workspace.value.isCommentInput) {
         workspace.value.commentInput(false)
         return
     }
-    if(commentInput.value) return
-        commentInput.value = true;
-        const { x, y } = workspace.value.root;
-        commentPosition.x = e.clientX - x + 40;
-        commentPosition.y = e.clientY - y - 45;
-        rootWidth.value = root.value && root.value.clientWidth
-        document.addEventListener('keydown', commentEsc);
+    if (commentInput.value) return
+    commentInput.value = true;
+    const { x, y } = workspace.value.root;
+    commentPosition.x = e.clientX - x + 40;
+    commentPosition.y = e.clientY - y - 45;
+    rootWidth.value = root.value && root.value.clientWidth
+    document.addEventListener('keydown', commentEsc);
 }
 
 const getCommentInputXY = (e: MouseEvent) => {
@@ -563,8 +570,8 @@ const mouseUpCommentInput = () => {
 }
 
 const closeComment = (e: MouseEvent) => {
-    if(!spacePressed.value) {
-        if(e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
+    if (!spacePressed.value) {
+        if (e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
             commentInput.value = false;
         }
     }
@@ -632,8 +639,10 @@ onUnmounted(() => {
         </ContextMenu>
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentInput v-if="commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y"
-         ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"></CommentInput>
-        <PageCommentItem v-if="!commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y" :rootWidth="rootWidth" :cursorClass="cursorClass"></PageCommentItem>
+            ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput">
+        </CommentInput>
+        <PageCommentItem v-if="!commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y"
+            :rootWidth="rootWidth" :cursorClass="cursorClass"></PageCommentItem>
     </div>
 </template>
 <style scoped lang="scss">

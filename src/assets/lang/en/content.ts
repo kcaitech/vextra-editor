@@ -7,6 +7,7 @@ export const shape: any = {
     artboard: 'Artboard',
     arrow: 'Arrow',
     text: 'text',
+    image: 'image'
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 
