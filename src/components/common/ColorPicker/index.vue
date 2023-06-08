@@ -112,13 +112,13 @@ const labels = computed(() => {
 });
 const values = computed<number[]>(() => {
   if (model.value.value === 'RGB') {
-    return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), rgba.alpha * 100];
+    return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
   } else if (model.value.value === 'HSB') {
-    return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), hsba.value.alpha * 100];
+    return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
   } else if (model.value.value === 'HSL') {
-    return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), hsla.value.alpha * 100];
+    return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
   } else {
-    return [rgba.R, rgba.G, rgba.B, rgba.alpha * 100];
+    return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
   }
 });
 const hue = computed<number>(() => {
