@@ -54,6 +54,7 @@ export enum CtrlElementType { // 控制元素类型
     Text = 'text'
 }
 export interface Media {
+    name: string
     buff: Uint8Array
     base64: string
 }

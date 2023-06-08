@@ -39,7 +39,7 @@ async function getFile() {
                         if (evt.target?.result) {
                             base64 = evt.target.result;
                             if (buff && base64) {
-                                const media = { buff, base64 };
+                                const media = { name: res.name, buff, base64 };
                                 props.context.workspace.setImage(media);
                             }
                         }

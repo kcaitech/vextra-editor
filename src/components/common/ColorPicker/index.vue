@@ -520,6 +520,7 @@ function enter() {
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
     emit('change', color);
     update_dot_indicator_position(color);
+    update_alpha_indicator(color);
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
   } else {
     reflush.value++;

@@ -29,6 +29,15 @@ function getName(type: ShapeType, brothers: Shape[], t: Function): string {
   const repeats: number = renamebrothers.length;
   return repeats ? `${name} ${repeats + 1}` : name;
 }
+function get_image_name(brothers: Shape[], name: string) {
+  name = name.trim();
+  const renamebrothers = brothers.filter((item: Shape) => {
+    const _n: any = item.name.split(' ');
+    return item.type === ShapeType.Image && _n[0] === name;
+  });
+  const repeats: number = renamebrothers.length;
+  return repeats ? `${name} ${repeats + 1}` : name;
+}
 // 判断图形是否在可视区域内
 function isInner(context: Context, shape: Shape) {
   const pMatrix = context.workspace.matrix;
@@ -59,4 +68,4 @@ function isInner(context: Context, shape: Shape) {
     return true;
   }
 }
-export { Root, updateRoot, getName, isInner }
+export { Root, updateRoot, getName, get_image_name, isInner }

@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName } from '@/utils/content';
+import { updateRoot, getName, get_image_name } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
 import PageCommentItem from './Content/PageCommentItem.vue'
@@ -92,11 +92,22 @@ function initShape(frame: ShapeFrame) { // 根据当前编辑器的action新增�
         const editor = props.context.editor.controller();
         const name = getName(type, parent.childs, t);
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-        const media = workspace.value.getImageFromDoc();
-        if (type === ShapeType.Image && media) {
-            const shape = asyncCreator.init_media(page, (parent as GroupShape), name, frame, media);
-            selection.selectShape(shape);
-            return shape;
+        if (type === ShapeType.Image) {
+            const media = workspace.value.getImageFromDoc();
+            if (media) {
+                let _name: string | string[] = media.name.split('.');
+                if (_name.length > 1) {
+                    _name.pop();
+                    if (_name[0]) {
+                        _name = get_image_name(parent.childs, _name[0]);
+                    } else {
+                        _name = name;
+                    }
+                }
+                const shape = asyncCreator.init_media(page, (parent as GroupShape), _name as string, frame, media);
+                selection.selectShape(shape);
+                return shape;
+            }
         } else {
             const shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
             selection.selectShape(shape);
