@@ -142,7 +142,7 @@ const popoverEl = ref<HTMLDivElement>();
 const hueIndicator = ref<HTMLDivElement>();
 const alphaIndicator = ref<HTMLDivElement>();
 const popoverVisible = ref<boolean>(false);
-let eyeDropper: Eyedropper = eyeDropperInit();
+const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
 
 function triggle() {
   const workspace = props.context.workspace;
@@ -355,7 +355,8 @@ function mouseup() {
 }
 function eyedropper() {
   if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
-    eyeDropper = eyeDropperInit();
+    const { x, y, right, bottom } = props.context.workspace.root;
+    eyeDropper.updateRoot({ x, y, width: right - x, height: bottom - y });
     eyeDropper.start(t('color.esc'));
   } else { // 调用系统自带的接口
     systemEyeDropper();

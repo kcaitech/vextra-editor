@@ -82,6 +82,10 @@ export class Eyedropper {
     this.canvas = canvas;
     this.ctx = ctx;
   }
+  // 吸取之前先更新root
+  updateRoot(root: Rect) {
+    this.rect = root;
+  }
   // 开吸
   async start(tip: string) {
     try {
