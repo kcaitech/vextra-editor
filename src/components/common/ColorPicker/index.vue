@@ -86,6 +86,7 @@ const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
 const recent = ref<Color[]>([]);
 let inputTarget: HTMLInputElement;
 let handleIndex = 0;
+const reflush = ref<number>(1);
 const data = reactive<Data>({
   rgba: { R: 255, G: 0, B: 0, alpha: 1 },
   hueIndicatorAttr: { x: 0 },
@@ -111,12 +112,16 @@ const labels = computed(() => {
   return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
 const values = computed<number[]>(() => {
-  if (model.value.value === 'RGB') {
-    return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
-  } else if (model.value.value === 'HSB') {
-    return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
-  } else if (model.value.value === 'HSL') {
-    return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
+  if (reflush.value) {
+    if (model.value.value === 'RGB') {
+      return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
+    } else if (model.value.value === 'HSB') {
+      return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
+    } else if (model.value.value === 'HSL') {
+      return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
+    } else {
+      return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
+    }
   } else {
     return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
   }
@@ -137,7 +142,7 @@ const popoverEl = ref<HTMLDivElement>();
 const hueIndicator = ref<HTMLDivElement>();
 const alphaIndicator = ref<HTMLDivElement>();
 const popoverVisible = ref<boolean>(false);
-const eyeDropper: Eyedropper = eyeDropperInit();
+let eyeDropper: Eyedropper = eyeDropperInit();
 
 function triggle() {
   const workspace = props.context.workspace;
@@ -225,7 +230,25 @@ function mousemove4Hue(e: MouseEvent) {
   hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
   setRGB(hueIndicatorAttr.x);
 }
-
+function wheel(e: WheelEvent) {
+  const wheel_step = 3;
+  e.preventDefault();
+  const { shiftKey, deltaX, deltaY } = e;
+  if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
+    // todo
+  } else {
+    const delta = deltaY > 0 ? wheel_step : -wheel_step;
+    if (shiftKey) {
+      // const val = (alphaIndicatorAttr.x + delta) > (lineAttribute.length - INDICATOR_WIDTH) ? alphaIndicatorAttr.x + delta - (lineAttribute.length - INDICATOR_WIDTH) : alphaIndicatorAttr.x + delta;
+      // alphaIndicatorAttr.x = alphaIndicatorAttr.x + val;
+      // setAlpha(alphaIndicatorAttr.x);
+    } else {
+      const val = (hueIndicatorAttr.x + delta) > (lineAttribute.length - INDICATOR_WIDTH) ? hueIndicatorAttr.x + delta - (lineAttribute.length - INDICATOR_WIDTH) : hueIndicatorAttr.x + delta;
+      hueIndicatorAttr.x = val;
+      setRGB(hueIndicatorAttr.x);
+    }
+  }
+}
 // 设置透明度
 function setAlphaIndicatorPosition(e: MouseEvent) {
   if (sliders.value) {
@@ -332,6 +355,7 @@ function mouseup() {
 }
 function eyedropper() {
   if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
+    eyeDropper = eyeDropperInit();
     eyeDropper.start(t('color.esc'));
   } else { // 调用系统自带的接口
     systemEyeDropper();
@@ -496,6 +520,8 @@ function enter() {
     emit('change', color);
     update_dot_indicator_position(color);
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+  } else {
+    reflush.value++;
   }
   inputTarget.removeEventListener('keydown', keyboardWatcher);
   inputTarget.blur();
@@ -506,7 +532,7 @@ function update(R: number, G: number, B: number) {
   rgba.B = B;
 }
 function update_recent_color() {
-  const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+  const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G,), Math.round(rgba.B));
   let nVal = updateRecently(color) || JSON.stringify([]);
   nVal = JSON.parse(nVal);
   if (nVal.length) {
@@ -567,7 +593,7 @@ onUnmounted(() => {
 
 <template>
   <div class="color-block" :style="{ backgroundColor: toRGBA(color) }" ref="block" @click="triggle">
-    <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible">
+    <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel">
       <!-- 头部 -->
       <div class="header">
         <div class="color-type">{{ t('color.solid') }}</div>
@@ -643,7 +669,7 @@ onUnmounted(() => {
   width: 16px;
   height: 16px;
   border-radius: 2px;
-  box-shadow: 0 0 2px var(--theme-color) inset;
+  border: 1px solid var(--grey-dark);
   font-weight: 500;
   font-size: var(--font-default-fontsize);
 
@@ -736,8 +762,8 @@ onUnmounted(() => {
         width: 16px;
         height: 16px;
         border-radius: 2px;
-        box-shadow: 0 0 2px var(--theme-color) inset;
-        cursor: pointer;
+        border: 1px solid var(--grey-dark);
+        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
       }
     }
 
@@ -803,21 +829,6 @@ onUnmounted(() => {
             }
           }
 
-        }
-      }
-
-      >.current-background {
-        margin-left: 8px;
-        width: 16px;
-        height: 16px;
-        border-radius: 2px;
-        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
-        background-size: auto 50%;
-
-        >div {
-          width: 100%;
-          height: 100%;
-          border-radius: 2px;
         }
       }
 
@@ -941,8 +952,8 @@ onUnmounted(() => {
             width: 16px;
             height: 16px;
             border-radius: 2px;
-            box-shadow: 0 0 2px var(--theme-color) inset;
-            cursor: pointer;
+            border: 1px solid var(--grey-dark);
+            cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
           }
 
           >.block:not(:first-child) {

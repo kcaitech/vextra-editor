@@ -87,7 +87,7 @@ export const rbgaObjToRgba = (rgba: IRgba) => {
 
 // 显示颜色信息，包括放大镜和颜色值
 export const renderColorInfo = (params: any) => {
-  const { containerDom, color, colors, point } = params;
+  const { containerDom, color, colors, point, rect } = params;
   let container = containerDom;
   const pos = point;
   const n = 7;
@@ -97,10 +97,10 @@ export const renderColorInfo = (params: any) => {
     const magnifier: any = document.createElement('div');
     container = magnifier;
   }
-  if (pos.x + size + 25 > window.innerWidth) {
-    pos.x -= size + 25;
+  if (pos.x + size + 15 > (rect.x + rect.width)) {
+    pos.x -= size + 15;
   }
-  if (pos.y + size + 40 > window.innerHeight) {
+  if (pos.y + size + 40 > (rect.y + rect.height)) {
     pos.y -= size + 40;
   }
   container.style = `
@@ -326,7 +326,7 @@ function parseColorForStorage(color: Color): string {
 export function parseColorFormStorage(c: string): Color {
   let _c: any[] = c.split(split);
   _c = _c.map(i => Number(i));
-  return new Color(_c[0], _c[1], _c[2], _c[3]);
+  return new Color(_c[0], Math.round(_c[1]), Math.round(_c[2]), Math.round(_c[3]));
 }
 function setLocalStorageForColors(si: string[]) {
   localStorage.setItem(key_storage, JSON.stringify(si));
