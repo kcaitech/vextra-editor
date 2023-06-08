@@ -572,6 +572,11 @@ function init() {
     }
   }
   update_dot_indicator_position(props.color);
+  update_alpha_indicator(props.color);
+}
+function update_alpha_indicator(color: Color) {
+  const { alpha } = color;
+  alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
 }
 function selectionWatcher(t: any) {
   if (t === Selection.CHANGE_SHAPE) {
