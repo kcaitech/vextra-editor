@@ -401,7 +401,7 @@ export function validate(model: Model, field: number, value: number): boolean {
         result = false;
       }
     }
-  } else if (model === "HSB") {
+  } else if (model === "HSB" || model === "HSL") {
     if (field === 0) {
       if (value > 360 || value < 0) result = false;
     } else {
@@ -513,18 +513,18 @@ export function RGB2HSL(color: Color): HSL {
 export function HSL2RGB(hsl: HSL): RGB {
   const { h, s, l } = hsl;
   const C = (1 - Math.abs(2 * l - 1)) * s;
-  const hPrime = h / 60;
-  const X = C * (1 - Math.abs(hPrime % 2 - 1));
+  const h_prime = h / 60;
+  const X = C * (1 - Math.abs(h_prime % 2 - 1));
   const m = l - C / 2;
-  if (hPrime <= 1) {
+  if (h_prime <= 1) {
     return withLight(C, X, 0)
-  } else if (hPrime <= 2) {
+  } else if (h_prime <= 2) {
     return withLight(X, C, 0)
-  } else if (hPrime <= 3) {
+  } else if (h_prime <= 3) {
     return withLight(0, C, X)
-  } else if (hPrime <= 4) {
+  } else if (h_prime <= 4) {
     return withLight(0, X, C)
-  } else if (hPrime <= 5) {
+  } else if (h_prime <= 5) {
     return withLight(X, 0, C)
   } else {
     return withLight(C, 0, X)

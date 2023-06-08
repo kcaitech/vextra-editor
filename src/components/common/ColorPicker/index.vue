@@ -267,10 +267,8 @@ function setDotPosition(e: MouseEvent) {
     saturationELBounding.right = right;
     saturationELBounding.bottom = bottom;
     const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
-    rgba.R = R;
-    rgba.G = G;
-    rgba.B = B;
-    const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+    update(R, G, B);
+    const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
     emit('change', color);
     document.addEventListener('mousemove', mousemove4Dot);
     document.addEventListener('mouseup', mouseup);
@@ -416,7 +414,7 @@ function keyboardWatcher(e: KeyboardEvent) {
       } else if (handleIndex === 2) {
         rgba.B = Number(v) + 1;
       }
-      const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+      const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
       emit('change', color);
       update_dot_indicator_position(color);
       props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
@@ -435,7 +433,7 @@ function keyboardWatcher(e: KeyboardEvent) {
       } else if (handleIndex === 2) {
         rgba.B = Number(v) - 1;
       }
-      const color = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+      const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
       emit('change', color);
       update_dot_indicator_position(color);
       props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
@@ -573,7 +571,9 @@ onUnmounted(() => {
       <!-- 头部 -->
       <div class="header">
         <div class="color-type">{{ t('color.solid') }}</div>
-        <div @click="removeColorPicker" class="close">X</div>
+        <div @click="removeColorPicker" class="close">
+          <svg-icon icon-class="close"></svg-icon>
+        </div>
       </div>
       <!-- 饱和度 -->
       <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
@@ -681,6 +681,13 @@ onUnmounted(() => {
         right: 8px;
         top: 8px;
         user-select: none;
+        display: flex;
+        align-items: center;
+
+        >svg {
+          width: 85%;
+          height: 85%;
+        }
       }
     }
 
