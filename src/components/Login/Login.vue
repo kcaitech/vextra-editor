@@ -7,7 +7,7 @@ import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
 import avatar from '@/assets/pd-logo-svg.svg';
-import { login } from '@/assets/lang/en'
+import { User } from '@/context/user'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -31,7 +31,9 @@ function onmessage(e: any) {
 async function getlogin(code: string, invite_code: string = '', id: string = '') {
     const tips: any = document.querySelector('#login_container')
     user_api.PostLogin({ code: code, invite_code: invite_code, id: id }).then((linfo: any) => {
-        if (linfo) {
+        if (linfo) {     
+            const user = new User(linfo.data);
+            (window as any).skuser = user;
             if (linfo.code === 0 && linfo.data.token !== '') {
                 localStorage.setItem('token', linfo.data.token)
                 localStorage.setItem('avatar', linfo.data.avatar)
