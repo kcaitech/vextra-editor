@@ -19,6 +19,7 @@ import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
 import avatar from '@/assets/pd-logo-svg.svg';
+import { ref } from 'vue';
 interface Emits {
     (e: 'settitle', title: string): void;
 }
@@ -51,14 +52,47 @@ function newFile() {
 
 function Setindex(a: any, b: any) {
     emits('settitle', b)
+    sessionStorage.setItem('index', a)
 }
+const x = sessionStorage.getItem('index')
+
+window.addEventListener('popstate', function () {
+  if(location.hash.toLowerCase()=='#/apphome/starfile'){
+    sessionStorage.setItem('index', '2')
+    sessionStorage.setItem('title', t('home.star_file'))
+    location.reload()
+  }
+  if(location.hash.toLowerCase()=='#/apphome/recently'){
+    sessionStorage.setItem('index', '1')
+    sessionStorage.setItem('title',t('home.recently_opened'))
+    location.reload()
+  }
+  if(location.hash.toLowerCase()=='#/apphome/meshare'){
+    sessionStorage.setItem('index', '3')
+    sessionStorage.setItem('title', t('home.file_shared'))
+    location.reload()
+  }
+  if(location.hash.toLowerCase()=='#/apphome/shareme'){
+    sessionStorage.setItem('index', '4')
+    sessionStorage.setItem('title', t('home.shared_file_received'))
+    location.reload()
+  }
+  if(location.hash.toLowerCase()=='#/apphome/recyclebin'){
+    sessionStorage.setItem('index', '5')
+    sessionStorage.setItem('title', t('home.recycling_station'))
+    location.reload()
+  }
+});
+
+
+
 </script>
 
 <template>
     <el-row class="tac">
         <el-col :span="12">
             <div class="logo">
-                <img :src="avatar" alt="ProtoDesign" />
+                <div style="width: 108px;height: 108px;"><img :src="avatar" alt="ProtoDesign" /></div>
                 <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
             </div>
             <div class="new">
@@ -69,7 +103,8 @@ function Setindex(a: any, b: any) {
                         <Folder />
                     </el-icon><span>{{ t('home.open_local_file') }}</span></button>
             </div>
-            <el-menu active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
+            <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
+                text-color="#000000">
                 <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1, t('home.recently_opened'))">
                         <el-icon>
                             <Clock />

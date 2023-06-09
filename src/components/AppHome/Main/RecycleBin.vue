@@ -1,31 +1,39 @@
 <template>
     <!-- 表格布局 -->
-    <el-table :data="GetrecycleList" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容">
+    <el-table :data="GetrecycleList" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
+        @row-contextmenu="rightmenu">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">
                 <el-icon :size=" 20 ">
-                    <el-tooltip :content="t('home.restore')" :show-after="1000" :hide-after="0">
+                    <el-tooltip :content=" t('home.restore') " :show-after=" 1000 " :hide-after=" 0 ">
                         <svg-icon class="svg restore" style="width: 20px; height: 20px;" icon-class="restore"
                             @click.stop.prevent=" Restorefile(scope.$index) "></svg-icon>
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip :content="t('home.completely_delete')" :show-after="1000" :hide-after="0">
+                    <el-tooltip :content=" t('home.completely_delete') " :show-after=" 1000 " :hide-after=" 0 ">
                         <Delete @click.stop.prevent=" Deletefile(scope.$index) " />
                     </el-tooltip>
                 </el-icon>&nbsp;
             </template>
         </el-table-column>
     </el-table>
+    <!-- 右键菜单 -->
+    <div class="rightmenu" ref="menu">
+        <ul>
+            <li style="margin-top: 10px;" @click=" rRestorefile ">{{t('homerightmenu.restore')}}</li>
+            <li style="margin-bottom: 10px;" @click=" rDeletefile ">{{t('homerightmenu.completely_delete')}}</li>
+        </ul>
+    </div>
     <!-- 确认删除弹框 -->
-    <el-dialog v-model=" dialogVisible " :title="t('home.completely_delete')" width="500" align-center>
+    <el-dialog v-model=" dialogVisible " :title=" t('home.completely_delete') " width="500" align-center>
         <span>{{t('home.delete_tips')}}</span>
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" @click=" Qdeletefile " style="background-color: none;">
+                <el-button type="primary" @click=" Qdeletefile(fileid) " style="background-color: none;">
                     {{ t('home.delete_ok') }}
                 </el-button>
                 <el-button @click=" dialogVisible = false ">{{t('home.cancel')}}</el-button>
@@ -37,15 +45,16 @@
 import * as user_api from '@/apis/users'
 import { Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { router } from '@/router'
 const { t } = useI18n()
 
 const GetrecycleList = ref<any[]>([])
 const isLoading = ref(false)
 const dialogVisible = ref(false)
-let fileid = 0
+const documentId = ref()
+const menu = ref<HTMLElement>()
+const fileid = ref('')
 
 //获取回收站文件列表
 async function GetrecycleLists() {
@@ -96,35 +105,117 @@ const Restorefile = async (index: number) => {
 //删除对应文件
 const Deletefile = (index: number) => {
     dialogVisible.value = true
-    fileid = index
+    const { document: { id } } = GetrecycleList.value[index]
+    fileid.value = id
 }
 
-const Qdeletefile = async () => {
-    try {
-        const { document: { id } } = GetrecycleList.value[fileid]
-    const { code } = await user_api.DeleteFile({ doc_id: id })
+const rightmenu = (row: any, column: any, event: any) => {
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const rightmenu: any = document.querySelector('.rightmenu')
+    const top = event.pageY
+    const left = event.pageX
+    if (event.target.tagName == 'DIV') {
+        rightmenu.style.left = left + 200 > viewportWidth ? (viewportWidth - 200) + "px" : left + 'px'
+        rightmenu.style.top = top + 291 > viewportHeight ? (viewportHeight - 291) + 'px' : top + 'px'
+        rightmenu.style.display = 'block'
+    }
+    documentId.value = row
+}
+
+//还原对应文件
+const rRestorefile = async () => {
+    const { document: { id } } = documentId.value
+    const { code } = await user_api.RecoverFile({ doc_id: id })
     if (code === 0) {
-        ElMessage.success(t('home.delete_file_ok'))
-        dialogVisible.value = false
+        ElMessage.success(t('home.restore_ok'))
         GetrecycleLists()
     } else {
-        dialogVisible.value = false
-        ElMessage.error(t('home.delete_file_no'))
+        ElMessage.error(t('home.restore_no'))
     }
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+//删除对应文件
+const rDeletefile = () => {
+    dialogVisible.value = true
+    const { document: { id } } = documentId.value
+    fileid.value = id
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+const Qdeletefile = async (id:string) => {
+    try {
+        const { code } = await user_api.DeleteFile({ doc_id: id })
+        if (code === 0) {
+            ElMessage.success(t('home.delete_file_ok'))
+            dialogVisible.value = false
+            GetrecycleLists()
+        } else {
+            dialogVisible.value = false
+            ElMessage.error(t('home.delete_file_no'))
+        }
     } catch (error) {
         dialogVisible.value = false
         ElMessage.error(t('other_tips'))
     }
-    
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+    if (event.target instanceof Element && event.target.closest('.rightmenu') == null) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+    }
 }
 
 onMounted(() => {
     GetrecycleLists()
+    document.addEventListener('mousedown', handleClickOutside)
 
+})
+
+onUnmounted(() => {
+    document.removeEventListener('mousedown', handleClickOutside)
 })
 </script>
 
 <style lang="scss" scoped>
+.rightmenu {
+    display: none;
+    min-width: 200px;
+    min-height: 100px;
+    z-index: 9999;
+    position: absolute;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+
+    ul {
+        margin: 0;
+        padding: 0 10px;
+
+        li {
+            display: block;
+            padding: 10px 10px;
+            font-size: 14px;
+            text-decoration: none;
+            color: rgba(13, 13, 13, 0.9);
+            border-radius: 2px;
+            cursor: pointer;
+
+            &:hover {
+                background-color: rgba(192, 192, 192, 0.3);
+            }
+        }
+
+    }
+}
+
 :deep(.el-button) {
     background: none;
 

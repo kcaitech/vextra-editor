@@ -11,11 +11,11 @@ router.beforeEach((to, from, next) => {
             next(); // 继续路由跳转
         }
     } else {
-        if (whiteList.find(function (item) {
+        if (whiteList.find(function (item) { 
             return item === to.path
         })) {
             next()
-        } else {
+        } else {       
             next('/login')
         }
     }
