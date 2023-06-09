@@ -82,6 +82,9 @@ export class WorkSpace extends Watchable(Object) {
     static DOCUMENT_SAVE = 16;
     static SHUTDOWN_COMMENT = 17;
     static SELECT_LIST_TAB = 18;
+    static CTRL_DISAPPEAR = 19;
+    static CTRL_APPEAR_IMMEDIATELY = 20;
+    static CTRL_APPEAR = 21;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -374,17 +377,16 @@ export class WorkSpace extends Watchable(Object) {
             repo.canUndo() && repo.undo();
             const selection = context.selection;
             const shapes = context.selection.selectedShapes;
-            const flat = context.selection.selectedPage!.flatShapes;
-            if (shapes.length) {
-                if (flat.length) {
+            const page = context.selection.selectedPage;
+            if (page) {
+                const flat = page.shapes;
+                if (shapes.length) {
                     for (let i = 0; i < shapes.length; i++) {
                         const item = shapes[i];
-                        if (!flat.find(i => i.id === item.id)) {
+                        if (!flat.get(item.id)) {
                             selection.unSelectShape(item);
                         }
                     }
-                } else {
-                    selection.resetSelectShapes();
                 }
             }
         } else if ((ctrl || meta) && shift) {

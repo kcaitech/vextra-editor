@@ -25,7 +25,7 @@ const workspace = computed(() => props.context.workspace);
 const visible = ref<boolean>(true);
 let controllerStyle: string;
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
-
+let timer_to_show: any;
 // #region 绘制控件
 const points = computed<Point[]>(() => {
     const offset = 16;
@@ -74,6 +74,21 @@ function workspaceUpdate(t?: number) {
         } else {
             visible.value = false;
         }
+    } else if (t === WorkSpace.CTRL_DISAPPEAR) {
+        visible.value = false;
+    } else if (t === WorkSpace.CTRL_APPEAR_IMMEDIATELY) {
+        visible.value = true;
+        clearTimeout(timer_to_show);
+        timer_to_show = null;
+    } else if (t === WorkSpace.CTRL_APPEAR) {
+        if (timer_to_show) {
+            clearTimeout(timer_to_show);
+        }
+        timer_to_show = setTimeout(() => {
+            visible.value = true;
+            clearTimeout(timer_to_show);
+            timer_to_show = null;
+        }, 600);
     }
 }
 function mousedown(e: MouseEvent) {

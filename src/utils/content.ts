@@ -27,7 +27,7 @@ function getName(type: ShapeType, brothers: Shape[], t: Function): string {
   const name = t(`shape.${type}`);
   const renamebrothers = brothers.filter((item: Shape) => item.type === type);
   const repeats: number = renamebrothers.length;
-  return (repeats && brothers[0]) ? `${name} ${repeats + 1}` : name;
+  return repeats ? `${name} ${repeats + 1}` : name;
 }
 // 判断图形是否在可视区域内
 function isInner(context: Context, shape: Shape) {

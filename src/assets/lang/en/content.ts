@@ -12,5 +12,6 @@ shape[ShapeType.Rectangle] = 'Rectangle';
 
 export const color = {
     solid: 'Solid',
-    esc: 'Press ESC to exit'
+    esc: 'Press ESC to exit',
+    recently: 'Recently used'
 }

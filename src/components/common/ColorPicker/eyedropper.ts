@@ -1,5 +1,6 @@
 
 // 吸管🍉，专吸颜色
+import { pipette } from '@/utils/cursor';
 import domtoimage from './dom-to-image.js';
 import { drawTooltip, getCanvas, getCanvasRectColor, loadImage, rbgaObjToHex, renderColorInfo } from './utils';
 export interface Point {
@@ -72,7 +73,7 @@ export class Eyedropper {
            left: ${x}px;
            top: ${y}px;
            z-index: 10000;
-           cursor: pointer;
+           cursor: -webkit-image-set(url(${pipette}) 1.5x) ${4} ${28}, auto;
            width: ${width}px;
            height: ${height}px;
          `,
@@ -127,6 +128,7 @@ export class Eyedropper {
     const point = { x: e.pageX + 15, y: e.pageY + 15 };
     const colorContainer = renderColorInfo({
       containerDom: this.colorContainer,
+      rect: this.rect,
       color,
       colors,
       point,
