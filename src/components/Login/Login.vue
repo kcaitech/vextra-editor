@@ -7,6 +7,7 @@ import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
 import avatar from '@/assets/pd-logo-svg.svg';
+import { login } from '@/assets/lang/en'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -15,14 +16,16 @@ const codevalue = ref('')
 const failed = ref<boolean>(false)
 const loginshow = ref<boolean>(true)
 const affirm = ref()
+const userid = ref('')
+const Wxcode = ref('')
 
 function onmessage(e: any) {
     if (e.data?.type !== "GetWxCode") {
         return
     }
     isLoading.value = true
-    let code = e.data.code
-    getlogin(code)
+    Wxcode.value = e.data.code
+    getlogin(Wxcode.value)
 }
 
 async function getlogin(code: string, invite_code: string = '', id: string = '') {
@@ -37,20 +40,11 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 isLoading.value = false
                 router.push({ name: 'apphome' })
             } else if (linfo.code === 400) {
+                userid.value = linfo.data.id
                 loginshow.value = false
                 nextTick(() => {
                     codeinput.value.focus()
                     codevalue.value = ''
-                    affirm.value.addEventListener('click', function clickaffirm() {
-                        if (codevalue.value != '') {
-                            if (linfo.code === 400) {
-                                ElMessage.closeAll("error")
-                                ElMessage.error({ duration: 1500, message: linfo.message })
-                            }
-                            getlogin(code, codevalue.value, linfo.data.id)
-                            affirm.value.removeEventListener('click', clickaffirm)
-                        }
-                    })
                 })
             }
         }
@@ -66,6 +60,40 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 })
             })
 
+        }
+
+    })
+}
+
+function clickaffirm() {
+    user_api.PostLogin({ code: Wxcode.value, invite_code: codevalue.value, id: userid.value }).then((result: any) => {
+        if (result) {
+            if (result.code === 0 && result.data.token !== '') {
+                localStorage.setItem('token', result.data.token)
+                localStorage.setItem('avatar', result.data.avatar)
+                localStorage.setItem('nickname', result.data.nickname)
+                localStorage.setItem('userId', result.data.id)
+                isLoading.value = false
+                router.push({ name: 'apphome' })
+            } else if (result.code === 400) {
+                codeinput.value.focus()
+                codevalue.value = ''
+                ElMessage.error({ duration: 1500, message: result.message })
+            }
+        }
+    }).catch((result: any) => {
+        if (result.data.code === -1) {
+            loginshow.value = true
+            nextTick(() => {
+                ElMessage.error({ duration: 1500, message: result.data.message })
+                isLoading.value = true
+                wxcode()
+                const login: any = document.querySelector('iframe')
+                login.addEventListener('load', function () {
+                    isLoading.value = false
+                })
+                login.removeEventListener('load', function () { })
+            })
         }
 
     })
@@ -121,7 +149,8 @@ onUnmounted(() => {
             <img :src="avatar" alt="ProtoDesign" />
             <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
             <input ref="codeinput" v-model="codevalue" maxlength="8" />
-            <button class="affirm" ref="affirm" :disabled="codevalue == '' ? true : false">{{ t('percenter.affirm')
+            <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="codevalue == '' ? true : false">{{
+                t('percenter.affirm')
             }}</button>
         </div>
     </div>
@@ -182,7 +211,7 @@ onUnmounted(() => {
     }
 
     input {
-        width: 20%;
+        min-width: 20%;
         height: 60px;
         font-size: 48px;
         color: rgba(0, 0, 0, 0.8);

@@ -1,8 +1,8 @@
 
 <template>
     <!-- 表格布局 -->
-    <el-table :data="getDoucmentList" max-height=84vh style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-        @row-dblclick="toDocument" @row-contextmenu="rightmenu" highlight-current-row>
+    <el-table :data="getDoucmentList" height=83vh style="width: 100%" v-loading="isLoading" empty-text="没有内容"
+        @row-dblclick="toDocument" @row-contextmenu="rightmenu">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -36,12 +36,15 @@
             </template>
         </el-table-column>
     </el-table>
+    <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
             <li style="margin-top: 10px;" @click=" openDocument ">打开</li>
             <li @click=" openNewWindowDocument ">在新标签页打开</li>
+            <div></div>
             <li @click.stop=" rSharefile ">分享</li>
             <li @click=" rStarfile " ref="isshow">标星</li>
+            <div></div>
             <li @click=" rrename ">重命名</li>
             <li>创建文件副本</li>
             <li style="margin-bottom: 10px;" @click=" rDeletefile ">删除文件</li>
@@ -49,10 +52,11 @@
     </div>
     <!-- 重命名弹框 -->
     <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
-        <input class="newname" type="text" :value=" newname " ref="renameinput" />
+        <input class="newname" type="text" v-model=" newname " ref="renameinput" />
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click=" rename1 ">
+                <el-button type="primary" style="background-color: none;" @click=" rename1 "
+                    :disabled=" newname == '' ? true : false ">
                     {{ t('home.rename_ok') }}
                 </el-button>
                 <el-button @click=" dialogVisible = false ">{{t('home.cancel')}}</el-button>
@@ -70,10 +74,11 @@ import * as share_api from "@/apis/share"
 import * as user_api from '@/apis/users'
 import { Share, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, Ref, nextTick } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, computed } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -88,23 +93,26 @@ const menu = ref<HTMLElement>()
 const dialogVisible = ref(false)
 const renameinput = ref()
 const newname = ref()
-const disabled = ref(false)
 const isshow = ref<HTMLElement>()
 
 //获取服务器我的文件列表
 async function getDoucment() {
     isLoading.value = true
-    const { data } = await share_api.getDoucmentListAPI()
-    if (data == null) {
-        ElMessage.error(t('home.failed_list_tips'))
-    } else {
-        for (let i = 0; i < data.length; i++) {
-            let { document: { size }, document_access_record: { last_access_time } } = data[i]
-            data[i].document.size = sizeTostr(size)
-            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+    try {
+        const { data } = await share_api.getDoucmentListAPI() as any
+        if (data == null) {
+            ElMessage.error(t('home.failed_list_tips'))
+        } else {
+            for (let i = 0; i < data.length; i++) {
+                let { document: { size }, document_access_record: { last_access_time } } = data[i]
+                data[i].document.size = sizeTostr(size)
+                data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+            }
         }
+        getDoucmentList.value = data
+    } catch (error) {
+        ElMessage.error("assaaa")
     }
-    getDoucmentList.value = data
     isLoading.value = false
 }
 
@@ -213,19 +221,20 @@ const rrename = () => {
 }
 
 const rename1 = async () => {
-    const { document: { id } } = documentId.value
+    const { document: { id, name } } = documentId.value
     newname.value = renameinput.value.value
-    try {
-        const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
-        if (code === 0) {
-            ElMessage.success(t('percenter.successtips'))
-            getDoucment()
-        } else {
-            ElMessage.error(t('percenter.errortips1'))
+    if (newname.value != name)
+        try {
+            const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
+            if (code === 0) {
+                ElMessage.success(t('percenter.successtips'))
+                getDoucment()
+            } else {
+                ElMessage.error(t('percenter.errortips1'))
+            }
+        } catch (error) {
+            ElMessage.error(t('home.other_tips'))
         }
-    } catch (error) {
-        ElMessage.error(t('home.other_tips'))
-    }
     dialogVisible.value = false
 }
 
@@ -284,7 +293,6 @@ const openNewWindowDocument = () => {
 }
 
 const rightmenu = (row: any, column: any, event: any) => {
-
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -295,14 +303,14 @@ const rightmenu = (row: any, column: any, event: any) => {
         rightmenu.style.top = top + 291 > viewportHeight ? (viewportHeight - 291) + 'px' : top + 'px'
         rightmenu.style.display = 'block'
     }
-    nextTick(() => {   
-        if (isshow.value){
-            if(row.document_favorites.is_favorite == true){
+    nextTick(() => {
+        if (isshow.value) {
+            if (row.document_favorites.is_favorite == true) {
                 isshow.value.innerHTML = '取消标星'
-            }else{
+            } else {
                 isshow.value.innerHTML = '标星'
             }
-        }    
+        }
     })
     documentId.value = row
 }
@@ -359,6 +367,11 @@ function emit(arg0: string) {
     &:hover {
         background: rgba(80, 80, 255, 0.884);
     }
+
+    &[disabled] {
+        background: rgba(195, 195, 246, 0.884);
+        border: 1px rgba(195, 195, 246, 0.884) solid;
+    }
 }
 
 .el-button+.el-button {
@@ -397,6 +410,13 @@ function emit(arg0: string) {
                 background-color: rgba(192, 192, 192, 0.3);
             }
         }
+
+        div {
+            height: 1px;
+            width: auto;
+            background: rgba(192, 192, 192, 0.3);
+        }
+
 
     }
 }

@@ -259,9 +259,6 @@ const getDocumentInfo = async () => {
             ElMessage({ message: `${t('apply.link_not')}` });
             router.push('/');
         }
-        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
-        // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限   
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -269,7 +266,12 @@ const getDocumentInfo = async () => {
                     id: route.query.id
                 }
             })
+            return
         }
+        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+        // documentKey.value = data
+        //获取文档类型是否为私有文档且有无权限   
+        
         const repo = new Repository();
         const importDocumentParams = {
             endPoint: FILE_DOWNLOAD,

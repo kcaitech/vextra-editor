@@ -26,15 +26,15 @@ import { User } from '@/context/user'
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
-const title = ref<string>(t('home.recently_opened'));
+const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 const getUserInfo = async () => {
   const result = await user_api.GetInfo()
   const user = new User(result.data);
   (window as any).skuser = user;
 }
-
 function setTitle(t: string) {
   title.value = t;
+  sessionStorage.setItem('title', title.value)
 }
 
 onMounted(async () => {

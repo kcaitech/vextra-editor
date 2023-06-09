@@ -1,7 +1,7 @@
 <template>
     <!-- 表格布局 -->
     <el-table :data="Getfavorites" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-    @row-dblclick="toDocument">
+        @row-dblclick="toDocument" @row-contextmenu="rightmenu">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
@@ -29,14 +29,40 @@
             </template>
         </el-table-column>
     </el-table>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight"></FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <!-- 右键菜单 -->
+    <div class="rightmenu" ref="menu">
+        <ul>
+            <li style="margin-top: 10px;" @click=" openDocument ">打开</li>
+            <li @click=" openNewWindowDocument ">在新标签页打开</li>
+            <div></div>
+            <li @click.stop=" rSharefile ">分享</li>
+            <li @click=" rStarfile " ref="isshow">标星</li>
+            <div v-if="showrenname"></div>
+            <li style="margin-bottom: 10px;" @click=" rrename " v-if="showrenname">重命名</li>
+        </ul>
+    </div>
+    <!-- 重命名弹框 -->
+    <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
+        <input class="newname" type="text" :value=" newname " ref="renameinput" />
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" style="background-color: none;" @click=" rename1 ">
+                    {{ t('home.rename_ok') }}
+                </el-button>
+                <el-button @click=" dialogVisible = false ">{{t('home.cancel')}}</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
+        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
+    </FileShare>
+    <div v-if=" showFileShare " class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { Share, Remove } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { pushScopeId, reactive, ref, onMounted, onUnmounted } from 'vue'
+import { pushScopeId, reactive, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import * as share_api from "@/apis/share"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
@@ -50,6 +76,13 @@ const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const selectValue = ref(1)
+const isshow = ref<HTMLElement>()
+const documentId = ref()
+const menu = ref<HTMLElement>()
+const dialogVisible = ref(false)
+const newname = ref()
+const renameinput = ref()
+const showrenname=ref<boolean>(true)
 
 async function getUserdata() {
     // loading
@@ -110,14 +143,137 @@ const toDocument = (row: any) => {
     })
 }
 const Sharefile = (scope: any) => {
-    if(showFileShare.value) {
-    showFileShare.value = false
-    return
-  }
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
     docId.value = scope.row.document.id
-    selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type  
-  showFileShare.value = true
+    selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
+    showFileShare.value = true
 }
+
+const rightmenu = (row: any, column: any, event: any) => {
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const rightmenu: any = document.querySelector('.rightmenu')
+    const top = event.pageY
+    const left = event.pageX
+    if (event.target.tagName == 'DIV') {
+        rightmenu.style.left = left + 200 > viewportWidth ? (viewportWidth - 200) + "px" : left + 'px'
+        rightmenu.style.top = top + 291 > viewportHeight ? (viewportHeight - 291) + 'px' : top + 'px'
+        rightmenu.style.display = 'block'
+    }
+    nextTick(() => {
+        if (isshow.value) {
+            if (row.document_favorites.is_favorite == true) {
+                isshow.value.innerHTML = '取消标星'
+            } else {
+                isshow.value.innerHTML = '标星'
+            }
+        }
+        if (row.document.user_id != localStorage.getItem('userId')) {
+            showrenname.value = false
+        } else {
+            showrenname.value = true
+        }
+    })
+    documentId.value = row
+}
+
+const openDocument = () => {
+    router.push({
+        name: 'document',
+        query: {
+            id: documentId.value.document.id
+        }
+    })
+}
+
+const openNewWindowDocument = () => {
+    const Name = 'document'
+    const query = { id: documentId.value.document.id }
+    const url = router.resolve({ name: Name, query: query }).href
+    window.open(url, '_blank')
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+const rSharefile = () => {
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = documentId.value.document.id
+    selectValue.value = documentId.value.document.doc_type !== 0 ? documentId.value.document.doc_type : documentId.value.document.doc_type;
+    showFileShare.value = true;
+}
+
+const rStarfile = async () => {
+    documentId.value.document_favorites.is_favorite = documentId.value.document_favorites.is_favorite === true ? false : true
+    const doc_id = documentId.value.document.id
+    if (documentId.value.document_favorites.is_favorite == true) {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
+        if (code === 0) {
+            ElMessage.success(t('home.star_ok'))
+        }
+    } else {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
+        if (code === 0) {
+            ElMessage.success(t('home.star_cancel'))
+        }
+    }
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+const rrename = () => {
+    newname.value = documentId.value.document.name
+    if (dialogVisible.value) {
+        dialogVisible.value = false
+    } else {
+        dialogVisible.value = true
+        setTimeout(() => {
+            renameinput.value.focus()
+            renameinput.value.select()
+        }, 100)
+    }
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+
+}
+
+const rename1 = async () => {
+    const { document: { id } } = documentId.value
+    newname.value = renameinput.value.value
+    try {
+        const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
+        if (code === 0) {
+            ElMessage.success(t('percenter.successtips'))
+            getUserdata()
+        } else {
+            ElMessage.error(t('percenter.errortips1'))
+        }
+    } catch (error) {
+        ElMessage.error(t('home.other_tips'))
+    }
+    dialogVisible.value = false
+}
+
+
+const handleClickOutside = (event: MouseEvent) => {
+    if (event.target instanceof Element && event.target.closest('.rightmenu') == null) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+    }
+}
+
 const closeShare = () => {
     showFileShare.value = false
 }
@@ -128,19 +284,93 @@ const onSwitch = (state: boolean) => {
     shareSwitch.value = state
 }
 const onSelectType = (type: number) => {
-  selectValue.value = type
+    selectValue.value = type
 }
 
 onMounted(() => {
     getUserdata()
     getPageHeight()
-    window.addEventListener('resize', getPageHeight);
+    window.addEventListener('resize', getPageHeight)
+    document.addEventListener('mousedown', handleClickOutside)
 })
 onUnmounted(() => {
-    window.removeEventListener('resize', getPageHeight);
+    window.removeEventListener('resize', getPageHeight)
+    document.removeEventListener('mousedown', handleClickOutside)
 })
 </script>
 <style lang="scss" scoped>
+.newname {
+    outline: none;
+    height: 30px;
+    width: 460px;
+    box-sizing: border-box;
+
+    &:hover {
+        border-radius: 2px;
+        border: 2px rgb(69, 69, 255) solid;
+        border-color: rgb(69, 69, 255);
+    }
+
+    &:focus {
+        border-radius: 2px;
+        border: 2px rgb(69, 69, 255) solid;
+        border-color: rgb(69, 69, 255);
+    }
+}
+
+.el-button--primary {
+    background: rgb(69, 69, 255);
+    color: white;
+    border-color: rgb(69, 69, 255);
+
+    &:hover {
+        background: rgba(80, 80, 255, 0.884);
+    }
+}
+
+.el-button+.el-button {
+    background: rgb(255, 255, 255);
+    color: black;
+
+    &:hover {
+        background: rgba(208, 208, 208, 0.167);
+    }
+}
+.rightmenu {
+    display: none;
+    min-width: 200px;
+    min-height: 100px;
+    z-index: 9999;
+    position: absolute;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+
+    ul {
+        margin: 0;
+        padding: 0 10px;
+
+        li {
+            display: block;
+            padding: 10px 10px;
+            font-size: 14px;
+            text-decoration: none;
+            color: rgba(13, 13, 13, 0.9);
+            border-radius: 2px;
+            cursor: pointer;
+
+            &:hover {
+                background-color: rgba(192, 192, 192, 0.3);
+            }
+        }
+        div {
+            height: 1px;
+            width: auto;
+            background: rgba(192, 192, 192, 0.3);
+        }
+
+    }
+}
 .el-icon {
     display: none;
 

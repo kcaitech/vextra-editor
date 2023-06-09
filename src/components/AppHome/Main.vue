@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import {} from 'vue';
 interface Props {
     title: string
 }
+
 const props = defineProps<Props>();
+
 </script>
 
 <template>

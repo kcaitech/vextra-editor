@@ -1,0 +1,1 @@
+delete from user where nickname="Ice.Z";
