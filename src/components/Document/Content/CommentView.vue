@@ -19,6 +19,9 @@ const props = defineProps<{
     commentInfo: any
     index: number
     documentCommentList: any[]
+    length: number
+    documentComment: any[]
+    reply:boolean
 }>()
 const emit = defineEmits<{
     (e:'close', event?: MouseEvent): void
@@ -27,6 +30,8 @@ const emit = defineEmits<{
     (e: 'recover', index?: number, id?: string): void
     (e: 'editComment', index: number, text: string): void
     (e: 'editCommentChild', index: number, text: string): void
+    (e: 'previousArticle', index: number): void
+    (e: 'nextArticle', index: number): void
 }>()
 interface Comment {
     parent_id: string
@@ -55,6 +60,12 @@ const scrollMaxHeight = ref(0)
 const close = (e: MouseEvent) => {
     emit('close', e)
 }
+const disablePrevent = computed(() => {
+    return props.index === 0
+})
+const disableNext = computed(() => {
+    return props.index === props.length - 1
+})
 const commentData = ref<Comment>({
     parent_id: '',
     root_id: '',
@@ -180,13 +191,17 @@ function workspaceUpdate(t?: number) {
 }
 
 const previousArticle = () => {
-    console.log('上一条评论');
-    
+    if(props.reply) {
+        const index = props.index
+        if(index === 0) return
+        emit('previousArticle', index)
+    }
 }
 
 const nextArticle = () => {
-    console.log('下一条评论');
-    
+    const index = props.index
+    if(index === props.length - 1) return
+    emit('nextArticle', index)
 }
 
 const addComment = () => {
@@ -303,9 +318,9 @@ onUnmounted(() => {
     :class="{ popup_left: offside, popup_right: !offside, 'shake': isShaking }">
         <div class="popup-heard">
             <div class="button-shift">
-                <el-button plain class="custom-button" @click="previousArticle">{{t('comment.last')}}</el-button>
+                <el-button plain class="custom-button" :style="{ opacity: disablePrevent ? '0.2': '1' }" @click="previousArticle">{{t('comment.last')}}</el-button>
                 <div class="button-icon"></div>
-                <el-button plain class="custom-button" @click="nextArticle">{{t('comment.next')}}</el-button>
+                <el-button plain class="custom-button" :style="{ opacity: disableNext ? '0.2': '1' }" @click="nextArticle">{{t('comment.next')}}</el-button>
             </div>
             <div class="comment-commands">
                 <el-button-group class="ml-4">

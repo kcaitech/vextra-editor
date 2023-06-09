@@ -534,6 +534,7 @@ const documentCommentList = ref<any[]>([])
 const route = useRoute()
 const docID = (route.query.id as string)
 const posi = ref({ x: 0, y: 0 });
+const commentsLength = ref(0)
 //添加评论
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
@@ -714,7 +715,8 @@ const getDocumentComment = async(id :string) => {
        data.forEach((obj: {childern: any[]}) => {
         obj.childern = []
        })
-       documentCommentList.value = list2Tree(data, '')  
+       documentCommentList.value = list2Tree(data, '')
+       commentsLength.value = documentCommentList.value.length
     }catch(err) {
         console.log(err);
     }
@@ -823,9 +825,9 @@ onUnmounted(() => {
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y" 
         :pageID="pageID" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" 
         :matrix="matrix.toArray()" :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <PageCommentItem :context="props.context" :x="posi.x" @moveCommentPopup="downMoveCommentPopup" 
-        :y="posi.y" :matrix="matrix.toArray()" @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush"
-         v-for="(item, index) in documentCommentList" :key="index" :commentInfo="item" :index="index" @recover="recover" @editComment="editComment">
+        <PageCommentItem :context="props.context" :x="posi.x" @moveCommentPopup="downMoveCommentPopup" :y="posi.y" :matrix="matrix.toArray()"
+         @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush" v-for="(item, index) in documentCommentList" :key="index" 
+         :commentInfo="item" :index="index" :length="commentsLength" @recover="recover" @editComment="editComment" :documentComment="documentCommentList">
         </PageCommentItem>
     </div>
 </template>

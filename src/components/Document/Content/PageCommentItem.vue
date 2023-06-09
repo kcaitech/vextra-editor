@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watchEffect } from 'vue'
+import { onMounted, onUnmounted, ref, watchEffect, computed } from 'vue'
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import HoverComment from './HoverComment.vue'
@@ -17,6 +17,8 @@ const props = defineProps<{
     commentInfo: any
     index: number
     reflush: number
+    length: number
+    documentComment: any[]
 }>()
 const emit = defineEmits<{
     (e: 'moveCommentPopup', event: MouseEvent, index: number): void
@@ -36,6 +38,17 @@ const comment = ref<HTMLDivElement>()
 const matrix = new Matrix();
 const posi = {x: 0, y: 0}
 const documentCommentList = ref<any[]>([])
+const reply = ref(props.context.selection.commentStatus)
+const status = computed(() => {
+    const status = props.commentInfo.status
+    reply.value = props.context.selection.commentStatus
+    if(reply.value) {
+        return true
+    }else {
+        return status === 0
+    }
+})
+
 const hoverComment = () => {
     if(!showScale.value) {
         props.context.workspace.hoverComment(false);
@@ -109,6 +122,33 @@ const editCommentChild = (index: number, text: string) => {
 const dragstart = (e: DragEvent) => {
     e.preventDefault()
 }
+
+const previousArticle = (i: number) => {
+    const index = i - 1
+    skipComment(index)
+}
+
+const nextArticle = (i: number) => {
+    const index = i + 1
+    skipComment(index)
+}
+
+const skipComment = (index: number) => {
+    const workspace = props.context.workspace;
+    const comment = props.documentComment[index]
+    const cx = comment.shape_frame.x1
+    const cy = comment.shape_frame.y1
+    const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
+    const { x, y, bottom, right } = workspace.root;
+    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
+    const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
+    if (transX || transY) {
+        props.context.selection.selectComment(comment.id)
+        workspace.matrix.trans(transX, transY);
+        workspace.matrixTransformation();
+    }
+}
+
 watchEffect(() => {
     props.reflush;
     matrix.reset(props.matrix);
@@ -120,6 +160,10 @@ const getDocumentComment = async() => {
        const {data} = await comment_api.getDocumentCommentAPI({doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id})
        documentCommentList.value = data
        documentCommentList.value = documentCommentList.value.reverse()
+       if(comment.value) {
+           rootHeight.value = comment.value.parentElement!.clientHeight
+           rootWidth.value = comment.value.parentElement!.clientWidth
+       }
     }catch(err) {
         console.log(err);
     }
@@ -128,19 +172,18 @@ const workspaceUpdate =(t: number) => {
     if(t === WorkSpace.HOVER_COMMENT) {
         unHoverComment()
     }
-    
 }
 const update = (t: number) => {
     if(t === Selection.CHANGE_COMMENT) {
-        console.log(t);
         if(props.context.selection.commentId === props.commentInfo.id) {
             props.context.workspace.commentMount(false)
             commentScale.value = 0
-            rootHeight.value = comment.value!.parentElement!.clientHeight
-            rootWidth.value = comment.value!.parentElement!.clientWidth
             ShowComment.value = true
             showScale.value = true
         }
+    }
+    if(t === Selection.SOLVE_MENU_STATUS) {
+        reply.value = props.context.selection.commentStatus
     }
 }
 getDocumentComment()
@@ -156,16 +199,17 @@ onUnmounted(() => {
 
 <template>
     <div class="container comment-mark-item" ref="comment" :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`,left: -2 + 'px', top: -33 + 'px'}"
-    :reflush="reflush !== 0 ? reflush : undefined">
+    :reflush="reflush !== 0 ? reflush : undefined" v-if="status">
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="moveCommentPopup"
         :style="{transform: `scale(${markScale})`}" :class="{shadow: commentScale === 1 }">
             <img @dragstart="dragstart" :src="commentInfo.user.avatar" alt="">
         </div>
         <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment" @unHoverComment="unHoverComment"
          :commentInfo="props.commentInfo" :index="props.index" @deleteComment="deleteComment" @resolve="resolve" @moveCommentPopup.stop="moveCommentPopup"></HoverComment>
-        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="posi.x" :y="posi.y" :rootHeight="rootHeight" :rootWidth="rootWidth" 
+        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="posi.x" :y="posi.y" :rootHeight="rootHeight" :rootWidth="rootWidth" :length="length"
         :context="props.context" @close="closeComment" :commentInfo="props.commentInfo" :index="props.index" @resolve="resolve" @delete="deleteComment"
-        @recover="recover" @editComment="editComment" @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"></CommentView>
+        @recover="recover" @editComment="editComment" @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"
+        @previousArticle="previousArticle" @next-article="nextArticle" :documentComment="documentComment" :reply="reply"></CommentView>
     </div>
 </template>
 

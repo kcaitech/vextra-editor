@@ -19,7 +19,7 @@ const commentMenu = ref<boolean>(false)
 const commentMenuItems = ref<commentListMenu[]>([
     { text: `${t('comment.sort')}`, status_p: false},
     { text: `${t('comment.show_about_me')}`, status_p: false},
-    { text: `${t('comment.show_resolved_comments')}`, status_p: false}
+    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
 ])
 const documentCommentList = ref<any[]>([])
 const showMenu = () => {
@@ -34,6 +34,7 @@ const closeMenu = () => {
 }
 
 const handleMenuStatus = (status: boolean, index: number) => {
+    props.context.selection.commentSolveMenuStatus(status)
     commentMenuItems.value[index].status_p = status
 }
 
