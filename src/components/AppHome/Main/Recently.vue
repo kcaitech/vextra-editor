@@ -54,15 +54,15 @@
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li style="margin-top: 10px;" @click=" openDocument ">打开</li>
-            <li @click=" openNewWindowDocument ">在新标签页打开</li>
+            <li style="margin-top: 10px;" @click=" openDocument ">{{t('homerightmenu.open')}}</li>
+            <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
             <div></div>
-            <li @click.stop=" rSharefile ">分享</li>
-            <li @click=" rStarfile " ref="isshow">标星</li>
+            <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
+            <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
             <div></div>
-            <li @click=" rrename " v-if= showrenname >重命名</li>
-            <li>创建文件副本</li>
-            <li style="margin-bottom: 10px;" @click=" rRemovefile ">从打开记录移除</li>
+            <li @click=" rrename " v-if= showrenname >{{t('homerightmenu.rename')}}</li>
+            <li>{{t('homerightmenu.copyfile')}}</li>
+            <li style="margin-bottom: 10px;" @click=" rRemovefile ">{{t('homerightmenu.removed_record')}}</li>
         </ul>
     </div>
     <!-- 重命名弹框 -->
@@ -221,9 +221,9 @@ const rightmenu = (row: any, column: any, event: any) => {
     nextTick(() => {
         if (isshow.value) {
             if (row.document_favorites.is_favorite == true) {
-                isshow.value.innerHTML = '取消标星'
+                isshow.value.innerHTML = t('homerightmenu.unstar')
             } else {
-                isshow.value.innerHTML = '标星'
+                isshow.value.innerHTML = t('homerightmenu.target_star')
             }
         }
         if (row.document.user_id != localStorage.getItem('userId')) {

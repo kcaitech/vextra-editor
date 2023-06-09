@@ -7,7 +7,7 @@
         <el-table-column prop="document.size" :label="t('home.size')" />
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">
-                <el-icon :size=" 20 " content="标星" v-if=" !ShareList[scope.$index].document_favorites.is_favorite ">
+                <el-icon :size=" 20 " v-if=" !ShareList[scope.$index].document_favorites.is_favorite ">
                     <el-tooltip :content=" t('home.star') " show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
                             @click.stop=" Starfile(scope.$index) ">
@@ -39,11 +39,11 @@
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li style="margin-top: 10px;" @click=" openDocument ">打开</li>
-            <li @click=" openNewWindowDocument ">在新标签页打开</li>
+            <li style="margin-top: 10px;" @click=" openDocument ">{{t('homerightmenu.open')}}</li>
+            <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
             <div></div>
-            <li @click.stop=" rSharefile ">分享</li>
-            <li style="margin-bottom: 10px;" @click=" rStarfile " ref="isshow">标星</li>
+            <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
+            <li style="margin-bottom: 10px;" @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
         </ul>
     </div>
     <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
@@ -145,9 +145,9 @@ const rightmenu = (row: any, column: any, event: any) => {
     nextTick(() => {
         if (isshow.value) {
             if (row.document_favorites.is_favorite == true) {
-                isshow.value.innerHTML = '取消标星'
+                isshow.value.innerHTML = t('homerightmenu.unstar')
             } else {
-                isshow.value.innerHTML = '标星'
+                isshow.value.innerHTML = t('homerightmenu.target_star')
             }
         }
     })

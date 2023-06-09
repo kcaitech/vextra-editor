@@ -24,8 +24,8 @@
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li style="margin-top: 10px;" @click=" rRestorefile ">还原</li>
-            <li style="margin-bottom: 10px;" @click=" rDeletefile ">彻底删除</li>
+            <li style="margin-top: 10px;" @click=" rRestorefile ">{{t('homerightmenu.restore')}}</li>
+            <li style="margin-bottom: 10px;" @click=" rDeletefile ">{{t('homerightmenu.completely_delete')}}</li>
         </ul>
     </div>
     <!-- 确认删除弹框 -->
