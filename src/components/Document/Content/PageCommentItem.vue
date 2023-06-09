@@ -1,17 +1,29 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref, watchEffect } from 'vue'
 import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
 import HoverComment from './HoverComment.vue'
 import CommentView from './CommentView.vue'
+import { Matrix } from "@kcdesign/data";
+import * as comment_api from '@/apis/comment';
+import { Selection } from '@/context/selection';
+
 type CommentViewEl = InstanceType<typeof CommentView>;
 const props = defineProps<{
     context: Context
     x: number
     y: number
-    rootWidth?: number
+    matrix: number[]
+    commentInfo: any
+    index: number
+    reflush: number
 }>()
 const emit = defineEmits<{
-    (e: 'mouseDownCommentInput', event: MouseEvent): void
+    (e: 'moveCommentPopup', event: MouseEvent, index: number): void
+    (e: 'deleteComment', index: number): void
+    (e: 'resolve', status: number, index: number): void
+    (e: 'recover'): void
+    (e: 'editComment', index: number, text: string): void
 }>()
 const commentPopupEl = ref<CommentViewEl>()
 const ShowComment = ref(false)
@@ -19,61 +31,141 @@ const commentScale = ref(0)
 const markScale = ref(1)
 const showScale = ref(false)
 const rootHeight = ref(0)
+const rootWidth = ref(0)
 const comment = ref<HTMLDivElement>()
+const matrix = new Matrix();
+const posi = {x: 0, y: 0}
+const documentCommentList = ref<any[]>([])
 const hoverComment = () => {
     if(!showScale.value) {
+        props.context.workspace.hoverComment(false);
         commentScale.value = 1
+        props.context.workspace.hoverComment(true);
     }
     markScale.value = 1.1
 }
+
 const unHoverComment = () => {
+    if (props.context.workspace.isCommentMove) return
     commentScale.value = 0
     markScale.value = 1
 }
 const showComment = (e: MouseEvent) => {
-    e.stopPropagation()
+    if(props.context.workspace.isCommentMove) return
+    props.context.workspace.commentMount(false)
+    const { x, y } = props.context.workspace.root
+    posi.x = e.clientX - x
+    posi.y = e.clientY - y
     commentScale.value = 0
     rootHeight.value = comment.value!.parentElement!.clientHeight
+    rootWidth.value = comment.value!.parentElement!.clientWidth
     ShowComment.value = true
     showScale.value = true
-    // document.addEventListener('keydown', commentEsc);
 }
 
 const unHover = () => {
     markScale.value = 1
 }
 
-// const commentEsc = (e: KeyboardEvent) => {
-//     e.stopPropagation()
-//     if (e.code === 'Escape') {
-//         document.removeEventListener('keydown', commentEsc);
-//         ShowComment.value = false;
-//         showScale.value = false
-//     }
-// }
-
-const mouseDownCommentInput = (e: MouseEvent) => {
+const moveCommentPopup = (e: MouseEvent) => {
     e.stopPropagation()
-    emit('mouseDownCommentInput', e)
+    emit('moveCommentPopup', e, props.index)
 }
 
 const closeComment = (e?: MouseEvent) => {
     if(e && e.target instanceof Element && e.target.closest('.comment-mark')) return
-    
     ShowComment.value = false
     showScale.value = false
 }
+
+const deleteComment = () => {
+    emit('deleteComment', props.index)
+}
+
+const resolve = (status: number, index: number) => {
+    emit('resolve', status, index)
+}
+
+const recover = (index?: number) => {
+    props.context.workspace.editTabComment()
+    emit('recover')
+    if(index) {
+        documentCommentList.value.splice(index, 1)
+    }else {
+        const timer = setTimeout(() => {
+            getDocumentComment()
+            clearTimeout(timer)
+        }, 50);
+    }
+}
+
+const editComment = (index: number, text: string) => {
+    emit('editComment', index, text)
+}
+
+const editCommentChild = (index: number, text: string) => {
+    documentCommentList.value[index].content = text
+}
+const dragstart = (e: DragEvent) => {
+    e.preventDefault()
+}
+watchEffect(() => {
+    props.reflush;
+    matrix.reset(props.matrix);
+    matrix.preTrans(props.commentInfo.shape_frame.x1, props.commentInfo.shape_frame.y1);
+})
+
+const getDocumentComment = async() => {
+    try {
+       const {data} = await comment_api.getDocumentCommentAPI({doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id})
+       documentCommentList.value = data
+       documentCommentList.value = documentCommentList.value.reverse()
+    }catch(err) {
+        console.log(err);
+    }
+}
+const workspaceUpdate =(t: number) => {
+    if(t === WorkSpace.HOVER_COMMENT) {
+        unHoverComment()
+    }
+    
+}
+const update = (t: number) => {
+    if(t === Selection.CHANGE_COMMENT) {
+        console.log(t);
+        if(props.context.selection.commentId === props.commentInfo.id) {
+            props.context.workspace.commentMount(false)
+            commentScale.value = 0
+            rootHeight.value = comment.value!.parentElement!.clientHeight
+            rootWidth.value = comment.value!.parentElement!.clientWidth
+            ShowComment.value = true
+            showScale.value = true
+        }
+    }
+}
+getDocumentComment()
+onMounted(() => {
+    props.context.workspace.watch(workspaceUpdate);
+    props.context.selection.watch(update);
+})
+onUnmounted(() => {
+    props.context.workspace.unwatch(workspaceUpdate);
+    props.context.selection.unwatch(update);
+})
 </script>
 
 <template>
-    <div class="container comment-mark-item" ref="comment" :style="{ top: props.y - 10 + 'px', left: props.x - 42 + 'px'}" >
-        <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="mouseDownCommentInput"
+    <div class="container comment-mark-item" ref="comment" :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`,left: -2 + 'px', top: -33 + 'px'}"
+    :reflush="reflush !== 0 ? reflush : undefined">
+        <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="moveCommentPopup"
         :style="{transform: `scale(${markScale})`}" :class="{shadow: commentScale === 1 }">
-            <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/getbgSw8iaiagB4ChgXIiax3eYG9U8iaWVkTZemvaTZRXZz6oad8tl7qXWxLxgfFQxWUZVPj1oXI5lGQpicNOnZPoMg/132" alt="">
+            <img @dragstart="dragstart" :src="commentInfo.user.avatar" alt="">
         </div>
-        <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment" @unHoverComment="unHoverComment" @mouseup.stop></HoverComment>
-        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="props.x" :y="props.y" :rootWidth="props.rootWidth"
-        :rootHeight="rootHeight" :context="props.context" @close="closeComment"></CommentView>
+        <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment" @unHoverComment="unHoverComment"
+         :commentInfo="props.commentInfo" :index="props.index" @deleteComment="deleteComment" @resolve="resolve" @moveCommentPopup.stop="moveCommentPopup"></HoverComment>
+        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="posi.x" :y="posi.y" :rootHeight="rootHeight" :rootWidth="rootWidth" 
+        :context="props.context" @close="closeComment" :commentInfo="props.commentInfo" :index="props.index" @resolve="resolve" @delete="deleteComment"
+        @recover="recover" @editComment="editComment" @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"></CommentView>
     </div>
 </template>
 
@@ -83,6 +175,8 @@ const closeComment = (e?: MouseEvent) => {
     width: 35px;
     transform: translateY(50%);
     height: 35px;
+    border-radius: calc(14px);
+    border-bottom-left-radius: 0;
     .comment-mark {
         display: flex;
         justify-content: center;

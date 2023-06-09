@@ -18,6 +18,8 @@ import { updateRoot, getName } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
 import PageCommentItem from './Content/PageCommentItem.vue'
+import * as comment_api from '@/apis/comment';
+import { useRoute } from 'vue-router';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -222,6 +224,13 @@ function workspaceUpdate(t?: number, name?: string) { // 更新编辑器状态�
         } else {
             setClass('auto-0');
         }
+    }
+    //更新评论
+    if(t === WorkSpace.EDIT_COMMENT) {
+        const timer = setTimeout(() => {
+            getDocumentComment(docID)
+            clearTimeout(timer)
+        }, 500);
     }
 }
 
@@ -517,7 +526,14 @@ function windowBlur() {
 const commentPosition: ClientXY = reactive({ x: 0, y: 0 });
 type CommentInputEl = InstanceType<typeof CommentInput>;
 const commentEl = ref<CommentInputEl>();
-const rootWidth = ref(root.value?.clientWidth)
+const rootWidth = ref(root.value && root.value.clientWidth)
+const pageID = ref(props.page.id)
+const shapeID = ref('')
+const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
+const documentCommentList = ref<any[]>([])
+const route = useRoute()
+const docID = (route.query.id as string)
+const posi = ref({ x: 0, y: 0 });
 //添加评论
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
@@ -528,18 +544,37 @@ const addComment = (e: MouseEvent) => {
         return
     }
     if(commentInput.value) return
-        commentInput.value = true;
-        const { x, y } = workspace.value.root;
-        commentPosition.x = e.clientX - x + 40;
-        commentPosition.y = e.clientY - y - 45;
-        rootWidth.value = root.value && root.value.clientWidth
-        document.addEventListener('keydown', commentEsc);
+    const { x, y } = workspace.value.root;
+    const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
+    const shapes = props.context.selection.getShapesByXY_beta(xy, false, false);
+    if(shapes.length === 0) { //点击的位置是否有图形
+        shapePosition.x = 0;
+        shapePosition.y = 0;
+        shapeID.value = props.page.id
+    }else {
+        const shape = shapes[0]
+        const m = shape.matrix2Page()
+        const farmeXY = m.computeCoord({x: shape.frame.x, y: shape.frame.y })   
+        shapePosition.x = xy.x - farmeXY.x; //评论输入框相对于shape的距离
+        shapePosition.y = xy.y - farmeXY.y;
+        shapeID.value = shape.id
+    }
+    commentPosition.x = xy.x; //评论输入框在页面的坐标
+    commentPosition.y = xy.y;
+    posi.value.x = e.clientX - x // 评论弹出框的位置坐标
+    posi.value.y = e.clientY - y
+    commentInput.value = true;
+    rootWidth.value = root.value && root.value.clientWidth
+    document.addEventListener('keydown', commentEsc);
 }
 
 const getCommentInputXY = (e: MouseEvent) => {
     const { x, y } = workspace.value.root;
-    commentPosition.x = e.clientX - x + 37;
-    commentPosition.y = e.clientY - y - 40;
+    const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
+    commentPosition.x = xy.x - 10;
+    commentPosition.y = xy.y + 10;
+    posi.value.x = e.clientX - x
+    posi.value.y = e.clientY - y
 }
 
 const commentEsc = (e: KeyboardEvent) => {
@@ -548,7 +583,7 @@ const commentEsc = (e: KeyboardEvent) => {
         commentInput.value = false;
     }
 }
-
+//移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
     document.addEventListener("mousemove", mouseMoveInput);
     document.addEventListener("mouseup", mouseUpCommentInput);
@@ -564,6 +599,94 @@ const mouseUpCommentInput = () => {
     document.removeEventListener('mouseup', mouseUpCommentInput);
 }
 
+const editCommentId = ref('')
+const commentIndex = ref()
+const downOnPageXY: ClientXY = reactive({ x: 0, y: 0 });
+//移动评论
+const downMoveCommentPopup = (e: MouseEvent, index: number) => {
+    setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
+    const {x, y} = getMouseOnPageXY(e)
+    downOnPageXY.x = x
+    downOnPageXY.y = y
+    workspace.value.commentMove(false)
+    editCommentId.value = documentCommentList.value[index].id
+    commentIndex.value = index
+    const handleMouseMove = (e: MouseEvent) => {
+        moveCommentPopup(e, index);
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+        const { x, y } = workspace.value.root;
+        const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
+        const shapes = props.context.selection.getShapesByXY_beta(xy, false, false);
+        const deltaX = Math.abs(xy.x - mousedownOnPageXY.x);
+        const deltaY = Math.abs(xy.y - mousedownOnPageXY.y);
+        const diff = Math.hypot(deltaX, deltaY);
+        const shape_frame = documentCommentList.value[index].shape_frame
+        shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
+        shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
+        workspace.value.commentMove(false)
+            if(shapes.length === 0) {
+                const data = {
+                    id: editCommentId.value,
+                    target_shape_id: props.page.id,
+                    shape_frame: {
+                        x1: shape_frame.x1,
+                        y1: shape_frame.y1,
+                        x2: 0,
+                        y2: 0
+                    }
+                }
+                editCommentPosition(data)
+            }else {
+                const shape = shapes[0]
+                const m = shape.matrix2Page()
+                const farmeXY = m.computeCoord({x: shape.frame.x, y: shape.frame.y }) 
+                const data = {
+                    id: editCommentId.value,
+                    target_shape_id: shape.id,
+                    shape_frame: {
+                        x1: shape_frame.x1,
+                        y1: shape_frame.y1,
+                        x2: shape_frame.x1 - farmeXY.x,
+                        y2: shape_frame.y1 - farmeXY.y
+                    }
+                }
+                editCommentPosition(data)
+            }
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("mouseup", handleMouseUp);
+};
+const commentReflush = ref(0)
+const moveCommentPopup = (e: MouseEvent, index: number) => {
+    commentReflush.value++
+    const { x, y } = workspace.value.root;
+    const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
+    const deltaX = Math.abs(xy.x - downOnPageXY.x);
+    const deltaY = Math.abs(xy.y - downOnPageXY.y);
+    const diff = Math.hypot(deltaX, deltaY);
+    if(diff > 3) {
+        props.context.workspace.commentMove(true)
+    }
+    const shape_frame = documentCommentList.value[index].shape_frame
+    shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
+    shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
+    setMousedownXY(e);
+};
+
+const editCommentPosition = async(data: any) => {
+    try{
+        await comment_api.editCommentAPI(data)
+    }catch(err) {
+        console.log(err);
+    }
+}
+
+// 取消评论输入框
 const closeComment = (e?: MouseEvent) => {
     if(!spacePressed.value) {
         if(e && e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
@@ -572,6 +695,67 @@ const closeComment = (e?: MouseEvent) => {
             commentInput.value = false;
         }
     }
+}
+
+// 调用评论API，并通知listTab组件更新评论列表
+const completed = () => {
+    workspace.value.sendComment()
+    const timer = setTimeout(() => {
+        getDocumentComment(docID)
+        clearTimeout(timer)
+        commentInput.value = false;
+    }, 100);
+}
+
+// 获取评论列表
+const getDocumentComment = async(id :string) => {
+    try {
+       const {data} = await comment_api.getDocumentCommentAPI({doc_id: id, page_id: pageID.value})
+       data.forEach((obj: {childern: any[]}) => {
+        obj.childern = []
+       })
+       documentCommentList.value = list2Tree(data, '')  
+    }catch(err) {
+        console.log(err);
+    }
+}
+
+// 列表转树
+const list2Tree = (list: any, rootValue: string) => {
+  const arr: any = []
+  list.forEach((item: any) => {
+    if (item.parent_id === rootValue) {
+      const children = list2Tree(list, item.id)
+      if (children.length) {
+        item.children = children
+      }
+      arr.push(item)
+    }
+  })
+  return arr
+}
+
+// 删除评论
+const deleteComment = (index :number) => {
+    workspace.value.sendComment()
+    documentCommentList.value.splice(index, 1)
+}
+
+//解决评论
+const resolve = (status: number, index: number) => {
+    workspace.value.sendComment()
+    documentCommentList.value[index].status = status
+}
+
+//回复评论
+const recover = () => {
+    workspace.value.sendComment()
+}
+
+//修改评论内容
+const editComment = (index: number, text: string) => {
+    workspace.value.sendComment()
+    documentCommentList.value[index].content = text
 }
 
 // hooks
@@ -609,6 +793,7 @@ onMounted(() => {
     stylerForCursorMount();
     rootRegister(true);
     props.context.selection.scoutMount(); // 用于hover判定
+    getDocumentComment(docID)
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
@@ -635,9 +820,13 @@ onUnmounted(() => {
             </PageViewContextMenuItems>
         </ContextMenu>
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
-        <CommentInput v-if="commentInput" :context="props.context" :x="commentPosition.x" :y="commentPosition.y"
-         ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"></CommentInput>
-        <PageCommentItem :context="props.context" :x="commentPosition.x" @mouseDownCommentInput="mouseDownCommentInput" :y="commentPosition.y" :rootWidth="rootWidth"></PageCommentItem>
+        <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y" 
+        :pageID="pageID" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" 
+        :matrix="matrix.toArray()" :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+        <PageCommentItem :context="props.context" :x="posi.x" @moveCommentPopup="downMoveCommentPopup" 
+        :y="posi.y" :matrix="matrix.toArray()" @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush"
+         v-for="(item, index) in documentCommentList" :key="index" :commentInfo="item" :index="index" @recover="recover" @editComment="editComment">
+        </PageCommentItem>
     </div>
 </template>
 <style scoped lang="scss">

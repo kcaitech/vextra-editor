@@ -3,16 +3,23 @@ import { ref, computed, nextTick } from 'vue'
 import { Context } from '@/context';
 import { Delete, Edit, Back } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
+import * as comment_api from '@/apis/comment';
+import { chain } from 'lodash';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
+    commentInfo: any
+    index: number
 }>()
 
 const emit = defineEmits<{
     (e: 'close') : void
+    (e: 'delete', index: number, event: Event, id: string):void
+    (e: 'editComment', index: number, text: string): void
+    (e: 'quickReply', name: string): void
 }>()
 const hover = ref(false)
-const textarea = ref('Lorem ipsum dolor sit amet consectetur adipisicing elit. Blanditiis,  Lorem ipsum dolor, sit amet consectetur a')
+const textarea = ref(props.commentInfo.content)
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const showEditComment = ref(false)
 const input = ref<HTMLInputElement>()
@@ -26,11 +33,11 @@ const unHoverShape = (e: MouseEvent) => {
 
 const onEditContext = (e: Event) => {
     e.stopPropagation()
+    textarea.value = props.commentInfo.content
     showEditComment.value = true
     nextTick(() => {
         input.value && input.value.focus()
     })
-    console.log('编辑内容');
     document.addEventListener('click', closeEdit)
 }
 
@@ -42,12 +49,21 @@ const closeEdit = (e: Event) => {
 
 const onQuickReply = (e: Event) => {
     e.stopPropagation()
-    console.log('快速回复');
+    emit('quickReply', props.commentInfo.user.nickname)
 }
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    console.log('删除评论');
+    deleteComment()
+    emit('delete', props.index, e, props.commentInfo.id)
+}
+
+const deleteComment = async() => {
+    try{
+        await comment_api.deleteCommentAPI({comment_id: props.commentInfo.id})
+    }catch(err) {
+        console.log(err);
+    }
 }
 
 const carriageReturn = (event: KeyboardEvent) => {
@@ -66,22 +82,51 @@ const carriageReturn = (event: KeyboardEvent) => {
 }
 
 const addComment = () => {
-    console.log('编辑添加评论');
-    
+    const text = textarea.value
+    emit('editComment', props.index, text)
+    editComment(text)
+    showEditComment.value = false
 }
+
+const editComment = async(content: string) => {
+    try{
+        const parent_id = props.commentInfo.parent_id
+        const root_id = props.commentInfo.root_id
+        await comment_api.editCommentAPI({id: props.commentInfo.id, parent_id, root_id, content})
+    }catch (err) {
+        console.log(err);
+    }
+}
+
+const formatDate = computed(() => {
+  return function (value: string): string {
+    const date = new Date(value);
+    const zh_month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const lang = localStorage.getItem('locale') || 'zh'
+    const en_month = date.toLocaleString('en-US', { month: 'long' });
+    if(lang === 'zh') {
+        return `${zh_month}月${day}日 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }else {
+        return `${en_month} ${day}, ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }
+  }
+})
 </script>
 
 <template>
     <div class="popup-body"  @mouseenter="hoverShape" @mouseleave="unHoverShape">
         <div class="container">
             <div class="avatar">
-                <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/getbgSw8iaiagB4ChgXIiax3eYG9U8iaWVkTZemvaTZRXZz6oad8tl7qXWxLxgfFQxWUZVPj1oXI5lGQpicNOnZPoMg/132" alt="">
+                <img :src="commentInfo.user.avatar" alt="">
             </div>
             <div class="popup-body-context">
                 <div class="box-heard">
                     <div class="name">
-                        <div>丘吉尔 </div>&nbsp;&nbsp;
-                        <div class="date"> 5月20日 13:14</div>
+                        <div>{{ commentInfo.user.nickname }}</div>&nbsp;&nbsp;
+                        <div class="date">{{ formatDate(commentInfo.record_created_at) }}</div>
                     </div>
                     <div class="icon" :style="{visibility: hover ? 'visible' : 'hidden'}">
                         <el-button-group class="ml-4">
@@ -95,12 +140,12 @@ const addComment = () => {
                             </el-tooltip>
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
                                 placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                                <el-button plain :icon="Delete" @click="onDelete"/>
+                                <el-button plain :icon="Delete" @click.stop="onDelete"/>
                             </el-tooltip>
                         </el-button-group>
                     </div>
                 </div>
-                <div class="box-context" v-if="!showEditComment" @dblclick="onEditContext">Lorem ipsum dolor sit amet consectetur adipisicing elit. Blanditiis,  Lorem ipsum dolor, sit amet consectetur a</div>
+                <div class="box-context" v-if="!showEditComment" @dblclick="onEditContext">{{ commentInfo.content }}</div>
                 <div class="textarea" v-if="showEditComment">
                     <el-input
                         ref="input"

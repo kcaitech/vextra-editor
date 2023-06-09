@@ -82,6 +82,10 @@ export class WorkSpace extends Watchable(Object) {
     static DOCUMENT_SAVE = 16;
     static SHUTDOWN_COMMENT = 17;
     static SELECT_LIST_TAB = 18;
+    static SEND_COMMENT = 19;
+    static EDIT_COMMENT = 20;
+    static HOVER_COMMENT = 21;
+    static COMMENT_POPUP = 22;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -103,11 +107,14 @@ export class WorkSpace extends Watchable(Object) {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
-    private m_comment_input: boolean = false;
+    private m_comment_input: boolean = false; 
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_saving: boolean = false;
+    private m_comment_move: boolean = false; //是否拖动评论，解决hove评论拖动时的闪烁问题
+    private m_hove_commetn: boolean = false; //是否hover评论
+    private m_comment_mount: boolean = false;//评论弹层的显示
     constructor(context: Context) {
         super();
         this.context = context
@@ -192,6 +199,15 @@ export class WorkSpace extends Watchable(Object) {
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
+    get isCommentMove() {
+        return this.m_comment_move;
+    }
+    get isHoverComment() {
+        return this.m_hove_commetn;
+    }
+    get isCommentMount() {
+        return this.m_comment_mount;
+    }
     startSvae() {
         this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
@@ -235,6 +251,9 @@ export class WorkSpace extends Watchable(Object) {
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
     }
+    commentMove(v: boolean) {
+        this.m_comment_move = v
+    }
     setCtrl(v: 'page' | 'controller') {
         this.m_controller = v;
     }
@@ -258,6 +277,12 @@ export class WorkSpace extends Watchable(Object) {
         this.m_comment_input = visible;
         if (!visible) {
             this.notify(WorkSpace.SHUTDOWN_COMMENT)
+        }
+    }
+    commentMount(visible: boolean) {
+        this.m_comment_mount = visible;
+        if (!visible) {
+            this.notify(WorkSpace.COMMENT_POPUP)
         }
     }
     popoverVisible(visible: boolean) {
@@ -483,5 +508,17 @@ export class WorkSpace extends Watchable(Object) {
     }
     resetCursor() {
         !this.transforming && this.notify(WorkSpace.RESET_CURSOR);
+    }
+    sendComment() {
+        this.notify(WorkSpace.SEND_COMMENT);// listTab栏和content组件之间的通信
+    }
+    editTabComment() {
+        this.notify(WorkSpace.EDIT_COMMENT); // listTab栏和content组件之间的通信
+    }
+    hoverComment(v: boolean) {
+        this.m_hove_commetn = v
+        if (!v) {
+            this.notify(WorkSpace.HOVER_COMMENT);
+        }
     }
 }

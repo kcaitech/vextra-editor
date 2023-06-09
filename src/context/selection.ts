@@ -48,6 +48,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_TEXT = 5;
     static PAGE_RENAME = 6;
     static UPDATE_RENDER_ITEM = 7;
+    static CHANGE_COMMENT = 8;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -61,6 +62,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;
+    private m_comment_id: string = '';
 
     constructor(document: Document) {
         super();
@@ -94,6 +96,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get isSelectText() {
         return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape;
     }
+    get commentId() {
+        return this.m_comment_id;
+    }
 
     selectPage(p: Page | undefined) {
         if (this.m_selectPage === p) {
@@ -124,6 +129,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     rename() {
         this.notify(Selection.PAGE_RENAME);
+    }
+    selectComment(id: string) {
+        this.m_comment_id = id
+        this.notify(Selection.CHANGE_COMMENT);
     }
 
     get selectedPage(): Page | undefined {

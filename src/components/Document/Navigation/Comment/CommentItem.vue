@@ -26,11 +26,18 @@ const status = computed(() => {
         return status === 0
     }
 })
+
 const replyNum = computed(() => {
-    const child = props.commentItem.childern.length
-    return child
+    if(props.commentItem.children) {
+        const child = props.commentItem.children.length
+        return child
+    }else {
+        return 0
+    }
 })
-const resolve = ref(props.commentItem.status === 0)
+const resolve = computed(() => {
+    return props.commentItem.status === 0 ? true : false
+})
 
 const hoverShape = (e: MouseEvent) => {
     hover.value = true
@@ -42,19 +49,32 @@ const unHoverShape = (e: MouseEvent) => {
 
 const onReply = (e: Event) => {
     e.stopPropagation()
-    console.log('回复评论');
+    const workspace = props.context.workspace;
+    const cx = props.commentItem.shape_frame.x1
+    const cy = props.commentItem.shape_frame.y1
+    const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
+    const { x, y, bottom, right } = workspace.root;
+    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
+    const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
+    if (transX || transY) {
+        props.context.selection.selectComment(props.commentItem.id)
+        workspace.matrix.trans(transX, transY);
+        
+        workspace.matrixTransformation();
+    }
 }
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
+    props.context.workspace.editTabComment()
     const status = props.commentItem.status === 0 ? 1 : 0
     setCommentStatus(status)
     emit('resolve', status, props.index)
-    resolve.value = !resolve.value
 }
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
+    props.context.workspace.editTabComment()
     deleteComment()
     emit('delete', props.index)
 }

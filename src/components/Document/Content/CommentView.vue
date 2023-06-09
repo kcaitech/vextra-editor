@@ -1,22 +1,45 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
-import { Close, Delete, CircleCheck, Back } from '@element-plus/icons-vue'
+import { Close, Delete, CircleCheck, Back, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
 import { Action } from '@/context/workspace';
+import { Matrix } from "@kcdesign/data";
 import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n'
+import * as comment_api from '@/apis/comment';
+import { v4 } from 'uuid';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
     x: number
     y: number
-    rootWidth?: number
+    rootWidth: number
     rootHeight: number
+    commentInfo: any
+    index: number
+    documentCommentList: any[]
 }>()
 const emit = defineEmits<{
     (e:'close', event?: MouseEvent): void
+    (e: 'resolve', status: number, index: number): void
+    (e: 'delete', index: number):void
+    (e: 'recover', index?: number, id?: string): void
+    (e: 'editComment', index: number, text: string): void
+    (e: 'editCommentChild', index: number, text: string): void
 }>()
+interface Comment {
+    parent_id: string
+    root_id: string
+    doc_id: string
+    page_id: string
+    shape_id: string
+    target_shape_id: string
+    shape_frame: any
+    record_created_at: string
+    content: string
+}
+const matrix = new Matrix(props.context.workspace.matrix);
 const workspace = computed(() => props.context.workspace);
 const textarea = ref('')
 const offside = ref(false)
@@ -26,26 +49,46 @@ const scrollHeight = ref(0)
 const textareaEl = ref<HTMLDivElement>()
 const inputPopup = ref<HTMLInputElement>()
 const isShaking = ref(false)
+const selectedPerson = ref('')
+const itemHeight = ref<HTMLDivElement>()
+const scrollMaxHeight = ref(0)
 const close = (e: MouseEvent) => {
     emit('close', e)
 }
+const commentData = ref<Comment>({
+    parent_id: '',
+    root_id: '',
+    doc_id: props.commentInfo.doc_id,
+    page_id: props.commentInfo.page_id,
+    shape_id: '',
+    target_shape_id: props.commentInfo.target_shape_id,
+    shape_frame: {},
+    record_created_at: '',
+    content: ''
+})
+
+const resolve = computed(() => {
+    return props.commentInfo.status === 0 ? true : false
+})
 
 const height = ref()
-
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const commentPosition = () => {
     nextTick(() => {
         inputPopup.value && inputPopup.value.focus()
         height.value = height.value ? textareaEl.value?.clientHeight : 52
-        offside.value = props.rootWidth! - props.x < 330
+        const p = matrix.computeCoord({ x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1 });
+        offside.value = props.rootWidth! - p.x < 360
         let t = 0
-        t = props.rootHeight! - props.y //剩余的高度
-        scrollHeight.value = props.rootHeight - 55 - (height.value as number) - 30
+        t = props.rootHeight! - p.y //剩余的高度
+        scrollMaxHeight.value = props.rootHeight - 55 - (height.value as number) - 30
 
         nextTick(() => {
+            scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
             if(commentPopup.value) {
-                if(t - commentPopup.value!.clientHeight < 0) {
-                    commentTop.value = t - commentPopup.value!.clientHeight - 30
+                const commentPopupH = scrollHeight.value + height.value + 45
+                if(t - commentPopupH < -10) {
+                    commentTop.value = t - commentPopupH + 10
                 }else {
                     commentTop.value = -10
                 }
@@ -87,18 +130,51 @@ const carriageReturn = (event: KeyboardEvent) => {
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
-    console.log('解决评论');
+    const status = props.commentInfo.status === 0 ? 1 : 0
+    setCommentStatus(status)
+    emit('resolve', status, props.index)
 }
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    console.log('删除评论');
+    deleteComment(props.commentInfo.id)
+    emit('delete', props.index)
+}
+const onDeleteItem = (index: number ,e: Event) => {
+    e.stopPropagation()
+    deleteComment(props.commentInfo.id)
+    emit('delete', index)
+}
+const onDeleteChild = (index: number, e: Event, id: string) => {
+    e.stopPropagation()
+    emit('recover', index, id)
+    deleteComment(id)
+}
+
+const setCommentStatus = async(status: number) => {
+    try{
+        await comment_api.setCommentStatusAPI({id: props.commentInfo.id, status: status})
+    }catch(err) {
+        console.log(err);
+    }
+}
+
+const deleteComment = async(id: string) => {
+    try{
+        await comment_api.deleteCommentAPI({comment_id: id})
+    }catch(err) {
+        console.log(err);
+    }
 }
 
 function workspaceUpdate(t?: number) {  
     const length = textarea.value.trim().length < 4
     props.context.workspace.commentInput(true);
+    props.context.workspace.commentMount(true);
   if (t === WorkSpace.SHUTDOWN_COMMENT && length) {
+    emit('close');
+  }
+  if (t === WorkSpace.COMMENT_POPUP) {
     emit('close');
   }
 }
@@ -114,8 +190,45 @@ const nextArticle = () => {
 }
 
 const addComment = () => {
-    console.log('添加评论');
-    
+    const timestamp  = getCurrentTime()
+    commentData.value.record_created_at = timestamp
+    commentData.value.content = textarea.value
+    commentData.value.doc_id = props.commentInfo.doc_id
+    commentData.value.page_id = props.commentInfo.page_id
+    commentData.value.target_shape_id = props.commentInfo.target_shape_id
+    commentData.value.shape_frame = {}
+    commentData.value.shape_id = v4()
+    commentData.value.parent_id = props.commentInfo.id
+    commentData.value.root_id = props.commentInfo.id
+    const data = commentData.value
+    createComment(data)
+    emit('recover')
+    textarea.value = ''
+}
+
+const getCurrentTime = () => {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = padNumber(currentDate.getMonth() + 1);
+    const day = padNumber(currentDate.getDate());
+    const hours = padNumber(currentDate.getHours());
+    const minutes = padNumber(currentDate.getMinutes());
+    const seconds = padNumber(currentDate.getSeconds());
+    const milliseconds = padNumber(currentDate.getMilliseconds(), 6);
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+}
+function padNumber(number: number, length = 2) {
+    return String(number).padStart(length, '0');
+}
+
+const createComment = async(d: any) => {
+    try {
+        await comment_api.createCommentAPI(d)
+        getDocumentComment()
+    }catch (err) {
+        console.log(err);
+    }
 }
 
 const startShake = () => {
@@ -127,7 +240,33 @@ const startShake = () => {
       }, 500); // 停止时间可以根据需要进行调整
 }
 
-watchEffect(commentPosition)
+const getDocumentComment = async() => {
+    try {
+       const {data} = await comment_api.getDocumentCommentAPI({doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id})
+    }catch(err) {
+        console.log(err);
+    }
+}
+
+const editComment = (index: number, text: string) => {
+    emit('editComment', index, text)
+}
+
+const editCommentChild = (index: number, text: string) => {
+    // documentCommentList.value[index].content = text
+    emit('editCommentChild', index, text)
+}
+
+const quickReply = (name: string) => {
+    textarea.value = `@${name} `
+    selectedPerson.value = `@${name}`
+    inputPopup.value && inputPopup.value.focus()
+}
+
+watchEffect(() => {
+    commentPosition()
+    getDocumentComment()
+})
 const scrollup = (e: MouseEvent) => {
 }
 
@@ -175,15 +314,24 @@ onUnmounted(() => {
                         <el-button plain :icon="Delete" @click="onDelete"/>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
-                        placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
+                        placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve">
                         <el-button plain :icon="CircleCheck" @click="onResolve"/>
                     </el-tooltip>
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
+                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-else>
+                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"/>
+                        </el-tooltip>
                     <el-button plain :icon="Close" @click="close"/>
                 </el-button-group>
             </div>
         </div>
         <el-scrollbar :height="scrollHeight + 'px'">
-            <CommentPopupItem  v-for="item in 20" :key="item" :context="props.context" @close="() => emit('close')"></CommentPopupItem>
+            <div ref="itemHeight">
+                <CommentPopupItem :context="props.context" @close="() => emit('close')" :commentInfo="props.commentInfo" 
+                    :index="props.index" @delete="onDeleteItem" @editComment="editComment" @quick-reply="quickReply"></CommentPopupItem>
+                <CommentPopupItem  v-for="(item, index) in props.documentCommentList" :key="index" :commentInfo="item" :index="index" :context="props.context" 
+                @close="() => emit('close')" @delete="onDeleteChild" @editComment="editCommentChild" @quick-reply="quickReply"></CommentPopupItem>
+            </div>
         </el-scrollbar>
         <div class="popup-footer">
             <div class="textarea" ref="textareaEl">
@@ -337,5 +485,8 @@ onUnmounted(() => {
     }
     .el-scrollbar {
         padding-right: 10px;
+    }
+    .custom-icon {
+        color: green; /* 设置颜色为绿色 */
     }
 </style>

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";
 import { useI18n } from 'vue-i18n';
 import * as comment_api from '@/apis/comment';
 import { useRoute } from 'vue-router';
+import { WorkSpace } from "@/context/workspace";
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 type commentListMenu = {
@@ -39,18 +40,28 @@ const handleMenuStatus = (status: boolean, index: number) => {
 const getDocumentComment = async(id :string) => {
     try {
        const {data} = await comment_api.getDocumentCommentAPI({doc_id: id})
-       data.forEach((obj: {childern: any[]; commentMenu: any; }) => {
+       data.forEach((obj: { commentMenu: any; }) => {
         obj.commentMenu = commentMenuItems.value
-        obj.childern = []
        })
-       documentCommentList.value = data
-       documentCommentList.value.forEach(o => {
-        const childern = documentCommentList.value.find(item => item.id === o.parent_id)
-        o.childern = childern || []       
-       })
+       documentCommentList.value = list2Tree(data, '') 
     }catch(err) {
         console.log(err);
     }
+}
+
+// 列表转树
+const list2Tree = (list: any, rootValue: string) => {
+  const arr: any = []
+  list.forEach((item: any) => {
+    if (item.parent_id === rootValue) {
+      const children = list2Tree(list, item.id)
+      if (children.length) {
+        item.children = children
+      }
+      arr.push(item)
+    }
+  })
+  return arr
 }
 
 const onResolve = (status: number, index: number) => {
@@ -59,11 +70,22 @@ const onResolve = (status: number, index: number) => {
 
 const onDelete = (index:number) => {
     documentCommentList.value.splice(index, 1)
-    getDocumentComment(docID)
+}
+const update = (t: number) => {
+    if(t === WorkSpace.SEND_COMMENT) {
+        const timer = setTimeout(() => {
+            getDocumentComment(docID)
+            clearTimeout(timer)
+        }, 500);
+    }
 }
 
 onMounted(() => {
     getDocumentComment(docID)
+    props.context.workspace.watch(update);
+})
+onUnmounted(() => {
+    props.context.workspace.unwatch(update);
 })
 </script>
 
