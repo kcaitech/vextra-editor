@@ -1,6 +1,6 @@
 import { Shape } from "@kcdesign/data";
 import { render as fillR } from "@/render/fill";
-import { render as borderR } from "@/render/border"
+import { render as borderR } from "@/render/border";
 
 export function render(h: Function, shape: Shape, reflush?: number) {
     // if (this.data.booleanOperation != BooleanOperation.None) {
@@ -34,7 +34,7 @@ export function render(h: Function, shape: Shape, reflush?: number) {
         props.style = style;
     } else {
         props.transform = `translate(${frame.x},${frame.y})`;
-    } 
+    }
 
     if (childs.length == 0) {
         props["fill-opacity"] = 1;

@@ -1,12 +1,10 @@
 import { ImageShape } from "@kcdesign/data";
+import { render as borderR } from "@/render/image-border";
 
 export function render(h: Function, shape: ImageShape, url: string, reflush?: number) {
     // <image :xlink:href="url" :x="frame.x" :y="frame.y" :width="frame.width" :height="frame.height" :reflush="reflush" />)
     const frame = shape.frame;
     const props: any = {}
-    props['xlink:href'] = url;
-    const childs = [];
-    const path = shape.getPath(true).toString();
 
     props.width = frame.width;
     props.height = frame.height;
@@ -25,7 +23,15 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     else {
         props.transform = `translate(${frame.x},${frame.y})`
     }
-
     if (reflush) props.reflush = reflush;
-    return h("image", props);
+
+    const path = shape.getPath(true).toString();
+    const childs = [...borderR(h, shape, path, url)];
+    if (childs.length) {
+        return h("g", props, childs);
+    } else {
+        props['xlink:href'] = url;
+        props['preserveAspectRatio'] = "none meet";
+        return h("image", props);
+    }
 }
