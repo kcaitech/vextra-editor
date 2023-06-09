@@ -325,6 +325,7 @@ function contextMenuMount(e: MouseEvent) {
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
     const shapes = selection.getShapesByXY(mousedownOnPageXY);
+
     contextMenuItems = ['paste', 'copy'];
     if (!shapes.length) {
         contextMenuItems = ['all', 'copy', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'ruler', 'pixel', 'operation'];
@@ -341,8 +342,11 @@ function contextMenuMount(e: MouseEvent) {
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
     }
+
     contextMenu.value = true;
+
     document.addEventListener('keydown', esc);
+    
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;

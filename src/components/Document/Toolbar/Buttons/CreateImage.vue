@@ -23,9 +23,8 @@ const pickerOpts = {
     excludeAcceptAllOption: true,
     multiple: false,
 };
-let fileHandle;
+let fileHandle: any;
 async function getFile() {
-    [fileHandle] = await (window as any).showOpenFilePicker(pickerOpts);
     fileHandle.getFile().then((res: any) => {
         const reader = new FileReader();
         let buff: any, base64: any;
@@ -49,15 +48,16 @@ async function getFile() {
         }
     })
 }
-function select(action: Action) {
+async function select() {
+    [fileHandle] = await (window as any).showOpenFilePicker(pickerOpts);
     getFile();
-    emit('select', action);
+    emit('select', Action.AddImage);
 }
 </script>
 <template>
     <el-tooltip class="box-item" effect="dark" :content="`${t('home.picture')} &nbsp;&nbsp; Shift+Ctrl+K`"
         placement="bottom" :show-after="500" :offset="10" :hide-after="0">
-        <ToolButton ref="button" @click="() => { select(Action.AddImage) }" :selected="props.active">
+        <ToolButton ref="button" @click="select" :selected="props.active">
             <div class="svg-container">
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
