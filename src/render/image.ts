@@ -5,6 +5,8 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     const frame = shape.frame;
     const props: any = {}
     props['xlink:href'] = url;
+    const childs = [];
+    const path = shape.getPath(true).toString();
 
     props.width = frame.width;
     props.height = frame.height;
