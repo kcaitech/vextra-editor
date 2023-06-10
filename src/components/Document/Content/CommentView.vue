@@ -30,8 +30,8 @@ const emit = defineEmits<{
     (e: 'recover', index?: number, id?: string): void
     (e: 'editComment', index: number, text: string): void
     (e: 'editCommentChild', index: number, text: string): void
-    (e: 'previousArticle', index: number): void
-    (e: 'nextArticle', index: number): void
+    (e: 'previousArticle', index: number, xy?: {x: number, y: number}, id?: string): void
+    (e: 'nextArticle', index: number, xy?: {x: number, y: number}, id?: string): void
 }>()
 interface Comment {
     parent_id: string
@@ -57,14 +57,33 @@ const isShaking = ref(false)
 const selectedPerson = ref('')
 const itemHeight = ref<HTMLDivElement>()
 const scrollMaxHeight = ref(0)
+const commentShowList = ref<any[]>([])
+
 const close = (e: MouseEvent) => {
     emit('close', e)
 }
+const prenvetOpacity = computed(() => {
+    const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
+    return index
+})
+const nextOpacity = computed(() => {
+    const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
+    return index
+})
+
 const disablePrevent = computed(() => {
-    return props.index === 0
+    if (props.reply) {
+        return props.index === 0
+    } else {
+        return prenvetOpacity.value === 0
+    }
 })
 const disableNext = computed(() => {
-    return props.index === props.length - 1
+    if (props.reply) {
+        return props.index === props.length - 1
+    } else {
+        return nextOpacity.value === commentShowList.value.length -1
+    }
 })
 const commentData = ref<Comment>({
     parent_id: '',
@@ -93,9 +112,9 @@ const commentPosition = () => {
         let t = 0
         t = props.rootHeight! - p.y //剩余的高度
         scrollMaxHeight.value = props.rootHeight - 55 - (height.value as number) - 30
-
         nextTick(() => {
             scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
+            
             if(commentPopup.value) {
                 const commentPopupH = scrollHeight.value + height.value + 45
                 if(t - commentPopupH < -10) {
@@ -195,13 +214,37 @@ const previousArticle = () => {
         const index = props.index
         if(index === 0) return
         emit('previousArticle', index)
+    } else {
+        const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
+        if (index === 0) return
+        const { x1, y1 } = commentShowList.value[index - 1].shape_frame
+        const id = commentShowList.value[index - 1].id
+        emit('previousArticle', index, {x: x1, y: y1}, id)
     }
+    
 }
 
 const nextArticle = () => {
-    const index = props.index
-    if(index === props.length - 1) return
-    emit('nextArticle', index)
+    if (props.reply) {
+        const index = props.index
+        if(index === props.length - 1) return
+        emit('nextArticle', index)
+    } else {
+        const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
+        const length = commentShowList.value.length
+        if (index === length - 1) return
+        const { x1, y1 } = commentShowList.value[index + 1].shape_frame
+        const id = commentShowList.value[index + 1].id
+        emit('nextArticle', index,  {x: x1, y: y1}, id)
+    }
+}
+
+const commentShow = () => {
+    props.documentComment.forEach(item => {
+        if (item.status === 0) {
+            commentShowList.value && commentShowList.value.push(item)     
+        }
+    })
 }
 
 const addComment = () => {
@@ -281,6 +324,7 @@ const quickReply = (name: string) => {
 watchEffect(() => {
     commentPosition()
     getDocumentComment()
+    commentShow()
 })
 const scrollup = (e: MouseEvent) => {
 }

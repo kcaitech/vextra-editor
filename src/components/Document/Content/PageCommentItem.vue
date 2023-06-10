@@ -41,7 +41,7 @@ const documentCommentList = ref<any[]>([])
 const reply = ref(props.context.selection.commentStatus)
 const status = computed(() => {
     const status = props.commentInfo.status
-    reply.value = props.context.selection.commentStatus
+    replyStatus()
     if(reply.value) {
         return true
     }else {
@@ -56,6 +56,10 @@ const hoverComment = () => {
         props.context.workspace.hoverComment(true);
     }
     markScale.value = 1.1
+}
+
+const replyStatus = () => {
+    reply.value = props.context.selection.commentStatus
 }
 
 const unHoverComment = () => {
@@ -123,27 +127,27 @@ const dragstart = (e: DragEvent) => {
     e.preventDefault()
 }
 
-const previousArticle = (i: number) => {
+const previousArticle = (i: number, xy?: {x: number, y: number}, id?: string) => {
     const index = i - 1
-    skipComment(index)
+    skipComment(index, xy, id)
 }
 
-const nextArticle = (i: number) => {
+const nextArticle = (i: number, xy?: {x: number, y: number}, id?: string) => {
     const index = i + 1
-    skipComment(index)
+    skipComment(index, xy, id)
 }
 
-const skipComment = (index: number) => {
+const skipComment = (index: number, xy?: {x: number, y: number}, id?: string) => {
     const workspace = props.context.workspace;
     const comment = props.documentComment[index]
-    const cx = comment.shape_frame.x1
-    const cy = comment.shape_frame.y1
+    const cx = reply.value ? comment.shape_frame.x1 : xy?.x
+    const cy = reply.value ? comment.shape_frame.y1 : xy?.y
     const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
     const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
     if (transX || transY) {
-        props.context.selection.selectComment(comment.id)
+        props.context.selection.selectComment(reply.value ? comment.id : id)
         workspace.matrix.trans(transX, transY);
         workspace.matrixTransformation();
     }
@@ -160,10 +164,6 @@ const getDocumentComment = async() => {
        const {data} = await comment_api.getDocumentCommentAPI({doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id})
        documentCommentList.value = data
        documentCommentList.value = documentCommentList.value.reverse()
-       if(comment.value) {
-           rootHeight.value = comment.value.parentElement!.clientHeight
-           rootWidth.value = comment.value.parentElement!.clientWidth
-       }
     }catch(err) {
         console.log(err);
     }
@@ -177,6 +177,10 @@ const update = (t: number) => {
     if(t === Selection.CHANGE_COMMENT) {
         if(props.context.selection.commentId === props.commentInfo.id) {
             props.context.workspace.commentMount(false)
+            if(comment.value) {
+                rootHeight.value = comment.value.parentElement!.clientHeight
+                rootWidth.value = comment.value.parentElement!.clientWidth
+            }
             commentScale.value = 0
             ShowComment.value = true
             showScale.value = true
