@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ToolButton from '../ToolButton.vue';
-import { Action } from '@/context/workspace';
+import { Action, Media, WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { onMounted, onUnmounted } from 'vue';
@@ -35,34 +35,91 @@ async function select() {
 function change(e: Event) {
     if (e.target) {
         const files = (e.target as HTMLInputElement).files;
-        if (files && files.length === 1) {
-            const file = files[0];
-            const reader = new FileReader();
-            let buff: any, base64: any;
-            reader.readAsArrayBuffer(file);
-            reader.onload = function (evt) {
-                if (evt.target?.result) {
-                    buff = evt.target.result;
-                    if (buff) {
-                        reader.readAsDataURL(file);
-                        reader.onload = function (evt) {
-                            if (evt.target?.result) {
-                                base64 = evt.target.result;
-                                if (buff && base64) {
-                                    const frame = get_frame(file);
-                                    const media = { name: file.name, frame, buff: new Uint8Array(buff), base64 };
-                                    props.context.workspace.setImage(media);
-                                    emit('select', Action.AddImage);
+        if (files) {
+            if (files.length === 1) {
+                const file = files[0];
+                const reader = new FileReader();
+                let buff: any, base64: any;
+                reader.readAsArrayBuffer(file);
+                reader.onload = function (evt) {
+                    if (evt.target?.result) {
+                        buff = evt.target.result;
+                        if (buff) {
+                            reader.readAsDataURL(file);
+                            reader.onload = function (evt) {
+                                if (evt.target?.result) {
+                                    base64 = evt.target.result;
+                                    if (buff && base64) {
+                                        const frame = get_frame(file);
+                                        const media = { name: file.name, frame, buff: new Uint8Array(buff), base64 };
+                                        props.context.workspace.setImage([media]);
+                                        emit('select', Action.AddImage);
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            } else if (files.length > 1) {
+                props.context.workspace.notify(WorkSpace.FREEZE);
+                multiple(files);
             }
         }
     }
 }
-function multiple() { }
+function multiple(files: any) {
+    const media: Media[] = [];
+    const len = files.length;
+    let index = 0;
+    try {
+        iteration();
+    } catch (error) {
+        props.context.workspace.notify(WorkSpace.THAW);
+    }
+    function iteration() {
+        const file = files[index];
+        const reader = new FileReader();
+        let buff: any, base64: any;
+        reader.readAsArrayBuffer(file);
+        reader.onload = function (evt) {
+            if (evt.target?.result) {
+                buff = evt.target.result;
+                if (buff) {
+                    reader.readAsDataURL(file);
+                    reader.onload = function (evt) {
+                        if (evt.target?.result) {
+                            base64 = evt.target.result;
+                            if (buff && base64) {
+                                const frame = get_frame(file);
+                                if (index < len - 1) {
+                                    media.push({ name: file.name, frame, buff: new Uint8Array(buff), base64 });
+                                    index++;
+                                    iteration();
+                                } else {
+                                    console.log('medias', media);
+                                    props.context.workspace.setImage(media);
+                                    props.context.workspace.notify(WorkSpace.THAW);
+                                }
+                            } else {
+                                index++;
+                                iteration();
+                            }
+                        } else {
+                            index++;
+                            iteration();
+                        }
+                    }
+                } else {
+                    index++;
+                    iteration();
+                }
+            } else {
+                index++;
+                iteration();
+            }
+        }
+    }
+}
 onMounted(() => {
     document.addEventListener('keydown', key);
 })
@@ -79,7 +136,7 @@ onUnmounted(() => {
             </div>
         </ToolButton>
     </el-tooltip>
-    <input type="file" :accept="accept" :multiple="false" id="filepicker" @change="(e: Event) => { change(e) }">
+    <input type="file" :accept="accept" :multiple="true" id="filepicker" @change="(e: Event) => { change(e) }">
 </template>
 <style scoped lang="scss">
 .svg-container {

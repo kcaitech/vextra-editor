@@ -99,6 +99,9 @@ export class WorkSpace extends Watchable(Object) {
     static CTRL_APPEAR = 21;
     static PASTE = 22;
     static PASTE_RIGHT = 23;
+    static INSERT_IMGS = 24;
+    static FREEZE = 25;
+    static THAW = 26;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -125,7 +128,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_saving: boolean = false;
-    private m_image: Media | undefined = undefined;
+    private m_image: Media[] | undefined = undefined;
     constructor(context: Context) {
         super();
         this.context = context
@@ -210,8 +213,11 @@ export class WorkSpace extends Watchable(Object) {
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
-    setImage(file: Media) {
-        this.m_image = file;
+    setImage(files: Media[]) {
+        this.m_image = [...files];
+        if (files.length > 1) {
+            this.notify(WorkSpace.INSERT_IMGS);
+        }
     }
     getImageFromDoc() {
         return this.m_image;

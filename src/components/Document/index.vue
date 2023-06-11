@@ -17,6 +17,7 @@ import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
+import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -40,6 +41,7 @@ const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
 const loading = ref<boolean>(false);
+const sub_loading = ref<boolean>(false);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -193,7 +195,7 @@ const getDocumentAuthority = async () => {
             if (data.data.perm_type === 1) {
                 permissionChange.value = PermissionChange.update
                 showNotification(data.data.perm_type)
-            }else if(data.data.perm_type === 2) {
+            } else if (data.data.perm_type === 2) {
                 permissionChange.value = PermissionChange.update
                 showNotification(data.data.perm_type)
             } else if (data.data.perm_type === 3) {
@@ -271,7 +273,7 @@ const getDocumentInfo = async () => {
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
         //获取文档类型是否为私有文档且有无权限   
-        
+
         const repo = new Repository();
         const importDocumentParams = {
             endPoint: FILE_DOWNLOAD,
@@ -361,6 +363,10 @@ function workspaceWatcher(t: number) {
             }
             upload(docID);
         }
+    } else if (t === WorkSpace.FREEZE) {
+        sub_loading.value = true;
+    } else if (t === WorkSpace.THAW) {
+        sub_loading.value = false;
     }
 }
 onMounted(() => {
@@ -428,6 +434,7 @@ watchEffect(() => {
             </div>
         </template>
     </ColSplitView>
+    <SubLoading v-if="sub_loading"></SubLoading>
     <div v-if="showHint" class="notification">
         <el-icon :size="13">
             <Warning />

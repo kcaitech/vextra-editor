@@ -4,7 +4,6 @@ import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape } from "@kcdesign/data";
 import { Action, Media, ResultByAction, WorkSpace, ClipboardItem } from '@/context/workspace';
 import { get_frame } from '@/utils/image';
-import { async } from "node-stream-zip";
 interface Root {
   init: boolean
   x: number
@@ -92,8 +91,9 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
     if (type === ShapeType.Image) {
       const media = workspace.getImageFromDoc();
-      if (media) {
-        let _name: any = media.name.split('.');
+      if (media && media.length) {
+        const _m = media[0];
+        let _name: any = _m.name.split('.');
         if (_name.length > 1) {
           _name.pop();
           if (_name[0]) {
@@ -102,7 +102,7 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
             _name = name;
           }
         }
-        new_shape = asyncCreator.init_media(page, (parent as GroupShape), _name as string, frame, media);
+        new_shape = asyncCreator.init_media(page, (parent as GroupShape), _name as string, frame, _m);
       }
     } else {
       new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
@@ -130,8 +130,9 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
     if (type === ShapeType.Image) {
       const media = workspace.getImageFromDoc();
-      if (media) {
-        let _name: any = media.name.split('.');
+      if (media && media.length) {
+        const _m = media[0];
+        let _name: any = _m.name.split('.');
         if (_name.length > 1) {
           _name.pop();
           if (_name[0]) {
@@ -140,9 +141,9 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
             _name = name;
           }
         }
-        frame.height = media.frame.height;
-        frame.width = media.frame.width;
-        new_shape = asyncCreator.init_media(page, (parent as GroupShape), _name as string, frame, media);
+        frame.height = _m.frame.height;
+        frame.width = _m.frame.width;
+        new_shape = asyncCreator.init_media(page, (parent as GroupShape), _name as string, frame, _m);
       }
     } else {
       new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
@@ -154,6 +155,54 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
   }
   workspace.setAction(Action.AutoV);
   workspace.creating(false);
+}
+// 图片从init到inset一气呵成
+function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
+  const selection = context.selection;
+  const page = selection.selectedPage;
+  let asyncCreator: AsyncCreator | undefined;
+  let new_shape: Shape | undefined;
+  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+  if (page) {
+    const editor = context.editor.controller();
+    const name = getName(ShapeType.Image, page.childs, t);
+    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+    const _m = media;
+    let _name: any = _m.name.split('.');
+    if (_name.length > 1) {
+      _name.pop();
+      if (_name[0]) {
+        _name = get_image_name(page.childs, _name[0]);
+      } else {
+        _name = name;
+      }
+    }
+    frame.height = _m.frame.height;
+    frame.width = _m.frame.width;
+    new_shape = asyncCreator.init_media(page, (page as GroupShape), _name as string, frame, _m);
+  }
+  if (asyncCreator && new_shape) {
+    asyncCreator = asyncCreator.close();
+    return new_shape;
+  }
+}
+function insert_imgs(context: Context, t: Function) {
+  const selection = context.selection;
+  const media = context.workspace.getImageFromDoc();
+  const new_shapes: Shape[] = [];
+  if (media && media.length) {
+    const xy = adjust_content_xy(context, media[0]);
+    for (let i = 0; i < media.length; i++) {
+      if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
+      const img = init_insert_image(context, xy, t, media[i]);
+      if (img) {
+        new_shapes.push(img);
+      }
+    }
+  }
+  if (new_shapes.length) {
+    selection.rangeSelectShape(new_shapes);
+  }
 }
 function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: number) {
   const root = context.workspace.root;
@@ -217,22 +266,9 @@ async function set_clipboard_image(context: Context, data: any, t: Function, _xy
         const buff = event.target?.result;
         if (base64 && buff) {
           item.content = { name: '图片', frame, buff: new Uint8Array(buff as any), base64 };
-          const workspace = context.workspace;
-          const root = workspace.root;
-          const matrix = workspace.matrix;
           const content = item!.content as Media;
-          const ratio_wh = content.frame.width / content.frame.height;
-          const page_height = root.height * matrix.m00;
-          const page_width = root.width * matrix.m00;
-          if ((content.frame.height >= content.frame.width) && (content.frame.height > page_height * 0.95)) {
-            content.frame.height = page_height * 0.95;
-            content.frame.width = content.frame.height * ratio_wh;
-          } else if ((content.frame.width >= content.frame.height) && (content.frame.width > page_width * 0.95)) {
-            content.frame.width = page_width * 0.95;
-            content.frame.height = content.frame.width / ratio_wh;
-          }
-          const page_center = matrix.inverseCoord(root.center);
-          const xy: PageXY = _xy || { x: page_center.x - content.frame.width / 2, y: page_center.y - content.frame.height / 2 };
+          const __xy = adjust_content_xy(context, content);
+          const xy: PageXY = _xy || __xy;
           paster_image(context, xy, t, content);
         }
       }
@@ -241,4 +277,72 @@ async function set_clipboard_image(context: Context, data: any, t: Function, _xy
   }
   fr.readAsDataURL(val);
 }
-export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, is_drag, paster };
+function adjust_content_xy(context: Context, m: Media) {
+  const workspace = context.workspace;
+  const root = workspace.root;
+  const matrix = workspace.matrix;
+  const ratio_wh = m.frame.width / m.frame.height;
+  const page_height = root.height * matrix.m00;
+  const page_width = root.width * matrix.m00;
+  if (m.frame.height >= m.frame.width) {
+    if (m.frame.height > page_height * 0.95) {
+      m.frame.height = page_height * 0.95;
+      m.frame.width = m.frame.height * ratio_wh;
+    }
+  } else {
+    if (m.frame.width > page_width * 0.95) {
+      m.frame.width = page_width * 0.95;
+      m.frame.height = m.frame.width / ratio_wh;
+    }
+  }
+  const page_center = matrix.inverseCoord(root.center);
+  return { x: page_center.x - m.frame.width / 2, y: page_center.y - m.frame.height / 2 };
+}
+function drop(e: DragEvent, context: Context, t: Function) {
+  e.preventDefault();
+  const data = e?.dataTransfer?.files;
+  if (data && data[0].type.indexOf('image') !== -1) {
+    const item: ClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
+    const file = data[0];
+    item.contentType = file.type;
+    const frame = { width: 100, height: 100 };
+    const img = new Image();
+    img.onload = function () {
+      frame.width = img.width;
+      frame.height = img.height;
+      const ratio = frame.width / frame.height;
+      if (frame.width >= frame.height) {
+        if (frame.width > 1080) {
+          frame.width = 1080;
+          frame.height = 1080 / ratio;
+        }
+      } else {
+        if (frame.height > 600) {
+          frame.height = 600;
+          frame.width = 600 * ratio;
+        }
+      }
+      const fr = new FileReader();
+      fr.onload = function (event) {
+        const base64: any = event.target?.result;
+        if (base64) {
+          fr.onload = function (event) {
+            const buff = event.target?.result;
+            if (base64 && buff) {
+              item.content = { name: file.name, frame, buff: new Uint8Array(buff as any), base64 };
+              const content = item!.content as Media;
+              const root = context.workspace.root;
+              const { clientX, clientY } = e;
+              const xy: PageXY = context.workspace.matrix.inverseCoord({ x: clientX - root.x, y: clientY - root.y });
+              paster_image(context, xy, t, content);
+            }
+          }
+          fr.readAsArrayBuffer(file);
+        }
+      }
+      fr.readAsDataURL(file);
+    }
+    img.src = URL.createObjectURL(file);
+  }
+}
+export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, is_drag, paster, insert_imgs, drop };

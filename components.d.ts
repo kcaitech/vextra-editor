@@ -120,6 +120,7 @@ declare module '@vue/runtime-core' {
     ShareMe: typeof import('./src/components/AppHome/Main/ShareMe.vue')['default']
     StarFile: typeof import('./src/components/AppHome/Main/StarFile.vue')['default']
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
+    SubLoading: typeof import('./src/components/common/SubLoading.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
     Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']

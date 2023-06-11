@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName, init_shape, init_insert_shape, is_drag, paster } from '@/utils/content';
+import { updateRoot, getName, init_shape, init_insert_shape, is_drag, paster, insert_imgs, drop } from '@/utils/content';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
 import PageCommentItem from './Content/PageCommentItem.vue'
@@ -192,7 +192,9 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
         } else if (type === WorkSpace.RESET_CURSOR) {
             setClass('auto-0');
         } else if (type === WorkSpace.INSERT_FRAME) {
-            insertFrame(); // 插入容器
+            insertFrame(); // 同步插入容器
+        } else if (type === WorkSpace.INSERT_IMGS) {
+            insertImgs(); // 同步插入多张图片
         } else if (type === WorkSpace.PASTE) {
             paster(props.context, t);
         } else if (type === WorkSpace.PASTE_RIGHT) {
@@ -210,6 +212,9 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
 async function setClass(name: string) {
     const _n = await styler.value.getClass(name);
     cursorClass.value = _n;
+}
+function insertImgs() {
+    insert_imgs(props.context, t);
 }
 function insertFrame() {
     const brothers = props.context.selection.selectedPage?.childs || [];
@@ -601,7 +606,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave">
+        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent>
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
