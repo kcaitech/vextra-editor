@@ -55,6 +55,7 @@ export enum CtrlElementType { // 控制元素类型
 }
 export interface Media {
     name: string
+    frame: { width: number, height: number }
     buff: Uint8Array
     base64: string
 }
@@ -67,6 +68,11 @@ const A2R = new Map([
     [Action.AddText, ShapeType.Text],
     [Action.AddImage, ShapeType.Image]
 ]);
+export interface ClipboardItem {
+    type: ShapeType
+    contentType: string
+    content: Media | string
+}
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
@@ -91,10 +97,12 @@ export class WorkSpace extends Watchable(Object) {
     static CTRL_DISAPPEAR = 19;
     static CTRL_APPEAR_IMMEDIATELY = 20;
     static CTRL_APPEAR = 21;
+    static PASTE = 22;
+    static PASTE_RIGHT = 23;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: any; // 剪切板
+    private m_clip_board: ClipboardItem | undefined; // 剪切板
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -111,7 +119,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
     private m_comment_input: boolean = false;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
@@ -297,7 +305,7 @@ export class WorkSpace extends Watchable(Object) {
             }
         } else if (event.code === KeyboardKeys.V) {
             event.preventDefault();
-            this.keydown_v();
+            this.keydown_v(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.L) {
             event.preventDefault();
             this.keydown_l(shiftKey);
@@ -339,7 +347,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = action;
         this.notify();
     }
-    setClipBoard(v: any) {
+    setClipBoard(v: ClipboardItem) {
         this.m_clip_board = v;
     }
     setFrameSize(size: { width: number, height: number }) {
@@ -375,9 +383,13 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddRect;
         this.notify();
     }
-    keydown_v() {
-        this.m_current_action = Action.AutoV;
-        this.notify();
+    keydown_v(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            this.notify(WorkSpace.PASTE);
+        } else {
+            this.m_current_action = Action.AutoV;
+            this.notify();
+        }
     }
     keydown_l(shiftKey: boolean) {
         this.escSetup();
