@@ -223,9 +223,13 @@ async function set_clipboard_image(context: Context, data: any, t: Function, _xy
           const content = item!.content as Media;
           const ratio_wh = content.frame.width / content.frame.height;
           const page_height = root.height * matrix.m00;
-          if (content.frame.height > page_height * 0.95) {
+          const page_width = root.width * matrix.m00;
+          if ((content.frame.height >= content.frame.width) && (content.frame.height > page_height * 0.95)) {
             content.frame.height = page_height * 0.95;
             content.frame.width = content.frame.height * ratio_wh;
+          } else if ((content.frame.width >= content.frame.height) && (content.frame.width > page_width * 0.95)) {
+            content.frame.width = page_width * 0.95;
+            content.frame.height = content.frame.width / ratio_wh;
           }
           const page_center = matrix.inverseCoord(root.center);
           const xy: PageXY = _xy || { x: page_center.x - content.frame.width / 2, y: page_center.y - content.frame.height / 2 };
