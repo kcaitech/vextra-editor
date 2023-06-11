@@ -68,4 +68,7 @@ function isInner(context: Context, shape: Shape) {
     return true;
   }
 }
-export { Root, updateRoot, getName, get_image_name, isInner }
+function init_scale(context: Context, shapes: Shape[]) {
+  // todo
+}
+export { Root, updateRoot, getName, get_image_name, isInner, init_scale };
