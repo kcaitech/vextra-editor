@@ -2,7 +2,7 @@ import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape } from "@kcdesign/data";
-import { Action, Media, ResultByAction, WorkSpace, ClipboardItem } from '@/context/workspace';
+import { Action, Media, ResultByAction, ClipboardItem } from '@/context/workspace';
 import { get_frame } from '@/utils/image';
 interface Root {
   init: boolean
