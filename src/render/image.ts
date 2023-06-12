@@ -2,7 +2,7 @@ import { ImageShape } from "@kcdesign/data";
 import { render as borderR } from "@/render/image-border";
 
 export function render(h: Function, shape: ImageShape, url: string, reflush?: number) {
-    // <image :xlink:href="url" :x="frame.x" :y="frame.y" :width="frame.width" :height="frame.height" :reflush="reflush" />)
+    if (!shape.isVisible) return;
     const frame = shape.frame;
     const props: any = {}
 

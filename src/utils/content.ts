@@ -278,8 +278,8 @@ function adjust_content_xy(context: Context, m: Media) {
   const root = workspace.root;
   const matrix = workspace.matrix;
   const ratio_wh = m.frame.width / m.frame.height;
-  const page_height = root.height * matrix.m00;
-  const page_width = root.width * matrix.m00;
+  const page_height = root.height / matrix.m00;
+  const page_width = root.width / matrix.m00;
   if (m.frame.height >= m.frame.width) {
     if (m.frame.height > page_height * 0.95) {
       m.frame.height = page_height * 0.95;

@@ -107,7 +107,7 @@ function wxcode() {
         id: "login_container",
         appid: "wx42bb87f7f2e86a6e",
         scope: "snsapi_login",
-        redirect_uri: encodeURIComponent("http://protodesign.cn/html/GetCode.html"),
+        redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
         // redirect_uri: encodeURIComponent("http://protodesign.cn/zbb/html/GetCode.html"),
         state: "STATE",
         style: "",
