@@ -22,7 +22,7 @@
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip :content=" t('home.de_star') " show-after="1000">
+                    <el-tooltip :content=" t('home.share') " show-after="1000">
                         <Share @click.stop=" Sharefile(scope) " />
                     </el-tooltip>
                 </el-icon>&nbsp;
@@ -53,14 +53,13 @@
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
-import { Share, Remove } from '@element-plus/icons-vue'
+import { Share } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { pushScopeId, reactive, ref, onMounted, onUnmounted, nextTick } from 'vue'
-import * as share_api from "@/apis/share"
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const ShareList = ref<any[]>([]);
 const isLoading = ref(false);
@@ -303,7 +302,8 @@ onUnmounted(() => {
 }
 .el-icon {
     display: none;
-
+    position: relative;
+    top:5px;
     &:hover {
         color: #6395f9;
     }
@@ -340,7 +340,13 @@ onUnmounted(() => {
     height: 56px;
     font-weight: 18px;
 }
+:deep(.el-table__cell) {
+    padding: 0;
+}
 
+:deep(.el-table__cell .cell) {
+    line-height: 56px;
+}
 .overlay {
     position: absolute;
     top: 0;

@@ -21,9 +21,7 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import * as user_api from '@/apis/users'
-import { User } from '@/context/user'
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));

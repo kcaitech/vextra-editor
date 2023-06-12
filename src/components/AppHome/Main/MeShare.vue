@@ -74,7 +74,7 @@ import * as share_api from "@/apis/share"
 import * as user_api from '@/apis/users'
 import { Share, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, computed } from "vue"
+import { onMounted, ref, onUnmounted, nextTick } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -423,7 +423,8 @@ function emit(arg0: string) {
 
 .el-icon {
     display: none;
-
+    position: relative;
+    top:5px;
     &:hover {
         color: #6395f9;
     }
@@ -459,6 +460,13 @@ function emit(arg0: string) {
 :deep(.el-table__row) {
     height: 50px;
     font-weight: 18px;
+}
+:deep(.el-table__cell) {
+    padding: 0;
+}
+
+:deep(.el-table__cell .cell) {
+    line-height: 56px;
 }
 
 .overlay {

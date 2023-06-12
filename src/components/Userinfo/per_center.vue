@@ -155,9 +155,7 @@ function tips(e: any) {
 }
 
 function closePersonalCenter() {
-    if (localStorage.getItem('location')) {
-        (window as any).location.href = localStorage.getItem('location')
-    }
+    history.back()
 }
 
 </script>

@@ -12,4 +12,4 @@ const production = true
 export const FILE_UPLOAD = production ? 'ws://api.protodesign.cn/api/v1' : 'ws://192.168.0.10:10000/api/v1';
 export const FILE_DOWNLOAD = production ? "http://storage.protodesign.cn" : "http://192.168.0.18:9000";
 //请求根路径
-export const BASE_URL = production ? 'http://api.protodesign.cn/api/v1' : 'http://192.168.0.10:10000/api/v1';
+export const BASE_URL = production ? 'http://protodesign.cn/api/v1' : 'http://192.168.0.10:10000/api/v1';

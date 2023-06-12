@@ -60,10 +60,9 @@
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
-import { Share, Remove } from '@element-plus/icons-vue'
+import { Share} from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { pushScopeId, reactive, ref, onMounted, onUnmounted, nextTick } from 'vue'
-import * as share_api from "@/apis/share"
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -87,7 +86,8 @@ const showrenname=ref<boolean>(true)
 async function getUserdata() {
     // loading
     isLoading.value = true
-    const { data } = await user_api.GetfavoritesList()
+    try {
+        const { data } = await user_api.GetfavoritesList()
     if (data == null) {
         ElMessage.error(t('home.failed_list_tips'))
     } else {
@@ -98,6 +98,10 @@ async function getUserdata() {
         }
     }
     Getfavorites.value = data
+    } catch (error) {
+        ElMessage.error('aaaaaaa')
+    }
+    
     // unloading  
     isLoading.value = false;
 }
@@ -373,7 +377,8 @@ onUnmounted(() => {
 }
 .el-icon {
     display: none;
-
+    position: relative;
+    top:5px;
     &:hover {
         color: #6395f9;
     }
@@ -409,6 +414,13 @@ onUnmounted(() => {
 :deep(.el-table__row) {
     height: 56px;
     font-weight: 18px;
+}
+:deep(.el-table__cell) {
+    padding: 0;
+}
+
+:deep(.el-table__cell .cell) {
+    line-height: 56px;
 }
 
 .overlay {

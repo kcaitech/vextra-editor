@@ -29,11 +29,10 @@ function onmessage(e: any) {
 }
 
 async function getlogin(code: string, invite_code: string = '', id: string = '') {
-    const tips: any = document.querySelector('#login_container')
     user_api.PostLogin({ code: code, invite_code: invite_code, id: id }).then((linfo: any) => {
-        if (linfo) {     
+        if (linfo) {
             const user = new User(linfo.data);
-            (window as any).skuser = user;
+            (window as any).skuser = user
             if (linfo.code === 0 && linfo.data.token !== '') {
                 localStorage.setItem('token', linfo.data.token)
                 localStorage.setItem('avatar', linfo.data.avatar)
@@ -53,6 +52,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
     }).catch((linfo: any) => {
         if (linfo.data.code === -1) {
             loginshow.value = true
+            ElMessage.error(linfo.data.message)
             nextTick(() => {
                 isLoading.value = true
                 wxcode()
@@ -107,8 +107,8 @@ function wxcode() {
         id: "login_container",
         appid: "wx42bb87f7f2e86a6e",
         scope: "snsapi_login",
-        redirect_uri: encodeURIComponent("http://protodesign.cn/html/GetCode.html"),
-        // redirect_uri: encodeURIComponent("http://protodesign.cn/zbb/html/GetCode.html"),
+        // redirect_uri: encodeURIComponent("http://protodesign.cn/html/GetCode.html"),
+        redirect_uri: encodeURIComponent("http://protodesign.cn/zbb/html/GetCode.html"),
         state: "STATE",
         style: "",
         href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAzMDBweDtoZWlnaHQ6IDMwMHB4O30=',
@@ -148,7 +148,12 @@ onUnmounted(() => {
             <Footer />
         </div>
         <div class="code_input" v-else>
-            <img :src="avatar" alt="ProtoDesign" />
+            <div class="top">
+                <div class="img">
+                    <img :src="avatar" alt="ProtoDesign" />
+                    <span>{{t('system.product_name')}}</span>
+                </div>
+            </div>
             <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
             <input ref="codeinput" v-model="codevalue" maxlength="8" />
             <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="codevalue == '' ? true : false">{{
@@ -198,10 +203,23 @@ onUnmounted(() => {
     align-items: center;
     animation: moveup 1.5s;
 
-    img {
+    .top {
         position: absolute;
         left: 0;
         top: 0;
+        .img{
+            display: flex;
+            align-items: center;
+            span{
+                font-size: 48px;
+                font-weight: 600;
+                color: white;
+            }
+            img{
+                height: 160px;
+                width: 160px;
+            }
+        }
     }
 
     .Invitation_code {

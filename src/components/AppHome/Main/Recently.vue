@@ -37,8 +37,8 @@
     </el-table>
     <!-- 卡片布局 -->
     <el-row v-else>
-        <el-col v-for="(         item         ) in          documentsList          " :key=" item.id " :span=" 3 "
-            style="margin:0px 20px 20px 0px;">
+        <el-col v-for="(                item                ) in                 documentsList                 "
+            :key=" item.id " :span=" 3 " style="margin:0px 20px 20px 0px;">
             <el-card :body-style=" { padding: '0px' } " shadow="hover">
                 <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
                     class="image" />
@@ -118,9 +118,11 @@ async function getUserdata() {
             ElMessage.error(t('home.failed_list_tips'))
         } else {
             for (let i = 0; i < data.length; i++) {
-                let { document: { size }, document_access_record: { last_access_time } } = data[i]
+                let { document: { size, name }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
+                data[i].document.name = getchineselength(name) > 30 ? name.slice(0, 29) + "..." : name
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+
             }
         }
         documentsList.value = data
@@ -142,6 +144,20 @@ function sizeTostr(size: any) {
         size = Math.round(size * 100) / 100 + "B"
     }
     return size
+}
+
+function getchineselength(str:string) {
+    let length = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charAt(i);
+        // 判断字符的Unicode编码是否处于中文字符的范围（[\u4E00-\u9FFF]）
+        if (/[\u4E00-\u9FFF]/.test(char)) {
+            length += 2; // 中文字符占两个字节
+        } else {
+            length += 1; // 非中文字符占一个字节
+        }
+    }
+    return length;
 }
 
 const Starfile = async (index: number) => {
@@ -432,6 +448,8 @@ onUnmounted(() => {
 
 .el-icon {
     display: none;
+    position: relative;
+    top: 5px;
 
     &:hover {
         color: #6395f9;
@@ -470,6 +488,14 @@ onUnmounted(() => {
 :deep(.el-table__row) {
     height: 56px;
     font-weight: 18px;
+}
+
+:deep(.el-table__cell) {
+    padding: 0;
+}
+
+:deep(.el-table__cell .cell) {
+    line-height: 56px;
 }
 
 .overlay {

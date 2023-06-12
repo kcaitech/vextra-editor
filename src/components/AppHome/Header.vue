@@ -31,9 +31,9 @@ const getApplyList = async () => {
     }
 }
 
+
 let timer: any = null
 getApplyList()
-
 onMounted(() => {
     timer = setInterval(() => {
         getApplyList()
@@ -45,7 +45,6 @@ onUnmounted(() => {
 })
 
 const errorHandler = () => true
-
 
 const search = ref('')
 const SearchList = ref<any[]>([])

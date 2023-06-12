@@ -247,7 +247,8 @@ onUnmounted(() => {
 
 .el-icon {
     display: none;
-
+    position: relative;
+    top:5px;
     &:hover {
         color: #6395f9;
     }
@@ -279,5 +280,12 @@ onUnmounted(() => {
 :deep(.el-table__row) {
     height: 56px;
     font-weight: 18px;
+}
+:deep(.el-table__cell) {
+    padding: 0;
+}
+
+:deep(.el-table__cell .cell) {
+    line-height: 56px;
 }
 </style>
