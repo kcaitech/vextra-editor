@@ -40,7 +40,6 @@ const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
-let timer_wait: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 function screenSetting() {
@@ -363,19 +362,7 @@ function workspaceWatcher(t: number) {
         }
     } else if (t === WorkSpace.FREEZE) {
         sub_loading.value = true;
-        if (timer_wait) {
-            clearTimeout(timer_wait);
-        }
-        timer_wait = setTimeout(() => {
-            sub_loading.value = false;
-            clearTimeout(timer_wait);
-            timer_wait = null;
-        }, 60000)
     } else if (t === WorkSpace.THAW) {
-        if (timer_wait) {
-            clearTimeout(timer_wait);
-            timer_wait = null;
-        }
         sub_loading.value = false;
     }
 }

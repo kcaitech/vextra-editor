@@ -113,7 +113,7 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     return { asyncCreator, new_shape };
   }
 }
-// 图形从init到inset一气呵成
+// 普通图形从init到inset一气呵成
 function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
   const selection = context.selection;
   const workspace = context.workspace;
@@ -127,26 +127,7 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
     const editor = context.editor.controller();
     const name = getName(type, parent.childs, t);
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    if (type === ShapeType.Image) {
-      const media = workspace.getImageFromDoc();
-      if (media && media.length) {
-        const _m = media[0];
-        let _name: any = _m.name.split('.');
-        if (_name.length > 1) {
-          _name.pop();
-          if (_name[0]) {
-            _name = get_image_name(parent.childs, _name[0]);
-          } else {
-            _name = name;
-          }
-        }
-        frame.height = _m.frame.height;
-        frame.width = _m.frame.width;
-        new_shape = asyncCreator.init_media(page, (parent as GroupShape), _name as string, frame, _m);
-      }
-    } else {
-      new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
-    }
+    new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
   }
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
@@ -202,7 +183,7 @@ function insert_imgs(context: Context, t: Function) {
   if (new_shapes.length) {
     selection.rangeSelectShape(new_shapes);
   }
-  context.workspace.notify(WorkSpace.THAW);
+  context.workspace.setFreezeStatus(false);
 }
 function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: number) {
   const root = context.workspace.root;
@@ -213,7 +194,7 @@ function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: n
 function paster(context: Context, t: Function, xy?: PageXY) {
   try {
     if (navigator.clipboard && navigator.clipboard.read) {
-      context.workspace.notify(WorkSpace.FREEZE);
+      context.workspace.setFreezeStatus(true);
       navigator.clipboard.read()
         .then(function (data) {
           if (data && data.length) { // 有内容
@@ -223,16 +204,16 @@ function paster(context: Context, t: Function, xy?: PageXY) {
           } else { // 没有有效内容
             // todo
           }
-          context.workspace.notify(WorkSpace.THAW);
+          context.workspace.setFreezeStatus(false);
         })
         .catch((e) => {
           console.log(e);
-          context.workspace.notify(WorkSpace.THAW);
+          context.workspace.setFreezeStatus(false);
         })
     }
   } catch (error) {
+    context.workspace.setFreezeStatus(false);
     console.log(error);
-    context.workspace.notify(WorkSpace.THAW);
   }
 }
 function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {

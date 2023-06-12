@@ -129,6 +129,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_saving: boolean = false;
     private m_image: Media[] | undefined = undefined;
+    private m_freeze: boolean = false;
     constructor(context: Context) {
         super();
         this.context = context
@@ -212,6 +213,13 @@ export class WorkSpace extends Watchable(Object) {
     }
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
+    }
+    get isFreeze() {
+        return this.m_freeze;
+    }
+    setFreezeStatus(isFreeze: boolean) {
+        this.m_freeze = isFreeze;
+        this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
     }
     setImage(files: Media[]) {
         this.m_image = [...files];
@@ -302,6 +310,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
+        if (this.isFreeze) return;
         if (event.code === KeyboardKeys.R) {
             if (!metaKey && !ctrlKey) {
                 event.preventDefault();
@@ -423,13 +432,11 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     keydown_k(ctrl: boolean, shift: boolean) {
-        this.escSetup();
-        if (ctrl && shift) {
-            this.m_current_action = Action.AddImage;
-        } else {
+        if (!ctrl && !shift) {
+            this.escSetup();
             this.m_current_action = Action.AutoK;
+            this.notify();
         }
-        this.notify();
     }
     keydown_o() {
         this.escSetup();

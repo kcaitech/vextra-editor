@@ -576,10 +576,15 @@ const stopWatch = watch(() => props.page, (cur, old) => {
 const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
     root.value && updateRoot(props.context, root.value);
 })
-renderinit().then(() => {
-    inited.value = true;
-    nextTick(() => { root.value && resizeObserver.observe(root.value) });
-})
+renderinit()
+    .then(() => {
+        inited.value = true;
+        nextTick(() => { root.value && resizeObserver.observe(root.value) });
+    }).catch((e) => {
+        console.log(e);
+    }).finally(() => {
+        props.context.workspace.setFreezeStatus(false);
+    })
 onMounted(() => {
     initMatrix(props.page);
     props.context.workspace.watch(workspaceWatcher);
@@ -590,6 +595,7 @@ onMounted(() => {
     stylerForCursorMount();
     rootRegister(true);
     props.context.selection.scoutMount();
+    props.context.workspace.setFreezeStatus(true);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);

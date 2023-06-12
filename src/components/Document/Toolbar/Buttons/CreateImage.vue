@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ToolButton from '../ToolButton.vue';
-import { Action, Media, WorkSpace } from '@/context/workspace';
+import { Media } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -9,14 +9,11 @@ interface Porps {
     active: boolean
     context: Context
 }
-interface Emits {
-    (e: "select", action: Action): void;
-}
 const props = defineProps<Porps>();
-const emit = defineEmits<Emits>();
 const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 const picker = ref<HTMLInputElement>();
 function key(e: KeyboardEvent) {
+    if (props.context.workspace.isFreeze) return;
     const { shiftKey, ctrlKey, code } = e;
     if (shiftKey && ctrlKey && code === 'KeyK') {
         const filepicker = document.getElementById('filepicker');
@@ -68,7 +65,7 @@ function change(e: Event) {
                 }
                 img.src = URL.createObjectURL(file);
             } else if (files.length > 1) {
-                props.context.workspace.notify(WorkSpace.FREEZE);
+                props.context.workspace.setFreezeStatus(true);
                 multiple(files);
             }
         }
@@ -81,8 +78,9 @@ function multiple(files: any) {
     try {
         iteration();
     } catch (error) {
-        props.context.workspace.notify(WorkSpace.THAW);
+        props.context.workspace.setFreezeStatus(false);
     }
+    // 挨个加载，遇到错误资源跳一步
     function iteration() {
         const file = files[index];
         const reader = new FileReader();
