@@ -20,9 +20,9 @@
   >.loader {
     width: 100%;
     height: 100%;
-    border: 2px solid transparent;
-    border-top: 2px solid grey;
-    border-left: 2px solid grey;
+    border: 6px solid transparent;
+    border-top: 6px solid grey;
+    border-left: 6px solid grey;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     box-sizing: border-box;

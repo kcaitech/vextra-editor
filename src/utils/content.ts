@@ -3,7 +3,6 @@ import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape } from "@kcdesign/data";
 import { Action, Media, ResultByAction, ClipboardItem, WorkSpace } from '@/context/workspace';
-import { get_frame } from '@/utils/image';
 interface Root {
   init: boolean
   x: number
@@ -215,13 +214,21 @@ function paster(context: Context, t: Function, xy?: PageXY) {
   try {
     if (navigator.clipboard && navigator.clipboard.read) {
       context.workspace.notify(WorkSpace.FREEZE);
-      navigator.clipboard.read().then(function (data) {
-        if (data && data.length) {
-          if (data[0].types[0].indexOf('image') !== -1) {
-            set_clipboard_image(context, data[0], t, xy)
+      navigator.clipboard.read()
+        .then(function (data) {
+          if (data && data.length) { // 有内容
+            if (data[0].types[0].indexOf('image') !== -1) { // 内容为一张图片
+              set_clipboard_image(context, data[0], t, xy)
+            }
+          } else { // 没有有效内容
+            // todo
           }
-        }
-      });
+          context.workspace.notify(WorkSpace.THAW);
+        })
+        .catch((e) => {
+          console.log(e);
+          context.workspace.notify(WorkSpace.THAW);
+        })
     }
   } catch (error) {
     console.log(error);
@@ -253,7 +260,6 @@ function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, 
   }
   workspace.setAction(Action.AutoV);
   workspace.creating(false);
-  context.workspace.notify(WorkSpace.THAW);
 }
 // 复制一张图片
 async function set_clipboard_image(context: Context, data: any, t: Function, _xy?: PageXY) {

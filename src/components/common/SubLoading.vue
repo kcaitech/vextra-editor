@@ -11,7 +11,7 @@
   width: 100%;
   height: 100%;
   z-index: 9999;
-  background-color: rgba($color: #ffffff, $alpha: 0.3);
+  background-color: rgba($color: #ffffff, $alpha: 0.2);
 
   .container {
     width: 60px;
@@ -24,9 +24,9 @@
     >.loader {
       width: 100%;
       height: 100%;
-      border: 2px solid transparent;
-      border-top: 2px solid grey;
-      border-left: 2px solid grey;
+      border: 6px solid transparent;
+      border-top: 6px solid grey;
+      border-left: 6px solid grey;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       box-sizing: border-box;
