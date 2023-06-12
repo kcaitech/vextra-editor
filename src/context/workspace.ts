@@ -215,9 +215,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     setImage(files: Media[]) {
         this.m_image = [...files];
-        if (files.length > 1) {
-            this.notify(WorkSpace.INSERT_IMGS);
-        }
+        this.notify(WorkSpace.INSERT_IMGS);
     }
     getImageFromDoc() {
         return this.m_image;

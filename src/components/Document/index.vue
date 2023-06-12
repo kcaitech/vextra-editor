@@ -40,6 +40,7 @@ const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
+let timer_wait: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 function screenSetting() {
@@ -307,9 +308,6 @@ function upload(id?: string) {
         if (context) {
             const data = context.data;
             if (data) {
-                // data.pagesMgr.get(data.pagesList[0].id).then((page) => {
-                //     console.log('child length', page?.childs.length);
-                // })
                 context.workspace.startSvae();
                 uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
                     if (successed) {
@@ -365,7 +363,19 @@ function workspaceWatcher(t: number) {
         }
     } else if (t === WorkSpace.FREEZE) {
         sub_loading.value = true;
+        if (timer_wait) {
+            clearTimeout(timer_wait);
+        }
+        timer_wait = setTimeout(() => {
+            sub_loading.value = false;
+            clearTimeout(timer_wait);
+            timer_wait = null;
+        }, 60000)
     } else if (t === WorkSpace.THAW) {
+        if (timer_wait) {
+            clearTimeout(timer_wait);
+            timer_wait = null;
+        }
         sub_loading.value = false;
     }
 }

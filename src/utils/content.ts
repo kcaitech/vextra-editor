@@ -2,7 +2,7 @@ import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape } from "@kcdesign/data";
-import { Action, Media, ResultByAction, ClipboardItem } from '@/context/workspace';
+import { Action, Media, ResultByAction, ClipboardItem, WorkSpace } from '@/context/workspace';
 import { get_frame } from '@/utils/image';
 interface Root {
   init: boolean
@@ -203,6 +203,7 @@ function insert_imgs(context: Context, t: Function) {
   if (new_shapes.length) {
     selection.rangeSelectShape(new_shapes);
   }
+  context.workspace.notify(WorkSpace.THAW);
 }
 function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: number) {
   const root = context.workspace.root;
@@ -210,20 +211,21 @@ function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: n
   const diff = Math.hypot(e.clientX - root.x - start.x, e.clientY - root.y - start.y);
   return Boolean(diff > dragActiveDis);
 }
-async function paster(context: Context, t: Function, xy?: PageXY) {
+function paster(context: Context, t: Function, xy?: PageXY) {
   try {
     if (navigator.clipboard && navigator.clipboard.read) {
-      await navigator.clipboard.read().then(async function (data) {
+      context.workspace.notify(WorkSpace.FREEZE);
+      navigator.clipboard.read().then(function (data) {
         if (data && data.length) {
           if (data[0].types[0].indexOf('image') !== -1) {
-            await set_clipboard_image(context, data[0], t, xy)
+            set_clipboard_image(context, data[0], t, xy)
           }
         }
       });
     }
   } catch (error) {
-    // todo
     console.log(error);
+    context.workspace.notify(WorkSpace.THAW);
   }
 }
 function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
@@ -251,31 +253,38 @@ function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, 
   }
   workspace.setAction(Action.AutoV);
   workspace.creating(false);
+  context.workspace.notify(WorkSpace.THAW);
 }
 // 复制一张图片
 async function set_clipboard_image(context: Context, data: any, t: Function, _xy?: PageXY) {
   const item: ClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
   item.contentType = data.types[0];
   const val = await data.getType(item.contentType);
-  const frame = get_frame(val);
-  const fr = new FileReader();
-  fr.onload = function (event) {
-    const base64: any = event.target?.result;
-    if (base64) {
-      fr.onload = function (event) {
-        const buff = event.target?.result;
-        if (base64 && buff) {
-          item.content = { name: '图片', frame, buff: new Uint8Array(buff as any), base64 };
-          const content = item!.content as Media;
-          const __xy = adjust_content_xy(context, content);
-          const xy: PageXY = _xy || __xy;
-          paster_image(context, xy, t, content);
+  const frame: { width: number, height: number } = { width: 100, height: 100 };
+  const img = new Image();
+  img.onload = function () {
+    frame.width = img.width;
+    frame.height = img.height;
+    const fr = new FileReader();
+    fr.onload = function (event) {
+      const base64: any = event.target?.result;
+      if (base64) {
+        fr.onload = function (event) {
+          const buff = event.target?.result;
+          if (base64 && buff) {
+            item.content = { name: t('shape.image'), frame, buff: new Uint8Array(buff as any), base64 };
+            const content = item!.content as Media;
+            const __xy = adjust_content_xy(context, content);
+            const xy: PageXY = _xy || __xy;
+            paster_image(context, xy, t, content);
+          }
         }
+        fr.readAsArrayBuffer(val);
       }
-      fr.readAsArrayBuffer(val);
     }
+    fr.readAsDataURL(val);
   }
-  fr.readAsDataURL(val);
+  img.src = URL.createObjectURL(val);
 }
 function adjust_content_xy(context: Context, m: Media) {
   const workspace = context.workspace;
@@ -312,9 +321,9 @@ function drop(e: DragEvent, context: Context, t: Function) {
       frame.height = img.height;
       const ratio = frame.width / frame.height;
       if (frame.width >= frame.height) {
-        if (frame.width > 1080) {
-          frame.width = 1080;
-          frame.height = 1080 / ratio;
+        if (frame.width > 600) {
+          frame.width = 600;
+          frame.height = frame.width / ratio;
         }
       } else {
         if (frame.height > 600) {

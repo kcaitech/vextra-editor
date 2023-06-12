@@ -11,7 +11,7 @@
   width: 100%;
   height: 100%;
   z-index: 9999;
-  background-color: rgba($color: #000000, $alpha: 0.12);
+  background-color: rgba($color: #ffffff, $alpha: 0.3);
 
   .container {
     width: 60px;
