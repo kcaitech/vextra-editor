@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal } from '@kcdesign/data';
+import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal, CoopRepository } from '@kcdesign/data';
 import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
@@ -267,8 +267,9 @@ const getDocumentInfo = async () => {
         const path = docInfo.value.document.path;
         const document = await importDocument(importDocumentParams, path, "", "", repo)
         if (document) {
+            const coopRepo = new CoopRepository(document, repo)
             window.document.title = document.name;
-            context = new Context(document, repo);
+            context = new Context(document, coopRepo);
             context.selection.watch(selectionWatcher);
             switchPage(context.data.pagesList[0]?.id);
             localStorage.setItem('docId', route.query.id as string);
@@ -278,7 +279,7 @@ const getDocumentInfo = async () => {
                     resolve()
                 }, 500)
             })
-            coopLocal = new CoopLocal(document, repo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
+            coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
             coopLocal.start();
         }
     } catch (err) {
@@ -301,8 +302,8 @@ function upload() {
                 query: { id: doc_id }
             });
             coopLocal = new CoopLocal(
-                (window as any).sketchDocument as Document,
-                ((window as any).skrepo as Repository),
+                context!.data,
+                context!.coopRepo,
                 `${FILE_UPLOAD}/documents/ws`,
                 localStorage.getItem('token') || "",
                 doc_id,
@@ -331,7 +332,7 @@ function init() {
         }, 30000);
     } else { // 从本地读取文件
         if ((window as any).sketchDocument) {
-            context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
+            context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             context.selection.watch(selectionWatcher);
             upload();
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
