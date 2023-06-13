@@ -110,9 +110,7 @@ export function render(h: Function, shape: Shape, path: string, url: string): Ar
     const elArr = new Array();
     for (let i = 0; i < bc; i++) {
         const border: Border = style.borders[i];
-        if (!border.isEnabled) {
-            continue;
-        }
+        if (!border.isEnabled) continue;
         const position = border.position;
         elArr.push(handler[position](h, shape, border, path, url));
     }
