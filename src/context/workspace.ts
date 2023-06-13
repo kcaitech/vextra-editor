@@ -417,7 +417,7 @@ export class WorkSpace extends Watchable(Object) {
             const shapes = context.selection.selectedShapes;
             const page = context.selection.selectedPage;
             if (page) {
-                const flat = page.shapes;
+                const flat = page.flat;
                 if (shapes.length) {
                     for (let i = 0; i < shapes.length; i++) {
                         const item = shapes[i];

@@ -12,6 +12,7 @@ declare module '@vue/runtime-core' {
     Apphome: typeof import('./src/components/AppHome/Apphome.vue')['default']
     Apply: typeof import('./src/components/Apply/index.vue')['default']
     ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']
+    Arrange: typeof import('./src/components/Document/Attribute/Arrange.vue')['default']
     Arrow: typeof import('./src/components/Document/Toolbar/Buttons/Arrow.vue')['default']
     ArtboardName: typeof import('./src/components/Document/Content/ArtboardName.vue')['default']
     ArtboardView: typeof import('./src/components/Document/Content/ArtboardView.vue')['default']

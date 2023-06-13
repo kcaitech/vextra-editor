@@ -49,7 +49,7 @@ function calcFrame() {
     shapeType.value = props.shape.type;
     showBgFlipH.value = props.shape.isFlippedHorizontal;
     showBgColorV.value = props.shape.isFlippedVertical;
-    if (shapeType.value === 'rectangle') {
+    if (shapeType.value === ShapeType.Rectangle) {
         getRectShapeAttr(props.shape);
     }
 }
@@ -268,7 +268,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 10px;
+    padding: 0px 10px 12px 10px;
     box-sizing: border-box;
     visibility: visible;
 

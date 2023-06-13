@@ -3,10 +3,11 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape } from '@kcdesign/data';
 import { ShapeType } from "@kcdesign/data"
-import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
 import ColorPicker from '../../common/ColorPicker/index.vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
+import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
@@ -15,8 +16,8 @@ import { debounce } from 'lodash';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 
-const shape = shallowRef<Shape>();
-
+const shapes = shallowRef<Shape[]>([]);
+const len = computed<number>(() => shapes.value.length);
 const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
@@ -24,13 +25,16 @@ const shapeType = ref();
 
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
-        shape.value = undefined;
+        shapes.value = [];
     } else if (t === Selection.CHANGE_SHAPE) {
         if (props.context.selection.selectedShapes.length === 1) {
-            shape.value = props.context.selection.selectedShapes[0];
-            shapeType.value = shape.value.type;
+            shapes.value = [props.context.selection.selectedShapes[0]];
+            shapeType.value = shapes.value[0].type;
+        } else if (props.context.selection.selectedShapes.length > 1) {
+            // todo
+            shapes.value = [...props.context.selection.selectedShapes];
         } else {
-            shape.value = undefined;
+            shapes.value = [];
         }
     }
 }
@@ -49,21 +53,22 @@ onUnmounted(() => {
 
 <template>
     <section>
-        <div v-if="shape">
-            <ShapeBaseAttr :shape="shape" :context="props.context"></ShapeBaseAttr>
-            <Text v-if="WITH_TEXT.includes(shapeType)" :shape="shape" :context="props.context"></Text>
-            <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shape" :context="props.context"></Fill>
-            <Border v-if="WITH_BORDER.includes(shapeType)" :shape="shape" :context="props.context"></Border>
-        </div>
-        <div v-else class="back-setting-container">
+        <div v-if="len === 0" class="back-setting-container">
             <span>{{ t('attr.background') }}</span>
             <div class="setting">
                 <ColorPicker class="color" :color="backgroundColor" :context="props.context"></ColorPicker>
                 <input type="text" :value="'#EFEFEF'" :spellcheck="false">
                 <input type="text" :value="1">
             </div>
-
         </div>
+        <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
+        <div v-if="len">
+            <ShapeBaseAttr :shape="shapes[0]" :context="props.context"></ShapeBaseAttr>
+            <Text v-if="WITH_TEXT.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Text>
+            <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Fill>
+            <Border v-if="WITH_BORDER.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Border>
+        </div>
+
     </section>
 </template>
 
