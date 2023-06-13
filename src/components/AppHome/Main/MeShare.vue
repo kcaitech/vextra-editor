@@ -230,6 +230,7 @@ const rrename = () => {
 const rename1 = async () => {
     const { document: { id, name } } = documentId.value
     newname.value = renameinput.value.value
+    if (newname.value == '') return
     if (newname.value != name)
         try {
             const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })

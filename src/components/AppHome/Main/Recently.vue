@@ -38,7 +38,7 @@
     <!-- 卡片布局 -->
     <el-row v-else>
         <el-col
-            v-for="(                      item                      ) in                       documentsList                       "
+            v-for="(                        item                        ) in                         documentsList                         "
             :key=" item.id " :span=" 3 " style="margin:0px 20px 20px 0px;">
             <el-card :body-style=" { padding: '0px' } " shadow="hover">
                 <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
@@ -68,10 +68,11 @@
     </div>
     <!-- 重命名弹框 -->
     <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
-        <input class="newname" type="text" :value=" newname " ref="renameinput" @keyup.enter=" rename1 " />
+        <input class="newname" type="text" v-model=" newname " ref="renameinput" @keyup.enter=" rename1 " />
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click=" rename1 ">
+                <el-button type="primary" style="background-color: none;" @click=" rename1 "
+                    :disabled=" newname == '' ? true : false ">
                     {{ t('home.rename_ok') }}
                 </el-button>
                 <el-button @click=" dialogVisible = false ">{{t('home.cancel')}}</el-button>
@@ -170,13 +171,13 @@ const Starfile = async (index: number) => {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: true })
         if (code === 0) {
             ElMessage.closeAll('success')
-            ElMessage.success({duration:1500,message:t('home.star_ok')})
+            ElMessage.success({ duration: 1500, message: t('home.star_ok') })
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: false })
         if (code === 0) {
             ElMessage.closeAll('success')
-            ElMessage.success({duration:1500,message:t('home.star_cancel')})
+            ElMessage.success({ duration: 1500, message: t('home.star_cancel') })
         }
     }
 }
@@ -211,10 +212,10 @@ const Removefile = async (index: number) => {
     if (code === 0) {
         documentsList.value.splice(index, 1)
         ElMessage.closeAll('success')
-        ElMessage.success({duration:1500,message:t('home.access_record_ok')})
+        ElMessage.success({ duration: 1500, message: t('home.access_record_ok') })
     } else {
         ElMessage.closeAll('error')
-        ElMessage.error({duration:1500,message:t('home.access_record_no')})
+        ElMessage.error({ duration: 1500, message: t('home.access_record_no') })
     }
 
 }
@@ -299,13 +300,13 @@ const rStarfile = async () => {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
             ElMessage.closeAll('success')
-            ElMessage.success({duration:1500,message:t('home.star_ok')})
+            ElMessage.success({ duration: 1500, message: t('home.star_ok') })
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
             ElMessage.closeAll('success')
-            ElMessage.success({duration:1500,message:t('home.star_cancel')})
+            ElMessage.success({ duration: 1500, message: t('home.star_cancel') })
         }
     }
     if (menu.value) {
@@ -333,20 +334,21 @@ const rrename = () => {
 const rename1 = async () => {
     const { document: { id, name } } = documentId.value
     newname.value = renameinput.value.value
+    if (newname.value == '') return
     if (newname.value != name)
         try {
             const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
             if (code === 0) {
                 ElMessage.closeAll('success')
-                ElMessage.success({duration:1500,message:t('percenter.successtips')})
+                ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
                 getUserdata()
             } else {
                 ElMessage.closeAll('error')
-                ElMessage.error({duration:1500,message:t('percenter.errortips1')})
+                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
             }
         } catch (error) {
             ElMessage.closeAll('error')
-            ElMessage.error({duration:1500,message:t('home.other_tips')})
+            ElMessage.error({ duration: 1500, message: t('home.other_tips') })
         }
     dialogVisible.value = false
 }
@@ -356,11 +358,11 @@ const rRemovefile = async () => {
     const { code } = await user_api.DeleteList({ access_record_id: id })
     if (code === 0) {
         ElMessage.closeAll('success')
-        ElMessage.success({duration:1500,message:t('home.access_record_ok')})
+        ElMessage.success({ duration: 1500, message: t('home.access_record_ok') })
         getUserdata()
     } else {
         ElMessage.closeAll('error')
-        ElMessage.error({duration:1500,message:t('home.access_record_no')})
+        ElMessage.error({ duration: 1500, message: t('home.access_record_no') })
     }
     if (menu.value) {
         menu.value.style.display = 'none'
@@ -372,11 +374,11 @@ const rcopyfile = async () => {
     const { code } = await user_api.Copyfile({ doc_id: id })
     if (code === 0) {
         ElMessage.closeAll('success')
-        ElMessage.success({duration:1500,message:t('homerightmenu.copyfile_ok')})
+        ElMessage.success({ duration: 1500, message: t('homerightmenu.copyfile_ok') })
         getUserdata()
     } else {
         ElMessage.closeAll('error')
-        ElMessage.error({duration:1500,message:t('homerightmenu.copyfile_no')})
+        ElMessage.error({ duration: 1500, message: t('homerightmenu.copyfile_no') })
     }
     if (menu.value) {
         menu.value.style.display = 'none'
@@ -430,6 +432,11 @@ onUnmounted(() => {
 
     &:hover {
         background: rgba(80, 80, 255, 0.884);
+    }
+
+    &[disabled] {
+        background: rgba(195, 195, 246, 0.884);
+        border: 1px rgba(195, 195, 246, 0.884) solid;
     }
 }
 

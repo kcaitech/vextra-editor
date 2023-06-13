@@ -43,10 +43,11 @@
     </div>
     <!-- 重命名弹框 -->
     <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
-        <input class="newname" type="text" :value=" newname " ref="renameinput" @keyup.enter="rename1" />
+        <input class="newname" type="text" v-model=" newname " ref="renameinput" @keyup.enter=" rename1 " />
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click=" rename1 ">
+                <el-button type="primary" style="background-color: none;" @click=" rename1 "
+                    :disabled=" newname == '' ? true : false ">
                     {{ t('home.rename_ok') }}
                 </el-button>
                 <el-button @click=" dialogVisible = false ">{{t('home.cancel')}}</el-button>
@@ -253,20 +254,21 @@ const rrename = () => {
 }
 
 const rename1 = async () => {
-    const { document: { id,name } } = documentId.value
+    const { document: { id, name } } = documentId.value
     newname.value = renameinput.value.value
+    if (newname.value == '') return
     if (newname.value != name)
-    try {
-        const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
-        if (code === 0) {
-            ElMessage.success(t('percenter.successtips'))
-            getUserdata()
-        } else {
-            ElMessage.error(t('percenter.errortips1'))
+        try {
+            const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
+            if (code === 0) {
+                ElMessage.success(t('percenter.successtips'))
+                getUserdata()
+            } else {
+                ElMessage.error(t('percenter.errortips1'))
+            }
+        } catch (error) {
+            ElMessage.error(t('home.other_tips'))
         }
-    } catch (error) {
-        ElMessage.error(t('home.other_tips'))
-    }
     dialogVisible.value = false
 }
 
@@ -330,6 +332,10 @@ onUnmounted(() => {
 
     &:hover {
         background: rgba(80, 80, 255, 0.884);
+    }
+    &[disabled] {
+        background: rgba(195, 195, 246, 0.884);
+        border: 1px rgba(195, 195, 246, 0.884) solid;
     }
 }
 
