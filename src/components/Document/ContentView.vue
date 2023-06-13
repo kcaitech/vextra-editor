@@ -228,9 +228,12 @@ function workspaceUpdate(t?: number, name?: string) { // 更新编辑器状态�
     //更新评论
     if(t === WorkSpace.EDIT_COMMENT) {
         const timer = setTimeout(() => {
-            getDocumentComment(docID)
+            getDocumentComment()
             clearTimeout(timer)
-        }, 500);
+        }, 100);
+    }
+    if(t === WorkSpace.UPDATE_COMMENT) {
+        documentCommentList.value = props.context.workspace.commentList
     }
 }
 
@@ -530,20 +533,31 @@ const rootWidth = ref(root.value && root.value.clientWidth)
 const pageID = ref(props.page.id)
 const shapeID = ref('')
 const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
-const documentCommentList = ref<any[]>([])
+const documentCommentList = ref<any[]>(workspace.value.pageCommentList)
 const route = useRoute()
 const docID = (route.query.id as string)
 const posi = ref({ x: 0, y: 0 });
-const commentsLength = ref(0)
+type commentListMenu = {
+    text: string
+    status_p: boolean
+}
+// 左侧评论列表的菜单
+const commentMenuItems = ref<commentListMenu[]>([
+    { text: `${t('comment.sort')}`, status_p: false},
+    { text: `${t('comment.show_about_me')}`, status_p: false},
+    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false}
+])
 //添加评论
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
-    if(workspace.value.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {
+    if(workspace.value.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {        
+        workspace.value.commentOpacity(false)
         workspace.value.commentInput(false)
         return
     }else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
         return
     }
+    
     if(commentInput.value) return
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
@@ -702,21 +716,23 @@ const closeComment = (e?: MouseEvent) => {
 const completed = () => {
     workspace.value.sendComment()
     const timer = setTimeout(() => {
-        getDocumentComment(docID)
+        getDocumentComment()
         clearTimeout(timer)
         commentInput.value = false;
     }, 100);
 }
 
 // 获取评论列表
-const getDocumentComment = async(id :string) => {
+const getDocumentComment = async() => {
     try {
-       const {data} = await comment_api.getDocumentCommentAPI({doc_id: id, page_id: pageID.value})
-       data.forEach((obj: {childern: any[]}) => {
-        obj.childern = []
+        const {data} = await comment_api.getDocumentCommentAPI({doc_id: route.query.id})
+       data.forEach((obj: { commentMenu: any; }) => {
+        obj.commentMenu = commentMenuItems.value
        })
-       documentCommentList.value = list2Tree(data, '')
-       commentsLength.value = documentCommentList.value.length
+       const list = list2Tree(data, '')
+       workspace.value.setCommentList(list)
+       workspace.value.setPageCommentList(props.page.id)
+       documentCommentList.value = workspace.value.pageCommentList
     }catch(err) {
         console.log(err);
     }
@@ -741,12 +757,20 @@ const list2Tree = (list: any, rootValue: string) => {
 const deleteComment = (index :number) => {
     workspace.value.sendComment()
     documentCommentList.value.splice(index, 1)
+    const timer = setTimeout(() => {
+        getDocumentComment()
+        clearTimeout(timer)
+    }, 100);
 }
 
 //解决评论
 const resolve = (status: number, index: number) => {
     workspace.value.sendComment()
     documentCommentList.value[index].status = status
+    const timer = setTimeout(() => {
+        getDocumentComment()
+        clearTimeout(timer)
+    }, 100);
 }
 
 //回复评论
@@ -758,6 +782,10 @@ const recover = () => {
 const editComment = (index: number, text: string) => {
     workspace.value.sendComment()
     documentCommentList.value[index].content = text
+    const timer = setTimeout(() => {
+        getDocumentComment()
+        clearTimeout(timer)
+    }, 100);
 }
 
 // hooks
@@ -785,7 +813,9 @@ renderinit().then(() => {
     inited.value = true;
     nextTick(() => { root.value && resizeObserver.observe(root.value) });
 })
+
 onMounted(() => {
+    getDocumentComment()
     initMatrix(props.page);
     props.context.workspace.watch(workspaceUpdate);
     props.page.watch(watcher);
@@ -795,7 +825,6 @@ onMounted(() => {
     stylerForCursorMount();
     rootRegister(true);
     props.context.selection.scoutMount(); // 用于hover判定
-    getDocumentComment(docID)
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
@@ -827,7 +856,7 @@ onUnmounted(() => {
         :matrix="matrix.toArray()" :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
         <PageCommentItem :context="props.context" :x="posi.x" @moveCommentPopup="downMoveCommentPopup" :y="posi.y" :matrix="matrix.toArray()"
          @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush" v-for="(item, index) in documentCommentList" :key="index" 
-         :commentInfo="item" :index="index" :length="commentsLength" @recover="recover" @editComment="editComment" :documentComment="documentCommentList">
+         :commentInfo="item" :index="index" @recover="recover" @editComment="editComment">
         </PageCommentItem>
     </div>
 </template>

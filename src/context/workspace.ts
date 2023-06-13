@@ -86,6 +86,10 @@ export class WorkSpace extends Watchable(Object) {
     static EDIT_COMMENT = 20;
     static HOVER_COMMENT = 21;
     static COMMENT_POPUP = 22;
+    static UPDATE_COMMENT = 23;
+    static OPACITY_COMMENT = 24;
+    static CURRENT_COMMENT = 25;
+    static SELECTE_COMMENT = 26;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -112,9 +116,14 @@ export class WorkSpace extends Watchable(Object) {
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_saving: boolean = false;
+    private m_comment_list: any[] = []; // 当前文档评论
+    private m_page_comment_list: any[] = []; // 当前页面评论
     private m_comment_move: boolean = false; //是否拖动评论，解决hove评论拖动时的闪烁问题
     private m_hove_commetn: boolean = false; //是否hover评论
     private m_comment_mount: boolean = false;//评论弹层的显示
+    private m_comment_opacity: boolean = false;//评论弹层显示时其他评论置灰
+    private m_hover_comment_id: string | undefined; //hover中的评论id
+    private m_select_comment_id: string | undefined; //选中的评论id
     constructor(context: Context) {
         super();
         this.context = context
@@ -199,6 +208,9 @@ export class WorkSpace extends Watchable(Object) {
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
+    get commentList() {
+        return this.m_comment_list;
+    }
     get isCommentMove() {
         return this.m_comment_move;
     }
@@ -207,6 +219,18 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isCommentMount() {
         return this.m_comment_mount;
+    }
+    get pageCommentList() {
+        return this.m_page_comment_list;
+    }
+    get isCommentOpacity() {
+        return this.m_comment_opacity;
+    }
+    get isHoverCommentId() {
+        return this.m_hover_comment_id;
+    }
+    get isSelectCommentId() {
+        return this.m_select_comment_id;
     }
     startSvae() {
         this.m_saving = true;
@@ -273,6 +297,15 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.SHUTDOWN_MENU);
         }
     }
+    setCommentList(list: any[]) {
+        this.m_comment_list = list;
+        this.notify(WorkSpace.UPDATE_COMMENT);
+    }
+    setPageCommentList(pageId: string) {
+        const list = this.m_comment_list;
+        this.m_page_comment_list = list.filter(item => item.page_id === pageId)
+        this.notify(WorkSpace.UPDATE_COMMENT);
+    }
     commentInput(visible: boolean) {
         this.m_comment_input = visible;
         if (!visible) {
@@ -284,6 +317,14 @@ export class WorkSpace extends Watchable(Object) {
         if (!visible) {
             this.notify(WorkSpace.COMMENT_POPUP)
         }
+    }
+    commentOpacity(status: boolean) { //点击后改变其他评论的透明度
+        this.m_comment_opacity = status
+        this.notify(WorkSpace.OPACITY_COMMENT)
+    }
+    saveCommentId(id: string) { //保存点击的评论id
+        this.m_select_comment_id = id
+        this.notify(WorkSpace.SELECTE_COMMENT)
     }
     popoverVisible(visible: boolean) {
         this.m_popover = visible;
@@ -439,6 +480,7 @@ export class WorkSpace extends Watchable(Object) {
     keydown_c() {
         this.escSetup();
         this.m_current_action = Action.AddComment;
+        this.commentInput(false);
         this.notify(WorkSpace.SELECT_LIST_TAB);
     }
     keydown_0(ctrl: boolean, meta: boolean) {
@@ -515,10 +557,14 @@ export class WorkSpace extends Watchable(Object) {
     editTabComment() {
         this.notify(WorkSpace.EDIT_COMMENT); // listTab栏和content组件之间的通信
     }
-    hoverComment(v: boolean) {
+    hoverComment(v: boolean, id?: string) {
         this.m_hove_commetn = v
+        this.m_hover_comment_id = id
         if (!v) {
             this.notify(WorkSpace.HOVER_COMMENT);
+        }
+        if(id) {
+            this.notify(WorkSpace.CURRENT_COMMENT);
         }
     }
 }

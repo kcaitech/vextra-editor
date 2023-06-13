@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick, watch } from 'vue'
 import { Context } from '@/context';
 import { Close, Delete, CircleCheck, Back, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
@@ -9,6 +9,7 @@ import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
 import { v4 } from 'uuid';
+import { ElScrollbar } from 'element-plus'
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -20,7 +21,6 @@ const props = defineProps<{
     index: number
     documentCommentList: any[]
     length: number
-    documentComment: any[]
     reply:boolean
 }>()
 const emit = defineEmits<{
@@ -32,6 +32,7 @@ const emit = defineEmits<{
     (e: 'editCommentChild', index: number, text: string): void
     (e: 'previousArticle', index: number, xy?: {x: number, y: number}, id?: string): void
     (e: 'nextArticle', index: number, xy?: {x: number, y: number}, id?: string): void
+    (e: 'moveCommentPopup', event: MouseEvent, index: number): void
 }>()
 interface Comment {
     parent_id: string
@@ -58,6 +59,7 @@ const selectedPerson = ref('')
 const itemHeight = ref<HTMLDivElement>()
 const scrollMaxHeight = ref(0)
 const commentShowList = ref<any[]>([])
+const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 
 const close = (e: MouseEvent) => {
     emit('close', e)
@@ -71,7 +73,7 @@ const nextOpacity = computed(() => {
     return index
 })
 
-const disablePrevent = computed(() => {
+const disablePrevent = computed(() => { 
     if (props.reply) {
         return props.index === 0
     } else {
@@ -114,7 +116,7 @@ const commentPosition = () => {
         scrollMaxHeight.value = props.rootHeight - 55 - (height.value as number) - 30
         nextTick(() => {
             scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
-            
+            scrollbarRef.value!.setScrollTop(itemHeight.value!.clientHeight)
             if(commentPopup.value) {
                 const commentPopupH = scrollHeight.value + height.value + 45
                 if(t - commentPopupH < -10) {
@@ -167,6 +169,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
+    props.context.workspace.commentInput(false);
     deleteComment(props.commentInfo.id)
     emit('delete', props.index)
 }
@@ -179,6 +182,7 @@ const onDeleteChild = (index: number, e: Event, id: string) => {
     e.stopPropagation()
     emit('recover', index, id)
     deleteComment(id)
+    commentPosition()
 }
 
 const setCommentStatus = async(status: number) => {
@@ -201,6 +205,7 @@ function workspaceUpdate(t?: number) {
     const length = textarea.value.trim().length < 4
     props.context.workspace.commentInput(true);
     props.context.workspace.commentMount(true);
+
   if (t === WorkSpace.SHUTDOWN_COMMENT && length) {
     emit('close');
   }
@@ -221,7 +226,6 @@ const previousArticle = () => {
         const id = commentShowList.value[index - 1].id
         emit('previousArticle', index, {x: x1, y: y1}, id)
     }
-    
 }
 
 const nextArticle = () => {
@@ -240,11 +244,12 @@ const nextArticle = () => {
 }
 
 const commentShow = () => {
-    props.documentComment.forEach(item => {
+    const commentList = props.context.workspace.pageCommentList
+    commentList.forEach(item => {
         if (item.status === 0) {
             commentShowList.value && commentShowList.value.push(item)     
         }
-    })
+    })    
 }
 
 const addComment = () => {
@@ -283,7 +288,6 @@ function padNumber(number: number, length = 2) {
 const createComment = async(d: any) => {
     try {
         await comment_api.createCommentAPI(d)
-        getDocumentComment()
     }catch (err) {
         console.log(err);
     }
@@ -296,14 +300,6 @@ const startShake = () => {
         isShaking.value = false;
         clearTimeout(timer)
       }, 500); // 停止时间可以根据需要进行调整
-}
-
-const getDocumentComment = async() => {
-    try {
-       const {data} = await comment_api.getDocumentCommentAPI({doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id})
-    }catch(err) {
-        console.log(err);
-    }
 }
 
 const editComment = (index: number, text: string) => {
@@ -322,9 +318,8 @@ const quickReply = (name: string) => {
 }
 
 watchEffect(() => {
+    props.documentCommentList
     commentPosition()
-    getDocumentComment()
-    commentShow()
 })
 const scrollup = (e: MouseEvent) => {
 }
@@ -337,19 +332,27 @@ const closeComment = (e: KeyboardEvent) => {
     }
 }
 
+const moveCommentPopup = (e: MouseEvent) => {
+    e.stopPropagation()
+    emit('moveCommentPopup', e, props.index)
+}
+
 defineExpose({
     commentPopup,
     textarea,
     startShake
 })
 onMounted(() => {  
+  commentShow()
+  props.context.workspace.saveCommentId(props.commentInfo.id);
+  props.context.workspace.commentOpacity(true);
   props.context.workspace.commentInput(true);
   props.context.workspace.watch(workspaceUpdate);
   document.addEventListener('mouseup', handleClickOutside);
   document.addEventListener('mouseup', scrollup)
   document.addEventListener('keydown', closeComment);
 })
-onUnmounted(() => {  
+onUnmounted(() => {
   props.context.workspace.unwatch(workspaceUpdate);
   document.removeEventListener('mouseup', handleClickOutside);
   document.removeEventListener('mouseup', scrollup);
@@ -360,7 +363,7 @@ onUnmounted(() => {
 <template>
     <div class="container-popup" ref="commentPopup" :style="{ top: commentTop + 'px' }" 
     :class="{ popup_left: offside, popup_right: !offside, 'shake': isShaking }">
-        <div class="popup-heard">
+        <div class="popup-heard"  @mousedown="moveCommentPopup">
             <div class="button-shift">
                 <el-button plain class="custom-button" :style="{ opacity: disablePrevent ? '0.2': '1' }" @click="previousArticle">{{t('comment.last')}}</el-button>
                 <div class="button-icon"></div>
@@ -384,7 +387,7 @@ onUnmounted(() => {
                 </el-button-group>
             </div>
         </div>
-        <el-scrollbar :height="scrollHeight + 'px'">
+        <el-scrollbar ref="scrollbarRef" :height="scrollHeight + 'px'">
             <div ref="itemHeight">
                 <CommentPopupItem :context="props.context" @close="() => emit('close')" :commentInfo="props.commentInfo" 
                     :index="props.index" @delete="onDeleteItem" @editComment="editComment" @quick-reply="quickReply"></CommentPopupItem>

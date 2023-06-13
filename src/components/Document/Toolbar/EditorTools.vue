@@ -27,6 +27,9 @@ const selected = ref<Action>(Action.AutoV);
 
 function select(action: Action) {
     workspace.value.setAction(action);
+    if(action === Action.AddComment) {
+        props.context.workspace.commentInput(false);
+    }
 }
 
 function update() {

@@ -19,6 +19,7 @@ const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
     (e: 'moveCommentPopup', event: MouseEvent, index: number): void
 }>()
+const workspace = computed(() => props.context.workspace);
 const hover = ref(false)
 const replyNum = computed(() => {
     if (props.commentInfo.children) {
@@ -32,9 +33,11 @@ const resolve = computed(() => {
     return props.commentInfo.status === 0 ? true : false
 })
 const hoverShape = (e: MouseEvent) => {
+    workspace.value.hoverComment(true, props.commentInfo.id)
     hover.value = true
 }
 const unHoverShape = (e: MouseEvent) => {
+    workspace.value.hoverComment(false, props.commentInfo.id)
     hover.value = false
     emit('unHoverComment')
 }
@@ -55,6 +58,7 @@ const onResolve = (e: Event) => {
 const onDelete = (e: Event) => {
     e.stopPropagation()
     emit('deleteComment', props.index)
+    props.context.workspace.commentInput(false);
     deleteComment()
 }
 
@@ -104,6 +108,8 @@ onMounted(() => {
     // props.context.workspace.watch(workspaceUpdate);
 })
 onUnmounted(() => {
+    props.context.workspace.commentOpacity(false)
+    props.context.workspace.commentInput(false);
     // props.context.workspace.unwatch(workspaceUpdate);
 })
 </script>
@@ -116,8 +122,8 @@ onUnmounted(() => {
         </div>
         <div class="content">
             <div class="box-heard">
-                <div class="name">
-                    <div>{{ commentInfo.user.nickname }}</div>&nbsp;&nbsp;
+                <div class="item_heard">
+                    <div class="name">{{ commentInfo.user.nickname }}</div>&nbsp;&nbsp;
                     <div class="date">{{ formatDate(commentInfo.record_created_at) }}</div>
                 </div>
                 <div class="icon" :style="{ visibility: hover ? 'visible' : 'hidden' }">
@@ -196,9 +202,19 @@ onUnmounted(() => {
             justify-content: space-between;
             margin: 5px 0;
 
-            .name {
-                display: flex;
-            }
+            .item_heard {
+                    display: flex;
+                    width: calc(100% - 80px);
+                    .name {
+                        max-width: calc(100% - 82px);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                    .date {
+                        width: 82px;
+                    }
+                }
 
             .icon {
                 width: 70px;

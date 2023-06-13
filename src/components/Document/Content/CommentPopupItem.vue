@@ -4,7 +4,6 @@ import { Context } from '@/context';
 import { Delete, Edit, Back } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
-import { chain } from 'lodash';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -54,16 +53,7 @@ const onQuickReply = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    deleteComment()
     emit('delete', props.index, e, props.commentInfo.id)
-}
-
-const deleteComment = async() => {
-    try{
-        await comment_api.deleteCommentAPI({comment_id: props.commentInfo.id})
-    }catch(err) {
-        console.log(err);
-    }
 }
 
 const carriageReturn = (event: KeyboardEvent) => {
@@ -124,8 +114,8 @@ const formatDate = computed(() => {
             </div>
             <div class="popup-body-context">
                 <div class="box-heard">
-                    <div class="name">
-                        <div>{{ commentInfo.user.nickname }}</div>&nbsp;&nbsp;
+                    <div class="item_heard">
+                        <div class="name">{{ commentInfo.user.nickname }}</div>&nbsp;&nbsp;
                         <div class="date">{{ formatDate(commentInfo.record_created_at) }}</div>
                     </div>
                     <div class="icon" :style="{visibility: hover ? 'visible' : 'hidden'}">
@@ -187,6 +177,7 @@ const formatDate = computed(() => {
             }
         }
         .popup-body-context {
+            width: 260px;
             display: flex;
             flex-direction: column;
             .box-heard {
@@ -194,8 +185,18 @@ const formatDate = computed(() => {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                .name {
+                .item_heard {
                     display: flex;
+                    width: calc(100% - 80px);
+                    .name {
+                        max-width: calc(100% - 82px);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                    .date {
+                        width: 82px;
+                    }
                 }
                 .icon {
                     width: 70px;
@@ -247,5 +248,7 @@ const formatDate = computed(() => {
 }
   :deep(.el-textarea__inner) {
     padding-left: 0;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 </style>

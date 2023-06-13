@@ -11,7 +11,8 @@ const props = defineProps<{
   pageHeight: number,
   shareSwitch: boolean,
   docId?: string,
-  selectValue: number
+  selectValue: number,
+  docUserId?: string
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -26,7 +27,7 @@ enum permissions {
 }
 const route = useRoute()
 const docID = props.docId ? props.docId : route.query.id
-const url = route.path !== '/document' ? `http://protodesign.cn/#/document?id=${docID}` : location.href
+const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` : location.href
 
 const value1 = ref(props.shareSwitch)
 const authority = ref(false)
@@ -209,7 +210,11 @@ watchEffect(() => {
   if (route.query.id) {
     const userId = localStorage.getItem('userId')
     if (docInfo.value) {
-      docInfo.value.user.id != userId ? founder.value = true : founder.value = false
+      if(props.docUserId) {
+        props.docUserId != userId ? founder.value = true : founder.value = false
+      }else {
+        docInfo.value.user.id != userId ? founder.value = true : founder.value = false
+      }
     }
   }
 })

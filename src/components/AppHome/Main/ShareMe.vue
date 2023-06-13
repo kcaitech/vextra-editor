@@ -36,7 +36,7 @@
             </template>
         </el-table-column>
     </el-table>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :docUserId="docUserId"
         @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
     <div v-if=" showFileShare " class="overlay"></div>
@@ -58,6 +58,7 @@ const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
+const docUserId = ref('')
 const selectValue = ref(1)
 
 async function ShareLists() {
@@ -114,6 +115,7 @@ const Sharefile = (scope: any) => {
         return
     }
     docId.value = scope.row.document.id
+    docUserId.value = scope.row.document.user_id
     selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
     showFileShare.value = true
 }

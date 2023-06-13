@@ -17,8 +17,6 @@ const props = defineProps<{
     commentInfo: any
     index: number
     reflush: number
-    length: number
-    documentComment: any[]
 }>()
 const emit = defineEmits<{
     (e: 'moveCommentPopup', event: MouseEvent, index: number): void
@@ -28,6 +26,7 @@ const emit = defineEmits<{
     (e: 'editComment', index: number, text: string): void
 }>()
 const commentPopupEl = ref<CommentViewEl>()
+const workspace = computed(() => props.context.workspace);
 const ShowComment = ref(false)
 const commentScale = ref(0)
 const markScale = ref(1)
@@ -37,8 +36,11 @@ const rootWidth = ref(0)
 const comment = ref<HTMLDivElement>()
 const matrix = new Matrix();
 const posi = {x: 0, y: 0}
-const documentCommentList = ref<any[]>([])
+const documentCommentList = ref<any[]>(workspace.value.pageCommentList[props.index].children || [])
+const commentOpacity = ref(workspace.value.isCommentOpacity)
 const reply = ref(props.context.selection.commentStatus)
+const commentLength = ref(props.context.workspace.pageCommentList.length)
+
 const status = computed(() => {
     const status = props.commentInfo.status
     replyStatus()
@@ -76,6 +78,7 @@ const showComment = (e: MouseEvent) => {
     commentScale.value = 0
     rootHeight.value = comment.value!.parentElement!.clientHeight
     rootWidth.value = comment.value!.parentElement!.clientWidth
+    getDocumentComment()
     ShowComment.value = true
     showScale.value = true
 }
@@ -90,9 +93,12 @@ const moveCommentPopup = (e: MouseEvent) => {
 }
 
 const closeComment = (e?: MouseEvent) => {
-    if(e && e.target instanceof Element && e.target.closest('.comment-mark')) return
+    const target = e && e.target instanceof Element
+    if(target && e.target.closest('.comment-mark') || target && e.target.closest('.container-hover')) return
     ShowComment.value = false
     showScale.value = false
+    props.context.workspace.commentOpacity(false)
+    props.context.workspace.saveCommentId('')
 }
 
 const deleteComment = () => {
@@ -112,7 +118,7 @@ const recover = (index?: number) => {
         const timer = setTimeout(() => {
             getDocumentComment()
             clearTimeout(timer)
-        }, 50);
+        }, 100);
     }
 }
 
@@ -139,21 +145,21 @@ const nextArticle = (i: number, xy?: {x: number, y: number}, id?: string) => {
 
 const skipComment = (index: number, xy?: {x: number, y: number}, id?: string) => {
     const workspace = props.context.workspace;
-    const comment = props.documentComment[index]
-    const cx = reply.value ? comment.shape_frame.x1 : xy?.x
-    const cy = reply.value ? comment.shape_frame.y1 : xy?.y
+    const commentItem = props.context.workspace.pageCommentList[index]
+    const cx = reply.value ? commentItem.shape_frame.x1 : xy?.x
+    const cy = reply.value ? commentItem.shape_frame.y1 : xy?.y
     const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
     const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
+    props.context.selection.selectComment(reply.value ? commentItem.id : id)
     if (transX || transY) {
-        props.context.selection.selectComment(reply.value ? comment.id : id)
         workspace.matrix.trans(transX, transY);
         workspace.matrixTransformation();
     }
 }
 
-watchEffect(() => {
+watchEffect(() => {    
     props.reflush;
     matrix.reset(props.matrix);
     matrix.preTrans(props.commentInfo.shape_frame.x1, props.commentInfo.shape_frame.y1);
@@ -172,6 +178,9 @@ const workspaceUpdate =(t: number) => {
     if(t === WorkSpace.HOVER_COMMENT) {
         unHoverComment()
     }
+    if(t === WorkSpace.OPACITY_COMMENT) {
+        commentOpacity.value = workspace.value.isCommentOpacity
+    }
 }
 const update = (t: number) => {
     if(t === Selection.CHANGE_COMMENT) {
@@ -182,6 +191,7 @@ const update = (t: number) => {
                 rootWidth.value = comment.value.parentElement!.clientWidth
             }
             commentScale.value = 0
+            getDocumentComment()
             ShowComment.value = true
             showScale.value = true
         }
@@ -190,7 +200,7 @@ const update = (t: number) => {
         reply.value = props.context.selection.commentStatus
     }
 }
-getDocumentComment()
+
 onMounted(() => {
     props.context.workspace.watch(workspaceUpdate);
     props.context.selection.watch(update);
@@ -202,18 +212,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container comment-mark-item" ref="comment" :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`,left: -2 + 'px', top: -33 + 'px'}"
-    :reflush="reflush !== 0 ? reflush : undefined" v-if="status">
+    <div class="container comment-mark-item" ref="comment" :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`
+    ,left: -2 + 'px', top: -33 + 'px'}" :reflush="reflush !== 0 ? reflush : undefined" v-if="status">
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="moveCommentPopup"
-        :style="{transform: `scale(${markScale})`}" :class="{shadow: commentScale === 1 }">
+        :style="{transform: `scale(${markScale})`, opacity: commentOpacity && !ShowComment ? '0.5' : '1'}" :class="{shadow: commentScale === 1 }">
             <img @dragstart="dragstart" :src="commentInfo.user.avatar" alt="">
         </div>
         <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment" @unHoverComment="unHoverComment"
          :commentInfo="props.commentInfo" :index="props.index" @deleteComment="deleteComment" @resolve="resolve" @moveCommentPopup.stop="moveCommentPopup"></HoverComment>
-        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="posi.x" :y="posi.y" :rootHeight="rootHeight" :rootWidth="rootWidth" :length="length"
+        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="posi.x" :y="posi.y" :rootHeight="rootHeight" :rootWidth="rootWidth" :length="commentLength"
         :context="props.context" @close="closeComment" :commentInfo="props.commentInfo" :index="props.index" @resolve="resolve" @delete="deleteComment"
         @recover="recover" @editComment="editComment" @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"
-        @previousArticle="previousArticle" @next-article="nextArticle" :documentComment="documentComment" :reply="reply"></CommentView>
+        @previousArticle="previousArticle" @next-article="nextArticle" :reply="reply" @moveCommentPopup.stop="moveCommentPopup"></CommentView>
     </div>
 </template>
 

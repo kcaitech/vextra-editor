@@ -21,7 +21,7 @@ const commentMenuItems = ref<commentListMenu[]>([
     { text: `${t('comment.show_about_me')}`, status_p: false},
     { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
 ])
-const documentCommentList = ref<any[]>([])
+const documentCommentList = ref<any[]>(props.context.workspace.commentList)
 const showMenu = () => {
     if(commentMenu.value) {
         commentMenu.value = false
@@ -44,7 +44,9 @@ const getDocumentComment = async(id :string) => {
        data.forEach((obj: { commentMenu: any; }) => {
         obj.commentMenu = commentMenuItems.value
        })
-       documentCommentList.value = list2Tree(data, '') 
+       const list  = list2Tree(data, '') 
+       props.context.workspace.setCommentList(list)
+       documentCommentList.value = props.context.workspace.commentList
     }catch(err) {
         console.log(err);
     }
@@ -67,22 +69,26 @@ const list2Tree = (list: any, rootValue: string) => {
 
 const onResolve = (status: number, index: number) => {
     documentCommentList.value[index].status = status
+    props.context.workspace.setCommentList(documentCommentList.value)
 }
 
 const onDelete = (index:number) => {
     documentCommentList.value.splice(index, 1)
+    props.context.workspace.setCommentList(documentCommentList.value)
 }
 const update = (t: number) => {
     if(t === WorkSpace.SEND_COMMENT) {
         const timer = setTimeout(() => {
             getDocumentComment(docID)
             clearTimeout(timer)
-        }, 500);
+        }, 100);
+    }
+    if(t === WorkSpace.UPDATE_COMMENT) {
+        documentCommentList.value = props.context.workspace.commentList
     }
 }
 
 onMounted(() => {
-    getDocumentComment(docID)
     props.context.workspace.watch(update);
 })
 onUnmounted(() => {

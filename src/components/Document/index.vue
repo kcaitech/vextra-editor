@@ -271,7 +271,6 @@ const getDocumentInfo = async () => {
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
         //获取文档类型是否为私有文档且有无权限   
-        
         const repo = new Repository();
         const importDocumentParams = {
             endPoint: FILE_DOWNLOAD,
@@ -299,6 +298,7 @@ const getDocumentInfo = async () => {
         loading.value = false;
     }
 }
+
 function upload(id?: string) {
     const token = localStorage.getItem('token');
     if (token) {

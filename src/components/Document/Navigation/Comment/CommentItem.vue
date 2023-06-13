@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import {ref, onMounted, computed } from "vue"
+import {ref, onMounted, computed, onUnmounted } from "vue"
 import { ChatDotSquare, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n'
 import { Page } from '@kcdesign/data';
+import { Selection } from '@/context/selection'
+import { WorkSpace } from "@/context/workspace";
 import * as comment_api from '@/apis/comment';
 const { t } = useI18n()
 const props = defineProps<{
@@ -16,16 +18,26 @@ const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
     (e: 'delete', index: number):void
 }>()
-const hover = ref(false)
+const hoverIcon = ref(false)
+const hoverComment = ref(props.context.workspace.isHoverComment)
+const reply = ref(props.context.selection.commentStatus)
+const resolve = computed(() => {
+    return props.commentItem.status === 0 ? true : false
+})
+const selectComment = ref(false)
 const status = computed(() => {
     const status = props.commentItem.status
-    const reply = props.commentItem.commentMenu[2].status_p
-    if(reply) {
+    replyStatus()
+    if(reply.value) {
         return true
     }else {
         return status === 0
     }
 })
+
+const replyStatus = () => {
+    reply.value = props.context.selection.commentStatus
+}
 
 const replyNum = computed(() => {
     if(props.commentItem.children) {
@@ -35,16 +47,16 @@ const replyNum = computed(() => {
         return 0
     }
 })
-const resolve = computed(() => {
-    return props.commentItem.status === 0 ? true : false
-})
+
 
 const hoverShape = (e: MouseEvent) => {
-    hover.value = true
+    hoverIcon.value = true
+    hoverComment.value = true
 }
 const page = ref<Page>()
 const unHoverShape = (e: MouseEvent) => {
-    hover.value = false
+    hoverIcon.value = false
+    hoverComment.value = false
 }
 
 const onReply = (e: Event) => {
@@ -56,8 +68,8 @@ const onReply = (e: Event) => {
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
     const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
+    props.context.selection.selectComment(props.commentItem.id)
     if (transX || transY) {
-        props.context.selection.selectComment(props.commentItem.id)
         workspace.matrix.trans(transX, transY);
         
         workspace.matrixTransformation();
@@ -67,14 +79,15 @@ const onReply = (e: Event) => {
 const onResolve = (e: Event) => {
     e.stopPropagation()
     props.context.workspace.editTabComment()
-    const status = props.commentItem.status === 0 ? 1 : 0
-    setCommentStatus(status)
-    emit('resolve', status, props.index)
+    const state = props.commentItem.status === 0 ? 1 : 0
+    setCommentStatus(state)
+    emit('resolve', state, props.index)
 }
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
     props.context.workspace.editTabComment()
+    props.context.workspace.commentInput(false);
     deleteComment()
     emit('delete', props.index)
 }
@@ -118,22 +131,45 @@ const getPage = () => {
             page.value = p
     })
 }
+
+const update = (t: number) => {
+    if(t === Selection.SOLVE_MENU_STATUS) {
+        replyStatus()
+    }
+    if(t === WorkSpace.CURRENT_COMMENT) {
+        const curId = props.context.workspace.isHoverCommentId
+        if(curId === props.commentItem.id) {
+            hoverComment.value = props.context.workspace.isHoverComment
+        }
+    }
+    if(t === WorkSpace.SELECTE_COMMENT) {
+        const curId = props.context.workspace.isSelectCommentId
+            selectComment.value = curId === props.commentItem.id ? true : false
+    }
+}
+
 getPage()
 onMounted(() => {
+    props.context.selection.watch(update);
+    props.context.workspace.watch(update);
+})
+onUnmounted(() => {
+    props.context.selection.unwatch(update);
+    props.context.workspace.unwatch(update);
 })
 </script>
 <template>
-    <div class="comment-item-container" :class="{active: hover}" @mouseenter="hoverShape" @mouseleave="unHoverShape" v-if="status">
+    <div class="comment-item-container" :class="{active: hoverComment, selected: selectComment}" @mouseenter="hoverShape" @mouseleave="unHoverShape" @click="onReply" v-if="status">
         <div class="avatar">
             <img :src="props.commentItem.user.avatar" alt="">
         </div>
         <div class="content">
             <div class="item-title">
-                <div class="name">
-                    <div :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">{{props.commentItem.user.nickname}} </div>&nbsp;&nbsp;
+                <div class="item_heard">
+                    <div class="name" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">{{props.commentItem.user.nickname}} </div>&nbsp;&nbsp;
                     <div class="date">{{ formatDate(props.commentItem.record_created_at) }}</div>
                 </div>
-                <div class="icon"  :style="{visibility: hover ? 'visible' : 'hidden'}">
+                <div class="icon"  :style="{visibility: hoverIcon ? 'visible' : 'hidden'}">
                     <el-button-group class="ml-4">
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
@@ -184,7 +220,7 @@ onMounted(() => {
             }
         }
         .content {
-            flex: 1;
+            width: calc(100% - 37px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -195,8 +231,15 @@ onMounted(() => {
                 height: 30px;
                 align-items: center;
                 justify-content: space-between;
-                .name {
+                .item_heard {
                     display: flex;
+                    width: calc(100% - 80px);
+                    .name {
+                        width: calc(100% - 82px);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
                 }
                 .icon {
                     width: 70px;
@@ -240,6 +283,9 @@ onMounted(() => {
     }
     .active {
         background-color: var(--grey);
+    }
+    .selected {
+        background-color: var(--left-navi-button-select-color);
     }
     .custom-icon {
         color: green; /* 设置颜色为绿色 */
