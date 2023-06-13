@@ -160,8 +160,6 @@ function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Funct
     frame.height = _m.frame.height;
     frame.width = _m.frame.width;
     new_shape = asyncCreator.init_media(page, (page as GroupShape), _name as string, frame, _m);
-    console.log('new_shape', new_shape);
-
   }
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
