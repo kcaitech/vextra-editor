@@ -6,7 +6,8 @@ export const shape: any = {
     oval: '圆形',
     artboard: '容器',
     arrow: '箭头',
-    text: '文字'
+    text: '文字',
+    image: '图片'
 }
 shape[ShapeType.Rectangle] = '矩形';
 

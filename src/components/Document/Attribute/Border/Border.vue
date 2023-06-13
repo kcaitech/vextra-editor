@@ -62,8 +62,7 @@ function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const borderStyle = new BorderStyle(0, 0);
-    const id = v4();
-    const border = new Border(id, true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
+    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
     editor.value.addBorder(border);
 }
 const isNoBorder = () => {

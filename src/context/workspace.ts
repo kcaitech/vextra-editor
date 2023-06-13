@@ -13,7 +13,8 @@ export enum Action {
     AddArrow = 'add-arrow',
     AddFrame = 'add-frame',
     AddText = 'add-text',
-    AddComment = 'add-comment'
+    AddComment = 'add-comment',
+    AddImage = 'add-image'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -52,15 +53,26 @@ export enum CtrlElementType { // 控制元素类型
     LineEndR = 'line-end-rotate',
     Text = 'text'
 }
-
+export interface Media {
+    name: string
+    frame: { width: number, height: number }
+    buff: Uint8Array
+    base64: string
+}
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle],
     [Action.AddEllipse, ShapeType.Oval],
     [Action.AddLine, ShapeType.Line],
     [Action.AddFrame, ShapeType.Artboard],
-    [Action.AddText, ShapeType.Text]
+    [Action.AddText, ShapeType.Text],
+    [Action.AddImage, ShapeType.Image]
 ]);
+export interface ClipboardItem {
+    type: ShapeType
+    contentType: string
+    content: Media | string
+}
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
@@ -85,10 +97,15 @@ export class WorkSpace extends Watchable(Object) {
     static CTRL_DISAPPEAR = 19;
     static CTRL_APPEAR_IMMEDIATELY = 20;
     static CTRL_APPEAR = 21;
+    static PASTE = 22;
+    static PASTE_RIGHT = 23;
+    static INSERT_IMGS = 24;
+    static FREEZE = 25;
+    static THAW = 26;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: any; // 剪切板
+    private m_clip_board: ClipboardItem | undefined; // 剪切板
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -105,12 +122,14 @@ export class WorkSpace extends Watchable(Object) {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
     private m_comment_input: boolean = false;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_saving: boolean = false;
+    private m_image: Media[] | undefined = undefined;
+    private m_freeze: boolean = false;
     constructor(context: Context) {
         super();
         this.context = context
@@ -195,6 +214,20 @@ export class WorkSpace extends Watchable(Object) {
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
+    get isFreeze() {
+        return this.m_freeze;
+    }
+    setFreezeStatus(isFreeze: boolean) {
+        this.m_freeze = isFreeze;
+        this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
+    }
+    setImage(files: Media[]) {
+        this.m_image = [...files];
+        this.notify(WorkSpace.INSERT_IMGS);
+    }
+    getImageFromDoc() {
+        return this.m_image;
+    }
     startSvae() {
         this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
@@ -277,6 +310,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
+        if (this.isFreeze) return;
         if (event.code === KeyboardKeys.R) {
             if (!metaKey && !ctrlKey) {
                 event.preventDefault();
@@ -284,7 +318,7 @@ export class WorkSpace extends Watchable(Object) {
             }
         } else if (event.code === KeyboardKeys.V) {
             event.preventDefault();
-            this.keydown_v();
+            this.keydown_v(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.L) {
             event.preventDefault();
             this.keydown_l(shiftKey);
@@ -293,7 +327,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
             event.preventDefault();
-            this.keydown_k();
+            this.keydown_k(ctrlKey, shiftKey);
         } else if (event.code === KeyboardKeys.O) {
             event.preventDefault();
             this.keydown_o();
@@ -326,7 +360,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = action;
         this.notify();
     }
-    setClipBoard(v: any) {
+    setClipBoard(v: ClipboardItem) {
         this.m_clip_board = v;
     }
     setFrameSize(size: { width: number, height: number }) {
@@ -362,9 +396,13 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddRect;
         this.notify();
     }
-    keydown_v() {
-        this.m_current_action = Action.AutoV;
-        this.notify();
+    keydown_v(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            this.notify(WorkSpace.PASTE);
+        } else {
+            this.m_current_action = Action.AutoV;
+            this.notify();
+        }
     }
     keydown_l(shiftKey: boolean) {
         this.escSetup();
@@ -393,10 +431,12 @@ export class WorkSpace extends Watchable(Object) {
             repo.canRedo() && repo.redo();
         }
     }
-    keydown_k() {
-        this.escSetup();
-        this.m_current_action = Action.AutoK;
-        this.notify();
+    keydown_k(ctrl: boolean, shift: boolean) {
+        if (!ctrl && !shift) {
+            this.escSetup();
+            this.m_current_action = Action.AutoK;
+            this.notify();
+        }
     }
     keydown_o() {
         this.escSetup();

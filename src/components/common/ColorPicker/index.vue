@@ -142,7 +142,7 @@ const popoverEl = ref<HTMLDivElement>();
 const hueIndicator = ref<HTMLDivElement>();
 const alphaIndicator = ref<HTMLDivElement>();
 const popoverVisible = ref<boolean>(false);
-let eyeDropper: Eyedropper = eyeDropperInit();
+const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
 
 function triggle() {
   const workspace = props.context.workspace;
@@ -355,7 +355,8 @@ function mouseup() {
 }
 function eyedropper() {
   if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
-    eyeDropper = eyeDropperInit();
+    const { x, y, right, bottom } = props.context.workspace.root;
+    eyeDropper.updateRoot({ x, y, width: right - x, height: bottom - y });
     eyeDropper.start(t('color.esc'));
   } else { // 调用系统自带的接口
     systemEyeDropper();
@@ -519,6 +520,7 @@ function enter() {
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
     emit('change', color);
     update_dot_indicator_position(color);
+    update_alpha_indicator(color);
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
   } else {
     reflush.value++;
@@ -572,6 +574,11 @@ function init() {
     }
   }
   update_dot_indicator_position(props.color);
+  update_alpha_indicator(props.color);
+}
+function update_alpha_indicator(color: Color) {
+  const { alpha } = color;
+  alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
 }
 function selectionWatcher(t: any) {
   if (t === Selection.CHANGE_SHAPE) {

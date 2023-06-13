@@ -6,6 +6,7 @@ import { XY } from '@/context/selection';
 import { Shape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -28,11 +29,12 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = true;
 }
 function copy() {
-  const copyObj = props.context.selection.selectedShapes;
-  props.context.workspace.setClipBoard(copyObj);
+  // const copyObj = props.context.selection.selectedShapes;
+  // props.context.workspace.setClipBoard();
 }
 function paste() {
-
+  props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
+  emit('close');
 }
 function selectAll() {
 
@@ -294,4 +296,5 @@ function closeLayerSubMenu(e: MouseEvent) {
     border-color: var(--theme-color-anti);
     transform: rotate(-45deg) translateY(-30%);
   }
-}</style>
+}
+</style>

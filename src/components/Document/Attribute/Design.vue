@@ -18,6 +18,8 @@ const props = defineProps<{ context: Context }>();
 const shape = shallowRef<Shape>();
 
 const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
+const WITH_TEXT = [ShapeType.Text];
+const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
 const shapeType = ref();
 
 function _change(t: number) {
@@ -26,7 +28,7 @@ function _change(t: number) {
     } else if (t === Selection.CHANGE_SHAPE) {
         if (props.context.selection.selectedShapes.length === 1) {
             shape.value = props.context.selection.selectedShapes[0];
-            shapeType.value = shape.value.type
+            shapeType.value = shape.value.type;
         } else {
             shape.value = undefined;
         }
@@ -49,9 +51,9 @@ onUnmounted(() => {
     <section>
         <div v-if="shape">
             <ShapeBaseAttr :shape="shape" :context="props.context"></ShapeBaseAttr>
-            <Text :shape="shape" :context="props.context"></Text>
+            <Text v-if="WITH_TEXT.includes(shapeType)" :shape="shape" :context="props.context"></Text>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shape" :context="props.context"></Fill>
-            <Border :shape="shape" :context="props.context"></Border>
+            <Border v-if="WITH_BORDER.includes(shapeType)" :shape="shape" :context="props.context"></Border>
         </div>
         <div v-else class="back-setting-container">
             <span>{{ t('attr.background') }}</span>
