@@ -107,8 +107,7 @@ function wxcode() {
         id: "login_container",
         appid: "wx42bb87f7f2e86a6e",
         scope: "snsapi_login",
-        // redirect_uri: encodeURIComponent("http://protodesign.cn/html/GetCode.html"),
-        redirect_uri: encodeURIComponent("http://protodesign.cn/zbb/html/GetCode.html"),
+        redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
         state: "STATE",
         style: "",
         href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAzMDBweDtoZWlnaHQ6IDMwMHB4O30=',
@@ -125,6 +124,7 @@ onMounted(() => {
         })
     }, 500);
     window.addEventListener('message', onmessage, false)
+
 })
 
 onUnmounted(() => {
@@ -155,7 +155,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
-            <input ref="codeinput" v-model="codevalue" maxlength="8" />
+            <input ref="codeinput" v-model="codevalue" maxlength="8" @keyup.enter="clickaffirm" />
             <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="codevalue == '' ? true : false">{{
                 t('percenter.affirm')
             }}</button>

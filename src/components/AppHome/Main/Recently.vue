@@ -37,7 +37,8 @@
     </el-table>
     <!-- 卡片布局 -->
     <el-row v-else>
-        <el-col v-for="(                item                ) in                 documentsList                 "
+        <el-col
+            v-for="(                      item                      ) in                       documentsList                       "
             :key=" item.id " :span=" 3 " style="margin:0px 20px 20px 0px;">
             <el-card :body-style=" { padding: '0px' } " shadow="hover">
                 <img src="https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png"
@@ -54,20 +55,20 @@
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li style="margin-top: 10px;" @click=" openDocument ">{{t('homerightmenu.open')}}</li>
+            <li @click=" openDocument ">{{t('homerightmenu.open')}}</li>
             <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
             <div></div>
             <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
             <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
             <div></div>
             <li @click=" rrename " v-if= showrenname >{{t('homerightmenu.rename')}}</li>
-            <li>{{t('homerightmenu.copyfile')}}</li>
-            <li style="margin-bottom: 10px;" @click=" rRemovefile ">{{t('homerightmenu.removed_record')}}</li>
+            <li @click=" rcopyfile " v-if= showcopyfile >{{t('homerightmenu.copyfile')}}</li>
+            <li @click=" rRemovefile ">{{t('homerightmenu.removed_record')}}</li>
         </ul>
     </div>
     <!-- 重命名弹框 -->
     <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
-        <input class="newname" type="text" :value=" newname " ref="renameinput" />
+        <input class="newname" type="text" :value=" newname " ref="renameinput" @keyup.enter=" rename1 " />
         <template #footer>
             <span class="dialog-footer">
                 <el-button type="primary" style="background-color: none;" @click=" rename1 ">
@@ -92,6 +93,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import { el } from 'element-plus/es/locale'
 
 const viewmodel = ref(true)
 const isLoading = ref(false)
@@ -108,6 +110,7 @@ const dialogVisible = ref(false)
 const newname = ref()
 const renameinput = ref()
 const showrenname = ref<boolean>(true)
+const showcopyfile = ref<boolean>(true)
 
 async function getUserdata() {
     // loading
@@ -122,12 +125,12 @@ async function getUserdata() {
                 data[i].document.size = sizeTostr(size)
                 data[i].document.name = getchineselength(name) > 30 ? name.slice(0, 29) + "..." : name
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
-
             }
         }
         documentsList.value = data
     } catch (error) {
-        ElMessage.error("assaaa")
+        ElMessage.closeAll('error')
+        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
     // unloading  
     isLoading.value = false;
@@ -146,7 +149,7 @@ function sizeTostr(size: any) {
     return size
 }
 
-function getchineselength(str:string) {
+function getchineselength(str: string) {
     let length = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str.charAt(i);
@@ -166,12 +169,14 @@ const Starfile = async (index: number) => {
     if (documentsList.value[index].document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: true })
         if (code === 0) {
-            ElMessage.success(t('home.star_ok'))
+            ElMessage.closeAll('success')
+            ElMessage.success({duration:1500,message:t('home.star_ok')})
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: false })
         if (code === 0) {
-            ElMessage.success(t('home.star_cancel'))
+            ElMessage.closeAll('success')
+            ElMessage.success({duration:1500,message:t('home.star_cancel')})
         }
     }
 }
@@ -205,9 +210,11 @@ const Removefile = async (index: number) => {
     const { code } = (await user_api.DeleteList({ access_record_id: id }))
     if (code === 0) {
         documentsList.value.splice(index, 1)
-        ElMessage.success(t('home.access_record_ok'))
+        ElMessage.closeAll('success')
+        ElMessage.success({duration:1500,message:t('home.access_record_ok')})
     } else {
-        ElMessage.error(t('home.access_record_no'))
+        ElMessage.closeAll('error')
+        ElMessage.error({duration:1500,message:t('home.access_record_no')})
     }
 
 }
@@ -244,8 +251,10 @@ const rightmenu = (row: any, column: any, event: any) => {
         }
         if (row.document.user_id != localStorage.getItem('userId')) {
             showrenname.value = false
+            showcopyfile.value = false
         } else {
             showrenname.value = true
+            showcopyfile.value = true
         }
     })
     documentId.value = row
@@ -289,12 +298,14 @@ const rStarfile = async () => {
     if (documentId.value.document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
-            ElMessage.success(t('home.star_ok'))
+            ElMessage.closeAll('success')
+            ElMessage.success({duration:1500,message:t('home.star_ok')})
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
-            ElMessage.success(t('home.star_cancel'))
+            ElMessage.closeAll('success')
+            ElMessage.success({duration:1500,message:t('home.star_cancel')})
         }
     }
     if (menu.value) {
@@ -320,19 +331,23 @@ const rrename = () => {
 }
 
 const rename1 = async () => {
-    const { document: { id } } = documentId.value
+    const { document: { id, name } } = documentId.value
     newname.value = renameinput.value.value
-    try {
-        const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
-        if (code === 0) {
-            ElMessage.success(t('percenter.successtips'))
-            getUserdata()
-        } else {
-            ElMessage.error(t('percenter.errortips1'))
+    if (newname.value != name)
+        try {
+            const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
+            if (code === 0) {
+                ElMessage.closeAll('success')
+                ElMessage.success({duration:1500,message:t('percenter.successtips')})
+                getUserdata()
+            } else {
+                ElMessage.closeAll('error')
+                ElMessage.error({duration:1500,message:t('percenter.errortips1')})
+            }
+        } catch (error) {
+            ElMessage.closeAll('error')
+            ElMessage.error({duration:1500,message:t('home.other_tips')})
         }
-    } catch (error) {
-        ElMessage.error(t('home.other_tips'))
-    }
     dialogVisible.value = false
 }
 
@@ -340,10 +355,28 @@ const rRemovefile = async () => {
     const { document_access_record: { id } } = documentId.value
     const { code } = await user_api.DeleteList({ access_record_id: id })
     if (code === 0) {
-        ElMessage.success(t('home.access_record_ok'))
+        ElMessage.closeAll('success')
+        ElMessage.success({duration:1500,message:t('home.access_record_ok')})
         getUserdata()
     } else {
-        ElMessage.error(t('home.access_record_no'))
+        ElMessage.closeAll('error')
+        ElMessage.error({duration:1500,message:t('home.access_record_no')})
+    }
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+const rcopyfile = async () => {
+    const { document: { id } } = documentId.value
+    const { code } = await user_api.Copyfile({ doc_id: id })
+    if (code === 0) {
+        ElMessage.closeAll('success')
+        ElMessage.success({duration:1500,message:t('homerightmenu.copyfile_ok')})
+        getUserdata()
+    } else {
+        ElMessage.closeAll('error')
+        ElMessage.error({duration:1500,message:t('homerightmenu.copyfile_no')})
     }
     if (menu.value) {
         menu.value.style.display = 'none'
@@ -416,6 +449,7 @@ onUnmounted(() => {
     z-index: 9999;
     position: absolute;
     background-color: white;
+    padding: 10px 0;
     border-radius: 5px;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
 

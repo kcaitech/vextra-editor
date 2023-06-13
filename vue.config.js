@@ -92,8 +92,8 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
-    //publicPath: '/zbb',
+    // publicPath: './',
+    publicPath: '/zbb',
     configureWebpack,
 
     pluginOptions: {
@@ -106,7 +106,7 @@ var exports = defineConfig({
 
     devServer: {
         port: 8080,
-        https: false,
+        https: true,
         proxy: {
             '/api': {
                 target: 'http://192.168.0.10:10000',

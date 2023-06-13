@@ -31,7 +31,7 @@
                             v-if="!shownicknameinput">{{
                                 uname }}</span>
                         <div v-else>
-                            <input class="newname" type="text" :value=uname @input="tips">
+                            <input class="newname" type="text" :value=uname @input="tips" @keyup.enter="changename">
                             <span></span>
                         </div>
 

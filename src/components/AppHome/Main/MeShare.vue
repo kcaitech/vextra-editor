@@ -39,23 +39,23 @@
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li style="margin-top: 10px;" @click=" openDocument ">{{t('homerightmenu.open')}}</li>
+            <li @click=" openDocument ">{{t('homerightmenu.open')}}</li>
             <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
             <div></div>
             <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
             <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
             <div></div>
             <li @click=" rrename ">{{t('homerightmenu.rename')}}</li>
-            <li>{{t('homerightmenu.copyfile')}}</li>
-            <li style="margin-bottom: 10px;" @click=" rDeletefile ">{{t('homerightmenu.deletefile')}}</li>
+            <li @click=" rcopyfile ">{{t('homerightmenu.copyfile')}}</li>
+            <li @click=" rDeletefile ">{{t('homerightmenu.deletefile')}}</li>
         </ul>
     </div>
     <!-- 重命名弹框 -->
     <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
-        <input class="newname" type="text" v-model=" newname " ref="renameinput" />
+        <input class="newname" type="text" v-model=" newname " ref="renameinput" @keydown.enter="rename1" />
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click=" rename1 "
+                <el-button type="primary" style="background-color: none;"  @click=" rename1 " 
                     :disabled=" newname == '' ? true : false ">
                     {{ t('home.rename_ok') }}
                 </el-button>
@@ -101,7 +101,8 @@ async function getDoucment() {
     try {
         const { data } = await share_api.getDoucmentListAPI() as any
         if (data == null) {
-            ElMessage.error(t('home.failed_list_tips'))
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
         } else {
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
@@ -111,8 +112,10 @@ async function getDoucment() {
         }
         getDoucmentList.value = data
     } catch (error) {
-        ElMessage.error("assaaa")
+        ElMessage.closeAll('error')
+        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
+    
     isLoading.value = false
 }
 
@@ -137,12 +140,14 @@ const Starfile = async (index: number) => {
     if (getDoucmentList.value[index].document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
-            ElMessage.success(t('home.star_ok'))
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.star_ok') })
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
-            ElMessage.success(t('home.star_cancel'))
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.star_cancel') })
         }
     }
 }
@@ -153,12 +158,14 @@ const rStarfile = async () => {
     if (documentId.value.document_favorites.is_favorite == true) {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
         if (code === 0) {
-            ElMessage.success(t('home.star_ok'))
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.star_ok') })
         }
     } else {
         const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
         if (code === 0) {
-            ElMessage.success(t('home.star_cancel'))
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.star_cancel') })
         }
     }
     if (menu.value) {
@@ -227,13 +234,16 @@ const rename1 = async () => {
         try {
             const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
             if (code === 0) {
-                ElMessage.success(t('percenter.successtips'))
+                ElMessage.closeAll('success')
+                ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
                 getDoucment()
             } else {
-                ElMessage.error(t('percenter.errortips1'))
+                ElMessage.closeAll('error')
+                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
             }
         } catch (error) {
-            ElMessage.error(t('home.other_tips'))
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.other_tips') })
         }
     dialogVisible.value = false
 }
@@ -242,10 +252,12 @@ const Deletefile = async (index: number) => {
     const { document: { id } } = getDoucmentList.value[index]
     const { code } = await user_api.MoveFile({ doc_id: id })
     if (code === 0) {
-        ElMessage.success(t('home.delete_ok_tips'))
+        ElMessage.closeAll('success')
+        ElMessage.success({ duration: 1500, message: t('home.delete_ok_tips') })
         getDoucment()
     } else {
-        ElMessage.error(t('home.delete_no_tips'))
+        ElMessage.closeAll('error')
+        ElMessage.error({ duration: 1500, message: t('home.delete_no_tips') })
     }
 }
 
@@ -253,10 +265,12 @@ const rDeletefile = async () => {
     const { document: { id } } = documentId.value
     const { code } = await user_api.MoveFile({ doc_id: id })
     if (code === 0) {
-        ElMessage.success(t('home.delete_ok_tips'))
+        ElMessage.closeAll('success')
+        ElMessage.success({ duration: 1500, message: t('home.delete_ok_tips') })
         getDoucment()
     } else {
-        ElMessage.error(t('home.delete_no_tips'))
+        ElMessage.closeAll('error')
+        ElMessage.error({ duration: 1500, message: t('home.delete_no_tips') })
     }
     if (menu.value) {
         menu.value.style.display = 'none'
@@ -313,6 +327,22 @@ const rightmenu = (row: any, column: any, event: any) => {
         }
     })
     documentId.value = row
+}
+
+const rcopyfile = async () => {
+    const { document: { id } } = documentId.value
+    const { code } = await user_api.Copyfile({ doc_id: id })
+    if (code === 0) {
+        ElMessage.closeAll('success')
+        ElMessage.success({ duration: 1500, message: t('homerightmenu.copyfile_ok') })
+        getDoucment()
+    } else {
+        ElMessage.closeAll('error')
+        ElMessage.error({ duration: 1500, message: t('homerightmenu.copyfile_no') })
+    }
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -390,6 +420,7 @@ function emit(arg0: string) {
     z-index: 9999;
     position: absolute;
     background-color: white;
+    padding: 10px 0;
     border-radius: 5px;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
 
@@ -424,7 +455,8 @@ function emit(arg0: string) {
 .el-icon {
     display: none;
     position: relative;
-    top:5px;
+    top: 5px;
+
     &:hover {
         color: #6395f9;
     }
@@ -461,6 +493,7 @@ function emit(arg0: string) {
     height: 50px;
     font-weight: 18px;
 }
+
 :deep(.el-table__cell) {
     padding: 0;
 }

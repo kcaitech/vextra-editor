@@ -32,18 +32,18 @@
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li style="margin-top: 10px;" @click=" openDocument ">{{t('homerightmenu.open')}}</li>
+            <li @click=" openDocument ">{{t('homerightmenu.open')}}</li>
             <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
             <div></div>
             <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
             <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
-            <div v-if="showrenname"></div>
-            <li style="margin-bottom: 10px;" @click=" rrename " v-if="showrenname">{{t('homerightmenu.rename')}}</li>
+            <div v-if=" showrenname "></div>
+            <li @click=" rrename " v-if=" showrenname ">{{t('homerightmenu.rename')}}</li>
         </ul>
     </div>
     <!-- 重命名弹框 -->
     <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
-        <input class="newname" type="text" :value=" newname " ref="renameinput" />
+        <input class="newname" type="text" :value=" newname " ref="renameinput" @keyup.enter="rename1" />
         <template #footer>
             <span class="dialog-footer">
                 <el-button type="primary" style="background-color: none;" @click=" rename1 ">
@@ -60,7 +60,7 @@
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
-import { Share} from '@element-plus/icons-vue'
+import { Share } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -81,27 +81,27 @@ const menu = ref<HTMLElement>()
 const dialogVisible = ref(false)
 const newname = ref()
 const renameinput = ref()
-const showrenname=ref<boolean>(true)
+const showrenname = ref<boolean>(true)
 
 async function getUserdata() {
     // loading
     isLoading.value = true
     try {
         const { data } = await user_api.GetfavoritesList()
-    if (data == null) {
-        ElMessage.error(t('home.failed_list_tips'))
-    } else {
-        for (let i = 0; i < data.length; i++) {
-            let { document: { size }, document_access_record: { last_access_time } } = data[i]
-            data[i].document.size = sizeTostr(size)
-            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+        if (data == null) {
+            ElMessage.error(t('home.failed_list_tips'))
+        } else {
+            for (let i = 0; i < data.length; i++) {
+                let { document: { size }, document_access_record: { last_access_time } } = data[i]
+                data[i].document.size = sizeTostr(size)
+                data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+            }
         }
-    }
-    Getfavorites.value = data
+        Getfavorites.value = data
     } catch (error) {
-        ElMessage.error('aaaaaaa')
+        ElMessage.error(t('home.failed_list_tips'))
     }
-    
+
     // unloading  
     isLoading.value = false;
 }
@@ -253,8 +253,9 @@ const rrename = () => {
 }
 
 const rename1 = async () => {
-    const { document: { id } } = documentId.value
+    const { document: { id,name } } = documentId.value
     newname.value = renameinput.value.value
+    if (newname.value != name)
     try {
         const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
         if (code === 0) {
@@ -340,6 +341,7 @@ onUnmounted(() => {
         background: rgba(208, 208, 208, 0.167);
     }
 }
+
 .rightmenu {
     display: none;
     min-width: 200px;
@@ -348,6 +350,7 @@ onUnmounted(() => {
     position: absolute;
     background-color: white;
     border-radius: 5px;
+    padding: 10px 0;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
 
     ul {
@@ -367,6 +370,7 @@ onUnmounted(() => {
                 background-color: rgba(192, 192, 192, 0.3);
             }
         }
+
         div {
             height: 1px;
             width: auto;
@@ -375,10 +379,12 @@ onUnmounted(() => {
 
     }
 }
+
 .el-icon {
     display: none;
     position: relative;
-    top:5px;
+    top: 5px;
+
     &:hover {
         color: #6395f9;
     }
@@ -415,6 +421,7 @@ onUnmounted(() => {
     height: 56px;
     font-weight: 18px;
 }
+
 :deep(.el-table__cell) {
     padding: 0;
 }

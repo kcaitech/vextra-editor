@@ -39,11 +39,11 @@
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li style="margin-top: 10px;" @click=" openDocument ">{{t('homerightmenu.open')}}</li>
+            <li @click=" openDocument ">{{t('homerightmenu.open')}}</li>
             <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
             <div></div>
             <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
-            <li style="margin-bottom: 10px;" @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
+            <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
         </ul>
     </div>
     <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
@@ -75,17 +75,22 @@ const isshow = ref<HTMLElement>()
 async function ShareLists() {
     // loading
     isLoading.value = true
-    const { data } = await user_api.ShareLists()
-    if (data == null) {
-        ElMessage.error(t('home.failed_list_tips'))
-    } else {
-        for (let i = 0; i < data.length; i++) {
-            let { document: { size }, document_access_record: { last_access_time } } = data[i]
-            data[i].document.size = sizeTostr(size)
-            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+    try {
+        const { data } = await user_api.ShareLists()
+        if (data == null) {
+            ElMessage.error(t('home.failed_list_tips'))
+        } else {
+            for (let i = 0; i < data.length; i++) {
+                let { document: { size }, document_access_record: { last_access_time } } = data[i]
+                data[i].document.size = sizeTostr(size)
+                data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+            }
         }
+        ShareList.value = data
+    } catch (error) {
+        ElMessage.error(t('home.failed_list_tips'))
     }
-    ShareList.value = data
+
     // // unloading  
     isLoading.value = false;
 }
@@ -150,7 +155,7 @@ const rightmenu = (row: any, column: any, event: any) => {
             }
         }
     })
-    documentId.value = row 
+    documentId.value = row
 }
 
 const openDocument = () => {
@@ -264,7 +269,6 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-
 .rightmenu {
     display: none;
     min-width: 200px;
@@ -272,6 +276,7 @@ onUnmounted(() => {
     z-index: 9999;
     position: absolute;
     background-color: white;
+    padding: 10px 0;
     border-radius: 5px;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
 
@@ -292,6 +297,7 @@ onUnmounted(() => {
                 background-color: rgba(192, 192, 192, 0.3);
             }
         }
+
         div {
             height: 1px;
             width: auto;
@@ -300,10 +306,12 @@ onUnmounted(() => {
 
     }
 }
+
 .el-icon {
     display: none;
     position: relative;
-    top:5px;
+    top: 5px;
+
     &:hover {
         color: #6395f9;
     }
@@ -340,6 +348,7 @@ onUnmounted(() => {
     height: 56px;
     font-weight: 18px;
 }
+
 :deep(.el-table__cell) {
     padding: 0;
 }
@@ -347,6 +356,7 @@ onUnmounted(() => {
 :deep(.el-table__cell .cell) {
     line-height: 56px;
 }
+
 .overlay {
     position: absolute;
     top: 0;
@@ -355,5 +365,4 @@ onUnmounted(() => {
     height: 100%;
     z-index: 999;
     background-color: rgba(0, 0, 0, 0.5);
-}
-</style>
+}</style>
