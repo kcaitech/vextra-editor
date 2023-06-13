@@ -4,7 +4,7 @@ let _ck: any;
 export async function init() {
     if (_ck) return;
     _ck = await PathKitInit({
-        locateFile: (file: string) => `/zrx/${file}`
+        locateFile: (file: string) => file
     })
 }
 

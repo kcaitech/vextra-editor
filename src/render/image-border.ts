@@ -2,7 +2,6 @@
 import { Shape } from '@kcdesign/data';
 import { Border, Gradient } from '@kcdesign/data';
 import { render as renderGradient } from "./gradient";
-import { objectId } from '@kcdesign/data';
 import { BorderPosition, FillType } from "@kcdesign/data"
 
 const handler: { [key: string]: (h: Function, shape: Shape, border: Border, path: string, url: string) => any } = {};
