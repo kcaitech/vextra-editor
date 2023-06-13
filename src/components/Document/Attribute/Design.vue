@@ -15,7 +15,6 @@ import Text from './Text/Text.vue';
 import { debounce } from 'lodash';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
-
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
 const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
@@ -63,7 +62,7 @@ onUnmounted(() => {
         </div>
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len">
-            <ShapeBaseAttr :shape="shapes[0]" :context="props.context"></ShapeBaseAttr>
+            <ShapeBaseAttr :shapes="shapes" :context="props.context"></ShapeBaseAttr>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Text>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Border>

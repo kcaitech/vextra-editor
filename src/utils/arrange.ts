@@ -299,6 +299,7 @@ export function get_individuality_bottom(shape: Shape) {
     _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
     return Math.max(..._ys);
 }
+// 获取个体左右
 export function get_individuality_l_r(shape: Shape) {
     const _xs: number[] = [];
     const frame = shape.frame;
@@ -315,6 +316,24 @@ export function get_individuality_l_r(shape: Shape) {
     });
     _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
     return { left: Math.min(..._xs), right: Math.max(..._xs) };
+}
+// 获取个体上下
+export function get_individuality_t_b(shape: Shape) {
+    const _ys: number[] = [];
+    const frame = shape.frame;
+    const m = shape.matrix2Page();
+    let ys: [number, number][] = [
+        [0, 0],
+        [frame.width, 0],
+        [frame.width, frame.height],
+        [0, frame.height]
+    ];
+    ys = ys.map(p => {
+        const _s = m.computeCoord(p[0], p[1]);
+        return [_s.x, _s.y];
+    });
+    _ys.push(ys[0][1], ys[1][1], ys[2][1], ys[3][1]);
+    return { top: Math.min(..._ys), bottom: Math.max(..._ys) };
 }
 
 // 靠左对齐
@@ -400,18 +419,76 @@ export function distribute_horizontally(shapes: Shape[]) {
             return 0;
         }
     });
-    const inner_length = new_shapes[new_shapes.length - 1].left - new_shapes[0].right;
-    let inner_space = inner_length;
-    for (let i = 1; i < new_shapes.length - 1; i++) {
-        inner_space -= new_shapes[i].width;
+    let right_max = new_shapes[0];
+    for (let i = 1; i < new_shapes.length; i++) {
+        if (new_shapes[i].right > right_max.right) {
+            right_max = new_shapes[i];
+        }
     }
-    if (inner_space) {
-        console.log('inner_space', inner_space);
+    if (right_max !== new_shapes[0]) {
+        const inner_length = new_shapes[new_shapes.length - 1].left - new_shapes[0].right;
+        let inner_space = inner_length;
+        for (let i = 1; i < new_shapes.length - 1; i++) {
+            inner_space -= new_shapes[i].width;
+        }
+        if (inner_space > 0) {
+            const gap = inner_space / (new_shapes.length - 1);
+            const actions: PositonAdjust[] = [];
+            for (let i = 1; i < new_shapes.length - 1; i++) {
+                const s_left = new_shapes[i].left;
+                actions.push({
+                    target: new_shapes[i].shape,
+                    transX: new_shapes[i - 1].right + gap - s_left,
+                    transY: 0
+                })
+                new_shapes[i].right = new_shapes[i - 1].right + new_shapes[i].width + gap;
+            }
+            return actions;
+        }
     }
-
 }
 
 export function vertical_uniform_distribution(shapes: Shape[]) {
-    const c_height = get_colony_height(shapes);
-    console.log('c_height', c_height);
+    const new_shapes: { top: number, bottom: number, height: number, shape: Shape }[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        const { top, bottom } = get_individuality_t_b(shape);
+        new_shapes.push({ shape, top, bottom, height: bottom - top });
+    }
+    new_shapes.sort((a, b) => {
+        if (a.top > b.top) {
+            return 1;
+        } else if (a.top < b.top) {
+            return -1;
+        } else {
+            return 0;
+        }
+    });
+    let right_max = new_shapes[0];
+    for (let i = 1; i < new_shapes.length; i++) {
+        if (new_shapes[i].bottom > right_max.bottom) {
+            right_max = new_shapes[i];
+        }
+    }
+    if (right_max !== new_shapes[0]) {
+        const inner_length = new_shapes[new_shapes.length - 1].top - new_shapes[0].bottom;
+        let inner_space = inner_length;
+        for (let i = 1; i < new_shapes.length - 1; i++) {
+            inner_space -= new_shapes[i].height;
+        }
+        if (inner_space > 0) {
+            const gap = inner_space / (new_shapes.length - 1);
+            const actions: PositonAdjust[] = [];
+            for (let i = 1; i < new_shapes.length - 1; i++) {
+                const s_top = new_shapes[i].top;
+                actions.push({
+                    target: new_shapes[i].shape,
+                    transX: 0,
+                    transY: new_shapes[i - 1].bottom + gap - s_top,
+                })
+                new_shapes[i].bottom = new_shapes[i - 1].bottom + new_shapes[i].height + gap;
+            }
+            return actions;
+        }
+    }
 }

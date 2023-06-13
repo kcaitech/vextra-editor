@@ -78,11 +78,25 @@ function flex_end_col() {
 }
 function space_around_h() {
     if (len.value < 3) return;
-    distribute_horizontally(props.shapes);
+    const page = props.context.selection.selectedPage;
+    const actions = distribute_horizontally(props.shapes);
+    if (actions && page) {
+        const editor = props.context.editor4Page(page);
+        if (actions.find(i => i.transX !== 0)) {
+            editor.arrange(actions);
+        }
+    }
 }
 function space_around_v() {
     if (len.value < 3) return;
-    vertical_uniform_distribution(props.shapes);
+    const page = props.context.selection.selectedPage;
+    const actions = vertical_uniform_distribution(props.shapes);
+    if (actions && page) {
+        const editor = props.context.editor4Page(page);
+        if (actions.find(i => i.transY !== 0)) {
+            editor.arrange(actions);
+        }
+    }
 }
 </script>
 <template>
