@@ -74,7 +74,7 @@ export function get_actions_fill_delete(shapes: Shape[], index: number) {
 }
 
 // borders
-export function get_boders(shapes: Shape[]): BorderItem[] | 'mixed' {
+export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
     const borders: BorderItem[] = [];
     const shape = shapes[0];
     const style = shape.style;
