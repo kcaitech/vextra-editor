@@ -187,7 +187,8 @@ export const attr: any = {
     'fixed_top': 'Top fixed',
     'fixed_top_bottom': 'Fixed top and bottom',
     'adapt': 'Resize to fit',
-    'mixed': 'Mixed'
+    'mixed': 'Mixed',
+    'mixed_lang': 'Click + to replace mixed content.'
 }
 
 export const login = {

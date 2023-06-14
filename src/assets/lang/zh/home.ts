@@ -186,7 +186,8 @@ export const attr: any = {
     'fixed_top': '顶部固定',
     'fixed_top_bottom': '上下固定',
     'adapt': '适应容器大小',
-    'mixed': '多值'
+    'mixed': '多值',
+    'mixed_lang': '存在对象设置不同，可点击 + 号统一设置'
 }
 
 export const login = {

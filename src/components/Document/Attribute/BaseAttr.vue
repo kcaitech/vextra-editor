@@ -51,8 +51,8 @@ const isFlippedHorizontal = ref<boolean>()
 const isFlippedVertical = ref<boolean>()
 const shwoAdapt = ref<boolean>(false)
 const multipleValues = ref<boolean>(false)
-const watchedShapes = new Map();
 const mixed = t('attr.mixed');
+const watchedShapes = new Map();
 function watchShapes() {
     const needWatchShapes = new Map();
     const selection = props.context.selection;

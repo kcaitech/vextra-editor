@@ -64,7 +64,7 @@ onUnmounted(() => {
         <div v-if="len">
             <ShapeBaseAttr :shapes="shapes" :context="props.context"></ShapeBaseAttr>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Text>
-            <Fill v-if="WITH_FILL.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Fill>
+            <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Border>
         </div>
 
