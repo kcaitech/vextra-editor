@@ -40,7 +40,7 @@ export function useController(context: Context) {
             }
             const m = getCloesetContainer(shapes[0]).id != targetParent.id;
             if (m && asyncTransfer) {
-                asyncTransfer.migrate(targetParent);
+                asyncTransfer.migrate(targetParent as GroupShape);
             }
         }
     }
@@ -147,7 +147,7 @@ export function useController(context: Context) {
                 if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
                     if (!editing) {
                         isDragging = true;
-                        asyncTransfer = context.editor.controller().asyncTransfer(shapes);
+                        asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
                         workspace.value.setSelectionViewUpdater(false);
                     }
                 }
