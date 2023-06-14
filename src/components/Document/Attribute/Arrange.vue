@@ -2,8 +2,9 @@
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data';
 import { PositonAdjust } from "@kcdesign/data";
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { align_left, align_cneter_x, align_right, align_top, align_cneter_y, align_bottom, distribute_horizontally, vertical_uniform_distribution } from '@/utils/arrange';
+import { WorkSpace } from '@/context/workspace';
 interface Props {
     context: Context
     shapes: Shape[]
@@ -20,6 +21,7 @@ function flex_start() {
             editor.arrange(actions);
         }
     }
+    props.context.workspace.notify(WorkSpace.CLAC_ATTRI);
 }
 // 水平线对齐
 function justify_midle_h() {
@@ -31,6 +33,7 @@ function justify_midle_h() {
             editor.arrange(actions);
         }
     }
+    props.context.workspace.notify(WorkSpace.CLAC_ATTRI);
 }
 // 靠右对齐
 function flex_end() {
@@ -42,6 +45,7 @@ function flex_end() {
             editor.arrange(actions);
         }
     }
+    props.context.workspace.notify(WorkSpace.CLAC_ATTRI);
 }
 // 靠顶部对齐
 function flex_start_col() {
@@ -53,6 +57,7 @@ function flex_start_col() {
             editor.arrange(actions);
         }
     }
+    props.context.workspace.notify(WorkSpace.CLAC_ATTRI);
 }
 // 中线对齐
 function justify_midle_v() {
@@ -64,6 +69,7 @@ function justify_midle_v() {
             editor.arrange(actions);
         }
     }
+    props.context.workspace.notify(WorkSpace.CLAC_ATTRI);
 }
 // 靠底部对齐
 function flex_end_col() {
@@ -75,6 +81,7 @@ function flex_end_col() {
             editor.arrange(actions);
         }
     }
+    props.context.workspace.notify(WorkSpace.CLAC_ATTRI);
 }
 function space_around_h() {
     if (len.value < 3) return;
@@ -86,6 +93,7 @@ function space_around_h() {
             editor.arrange(actions);
         }
     }
+    props.context.workspace.notify(WorkSpace.CLAC_ATTRI);
 }
 function space_around_v() {
     if (len.value < 3) return;
@@ -97,7 +105,49 @@ function space_around_v() {
             editor.arrange(actions);
         }
     }
+    props.context.workspace.notify(WorkSpace.CLAC_ATTRI);
 }
+function keyboard_wather(e: KeyboardEvent) {
+    const { altKey, shiftKey, code, target } = e;
+    if (target instanceof HTMLInputElement) return;
+    if (altKey) {
+        if (code === 'KeyA') {
+            e.preventDefault();
+            flex_start();
+        } else if (code === 'KeyH') {
+            if (shiftKey) {
+                e.preventDefault();
+                space_around_h();
+            } else {
+                e.preventDefault();
+                justify_midle_h();
+            }
+        } else if (code === 'KeyD') {
+            e.preventDefault();
+            flex_end();
+        } else if (code === 'KeyW') {
+            e.preventDefault();
+            flex_start_col();
+        } else if (code === 'KeyV') {
+            if (shiftKey) {
+                e.preventDefault();
+                space_around_v();
+            } else {
+                e.preventDefault();
+                justify_midle_v();
+            }
+        } else if (code === 'KeyS') {
+            e.preventDefault();
+            flex_end_col();
+        }
+    }
+}
+onMounted(() => {
+    document.addEventListener('keydown', keyboard_wather);
+})
+onUnmounted(() => {
+    document.removeEventListener('keydown', keyboard_wather);
+})
 </script>
 <template>
     <div class="container">
@@ -163,7 +213,7 @@ function space_around_v() {
     border-radius: 4px;
 
     >svg {
-        color: var(--grey-dark);
+        color: rgba(185, 185, 185, 1);
         width: 70%;
         height: 70%;
     }

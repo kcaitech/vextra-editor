@@ -9,7 +9,16 @@ import { RectRadius } from '@kcdesign/data'
 import { cloneDeep, debounce, throttle } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
-import { is_mixed } from '@/utils/attri_setting';
+import {
+    is_mixed,
+    get_actions_constrainer_proportions,
+    get_actions_frame_x, get_actions_frame_y,
+    get_actions_frame_w, get_actions_frame_h,
+    get_actions_rotate,
+    get_actions_flip_h,
+    get_actions_flip_v
+} from '@/utils/attri_setting';
+import { WorkSpace } from '@/context/workspace';
 interface Props {
     shapes: Shape[]
     context: Context
@@ -22,8 +31,8 @@ const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 const reflush = ref(0);
 function shapesWatcher() {
-    calcFrame();
     reflush.value++;
+    _calcFrame();
 }
 const shapeType = ref<ShapeType>();
 const x = ref<number | string>(0);
@@ -31,15 +40,15 @@ const y = ref<number | string>(0);
 const w = ref<number | string>(0);
 const h = ref<number | string>(0);
 const rotate = ref<number | string>(0);
-const isLock = ref<boolean>(true);
+const isLock = ref<boolean>(false);
 const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
 const points = ref<number>(0);
 const radius = ref<RectRadius>();
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
-const showBgFlipH = ref<boolean>()
-const showBgColorV = ref<boolean>()
+const isFlippedHorizontal = ref<boolean>()
+const isFlippedVertical = ref<boolean>()
 const shwoAdapt = ref<boolean>(false)
 const multipleValues = ref<boolean>(false)
 const watchedShapes = new Map();
@@ -76,22 +85,18 @@ function _calcFrame() {
         w.value = Math.max(frame.width, 1);
         h.value = Math.max(frame.height, 1);
         rotate.value = Number(shape.rotation?.toFixed(2)) || 0;
-        shapeType.value = shape.type;
-        showBgFlipH.value = shape.isFlippedHorizontal;
-        showBgColorV.value = shape.isFlippedVertical;
-        if (shapeType.value === ShapeType.Rectangle) {
-            getRectShapeAttr(shape);
-        }
+        isFlippedHorizontal.value = Boolean(shape.isFlippedHorizontal);
+        isFlippedVertical.value = Boolean(shape.isFlippedVertical);
     } else if (len.value > 1) {
         const shape = props.shapes[0];
         const xy = shape.frame2Page();
+        const frame = shape.frame;
         if (x.value !== mixed) {
             x.value = xy.x;
         }
         if (y.value !== mixed) {
             y.value = xy.y;
         }
-        const frame = shape.frame;
         if (w.value !== mixed) {
             w.value = Math.max(frame.width, 1);
         }
@@ -106,7 +111,7 @@ function _update_view() {
     layout();
     check_mixed();
 }
-const update_view = debounce(_update_view, 300);
+const update_view = debounce(_update_view, 200);
 function selection_wather(t: any) {
     if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
         update_view();
@@ -119,6 +124,7 @@ function check_mixed() {
     isMixed.w === 'mixed' ? w.value = mixed : w.value = isMixed.w;
     isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
     isMixed.rotate === 'mixed' ? rotate.value = mixed : rotate.value = isMixed.rotate;
+    isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!
 }
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
@@ -136,68 +142,87 @@ function onChangeX(value: string) {
             editor.value.translateTo(_x, xy.y);
         }
     } else if (len.value > 1) {
-        for (let i = 0; i < props.shapes.length; i++) {
-            const shape = props.shapes[i];
-            if (shape.frame.x.toFixed(fix) != value) {
-                const xy = shape.frame2Page();
-                const editor = props.context.editor4Shape(shape);
-                editor.translateTo(_x, xy.y);
-            }
+        const actions = get_actions_frame_x(props.shapes, _x);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.arrange(actions);
+            check_mixed();
         }
-        check_mixed();
     }
 }
 function onChangeY(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
-    const y: number = Number.parseFloat(value);
-    if (isNaN(y)) return;
+    const _y: number = Number.parseFloat(value);
+    if (isNaN(_y)) return;
     if (len.value === 1) {
         const shape = props.shapes[0];
         if (shape.frame.y.toFixed(fix) != value) {
             const xy = shape.frame2Page();
-            editor.value.translateTo(xy.x, y);
+            editor.value.translateTo(xy.x, _y);
         }
     } else if (len.value > 1) {
-        for (let i = 0; i < props.shapes.length; i++) {
-            const shape = props.shapes[i];
-            if (shape.frame.x.toFixed(fix) != value) {
-                const xy = shape.frame2Page();
-                const editor = props.context.editor4Shape(shape);
-                editor.translateTo(xy.x, y);
-            }
+        const actions = get_actions_frame_y(props.shapes, _y);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.arrange(actions);
+            check_mixed();
         }
-        check_mixed();
     }
 }
 function onChangeW(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
-    const newW: number = Number.parseFloat(value);
-    if (isNaN(newW)) return editor.value.expandTo((w.value as number), (h.value as number));
+    const _w: number = Number.parseFloat(value);
+    if (isNaN(_w)) return editor.value.expandTo((w.value as number), (h.value as number));
     if (len.value === 1) {
-        const rate = newW / (w.value as number);
+        const rate = _w / (w.value as number);
         const shape = props.shapes[0];
         if (shape.frame.width.toFixed(fix) != value) {
-            const newH = isLock.value ? Number((rate * (h.value as number)).toFixed(fix)) : shape.frame.height;
-            editor.value.expandTo(newW, newH);
+            const _h = isLock.value ? Number((rate * (h.value as number)).toFixed(fix)) : shape.frame.height;
+            editor.value.expandTo(_w, _h);
+        }
+    } else if (len.value > 1) {
+        const actions = get_actions_frame_w(props.shapes, _w, isLock.value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFrame(actions);
+            check_mixed();
         }
     }
-
 }
 function onChangeH(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
-    const newH: number = Number.parseFloat(value);
-    if (isNaN(newH)) return editor.value.expandTo((w.value as number), (h.value as number));
+    const _h: number = Number.parseFloat(value);
+    if (isNaN(_h)) return editor.value.expandTo((w.value as number), (h.value as number));
     if (len.value === 1) {
-        const rate = newH / (h.value as number);
+        const rate = _h / (h.value as number);
         const shape = props.shapes[0];
         if (shape.frame.height.toFixed(fix) !== value) {
-            const newW = isLock.value ? Number((rate * (w.value as number)).toFixed(fix)) : shape.frame.width;
-            editor.value.expandTo(newW, newH);
+            const _w = isLock.value ? Number((rate * (w.value as number)).toFixed(fix)) : shape.frame.width;
+            editor.value.expandTo(_w, _h);
         }
+    } else if (len.value > 1) {
+        const actions = get_actions_frame_h(props.shapes, _h, isLock.value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFrame(actions);
+            check_mixed();
+        }
+
     }
 }
 function lockToggle() {
-    isLock.value = !isLock.value;
+    const val = !isLock.value;
+    const actions = get_actions_constrainer_proportions(props.shapes, val);
+    const page = props.context.selection.selectedPage;
+    if (page) {
+        const editor = props.context.editor4Page(page);
+        editor.setShapesConstrainerProportions(actions);
+    }
+    isLock.value = val;
 }
 function radiusToggle() {
     isMoreForRadius.value = !isMoreForRadius.value
@@ -216,60 +241,90 @@ function radiusToggle() {
 
 }
 function fliph() {
-    editor.value.flipH();
+    if (len.value === 1) {
+        editor.value.flipH();
+    } else if (len.value > 1) {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const actions = get_actions_flip_h(props.shapes);
+            const editor = props.context.editor4Page(page);
+            editor.shapesFlip(actions);
+        }
+    }
 }
 function flipv() {
-    editor.value.flipV();
+    if (len.value === 1) {
+        editor.value.flipV();
+    } else if (len.value > 1) {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const actions = get_actions_flip_v(props.shapes);
+            const editor = props.context.editor4Page(page);
+            editor.shapesFlip(actions);
+        }
+    }
 }
 function onChangeRotate(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return editor.value.rotate(rotate.value as number);
-    editor.value.rotate(newRotate);
+    if (len.value === 1) {
+        editor.value.rotate(newRotate);
+    } else if (len.value > 1) {
+        const actions = get_actions_rotate(props.shapes, newRotate);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesRotate(actions);
+            check_mixed();
+        }
+    }
 }
 const onChangeRadian = (value: string, type: 'rrt' | 'rlt' | 'rrb' | 'rlb') => {
-    if (isMoreForRadius.value) {
-        value = Number.parseFloat(value).toFixed(fix);
-        const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
-        if (!radius.value) return;
-        const newR = cloneDeep(radius.value);
-        newR[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-        editor.value.setRadius(newR);
-    } else {
-        value = Number.parseFloat(value).toFixed(fix);
-        const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
-        if (!radius.value) return;
-        const newR = cloneDeep(radius.value);
-        newR['rrt'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-        newR['rlt'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-        newR['rrb'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-        // newR['rlb'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
-        editor.value.setRadius(newR);
+    if (len.value === 1) {
+        if (isMoreForRadius.value) {
+            value = Number.parseFloat(value).toFixed(fix);
+            const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
+            if (!radius.value) return;
+            const newR = cloneDeep(radius.value);
+            newR[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+            editor.value.setRadius(newR);
+        } else {
+            value = Number.parseFloat(value).toFixed(fix);
+            const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
+            if (!radius.value) return;
+            const newR = cloneDeep(radius.value);
+            newR['rrt'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+            newR['rlt'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+            newR['rrb'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+            // newR['rlb'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
+            editor.value.setRadius(newR);
+        }
     }
 }
 function adapt() {
-    editor.value.adapt();
+    if (len.value === 1) {
+        editor.value.adapt();
+    }
 }
 const RADIUS_SETTING = [ShapeType.Rectangle, ShapeType.Artboard];
 const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
 function layout() {
     if (len.value === 1) {
         const shape = props.shapes[0];
-        if (RADIUS_SETTING.includes(shape.type)) {
-            showRadius.value = true
-        } else {
-            showRadius.value = false
+        showRadius.value = RADIUS_SETTING.includes(shape.type);
+        showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
+        shwoAdapt.value = shape.type === ShapeType.Artboard;
+        shapeType.value = shape.type;
+        isLock.value = Boolean(shape.constrainerProportions);
+        if (shapeType.value === ShapeType.Rectangle) {
+            getRectShapeAttr(shape);
         }
-        if (DE_RADIAN_SETTING.includes(shape.type)) {
-            showRadian.value = false
-        } else {
-            showRadian.value = true
-        }
-        if (shape.type === ShapeType.Artboard) {
-            shwoAdapt.value = true
-        } else {
-            shwoAdapt.value = false
-        }
+    }
+}
+function workspace_watcher(t?: any) {
+    if (t === WorkSpace.CLAC_ATTRI) {
+        check_mixed();
     }
 }
 // hooks
@@ -279,9 +334,11 @@ onMounted(() => {
     watchShapes();
     check_mixed();
     props.context.selection.watch(selection_wather);
+    props.context.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
+    props.context.workspace.unwatch(workspace_watcher);
 })
 watchEffect(shapesWatcher);
 </script>
@@ -312,10 +369,10 @@ watchEffect(shapesWatcher);
         <div class="tr">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
-            <div class="flip ml-24" @click="fliph" :class="{ bgColor: showBgFlipH }">
+            <div class="flip ml-24" @click="fliph" :class="{ active: isFlippedHorizontal }">
                 <svg-icon icon-class="fliph"></svg-icon>
             </div>
-            <div class="flip ml-12" @click="flipv" :class="{ bgColor: showBgColorV }">
+            <div class="flip ml-12" @click="flipv" :class="{ active: isFlippedVertical }">
                 <svg-icon icon-class="flipv"></svg-icon>
             </div>
             <div style="width: 22px;height: 22px;;"></div>
@@ -394,8 +451,9 @@ watchEffect(shapesWatcher);
             align-items: center;
 
             >svg {
-                width: 60%;
-                height: 60%;
+                color: grey;
+                width: 100%;
+                height: 100%;
             }
         }
 
@@ -444,7 +502,7 @@ watchEffect(shapesWatcher);
             }
         }
 
-        .bgColor {
+        .active {
             background-color: var(--active-color);
             color: #fff;
         }

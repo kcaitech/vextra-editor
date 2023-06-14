@@ -102,6 +102,7 @@ export class WorkSpace extends Watchable(Object) {
     static INSERT_IMGS = 24;
     static FREEZE = 25;
     static THAW = 26;
+    static CLAC_ATTRI = 27;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -427,8 +428,14 @@ export class WorkSpace extends Watchable(Object) {
                     }
                 }
             }
+            if (this.context.selection.selectedShapes.length > 1) {
+                this.notify(WorkSpace.CLAC_ATTRI);
+            }
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
+            if (this.context.selection.selectedShapes.length > 1) {
+                this.notify(WorkSpace.CLAC_ATTRI);
+            }
         }
     }
     keydown_k(ctrl: boolean, shift: boolean) {

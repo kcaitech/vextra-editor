@@ -431,23 +431,21 @@ export function distribute_horizontally(shapes: Shape[]) {
         for (let i = 1; i < new_shapes.length - 1; i++) {
             inner_space -= new_shapes[i].width;
         }
-        if (inner_space > 0) {
-            const gap = inner_space / (new_shapes.length - 1);
-            const actions: PositonAdjust[] = [];
-            for (let i = 1; i < new_shapes.length - 1; i++) {
-                const s_left = new_shapes[i].left;
-                actions.push({
-                    target: new_shapes[i].shape,
-                    transX: new_shapes[i - 1].right + gap - s_left,
-                    transY: 0
-                })
-                new_shapes[i].right = new_shapes[i - 1].right + new_shapes[i].width + gap;
-            }
-            return actions;
+        const gap = inner_space / (new_shapes.length - 1);
+        const actions: PositonAdjust[] = [];
+        for (let i = 1; i < new_shapes.length - 1; i++) {
+            const s_left = new_shapes[i].left;
+            actions.push({
+                target: new_shapes[i].shape,
+                transX: new_shapes[i - 1].right + gap - s_left,
+                transY: 0
+            })
+            new_shapes[i].right = new_shapes[i - 1].right + new_shapes[i].width + gap;
         }
+        return actions;
     }
 }
-
+// 垂直均匀分布
 export function vertical_uniform_distribution(shapes: Shape[]) {
     const new_shapes: { top: number, bottom: number, height: number, shape: Shape }[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -476,19 +474,17 @@ export function vertical_uniform_distribution(shapes: Shape[]) {
         for (let i = 1; i < new_shapes.length - 1; i++) {
             inner_space -= new_shapes[i].height;
         }
-        if (inner_space > 0) {
-            const gap = inner_space / (new_shapes.length - 1);
-            const actions: PositonAdjust[] = [];
-            for (let i = 1; i < new_shapes.length - 1; i++) {
-                const s_top = new_shapes[i].top;
-                actions.push({
-                    target: new_shapes[i].shape,
-                    transX: 0,
-                    transY: new_shapes[i - 1].bottom + gap - s_top,
-                })
-                new_shapes[i].bottom = new_shapes[i - 1].bottom + new_shapes[i].height + gap;
-            }
-            return actions;
+        const gap = inner_space / (new_shapes.length - 1);
+        const actions: PositonAdjust[] = [];
+        for (let i = 1; i < new_shapes.length - 1; i++) {
+            const s_top = new_shapes[i].top;
+            actions.push({
+                target: new_shapes[i].shape,
+                transX: 0,
+                transY: new_shapes[i - 1].bottom + gap - s_top,
+            })
+            new_shapes[i].bottom = new_shapes[i - 1].bottom + new_shapes[i].height + gap;
         }
+        return actions;
     }
 }
