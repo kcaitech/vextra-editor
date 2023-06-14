@@ -107,7 +107,6 @@ function first() {
         addFill();
     }
 }
-
 function deleteFill(idx: number) {
     if (len.value === 1) {
         editor.value.deleteFill(idx);
@@ -120,7 +119,6 @@ function deleteFill(idx: number) {
         }
     }
 }
-
 function toggleVisible(idx: number) {
     if (len.value === 1) {
         editor.value.setFillEnable(idx, !fills[idx].fill.isEnabled);
@@ -134,7 +132,6 @@ function toggleVisible(idx: number) {
         }
     }
 }
-
 function setColor(idx: number, clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
     if (!res) {
@@ -155,7 +152,6 @@ function setColor(idx: number, clr: string, alpha: number) {
         }
     }
 }
-
 function onColorChange(idx: number, e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
     if (value.slice(0, 1) !== '#') {
@@ -171,7 +167,6 @@ function onColorChange(idx: number, e: Event) {
         return (e.target as HTMLInputElement).value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
-
 function onAlphaChange(idx: number, e: Event) {
     let value = (e.currentTarget as any)['value']
     if (alphaFill.value) {
@@ -220,7 +215,6 @@ function getColorFromPicker(idx: number, color: Color) {
     if (len.value === 1) {
         editor.value.setFillColor(idx, color);
     } else if (len.value > 1) {
-        //todo
         const actions = get_actions_fill_color(props.shapes, idx, color);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -229,7 +223,6 @@ function getColorFromPicker(idx: number, color: Color) {
         }
     }
 }
-
 function selection_wather(t: any) {
     if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
         watchShapes();

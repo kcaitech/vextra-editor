@@ -12,7 +12,7 @@ import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
 import Text from './Text/Text.vue';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
@@ -37,7 +37,7 @@ function _change(t: number) {
         }
     }
 }
-const change = debounce(_change, 100);
+const change = throttle(_change, 200);
 function selectionChange(t: number) {
     change(t);
 }
@@ -65,7 +65,7 @@ onUnmounted(() => {
             <ShapeBaseAttr :shapes="shapes" :context="props.context"></ShapeBaseAttr>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Text>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
-            <Border v-if="WITH_BORDER.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Border>
+            <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
         </div>
 
     </section>

@@ -112,7 +112,7 @@ export function render(h: Function, shape: Shape, path: string, url: string): Ar
         const border: Border = style.borders[i];
         if (!border.isEnabled) continue;
         const position = border.position;
-        elArr.push(handler[position](h, shape, border, path, url));
+        elArr.unshift(handler[position](h, shape, border, path, url));
     }
     return elArr;
 }
