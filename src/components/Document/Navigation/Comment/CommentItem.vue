@@ -17,6 +17,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
     (e: 'delete', index: number):void
+    (e: "switchpage", id: string): void;
 }>()
 const hoverIcon = ref(false)
 const hoverComment = ref(false)
@@ -59,20 +60,25 @@ const unHoverShape = (e: MouseEvent) => {
     hoverComment.value = false
 }
 
-const onReply = (e: Event) => {
-    e.stopPropagation()
-    const workspace = props.context.workspace;
-    const cx = props.commentItem.shape_frame.x1
-    const cy = props.commentItem.shape_frame.y1
-    const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
-    const { x, y, bottom, right } = workspace.root;
-    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
-    const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
-    props.context.selection.selectComment(props.commentItem.id)
-    if (transX || transY) {
-        workspace.matrix.trans(transX, transY);
-        
-        workspace.matrixTransformation();
+const onReply = () => {
+    const id = props.context.selection.selectedPage?.id
+    if(id === props.pageId) {
+        const workspace = props.context.workspace;
+        const cx = props.commentItem.shape_frame.x1
+        const cy = props.commentItem.shape_frame.y1
+        const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
+        const { x, y, bottom, right } = workspace.root;
+        const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
+        const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
+        props.context.selection.selectComment(props.commentItem.id)
+        if (transX || transY) {
+            workspace.matrix.trans(transX, transY);
+            workspace.matrixTransformation();
+        }
+    }else {
+        props.context.selection.selectCommentPage(props.pageId)   
+        props.context.selection.setCommentSelect(true)
+        props.context.selection.selectComment(props.commentItem.id)
     }
 }
 
@@ -126,7 +132,7 @@ const formatDate = computed(() => {
 })
 const getPage = () => {
     const p = props.context.data
-    p.pagesMgr.get('c62c70d6-8347-4b22-bebb-7e5fff9c0276').then((p: Page | undefined) => {
+    p.pagesMgr.get(props.pageId).then((p: Page | undefined) => {
         if(!p) return
             page.value = p
     })
@@ -173,7 +179,7 @@ onUnmounted(() => {
                     <el-button-group class="ml-4">
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                            <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;"/>
+                            <el-button plain :icon="ChatDotSquare" @click.stop="onReply" style="margin-right: 5px;"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0">

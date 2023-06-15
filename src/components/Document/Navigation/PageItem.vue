@@ -26,7 +26,6 @@ const MOUSE_LEFT = 0;
 const MOUSE_RIGHT = 2;
 function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
-
     if (e.button === MOUSE_LEFT) {
         document.addEventListener("mouseup", function onMouseUp() {
             e.stopPropagation();

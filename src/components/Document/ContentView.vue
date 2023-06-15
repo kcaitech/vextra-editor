@@ -217,6 +217,9 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
             clearTimeout(timer)
         }, 50);
     }
+    if(type === WorkSpace.TOGGLE_PAGE) {
+            getDocumentComment()
+    }
     if(type === WorkSpace.UPDATE_PAGE_COMMENT) {
         documentCommentList.value = props.context.workspace.pageCommentList
     }
@@ -768,8 +771,6 @@ const completed = () => {
 // 获取评论列表
 const getDocumentComment = async() => {
     try {
-        console.log('调用api');
-        
         const {data} = await comment_api.getDocumentCommentAPI({doc_id: route.query.id})
        data.forEach((obj: { children: any[]; commentMenu: any; }) => {
         obj.commentMenu = commentMenuItems.value
@@ -779,6 +780,10 @@ const getDocumentComment = async() => {
        workspace.value.setPageCommentList(list, props.page.id)
        documentCommentList.value = workspace.value.pageCommentList
        workspace.value.setCommentList(list)
+       if(props.context.selection.isSelectComment) {
+           props.context.selection.selectComment(props.context.selection.commentId)
+           props.context.selection.setCommentSelect(false)
+       }
     }catch(err) {
         console.log(err);
     }

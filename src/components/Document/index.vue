@@ -97,7 +97,7 @@ function switchPage(id?: string) {
                 ctx.selection.selectPage(page);
                 (window as any).__context = ctx;
                 curPage.value = page;
-                ctx.workspace.editTabComment()
+                ctx.workspace.toggleCommentPage()
             }
         })
     }
@@ -108,6 +108,13 @@ function selectionWatcher(t: number) {
             const ctx: Context = context;
             curPage.value = ctx.selection.selectedPage;
         }
+    }
+    if (t === Selection.COMMENT_CHANGE_PAGE) {
+        if (context) {
+            const pageId = context.selection.commentPageId
+            switchPage(pageId)
+        }
+        
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
@@ -491,7 +498,7 @@ watchEffect(() => {
     #navigation {
         height: 100%;
         background-color: var(--left-navi-bg-color);
-        z-index: 2;
+        z-index: 9;
     }
 
     #content {
@@ -503,7 +510,7 @@ watchEffect(() => {
     #attributes {
         height: 100%;
         background-color: var(--right-attr-bg-color);
-        z-index: 2;
+        z-index: 9;
     }
 
     .showHiddenR {

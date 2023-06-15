@@ -50,6 +50,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static UPDATE_RENDER_ITEM = 7;
     static CHANGE_COMMENT = 8;
     static SOLVE_MENU_STATUS = 9;
+    static COMMENT_CHANGE_PAGE = 10;
+    static SKIP_COMMENT = 11;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -65,6 +67,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_cursorEnd: number = -1;
     private m_comment_id: string = '';
     private m_comment_status: boolean = false;
+    private m_comment_page_id: string | undefined;
+    private m_select_comment: boolean = false;
 
     constructor(document: Document) {
         super();
@@ -103,6 +107,24 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     get commentStatus() { //评论列表是否显示解决
         return this.m_comment_status;
+    }
+    get commentPageId() {
+        return this.m_comment_page_id;
+    }
+    get isSelectComment() {
+        return this.m_select_comment;
+    }
+
+    selectCommentPage(id: string) {
+        this.m_comment_page_id = id
+        this.notify(Selection.COMMENT_CHANGE_PAGE)
+    }
+
+    setCommentSelect(s: boolean) {
+        this.m_select_comment = s
+        if(!s) {
+            this.notify(Selection.SKIP_COMMENT)
+        }
     }
 
     commentSolveMenuStatus(status: boolean) { //设置列表评论菜单解决状态

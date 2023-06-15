@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watchEffect, computed } from 'vue'
+import { onMounted, onUnmounted, ref, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import HoverComment from './HoverComment.vue'
@@ -52,6 +52,33 @@ const status = computed(() => {
     }
 })
 
+function watcher() {
+    watchShapes();
+    if (props.commentInfo.shape_frame.x2 || props.commentInfo.shape_frame.y2) {
+        setCommentPosition()
+    }
+}
+
+const watchedShapes = new Map();
+function watchShapes() { // 监听相关shape的变化
+    const needWatchShapes = new Map();
+    const selection = props.context.selection.selectedPage?.childs;
+    if (selection) {
+        selection.forEach((v) => {
+            needWatchShapes.set(v.id, v);
+        })
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(watcher);
+        watchedShapes.delete(k);
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        v.watch(watcher);
+        watchedShapes.set(k, v);
+    })
+}
 const hoverComment = () => {
     if (!showScale.value) {
         props.context.workspace.hoverComment(false);
@@ -159,12 +186,11 @@ const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) 
         workspace.matrixTransformation();
     }
 }
-
-watchEffect(() => {
+function setOrigin() { // 这个动作是让container与页面坐标系重合
     props.reflush;
     matrix.reset(props.matrix);
     matrix.preTrans(props.commentInfo.shape_frame.x1, props.commentInfo.shape_frame.y1);
-})
+}
 
 const getDocumentComment = async () => {
     try {
@@ -182,10 +208,45 @@ const workspaceUpdate = (t: number) => {
     if (t === WorkSpace.OPACITY_COMMENT) {
         commentOpacity.value = workspace.value.isCommentOpacity
     }
-    if (props.commentInfo.shape_frame.x2 || props.commentInfo.shape_frame.y2) {
-        setCommentPosition()
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        setOrigin()
+        // if (props.commentInfo.shape_frame.x2 || props.commentInfo.shape_frame.y2) {
+        //     console.log(11);
+        //     setCommentPosition()
+        // }
     }
 }
+
+const pageSkipComment = () => {
+    const workspace = props.context.workspace;
+    const commentId = props.context.selection.commentId
+    const index = props.context.workspace.pageCommentList.findIndex(item => item.id === commentId)
+    const commentItem = props.context.workspace.pageCommentList[index]
+    const cx = commentItem.shape_frame.x1
+    const cy = commentItem.shape_frame.y1
+    const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
+    const { x, y, bottom, right } = workspace.root;
+    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
+    const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
+    nextTick(() => {
+        if (comment.value) {
+            if (props.context.selection.commentId === props.commentInfo.id){
+                props.context.workspace.commentMount(false)
+                rootHeight.value = comment.value.parentElement!.clientHeight
+                rootWidth.value = comment.value.parentElement!.clientWidth
+                commentScale.value = 0
+                getDocumentComment()
+                ShowComment.value = true
+                showScale.value = true
+            }
+        }
+    })
+    if (transX || transY) {
+        workspace.matrix.trans(transX, transY);
+        workspace.matrixTransformation();
+    }
+}
+
 const update = (t: number) => {
     if (t === Selection.CHANGE_COMMENT) {
         if (props.context.selection.commentId === props.commentInfo.id) {
@@ -203,6 +264,9 @@ const update = (t: number) => {
     if (t === Selection.SOLVE_MENU_STATUS) {
         reply.value = props.context.selection.commentStatus
     }
+    if(t === Selection.SKIP_COMMENT) {
+        pageSkipComment()
+    }
 }
 
 const setCommentPosition = () => {
@@ -210,12 +274,10 @@ const setCommentPosition = () => {
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (!workspace.value.transforming) return
     shape.forEach(item => {
-        if (item.id === props.commentInfo.target_shape_id) {            
-            if(selection.includes(item)) {
-                
+        if (item.id === props.commentInfo.target_shape_id) {
+            if (selection.includes(item)) {
                 workspace.value.editShapeComment(true, item)
                 const { x, y } = item.frame2Page();
-                console.log(x, y);
                 const farmeX = x + props.commentInfo.shape_frame.x2
                 const farmeY = y + props.commentInfo.shape_frame.y2
                 emit('updateShapeComment', farmeX, farmeY, props.index)
@@ -233,6 +295,8 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
     props.context.selection.unwatch(update);
 })
+watchEffect(setOrigin)
+watchEffect(watcher)
 </script>
 
 <template>
@@ -290,4 +354,5 @@ onUnmounted(() => {
     .shadow {
         box-shadow: none;
     }
-}</style>
+}
+</style>

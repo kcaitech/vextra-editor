@@ -112,6 +112,7 @@ export class WorkSpace extends Watchable(Object) {
     static FREEZE = 33;
     static THAW = 34;
     static UPDATE_PAGE_COMMENT = 35;
+    static TOGGLE_PAGE = 36;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -630,5 +631,8 @@ export class WorkSpace extends Watchable(Object) {
         if(id) {
             this.notify(WorkSpace.CURRENT_COMMENT);
         }
+    }
+    toggleCommentPage() {
+        this.notify(WorkSpace.EDIT_COMMENT);//点击评论跳转页面
     }
 }
