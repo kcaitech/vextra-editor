@@ -161,16 +161,16 @@ export function useController(context: Context) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
                     _migrate(shapes, startPosition, mousePosition);
-                    const len = shapes.length;
-                    if (len > 1) {
-                        const m = matrix.inverseCoord({ x: mousePosition.x, y: mousePosition.y });
-                        asyncTransfer.trans(startPositionOnPage, m);
-                        const tool = context.workspace.toolGroup;
-                        if (tool) {
-                            tool.removeAttribute('style');
-                            trans.x = 0, trans.y = 0;
-                        }
-                    }
+                    // const len = shapes.length;
+                    // if (len > 1) {
+                    //     const m = matrix.inverseCoord({ x: mousePosition.x, y: mousePosition.y });
+                    //     asyncTransfer.trans(startPositionOnPage, m);
+                    //     const tool = context.workspace.toolGroup;
+                    //     if (tool) {
+                    //         tool.removeAttribute('style');
+                    //         trans.x = 0, trans.y = 0;
+                    //     }
+                    // }
                     asyncTransfer = asyncTransfer?.close();
                 }
                 isDragging = false;
@@ -189,25 +189,25 @@ export function useController(context: Context) {
     function transform(start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.inverseCoord(start.x, start.y);
         const pe: PageXY = matrix.inverseCoord(end.x, end.y);
-        if (shapes.length > 1) {
-            const tool = context.workspace.toolGroup;
-            if (tool) {
-                const tx = ps.x - pe.x;
-                const ty = ps.y - pe.y;
-                trans.x -= tx;
-                trans.y -= ty;
-                tool.style.transform = `translate(${trans.x}px, ${trans.y}px)`;
-            }
-        } else {
-            if (asyncTransfer) {
-                asyncTransfer.trans(ps, pe);
-                migrate(shapes, start, end);
-            }
-        }
-        // if (asyncTransfer) {
-        //     asyncTransfer.trans(ps, pe);
-        //     migrate(shapes, start, end);
+        // if (shapes.length > 1) {
+        //     const tool = context.workspace.toolGroup;
+        //     if (tool) {
+        //         const tx = ps.x - pe.x;
+        //         const ty = ps.y - pe.y;
+        //         trans.x -= tx;
+        //         trans.y -= ty;
+        //         tool.style.transform = `translate(${trans.x}px, ${trans.y}px)`;
+        //     }
+        // } else {
+        //     if (asyncTransfer) {
+        //         asyncTransfer.trans(ps, pe);
+        //         migrate(shapes, start, end);
+        //     }
         // }
+        if (asyncTransfer) {
+            asyncTransfer.trans(ps, pe);
+            migrate(shapes, start, end);
+        }
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selected = context.selection.selectedShapes;

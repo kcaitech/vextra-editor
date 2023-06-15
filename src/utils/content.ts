@@ -2,7 +2,7 @@ import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape } from "@kcdesign/data";
-import { Action, Media, ResultByAction, WorkSpace } from '@/context/workspace';
+import { Action, Media, ResultByAction } from '@/context/workspace';
 interface SystemClipboardItem {
   type: ShapeType
   contentType: string
@@ -73,7 +73,7 @@ function isInner(context: Context, shape: Shape) {
   if ((l + rx) > right - 20 || r < 0 + 20) {
     return false;
   } else if (b < 0 + 20 || (t + ry) > bottom - 20) {
-    return false
+    return false;
   } else {
     return true;
   }

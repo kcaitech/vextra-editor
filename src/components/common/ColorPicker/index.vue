@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, nextTick, reactive, onMounted, onUnmounted, onBeforeUnmount, computed } from 'vue';
+import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { Selection } from '@/context/selection';
+import { ClientXY, Selection } from '@/context/selection';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
 import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, RGB2H, validate, getHRGB, HSB2RGB, RGB2HSL, HSL2RGB } from './utils';
@@ -86,6 +86,8 @@ const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
 const recent = ref<Color[]>([]);
 let inputTarget: HTMLInputElement;
 let handleIndex = 0;
+const mousedownPositon: ClientXY = { x: 0, y: 0 };
+let isDrag: boolean = false;
 const reflush = ref<number>(1);
 const data = reactive<Data>({
   rgba: { R: 255, G: 0, B: 0, alpha: 1 },
@@ -201,9 +203,17 @@ function xTohex(rgb: [number, number, number]): string {
   })
   return str
 }
+function setMousedownPosition(e: MouseEvent) {
+  mousedownPositon.x = e.clientX;
+  mousedownPositon.y = e.clientY;
+}
+function is_drag(e: MouseEvent) {
+  return Math.hypot(e.clientX - mousedownPositon.x, e.clientY - mousedownPositon.y) > 9;
+}
 // 设置色相
 function setHueIndicatorPosition(e: MouseEvent) {
   if (sliders.value) {
+    setMousedownPosition(e);
     const { x, right } = sliders.value.getBoundingClientRect();
     lineAttribute.begin = x;
     lineAttribute.end = right;
@@ -221,14 +231,18 @@ function setHueIndicatorPosition(e: MouseEvent) {
   }
 }
 function mousemove4Hue(e: MouseEvent) {
-  let placement = e.x - lineAttribute.begin;
-  if (placement < HALF_INDICATOR_WIDTH) {
-    placement = HALF_INDICATOR_WIDTH;
-  } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-    placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+  if (isDrag) {
+    let placement = e.x - lineAttribute.begin;
+    if (placement < HALF_INDICATOR_WIDTH) {
+      placement = HALF_INDICATOR_WIDTH;
+    } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+      placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+    }
+    hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+    setRGB(hueIndicatorAttr.x);
+  } else {
+    isDrag = is_drag(e);
   }
-  hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
-  setRGB(hueIndicatorAttr.x);
 }
 function wheel(e: WheelEvent) {
   const wheel_step = 3;
@@ -252,6 +266,7 @@ function wheel(e: WheelEvent) {
 // 设置透明度
 function setAlphaIndicatorPosition(e: MouseEvent) {
   if (sliders.value) {
+    setMousedownPosition(e);
     const { x, right } = sliders.value.getBoundingClientRect();
     lineAttribute.begin = x;
     lineAttribute.end = right;
@@ -269,18 +284,23 @@ function setAlphaIndicatorPosition(e: MouseEvent) {
   }
 }
 function mousemove4Alpha(e: MouseEvent) {
-  let placement = e.x - lineAttribute.begin;
-  if (placement < HALF_INDICATOR_WIDTH) {
-    placement = HALF_INDICATOR_WIDTH;
-  } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-    placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+  if (isDrag) {
+    let placement = e.x - lineAttribute.begin;
+    if (placement < HALF_INDICATOR_WIDTH) {
+      placement = HALF_INDICATOR_WIDTH;
+    } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+      placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+    }
+    alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+    setAlpha(alphaIndicatorAttr.x);
+  } else {
+    isDrag = is_drag(e);
   }
-  alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
-  setAlpha(alphaIndicatorAttr.x);
 }
 
 function setDotPosition(e: MouseEvent) {
   if (saturationEL.value) {
+    setMousedownPosition(e);
     const { x: saturationX, y: saturationY, right, bottom } = saturationEL.value.getBoundingClientRect();
     const { x: mx, y: my } = e;
     dotPosition.left = mx - saturationX - 5;
@@ -299,28 +319,32 @@ function setDotPosition(e: MouseEvent) {
   }
 }
 function mousemove4Dot(e: MouseEvent) {
-  const { x, y } = e;
-  const { x: saturationX, y: saturationY, right, bottom } = saturationELBounding;
-  if (x >= saturationX && y <= bottom && x <= right && y >= saturationY) {
-    dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-    dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-  } else if (x < saturationX && y <= bottom && y >= saturationY) {
-    dotPosition.left = -(DOT_WIDTH / 2);
-    dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-  } else if (x > right && y <= bottom && y >= saturationY) {
-    dotPosition.left = HUE_WIDTH - (DOT_WIDTH / 2);
-    dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-  } else if (y < saturationY && x >= saturationX && x <= right) {
-    dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-    dotPosition.top = -(DOT_WIDTH / 2);
-  } else if (y > bottom && x >= saturationX && x <= right) {
-    dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-    dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
+  if (isDrag) {
+    const { x, y } = e;
+    const { x: saturationX, y: saturationY, right, bottom } = saturationELBounding;
+    if (x >= saturationX && y <= bottom && x <= right && y >= saturationY) {
+      dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+      dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+    } else if (x < saturationX && y <= bottom && y >= saturationY) {
+      dotPosition.left = -(DOT_WIDTH / 2);
+      dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+    } else if (x > right && y <= bottom && y >= saturationY) {
+      dotPosition.left = HUE_WIDTH - (DOT_WIDTH / 2);
+      dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+    } else if (y < saturationY && x >= saturationX && x <= right) {
+      dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+      dotPosition.top = -(DOT_WIDTH / 2);
+    } else if (y > bottom && x >= saturationX && x <= right) {
+      dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+      dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
+    }
+    const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
+    const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
+    update(R, G, B);
+    emit('change', color);
+  } else {
+    isDrag = is_drag(e);
   }
-  const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
-  const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
-  update(R, G, B);
-  emit('change', color);
 }
 // set color
 function setRGB(indicator: number) {
@@ -352,6 +376,7 @@ function mouseup() {
   document.removeEventListener('mousemove', mousemove4Hue)
   document.removeEventListener('mouseup', mouseup)
   props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+  isDrag = false;
 }
 function eyedropper() {
   if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
@@ -585,16 +610,21 @@ function selectionWatcher(t: any) {
     props.context.workspace.removeColorPicker();
   }
 }
+function window_blur() {
+  isDrag = false;
+}
 onMounted(() => {
   props.context.workspace.watch(workspaceWatcher);
   props.context.selection.watch(selectionWatcher);
   init();
+  window.addEventListener('blur', window_blur);
 });
 onUnmounted(() => {
   eyeDropper.destroy();
   blockUnmount();
   props.context.workspace.unwatch(workspaceWatcher);
   props.context.selection.unwatch(selectionWatcher);
+  window.removeEventListener('blur', window_blur)
 })
 </script>
 
