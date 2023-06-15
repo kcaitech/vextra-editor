@@ -5,7 +5,7 @@ export function clipboard_write(shapes: Shape[]) {
     return content;
 }
 export function copy(context: Context) {
-    let result: any = clipboard_write(context.selection.selectedShapes);
+    const result: any = clipboard_write(context.selection.selectedShapes);
     // if (navigator.clipboard && result?.length) {
     //     result = JSON.stringify(result);
     //     console.log(result);
