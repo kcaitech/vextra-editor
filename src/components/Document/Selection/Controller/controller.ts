@@ -1,3 +1,4 @@
+import { export_shape, import_shape, Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -5,7 +6,6 @@ import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
-import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
 import { forGroupHover, groupPassthrough } from "@/utils/scout";
 import { Action, WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
@@ -147,6 +147,24 @@ export function useController(context: Context) {
                 if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
                     if (!editing) {
                         isDragging = true;
+                        if (e.altKey) {
+                            const source = export_shape(shapes);
+                            const new_source = import_shape(source);
+                            const page = context.selection.selectedPage;
+                            const result: Shape[] = [];
+                            if (page) {
+                                for (let i = 0; i < new_source.length; i++) {
+                                    const _s = new_source[i];
+                                    const editor = context.editor4Page(page);
+                                    const r = editor.insert(page, source[i].index + 1, _s, true);
+                                    if (r) { result.push(r) }
+                                }
+                            }
+                            if (result.length) {
+                                shapes = result;
+                                context.selection.rangeSelectShape(result);
+                            }
+                        }
                         asyncTransfer = context.editor.controller().asyncTransfer(shapes);
                         workspace.value.setSelectionViewUpdater(false);
                     }

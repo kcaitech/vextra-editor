@@ -19,6 +19,7 @@ export enum Action {
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
+    A = 'KeyA',
     R = 'KeyR',
     V = 'KeyV',
     L = 'KeyL',
@@ -310,7 +311,9 @@ export class WorkSpace extends Watchable(Object) {
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (this.isFreeze) return;
-        if (event.code === KeyboardKeys.R) {
+        if (event.code === KeyboardKeys.A) {
+            this.keydown_a(ctrlKey, metaKey);
+        } else if (event.code === KeyboardKeys.R) {
             if (!metaKey && !ctrlKey) {
                 event.preventDefault();
                 this.keydown_r();
@@ -391,6 +394,15 @@ export class WorkSpace extends Watchable(Object) {
         this.m_setting = v;
     }
     // keyboard
+    keydown_a(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            const selection = this.context.selection
+            const page = selection.selectedPage;
+            if (page) {
+                selection.rangeSelectShape(page.childs);
+            }
+        }
+    }
     keydown_r() {
         this.escSetup();
         this.m_current_action = Action.AddRect;
