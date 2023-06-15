@@ -10,5 +10,7 @@ export const homerightmenu = {
     deletefile:'Delete file',
     restore: 'Restore',
     completely_delete: 'Completely delete',
+    copyfile_ok:'Successful replication',
+    copyfile_no:'Replication failure'
 
 }

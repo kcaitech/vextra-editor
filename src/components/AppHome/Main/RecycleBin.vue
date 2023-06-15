@@ -24,12 +24,12 @@
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li style="margin-top: 10px;" @click=" rRestorefile ">{{t('homerightmenu.restore')}}</li>
-            <li style="margin-bottom: 10px;" @click=" rDeletefile ">{{t('homerightmenu.completely_delete')}}</li>
+            <li @click=" rRestorefile ">{{t('homerightmenu.restore')}}</li>
+            <li @click=" rDeletefile ">{{t('homerightmenu.completely_delete')}}</li>
         </ul>
     </div>
     <!-- 确认删除弹框 -->
-    <el-dialog v-model=" dialogVisible " :title=" t('home.completely_delete') " width="500" align-center>
+    <el-dialog v-model=" dialogVisible " :title=" t('home.completely_delete') " width="500" align-center  @keyup.enter="Qdeletefile(fileid)">
         <span>{{t('home.delete_tips')}}</span>
         <template #footer>
             <span class="dialog-footer">
@@ -60,17 +60,22 @@ const fileid = ref('')
 async function GetrecycleLists() {
     // loading
     isLoading.value = true
-    const { data } = await user_api.GetrecycleList()
-    if (data == null) {
-        ElMessage.error(t('home.failed_list_tips'))
-    } else {
-        for (let i = 0; i < data.length; i++) {
-            let { document: { size }, document_access_record: { last_access_time } } = data[i]
-            data[i].document.size = sizeTostr(size)
-            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+    try {
+        const { data } = await user_api.GetrecycleList()
+        if (data == null) {
+            ElMessage.error(t('home.failed_list_tips'))
+        } else {
+            for (let i = 0; i < data.length; i++) {
+                let { document: { size }, document_access_record: { last_access_time } } = data[i]
+                data[i].document.size = sizeTostr(size)
+                data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+            }
         }
+        GetrecycleList.value = data
+    } catch (error) {
+        ElMessage.error(t('home.failed_list_tips'))
     }
-    GetrecycleList.value = data
+
     // unloading  
     isLoading.value = false;
 }
@@ -148,7 +153,7 @@ const rDeletefile = () => {
     }
 }
 
-const Qdeletefile = async (id:string) => {
+const Qdeletefile = async (id: string) => {
     try {
         const { code } = await user_api.DeleteFile({ doc_id: id })
         if (code === 0) {
@@ -188,17 +193,17 @@ onUnmounted(() => {
 .rightmenu {
     display: none;
     min-width: 200px;
-    min-height: 100px;
+    height: auto;
     z-index: 9999;
     position: absolute;
     background-color: white;
+    padding: 10px 0;
     border-radius: 5px;
     box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
 
     ul {
         margin: 0;
         padding: 0 10px;
-
         li {
             display: block;
             padding: 10px 10px;
@@ -247,6 +252,8 @@ onUnmounted(() => {
 
 .el-icon {
     display: none;
+    position: relative;
+    top: 5px;
 
     &:hover {
         color: #6395f9;
@@ -279,5 +286,13 @@ onUnmounted(() => {
 :deep(.el-table__row) {
     height: 56px;
     font-weight: 18px;
+}
+
+:deep(.el-table__cell) {
+    padding: 0;
+}
+
+:deep(.el-table__cell .cell) {
+    line-height: 56px;
 }
 </style>

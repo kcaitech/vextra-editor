@@ -1,1 +1,1 @@
-delete from user where nickname="Ice.Z1";
+delete from user where nickname="Ice.Z12421";

@@ -10,4 +10,6 @@ export const homerightmenu = {
     deletefile:'删除文件',
     restore: '还原',
     completely_delete: '彻底删除',
+    copyfile_ok:'复制成功',
+    copyfile_no:'复制失败'
 }
