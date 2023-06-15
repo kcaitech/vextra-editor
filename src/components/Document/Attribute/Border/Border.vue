@@ -13,7 +13,7 @@ import { message } from "@/utils/message";
 import { toHex } from "@/utils/color";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { get_boders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
+import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
 interface BorderItem {
     id: number,
     border: Border
@@ -71,7 +71,7 @@ function updateData() {
             borders.push(b);
         }
     } else if (len.value > 1) {
-        const _bs = get_boders(props.shapes);
+        const _bs = get_borders(props.shapes);
         if (_bs === 'mixed') {
             mixed.value = true;
         } else {
