@@ -168,7 +168,7 @@ function onColorChange(idx: number, e: Event) {
     }
 }
 function onAlphaChange(idx: number, e: Event) {
-    let value = (e.currentTarget as any)['value']
+    let value = (e.currentTarget as any)['value'];
     if (alphaFill.value) {
         if (value?.slice(-1) === '%') {
             value = Number(value?.slice(0, -1))
