@@ -300,6 +300,8 @@ const onChangeRadian = (value: string, type: 'rrt' | 'rlt' | 'rrb' | 'rlb') => {
             // newR['rlb'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
             editor.value.setRadius(newR);
         }
+    } else {
+        // todo
     }
 }
 function adapt() {

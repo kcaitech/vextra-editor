@@ -1,4 +1,4 @@
-import { Watchable } from "@kcdesign/data";
+import { Shape, Watchable } from "@kcdesign/data";
 import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
@@ -69,9 +69,9 @@ const A2R = new Map([
     [Action.AddImage, ShapeType.Image]
 ]);
 export interface ClipboardItem {
+    index: number
     type: ShapeType
-    contentType: string
-    content: Media | string
+    content: Shape
 }
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
@@ -103,10 +103,11 @@ export class WorkSpace extends Watchable(Object) {
     static FREEZE = 25;
     static THAW = 26;
     static CLAC_ATTRI = 27;
+    static COPY = 28;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: ClipboardItem | undefined; // 剪切板
+    private m_clip_board: ClipboardItem[] | undefined; // 剪切板
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -346,7 +347,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_t();
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
-            this.keydown_c();
+            this.keydown_c(ctrlKey, metaKey);
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -361,7 +362,8 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = action;
         this.notify();
     }
-    setClipBoard(v: ClipboardItem) {
+    // 存入剪切板
+    setClipBoard(v: ClipboardItem[]) {
         this.m_clip_board = v;
     }
     setFrameSize(size: { width: number, height: number }) {
@@ -460,10 +462,14 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddText;
         this.notify();
     }
-    keydown_c() {
-        this.escSetup();
-        this.m_current_action = Action.AddComment;
-        this.notify(WorkSpace.SELECT_LIST_TAB);
+    keydown_c(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            this.notify(WorkSpace.COPY)
+        } else {
+            this.escSetup();
+            this.m_current_action = Action.AddComment;
+            this.notify(WorkSpace.SELECT_LIST_TAB);
+        }
     }
     keydown_0(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) {

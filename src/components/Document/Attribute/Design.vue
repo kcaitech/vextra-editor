@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { Shape } from '@kcdesign/data';
-import { ShapeType } from "@kcdesign/data"
+import { ShapeType, Color, Shape } from "@kcdesign/data"
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
 import ColorPicker from '../../common/ColorPicker/index.vue';
-import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr.vue';
