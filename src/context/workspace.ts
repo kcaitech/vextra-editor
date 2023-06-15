@@ -3,6 +3,7 @@ import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
+import { Clipboard } from "@/utils/clipaboard";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -68,11 +69,6 @@ const A2R = new Map([
     [Action.AddText, ShapeType.Text],
     [Action.AddImage, ShapeType.Image]
 ]);
-export interface ClipboardItem {
-    index: number
-    type: ShapeType
-    content: Shape
-}
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
@@ -107,7 +103,6 @@ export class WorkSpace extends Watchable(Object) {
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: ClipboardItem[] | undefined; // 剪切板
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -132,9 +127,11 @@ export class WorkSpace extends Watchable(Object) {
     private m_saving: boolean = false;
     private m_image: Media[] | undefined = undefined;
     private m_freeze: boolean = false;
+    private m_clipboard: Clipboard;
     constructor(context: Context) {
         super();
-        this.context = context
+        this.context = context;
+        this.m_clipboard = new Clipboard(context);
     }
     get matrix() {
         return this.m_matrix;
@@ -173,9 +170,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     get action() {
         return this.m_current_action;
-    }
-    get clipBoard() {
-        return this.m_clip_board;
     }
     get frameSize() {
         return this.m_frame_size;
@@ -218,6 +212,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isFreeze() {
         return this.m_freeze;
+    }
+    get clipboard() {
+        return this.m_clipboard;
     }
     setFreezeStatus(isFreeze: boolean) {
         this.m_freeze = isFreeze;

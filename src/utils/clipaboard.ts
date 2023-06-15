@@ -16,3 +16,24 @@ export function copy(context: Context) {
         });
     }
 }
+export class Clipboard {
+    private carrier: HTMLElement | undefined;
+    private context: Context;
+    constructor(context: Context) {
+        this.context = context;
+        this.carrier = document.createElement('span');
+        this.carrier.style.display = 'none';
+    }
+    write_html() {
+        const shapes = this.context.selection.selectedShapes;
+        if (this.carrier) {
+            const blob = new Blob(['https://test.protodesign.cn/zrx/#/document?id=117879034838269952'], { type: 'text/html' });
+            if (navigator.clipboard) {
+                navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+            }
+        }
+    }
+    write_plain() {
+
+    }
+}

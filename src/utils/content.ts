@@ -202,16 +202,16 @@ function paster(context: Context, t: Function, xy?: PageXY) {
       context.workspace.setFreezeStatus(true);
       navigator.clipboard.read()
         .then(function (data) {
-          if (data && data.length) { // 有内容
+          if (data && data.length) { // 存在有效内容
             if (data[0].types[0].indexOf('image') !== -1) { // 内容为一张图片
               set_clipboard_image(context, data[0], t, xy)
             } else if (data[0].types.includes('text/html')) {
-              data[0].getType('text/html').then(val => {
+              data[0].getType('text/html').then(val => { // 图形
                 const fr = new FileReader();
                 fr.onload = function (event) {
                   const text = event.target?.result;
                   if (text) {
-                    console.log(text);
+                    console.log('html', text);
                   }
                 }
                 fr.readAsText(val);
@@ -222,7 +222,7 @@ function paster(context: Context, t: Function, xy?: PageXY) {
                 fr.onload = function (event) {
                   const text = event.target?.result;
                   if (text) {
-                    console.log(text);
+                    console.log('plain', text);
                   }
                 }
                 fr.readAsText(val);
