@@ -27,7 +27,7 @@ let scaling: boolean = false;
 let rotating: boolean = false;
 let clt: CtrlElementType;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
-let src_frame: ControllerFrame | undefined;
+let origin_frame: { x: number, y: number, width: number, height: number } = { x: 0, y: 0, width: 0, height: 0 };
 const rotatePositon = computed(() => {
   const map = new Map([
     [CtrlElementType.RectLT, 'lt'],
@@ -61,7 +61,17 @@ function getCtrlElementType(event: MouseEvent) {
   const ele = (event.target as HTMLDivElement)?.dataset?.pointId || '';
   return positionToCtrlElementType.get(ele) as CtrlElementType;
 }
-
+function calcOrigin() {
+  const [p1, p2, p3, p4] = props.controllerFrame;
+  const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
+  const p3OnPage = matrix.inverseCoord({ x: p3.x, y: p3.y });
+  origin_frame = {
+    x: p1OnPage.x,
+    y: p1OnPage.y,
+    width: p3OnPage.x - p1OnPage.x,
+    height: p3OnPage.y - p1OnPage.y
+  };
+}
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
@@ -75,7 +85,8 @@ function onMouseDown(event: MouseEvent) {
       clt = getCtrlElementType(event);
       matrix.reset(workspace.value.matrix);
       root = workspace.value.root;
-      startPosition = { x: clientX - root.x, y: clientY - root.y }
+      startPosition = { x: clientX - root.x, y: clientY - root.y };
+      calcOrigin();
       document.addEventListener('mousemove', onMouseMove);
       document.addEventListener('mouseup', onMouseUp);
     }
@@ -132,27 +143,11 @@ function onMouseMove(event: MouseEvent) {
           const ncf = { x: p4OnPage.x, y: p4OnPage.y - new_height, width: new_width, height: new_height };
           asyncBaseAction.execute4multi(shapes, ocf, ncf);
         } else if (props.point.type === CtrlElementType.RectRB) {
-          if (src_frame) { // 寻找合适的变量销毁时机
-            const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
-            const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
-            const new_width = Math.abs(currentPoint.x - p1OnPage.x);
-            const new_height = Math.abs(currentPoint.y - p1OnPage.y);
-            const ncf = { x: p1OnPage.x, y: p1OnPage.y, width: new_width, height: new_height };
-            asyncBaseAction.execute4multi(shapes, src_frame, ncf);
-            src_frame = ncf;
-          } else {
-            const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
-            const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
-            const p3OnPage = matrix.inverseCoord({ x: p3.x, y: p3.y });
-            const old_width = Math.abs(p3OnPage.x - p1OnPage.x);
-            const old_height = Math.abs(p3OnPage.y - p1OnPage.y);
-            const new_width = Math.abs(currentPoint.x - p1OnPage.x);
-            const new_height = Math.abs(currentPoint.y - p1OnPage.y);
-            const ocf = { x: p1OnPage.x, y: p1OnPage.y, width: old_width, height: old_height };
-            const ncf = { x: p1OnPage.x, y: p1OnPage.y, width: new_width, height: new_height };
-            asyncBaseAction.execute4multi(shapes, ocf, ncf);
-            src_frame = ncf;
-          }
+          const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
+          const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
+          const new_frame = { x: p1OnPage.x, y: p1OnPage.y, width: currentPoint.x - p1OnPage.x, height: currentPoint.y - p1OnPage.y };
+          const params = { x: new_frame.x, y: new_frame.y, scaleX: (new_frame.width / origin_frame.width), scaleY: (new_frame.height / origin_frame.height) };
+          asyncBaseAction.execute4multi_beta(shapes, params);
         } else if (props.point.type === CtrlElementType.RectLB) {
           const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
           const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });

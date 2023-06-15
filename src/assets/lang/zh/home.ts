@@ -113,7 +113,8 @@ export const home = {
     rename_ok:'确定',
     page_sort: '按页面排序',
     login_failed:'登录失败',
-    login_refresh:'点击刷新二维码'
+    login_refresh:'点击刷新二维码',
+    invitation_code_tips:'请输入试用邀请码'
 }
 
 export const search = {

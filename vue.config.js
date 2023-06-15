@@ -74,11 +74,13 @@ var configureWebpack = (config) => {
     )
 
     config.plugins = [
-        AutoImport({resolvers: [ElementPlusResolver()]}),
-        Components({resolvers: [ElementPlusResolver()]}),
-        new CopyWebpackPlugin({patterns: [
-            { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
-        ]}),
+        AutoImport({ resolvers: [ElementPlusResolver()] }),
+        Components({ resolvers: [ElementPlusResolver()] }),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
+            ]
+        }),
         ...config.plugins
     ]
 
@@ -106,16 +108,16 @@ var exports = defineConfig({
         port: 8080,
         https: true,
         proxy: {
-            '/api':{
+            '/api': {
                 target: 'http://192.168.0.10:10000',
                 // target: 'http://mock.apifox.cn/m1/2612240-0-1d5a81b5',
                 changeOrigin: true,
                 disableHostCheck: true,
                 //ws: true,
                 pathRewrite: {
-                    '^/api': '/api' 
+                    '^/api': '/api'
                     // '^/api/v1': '/' 
-               }
+                }
             }
         }
     }

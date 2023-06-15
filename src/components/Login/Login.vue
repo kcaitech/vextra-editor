@@ -6,23 +6,33 @@ import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
+import avatar from '@/assets/pd-logo-svg.svg';
+import { User } from '@/context/user'
 
-const { t } = useI18n();
-const isLoading = ref(false);
-const showCode = ref(false)
-const code = ref()
+const { t } = useI18n()
+const isLoading = ref(false)
+const codeinput = ref()
 const codevalue = ref('')
-const failed = ref<boolean>(false);
-async function onmessage(e: any) {
+const failed = ref<boolean>(false)
+const loginshow = ref<boolean>(true)
+const affirm = ref()
+const userid = ref('')
+const Wxcode = ref('')
+
+function onmessage(e: any) {
     if (e.data?.type !== "GetWxCode") {
         return
     }
     isLoading.value = true
-    let code = e.data.code
-    //此处获取邀请码，并添加到请求参数中
-    const tips: any = document.querySelector('#login_container')
-    user_api.PostLogin({ code: code, invite_code: codevalue.value }).then((linfo: any) => {
+    Wxcode.value = e.data.code
+    getlogin(Wxcode.value)
+}
+
+async function getlogin(code: string, invite_code: string = '', id: string = '') {
+    user_api.PostLogin({ code: code, invite_code: invite_code, id: id }).then((linfo: any) => {
         if (linfo) {
+            const user = new User(linfo.data);
+            (window as any).skuser = user
             if (linfo.code === 0 && linfo.data.token !== '') {
                 localStorage.setItem('token', linfo.data.token)
                 localStorage.setItem('avatar', linfo.data.avatar)
@@ -31,40 +41,63 @@ async function onmessage(e: any) {
                 isLoading.value = false
                 router.push({ name: 'apphome' })
             } else if (linfo.code === 400) {
-                ElMessage.error(linfo.message)
-                failed.value = true;
-                tips.innerHTML = `${t('home.login_refresh')}`
-                tips.addEventListener('click', () => {
-                    wxcode()
-                    failed.value = false;
-                })
-
-            } else {
-                ElMessage.error(t('home.login_failed'))
-                failed.value = true;
-                tips.innerHTML = `${t('home.login_refresh')}`
-                tips.addEventListener('click', () => {
-                    wxcode()
-                    failed.value = false;
+                userid.value = linfo.data.id
+                loginshow.value = false
+                nextTick(() => {
+                    codeinput.value.focus()
+                    codevalue.value = ''
                 })
             }
-        } else {
-            ElMessage.error(t('home.login_failed'))
-            failed.value = true;
-            tips.innerHTML = `${t('home.login_refresh')}`
-            tips.addEventListener('click', () => {
+        }
+    }).catch((linfo: any) => {
+        if (linfo.data.code === -1) {
+            loginshow.value = true
+            ElMessage.error(linfo.data.message)
+            nextTick(() => {
+                isLoading.value = true
                 wxcode()
-                failed.value = false;
+                const login: any = document.querySelector('iframe')
+                login.addEventListener('load', function () {
+                    isLoading.value = false
+                })
+            })
+
+        }
+
+    })
+}
+
+function clickaffirm() {
+    user_api.PostLogin({ code: Wxcode.value, invite_code: codevalue.value, id: userid.value }).then((result: any) => {
+        if (result) {
+            if (result.code === 0 && result.data.token !== '') {
+                localStorage.setItem('token', result.data.token)
+                localStorage.setItem('avatar', result.data.avatar)
+                localStorage.setItem('nickname', result.data.nickname)
+                localStorage.setItem('userId', result.data.id)
+                isLoading.value = false
+                router.push({ name: 'apphome' })
+            } else if (result.code === 400) {
+                codeinput.value.focus()
+                codevalue.value = ''
+                ElMessage.error({ duration: 1500, message: result.message })
+            }
+        }
+    }).catch((result: any) => {
+        if (result.data.code === -1) {
+            loginshow.value = true
+            nextTick(() => {
+                ElMessage.error({ duration: 1500, message: result.data.message })
+                isLoading.value = true
+                wxcode()
+                const login: any = document.querySelector('iframe')
+                login.addEventListener('load', function () {
+                    isLoading.value = false
+                })
+                login.removeEventListener('load', function () { })
             })
         }
-    }).catch(() => {
-        ElMessage.error(t('home.login_failed'))
-        failed.value = true;
-        tips.innerHTML = `${t('home.login_refresh')}`
-        tips.addEventListener('click', () => {
-            wxcode()
-            failed.value = false;
-        })
+
     })
 }
 
@@ -88,14 +121,10 @@ onMounted(() => {
         const login: any = document.querySelector('iframe')
         login.addEventListener('load', function () {
             isLoading.value = false
-            showCode.value = true
-            nextTick(() => {
-                code.value.focus()
-            })
-
         })
     }, 500);
     window.addEventListener('message', onmessage, false)
+
 })
 
 onUnmounted(() => {
@@ -105,23 +134,127 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <html lang="en">
-    <Describes />
-    <div class="login">
-        <span>{{ t('system.wx_login') }}</span>
-        <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
-        <span class="Invitation_code" v-if="showCode">邀请码：<input ref="code" v-model="codevalue" maxlength="8" /></span>
-        <p>{{ t('system.login_read') }}
-            <a href="">{{ t('system.read_TOS') }}</a>&nbsp;
-            <a href="">{{ t('system.read_Privacy') }}</a>
-        </p>
+    <div class="main">
+        <div class="all" v-if="loginshow">
+            <Describes />
+            <div class="login">
+                <span>{{ t('system.wx_login') }}</span>
+                <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
+                <p>{{ t('system.login_read') }}
+                    <a href="">{{ t('system.read_TOS') }}</a>&nbsp;
+                    <a href="">{{ t('system.read_Privacy') }}</a>
+                </p>
+            </div>
+            <Footer />
+        </div>
+        <div class="code_input" v-else>
+            <div class="top">
+                <div class="img">
+                    <img :src="avatar" alt="ProtoDesign" />
+                    <span>{{t('system.product_name')}}</span>
+                </div>
+            </div>
+            <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
+            <input ref="codeinput" v-model="codevalue" maxlength="8" @keyup.enter="clickaffirm" />
+            <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="codevalue == '' ? true : false">{{
+                t('percenter.affirm')
+            }}</button>
+        </div>
     </div>
-    <Footer />
-
-    </html>
 </template>
 
 <style lang='scss' scoped>
+.main {
+    width: 100vw;
+    height: 100vh;
+    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0.00) -113deg, #542FDB 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0.00) 247deg, #542FDB 453deg);
+    background-blend-mode: color-dodge;
+}
+
+.affirm {
+    width: 120px;
+    height: 48px;
+    font-size: 18px;
+    letter-spacing: 10px;
+    text-indent: 10px;
+    padding: 0;
+    border: 1px rgb(69, 69, 255) solid;
+    border-radius: 5px;
+    background: rgb(69, 69, 255);
+    color: white;
+    margin: 50px 0 200px 0;
+    text-align: center;
+
+    &:hover {
+        background: rgba(80, 80, 255, 0.884);
+    }
+
+    &[disabled] {
+        background: rgba(195, 195, 246, 0.884);
+        border: 1px rgba(195, 195, 246, 0.884) solid;
+    }
+}
+
+.code_input {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    animation: moveup 1.5s;
+
+    .top {
+        position: absolute;
+        left: 0;
+        top: 0;
+        .img{
+            display: flex;
+            align-items: center;
+            span{
+                font-size: 48px;
+                font-weight: 600;
+                color: white;
+            }
+            img{
+                height: 160px;
+                width: 160px;
+            }
+        }
+    }
+
+    .Invitation_code {
+        font-size: 32px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: 5px;
+        color: white;
+    }
+
+    input {
+        min-width: 20%;
+        height: 60px;
+        font-size: 48px;
+        color: rgba(0, 0, 0, 0.8);
+        text-align: center;
+        border-radius: 10px;
+        border: 2px rgb(50, 50, 255) solid;
+        outline: none;
+        margin-top: 50px;
+        letter-spacing: 20px;
+
+        &:hover {
+            border-radius: 10px;
+            border: 2px rgb(69, 69, 255) solid;
+        }
+
+        &:focus {
+            border-radius: 10px;
+            border: 2px rgb(69, 69, 255) solid;
+        }
+    }
+
+}
+
 .login_container_hover {
     background-color: #00000030;
     line-height: 300px;
@@ -132,7 +265,7 @@ onUnmounted(() => {
     background-color: #00000010;
 }
 
-html {
+.all {
     overflow: auto;
     display: flex;
     align-items: center;
@@ -141,8 +274,6 @@ html {
     flex-wrap: wrap;
     width: 100vw;
     height: 100vh;
-    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0.00) -113deg, #542FDB 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0.00) 247deg, #542FDB 453deg);
-    background-blend-mode: color-dodge;
 
     .login {
         display: flex;
@@ -158,6 +289,7 @@ html {
         border-radius: 5px;
         z-index: 2;
         box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
+        animation: moveleft 1.5s;
 
         div {
             width: 300px;
@@ -173,37 +305,6 @@ html {
             letter-spacing: 10px;
         }
 
-        .Invitation_code {
-            font-size: 14px;
-            font-weight: 600;
-            margin: 0;
-            letter-spacing: 5px;
-
-            input {
-                width: 65px;
-                font-size: 14px;
-                font-weight: 600;
-                color: rgba(0, 0, 0, 0.8);
-                text-align: center;
-                border-radius: 2px;
-                border: 2px rgb(65, 65, 65) solid;
-                outline: none;
-
-                &:hover {
-                    border-radius: 2px;
-                    border: 2px rgb(69, 69, 255) solid;
-                    border-color: rgb(69, 69, 255);
-                }
-
-                &:focus {
-                    border-radius: 2px;
-                    border: 2px rgb(69, 69, 255) solid;
-                    border-color: rgb(69, 69, 255);
-                }
-            }
-
-        }
-
         p {
             font-size: 12px;
             font-weight: bold;
@@ -213,6 +314,30 @@ html {
 
         }
 
+    }
+}
+
+@keyframes moveleft {
+    0% {
+        opacity: 0;
+        transform: translateX(200px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes moveup {
+    0% {
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 </style>

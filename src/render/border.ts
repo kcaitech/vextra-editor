@@ -1,7 +1,6 @@
 
 import { Shape } from '@kcdesign/data';
 import { Border, Gradient } from '@kcdesign/data';
-// import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { objectId } from '@kcdesign/data';
 import { BorderPosition, FillType, GradientType } from "@kcdesign/data"
@@ -142,14 +141,24 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
     const thickness = border.thickness;
 
     let g_;
-    let stroke;
+    const body_props: any = {
+        d: path,
+        fill: "none",
+        stroke: '',
+        'stroke-width': 2 * thickness,
+        'clip-path': "url(#" + clipId + ")"
+    }
+    const { length, gap } = border.borderStyle;
+    if (length || gap) {
+        body_props['stroke-dasharray'] = `${length}, ${gap}`
+    }
     const color = border.color;
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
-        stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
-        stroke = "url(#" + g_.id + ")";
+        body_props.stroke = "url(#" + g_.id + ")";
     }
 
     const elArr = [];
@@ -160,13 +169,7 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
         h("clipPath", { id: clipId }, h("path", {
             d: path
         })),
-        h('path', {
-            d: path,
-            fill: "none",
-            stroke,
-            'stroke-width': 2 * thickness,
-            "clip-path": "url(#" + clipId + ")"
-        })
+        h('path', body_props)
     );
     return h("g", elArr);
 }
@@ -174,37 +177,31 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
 handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Border, path: string): any {
     const frame = shape.frame;
     const thickness = border.thickness;
-
     let g_;
-    let stroke;
+    const body_props: any = {
+        d: path,
+        fill: "none",
+        stroke: '',
+        'stroke-width': thickness
+    }
     const color = border.color;
-    const fillType = border.fillType;
-    if (fillType == FillType.SolidColor) {
-        stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
-    } else {
-        g_ = renderGradient(h, border.gradient as Gradient, frame);
-        stroke = "url(#" + g_.id + ")";
+    const { length, gap } = border.borderStyle;
+    if (length || gap) {
+        body_props['stroke-dasharray'] = `${length}, ${gap}`
     }
 
-    if (g_ && g_.node) {
-        // elArr.push(g_.node);
-        return h("g", [
-            g_.node,
-            h('path', {
-                d: path,
-                fill: "none",
-                stroke,
-                'stroke-width': thickness,
-
-            })
-        ]);
+    const fillType = border.fillType;
+    if (fillType == FillType.SolidColor) {
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
     } else {
-        return h('path', {
-            d: path,
-            fill: "none",
-            stroke,
-            'stroke-width': thickness
-        });
+        g_ = renderGradient(h, border.gradient as Gradient, frame);
+        body_props.stroke = "url(#" + g_.id + ")";
+    }
+    const body = h('path', body_props);
+    if (g_ && g_.node) {
+        return h("g", [g_.node, body]);
+    } else {
+        return body;
     }
 }
 
@@ -213,17 +210,27 @@ handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Bor
     const thickness = border.thickness;
 
     let g_;
-    let stroke;
+    const body_props: any = {
+        d: path,
+        fill: "none",
+        stroke: '',
+        'stroke-width': 2 * thickness,
+    }
+    const { length, gap } = border.borderStyle;
+    if (length || gap) {
+        body_props['stroke-dasharray'] = `${length}, ${gap}`;
+    }
     const color = border.color;
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
-        stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
-        stroke = "url(#" + g_.id + ")";
+        body_props.stroke = "url(#" + g_.id + ")";
     }
 
     const maskId = "mask-border" + objectId(border);
+    body_props.mask = "url(#" + maskId + ")";
 
     const width = frame.width + 2 * thickness;
     const height = frame.height + 2 * thickness;
@@ -232,22 +239,20 @@ handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Bor
     if (g_ && g_.node) {
         elArr.push(g_.node);
     }
-    elArr.push(h("mask", { id: maskId }, [
-        h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
-        h("path", { d: path, fill: "black" })
-    ]),
-        h('path', {
-            d: path,
-            fill: "none",
-            stroke,
-            'stroke-width': 2 * thickness,
-            mask: "url(#" + maskId + ")"
-        }))
-
+    const mask = h(
+        "mask",
+        { id: maskId },
+        [
+            h("rect", { x: -thickness, y: -thickness, width, height, fill: "white" }),
+            h("path", { d: path, fill: "black" })
+        ]
+    )
+    const b_ = h('path', body_props);
+    elArr.push(mask, b_);
     return (h("g", elArr));
 }
 
-export function render(h: Function, shape: Shape, path?:string): Array<any> {
+export function render(h: Function, shape: Shape, path?: string): Array<any> {
     const style = shape.style;
     const bc = style.borders.length;
     path = path || shape.getPath(true).toString();

@@ -45,18 +45,20 @@ service.interceptors.response.use(function (response) {
     // dataAxios 是 axios 返回数据中的 data
     const dataAxios = response.data || {}
 
-        // 这个状态码是和后端约定的
+    // 这个状态码是和后端约定的
     const code = dataAxios.reset
-    
-    if(dataAxios.code === 0) {
-        return Promise.resolve(dataAxios) 
-    }else {
-        if(dataAxios && dataAxios.code && dataAxios.code === 401) {
+
+    if (dataAxios.code === 0) {
+        return Promise.resolve(dataAxios)
+    } else if (dataAxios && dataAxios.code && dataAxios.code === 400) {
+        return Promise.resolve(dataAxios)
+    } else {
+        if (dataAxios && dataAxios.code && dataAxios.code === 401) {
             const timer = setTimeout(() => {
                 loginModal = false;
                 clearTimeout(timer)
-              }, 5000);
-            if(!loginModal) {
+            }, 5000);
+            if (!loginModal) {
                 ElMessage({
                     message: '登录失效，请重新登录',
                     type: 'error',

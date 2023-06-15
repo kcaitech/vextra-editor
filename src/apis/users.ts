@@ -156,3 +156,13 @@ export function Setfilename(data = {}, ops = {}) {
         ...ops
     })
 }
+
+//复制文档
+export function Copyfile(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/copy',
+        method: 'post',
+        data:data,
+        ...ops
+    })
+}

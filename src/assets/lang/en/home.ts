@@ -113,7 +113,8 @@ export const home = {
     rename_ok:'OK',
     page_sort: 'Sort by page',
     login_failed:'Login failure',
-    login_refresh:'Click refresh QR code'
+    login_refresh:'Click refresh QR code',
+    invitation_code_tips:'Please enter the trial invitation code'
 }
 
 export const search = {

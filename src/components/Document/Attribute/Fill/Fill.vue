@@ -9,6 +9,7 @@ import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
+import { v4 } from 'uuid';
 
 interface FillItem {
     id: number,
@@ -64,7 +65,8 @@ function setupWatcher() {
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const fill = new Fill(true, FillType.SolidColor, color, contextSettings);
+    const id = v4();
+    const fill = new Fill(id, true, FillType.SolidColor, color, contextSettings);
     editor.value.addFill(fill);
 }
 const isNoFile = () => {
@@ -153,13 +155,8 @@ function onAlphaChange(idx: number, e: Event) {
         }
     }
 }
-function getColorFromPicker(rgb: number[], idx: number) {
-    let clr = toHex(rgb[0], rgb[1], rgb[2]);
-    if (clr.slice(0, 1) !== '#') {
-        clr = "#" + clr
-    }
-    const alpha = fills[idx].fill.color.alpha;
-    setColor(idx, clr, alpha);
+function getColorFromPicker(idx: number, color: Color) {
+    editor.value.setFillColor(idx, color);
 }
 
 const fillArr = ['line-shape']
@@ -204,8 +201,8 @@ onBeforeUpdate(() => {
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" :context="props.context"
-                        @choosecolor="c => getColorFromPicker(c, idx)"></ColorPicker>
+                    <ColorPicker :color="f.fill.color" :context="props.context" @change="c => getColorFromPicker(idx, c)">
+                    </ColorPicker>
                     <input :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
                         @change="(e) => onColorChange(idx, e)" />
                     <input ref="alpheFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'"

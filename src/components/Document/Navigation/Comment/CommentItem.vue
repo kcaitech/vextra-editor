@@ -19,7 +19,7 @@ const emit = defineEmits<{
     (e: 'delete', index: number):void
 }>()
 const hoverIcon = ref(false)
-const hoverComment = ref(props.context.workspace.isHoverComment)
+const hoverComment = ref(false)
 const reply = ref(props.context.selection.commentStatus)
 const resolve = computed(() => {
     return props.commentItem.status === 0 ? true : false

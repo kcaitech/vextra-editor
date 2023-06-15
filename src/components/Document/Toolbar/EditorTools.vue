@@ -11,6 +11,7 @@ import Ellipse from "./Buttons/Ellipse.vue";
 import Line from "./Buttons/Path.vue";
 import Arrow from "./Buttons/Arrow.vue";
 import CreateText from "./Buttons/CreateText.vue";
+import CreateImage from "./Buttons/CreateImage.vue";
 import Comment from "./Buttons/Comment.vue"
 import { Action, WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n'
@@ -54,14 +55,7 @@ onUnmounted(() => {
         <Line @select="select" :active="selected === Action.AddLine"></Line>
         <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
-        <el-tooltip class="box-item" effect="dark" :content="`${t('home.picture')} &nbsp;&nbsp; Shift+Ctrl+K`"
-            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
-            <ToolButton>
-                <div class="temp">
-                    <svg-icon icon-class="picture"></svg-icon>
-                </div>
-            </ToolButton>
-        </el-tooltip>
+        <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <div class="vertical-line" />
         <el-tooltip class="box-item" effect="dark" :content="`${t('navi.comps')} &nbsp;&nbsp; Shift+I`" placement="bottom"
             :show-after="500" :offset="10" :hide-after="0">

@@ -41,8 +41,9 @@ const handleMenuStatus = (status: boolean, index: number) => {
 const getDocumentComment = async(id :string) => {
     try {
        const {data} = await comment_api.getDocumentCommentAPI({doc_id: id})
-       data.forEach((obj: { commentMenu: any; }) => {
+       data.forEach((obj: {children: any[]; commentMenu: any; }) => {
         obj.commentMenu = commentMenuItems.value
+        obj.children = []
        })
        const list  = list2Tree(data, '') 
        props.context.workspace.setCommentList(list)
@@ -81,7 +82,7 @@ const update = (t: number) => {
         const timer = setTimeout(() => {
             getDocumentComment(docID)
             clearTimeout(timer)
-        }, 100);
+        }, 150);
     }
     if(t === WorkSpace.UPDATE_COMMENT) {
         documentCommentList.value = props.context.workspace.commentList

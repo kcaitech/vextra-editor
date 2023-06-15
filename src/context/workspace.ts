@@ -1,6 +1,7 @@
 import { Watchable } from "@kcdesign/data";
 import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
+import { Shape } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
 export enum Action {
@@ -13,7 +14,8 @@ export enum Action {
     AddArrow = 'add-arrow',
     AddFrame = 'add-frame',
     AddText = 'add-text',
-    AddComment = 'add-comment'
+    AddComment = 'add-comment',
+    AddImage = 'add-image'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -52,15 +54,26 @@ export enum CtrlElementType { // 控制元素类型
     LineEndR = 'line-end-rotate',
     Text = 'text'
 }
-
+export interface Media {
+    name: string
+    frame: { width: number, height: number }
+    buff: Uint8Array
+    base64: string
+}
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle],
     [Action.AddEllipse, ShapeType.Oval],
     [Action.AddLine, ShapeType.Line],
     [Action.AddFrame, ShapeType.Artboard],
-    [Action.AddText, ShapeType.Text]
+    [Action.AddText, ShapeType.Text],
+    [Action.AddImage, ShapeType.Image]
 ]);
+export interface ClipboardItem {
+    type: ShapeType
+    contentType: string
+    content: Media | string
+}
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
@@ -90,10 +103,19 @@ export class WorkSpace extends Watchable(Object) {
     static OPACITY_COMMENT = 24;
     static CURRENT_COMMENT = 25;
     static SELECTE_COMMENT = 26;
+    static CTRL_DISAPPEAR = 27;
+    static CTRL_APPEAR_IMMEDIATELY = 28;
+    static CTRL_APPEAR = 29;
+    static PASTE = 30;
+    static PASTE_RIGHT = 31;
+    static INSERT_IMGS = 32;
+    static FREEZE = 33;
+    static THAW = 34;
+    static UPDATE_PAGE_COMMENT = 35;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: any; // 剪切板
+    private m_clip_board: ClipboardItem | undefined; // 剪切板
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -110,8 +132,8 @@ export class WorkSpace extends Watchable(Object) {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
-    private m_comment_input: boolean = false; 
+    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_comment_input: boolean = false;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
@@ -124,6 +146,10 @@ export class WorkSpace extends Watchable(Object) {
     private m_comment_opacity: boolean = false;//评论弹层显示时其他评论置灰
     private m_hover_comment_id: string | undefined; //hover中的评论id
     private m_select_comment_id: string | undefined; //选中的评论id
+    private m_image: Media[] | undefined = undefined;
+    private m_freeze: boolean = false;
+    private m_shape_comment: boolean = false; //是否在编辑shape上的评论（移动shape修改评论位置）
+    private m_comment_shape: Shape[] = [] //保存移动shape上有评论的shape
     constructor(context: Context) {
         super();
         this.context = context
@@ -232,6 +258,26 @@ export class WorkSpace extends Watchable(Object) {
     get isSelectCommentId() {
         return this.m_select_comment_id;
     }
+    get isFreeze() {
+        return this.m_freeze;
+    }
+    get isEditShapeComment() {
+        return this.m_shape_comment
+    }
+    get commentShape() {
+        return this.m_comment_shape
+    }
+    setFreezeStatus(isFreeze: boolean) {
+        this.m_freeze = isFreeze;
+        this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
+    }
+    setImage(files: Media[]) {
+        this.m_image = [...files];
+        this.notify(WorkSpace.INSERT_IMGS);
+    }
+    getImageFromDoc() {
+        return this.m_image;
+    }
     startSvae() {
         this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
@@ -301,10 +347,13 @@ export class WorkSpace extends Watchable(Object) {
         this.m_comment_list = list;
         this.notify(WorkSpace.UPDATE_COMMENT);
     }
-    setPageCommentList(pageId: string) {
+    updateCommentList(pageId: string) {
         const list = this.m_comment_list;
         this.m_page_comment_list = list.filter(item => item.page_id === pageId)
-        this.notify(WorkSpace.UPDATE_COMMENT);
+    }
+    setPageCommentList(list: any[], pageId: string) {
+        this.m_page_comment_list = list.filter(item => item.page_id === pageId)
+        this.notify(WorkSpace.UPDATE_PAGE_COMMENT);
     }
     commentInput(visible: boolean) {
         this.m_comment_input = visible;
@@ -326,6 +375,15 @@ export class WorkSpace extends Watchable(Object) {
         this.m_select_comment_id = id
         this.notify(WorkSpace.SELECTE_COMMENT)
     }
+    editShapeComment(state: boolean, shape?: Shape) {
+        this.m_shape_comment = state
+        if(state) {
+            this.m_comment_shape.push(shape!)
+            this.m_comment_shape = Array.from(new Set(this.m_comment_shape));
+        }else {
+            this.m_comment_shape = []
+        }
+    }
     popoverVisible(visible: boolean) {
         this.m_popover = visible;
         if (!visible) {
@@ -340,6 +398,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
+        if (this.isFreeze) return;
         if (event.code === KeyboardKeys.R) {
             if (!metaKey && !ctrlKey) {
                 event.preventDefault();
@@ -347,7 +406,7 @@ export class WorkSpace extends Watchable(Object) {
             }
         } else if (event.code === KeyboardKeys.V) {
             event.preventDefault();
-            this.keydown_v();
+            this.keydown_v(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.L) {
             event.preventDefault();
             this.keydown_l(shiftKey);
@@ -356,7 +415,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
             event.preventDefault();
-            this.keydown_k();
+            this.keydown_k(ctrlKey, shiftKey);
         } else if (event.code === KeyboardKeys.O) {
             event.preventDefault();
             this.keydown_o();
@@ -389,7 +448,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = action;
         this.notify();
     }
-    setClipBoard(v: any) {
+    setClipBoard(v: ClipboardItem) {
         this.m_clip_board = v;
     }
     setFrameSize(size: { width: number, height: number }) {
@@ -425,9 +484,13 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddRect;
         this.notify();
     }
-    keydown_v() {
-        this.m_current_action = Action.AutoV;
-        this.notify();
+    keydown_v(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            this.notify(WorkSpace.PASTE);
+        } else {
+            this.m_current_action = Action.AutoV;
+            this.notify();
+        }
     }
     keydown_l(shiftKey: boolean) {
         this.escSetup();
@@ -440,27 +503,28 @@ export class WorkSpace extends Watchable(Object) {
             repo.canUndo() && repo.undo();
             const selection = context.selection;
             const shapes = context.selection.selectedShapes;
-            const flat = context.selection.selectedPage!.flatShapes;
-            if (shapes.length) {
-                if (flat.length) {
+            const page = context.selection.selectedPage;
+            if (page) {
+                const flat = page.shapes;
+                if (shapes.length) {
                     for (let i = 0; i < shapes.length; i++) {
                         const item = shapes[i];
-                        if (!flat.find(i => i.id === item.id)) {
+                        if (!flat.get(item.id)) {
                             selection.unSelectShape(item);
                         }
                     }
-                } else {
-                    selection.resetSelectShapes();
                 }
             }
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
         }
     }
-    keydown_k() {
-        this.escSetup();
-        this.m_current_action = Action.AutoK;
-        this.notify();
+    keydown_k(ctrl: boolean, shift: boolean) {
+        if (!ctrl && !shift) {
+            this.escSetup();
+            this.m_current_action = Action.AutoK;
+            this.notify();
+        }
     }
     keydown_o() {
         this.escSetup();
