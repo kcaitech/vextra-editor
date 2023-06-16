@@ -42,6 +42,7 @@ let timerForLeft: any;
 let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
+const null_context = ref<boolean>(true);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -278,6 +279,7 @@ const getDocumentInfo = async () => {
             const coopRepo = new CoopRepository(document, repo)
             window.document.title = document.name;
             context = new Context(document, coopRepo);
+            null_context.value = false;
             context.selection.watch(selectionWatcher);
             switchPage(context.data.pagesList[0]?.id);
             localStorage.setItem('docId', route.query.id as string);
@@ -332,6 +334,7 @@ function init() {
     } else { // 从本地读取文件
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
+            null_context.value = false;
             context.selection.watch(selectionWatcher);
             upload();
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
@@ -374,20 +377,20 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Loading v-if="loading || !context"></Loading>
+    <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
-        <Toolbar :context="context" v-if="!loading && context" />
+        <Toolbar :context="context" v-if="!loading && !null_context" />
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" v-if="!loading && context"
+    <ColSplitView id="center" v-if="!loading && !null_context"
         :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
         :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
-            <Navigation v-if="curPage !== undefined && context" id="navigation" :context="context" @switchpage="switchPage"
+            <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context" @switchpage="switchPage"
                 @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
                 :page="(curPage as Page)">
             </Navigation>
@@ -398,11 +401,11 @@ onUnmounted(() => {
             </div>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined && context" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context" :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" v-if="context" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
+            <Attribute id="attributes" v-if="!null_context" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
                 @mouseleave="() => { mouseleave('right') }"></Attribute>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
                 :style="{ opacity: showRight ? 1 : 0.6 }">
