@@ -63,7 +63,7 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
                                     if (text) {
                                         if ((text as string).slice(0, 50).indexOf('-shapes-') > -1) {
                                             const source = JSON.parse((text as any).split('-shapes-')[1]);
-                                            const shapes = import_shape(source);
+                                            const shapes = import_shape(context.data, source);
                                             const result: Shape[] = [];
                                             if (shapes.length) {
                                                 for (let i = 0; i < shapes.length; i++) {

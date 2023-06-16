@@ -1,4 +1,4 @@
-import { export_shape, import_shape, Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape } from '@kcdesign/data';
+import { export_shape, import_shape, Shape, ShapeType, GroupShape } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -149,7 +149,7 @@ export function useController(context: Context) {
                         isDragging = true;
                         if (e.altKey) {
                             const source = export_shape(shapes);
-                            const new_source = import_shape(source);
+                            const new_source = import_shape(context.data, source);
                             const page = context.selection.selectedPage;
                             const result: Shape[] = [];
                             if (page) {
