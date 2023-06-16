@@ -15,7 +15,7 @@ import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop } from '@/utils/content';
-import { copy, Clipboard, paster } from '@/utils/clipaboard';
+import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
 import PageCommentItem from './Content/PageCommentItem.vue';
@@ -600,6 +600,7 @@ onMounted(() => {
     rootRegister(true);
     props.context.selection.scoutMount();
     props.context.workspace.setFreezeStatus(true);
+    props.context.workspace.init(t);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);

@@ -208,7 +208,9 @@ export const comment = {
     show_resolved_comments: 'Show resolved comments',
     comment_area: 'Comment section'
 }
-
+export const clipboard = {
+    'invalid_data': 'invalid data'
+}
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';

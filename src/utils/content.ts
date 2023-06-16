@@ -368,5 +368,4 @@ function drop(e: DragEvent, context: Context, t: Function) {
     img.src = URL.createObjectURL(file);
   }
 }
-function clipboard_carrier_mount() { }
 export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, is_drag, paster, insert_imgs, drop };
