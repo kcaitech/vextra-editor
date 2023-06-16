@@ -1,4 +1,4 @@
-import { CoopRepository, Watchable } from "@kcdesign/data";
+import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -41,6 +41,7 @@ export class Context extends Watchable(Object) {
     private m_repo: RepoWraper;
     private m_coopRepo: CoopRepository;
     private m_workspace: WorkSpace;
+    private m_taskMgr: TaskMgr;
 
     constructor(data: Document, repo: CoopRepository) {
         super();
@@ -50,6 +51,36 @@ export class Context extends Watchable(Object) {
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_workspace = new WorkSpace(this);
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
+        this.m_taskMgr = new TaskMgr();
+
+        const pagelist = data.pagesList.slice(0);
+        this.m_taskMgr.add(new class implements Task { // page auto loader
+            isValid(): boolean {
+                return !this.isDone();
+            }
+            isDone(): boolean {
+                return pagelist.length <= 0;
+            }
+            async run(): Promise<void> {
+                let id;
+                while (pagelist.length > 0) {
+                    const i = pagelist[0];
+                    if (data.pagesMgr.getSync(i.id)) {
+                        pagelist.splice(0, 1);
+                    }
+                    else {
+                        id = i.id;
+                        break;
+                    }
+                }
+                if (id) {
+                    await data.pagesMgr.get(id);
+                    pagelist.splice(0, 1);
+                }
+            }
+        }, TaskPriority.normal);
+
+        this.m_taskMgr.startLoop();
     }
 
     get editor(): Editor {
