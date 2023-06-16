@@ -149,22 +149,6 @@ export function useController(context: Context) {
                     if (!editing) {
                         isDragging = true;
                         if (e.altKey) {
-                            const source = export_shape(shapes);
-                            const new_source = import_shape(context.data, source);
-                            const page = context.selection.selectedPage;
-                            const result: Shape[] = [];
-                            if (page) {
-                                for (let i = 0; i < new_source.length; i++) {
-                                    const _s = new_source[i];
-                                    const editor = context.editor4Page(page);
-                                    const r = editor.insert(page, source[i].index + 1, _s, true);
-                                    if (r) { result.push(r) }
-                                }
-                            }
-                            if (result.length) {
-                                shapes = result;
-                                context.selection.rangeSelectShape(result);
-                            }
                             shapes = paster_short(context, shapes);
                         }
                         asyncTransfer = context.editor.controller().asyncTransfer(shapes);
