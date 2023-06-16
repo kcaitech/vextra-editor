@@ -273,12 +273,6 @@ const getDocumentInfo = async () => {
             context.selection.watch(selectionWatcher);
             switchPage(context.data.pagesList[0]?.id);
             localStorage.setItem('docId', route.query.id as string);
-            // 延时半秒
-            await new Promise<void>(resolve => {
-                setTimeout(() => {
-                    resolve()
-                }, 500)
-            })
             coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
             coopLocal.start();
         }
