@@ -54,7 +54,6 @@ export class Context extends Watchable(Object) {
         this.m_taskMgr = new TaskMgr();
 
         const pagelist = data.pagesList.slice(0);
-        console.log("pagelist", pagelist)
         this.m_taskMgr.add(new class implements Task { // page auto loader
             isValid(): boolean {
                 return !this.isDone();
@@ -74,11 +73,9 @@ export class Context extends Watchable(Object) {
                         break;
                     }
                 }
-                console.log("task run", id, pagelist.length)
                 if (id) {
                     await data.pagesMgr.get(id);
                     pagelist.splice(0, 1);
-                    console.log("task finish", id, pagelist.length)
                 }
             }
         }, TaskPriority.normal);
