@@ -5,7 +5,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, defineProps, ref, defineExpose } from 'vue';
+import { computed, ref } from 'vue';
 const props = defineProps<{ valid?: boolean, selected?: boolean }>();
 
 const toolButtonEl = ref<HTMLDivElement>();

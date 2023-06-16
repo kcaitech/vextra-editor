@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
-import { defineProps, onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data";
@@ -94,7 +94,7 @@ function notifySourceChange(t?: number | string) {
             }
             if (shapelist.value && indexItem >= 0) {
                 const itemScrollH = indexItem * 30
-                if (itemScrollH + 30 >= ListH.value - shapelist.value.scroll.y) {
+                if (itemScrollH + 29 >= ListH.value - shapelist.value.scroll.y) {
                     if ((itemScrollH) + shapelist.value.scroll.y < ListH.value - 30) return
                     shapelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
                 } else if (itemScrollH < -(shapelist.value.scroll.y)) {

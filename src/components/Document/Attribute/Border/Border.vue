@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineProps, onBeforeUpdate, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
@@ -10,75 +10,139 @@ import { Color, Border, ContextSettings, BorderStyle, MarkerType } from '@kcdesi
 import { FillType, BlendMode, BorderPosition } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
-import { toHex } from "@/utils/color"
-
+import { toHex } from "@/utils/color";
+import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
+import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
 interface BorderItem {
     id: number,
     border: Border
 }
-
+interface Props {
+    context: Context
+    shapes: Shape[]
+}
 const { t } = useI18n();
-const props = defineProps<{
-    context: Context,
-    shape: Shape,
-}>();
+const props = defineProps<Props>();
 const data: { borders: BorderItem[] } = reactive({ borders: [] });
 const { borders } = data;
-const alpheBorder = ref<HTMLInputElement>()
-const editor = computed(() => {
-    return props.context.editor4Shape(props.shape);
-});
-let shapeId: string = "";
-let shape: Shape | undefined;
+const alphaBorder = ref<HTMLInputElement>();
+const mixed = ref<boolean>(false);
+const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
+const watchedShapes = new Map();
+const len = computed<number>(() => props.shapes.length);
 
-function setupWatcher() {
-    if (!shape) {
-        shape = props.shape;
-        shape.watch(watcher);
+function watchShapes() {
+    const needWatchShapes = new Map();
+    const selection = props.context.selection;
+    if (selection.hoveredShape) {
+        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
     }
-    else if (shape.id != props.shape.id) {
-        shape.unwatch(watcher);
-        shape = props.shape;
-        shape.watch(watcher);
+    if (selection.selectedShapes.length > 0) {
+        selection.selectedShapes.forEach((v) => {
+            needWatchShapes.set(v.id, v);
+        })
     }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(watcher);
+        watchedShapes.delete(k);
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        v.watch(watcher);
+        watchedShapes.set(k, v);
+    })
 }
 function watcher(...args: any[]) {
     if (args.length > 0 && args.includes('style')) updateData();
 }
 function updateData() {
-    shapeId = props.shape.id;
     borders.length = 0;
-    const style = props.shape.style;
-    for (let i = 0, len = style.borders.length; i < len; i++) {
-        const border = style.borders[i];
-        const b: BorderItem = {
-            id: i,
-            border: border
+    mixed.value = false;
+    if (len.value === 1) {
+        const style = props.shapes[0].style;
+        for (let i = 0, l = style.borders.length; i < l; i++) {
+            const border = style.borders[i];
+            const b: BorderItem = {
+                id: i,
+                border: border
+            }
+            borders.push(b);
         }
-        borders.push(b);
+    } else if (len.value > 1) {
+        const _bs = get_borders(props.shapes);
+        if (_bs === 'mixed') {
+            mixed.value = true;
+        } else {
+            borders.push(..._bs);
+        }
     }
 }
 function addBorder() {
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const borderStyle = new BorderStyle(0, 0);
     const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
-    editor.value.addBorder(border);
+    if (len.value === 1) {
+        editor.value.addBorder(border);
+    } else if (len.value > 1) {
+        if (mixed.value) {
+            const actions = get_actions_border_unify(props.shapes);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesBordersUnify(actions);
+            }
+        } else {
+            const actions = get_actions_add_boder(props.shapes, border);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesAddBorder(actions);
+            }
+        }
+    }
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
-const isNoBorder = () => {
-    if (borders.length === 0) {
+function first() {
+    if (borders.length === 0 && !mixed.value) {
         addBorder()
     }
 }
 function deleteBorder(idx: number) {
-    editor.value.deleteBorder(idx);
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+    if (len.value === 1) {
+        editor.value.deleteBorder(idx);
+    } else if (len.value > 1) {
+        const actions = get_actions_border_delete(props.shapes, idx);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.shapesDeleteBorder(actions);
+        }
+    }
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function toggleVisible(idx: number) {
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
-    editor.value.setBorderVisiable(idx, isEnabled);
+    if (len.value === 1) {
+        editor.value.setBorderEnable(idx, isEnabled);
+    } else if (len.value > 1) {
+        const actions = get_actions_border_enabled(props.shapes, idx, isEnabled);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesBorderEnabled(actions);
+        }
+    }
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function onColorChange(e: Event, idx: number) {
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     let value = (e.target as HTMLInputElement)?.value;
     if (value.slice(0, 1) !== '#') {
         value = "#" + value
@@ -91,17 +155,27 @@ function onColorChange(e: Event, idx: number) {
         message('danger', t('system.illegal_input'));
         return (e.target as HTMLInputElement).value = (toHex(borders[idx].border.color)).slice(1)
     }
-
     const r = Number.parseInt(hex[1], 16);
     const g = Number.parseInt(hex[2], 16);
     const b = Number.parseInt(hex[3], 16);
     const alpha = border.color.alpha;
     const color = new Color(alpha, r, g, b);
-    editor.value.setBorderColor(idx, color);
+    if (len.value === 1) {
+        editor.value.setBorderColor(idx, color);
+    } else if (len.value > 1) {
+        const actions = get_actions_border_color(props.shapes, idx, color);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesBorderColor(actions);
+        }
+    }
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function onAlphaChange(e: Event, idx: number) {
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     let alpha = (e.currentTarget as any)['value']
-    if (alpheBorder.value) {
+    if (alphaBorder.value) {
         if (alpha?.slice(-1) === '%') {
             alpha = Number(alpha?.slice(0, -1))
             if (isNaN(alpha) || alpha < 0) {
@@ -115,7 +189,16 @@ function onAlphaChange(e: Event, idx: number) {
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
-            editor.value.setBorderColor(idx, color);
+            if (len.value === 1) {
+                editor.value.setBorderColor(idx, color);
+            } else if (len.value > 1) {
+                const actions = get_actions_border_color(props.shapes, idx, color);
+                const page = props.context.selection.selectedPage;
+                if (page) {
+                    const editor = props.context.editor4Page(page);
+                    editor.setShapesBorderColor(actions);
+                }
+            }
         } else {
             if (!isNaN(Number(alpha)) && alpha >= 0) {
                 if (alpha > 100) {
@@ -132,54 +215,65 @@ function onAlphaChange(e: Event, idx: number) {
             }
         }
     }
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
-function getColorFromPicker(rgb: number[], idx: number) {
-    const isEnabled = borders[idx].border.isEnabled;
-    const alpha = borders[idx].border.color.alpha;
-    const color = new Color(alpha, rgb[0], rgb[1], rgb[2]);
-    editor.value.setBorder(idx, { isEnabled, color });
+function getColorFromPicker(color: Color, idx: number) {
+    if (len.value === 1) {
+        editor.value.setBorderColor(idx, color);
+    } else if (len.value > 1) {
+        const actions = get_actions_border_color(props.shapes, idx, color);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesBorderColor(actions);
+        }
+    }
+}
+function selection_wather(t: any) {
+    if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
+        watchShapes();
+        updateData();
+    }
 }
 // hooks
 onMounted(() => {
+    props.context.selection.watch(selection_wather); // 有问题，等会再收拾你
+    watchShapes();
     updateData();
-    setupWatcher();
 })
 onUnmounted(() => {
-    if (shape) {
-        shape.unwatch(watcher);
-        shape = undefined;
-    }
+    props.context.selection.unwatch(selection_wather);
 })
-onBeforeUpdate(() => {
-    if (shapeId != props.shape.id) updateData();
-    setupWatcher();
-})
+watchEffect(updateData);
 </script>
 
 <template>
     <div class="border-panel">
-        <TypeHeader :title="t('attr.border')" class="mt-24" @click="isNoBorder">
+        <TypeHeader :title="t('attr.border')" class="mt-24" @click="first">
             <template #tool>
                 <div class="add" @click="addBorder">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </template>
         </TypeHeader>
-        <div class="borders-container">
+        <div class="tips-wrap" v-if="mixed">
+            <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
+        </div>
+        <div class="borders-container" v-else-if="!mixed">
             <div class="border" v-for="(b, idx) in borders" :key="b.id">
                 <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
                     <ColorPicker :color="b.border.color" :context="props.context"
-                        @choosecolor="(c: any) => getColorFromPicker(c, idx)" />
+                        @change="(c: Color) => getColorFromPicker(c, idx)" />
                     <input :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
                         @change="e => onColorChange(e, idx)" />
-                    <input ref="alpheBorder" style="text-align: center;" :value="(b.border.color.alpha * 100) + '%'"
+                    <input ref="alphaBorder" style="text-align: center;" :value="(b.border.color.alpha * 100) + '%'"
                         @change="e => onAlphaChange(e, idx)" />
                 </div>
                 <div class="extra-action">
-                    <BorderDetail :context="props.context" :shape="props.shape" :border="b.border" :index="idx">
+                    <BorderDetail :context="props.context" :shape="props.shapes[0]" :border="b.border" :index="idx">
                     </BorderDetail>
                     <div class="delete" @click="deleteBorder(idx)">
                         <svg-icon icon-class="delete"></svg-icon>
@@ -214,6 +308,17 @@ onBeforeUpdate(() => {
 
     .add:hover {
         transform: scale(1.25);
+    }
+
+    .tips-wrap {
+        padding: 12px 0;
+
+        .mixed-tips {
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-size: var(--font-default-fontsize);
+        }
     }
 
     .borders-container {

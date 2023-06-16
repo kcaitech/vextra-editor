@@ -1,11 +1,13 @@
 <script setup lang='ts'>
-import { defineProps, reactive, ref, defineEmits, computed } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
 import { Shape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
+import { clipboard_write } from '@/utils/clipaboard';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -28,11 +30,11 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = true;
 }
 function copy() {
-  const copyObj = props.context.selection.selectedShapes;
-  props.context.workspace.setClipBoard(copyObj);
+  clipboard_write(props.context.selection.selectedShapes);
 }
 function paste() {
-
+  props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
+  emit('close');
 }
 function selectAll() {
 
@@ -294,4 +296,5 @@ function closeLayerSubMenu(e: MouseEvent) {
     border-color: var(--theme-color-anti);
     transform: rotate(-45deg) translateY(-30%);
   }
-}</style>
+}
+</style>

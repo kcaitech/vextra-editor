@@ -1,10 +1,5 @@
-<!--
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-03 14:47:46
- * @FilePath: \kcdesign\src\components\common\IconText.vue
--->
 <script setup lang="ts">
-import { defineProps, defineEmits, watch, ref, onMounted } from "vue";
+import { watch, ref, onMounted } from "vue";
 type Scale = { axleX: number, degX: number }
 const props = defineProps<{
     svgicon?: any,
@@ -30,25 +25,25 @@ const input = ref<HTMLInputElement>();
 
 function onChange(e: Event) {
     let value = (e.currentTarget as any)['value']
-    if(props.svgicon !== 'angle') {
-        if(isNaN(Number(input.value!.value))){
-            return input.value!.value = String(props.text) 
+    if (props.svgicon !== 'angle') {
+        if (isNaN(Number(input.value!.value))) {
+            return input.value!.value = String(props.text)
         }
-    }else if(props.svgicon === 'angle') {
-        if(input.value!.value.slice(-1) === '°' && isNaN(Number(input.value!.value.slice(0, -1)))){
-            return input.value!.value = String(props.text)             
-        }else if(input.value!.value.slice(-1) !== '°' && isNaN(Number(input.value!.value))) {
-            return input.value!.value = String(props.text) 
+    } else if (props.svgicon === 'angle') {
+        if (input.value!.value.slice(-1) === '°' && isNaN(Number(input.value!.value.slice(0, -1)))) {
+            return input.value!.value = String(props.text)
+        } else if (input.value!.value.slice(-1) !== '°' && isNaN(Number(input.value!.value))) {
+            return input.value!.value = String(props.text)
         }
     }
-    if(Number(input.value!.value) < 1 && props.ticon === 'W') {
-        input.value!.value = '1' 
-    } else if(Number(input.value!.value) < 1 && props.ticon === 'H') {
-        input.value!.value = '1' 
+    if (Number(input.value!.value) < 1 && props.ticon === 'W') {
+        input.value!.value = '1'
+    } else if (Number(input.value!.value) < 1 && props.ticon === 'H') {
+        input.value!.value = '1'
     }
-    if(value < 1 && props.ticon === 'W') {
+    if (value < 1 && props.ticon === 'W') {
         value = 1
-    }else if(value < 1 && props.ticon === 'H') {
+    } else if (value < 1 && props.ticon === 'H') {
         value = 1
     }
     emit("onchange", value);
@@ -73,7 +68,7 @@ const onKeyBlur = (e: KeyboardEvent) => {
     }
 }
 const onMouseDown = (e: MouseEvent) => {
-    if(props.svgicon === 'radius' && props.multipleValues === true) {
+    if (props.svgicon === 'radius' && props.multipleValues === true) {
         return
     }
     isDrag.value = true
@@ -85,16 +80,16 @@ const onMouseDown = (e: MouseEvent) => {
 }
 let posi = 0
 const onMouseMove = (e: MouseEvent) => {
-        //鼠标移动的距离
+    //鼠标移动的距离
     let mx = e.screenX - curpt.x
-        if (isDrag.value && mx > 4 || mx < -4) {
+    if (isDrag.value && mx > 4 || mx < -4) {
         curpt.x = e.screenX
-        }
-            //坐标移动的大小
+    }
+    //坐标移动的大小
     scale.value.axleX = Number((mx).toFixed(2))
-            //角度移动的大小
+    //角度移动的大小
     scale.value.degX = Number((mx / 5).toFixed(2))
-    
+
     // if(isDrag.value) {
     //      //鼠标移动的距离
     //     let mx = e.clientX - curpt.x
@@ -141,25 +136,25 @@ watch(scale, () => {
     //input的值加上鼠标移动后的大小等于最终改变的值
     if (props.ticon) {
         input.value!.value = String(Number(input.value!.value) + scale.value.axleX)
-        if(props.ticon === 'W' || props.ticon === 'H') {
-            if(Number(input.value!.value) <= 1) {
+        if (props.ticon === 'W' || props.ticon === 'H') {
+            if (Number(input.value!.value) <= 1) {
                 input.value!.value = '1'
             }
         }
-        emit("onchange",input.value!.value);
+        emit("onchange", input.value!.value);
     } else {
-        if(props.svgicon === 'angle') {
-            if(input.value!.value.slice(-1) && input.value!.value.slice(-1) === '°') {
-                input.value!.value = input.value!.value.slice(0, -1)     
+        if (props.svgicon === 'angle') {
+            if (input.value!.value.slice(-1) && input.value!.value.slice(-1) === '°') {
+                input.value!.value = input.value!.value.slice(0, -1)
             }
         }
         input.value!.value = (Number(input.value!.value) + scale.value.degX).toFixed(2)
-        if(props.svgicon === 'radius') {
-            if(Number(input.value!.value) <= 0) {
+        if (props.svgicon === 'radius') {
+            if (Number(input.value!.value) <= 0) {
                 input.value!.value = '0'
             }
         }
-        emit("onchange",Number(input.value!.value).toFixed(2))
+        emit("onchange", Number(input.value!.value).toFixed(2))
     }
 }, { deep: true });
 watch(screenWidth, () => {
@@ -170,8 +165,8 @@ watch(screenHeight, () => {
 })
 onMounted(() => {
     window.addEventListener('resize', () => {
-      screenWidth.value = window.innerWidth;
-      screenHeight.value = window.innerHeight;
+        screenWidth.value = window.innerWidth;
+        screenHeight.value = window.innerHeight;
     });
 })
 </script>
@@ -179,14 +174,14 @@ onMounted(() => {
 <template>
     <label class="icontext">
         <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
-                width: `${props.frame ? frame?.width : 18}px`,
-                height: `${props.frame ? frame?.height : 18}px`,
-                transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`,
-                cursor: props.svgicon === 'radius' && props.multipleValues === true ? 'auto':'ew-resize'
-            }"></svg-icon>
+            width: `${props.frame ? frame?.width : 18}px`,
+            height: `${props.frame ? frame?.height : 18}px`,
+            transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`,
+            cursor: props.svgicon === 'radius' && props.multipleValues === true ? 'auto' : 'ew-resize'
+        }"></svg-icon>
         <img class="icon" v-if="props.icon" :src="props.icon" />
         <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon">{{ props.ticon }}</span>
-        <input ref="input" @click="onBlur" :value="props.multipleValues ? '多值' :props.text" @keydown="onKeyBlur" v-on:change="onChange" />
+        <input ref="input" @click="onBlur" :value="props.text" @keydown="onKeyBlur" v-on:change="onChange" />
     </label>
 </template>
 

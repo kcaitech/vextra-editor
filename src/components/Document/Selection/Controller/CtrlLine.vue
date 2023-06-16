@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
+import { computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
 import { CtrlElementType } from "@/context/workspace";
 import { ClientXY } from "@/context/selection";
@@ -76,14 +76,14 @@ onMounted(() => {
     props.context.selection.watch(updater);
     props.context.workspace.watch(workspaceUpdate);
     window.addEventListener('blur', windowBlur);
-    document.addEventListener('keydown', keyboardHandle);
+    // document.addEventListener('keydown', keyboardHandle);
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     props.context.workspace.unwatch(workspaceUpdate);
     window.removeEventListener('blur', windowBlur);
-    document.removeEventListener('keydown', keyboardHandle);
+    // document.removeEventListener('keydown', keyboardHandle);
 })
 
 watchEffect(() => { updater() })

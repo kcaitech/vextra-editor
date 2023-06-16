@@ -1,26 +1,18 @@
 <script setup lang="ts">
-import { Menu, Operation } from '@element-plus/icons-vue'
 import { RouterView } from 'vue-router';
-import { useI18n } from 'vue-i18n';
+interface Props {
+    title: string
+}
 
-const {t} = useI18n()
-
+const props = defineProps<Props>();
 
 </script>
 
 <template>
     <div class="title">
         <div>
-            <span>{{ t('home.automatically_open') }}</span>
+            <span>{{ props.title }}</span>
         </div>
-        <!-- <div>
-            <el-icon size="25">
-                <Menu />
-            </el-icon>
-            <el-icon size="25">
-                <Operation size="30" />
-            </el-icon>
-        </div> -->
     </div>
     <el-divider />
     <div class="main">

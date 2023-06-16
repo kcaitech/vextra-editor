@@ -1,6 +1,16 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
+import { Color } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
-
+export interface HSB {
+  h: number
+  s: number
+  b: number
+}
+export interface HSL {
+  h: number
+  s: number
+  l: number
+}
 export function toRGBA(options: {
   red: number,
   green: number,
@@ -30,6 +40,7 @@ export function toHex(options: {
   }
   return "#" + toHex(options.red) + toHex(options.green) + toHex(options.blue);
 }
+export type Model = 'RGB' | 'HSL' | 'HSB';
 
 /**
  * 加载base64图片
@@ -76,7 +87,7 @@ export const rbgaObjToRgba = (rgba: IRgba) => {
 
 // 显示颜色信息，包括放大镜和颜色值
 export const renderColorInfo = (params: any) => {
-  const { containerDom, color, colors, point } = params;
+  const { containerDom, color, colors, point, rect } = params;
   let container = containerDom;
   const pos = point;
   const n = 7;
@@ -86,10 +97,10 @@ export const renderColorInfo = (params: any) => {
     const magnifier: any = document.createElement('div');
     container = magnifier;
   }
-  if (pos.x + size + 25 > window.innerWidth) {
-    pos.x -= size + 25;
+  if (pos.x + size + 15 > (rect.x + rect.width)) {
+    pos.x -= size + 15;
   }
-  if (pos.y + size + 40 > window.innerHeight) {
+  if (pos.y + size + 40 > (rect.y + rect.height)) {
     pos.y -= size + 40;
   }
   container.style = `
@@ -283,3 +294,242 @@ export const getCanvasRectColor = (ctx: any, rect: Rect, scale: number = 1) => {
   return colors;
 }
 
+// store
+export const key_storage = 'color_recently';
+const split = ':';
+export function updateRecently(color: Color) {
+  const store = JSON.parse(localStorage.getItem(key_storage) || JSON.stringify([]));
+  if (store.length) {
+    const item = parseColorForStorage(color);
+    const e_idx = store.findIndex((i: string) => i === item);
+    if (e_idx > -1) {
+      store.splice(e_idx, 1);
+      store.unshift(item);
+    } else {
+      store.unshift(item);
+    }
+    if (store.length > 10) {
+      setLocalStorageForColors(store.slice(0, 10));
+    } else {
+      setLocalStorageForColors(store);
+    }
+  } else {
+    const c = parseColorForStorage(color);
+    store.unshift(c);
+    setLocalStorageForColors(store);
+  }
+  return localStorage.getItem(key_storage);
+}
+function parseColorForStorage(color: Color): string {
+  return `${color.alpha}${split}${color.red}${split}${color.green}${split}${color.blue}`;
+}
+export function parseColorFormStorage(c: string): Color {
+  let _c: any[] = c.split(split);
+  _c = _c.map(i => Number(i));
+  return new Color(_c[0], Math.round(_c[1]), Math.round(_c[2]), Math.round(_c[3]));
+}
+function setLocalStorageForColors(si: string[]) {
+  localStorage.setItem(key_storage, JSON.stringify(si));
+}
+
+// RGB => H
+export function RGB2H(color: Color) {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let h = 0;
+  if (max === min) {
+    h = 0;
+  } else if (max === red && green >= blue) {
+    h = 60 * ((green - blue) / (max - min)) + 0;
+  } else if (max === red && green < blue) {
+    h = 60 * ((green - blue) / (max - min)) + 360;
+  } else if (max === green) {
+    h = 60 * ((blue - red) / (max - min)) + 120;
+  } else if (max === blue) {
+    h = 60 * ((red - green) / (max - min)) + 240;
+  }
+  return h;
+}
+// RGB => S
+export function RGB2S(color: Color) {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  return (max - min) / max;
+}
+
+// RGB => B
+export function RGB2B(color: Color) {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  return max / 255;
+}
+// RGB => HSB
+export function RGB2HSB(color: Color): HSB {
+  const { red, green, blue } = color;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let h = 0, s = 0, b = 0;
+  if (max === min) {
+    h = 0;
+  } else if (max === red && green >= blue) {
+    h = 60 * ((green - blue) / (max - min)) + 0;
+  } else if (max === red && green < blue) {
+    h = 60 * ((green - blue) / (max - min)) + 360;
+  } else if (max === green) {
+    h = 60 * ((blue - red) / (max - min)) + 120;
+  } else if (max === blue) {
+    h = 60 * ((red - green) / (max - min)) + 240;
+  }
+  if (max === min && min === 0) {
+    s = 0;
+  } else {
+    s = (max - min) / max;
+  }
+  b = max / 255;
+  return { h: h / 360, s, b };
+}
+export function validate(model: Model, field: number, value: number): boolean {
+  if (isNaN(value)) return false;
+  let result = true;
+  if (model === "RGB") {
+    if ([0, 1, 2].includes(field)) {
+      if (value > 255 || value < 0) result = false;
+    } else {
+      if (value < 0 || value > 100) {
+        result = false;
+      }
+    }
+  } else if (model === "HSB" || model === "HSL") {
+    if (field === 0) {
+      if (value > 360 || value < 0) result = false;
+    } else {
+      if (value < 0 || value > 100) {
+        result = false;
+      }
+    }
+  }
+  return result;
+}
+interface HRGB {
+  R: number
+  G: number
+  B: number
+}
+export function getHRGB(h: number): HRGB {
+  const h_rgb = { R: 255, G: 0, B: 0 };
+  const start = 0;
+  const end = 360;
+  if (start <= h && h <= end * 0.17) {
+    const rate = h / (end * 0.17);
+    h_rgb.R = 255;
+    h_rgb.G = Math.floor(255 * rate);
+    h_rgb.B = 0;
+  } else if (end * 0.17 < h && h <= end * 0.33) {
+    const rate = (h - end * 0.17) / (end * 0.33 - end * 0.17);
+    h_rgb.R = Math.floor(255 - 255 * rate);
+    h_rgb.G = 255;
+    h_rgb.B = 0;
+  } else if (end * 0.33 < h && h <= end * 0.50) {
+    const rate = (h - end * 0.33) / (end * 0.50 - end * 0.33);
+    h_rgb.R = 0;
+    h_rgb.G = 255;
+    h_rgb.B = Math.floor(255 * rate);
+  } else if (end * 0.50 < h && h <= end * 0.67) {
+    const rate = (h - end * 0.50) / (end * 0.67 - end * 0.50);
+    h_rgb.R = 0;
+    h_rgb.G = Math.floor(255 - 255 * rate);
+    h_rgb.B = 255;
+  } else if (end * 0.67 < h && h <= end * 0.83) {
+    const rate = (h - end * 0.67) / (end * 0.83 - end * 0.67);
+    h_rgb.R = Math.floor(255 * rate);
+    h_rgb.G = 0;
+    h_rgb.B = 255;
+  } else {
+    const rate = (h - end * 0.83) / (end - end * 0.83);
+    h_rgb.R = 255;
+    h_rgb.G = 0;
+    h_rgb.B = Math.floor(255 - 255 * rate);
+  }
+  return h_rgb;
+}
+export interface RGB {
+  R: number
+  G: number
+  B: number
+}
+export function HSB2RGB(H: number, S: number, V: number): RGB {
+  const I = Math.floor((H / 60)) % 6;
+  const F = H === 360 ? 0 : (H / 60) - I; // 闭环
+  const P = (V * 255) * (1 - S);
+  const Q = (V * 255) * (1 - F * S);
+  const T = (V * 255) * (1 - (1 - F) * S);
+  const _V = V * 255;
+  switch (I) {
+    case 0:
+      return { R: _V, G: T, B: P };
+    case 1:
+      return { R: Q, G: _V, B: P };
+    case 2:
+      return { R: P, G: _V, B: T };
+    case 3:
+      return { R: P, G: Q, B: _V };
+    case 4:
+      return { R: T, G: P, B: _V };
+    case 5:
+      return { R: _V, G: P, B: Q };
+    default:
+      return { R: 255, G: 0, B: 0 };
+  }
+}
+export function RGB2HSL(color: Color): HSL {
+  let { red, green, blue } = color;
+  red = red / 255;
+  green = green / 255;
+  blue = blue / 255;
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let h = 0, s = 0, l = 0;
+  if (max === min) {
+    h = 0;
+  } else if (max === red && green >= blue) {
+    h = 60 * ((green - blue) / (max - min)) + 0;
+  } else if (max === red && green < blue) {
+    h = 60 * ((green - blue) / (max - min)) + 360;
+  } else if (max === green) {
+    h = 60 * ((blue - red) / (max - min)) + 120;
+  } else if (max === blue) {
+    h = 60 * ((red - green) / (max - min)) + 240;
+  }
+  l = ((max + min) / 2);
+  if (l === 0 || l === 1) {
+    s = 0;
+  } else {
+    s = (max - min) / (1 - Math.abs(2 * l - 1));
+  }
+  return { h, s, l };
+}
+export function HSL2RGB(hsl: HSL): RGB {
+  const { h, s, l } = hsl;
+  const C = (1 - Math.abs(2 * l - 1)) * s;
+  const h_prime = h / 60;
+  const X = C * (1 - Math.abs(h_prime % 2 - 1));
+  const m = l - C / 2;
+  if (h_prime <= 1) {
+    return withLight(C, X, 0)
+  } else if (h_prime <= 2) {
+    return withLight(X, C, 0)
+  } else if (h_prime <= 3) {
+    return withLight(0, C, X)
+  } else if (h_prime <= 4) {
+    return withLight(0, X, C)
+  } else if (h_prime <= 5) {
+    return withLight(X, 0, C)
+  } else {
+    return withLight(C, 0, X)
+  }
+  function withLight(r: number, g: number, b: number) {
+    return { R: (r + m) * 255, G: (g + m) * 255, B: (b + m) * 255 };
+  }
+}

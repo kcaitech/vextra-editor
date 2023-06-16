@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineEmits, ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect, defineProps } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect,} from 'vue';
 import { useI18n } from 'vue-i18n';
 import { User } from '@/context/user';
 import * as share_api from '@/apis/share';
@@ -72,6 +72,7 @@ const options = [
     label: `${t('share.anyone_can_edit_it')}`
   }
 ]
+console.log(props.shareSwitch, props.selectValue);
 
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
@@ -133,8 +134,10 @@ const onRemove = (id: string, i: number) => {
 const getShareList = async () => {
   try {
     const { data } = await share_api.getShareListAPI({ doc_id: docID })
-    shareList.value = data
-  } catch (err) {
+    if(data) {
+      shareList.value = data
+    }
+  } catch(err) {
     console.log(err);
   }
 }
@@ -158,10 +161,10 @@ const setShateType = async (type: number) => {
   try {
     await share_api.setShateTypeAPI({ doc_id: docID, doc_type: type })
     for (let i = 0; i < shareList.value.length; i++) {
-      if (type === 1) {
-        shareList.value[i].document_permission.perm_type = type
-      } else {
-        shareList.value[i].document_permission.perm_type = type - 1
+      if(type === 1) {
+        return
+      }else if(shareList.value[i].document_permission.perm_source_type === 0) {
+        shareList.value[i].document_permission.perm_type = type -1
       }
     }
   } catch (err) {
@@ -376,7 +379,7 @@ onUnmounted(() => {
         <!-- 文档权限 -->
         <div class="unfounder">
           <span>{{ t('share.document_permission') }}:</span>
-          <p class="name">{{ permission[docInfo.document_permission.perm_type] }}</p>
+          <p class="name">{{DocType[props.selectValue]}}</p>
         </div>
         <!-- 链接按钮 -->
         <div class="button bottom">

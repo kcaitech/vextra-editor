@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Shape } from '@kcdesign/data';
-import { defineProps, watchEffect, onMounted, onUnmounted } from 'vue';
+import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget } from '@/utils/common';
 export interface SelectorFrame {

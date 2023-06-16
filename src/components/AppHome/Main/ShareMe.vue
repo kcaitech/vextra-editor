@@ -1,13 +1,13 @@
 <template>
     <!-- 表格布局 -->
     <el-table :data="ShareList" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-        @row-dblclick="toDocument">
+        @row-dblclick="toDocument" @row-contextmenu="rightmenu">
         <el-table-column prop="document.name" :label="t('home.file_name')" />
         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
         <el-table-column prop="document.size" :label="t('home.size')" />
         <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
             <template #default="scope: any">
-                <el-icon :size=" 20 " content="标星" v-if=" !ShareList[scope.$index].document_favorites.is_favorite ">
+                <el-icon :size=" 20 " v-if=" !ShareList[scope.$index].document_favorites.is_favorite ">
                     <el-tooltip :content=" t('home.star') " show-after="1000">
                         <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
                             @click.stop=" Starfile(scope.$index) ">
@@ -22,7 +22,7 @@
                     </el-tooltip>
                 </el-icon>&nbsp;
                 <el-icon :size=" 20 ">
-                    <el-tooltip :content=" t('home.de_star') " show-after="1000">
+                    <el-tooltip :content=" t('home.share') " show-after="1000">
                         <Share @click.stop=" Sharefile(scope) " />
                     </el-tooltip>
                 </el-icon>&nbsp;
@@ -36,6 +36,16 @@
             </template>
         </el-table-column>
     </el-table>
+    <!-- 右键菜单 -->
+    <div class="rightmenu" ref="menu">
+        <ul>
+            <li @click=" openDocument ">{{t('homerightmenu.open')}}</li>
+            <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
+            <div></div>
+            <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
+            <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
+        </ul>
+    </div>
     <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
         @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
@@ -43,14 +53,13 @@
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
-import { Share, Remove } from '@element-plus/icons-vue'
+import { Share } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { pushScopeId, reactive, ref, onMounted, onUnmounted } from 'vue'
-import * as share_api from "@/apis/share"
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 const ShareList = ref<any[]>([]);
 const isLoading = ref(false);
@@ -59,21 +68,29 @@ const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
 const selectValue = ref(1)
+const documentId = ref()
+const menu = ref<HTMLElement>()
+const isshow = ref<HTMLElement>()
 
 async function ShareLists() {
     // loading
     isLoading.value = true
-    const { data } = await user_api.ShareLists()
-    if (data == null) {
-        ElMessage.error(t('home.failed_list_tips'))
-    } else {
-        for (let i = 0; i < data.length; i++) {
-            let { document: { size }, document_access_record: { last_access_time } } = data[i]
-            data[i].document.size = sizeTostr(size)
-            data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+    try {
+        const { data } = await user_api.ShareLists()
+        if (data == null) {
+            ElMessage.error(t('home.failed_list_tips'))
+        } else {
+            for (let i = 0; i < data.length; i++) {
+                let { document: { size }, document_access_record: { last_access_time } } = data[i]
+                data[i].document.size = sizeTostr(size)
+                data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+            }
         }
+        ShareList.value = data
+    } catch (error) {
+        ElMessage.error(t('home.failed_list_tips'))
     }
-    ShareList.value = data
+
     // // unloading  
     isLoading.value = false;
 }
@@ -117,6 +134,89 @@ const Sharefile = (scope: any) => {
     selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
     showFileShare.value = true
 }
+
+const rightmenu = (row: any, column: any, event: any) => {
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const rightmenu: any = document.querySelector('.rightmenu')
+    const top = event.pageY
+    const left = event.pageX
+    if (event.target.tagName == 'DIV') {
+        rightmenu.style.left = left + 200 > viewportWidth ? (viewportWidth - 200) + "px" : left + 'px'
+        rightmenu.style.top = top + 291 > viewportHeight ? (viewportHeight - 291) + 'px' : top + 'px'
+        rightmenu.style.display = 'block'
+    }
+    nextTick(() => {
+        if (isshow.value) {
+            if (row.document_favorites.is_favorite == true) {
+                isshow.value.innerHTML = t('homerightmenu.unstar')
+            } else {
+                isshow.value.innerHTML = t('homerightmenu.target_star')
+            }
+        }
+    })
+    documentId.value = row
+}
+
+const openDocument = () => {
+    router.push({
+        name: 'document',
+        query: {
+            id: documentId.value.document.id
+        }
+    })
+}
+
+const openNewWindowDocument = () => {
+    const Name = 'document'
+    const query = { id: documentId.value.document.id }
+    const url = router.resolve({ name: Name, query: query }).href
+    window.open(url, '_blank')
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+const rSharefile = () => {
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = documentId.value.document.id
+    selectValue.value = documentId.value.document.doc_type !== 0 ? documentId.value.document.doc_type : documentId.value.document.doc_type;
+    showFileShare.value = true;
+}
+
+const rStarfile = async () => {
+    documentId.value.document_favorites.is_favorite = documentId.value.document_favorites.is_favorite === true ? false : true
+    const doc_id = documentId.value.document.id
+    if (documentId.value.document_favorites.is_favorite == true) {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
+        if (code === 0) {
+            ElMessage.success(t('home.star_ok'))
+        }
+    } else {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
+        if (code === 0) {
+            ElMessage.success(t('home.star_cancel'))
+        }
+    }
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+    if (event.target instanceof Element && event.target.closest('.rightmenu') == null) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+    }
+}
+
 const closeShare = () => {
     showFileShare.value = false
 }
@@ -131,13 +231,19 @@ const onSelectType = (type: number) => {
 }
 
 const Exitshar = async (index: number) => {
-    const { document: { id } } = ShareList.value[index]
-    const { code } = await user_api.ExitSharing({ share_id: id })
-    if (!code) {
-        ElMessage.success('退出成功')
-    } else {
-        ElMessage.error('退出失败')
+    const { document_permission: { id } } = ShareList.value[index]
+    try {
+        const { code } = await user_api.ExitSharing({ share_id: id })
+        if (!code) {
+            ElMessage.success(t('home.exit_share_success'))
+            ShareLists()
+        } else {
+            ElMessage.error(t('home.exit_share_fail'))
+        }
+    } catch (error) {
+        ElMessage.error(t('home.other_tips'))
     }
+
 
 }
 
@@ -154,15 +260,57 @@ const toDocument = (row: any) => {
 onMounted(() => {
     ShareLists()
     getPageHeight()
-    window.addEventListener('resize', getPageHeight);
+    window.addEventListener('resize', getPageHeight)
+    document.addEventListener('mousedown', handleClickOutside)
 })
 onUnmounted(() => {
-    window.removeEventListener('resize', getPageHeight);
+    window.removeEventListener('resize', getPageHeight)
+    document.removeEventListener('mousedown', handleClickOutside)
 })
 </script>
 <style lang="scss" scoped>
+.rightmenu {
+    display: none;
+    min-width: 200px;
+    min-height: 100px;
+    z-index: 9999;
+    position: absolute;
+    background-color: white;
+    padding: 10px 0;
+    border-radius: 5px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+
+    ul {
+        margin: 0;
+        padding: 0 10px;
+
+        li {
+            display: block;
+            padding: 10px 10px;
+            font-size: 14px;
+            text-decoration: none;
+            color: rgba(13, 13, 13, 0.9);
+            border-radius: 2px;
+            cursor: pointer;
+
+            &:hover {
+                background-color: rgba(192, 192, 192, 0.3);
+            }
+        }
+
+        div {
+            height: 1px;
+            width: auto;
+            background: rgba(192, 192, 192, 0.3);
+        }
+
+    }
+}
+
 .el-icon {
     display: none;
+    position: relative;
+    top: 5px;
 
     &:hover {
         color: #6395f9;
@@ -199,6 +347,14 @@ onUnmounted(() => {
 :deep(.el-table__row) {
     height: 56px;
     font-weight: 18px;
+}
+
+:deep(.el-table__cell) {
+    padding: 0;
+}
+
+:deep(.el-table__cell .cell) {
+    line-height: 56px;
 }
 
 .overlay {

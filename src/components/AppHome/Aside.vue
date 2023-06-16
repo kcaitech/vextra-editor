@@ -18,6 +18,12 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
+import avatar from '@/assets/pd-logo-svg.svg';
+
+interface Emits {
+    (e: 'settitle', title: string): void;
+}
+const emits = defineEmits<Emits>();
 const { t } = useI18n();
 
 const picker = new FilePicker((file) => {
@@ -46,11 +52,41 @@ function newFile() {
     router.push({ name: 'document' });
 }
 
-function Setindex(a: any) {
-    let x: any = a
-    localStorage.setItem('index', x)
+function Setindex(a: any, b: any) {
+    emits('settitle', b)
+    sessionStorage.setItem('index', a)
 }
-const x = localStorage.getItem('index')
+const x = sessionStorage.getItem('index')
+
+window.addEventListener('popstate', function () {
+  if(location.hash.toLowerCase()=='#/apphome/starfile'){
+    sessionStorage.setItem('index', '2')
+    sessionStorage.setItem('title', t('home.star_file'))
+    location.reload()
+  }
+  if(location.hash.toLowerCase()=='#/apphome/recently'){
+    sessionStorage.setItem('index', '1')
+    sessionStorage.setItem('title',t('home.recently_opened'))
+    location.reload()
+  }
+  if(location.hash.toLowerCase()=='#/apphome/meshare'){
+    sessionStorage.setItem('index', '3')
+    sessionStorage.setItem('title', t('home.file_shared'))
+    location.reload()
+  }
+  if(location.hash.toLowerCase()=='#/apphome/shareme'){
+    sessionStorage.setItem('index', '4')
+    sessionStorage.setItem('title', t('home.shared_file_received'))
+    location.reload()
+  }
+  if(location.hash.toLowerCase()=='#/apphome/recyclebin'){
+    sessionStorage.setItem('index', '5')
+    sessionStorage.setItem('title', t('home.recycling_station'))
+    location.reload()
+  }
+});
+
+
 
 </script>
 
@@ -58,9 +94,7 @@ const x = localStorage.getItem('index')
     <el-row class="tac">
         <el-col :span="12">
             <div class="logo">
-                <el-icon size="50">
-                    <Clock />
-                </el-icon>
+                <div style="width: 108px;height: 108px;"><img :src="avatar" alt="ProtoDesign" /></div>
                 <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
             </div>
             <div class="new">
@@ -71,32 +105,35 @@ const x = localStorage.getItem('index')
                         <Folder />
                     </el-icon><span>{{ t('home.open_local_file') }}</span></button>
             </div>
-            <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo" text-color="#000000">
-                <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1)">
+            <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
+                text-color="#000000">
+                <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1, t('home.recently_opened'))">
                         <el-icon>
                             <Clock />
                         </el-icon>
                         <span>{{ t('home.recently_opened') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2)">
+                <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2, t('home.star_file'))">
                         <el-icon>
                             <Star />
                         </el-icon>
                         <span>{{ t('home.star_file') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3)">
+                <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3, t('home.file_shared'))">
                         <el-icon>
                             <Share />
                         </el-icon>
                         <span>{{ t('home.file_shared') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/shareme"><el-menu-item index="4" @click="Setindex(4)">
+                <router-link to="/apphome/shareme"><el-menu-item index="4"
+                        @click="Setindex(4, t('home.shared_file_received'))">
                         <el-icon>
                             <BottomLeft />
                         </el-icon>
                         <span>{{ t('home.shared_file_received') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5" @click="Setindex(5)">
+                <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5"
+                        @click="Setindex(5, t('home.recycling_station'))">
                         <el-icon>
                             <Delete />
                         </el-icon>

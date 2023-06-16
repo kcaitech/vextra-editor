@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { ref, defineProps, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { CtrlElementType } from '@/context/workspace';
 import { XY, ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';

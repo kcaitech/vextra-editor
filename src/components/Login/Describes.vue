@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import avatar from '@/assets/pd-logo-svg.svg';
 
 const { t } = useI18n();
 
@@ -7,7 +8,7 @@ const { t } = useI18n();
 
 <template>
     <div class="logo">
-        <img src="http://www.uimaker.com/uploads/allimg/200105/112501I08_0.png" alt="ProtoDesign" />
+        <img :src="avatar" alt="ProtoDesign" />
         <h1>{{t('system.product_name')}}</h1>
         <p>{{t('system.product_description')}}</p>
     </div>
@@ -23,23 +24,29 @@ const { t } = useI18n();
     flex-wrap: wrap;
     align-content: center;
     justify-content: center;
+    box-sizing: border-box;
 
     img {
         width: 160px;
         height: 160px;
         margin: 20px;
+        animation: moveDown 1.5s ;
     }
 
     h1 {
         font-size: 60PX;
+        height: 160px;
+        line-height: 160px;
         color: white;
         margin: 20px;
+        animation: moveDown 1.5s ;
     }
 
     p {
         font-size: 20PX;
         color: white;
         margin-top: 20px;
+        animation: moveup 1.5s ;
     }
 
 }
@@ -55,5 +62,27 @@ const { t } = useI18n();
         display: none;
     }
 
+}
+
+@keyframes moveDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-300px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes moveup {
+  0% {
+    opacity: 0;
+    transform: translateY(300px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style >

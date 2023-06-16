@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, defineProps, defineExpose, onMounted, onUnmounted } from 'vue';
+import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 const props = defineProps<{

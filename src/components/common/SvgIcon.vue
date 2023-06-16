@@ -5,7 +5,7 @@
 </template>
  
 <script setup lang="ts">
-import { computed, defineProps } from 'vue'
+import { computed } from 'vue'
 const props = defineProps<{ iconClass: string, className?: string }>();
 const iconName = computed(() => {
     return `#icon-${props.iconClass}`
@@ -19,12 +19,4 @@ const svgClass = computed(() => {
 })
 </script>
 
-<style scoped>
-/* .svg-icon {
-    width: 100%;
-    height: 100%;
-    fill: currentColor;
-    overflow: hidden;
-} */
-
-</style>
+<style scoped></style>

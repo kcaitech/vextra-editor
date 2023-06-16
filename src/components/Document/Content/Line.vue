@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Shape } from '@kcdesign/data';
-import { h, defineProps, onMounted, onUnmounted, ref, watch } from 'vue';
+import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { render as r } from "@/render/line";
 
 const props = defineProps<{ data: Shape }>();

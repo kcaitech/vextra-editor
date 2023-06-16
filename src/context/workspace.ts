@@ -1,4 +1,4 @@
-import { Watchable } from "@kcdesign/data";
+import { Shape, Watchable } from "@kcdesign/data";
 import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
@@ -13,7 +13,8 @@ export enum Action {
     AddArrow = 'add-arrow',
     AddFrame = 'add-frame',
     AddText = 'add-text',
-    AddComment = 'add-comment'
+    AddComment = 'add-comment',
+    AddImage = 'add-image'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -52,15 +53,26 @@ export enum CtrlElementType { // 控制元素类型
     LineEndR = 'line-end-rotate',
     Text = 'text'
 }
-
+export interface Media {
+    name: string
+    frame: { width: number, height: number }
+    buff: Uint8Array
+    base64: string
+}
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle],
     [Action.AddEllipse, ShapeType.Oval],
     [Action.AddLine, ShapeType.Line],
     [Action.AddFrame, ShapeType.Artboard],
-    [Action.AddText, ShapeType.Text]
+    [Action.AddText, ShapeType.Text],
+    [Action.AddImage, ShapeType.Image]
 ]);
+export interface ClipboardItem {
+    index: number
+    type: ShapeType
+    content: Shape
+}
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
@@ -80,10 +92,22 @@ export class WorkSpace extends Watchable(Object) {
     static START_SAVE = 14;
     static END_SAVE = 15;
     static DOCUMENT_SAVE = 16;
+    static SHUTDOWN_COMMENT = 17;
+    static SELECT_LIST_TAB = 18;
+    static CTRL_DISAPPEAR = 19;
+    static CTRL_APPEAR_IMMEDIATELY = 20;
+    static CTRL_APPEAR = 21;
+    static PASTE = 22;
+    static PASTE_RIGHT = 23;
+    static INSERT_IMGS = 24;
+    static FREEZE = 25;
+    static THAW = 26;
+    static CLAC_ATTRI = 27;
+    static COPY = 28;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: any; // 剪切板
+    private m_clip_board: ClipboardItem[] | undefined; // 剪切板
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -100,11 +124,14 @@ export class WorkSpace extends Watchable(Object) {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_comment_input: boolean = false;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_saving: boolean = false;
+    private m_image: Media[] | undefined = undefined;
+    private m_freeze: boolean = false;
     constructor(context: Context) {
         super();
         this.context = context
@@ -180,13 +207,30 @@ export class WorkSpace extends Watchable(Object) {
     get isEditing() {
         return this.m_content_editing;
     }
+    get isCommentInput() {
+        return this.m_comment_input;
+    }
     get toolGroup() {
         return this.m_tool_group;
     }
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
-    startSave() {
+    get isFreeze() {
+        return this.m_freeze;
+    }
+    setFreezeStatus(isFreeze: boolean) {
+        this.m_freeze = isFreeze;
+        this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
+    }
+    setImage(files: Media[]) {
+        this.m_image = [...files];
+        this.notify(WorkSpace.INSERT_IMGS);
+    }
+    getImageFromDoc() {
+        return this.m_image;
+    }
+        startSave() {
         this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
     }
@@ -248,6 +292,12 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.SHUTDOWN_MENU);
         }
     }
+    commentInput(visible: boolean) {
+        this.m_comment_input = visible;
+        if (!visible) {
+            this.notify(WorkSpace.SHUTDOWN_COMMENT)
+        }
+    }
     popoverVisible(visible: boolean) {
         this.m_popover = visible;
         if (!visible) {
@@ -262,6 +312,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
+        if (this.isFreeze) return;
         if (event.code === KeyboardKeys.R) {
             if (!metaKey && !ctrlKey) {
                 event.preventDefault();
@@ -269,7 +320,7 @@ export class WorkSpace extends Watchable(Object) {
             }
         } else if (event.code === KeyboardKeys.V) {
             event.preventDefault();
-            this.keydown_v();
+            this.keydown_v(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.L) {
             event.preventDefault();
             this.keydown_l(shiftKey);
@@ -278,7 +329,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
         } else if (event.code === KeyboardKeys.K) {
             event.preventDefault();
-            this.keydown_k();
+            this.keydown_k(ctrlKey, shiftKey);
         } else if (event.code === KeyboardKeys.O) {
             event.preventDefault();
             this.keydown_o();
@@ -296,7 +347,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_t();
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
-            this.keydown_c();
+            this.keydown_c(ctrlKey, metaKey);
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -311,7 +362,8 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = action;
         this.notify();
     }
-    setClipBoard(v: any) {
+    // 存入剪切板
+    setClipBoard(v: ClipboardItem[]) {
         this.m_clip_board = v;
     }
     setFrameSize(size: { width: number, height: number }) {
@@ -347,9 +399,13 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddRect;
         this.notify();
     }
-    keydown_v() {
-        this.m_current_action = Action.AutoV;
-        this.notify();
+    keydown_v(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            this.notify(WorkSpace.PASTE);
+        } else {
+            this.m_current_action = Action.AutoV;
+            this.notify();
+        }
     }
     keydown_l(shiftKey: boolean) {
         this.escSetup();
@@ -358,34 +414,38 @@ export class WorkSpace extends Watchable(Object) {
     }
     keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         const repo = context.repo;
-        const page = context.selection.selectedPage;
-        if (!page) return;
         if ((ctrl || meta) && !shift) {
             repo.canUndo() && repo.undo();
             const selection = context.selection;
             const shapes = context.selection.selectedShapes;
-            // const flat = context.selection.selectedPage!.flatShapes;
-            if (shapes.length) {
-                // if (flat.length) {
-                for (let i = 0; i < shapes.length; i++) {
-                    const item = shapes[i];
-                    const shape = page.getShape(item.id)
-                    if (!shape) {
-                        selection.unSelectShape(item);
+            const page = context.selection.selectedPage;
+            if (page) {
+                const flat = page.flat;
+                if (shapes.length) {
+                    for (let i = 0; i < shapes.length; i++) {
+                        const item = shapes[i];
+                        if (!flat.get(item.id)) {
+                            selection.unSelectShape(item);
+                        }
                     }
                 }
-                // } else {
-                //     selection.resetSelectShapes();
-                // }
+            }
+            if (this.context.selection.selectedShapes.length > 1) {
+                this.notify(WorkSpace.CLAC_ATTRI);
             }
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
+            if (this.context.selection.selectedShapes.length > 1) {
+                this.notify(WorkSpace.CLAC_ATTRI);
+            }
         }
     }
-    keydown_k() {
-        this.escSetup();
-        this.m_current_action = Action.AutoK;
-        this.notify();
+    keydown_k(ctrl: boolean, shift: boolean) {
+        if (!ctrl && !shift) {
+            this.escSetup();
+            this.m_current_action = Action.AutoK;
+            this.notify();
+        }
     }
     keydown_o() {
         this.escSetup();
@@ -402,10 +462,14 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddText;
         this.notify();
     }
-    keydown_c() {
-        this.escSetup();
-        this.m_current_action = Action.AddComment;
-        this.notify();
+    keydown_c(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            this.notify(WorkSpace.COPY)
+        } else {
+            this.escSetup();
+            this.m_current_action = Action.AddComment;
+            this.notify(WorkSpace.SELECT_LIST_TAB);
+        }
     }
     keydown_0(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) {

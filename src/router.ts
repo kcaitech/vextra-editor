@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory, onBeforeRouteLeave, onBeforeRouteUp
 import { SKIP_LOGIN } from '@/utils/setting';
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
-const Apphome = () => import("@/components/AppHome/index.vue");
+const Apphome = () => import("@/components/AppHome/Apphome.vue");
 const Login = () => import("@/components/Login/Login.vue");
 const Recently = () => import("@/components/AppHome/Main/Recently.vue");
 const StarFile = () => import("@/components/AppHome/Main/StarFile.vue");
@@ -10,17 +10,17 @@ const ShareMe = () => import("@/components/AppHome/Main/ShareMe.vue");
 const MeShare = () => import("@/components/AppHome/Main/MeShare.vue");
 const RecycleBin = () => import("@/components/AppHome/Main/RecycleBin.vue");
 const Apply = () => import("@/components/Apply/index.vue")
-const per_center=()=>import('@/components/Userinfo/per_center.vue')
+const per_center = () => import('@/components/Userinfo/per_center.vue')
 
 const routes = [
     {
         path: '/',
-        redirect: '/apphome/recently'
+        redirect: '/apphome/recently',
     },
     {
         path: "/login",
         name: "login",
-        component: Login
+        component: Login,
     },
     {
         path: "/home",
@@ -75,7 +75,7 @@ const routes = [
         path: "/pcenter",
         name: "per_center",
         component: per_center
-    }
+    },
 ]
 
 export const router = createRouter({

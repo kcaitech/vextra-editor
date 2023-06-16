@@ -12,7 +12,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { ref, defineEmits, onUnmounted } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { FilePicker } from '../common/filepicker';
 const active = ref(false);
 
