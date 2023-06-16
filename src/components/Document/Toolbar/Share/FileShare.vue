@@ -44,7 +44,6 @@ const remove = ref(`${t('share.remove')}`)
 const founder = ref(false)
 const UserInfo = ref<userInfo | undefined>(props.userInfo)
 const shareList = ref<any[]>([])
-console.log(UserInfo.value);
 
 const handleTop = ref<number>()
 const posi = ref({
@@ -77,7 +76,6 @@ const options = [
     label: `${t('share.anyone_can_edit_it')}`
   }
 ]
-console.log(props.shareSwitch, props.selectValue);
 
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])

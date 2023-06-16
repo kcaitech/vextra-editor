@@ -1,8 +1,3 @@
-<!--
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-09 17:28:05
- * @FilePath: \kcdesign\src\components\Document\Navigation\PageList.vue
--->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
 import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
@@ -202,7 +197,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
             pageSource.notify(0, 0, 0, Number.MAX_VALUE);
         })
     } else if (item === 'copy_link') {
-        e?.stopPropagation()
+        e?.stopPropagation();
     } else if (item === 'delete') {
         e?.stopPropagation()
         const index = props.context.data.pagesList.findIndex((item) => item.id === id)

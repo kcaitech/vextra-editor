@@ -119,7 +119,11 @@ onUnmounted(() => {
             </div>
             <CommentMenu v-if="commentMenu" :Items="commentMenuItems" @close="closeMenu" @comment-menu-status="handleMenuStatus"></CommentMenu>
         </div>
-        <div class="comment-list">
+        <div class="no_comment" v-if="documentCommentList.length <= 0">
+            <div>{{t('comment.no_comment')}}</div>
+            <div>{{t('comment.leave_a_comment')}}</div>
+        </div>
+        <div class="comment-list" v-else>
             <el-scrollbar ref="scrollbarRef">
                 <CommentItem v-for="(item, index) in documentCommentList" :key="item.id" :commentItem="item" :index="index"
                  :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete" :data-comment="item.id"></CommentItem>
@@ -159,6 +163,14 @@ onUnmounted(() => {
     .comment-list {
         position: relative;
         height: 100%;
+    }
+    .no_comment {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: #999;
     }
 }
 .el-scrollbar {

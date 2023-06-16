@@ -7,6 +7,7 @@ import { Shape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
+import { clipboard_write } from '@/utils/clipaboard';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -29,8 +30,7 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = true;
 }
 function copy() {
-  // const copyObj = props.context.selection.selectedShapes;
-  // props.context.workspace.setClipBoard();
+  clipboard_write(props.context.selection.selectedShapes);
 }
 function paste() {
   props.context.workspace.notify(WorkSpace.PASTE_RIGHT);

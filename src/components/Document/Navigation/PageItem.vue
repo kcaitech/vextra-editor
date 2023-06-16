@@ -1,8 +1,3 @@
-<!--
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-08 09:53:56
- * @FilePath: \kcdesign\src\components\Document\Navigation\PageItem.vue
--->
 <script setup lang="ts">
 import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
 import { Selection } from "@/context/selection";
@@ -23,7 +18,6 @@ const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
 const esc = ref<boolean>(false)
 const MOUSE_LEFT = 0;
-const MOUSE_RIGHT = 2;
 function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
     if (e.button === MOUSE_LEFT) {

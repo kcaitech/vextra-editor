@@ -95,8 +95,8 @@ export const home = {
     access_record_ok: '移除成功',
     access_record_no: '移除失败',
     exit_share: '退出共享',
-    exit_share_success:'退出成功',
-    exit_share_fail:'退出失败',
+    exit_share_success: '退出成功',
+    exit_share_fail: '退出失败',
     restore: '还原',
     completely_delete: '彻底删除',
     delete_tips: '删除执行后，文件将无法恢复找回，确认要删除吗？',
@@ -109,12 +109,12 @@ export const home = {
     delete_file_no: '删除失败',
     other_tips: '请确保网络连接正常',
     addComment: '添加评论',
-    rename:'重命名',
-    rename_ok:'确定',
+    rename: '重命名',
+    rename_ok: '确定',
     page_sort: '按页面排序',
-    login_failed:'登录失败',
-    login_refresh:'点击刷新二维码',
-    invitation_code_tips:'请输入试用邀请码'
+    login_failed: '登录失败',
+    login_refresh: '点击刷新二维码',
+    invitation_code_tips: '请输入试用邀请码'
 }
 
 export const search = {
@@ -185,7 +185,9 @@ export const attr: any = {
     'fixed_bottom': '底部固定',
     'fixed_top': '顶部固定',
     'fixed_top_bottom': '上下固定',
-    'adapt': '适应容器大小'
+    'adapt': '适应容器大小',
+    'mixed': '多值',
+    'mixed_lang': '存在对象设置不同，可点击 + 号统一设置'
 }
 
 export const login = {
@@ -208,7 +210,9 @@ export const comment = {
     check: '查看',
     a_few_reply: '条回复',
     month: '月',
-    day: '日'
+    day: '日',
+    no_comment: '当前无评论',
+    leave_a_comment: '点击任意位置留下你的评论'
 }
 
 attr[BorderPosition.Inner] = '内部';

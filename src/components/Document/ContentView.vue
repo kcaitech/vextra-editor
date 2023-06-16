@@ -15,6 +15,7 @@ import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { updateRoot, getName, init_shape, init_insert_shape, is_drag, paster, insert_imgs, drop } from '@/utils/content';
+import { copy } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
 import PageCommentItem from './Content/PageCommentItem.vue'
@@ -202,6 +203,8 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
             paster(props.context, t);
         } else if (type === WorkSpace.PASTE_RIGHT) {
             paster(props.context, t, mousedownOnPageXY);
+        } else if (type === WorkSpace.COPY) {
+            copy(props.context);
         }
         const action = props.context.workspace.action;
         if (action.startsWith('add')) {
@@ -215,7 +218,7 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
         const timer = setTimeout(() => {
             getDocumentComment()
             clearTimeout(timer)
-        }, 50);
+        }, 150);
     }
     if(type === WorkSpace.TOGGLE_PAGE) {
         props.context.workspace.updateCommentList(props.page.id)

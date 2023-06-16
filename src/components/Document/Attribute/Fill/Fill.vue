@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUpdate, onMounted, onUnmounted, onUpdated, reactive, ref } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
 import { Shape } from '@kcdesign/data';
 import { Color, Fill, ContextSettings } from "@kcdesign/data";
@@ -9,80 +9,129 @@ import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
-import { v4 } from 'uuid';
+import { Selection } from '@/context/selection';
+import { get_fills, get_actions_fill_color, get_actions_add_fill, get_actions_fill_unify, get_actions_fill_enabled, get_actions_fill_delete } from '@/utils/shape_style';
 
 interface FillItem {
     id: number,
     fill: Fill
 }
-
+interface Props {
+    context: Context
+    shapes: Shape[]
+}
+const props = defineProps<Props>();
+const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
+const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
-const props = defineProps<{
-    context: Context,
-    shape: Shape,
-}>();
-
-const editor = computed(() => {
-    return props.context.editor4Shape(props.shape);
-})
-
+const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
-const alpheFill = ref<HTMLInputElement>()
+const alphaFill = ref<HTMLInputElement>();
+const mixed = ref<boolean>(false);
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
 }
-
-let shapeId: string = "";
-function updateData() {
-    shapeId = props.shape.id;
-    fills.length = 0;
-    const style = props.shape.style;
-    for (let i = 0, len = style.fills.length; i < len; i++) {
-        const fill = style.fills[i];
-        const f = { id: i, fill };
-        fills.push(f);
+function watchShapes() {
+    const needWatchShapes = new Map();
+    const selection = props.context.selection;
+    if (selection.hoveredShape) {
+        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
     }
+    if (selection.selectedShapes.length > 0) {
+        selection.selectedShapes.forEach((v) => {
+            needWatchShapes.set(v.id, v);
+        })
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(watcher);
+        watchedShapes.delete(k);
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        v.watch(watcher);
+        watchedShapes.set(k, v);
+    })
 }
+function updateData() {
+    fills.length = 0;
+    mixed.value = false;
+    if (len.value === 1) {
+        const shape = props.shapes[0];
+        const style = shape.style;
+        for (let i = 0, len = style.fills.length; i < len; i++) {
+            const fill = style.fills[i];
+            const f = { id: i, fill };
+            fills.push(f);
+        }
+    } else if (len.value > 1) {
+        const _fs = get_fills(props.shapes);
+        if (_fs === 'mixed') {
+            mixed.value = true;
+        } else {
+            fills.push(..._fs);
+        }
+    }
 
+}
 function watcher(...args: any[]) {
     if (args.length > 0 && args.includes('style')) updateData();
 }
-
-let shape: Shape | undefined;
-function setupWatcher() {
-    if (!shape) {
-        shape = props.shape;
-        shape.watch(watcher);
-    }
-    else if (shape.id != props.shape.id) {
-        shape.unwatch(watcher);
-        shape = props.shape;
-        shape.watch(watcher);
-    }
-}
-
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const id = v4();
-    const fill = new Fill(id, true, FillType.SolidColor, color, contextSettings);
-    editor.value.addFill(fill);
-}
-const isNoFile = () => {
-    if (fills.length === 0) {
-        addFill()
+    const fill = new Fill(true, FillType.SolidColor, color, contextSettings);
+    if (len.value === 1) {
+        editor.value.addFill(fill);
+    } else if (len.value > 1) {
+        if (mixed.value) {
+            const actions = get_actions_fill_unify(props.shapes);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesFillsUnify(actions);
+            }
+        } else {
+            const actions = get_actions_add_fill(props.shapes, fill);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesAddFill(actions);
+            }
+        }
     }
 }
-
+function first() {
+    if (fills.length === 0 && !mixed.value) {
+        addFill();
+    }
+}
 function deleteFill(idx: number) {
-    editor.value.deleteFill(idx);
+    if (len.value === 1) {
+        editor.value.deleteFill(idx);
+    } else if (len.value > 1) {
+        const actions = get_actions_fill_delete(props.shapes, idx);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.shapesDeleteFill(actions);
+        }
+    }
 }
-
 function toggleVisible(idx: number) {
-    editor.value.setFillEnable(idx);
+    if (len.value === 1) {
+        editor.value.setFillEnable(idx, !fills[idx].fill.isEnabled);
+    } else if (len.value > 1) {
+        const value = !props.shapes[0].style.fills[idx].isEnabled;
+        const actions = get_actions_fill_enabled(props.shapes, idx, value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillEnabled(actions);
+        }
+    }
 }
-
 function setColor(idx: number, clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
     if (!res) {
@@ -92,9 +141,17 @@ function setColor(idx: number, clr: string, alpha: number) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
-    editor.value.setFillColor(idx, new Color(alpha, r, g, b))
+    if (len.value === 1) {
+        editor.value.setFillColor(idx, new Color(alpha, r, g, b));
+    } else if (len.value > 1) {
+        const actions = get_actions_fill_color(props.shapes, idx, new Color(alpha, r, g, b));
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillColor(actions);
+        }
+    }
 }
-
 function onColorChange(idx: number, e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
     if (value.slice(0, 1) !== '#') {
@@ -107,13 +164,12 @@ function onColorChange(idx: number, e: Event) {
         setColor(idx, value, alpha);
     } else {
         message('danger', t('system.illegal_input'));
-        return (e.target as HTMLInputElement).value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue)
+        return (e.target as HTMLInputElement).value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
-
 function onAlphaChange(idx: number, e: Event) {
-    let value = (e.currentTarget as any)['value']
-    if (alpheFill.value) {
+    let value = (e.currentTarget as any)['value'];
+    if (alphaFill.value) {
         if (value?.slice(-1) === '%') {
             value = Number(value?.slice(0, -1))
             if (value >= 0) {
@@ -156,46 +212,48 @@ function onAlphaChange(idx: number, e: Event) {
     }
 }
 function getColorFromPicker(idx: number, color: Color) {
-    editor.value.setFillColor(idx, color);
+    if (len.value === 1) {
+        editor.value.setFillColor(idx, color);
+    } else if (len.value > 1) {
+        const actions = get_actions_fill_color(props.shapes, idx, color);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillColor(actions);
+        }
+    }
 }
-
-const fillArr = ['line-shape']
-
+function selection_wather(t: any) {
+    if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
+        watchShapes();
+        updateData();
+    }
+}
 // hooks
-onUpdated(() => {
-    if (fillArr.includes(props.shape.typeId)) {
-        deleteFill(0)
-    }
-})
-
 onMounted(() => {
+    props.context.selection.watch(selection_wather); // 有问题，等会再收拾你
+    watchShapes();
     updateData();
-    setupWatcher();
 })
-
 onUnmounted(() => {
-    if (shape) {
-        shape.unwatch(watcher);
-        shape = undefined;
-    }
+    props.context.selection.unwatch(selection_wather);
 })
-onBeforeUpdate(() => {
-    if (shapeId != props.shape.id) updateData();
-    setupWatcher();
-})
-
+watchEffect(updateData);
 </script>
 
 <template>
     <div class="fill-panel">
-        <TypeHeader :title="t('attr.fill')" class="mt-24" @click="isNoFile">
+        <TypeHeader :title="t('attr.fill')" class="mt-24" @click="first">
             <template #tool>
                 <div class="add" @click="addFill">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </template>
         </TypeHeader>
-        <div class="fills-container">
+        <div class="tips-wrap" v-if="mixed">
+            <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
+        </div>
+        <div class="fills-container" v-else-if="!mixed">
             <div class="fill" v-for="(f, idx) in fills" :key="f.id">
                 <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(f.id)">
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
@@ -205,7 +263,7 @@ onBeforeUpdate(() => {
                     </ColorPicker>
                     <input :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
                         @change="(e) => onColorChange(idx, e)" />
-                    <input ref="alpheFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'"
+                    <input ref="alphaFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'"
                         @change="(e) => onAlphaChange(idx, e)" />
                 </div>
                 <div style="width: 22px;"></div>
@@ -213,8 +271,8 @@ onBeforeUpdate(() => {
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>
-
         </div>
+
     </div>
 </template>
 
@@ -328,5 +386,17 @@ onBeforeUpdate(() => {
             }
         }
     }
+
+    .tips-wrap {
+        padding: 12px 0;
+
+        .mixed-tips {
+            display: block;
+            width: 100%;
+            text-align: center;
+            font-size: var(--font-default-fontsize);
+        }
+    }
+
 }
 </style>
