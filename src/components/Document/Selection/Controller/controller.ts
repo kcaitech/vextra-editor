@@ -1,4 +1,4 @@
-import { export_shape, import_shape, Shape, ShapeType, GroupShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -41,7 +41,7 @@ export function useController(context: Context) {
             }
             const m = getCloesetContainer(shapes[0]).id != targetParent.id;
             if (m && asyncTransfer) {
-                asyncTransfer.migrate(targetParent);
+                asyncTransfer.migrate(targetParent as GroupShape);
             }
         }
     }
@@ -151,7 +151,7 @@ export function useController(context: Context) {
                         if (e.altKey) {
                             shapes = paster_short(context, shapes);
                         }
-                        asyncTransfer = context.editor.controller().asyncTransfer(shapes);
+                        asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
                         workspace.value.setSelectionViewUpdater(false);
                     }
                 }
