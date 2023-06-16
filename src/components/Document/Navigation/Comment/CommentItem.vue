@@ -264,17 +264,12 @@ onUnmounted(() => {
                 }
             }
             .text {
-                width: auto;
-                display: -webkit-box;
-                -webkit-box-orient: vertical;
+                width: 100%;
                 overflow: hidden;
-                /* 使用未来规范的line-clamp属性 */
-                line-clamp: 4;
-                /* 兼容不同浏览器的前缀 */
-                -webkit-line-clamp: 4;
-                -moz-line-clamp: 4;
-                /* 显示省略号 */
                 text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 4;
+                -webkit-box-orient: vertical;
                 color:rgba(0, 0, 0, .5);
             }
             .bottom-info {

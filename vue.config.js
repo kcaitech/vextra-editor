@@ -84,10 +84,10 @@ var configureWebpack = (config) => {
         ...config.plugins
     ]
 
-    // config.watchOptions = {
-    //     ignored: ["node_modules\\/(?!(@kcdesign)\\/)"],
-    //     poll: 500
-    // }
+    config.watchOptions = {
+        ignored: ["node_modules\\/(?!(@kcdesign)\\/)"],
+        poll: 1500,
+    }
 }
 
 var exports = defineConfig({

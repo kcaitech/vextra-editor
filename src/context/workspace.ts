@@ -285,7 +285,7 @@ export class WorkSpace extends Watchable(Object) {
     getImageFromDoc() {
         return this.m_image;
     }
-    startSvae() {
+        startSave() {
         this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
     }

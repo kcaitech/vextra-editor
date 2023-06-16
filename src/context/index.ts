@@ -1,4 +1,4 @@
-import { Watchable } from "@kcdesign/data";
+import { CoopRepository, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
@@ -9,8 +9,8 @@ import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
 // 仅暴露必要的方法
 export class RepoWraper {
-    private m_repo: Repository;
-    constructor(repo: Repository) {
+    private m_repo: CoopRepository;
+    constructor(repo: CoopRepository) {
         this.m_repo = repo;
     }
     canRedo(): boolean {
@@ -25,6 +25,13 @@ export class RepoWraper {
     redo() {
         this.m_repo.redo();
     }
+    watch(f: Function) {
+        // todo
+        throw new Error("Not implemented")
+    }
+    unwatch(f: Function) {
+        throw new Error("Not implemented")
+    }
 }
 
 export class Context extends Watchable(Object) {
@@ -32,15 +39,17 @@ export class Context extends Watchable(Object) {
     private m_selection: Selection;
     private m_editor: Editor;
     private m_repo: RepoWraper;
+    private m_coopRepo: CoopRepository;
     private m_workspace: WorkSpace;
 
-    constructor(data: Document, repo: Repository) {
+    constructor(data: Document, repo: CoopRepository) {
         super();
         this.m_data = data;
         this.m_selection = new Selection(data);
-        this.m_repo = new RepoWraper(repo);
+        this.m_coopRepo = repo;
+        this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_workspace = new WorkSpace(this);
-        this.m_editor = new Editor(this.m_data, repo, this.m_selection);
+        this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
     }
 
     get editor(): Editor {
@@ -65,6 +74,10 @@ export class Context extends Watchable(Object) {
 
     get repo(): RepoWraper {
         return this.m_repo;
+    }
+
+    get coopRepo(): CoopRepository {
+        return this.m_coopRepo;
     }
 
     get selection() {
