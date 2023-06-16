@@ -129,6 +129,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_image: Media[] | undefined = undefined;
     private m_freeze: boolean = false;
     private m_clipboard: Clipboard;
+    private m_t: Function = () => { };
     constructor(context: Context) {
         super();
         this.context = context;
@@ -216,6 +217,12 @@ export class WorkSpace extends Watchable(Object) {
     }
     get clipboard() {
         return this.m_clipboard;
+    }
+    t(content: string) {
+        return this.m_t(content);
+    }
+    init(t: Function) {
+        this.m_t = t;
     }
     setFreezeStatus(isFreeze: boolean) {
         this.m_freeze = isFreeze;

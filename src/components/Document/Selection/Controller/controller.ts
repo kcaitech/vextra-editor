@@ -10,6 +10,7 @@ import { forGroupHover, groupPassthrough } from "@/utils/scout";
 import { Action, WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
+import { paster_short } from '@/utils/clipaboard';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -164,6 +165,7 @@ export function useController(context: Context) {
                                 shapes = result;
                                 context.selection.rangeSelectShape(result);
                             }
+                            shapes = paster_short(context, shapes);
                         }
                         asyncTransfer = context.editor.controller().asyncTransfer(shapes);
                         workspace.value.setSelectionViewUpdater(false);
