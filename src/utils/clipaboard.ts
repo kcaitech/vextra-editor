@@ -60,8 +60,8 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
                 })
         }
     } catch (error) {
+        message('info', t('clipboard.invalid_data'));
         context.workspace.setFreezeStatus(false);
-        console.log(error);
     }
 }
 // 内部shapes复制
@@ -145,7 +145,7 @@ function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
         }
         fr.readAsText(val);
     }).catch((e: Error) => {
-        console.log(e);
+        message('info', context.workspace.t('clipboard.invalid_data'));
     });
 }
 function adjust_content_xy(context: Context, m: { width: number, height: number }) {
@@ -212,7 +212,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
     workspace.setAction(Action.AutoV);
     workspace.creating(false);
 }
-// 不经过剪切板，直接复制(shapes)
+// 不经过剪切板，直接复制(Shape[])
 export function paster_short(context: Context, shapes: Shape[]): Shape[] {
     const source = export_shape(shapes);
     const new_source = import_shape(context.data, source);
@@ -223,7 +223,7 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
             const _s = new_source[i];
             const editor = context.editor4Page(page);
             const r = editor.insert(page, source[i].index + 1, _s, true);
-            if (r) { result.push(r) }
+            if (r) { result.push(r) };
         }
     }
     if (result.length) {
