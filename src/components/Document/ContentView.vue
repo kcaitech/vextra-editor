@@ -218,7 +218,8 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
         }, 50);
     }
     if(type === WorkSpace.TOGGLE_PAGE) {
-            getDocumentComment()
+        props.context.workspace.updateCommentList(props.page.id)
+        documentCommentList.value = props.context.workspace.pageCommentList
     }
     if(type === WorkSpace.UPDATE_PAGE_COMMENT) {
         documentCommentList.value = props.context.workspace.pageCommentList

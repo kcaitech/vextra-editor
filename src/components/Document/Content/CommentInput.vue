@@ -195,7 +195,7 @@ onUnmounted(() => {
                 size="small"
                 @keydown="carriageReturn"
             />
-            <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><el-icon :size="14"><Back /></el-icon></div>
+            <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><svg-icon icon-class="send"></svg-icon></div>
         </div>
     </div>
 </template>
@@ -233,7 +233,7 @@ onUnmounted(() => {
         .textarea {
             display: flex;
             align-items: self-end;
-            padding: 12px;
+            padding: 10px;
             background-color: #fff;
             box-shadow: 0px 5px 10px rgba(0,0,0,0.15);
             border-radius: 4px;
@@ -242,10 +242,15 @@ onUnmounted(() => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 20px;
-                height: 20px;
+                margin-left: 2px;
+                width: 25px;
+                height: 23px;
                 background-color: var(--active-color);
                 border-radius: 50%;
+                >svg {
+                    width: 15px;
+                    height: 15px;
+                }
             }
         }
     }

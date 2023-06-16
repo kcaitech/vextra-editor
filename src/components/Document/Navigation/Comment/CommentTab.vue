@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n';
 import * as comment_api from '@/apis/comment';
 import { useRoute } from 'vue-router';
 import { WorkSpace } from "@/context/workspace";
+import { ElScrollbar } from 'element-plus'
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 type commentListMenu = {
@@ -22,6 +23,7 @@ const commentMenuItems = ref<commentListMenu[]>([
     { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
 ])
 const documentCommentList = ref<any[]>(props.context.workspace.commentList)
+const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 const showMenu = () => {
     if(commentMenu.value) {
         commentMenu.value = false
@@ -87,6 +89,17 @@ const update = (t: number) => {
     if(t === WorkSpace.UPDATE_COMMENT) {
         documentCommentList.value = props.context.workspace.commentList
     }
+    if(t === WorkSpace.SELECTE_COMMENT) {
+        const curId = props.context.workspace.isSelectCommentId
+        const comment = document.querySelector(`[data-comment="${curId}"]`)
+        if(comment) {
+            scrollbarRef.value?.scrollTo({
+                top: (comment as HTMLDivElement).offsetTop,
+                behavior: "smooth"
+            })
+        }
+        
+    }
 }
 
 onMounted(() => {
@@ -107,9 +120,9 @@ onUnmounted(() => {
             <CommentMenu v-if="commentMenu" :Items="commentMenuItems" @close="closeMenu" @comment-menu-status="handleMenuStatus"></CommentMenu>
         </div>
         <div class="comment-list">
-            <el-scrollbar>
+            <el-scrollbar ref="scrollbarRef">
                 <CommentItem v-for="(item, index) in documentCommentList" :key="item.id" :commentItem="item" :index="index"
-                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete"></CommentItem>
+                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete" :data-comment="item.id"></CommentItem>
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>
@@ -144,6 +157,7 @@ onUnmounted(() => {
         }
     }
     .comment-list {
+        position: relative;
         height: 100%;
     }
 }

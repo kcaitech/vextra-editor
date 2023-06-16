@@ -4,6 +4,7 @@ import { Matrix } from '@kcdesign/data';
 import { Shape } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
+import { userInfo } from '@/context/user'
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -134,6 +135,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_user_info: userInfo | undefined
     private m_comment_input: boolean = false;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
@@ -223,6 +225,9 @@ export class WorkSpace extends Watchable(Object) {
     get isPageDragging() {
         return this.m_page_dragging;
     }
+    get isUserInfo() {
+        return this.m_user_info;
+    }
     get isEditing() {
         return this.m_content_editing;
     }
@@ -291,6 +296,9 @@ export class WorkSpace extends Watchable(Object) {
         if (!this.m_saving) {
             this.notify(WorkSpace.DOCUMENT_SAVE);
         }
+    }
+    setUserInfo(info: userInfo) {
+        this.m_user_info = info
     }
     colorPickerSetup(id: string) {
         this.m_color_picker = id;

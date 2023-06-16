@@ -111,7 +111,15 @@ const showComment = (e: MouseEvent) => {
     showScale.value = true
 }
 
-const unHover = () => {
+const unHover = (e: MouseEvent) => {
+    var timeout = setTimeout(() => {
+        if(props.context.workspace.isHoverCommentId === props.commentInfo.id) {
+            return
+        }else {
+            props.context.workspace.hoverComment(false);
+        }
+        clearTimeout(timeout)
+    }, 100)
     markScale.value = 1
 }
 
@@ -210,10 +218,6 @@ const workspaceUpdate = (t: number) => {
     }
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin()
-        // if (props.commentInfo.shape_frame.x2 || props.commentInfo.shape_frame.y2) {
-        //     console.log(11);
-        //     setCommentPosition()
-        // }
     }
 }
 
@@ -303,7 +307,7 @@ watchEffect(watcher)
     <div class="container comment-mark-item" ref="comment" :style="{
         transform: `translate(${matrix.m02}px, ${matrix.m12}px)`
         , left: -2 + 'px', top: -33 + 'px'
-    }" :reflush="reflush !== 0 ? reflush : undefined" v-if="status">
+    }" :reflush="reflush !== 0 ? reflush : undefined" v-if="status" :class="{ hierarchy: ShowComment || commentScale === 1 ? true : false}">
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="moveCommentPopup"
             :style="{ transform: `scale(${markScale})`, opacity: commentOpacity && !ShowComment ? '0.5' : '1' }"
             :class="{ shadow: commentScale === 1 }">
@@ -354,5 +358,9 @@ watchEffect(watcher)
     .shadow {
         box-shadow: none;
     }
+}
+
+.hierarchy {
+    z-index: 2;
 }
 </style>

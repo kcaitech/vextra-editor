@@ -11,6 +11,7 @@ import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, uploadExForm, Repository, Page } from '@kcdesign/data';
 import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
+import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
@@ -257,6 +258,13 @@ function polling() {
         }
     }, 60000);
 }
+const getUserInfo = async() => {
+    const {data} = await user_api.GetInfo()
+    if(context) {
+        context.workspace.setUserInfo(data)
+    }
+}
+
 //获取文档信息
 const getDocumentInfo = async () => {
     try {
@@ -269,6 +277,7 @@ const getDocumentInfo = async () => {
             ElMessage({ message: `${t('apply.link_not')}` });
             router.push('/');
         }
+        //获取文档类型是否为私有文档且有无权限   
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -280,7 +289,6 @@ const getDocumentInfo = async () => {
         }
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限   
 
         const repo = new Repository();
         const importDocumentParams = {
@@ -303,6 +311,7 @@ const getDocumentInfo = async () => {
                 polling();
             }
         })
+        getUserInfo()
     } catch (err) {
         new Error(`${err}`);
     } finally {

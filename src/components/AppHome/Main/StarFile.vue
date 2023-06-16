@@ -54,7 +54,7 @@
             </span>
         </template>
     </el-dialog>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="UserInfo"
         @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
     <div v-if=" showFileShare " class="overlay"></div>
@@ -67,6 +67,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import { userInfo } from '@/context/user';
 const { t } = useI18n()
 
 const Getfavorites = ref<any[]>([]);
@@ -83,6 +84,7 @@ const dialogVisible = ref(false)
 const newname = ref()
 const renameinput = ref()
 const showrenname = ref<boolean>(true)
+const UserInfo = ref<userInfo | undefined>()
 
 async function getUserdata() {
     // loading
@@ -147,6 +149,13 @@ const toDocument = (row: any) => {
         }
     })
 }
+
+const userData = ref({
+    avatar: localStorage.getItem('avatar') || '',
+    id: localStorage.getItem('userId') || '',
+    nickname: localStorage.getItem('nickname') || ''
+})
+
 const Sharefile = (scope: any) => {
     if (showFileShare.value) {
         showFileShare.value = false
@@ -154,6 +163,7 @@ const Sharefile = (scope: any) => {
     }
     docId.value = scope.row.document.id
     selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
+    UserInfo.value = userData.value
     showFileShare.value = true
 }
 
@@ -214,6 +224,7 @@ const rSharefile = () => {
     }
     docId.value = documentId.value.document.id
     selectValue.value = documentId.value.document.doc_type !== 0 ? documentId.value.document.doc_type : documentId.value.document.doc_type;
+    UserInfo.value = userData.value
     showFileShare.value = true;
 }
 

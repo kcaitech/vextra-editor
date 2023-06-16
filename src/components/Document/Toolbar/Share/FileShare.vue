@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect,} from 'vue';
 import { useI18n } from 'vue-i18n';
-import { User } from '@/context/user';
+import { userInfo } from '@/context/user';
+import { Context } from '@/context';
 import * as share_api from '@/apis/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
@@ -12,7 +13,9 @@ const props = defineProps<{
   shareSwitch: boolean,
   docId?: string,
   selectValue: number,
-  docUserId?: string
+  docUserId?: string,
+  context?: Context,
+  userInfo:userInfo | undefined
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -39,8 +42,9 @@ const reviewable = ref(`${t('share.reviewable')}`)
 const readOnly = ref(`${t('share.readOnly')}`)
 const remove = ref(`${t('share.remove')}`)
 const founder = ref(false)
-const userInfo = ref<User>()
+const UserInfo = ref<userInfo | undefined>(props.userInfo)
 const shareList = ref<any[]>([])
+console.log(UserInfo.value);
 
 const handleTop = ref<number>()
 const posi = ref({
@@ -78,8 +82,6 @@ console.log(props.shareSwitch, props.selectValue);
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const selectValue = ref(DocType[props.selectValue])
-
-userInfo.value = ((window as any).skuser as User);
 
 const closeShare = (e: MouseEvent) => {
   e.stopPropagation()
@@ -208,7 +210,7 @@ watch(value1, (nVal, oVal) => {
 
 watchEffect(() => {
   if (route.query.id) {
-    const userId = localStorage.getItem('userId')
+    const userId = UserInfo.value?.id
     if (docInfo.value) {
       if(props.docUserId) {
         props.docUserId != userId ? founder.value = true : founder.value = false
@@ -330,8 +332,8 @@ onUnmounted(() => {
           <el-scrollbar height="285px" class="shared-by">
             <div class="scrollbar-demo-item">
               <div class="item-left">
-                <div class="avatar"><img :src="userInfo?.userInfo.avatar"></div>
-                <div class="name">{{ userInfo?.userInfo.nickname }}</div>
+                <div class="avatar"><img :src="UserInfo?.avatar"></div>
+                <div class="name">{{ UserInfo?.nickname }}</div>
               </div>
               <div class="item-right">
                 <div class="founder">{{ t('share.founder') }}</div>
@@ -342,7 +344,7 @@ onUnmounted(() => {
                 <div class="avatar"><img :src="item.user.avatar"></div>
                 <div class="name">{{ item.user.nickname }}</div>
               </div>
-              <div class="item-right" @click="e => selectAuthority(ids, e)">
+              <div class="item-right" @click="(e: Event) => selectAuthority(ids, e)">
                 <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
                 <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
                 <div class="popover" v-if="authority && index === ids" ref="popover"
@@ -473,14 +475,15 @@ onUnmounted(() => {
     height: 100%;
 
     .avatar {
-      height: 20px;
-      width: 20px;
+      height: 25px;
+      width: 25px;
       border-radius: 50%;
       margin-right: 10px;
 
       >img {
         height: 100%;
         width: 100%;
+        border-radius: 50%;
       }
     }
   }

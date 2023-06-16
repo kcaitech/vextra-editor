@@ -64,7 +64,7 @@
         </template>
     </el-dialog>
     <div v-if=" showFileShare " class="overlay"></div>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="UserInfo"
         @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
 </template>
@@ -78,7 +78,7 @@ import { onMounted, ref, onUnmounted, nextTick } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
-
+import { userInfo } from '@/context/user';
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -94,6 +94,7 @@ const dialogVisible = ref(false)
 const renameinput = ref()
 const newname = ref()
 const isshow = ref<HTMLElement>()
+const UserInfo = ref<userInfo | undefined>()
 
 //获取服务器我的文件列表
 async function getDoucment() {
@@ -173,6 +174,12 @@ const rStarfile = async () => {
     }
 }
 
+const userData = ref({
+    avatar: localStorage.getItem('avatar') || '',
+    id: localStorage.getItem('userId') || '',
+    nickname: localStorage.getItem('nickname') || ''
+})
+
 const Sharefile = (scope: any) => {
     if (showFileShare.value) {
         showFileShare.value = false
@@ -180,6 +187,7 @@ const Sharefile = (scope: any) => {
     }
     docId.value = scope.row.document.id
     selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
+    UserInfo.value = userData.value
     showFileShare.value = true
 }
 
@@ -193,6 +201,7 @@ const rSharefile = () => {
     }
     docId.value = documentId.value.document.id
     selectValue.value = documentId.value.document.doc_type !== 0 ? documentId.value.document.doc_type : documentId.value.document.doc_type;
+    UserInfo.value = userData.value
     showFileShare.value = true;
 }
 

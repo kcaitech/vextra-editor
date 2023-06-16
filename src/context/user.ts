@@ -83,4 +83,4 @@ export class DocumentInfo extends Watchable(Object) {
         return this.m_application_count
     }
 }
-export {DocInfo}
+export {DocInfo, userInfo}

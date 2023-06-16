@@ -408,7 +408,7 @@ onUnmounted(() => {
                     size="small"
                     @keydown="carriageReturn"
                 />
-                <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><el-icon :size="14"><Back /></el-icon></div>
+                <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><svg-icon icon-class="send"></svg-icon></div>
             </div>
         </div>
     </div>
@@ -480,10 +480,14 @@ onUnmounted(() => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 20px;
-                height: 20px;
+                width: 23px;
+                height: 22px;
                 background-color: var(--active-color);
                 border-radius: 50%;
+                >svg {
+                    width: 13px;
+                    height: 13px;
+                }
             }
         }
         }
