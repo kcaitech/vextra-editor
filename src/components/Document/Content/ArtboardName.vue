@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, ref, nextTick, defineEmits } from 'vue'
+import { ref, nextTick } from 'vue'
 import { Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 const props = defineProps<{
@@ -109,6 +109,7 @@ const selectShape = () => {
 </template>
 
 <style scoped lang="scss">
+      
 .container-name {
     .name {
         width: 100%;
@@ -120,7 +121,7 @@ const selectShape = () => {
     }
 
     .rename {
-        height: 13px;
+        height: 15px;
         outline-style: none;
         font-size: 9px;
         border: 1px solid var(--active-color);

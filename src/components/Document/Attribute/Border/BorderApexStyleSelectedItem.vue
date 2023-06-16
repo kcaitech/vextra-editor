@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue';
-import { defineProps, computed } from 'vue'
+import { computed } from 'vue'
 const props = defineProps<{
     data: SelectItem
 }>();

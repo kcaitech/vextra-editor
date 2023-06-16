@@ -1,5 +1,11 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
+import { debounce } from 'lodash';
+// 打印
+function _debounceLog(mes: any, flag?: string) {
+  console.log(flag ? `${flag} ${mes}` : mes);
+}
+export const debounceLog = debounce(_debounceLog, 300);
 // 简易id
 export function simpleId(): string {
   return uuid().split('-')[3];

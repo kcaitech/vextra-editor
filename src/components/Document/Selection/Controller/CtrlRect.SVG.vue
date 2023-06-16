@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
+import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { CtrlElementType, WorkSpace } from "@/context/workspace";

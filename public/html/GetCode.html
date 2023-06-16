@@ -1,18 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>微信登录</title>
 </head>
-<body >
-    <p>登录中...</p>
+<style>
+    .tips span{
+        letter-spacing: 1px;
+        text-align: left;
+    }
+
+    .tips span::after {
+        content: "";
+        min-width: 30px;
+        display: inline-block;
+        animation: dots 2s infinite;
+    }
+
+    @keyframes dots {
+        0% {
+            content: "";
+        }
+
+        33% {
+            content: ".";
+        }
+
+        66% {
+            content: "..";
+        }
+        100% {
+            content: "...";
+        }
+    }
+</style>
+
+<body>
+    <p class="tips" style="width: 300px;height: 300px;line-height: 300px;text-align: center;margin: 0;">
+        登录中<span></span></p>
     <script>
-        let code = location.search.slice(6, -12)
+        var code = location.search.slice(6, -12)
         window.top.postMessage({ code: code, type: "GetWxCode" }, '*')
     </script>
-    <style>
-    </style>
+
 </body>
+
 </html>

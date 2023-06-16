@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Popover from '@/components/common/Popover.vue';
-import { ref, defineProps, onMounted, reactive, computed, onUnmounted, onBeforeUpdate } from 'vue';
+import { ref, onMounted, reactive, computed, onUnmounted, onBeforeUpdate } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
@@ -8,7 +8,7 @@ import { Shape } from '@kcdesign/data';
 import { genOptions } from '@/utils/common';
 import { ResizingConstraints } from '@kcdesign/data';
 
-type Side = 'top' | 'right' | 'bottom' | 'left' | 'width' | 'height'| 'center';
+type Side = 'top' | 'right' | 'bottom' | 'left' | 'width' | 'height' | 'center';
 interface Controller {
   right: boolean;
   width: boolean;
@@ -18,16 +18,16 @@ interface Controller {
   top: boolean;
 }
 const props = defineProps<{
-    context: Context,
-    shape: Shape,
+  context: Context,
+  shape: Shape,
 }>();
 const editor = computed(() => {
-    return props.context.editor4Shape(props.shape);
+  return props.context.editor4Shape(props.shape);
 })
 let shape: Shape | undefined;
 const reflush = ref(0);
 const watcher = () => {
-    reflush.value++;
+  reflush.value++;
 }
 
 const { t } = useI18n();
@@ -59,20 +59,21 @@ const heightOptions: SelectSource[] = genOptions([
 ]);
 
 function setupWatcher() {
-    if (!shape) {
-        shape = props.shape;
-        shape.watch(watcher);
-    }
-    else if (shape.id != props.shape.id) {
-        shape.unwatch(watcher);
-        shape = props.shape;
-        shape.watch(watcher);
-    }
+  if (!shape) {
+    shape = props.shape;
+    shape.watch(watcher);
+  }
+  else if (shape.id != props.shape.id) {
+    shape.unwatch(watcher);
+    shape = props.shape;
+    shape.watch(watcher);
+  }
 }
 function showMenu() {
-  const workspace = props.context.workspace
-  workspace.popoverVisible(false);
-  popover.value?.show();
+  return false;
+  // const workspace = props.context.workspace
+  // workspace.popoverVisible(false);
+  // popover.value?.show();
 }
 function setConstrain(side: Side) {
   let resizingConstraint = props.shape.resizingConstraint as number;
@@ -108,8 +109,8 @@ function setConstrain(side: Side) {
   }
 
   editor.value.setResizingConstraint(resizingConstraint);
-  
-  controllerInit();  
+
+  controllerInit();
 }
 function controllerInit() {
   const init = props.shape.resizingConstraint as number;
@@ -159,24 +160,25 @@ function status(side: Side): string {
 
 // hooks
 onMounted(() => {
-    setupWatcher();
-    controllerInit();
+  setupWatcher();
+  controllerInit();
 })
 onUnmounted(() => {
-    if (shape) {
-        shape.unwatch(watcher);
-        shape = undefined;
-    }
+  if (shape) {
+    shape.unwatch(watcher);
+    shape = undefined;
+  }
 })
 onBeforeUpdate(() => {
-    setupWatcher();
-    controllerInit();
+  setupWatcher();
+  controllerInit();
 })
 </script>
 
 <template>
   <div class="position-container">
-    <Popover class="popover" ref="popover" :left="-592" :height="160" :title="t('attr.constraints')" :context="props.context">
+    <Popover class="popover" ref="popover" :left="-592" :height="160" :title="t('attr.constraints')"
+      :context="props.context">
       <template #trigger>
         <div class="trigger">
           <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
@@ -186,55 +188,30 @@ onBeforeUpdate(() => {
         <div class="position">
           <div class="options">
             <div>
-              <label>{{t('attr.horizontal')}}</label>
+              <label>{{ t('attr.horizontal') }}</label>
               <Select :item-height="32" :width="136" :source="widthOptions"></Select>
             </div>
             <div>
-              <label>{{t('attr.vertical')}}</label>
+              <label>{{ t('attr.vertical') }}</label>
               <Select :item-height="32" :width="136" :source="heightOptions"></Select>
             </div>
           </div>
           <div class="control">
-            <div
-              class="top"
-              :style="{color: status('top')}"
-              @click="setConstrain('top')"
-            >
+            <div class="top" :style="{ color: status('top') }" @click="setConstrain('top')">
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
-            <div
-              class="right"
-              :style="{color: status('right')}"
-              @click="setConstrain('right')"
-            >
+            <div class="right" :style="{ color: status('right') }" @click="setConstrain('right')">
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
-            <div
-              class="bottom"
-              :style="{color: status('bottom')}"
-              @click="setConstrain('bottom')"
-            >
+            <div class="bottom" :style="{ color: status('bottom') }" @click="setConstrain('bottom')">
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
-            <div
-              class="left"
-              :style="{color: status('left')}"
-              @click="setConstrain('left')"
-            >
+            <div class="left" :style="{ color: status('left') }" @click="setConstrain('left')">
               <svg-icon icon-class="side-button"></svg-icon>
             </div>
-            <div 
-              class="height" 
-              @click="setConstrain('height')"
-              :style="{ backgroundColor: status('height') }"/>
-            <div
-              class="width"
-              @click="setConstrain('width')"
-              :style="{ backgroundColor: status('width') }"/>
-            <div
-              class="dot"
-              @click.stop="setConstrain('center')"
-              :style="{ backgroundColor: status('center')}"></div>
+            <div class="height" @click="setConstrain('height')" :style="{ backgroundColor: status('height') }" />
+            <div class="width" @click="setConstrain('width')" :style="{ backgroundColor: status('width') }" />
+            <div class="dot" @click.stop="setConstrain('center')" :style="{ backgroundColor: status('center') }"></div>
           </div>
         </div>
       </template>
@@ -244,44 +221,53 @@ onBeforeUpdate(() => {
 
 <style scoped lang="scss">
 .position-container {
-  > .popover {
+  >.popover {
     width: 22px;
     height: 22px;
+
     .trigger {
       width: 100%;
       height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
-      > svg {
+      opacity: 0;
+
+      >svg {
         width: 50%;
         height: 50%;
         transition: 0.5s;
       }
-      > svg:hover {
+
+      >svg:hover {
         transform: rotate(90deg);
       }
     }
+
     .position {
       height: 100%;
       display: flex;
       padding: var(--default-padding);
       box-sizing: border-box;
+
       .options {
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         justify-content: space-around;
-        > div {
+
+        >div {
           display: flex;
           align-items: center;
-          > label {
+
+          >label {
             flex: 0 0 80px;
             text-align: left;
             font-weight: var(--font-default-bold);
           }
         }
       }
+
       .control {
         flex: 0 0 96px;
         box-sizing: border-box;
@@ -291,36 +277,43 @@ onBeforeUpdate(() => {
         background-color: var(--input-background);
         margin: 0 auto;
         position: relative;
-        > div {
+
+        >div {
           position: absolute;
           height: 32px;
           width: 32px;
           text-align: center;
-          > svg {
+
+          >svg {
             height: 80%;
             width: 80%;
             margin-top: 12px;
           }
         }
-        > .top {
+
+        >.top {
           transform: rotate(180deg) translateX(50%);
           left: 50%;
         }
-        > .right {
+
+        >.right {
           transform: rotate(270deg) translateX(50%);
           right: 0;
           top: 50%;
         }
-        > .bottom {
+
+        >.bottom {
           transform: rotate(0deg) translateX(-50%);
           left: 50%;
           bottom: 0;
         }
-        > .left {
+
+        >.left {
           transform: rotate(90deg) translateX(-50%);
           left: 0;
           top: 50%;
         }
+
         .height {
           width: 3px;
           height: 20px;
@@ -328,6 +321,7 @@ onBeforeUpdate(() => {
           top: 50%;
           transform: translate(-50%, -50%);
         }
+
         .width {
           width: 20px;
           height: 3px;
@@ -335,6 +329,7 @@ onBeforeUpdate(() => {
           top: 50%;
           transform: translate(-50%, -50%);
         }
+
         .dot {
           width: 3px;
           height: 3px;

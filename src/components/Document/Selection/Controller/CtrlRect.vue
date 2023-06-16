@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { defineProps, computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
+import { computed, onMounted, onUnmounted, watchEffect, ref } from "vue";
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
 import { CtrlElementType } from "@kcdesign/data";
@@ -25,7 +25,7 @@ const workspace = computed(() => props.context.workspace);
 const visible = ref<boolean>(true);
 let controllerStyle: string;
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
-
+let timer_to_show: any;
 // #region 绘制控件
 const points = computed<Point[]>(() => {
     const offset = 16;
@@ -74,6 +74,21 @@ function workspaceUpdate(t?: number) {
         } else {
             visible.value = false;
         }
+    } else if (t === WorkSpace.CTRL_DISAPPEAR) {
+        visible.value = false;
+    } else if (t === WorkSpace.CTRL_APPEAR_IMMEDIATELY) {
+        visible.value = true;
+        clearTimeout(timer_to_show);
+        timer_to_show = null;
+    } else if (t === WorkSpace.CTRL_APPEAR) {
+        if (timer_to_show) {
+            clearTimeout(timer_to_show);
+        }
+        timer_to_show = setTimeout(() => {
+            visible.value = true;
+            clearTimeout(timer_to_show);
+            timer_to_show = null;
+        }, 600);
     }
 }
 function mousedown(e: MouseEvent) {
@@ -109,14 +124,14 @@ onMounted(() => {
     props.context.selection.watch(updater);
     props.context.workspace.watch(workspaceUpdate);
     window.addEventListener('blur', windowBlur);
-    document.addEventListener('keydown', keyboardHandle);
+    // document.addEventListener('keydown', keyboardHandle);
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     props.context.workspace.unwatch(workspaceUpdate);
     window.removeEventListener('blur', windowBlur);
-    document.removeEventListener('keydown', keyboardHandle);
+    // document.removeEventListener('keydown', keyboardHandle);
 })
 
 watchEffect(() => { updater() })

@@ -1,21 +1,22 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { defineProps, onMounted, onUnmounted, defineEmits, ref, defineExpose } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 
 interface Props {
   x: number
   y: number
-  width?: number,
-  site?: { x: number, y: number },
-  context: Context;
+  context: Context
+  width?: number
+  site?: { x: number, y: number }
 }
-const surplusX = ref<number>(0)
-const menu = ref<HTMLDivElement>()
+interface Emits {
+  (e: 'close'): void
+}
+const surplusX = ref<number>(0);
+const menu = ref<HTMLDivElement>();
 const props = defineProps<Props>();
-const emit = defineEmits<{
-  (e: 'close'): void;
-}>();
+const emit = defineEmits<Emits>();
 
 defineExpose({
   menu
@@ -25,7 +26,7 @@ function handleClickOutside(event: MouseEvent) {
   event.stopPropagation()
   event.target instanceof Element && !event.target.closest('.__context-menu') && emit('close');
 }
-function workspaceUpdate(t?: number) {  
+function workspaceUpdate(t?: number) {
   if (t === WorkSpace.SHUTDOWN_MENU) {
     emit('close');
   }
@@ -34,12 +35,12 @@ function workspaceUpdate(t?: number) {
 if (props.site)
   surplusX.value = document.documentElement.clientWidth - props.site.x
 
-onMounted(() => {  
+onMounted(() => {
   props.context.workspace.menuMount(true);
   props.context.workspace.watch(workspaceUpdate);
   document.addEventListener('mousedown', handleClickOutside);
 })
-onUnmounted(() => {  
+onUnmounted(() => {
   props.context.workspace.unwatch(workspaceUpdate);
   document.removeEventListener('mousedown', handleClickOutside);
 })

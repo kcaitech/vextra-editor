@@ -146,3 +146,23 @@ export function Setusernickname(data = {}, ops = {}) {
         ...ops
     })
 }
+
+//文件重命名
+export function Setfilename(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/name',
+        method: 'put',
+        data:data,
+        ...ops
+    })
+}
+
+//复制文档
+export function Copyfile(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/copy',
+        method: 'post',
+        data:data,
+        ...ops
+    })
+}

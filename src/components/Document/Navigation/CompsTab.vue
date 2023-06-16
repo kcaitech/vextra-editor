@@ -5,7 +5,7 @@
  * @LastEditTime: 2023-03-09 15:27:56
 -->
 <script setup lang="ts">
-import { defineProps } from "vue";
+import {} from "vue";
 import { Context } from "@/context";
 const props = defineProps<{ context: Context }>();
 

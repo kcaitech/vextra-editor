@@ -7,10 +7,12 @@ export const shape: any = {
     artboard: 'Artboard',
     arrow: 'Arrow',
     text: 'text',
+    image: 'image'
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 
 export const color = {
     solid: 'Solid',
-    esc: 'Press ESC to exit'
+    esc: 'Press ESC to exit',
+    recently: 'Recently used'
 }

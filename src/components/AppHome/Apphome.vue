@@ -2,14 +2,14 @@
   <div class="common-layout">
     <el-container>
       <el-aside width="381px">
-        <Aside />
+        <Aside @settitle="setTitle" />
       </el-aside>
       <el-container>
         <el-header>
           <Header />
         </el-header>
         <el-main>
-          <Main/>
+          <Main :title="title" />
         </el-main>
       </el-container>
     </el-container>
@@ -21,26 +21,16 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import * as user_api from '@/apis/users'
-import {User} from '@/context/user'
-import {onMounted} from 'vue';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 
-const getUserInfo = async () => {
-    const result = await user_api.GetInfo()
-    const user = new User(result.data);
-    (window as any).skuser = user;
+function setTitle(t: string) {
+  title.value = t;
+  sessionStorage.setItem('title', title.value)
 }
 
-onMounted(async () => {
-    getUserInfo()
-    const resavatar = await user_api.GetInfo()
-    localStorage.setItem('avatar', resavatar.data.avatar)
-    localStorage.setItem('nickname', resavatar.data.nickname)
-
-    // setTimeout(() => {
-    //     importDocumentTest()
-    // }, 2000)
-})
 </script>
 
 <style lang="scss" scoped></style>

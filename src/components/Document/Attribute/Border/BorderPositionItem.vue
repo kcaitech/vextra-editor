@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { defineProps, defineEmits, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { SelectItem } from '@/components/common/Select.vue'
 const props = defineProps<{ data: SelectItem }>();
 const emit = defineEmits<{
