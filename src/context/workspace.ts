@@ -235,7 +235,7 @@ export class WorkSpace extends Watchable(Object) {
     getImageFromDoc() {
         return this.m_image;
     }
-    startSvae() {
+    startSave() {
         this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
     }
@@ -436,7 +436,7 @@ export class WorkSpace extends Watchable(Object) {
             const shapes = context.selection.selectedShapes;
             const page = context.selection.selectedPage;
             if (page) {
-                const flat = page.flat;
+                const flat = page.shapes;
                 if (shapes.length) {
                     for (let i = 0; i < shapes.length; i++) {
                         const item = shapes[i];

@@ -170,7 +170,7 @@ function onMouseMove(event: MouseEvent) {
     if (Math.hypot(mouseOnClient.x - startPosition.x, mouseOnClient.y - startPosition.y) > dragActiveDis) {
       isDragging = true;
       const shapes: Shape[] = props.context.selection.selectedShapes;
-      asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes);
+      asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes, props.context.selection.selectedPage!);
     }
   }
 }
