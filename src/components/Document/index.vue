@@ -363,7 +363,7 @@ onMounted(() => {
 onUnmounted(() => {
     try {
         coopLocal?.close();
-    } catch (err) {}
+    } catch (err) { }
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
@@ -379,7 +379,7 @@ onUnmounted(() => {
 <template>
     <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
-        <Toolbar :context="context" v-if="!loading && !null_context" />
+        <Toolbar :context="context!" v-if="!loading && !null_context" />
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
@@ -390,9 +390,9 @@ onUnmounted(() => {
         :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
-            <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context" @switchpage="switchPage"
-                @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
-                :page="(curPage as Page)">
+            <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
+                @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
+                @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)">
             </Navigation>
             <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
                 :style="{ opacity: showLeft ? 1 : 0.6 }">
@@ -401,12 +401,13 @@ onUnmounted(() => {
             </div>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
+                :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" v-if="!null_context" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
-                @mouseleave="() => { mouseleave('right') }"></Attribute>
+            <Attribute id="attributes" v-if="!null_context" :context="context!"
+                @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"></Attribute>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
                 :style="{ opacity: showRight ? 1 : 0.6 }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>

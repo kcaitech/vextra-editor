@@ -33,7 +33,6 @@ export function useController(context: Context) {
             const selection = context.selection;
             let targetParent;
             const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
-
             if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
                 targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
             } else {
