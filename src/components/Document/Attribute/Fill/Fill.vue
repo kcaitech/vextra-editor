@@ -11,6 +11,7 @@ import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
 import { Selection } from '@/context/selection';
 import { get_fills, get_actions_fill_color, get_actions_add_fill, get_actions_fill_unify, get_actions_fill_enabled, get_actions_fill_delete } from '@/utils/shape_style';
+import { v4 } from 'uuid';
 
 interface FillItem {
     id: number,
@@ -81,7 +82,7 @@ function watcher(...args: any[]) {
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const fill = new Fill(true, FillType.SolidColor, color, contextSettings);
+    const fill = new Fill(v4(), true, FillType.SolidColor, color, contextSettings);
     if (len.value === 1) {
         editor.value.addFill(fill);
     } else if (len.value > 1) {

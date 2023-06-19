@@ -126,7 +126,7 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, sele
                         result.push(item);
                         if (!force && result.length) return result;
                     }
-                } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
+                } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
                     const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
                     if (g) {
                         result.push(g);
@@ -152,7 +152,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
         if (g[j].isVisible) {
             const childIsTarget = isTarget(scout, g[j], position);
             if (childIsTarget) {
-                if (g[j].type === ShapeType.Group) {
+                if ([ShapeType.Group, ShapeType.FlattenShape].includes(g[j].type)) {
                     const c: Shape[] = (g[j] as GroupShape).childs;
                     return forGroupHover(scout, c, position, selected, isCtrl);
                 } else {
@@ -161,7 +161,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
                         return g[j];
                     }
                     let max = 0;
-                    while (target?.parent && target?.parent?.type == ShapeType.Group && max <= 10000) {
+                    while (target?.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target?.parent?.type) && max <= 10000) {
                         if (selected) {
                             const isBroSelected: boolean = isPartSelect(target?.parent, selected);
                             if (isBroSelected) break;

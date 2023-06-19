@@ -2,6 +2,7 @@ import {
     Color, Fill, Shape, FillColorAction, FillEnableAction, FillAddAction, FillDeleteAction, FillsReplaceAction,
     Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction
 } from "@kcdesign/data";
+import { v4 } from "uuid";
 interface FillItem {
     id: number,
     fill: Fill
@@ -54,7 +55,14 @@ export function get_actions_fill_unify(shapes: Shape[]) {
     const actions: FillsReplaceAction[] = [];
     const fills = shapes[0].style.fills;
     for (let i = 1; i < shapes.length; i++) {
-        actions.push({ target: shapes[i], value: fills });
+        const new_fills: Fill[] = [];
+        for (let i = 0; i < fills.length; i++) {
+            const fill = fills[i];
+            const { isEnabled, fillType, color, contextSettings } = fill;
+            const new_fill = new Fill(v4(), isEnabled, fillType, color, contextSettings);
+            new_value.push(new_fill);
+        }
+        actions.push({ target: shapes[i], value: new_fills });
     }
     return actions;
 }
