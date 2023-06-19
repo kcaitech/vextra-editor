@@ -10,7 +10,7 @@ interface SystemClipboardItem {
     contentType: string
     content: Media | string
 }
-const identity = 'proto/shapes';
+const identity = 'cn.protodesign/shapes';
 export class Clipboard {
     private context: Context;
     constructor(context: Context) {
@@ -71,7 +71,7 @@ function clipboard_text_html(context: Context, data: any) {
         fr.onload = function (event) {
             const text_html = event.target?.result;
             if (text_html && typeof text_html === 'string') {
-                if (text_html.slice(0, 50).indexOf(identity) > -1) {
+                if (text_html.slice(0, 60).indexOf(identity) > -1) {
                     const source = JSON.parse(text_html.split(identity)[1]);
                     const shapes = import_shape(context.data, source);
                     const result: Shape[] = [];

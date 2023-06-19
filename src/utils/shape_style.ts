@@ -60,7 +60,7 @@ export function get_actions_fill_unify(shapes: Shape[]) {
             const fill = fills[i];
             const { isEnabled, fillType, color, contextSettings } = fill;
             const new_fill = new Fill(v4(), isEnabled, fillType, color, contextSettings);
-            new_value.push(new_fill);
+            new_fills.push(new_fill);
         }
         actions.push({ target: shapes[i], value: new_fills });
     }
@@ -149,7 +149,14 @@ export function get_actions_border_unify(shapes: Shape[]) {
     const actions: BordersReplaceAction[] = [];
     const borders = shapes[0].style.borders;
     for (let i = 1; i < shapes.length; i++) {
-        actions.push({ target: shapes[i], value: borders });
+        const new_borders: Border[] = [];
+        for (let i = 0; i < borders.length; i++) {
+            const border = borders[i];
+            const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType } = border;
+            const new_border = new Border(v4(), isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType);
+            new_borders.push(new_border);
+        }
+        actions.push({ target: shapes[i], value: new_borders });
     }
     return actions;
 }

@@ -64,14 +64,14 @@ function updateData() {
         for (let i = 0, len = style.fills.length; i < len; i++) {
             const fill = style.fills[i];
             const f = { id: i, fill };
-            fills.push(f);
+            fills.unshift(f);
         }
     } else if (len.value > 1) {
         const _fs = get_fills(props.shapes);
         if (_fs === 'mixed') {
             mixed.value = true;
         } else {
-            fills.push(..._fs);
+            fills.unshift(..._fs);
         }
     }
 
@@ -260,15 +260,16 @@ watchEffect(updateData);
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" :context="props.context" @change="c => getColorFromPicker(idx, c)">
+                    <ColorPicker :color="f.fill.color" :context="props.context"
+                        @change="c => getColorFromPicker((fills.length - 1 - idx), c)">
                     </ColorPicker>
                     <input :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange(idx, e)" />
+                        @change="(e) => onColorChange((fills.length - 1 - idx), e)" />
                     <input ref="alphaFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'"
-                        @change="(e) => onAlphaChange(idx, e)" />
+                        @change="(e) => onAlphaChange((fills.length - 1 - idx), e)" />
                 </div>
                 <div style="width: 22px;"></div>
-                <div class="delete" @click="deleteFill(idx)">
+                <div class="delete" @click="deleteFill((fills.length - 1 - idx))">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>
