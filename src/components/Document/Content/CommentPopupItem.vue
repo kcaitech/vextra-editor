@@ -130,16 +130,16 @@ const formatDate = computed(() => {
                     <div class="icon" :style="{visibility: hover ? 'visible' : 'hidden'}">
                         <el-button-group class="ml-4">
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.edit_content')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                                <el-button plain :icon="Edit" @click="onEditContext" :style="{'margin-right': 5 +'px', opacity: isControls ? 1 : .3}" />
+                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                                <el-button plain :icon="Edit" @click="onEditContext" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>
                             </el-tooltip>
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.quick_reply')}`"
                                 placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
                                 <el-button plain @click="onQuickReply" style="margin-right: 5px;"><i style="font-size: 13px;">@</i></el-button>
                             </el-tooltip>
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                                <el-button plain :icon="Delete" @click.stop="onDelete" :style="{opacity: isControls ? 1 : .3}"/>
+                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                                <el-button plain :icon="Delete" @click.stop="onDelete" v-if="isControls"/>
                             </el-tooltip>
                         </el-button-group>
                     </div>
@@ -211,7 +211,7 @@ const formatDate = computed(() => {
                     width: 70px;
                     height: 20px;
                     display: flex;
-                    justify-content: space-between;
+                    justify-content: flex-end;
                     align-items: center;
                     .el-button {
                     border: none;

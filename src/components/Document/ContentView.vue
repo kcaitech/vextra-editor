@@ -541,8 +541,7 @@ const shapeID = ref('')
 const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
 const documentCommentList = ref<any[]>(workspace.value.pageCommentList)
 const route = useRoute()
-let commentShape: Shape | undefined
-const docID = (route.query.id as string)
+const userId = localStorage.getItem('userId') || ''
 const posi = ref({ x: 0, y: 0 });
 type commentListMenu = {
     text: string
@@ -565,11 +564,8 @@ const detectionShape = (e: MouseEvent) => {
         shapeID.value = props.page.id
     }else {
         const shape = shapes[0]
-        const m = shape.matrix2Page()
-        const frame = shape.frame;
-        let s = m.computeCoord({x: frame.x, y: frame.y})
-        let _p = matrix.computeCoord(s.x, s.y);
-        const farmeXY = {x: _p.x, y: _p.y }
+        const fp = shape.frame2Page();
+        const farmeXY = {x: fp.x, y: fp.y }
         shapePosition.x = xy.x - farmeXY.x; //评论输入框相对于shape的距离
         shapePosition.y = xy.y - farmeXY.y;
         shapeID.value = shape.id
@@ -642,6 +638,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
     workspace.value.commentMove(false)
     editCommentId.value = documentCommentList.value[index].id
     commentIndex.value = index
+    if(documentCommentList.value[index].user.id !== userId) return
     const handleMouseMove = (e: MouseEvent) => {
         moveCommentPopup(e, index);
     };
@@ -672,11 +669,12 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
                 editMoveCommentPosition(data)
             }else {
                 const shape = shapes[0]
-                const m = shape.matrix2Page()
-                const frame = shape.frame;
-                let s = m.computeCoord({x: frame.x, y: frame.y})
-                let _p = matrix.computeCoord(s.x, s.y);
-                const farmeXY = {x: _p.x, y: _p.y }
+                // const m = shape.matrix2Page()
+                // const frame = shape.frame;
+                // let s = m.computeCoord({x: frame.x, y: frame.y})
+                // let _p = matrix.computeCoord(s.x, s.y);
+                const fp = shape.frame2Page();
+                const farmeXY = {x: fp.x, y: fp.y }
                 const data = {
                     id: editCommentId.value,
                     target_shape_id: shape.id,
@@ -714,6 +712,7 @@ const moveCommentPopup = (e: MouseEvent, index: number) => {
 };
 
 const updateShapeComment = (x: number, y: number, index: number) => {
+    if(documentCommentList.value[index].user.id !== userId) return
     commentReflush.value++
     const shape_frame = documentCommentList.value[index].shape_frame
     shape_frame.x1 = x

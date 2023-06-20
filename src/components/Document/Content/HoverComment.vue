@@ -141,16 +141,16 @@ onUnmounted(() => {
                             <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;" />
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0">
-                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px', opacity: isControls ? 1 : .3}"/>
+                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0" v-if="resolve">
-                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop :style="{opacity: isControls ? 1 : .3}"/>
+                            :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
+                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0" v-else>
-                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop :style="{opacity: isControls ? 1 : .3}"/>
+                            :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
+                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop v-if="isControls"/>
                         </el-tooltip>
                     </el-button-group>
                 </div>
@@ -225,6 +225,8 @@ onUnmounted(() => {
                 }
 
             .icon {
+                display: flex;
+                justify-content: flex-end;
                 width: 70px;
                 height: 20px;
 

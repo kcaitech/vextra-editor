@@ -380,16 +380,17 @@ onUnmounted(() => {
             <div class="comment-commands">
                 <el-button-group class="ml-4">
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                        placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                        <el-button plain :icon="Delete" @click="onDelete" :style="{opacity: isControls ? 1 : .3}"/>
+                        placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls"/>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
-                        placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve">
-                        <el-button plain :icon="CircleCheck" @click="onResolve" :style="{opacity: isControls ? 1 : .3}"/>
+                        placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
+                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls"/>
+                        
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
-                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-else>
-                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" :style="{opacity: isControls ? 1 : .3}"/>
+                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
+                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" v-if="isControls"/>
                         </el-tooltip>
                     <el-button plain :icon="Close" @click="close"/>
                 </el-button-group>
@@ -461,6 +462,8 @@ onUnmounted(() => {
                 }
             }
             .comment-commands {
+                display: flex;
+                justify-content: flex-end;
                 width: 90px;
                 height: 30px;
                 .el-button {
