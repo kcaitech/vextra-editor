@@ -14,11 +14,12 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName, init_shape, init_insert_shape, is_drag, paster, insert_imgs, drop } from '@/utils/content';
-import { copy } from '@/utils/clipaboard';
+import { updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop } from '@/utils/content';
+import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
-import PageCommentItem from './Content/PageCommentItem.vue'
+import PageCommentItem from './Content/PageCommentItem.vue';
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -201,7 +202,7 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
         } else if (type === WorkSpace.PASTE_RIGHT) {
             paster(props.context, t, mousedownOnPageXY);
         } else if (type === WorkSpace.COPY) {
-            copy(props.context);
+            props.context.workspace.clipboard.write_html();
         }
         const action = props.context.workspace.action;
         if (action.startsWith('add')) {
@@ -599,6 +600,7 @@ onMounted(() => {
     rootRegister(true);
     props.context.selection.scoutMount();
     props.context.workspace.setFreezeStatus(true);
+    props.context.workspace.init(t);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);

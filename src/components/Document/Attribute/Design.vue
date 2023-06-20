@@ -10,14 +10,14 @@ import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
 import Text from './Text/Text.vue';
-import { debounce, throttle } from 'lodash';
+import { throttle } from 'lodash';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
-const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
+const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard];
 const WITH_TEXT = [ShapeType.Text];
-const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Text, ShapeType.Path, ShapeType.Artboard];
+const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard];
 const shapeType = ref();
 
 function _change(t: number) {
@@ -28,7 +28,6 @@ function _change(t: number) {
             shapes.value = [props.context.selection.selectedShapes[0]];
             shapeType.value = shapes.value[0].type;
         } else if (props.context.selection.selectedShapes.length > 1) {
-            // todo
             shapes.value = [...props.context.selection.selectedShapes];
         } else {
             shapes.value = [];

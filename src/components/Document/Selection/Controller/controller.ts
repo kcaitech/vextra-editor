@@ -1,3 +1,4 @@
+import { Shape, ShapeType, GroupShape } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -5,11 +6,11 @@ import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
-import { ShapeType, Shape, GroupShape } from "@kcdesign/data";
 import { forGroupHover, groupPassthrough } from "@/utils/scout";
 import { Action, WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
+import { paster_short } from '@/utils/clipaboard';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -32,7 +33,6 @@ export function useController(context: Context) {
             const selection = context.selection;
             let targetParent;
             const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
-
             if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
                 targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
             } else {
@@ -89,7 +89,7 @@ export function useController(context: Context) {
         const selected = context.selection.selectedShapes;
         if (selected.length === 1) {
             const item = selected[0];
-            if (item.type === ShapeType.Group) {
+            if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) {
                 const scope = (item as GroupShape).childs;
                 const scout = context.selection.scout;
                 const target = groupPassthrough(scout!, scope, startPositionOnPage);
@@ -147,6 +147,9 @@ export function useController(context: Context) {
                 if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
                     if (!editing) {
                         isDragging = true;
+                        if (e.altKey) {
+                            shapes = paster_short(context, shapes);
+                        }
                         asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
                         workspace.value.setSelectionViewUpdater(false);
                     }

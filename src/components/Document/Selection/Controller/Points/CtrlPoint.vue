@@ -117,50 +117,51 @@ function onMouseMove(event: MouseEvent) {
         const p2Onpage: PageXY = matrix.inverseCoord(mouseOnClient.x, mouseOnClient.y);
         asyncBaseAction.execute(props.point.type, p1OnPage, p2Onpage, deg, aType);
       } else if (len > 1) {
-        props.context.workspace.setSelectionViewUpdater(false);
-        const [p1, p2, p3, p4] = props.controllerFrame;
-        if (props.point.type === CtrlElementType.RectLT) {
-          const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
-          const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
-          const p3OnPage = matrix.inverseCoord({ x: p3.x, y: p3.y });
-          const old_width = p3OnPage.x - p1OnPage.x;
-          const old_height = p3OnPage.y - p1OnPage.y;
-          const new_width = p3OnPage.x - currentPoint.x;
-          const new_height = p3OnPage.y - currentPoint.y;
-          const ocf = { x: p1OnPage.x, y: p1OnPage.y, width: old_width, height: old_height };
-          const ncf = { x: currentPoint.x, y: currentPoint.y, width: new_width, height: new_height };
-          asyncBaseAction.execute4multi(shapes, ocf, ncf);
-        } else if (props.point.type === CtrlElementType.RectRT) {
-          const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
-          const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
-          const p2OnPage = matrix.inverseCoord({ x: p2.x, y: p2.y });
-          const p4OnPage = matrix.inverseCoord({ x: p4.x, y: p4.y });
-          const old_width = Math.abs(p2OnPage.x - p4OnPage.x);
-          const old_height = Math.abs(p2OnPage.y - p4OnPage.y);
-          const new_width = Math.abs(currentPoint.x - p4OnPage.x);
-          const new_height = Math.abs(currentPoint.y - p4OnPage.y);
-          const ocf = { x: p1OnPage.x, y: p1OnPage.y, width: old_width, height: old_height };
-          const ncf = { x: p4OnPage.x, y: p4OnPage.y - new_height, width: new_width, height: new_height };
-          asyncBaseAction.execute4multi(shapes, ocf, ncf);
-        } else if (props.point.type === CtrlElementType.RectRB) {
-          const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
-          const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
-          const new_frame = { x: p1OnPage.x, y: p1OnPage.y, width: currentPoint.x - p1OnPage.x, height: currentPoint.y - p1OnPage.y };
-          const params = { x: new_frame.x, y: new_frame.y, scaleX: (new_frame.width / origin_frame.width), scaleY: (new_frame.height / origin_frame.height) };
-          asyncBaseAction.execute4multi_beta(shapes, params);
-        } else if (props.point.type === CtrlElementType.RectLB) {
-          const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
-          const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
-          const p2OnPage = matrix.inverseCoord({ x: p2.x, y: p2.y });
-          const p4OnPage = matrix.inverseCoord({ x: p4.x, y: p4.y });
-          const old_width = Math.abs(p4OnPage.x - p2OnPage.x);
-          const old_height = Math.abs(p4OnPage.y - p2OnPage.y);
-          const new_width = Math.abs(currentPoint.x - p2OnPage.x);
-          const new_height = Math.abs(currentPoint.y - p2OnPage.y);
-          const ocf = { x: p1OnPage.x, y: p1OnPage.y, width: old_width, height: old_height };
-          const ncf = { x: currentPoint.x, y: p1OnPage.y, width: new_width, height: new_height };
-          asyncBaseAction.execute4multi(shapes, ocf, ncf);
-        }
+        // todo
+        // props.context.workspace.setSelectionViewUpdater(false);
+        // const [p1, p2, p3, p4] = props.controllerFrame;
+        // if (props.point.type === CtrlElementType.RectLT) {
+        //   const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
+        //   const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
+        //   const p3OnPage = matrix.inverseCoord({ x: p3.x, y: p3.y });
+        //   const old_width = p3OnPage.x - p1OnPage.x;
+        //   const old_height = p3OnPage.y - p1OnPage.y;
+        //   const new_width = p3OnPage.x - currentPoint.x;
+        //   const new_height = p3OnPage.y - currentPoint.y;
+        //   const ocf = { x: p1OnPage.x, y: p1OnPage.y, width: old_width, height: old_height };
+        //   const ncf = { x: currentPoint.x, y: currentPoint.y, width: new_width, height: new_height };
+        //   asyncBaseAction.execute4multi(shapes, ocf, ncf);
+        // } else if (props.point.type === CtrlElementType.RectRT) {
+        //   const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
+        //   const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
+        //   const p2OnPage = matrix.inverseCoord({ x: p2.x, y: p2.y });
+        //   const p4OnPage = matrix.inverseCoord({ x: p4.x, y: p4.y });
+        //   const old_width = Math.abs(p2OnPage.x - p4OnPage.x);
+        //   const old_height = Math.abs(p2OnPage.y - p4OnPage.y);
+        //   const new_width = Math.abs(currentPoint.x - p4OnPage.x);
+        //   const new_height = Math.abs(currentPoint.y - p4OnPage.y);
+        //   const ocf = { x: p1OnPage.x, y: p1OnPage.y, width: old_width, height: old_height };
+        //   const ncf = { x: p4OnPage.x, y: p4OnPage.y - new_height, width: new_width, height: new_height };
+        //   asyncBaseAction.execute4multi(shapes, ocf, ncf);
+        // } else if (props.point.type === CtrlElementType.RectRB) {
+        //   const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
+        //   const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
+        //   const new_frame = { x: p1OnPage.x, y: p1OnPage.y, width: currentPoint.x - p1OnPage.x, height: currentPoint.y - p1OnPage.y };
+        //   const params = { x: new_frame.x, y: new_frame.y, scaleX: (new_frame.width / origin_frame.width), scaleY: (new_frame.height / origin_frame.height) };
+        //   asyncBaseAction.execute4multi(shapes, params);
+        // } else if (props.point.type === CtrlElementType.RectLB) {
+        //   const currentPoint = matrix.inverseCoord({ x: mouseOnClient.x, y: mouseOnClient.y });
+        //   const p1OnPage = matrix.inverseCoord({ x: p1.x, y: p1.y });
+        //   const p2OnPage = matrix.inverseCoord({ x: p2.x, y: p2.y });
+        //   const p4OnPage = matrix.inverseCoord({ x: p4.x, y: p4.y });
+        //   const old_width = Math.abs(p4OnPage.x - p2OnPage.x);
+        //   const old_height = Math.abs(p4OnPage.y - p2OnPage.y);
+        //   const new_width = Math.abs(currentPoint.x - p2OnPage.x);
+        //   const new_height = Math.abs(currentPoint.y - p2OnPage.y);
+        //   const ocf = { x: p1OnPage.x, y: p1OnPage.y, width: old_width, height: old_height };
+        //   const ncf = { x: currentPoint.x, y: p1OnPage.y, width: new_width, height: new_height };
+        //   asyncBaseAction.execute4multi(shapes, ocf, ncf);
+        // }
       }
     }
     props.context.workspace.setSelectionViewUpdater(true);

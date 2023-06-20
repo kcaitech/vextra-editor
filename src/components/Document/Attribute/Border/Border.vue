@@ -14,6 +14,8 @@ import { toHex } from "@/utils/color";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
+import { v4 } from 'uuid';
+import { cloneDeep } from 'lodash';
 interface BorderItem {
     id: number,
     border: Border
@@ -68,14 +70,14 @@ function updateData() {
                 id: i,
                 border: border
             }
-            borders.push(b);
+            borders.unshift(b);
         }
     } else if (len.value > 1) {
         const _bs = get_borders(props.shapes);
         if (_bs === 'mixed') {
             mixed.value = true;
         } else {
-            borders.push(..._bs);
+            borders.unshift(..._bs);
         }
     }
 }
@@ -84,7 +86,7 @@ function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
+    const border = new Border(v4(), true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
     if (len.value === 1) {
         editor.value.addBorder(border);
     } else if (len.value > 1) {
@@ -129,8 +131,9 @@ function toggleVisible(idx: number) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const border = borders[idx].border;
     const isEnabled = !border.isEnabled;
+    const _idx = borders.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setBorderEnable(idx, isEnabled);
+        editor.value.setBorderEnable(_idx, isEnabled);
     } else if (len.value > 1) {
         const actions = get_actions_border_enabled(props.shapes, idx, isEnabled);
         const page = props.context.selection.selectedPage;
@@ -160,10 +163,11 @@ function onColorChange(e: Event, idx: number) {
     const b = Number.parseInt(hex[3], 16);
     const alpha = border.color.alpha;
     const color = new Color(alpha, r, g, b);
+    const _idx = borders.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setBorderColor(idx, color);
+        editor.value.setBorderColor(_idx, color);
     } else if (len.value > 1) {
-        const actions = get_actions_border_color(props.shapes, idx, color);
+        const actions = get_actions_border_color(props.shapes, _idx, color);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -189,10 +193,11 @@ function onAlphaChange(e: Event, idx: number) {
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
+            const _idx = borders.length - idx - 1;
             if (len.value === 1) {
-                editor.value.setBorderColor(idx, color);
+                editor.value.setBorderColor(_idx, color);
             } else if (len.value > 1) {
-                const actions = get_actions_border_color(props.shapes, idx, color);
+                const actions = get_actions_border_color(props.shapes, _idx, color);
                 const page = props.context.selection.selectedPage;
                 if (page) {
                     const editor = props.context.editor4Page(page);
@@ -218,10 +223,11 @@ function onAlphaChange(e: Event, idx: number) {
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function getColorFromPicker(color: Color, idx: number) {
+    const _idx = borders.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setBorderColor(idx, color);
+        editor.value.setBorderColor(_idx, color);
     } else if (len.value > 1) {
-        const actions = get_actions_border_color(props.shapes, idx, color);
+        const actions = get_actions_border_color(props.shapes, _idx, color);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -237,7 +243,7 @@ function selection_wather(t: any) {
 }
 // hooks
 onMounted(() => {
-    props.context.selection.watch(selection_wather); // 有问题，等会再收拾你
+    props.context.selection.watch(selection_wather);
     watchShapes();
     updateData();
 })
@@ -273,7 +279,8 @@ watchEffect(updateData);
                         @change="e => onAlphaChange(e, idx)" />
                 </div>
                 <div class="extra-action">
-                    <BorderDetail :context="props.context" :shape="props.shapes[0]" :border="b.border" :index="idx">
+                    <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
+                        :index="borders.length - idx - 1">
                     </BorderDetail>
                     <div class="delete" @click="deleteBorder(idx)">
                         <svg-icon icon-class="delete"></svg-icon>

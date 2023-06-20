@@ -65,7 +65,7 @@ export function render(h: Function, shape: Shape, path?: string): Array<any> {
             continue;
         }
         const fillType = fill.fillType;
-        elArr.unshift(handler[fillType](h, shape, fill, path));
+        elArr.push(handler[fillType](h, shape, fill, path));
     }
     return elArr;
 }

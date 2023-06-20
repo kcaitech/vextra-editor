@@ -3,6 +3,7 @@ import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
+import { Clipboard } from "@/utils/clipaboard";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -18,6 +19,7 @@ export enum Action {
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
+    A = 'KeyA',
     R = 'KeyR',
     V = 'KeyV',
     L = 'KeyL',
@@ -68,11 +70,6 @@ const A2R = new Map([
     [Action.AddText, ShapeType.Text],
     [Action.AddImage, ShapeType.Image]
 ]);
-export interface ClipboardItem {
-    index: number
-    type: ShapeType
-    content: Shape
-}
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
@@ -107,7 +104,6 @@ export class WorkSpace extends Watchable(Object) {
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: ClipboardItem[] | undefined; // 剪切板
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -132,9 +128,12 @@ export class WorkSpace extends Watchable(Object) {
     private m_saving: boolean = false;
     private m_image: Media[] | undefined = undefined;
     private m_freeze: boolean = false;
+    private m_clipboard: Clipboard;
+    private m_t: Function = () => { };
     constructor(context: Context) {
         super();
-        this.context = context
+        this.context = context;
+        this.m_clipboard = new Clipboard(context);
     }
     get matrix() {
         return this.m_matrix;
@@ -173,9 +172,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     get action() {
         return this.m_current_action;
-    }
-    get clipBoard() {
-        return this.m_clip_board;
     }
     get frameSize() {
         return this.m_frame_size;
@@ -218,6 +214,15 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isFreeze() {
         return this.m_freeze;
+    }
+    get clipboard() {
+        return this.m_clipboard;
+    }
+    t(content: string) {
+        return this.m_t(content);
+    }
+    init(t: Function) {
+        this.m_t = t;
     }
     setFreezeStatus(isFreeze: boolean) {
         this.m_freeze = isFreeze;
@@ -313,7 +318,9 @@ export class WorkSpace extends Watchable(Object) {
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (this.isFreeze) return;
-        if (event.code === KeyboardKeys.R) {
+        if (event.code === KeyboardKeys.A) {
+            this.keydown_a(ctrlKey, metaKey);
+        } else if (event.code === KeyboardKeys.R) {
             if (!metaKey && !ctrlKey) {
                 event.preventDefault();
                 this.keydown_r();
@@ -394,6 +401,15 @@ export class WorkSpace extends Watchable(Object) {
         this.m_setting = v;
     }
     // keyboard
+    keydown_a(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            const selection = this.context.selection
+            const page = selection.selectedPage;
+            if (page) {
+                selection.rangeSelectShape(page.childs);
+            }
+        }
+    }
     keydown_r() {
         this.escSetup();
         this.m_current_action = Action.AddRect;

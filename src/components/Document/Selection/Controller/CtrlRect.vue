@@ -26,6 +26,7 @@ const visible = ref<boolean>(true);
 let controllerStyle: string;
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 let timer_to_show: any;
+const ctrlrectEle = ref<HTMLElement>();
 // #region 绘制控件
 const points = computed<Point[]>(() => {
     const offset = 16;
@@ -110,9 +111,19 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
-
-function keyboardHandle(e: KeyboardEvent) {
-    handle(e, props.context);
+function keyboard_down_watcher(e: KeyboardEvent) {
+    if (e.code === 'AltLeft') {
+        if (ctrlrectEle.value) {
+            ctrlrectEle.value.classList.add('cursor-copy');
+        }
+    }
+}
+function keyboard_up_watcher(e: KeyboardEvent) {
+    if (e.code === 'AltLeft') {
+        if (ctrlrectEle.value) {
+            ctrlrectEle.value.classList.remove('cursor-copy');
+        }
+    }
 }
 
 function windowBlur() {
@@ -124,21 +135,23 @@ onMounted(() => {
     props.context.selection.watch(updater);
     props.context.workspace.watch(workspaceUpdate);
     window.addEventListener('blur', windowBlur);
-    // document.addEventListener('keydown', keyboardHandle);
+    document.addEventListener('keydown', keyboard_down_watcher);
+    document.addEventListener('keyup', keyboard_up_watcher);
 })
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     props.context.workspace.unwatch(workspaceUpdate);
     window.removeEventListener('blur', windowBlur);
-    // document.removeEventListener('keydown', keyboardHandle);
+    document.removeEventListener('keydown', keyboard_down_watcher);
+    document.removeEventListener('keyup', keyboard_up_watcher);
 })
 
 watchEffect(() => { updater() })
 </script>
 <template>
-    <div :class="{ 'ctrl-rect': true, 'un-visible': !visible, editing }" @mousedown="mousedown" :style="controllerStyle"
-        data-area="controller">
+    <div ref="ctrlrectEle" :class="{ 'ctrl-rect': true, 'un-visible': !visible, editing }" @mousedown="mousedown"
+        :style="controllerStyle" data-area="controller">
         <CtrlBar v-for="(bar, index) in  bars" :key="index" :context="props.context" :width="bar.width" :height="bar.height"
             :ctrl-type="bar.type" :rotate="props.rotate"></CtrlBar>
         <CtrlPoint v-for="(point, index) in points" :key="index" :context="props.context" :axle="axle" :point="point"

@@ -36,10 +36,8 @@ function show() {
         const { top, left, width, height } = popover.value.getBoundingClientRect();
         const propsLeft = (props.left || 0);
         const propsTop = (props.top || 0);
-
         const L = Math.min(document.documentElement.clientWidth - buffer - (left + width), 0);
         const T = Math.min(document.documentElement.clientHeight - buffer - (top + height), 0);
-
         popover.value.style.left = Math.min(propsLeft, L) + 'px';
         popover.value.style.top = Math.min(propsTop, T) + 'px';
       }
@@ -80,8 +78,8 @@ onUnmounted(() => {
     }" class="popover" ref="popover" v-if="popoverVisible">
       <div class="header">
         <span class="title">{{ props.title }}</span>
-        <div class="close" @click="popoverClose">
-          X
+        <div @click="popoverClose" class="close">
+          <svg-icon icon-class="close"></svg-icon>
         </div>
       </div>
       <div class="body">
@@ -102,6 +100,7 @@ onUnmounted(() => {
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
     background-color: #ffffff;
     z-index: 1;
+    border-radius: 4px;
 
     >.header {
       width: 100%;
@@ -111,6 +110,7 @@ onUnmounted(() => {
       font-size: var(--font-default-fontsize);
       padding: 0 var(--default-padding);
       box-sizing: border-box;
+      align-items: center;
 
       >.title {
         line-height: 32px;
@@ -120,12 +120,16 @@ onUnmounted(() => {
       >.close {
         width: 24px;
         height: 24px;
-        text-align: center;
-        line-height: 24px;
         position: absolute;
         right: var(--default-padding);
-        top: 4px;
-        text-align: right;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        >svg {
+          width: 65%;
+          height: 65%;
+        }
       }
     }
 

@@ -207,7 +207,9 @@ export const comment = {
     show_resolved_comments: '显示已解决评论',
     comment_area: '评论区'
 }
-
+export const clipboard = {
+    'invalid_data': '该内容无法解析'
+}
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';
