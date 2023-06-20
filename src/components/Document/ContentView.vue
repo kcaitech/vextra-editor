@@ -21,7 +21,7 @@ import CommentInput from './Content/CommentInput.vue';
 import PageCommentItem from './Content/PageCommentItem.vue'
 import * as comment_api from '@/apis/comment';
 import { useRoute } from 'vue-router';
-import { debounce } from "lodash";
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
 const props = defineProps<{
@@ -218,11 +218,7 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
         const timer = setTimeout(() => {
             getDocumentComment()
             clearTimeout(timer)
-        }, 150);
-    }
-    if(type === WorkSpace.TOGGLE_PAGE) {
-        props.context.workspace.updateCommentList(props.page.id)
-        documentCommentList.value = props.context.workspace.pageCommentList
+        }, 100);
     }
     if(type === WorkSpace.UPDATE_PAGE_COMMENT) {
         documentCommentList.value = props.context.workspace.pageCommentList
@@ -570,9 +566,12 @@ const detectionShape = (e: MouseEvent) => {
     }else {
         const shape = shapes[0]
         const m = shape.matrix2Page()
-        const farmeXY = {x: shape.frame.x, y: shape.frame.y }
-        shapePosition.x = xy.x - farmeXY.x - 36; //评论输入框相对于shape的距离
-        shapePosition.y = xy.y - farmeXY.y - 4;
+        const frame = shape.frame;
+        let s = m.computeCoord({x: frame.x, y: frame.y})
+        let _p = matrix.computeCoord(s.x, s.y);
+        const farmeXY = {x: _p.x, y: _p.y }
+        shapePosition.x = xy.x - farmeXY.x; //评论输入框相对于shape的距离
+        shapePosition.y = xy.y - farmeXY.y;
         shapeID.value = shape.id
     }
     return {x, y, xy}
@@ -674,16 +673,19 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
             }else {
                 const shape = shapes[0]
                 const m = shape.matrix2Page()
-                const farmeXY = {x: shape.frame.x, y: shape.frame.y }
+                const frame = shape.frame;
+                let s = m.computeCoord({x: frame.x, y: frame.y})
+                let _p = matrix.computeCoord(s.x, s.y);
+                const farmeXY = {x: _p.x, y: _p.y }
                 const data = {
                     id: editCommentId.value,
                     target_shape_id: shape.id,
                     shape_frame: {
                         x1: shape_frame.x1,
                         y1: shape_frame.y1,
-                        x2: shape_frame.x1 - farmeXY.x - 36,
-                        y2: shape_frame.y1 - farmeXY.y - 4
-                    }
+                        x2: shape_frame.x1 - farmeXY.x,
+                        y2: shape_frame.y1 - farmeXY.y
+                    }                    
                 }
                 editMoveCommentPosition(data)
             }
@@ -776,18 +778,22 @@ const completed = () => {
 const getDocumentComment = async() => {
     try {
         const {data} = await comment_api.getDocumentCommentAPI({doc_id: route.query.id})
-       data.forEach((obj: { children: any[]; commentMenu: any; }) => {
-        obj.commentMenu = commentMenuItems.value
-        obj.children = []
-       })
-       const list = list2Tree(data, '')
-       workspace.value.setPageCommentList(list, props.page.id)
-       documentCommentList.value = workspace.value.pageCommentList
-       workspace.value.setCommentList(list)
-       if(props.context.selection.isSelectComment) {
-           props.context.selection.selectComment(props.context.selection.commentId)
-           props.context.selection.setCommentSelect(false)
-       }
+        if(data) {
+            data.forEach((obj: { children: any[]; commentMenu: any; }) => {
+             obj.commentMenu = commentMenuItems.value
+             obj.children = []
+            })
+            const list = list2Tree(data, '')
+            workspace.value.setNot2TreeComment(data)
+            workspace.value.setPageCommentList(list, props.page.id)
+            workspace.value.setCommentList(list)
+            documentCommentList.value = workspace.value.pageCommentList
+            if(props.context.selection.isSelectComment) {
+                props.context.selection.selectComment(props.context.selection.commentId)
+                documentCommentList.value = workspace.value.pageCommentList
+                props.context.selection.setCommentSelect(false)
+            }
+        }
     }catch(err) {
         console.log(err);
     }
@@ -806,6 +812,29 @@ const list2Tree = (list: any, rootValue: string) => {
     }
   })
   return arr
+}
+
+//关于我的评论
+const aboutMe = () => {
+    const aboutMeArr: any = []
+    const userId = localStorage.getItem('userId')
+    const commnetList = props.context.workspace.not2treeComment
+    commnetList.forEach((item: any) => {
+        if(item.user.id === userId) {
+            const rootId = item.root_id
+            if(rootId) {
+                commnetList.forEach((i: any) => {
+                    if(i.id === rootId) {
+                        aboutMeArr.push(i)
+                    }
+                })
+            }else {
+                aboutMeArr.push(item)
+            }
+        }
+    })
+    const myComment = Array.from(new Set(aboutMeArr))
+    return myComment
 }
 
 // 删除评论
@@ -917,8 +946,8 @@ onUnmounted(() => {
         :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" 
         :matrix="matrix.toArray()" :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
         <PageCommentItem :context="props.context" :x="posi.x" @moveCommentPopup="downMoveCommentPopup" :y="posi.y" :matrix="matrix.toArray()"
-         @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush" v-for="(item, index) in documentCommentList" :key="index" 
-         :commentInfo="item" :index="index" @recover="recover" @editComment="editComment" @updateShapeComment="updateShapeComment">
+            @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush" v-for="(item, index) in documentCommentList" :key="index" 
+            :commentInfo="item" :index="index" @recover="recover" @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()">
         </PageCommentItem>
     </div>
 </template>

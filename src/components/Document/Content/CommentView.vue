@@ -103,6 +103,12 @@ const resolve = computed(() => {
     return props.commentInfo.status === 0 ? true : false
 })
 
+const isControls = computed(() => {
+    props.commentInfo.user.id || workspace.value.isDocumentInfo?.user.id || workspace.value.isUserInfo?.id
+    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    else return false
+})
+
 const height = ref()
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const commentPosition = () => {
@@ -116,10 +122,10 @@ const commentPosition = () => {
         scrollMaxHeight.value = props.rootHeight - 55 - (height.value as number) - 30
         nextTick(() => {
             scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
-            scrollbarRef.value!.setScrollTop(itemHeight.value!.clientHeight)
+            scrollbarRef.value!.setScrollTop(itemHeight.value!.clientHeight)            
             if(commentPopup.value) {
                 const commentPopupH = scrollHeight.value + height.value + 45
-                if(t - commentPopupH < -10) {
+                if(t - commentPopupH < -45) {
                     commentTop.value = t - commentPopupH + 10
                 }else {
                     commentTop.value = -10
@@ -162,6 +168,7 @@ const carriageReturn = (event: KeyboardEvent) => {
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
+    if(!isControls.value) return
     const status = props.commentInfo.status === 0 ? 1 : 0
     setCommentStatus(status)
     emit('resolve', status, props.index)
@@ -169,6 +176,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
+    if(!isControls.value) return
     props.context.workspace.commentInput(false);
     deleteComment(props.commentInfo.id)
     emit('delete', props.index)
@@ -373,15 +381,15 @@ onUnmounted(() => {
                 <el-button-group class="ml-4">
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
                         placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                        <el-button plain :icon="Delete" @click="onDelete"/>
+                        <el-button plain :icon="Delete" @click="onDelete" :style="{opacity: isControls ? 1 : .3}"/>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                         placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve">
-                        <el-button plain :icon="CircleCheck" @click="onResolve"/>
+                        <el-button plain :icon="CircleCheck" @click="onResolve" :style="{opacity: isControls ? 1 : .3}"/>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-else>
-                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"/>
+                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" :style="{opacity: isControls ? 1 : .3}"/>
                         </el-tooltip>
                     <el-button plain :icon="Close" @click="close"/>
                 </el-button-group>

@@ -3,7 +3,7 @@ import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
-import { userInfo } from '@/context/user'
+import { UserInfo, DocInfo } from '@/context/user'
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -112,9 +112,9 @@ export class WorkSpace extends Watchable(Object) {
     static FREEZE = 33;
     static THAW = 34;
     static UPDATE_PAGE_COMMENT = 35;
-    static TOGGLE_PAGE = 36;
     static CLAC_ATTRI = 37;
     static COPY = 38;
+    static COMMENT_ALL = 39;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -136,12 +136,13 @@ export class WorkSpace extends Watchable(Object) {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
-    private m_user_info: userInfo | undefined
+    private m_user_info: UserInfo | undefined
     private m_comment_input: boolean = false;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_saving: boolean = false;
+    private m_document_info: DocInfo | undefined;
     private m_comment_list: any[] = []; // 当前文档评论
     private m_page_comment_list: any[] = []; // 当前页面评论
     private m_comment_move: boolean = false; //是否拖动评论，解决hove评论拖动时的闪烁问题
@@ -154,6 +155,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_freeze: boolean = false;
     private m_shape_comment: boolean = false; //是否在编辑shape上的评论（移动shape修改评论位置）
     private m_comment_shape: Shape[] = [] //保存移动shape上有评论的shape
+    private m_not2tree_comment: any = [] //没有转树的评论列表
     constructor(context: Context) {
         super();
         this.context = context
@@ -269,10 +271,16 @@ export class WorkSpace extends Watchable(Object) {
         return this.m_freeze;
     }
     get isEditShapeComment() {
-        return this.m_shape_comment
+        return this.m_shape_comment;
     }
     get commentShape() {
-        return this.m_comment_shape
+        return this.m_comment_shape;
+    }
+    get not2treeComment() {
+        return this.m_not2tree_comment;
+    }
+    get isDocumentInfo() {
+        return this.m_document_info;
     }
     setFreezeStatus(isFreeze: boolean) {
         this.m_freeze = isFreeze;
@@ -298,7 +306,10 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.DOCUMENT_SAVE);
         }
     }
-    setUserInfo(info: userInfo) {
+    setDocumentInfo(info: DocInfo) {
+        this.m_document_info = info
+    }
+    setUserInfo(info: UserInfo) {
         this.m_user_info = info
     }
     colorPickerSetup(id: string) {
@@ -393,6 +404,10 @@ export class WorkSpace extends Watchable(Object) {
         }else {
             this.m_comment_shape = []
         }
+    }
+    setNot2TreeComment(list: any[]) {
+        this.m_not2tree_comment = list
+        this.notify(WorkSpace.COMMENT_ALL)
     }
     popoverVisible(visible: boolean) {
         this.m_popover = visible;

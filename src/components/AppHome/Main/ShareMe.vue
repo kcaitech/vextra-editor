@@ -46,7 +46,7 @@
             <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
         </ul>
     </div>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :docUserId="docUserId" :userInfo="UserInfo"
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :docUserId="docUserId" :userInfo="userInfo"
         @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
     <div v-if=" showFileShare " class="overlay"></div>
@@ -59,7 +59,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import { useI18n } from 'vue-i18n'
-import { userInfo } from '@/context/user';
+import { UserInfo } from '@/context/user';
 const { t } = useI18n()
 
 const ShareList = ref<any[]>([]);
@@ -73,7 +73,7 @@ const selectValue = ref(1)
 const documentId = ref()
 const menu = ref<HTMLElement>()
 const isshow = ref<HTMLElement>()
-const UserInfo = ref<userInfo | undefined>()
+const userInfo = ref<UserInfo | undefined>()
 
 async function ShareLists() {
     // loading
@@ -142,7 +142,7 @@ const Sharefile = (scope: any) => {
     docId.value = scope.row.document.id
     docUserId.value = scope.row.document.user_id
     selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
-    UserInfo.value = userData.value
+    userInfo.value = userData.value
     showFileShare.value = true
 }
 
@@ -198,7 +198,7 @@ const rSharefile = () => {
     }
     docId.value = documentId.value.document.id
     selectValue.value = documentId.value.document.doc_type !== 0 ? documentId.value.document.doc_type : documentId.value.document.doc_type;
-    UserInfo.value = userData.value
+    userInfo.value = userData.value
     showFileShare.value = true;
 }
 

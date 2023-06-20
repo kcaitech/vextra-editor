@@ -221,10 +221,11 @@ onBeforeUpdate(() => {
 
 <style scoped lang="scss">
 .position-container {
+  z-index: inherit;
+
   >.popover {
     width: 22px;
     height: 22px;
-
     .trigger {
       width: 100%;
       height: 100%;

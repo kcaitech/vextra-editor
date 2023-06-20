@@ -52,6 +52,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static SOLVE_MENU_STATUS = 9;
     static COMMENT_CHANGE_PAGE = 10;
     static SKIP_COMMENT = 11;
+    static PAGE_SORT = 12;
+    static ABOUT_ME = 13;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -69,6 +71,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_comment_status: boolean = false;
     private m_comment_page_id: string | undefined;
     private m_select_comment: boolean = false;
+    private m_comment_page_sort: boolean = false;
+    private m_comment_about_me: boolean = false;
 
     constructor(document: Document) {
         super();
@@ -114,6 +118,12 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get isSelectComment() {
         return this.m_select_comment;
     }
+    get commentPageSort() { //评论是否按页面排序
+        return this.m_comment_page_sort;
+    }
+    get commentAboutMe() { //评论显示关于我的
+        return this.m_comment_about_me;
+    }
 
     selectCommentPage(id: string) {
         this.m_comment_page_id = id
@@ -130,6 +140,14 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     commentSolveMenuStatus(status: boolean) { //设置列表评论菜单解决状态
         this.m_comment_status = status
         this.notify(Selection.SOLVE_MENU_STATUS)
+    }
+    setPageSort(status: boolean) {
+        this.m_comment_page_sort = status
+        this.notify(Selection.PAGE_SORT)
+    }
+    setCommentAboutMe(status: boolean) {
+        this.m_comment_about_me = status
+        this.notify(Selection.ABOUT_ME)
     }
 
     selectPage(p: Page | undefined) {

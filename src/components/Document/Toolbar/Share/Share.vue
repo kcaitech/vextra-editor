@@ -4,7 +4,7 @@ import FileShare from './FileShare.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { userInfo } from '@/context/user';
+import { UserInfo } from '@/context/user';
 import * as share_api from '@/apis/share';
 
 const { t } = useI18n()
@@ -18,13 +18,13 @@ const showFileShare = ref<boolean>(false);
 const pageHeight = ref(0)
 const shareSwitch = ref(true)
 const selectValue = ref(1)
-const UserInfo = ref<userInfo | undefined>()
+const userInfo = ref<UserInfo | undefined>()
 const onShare = () => {
   if (showFileShare.value) {
     showFileShare.value = false
     return
   }
-  UserInfo.value = props.context.workspace.isUserInfo
+  userInfo.value = props.context.workspace.isUserInfo
   showFileShare.value = true
 }
 const closeShare = () => {
@@ -82,7 +82,7 @@ onUnmounted(() => {
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
     <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue"
-      @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight" :context="props.context" :userInfo="UserInfo"></FileShare>
+      @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
   </div>
 </template>
 

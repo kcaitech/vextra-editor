@@ -118,6 +118,7 @@ const addPage = () => {
     nextTick(() => {
         props.context.selection.reName();
     })
+    props.context.workspace.toggleCommentPage()
 }
 function toggle() {
     fold.value = !fold.value;
@@ -203,6 +204,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         const index = props.context.data.pagesList.findIndex((item) => item.id === id)
         id && props.context.editor4Doc().delete(id)
         id && props.context.selection.deletePage(id, index)
+        props.context.workspace.toggleCommentPage()
     }
 }
 </script>

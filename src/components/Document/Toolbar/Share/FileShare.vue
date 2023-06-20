@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect,} from 'vue';
 import { useI18n } from 'vue-i18n';
-import { userInfo } from '@/context/user';
+import { UserInfo } from '@/context/user';
 import { Context } from '@/context';
 import * as share_api from '@/apis/share';
 import { ElMessage } from 'element-plus';
@@ -15,7 +15,7 @@ const props = defineProps<{
   selectValue: number,
   docUserId?: string,
   context?: Context,
-  userInfo:userInfo | undefined
+  userInfo:UserInfo | undefined
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -42,7 +42,7 @@ const reviewable = ref(`${t('share.reviewable')}`)
 const readOnly = ref(`${t('share.readOnly')}`)
 const remove = ref(`${t('share.remove')}`)
 const founder = ref(false)
-const UserInfo = ref<userInfo | undefined>(props.userInfo)
+const userInfo = ref<UserInfo | undefined>(props.userInfo)
 const shareList = ref<any[]>([])
 
 const handleTop = ref<number>()
@@ -208,7 +208,7 @@ watch(value1, (nVal, oVal) => {
 
 watchEffect(() => {
   if (route.query.id) {
-    const userId = UserInfo.value?.id
+    const userId = userInfo.value?.id
     if (docInfo.value) {
       if(props.docUserId) {
         props.docUserId != userId ? founder.value = true : founder.value = false
@@ -330,8 +330,8 @@ onUnmounted(() => {
           <el-scrollbar height="285px" class="shared-by">
             <div class="scrollbar-demo-item">
               <div class="item-left">
-                <div class="avatar"><img :src="UserInfo?.avatar"></div>
-                <div class="name">{{ UserInfo?.nickname }}</div>
+                <div class="avatar"><img :src="userInfo?.avatar"></div>
+                <div class="name">{{ userInfo?.nickname }}</div>
               </div>
               <div class="item-right">
                 <div class="founder">{{ t('share.founder') }}</div>

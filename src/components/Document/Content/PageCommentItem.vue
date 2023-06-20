@@ -7,7 +7,7 @@ import CommentView from './CommentView.vue'
 import { Matrix, Shape } from "@kcdesign/data";
 import * as comment_api from '@/apis/comment';
 import { Selection } from '@/context/selection';
-
+import { debounce } from "lodash";
 type CommentViewEl = InstanceType<typeof CommentView>;
 const props = defineProps<{
     context: Context
@@ -17,6 +17,7 @@ const props = defineProps<{
     commentInfo: any
     index: number
     reflush: number
+    myComment: any[]
 }>()
 const emit = defineEmits<{
     (e: 'moveCommentPopup', event: MouseEvent, index: number): void
@@ -41,16 +42,48 @@ const documentCommentList = ref<any[]>(workspace.value.pageCommentList[props.ind
 const commentOpacity = ref(workspace.value.isCommentOpacity)
 const reply = ref(props.context.selection.commentStatus)
 const commentLength = ref(props.context.workspace.pageCommentList.length)
-
+const myComment = ref(props.context.selection.commentAboutMe)
+const aboutMe = ref(false)
 const status = computed(() => {
     const status = props.commentInfo.status
     replyStatus()
+    showAboutMe()
     if (reply.value) {
-        return true
+        if(myComment.value) {
+            if(aboutMe.value) {
+                return true
+            }else {
+                return false
+            }
+        }else {
+            return true
+        }
     } else {
-        return status === 0
+        if(status === 0) {
+            if(myComment.value) {
+                if(aboutMe.value) {
+                    return true
+                }else {
+                    return false
+                }
+            }else {
+                return true
+            }
+        }else {
+            return false
+        }
     }
 })
+
+const showAboutMe = () => {
+    myComment.value = props.context.selection.commentAboutMe
+    const comment = props.myComment.find(item => item.id === props.commentInfo.id)
+    if(comment) {
+        aboutMe.value = true
+    } else {
+        aboutMe.value = false
+    }
+}
 
 function watcher() {
     watchShapes();
@@ -181,9 +214,13 @@ const nextArticle = (i: number, xy?: { x: number, y: number }, id?: string) => {
 
 const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) => {
     const workspace = props.context.workspace;
-    const commentItem = props.context.workspace.pageCommentList[index]
+    const commentItem = props.context.workspace.pageCommentList[index] 
     const cx = reply.value ? commentItem.shape_frame.x1 : xy?.x
     const cy = reply.value ? commentItem.shape_frame.y1 : xy?.y
+    if(isInner(cx, cy)) {
+        props.context.selection.selectComment(reply.value ? commentItem.id : id)
+        return
+    }
     const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
@@ -194,6 +231,22 @@ const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) 
         workspace.matrixTransformation();
     }
 }
+
+// 判断评论是否在可视区域内
+function isInner(x: number, y: number) {
+  const workspace = props.context.workspace;
+  const { x: rx, y: ry, bottom, right } = workspace.root;
+  const commentCenter = workspace.matrix.computeCoord(x, y) //评论在视图上的位置
+  if((commentCenter.x + rx) < rx ||(commentCenter.y + ry) < ry) {
+    return false
+  } else if ((commentCenter.x + rx) > right || (commentCenter.y + ry) > bottom) {
+    return false
+  }else {
+    return true
+  }
+}
+
+
 function setOrigin() { // 这个动作是让container与页面坐标系重合
     props.reflush;
     matrix.reset(props.matrix);
@@ -219,6 +272,9 @@ const workspaceUpdate = (t: number) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin()
     }
+    if (props.commentInfo.shape_frame.x2 || props.commentInfo.shape_frame.y2) {
+        setCommentPosition()
+    }
 }
 
 const pageSkipComment = () => {
@@ -232,44 +288,41 @@ const pageSkipComment = () => {
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
     const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
-    nextTick(() => {
-        if (comment.value) {
-            if (props.context.selection.commentId === props.commentInfo.id){
-                props.context.workspace.commentMount(false)
-                rootHeight.value = comment.value.parentElement!.clientHeight
-                rootWidth.value = comment.value.parentElement!.clientWidth
-                commentScale.value = 0
-                getDocumentComment()
-                ShowComment.value = true
-                showScale.value = true
-            }
-        }
-    })
     if (transX || transY) {
         workspace.matrix.trans(transX, transY);
         workspace.matrixTransformation();
     }
 }
 
+const unfold = () => {
+    if (props.context.selection.commentId === props.commentInfo.id) {
+        props.context.workspace.commentMount(false)
+        if (comment.value) {
+            rootHeight.value = comment.value.parentElement!.clientHeight
+            rootWidth.value = comment.value.parentElement!.clientWidth
+        }
+        commentScale.value = 0
+        getDocumentComment()
+        ShowComment.value = true
+        showScale.value = true
+    }
+}
+
 const update = (t: number) => {
     if (t === Selection.CHANGE_COMMENT) {
-        if (props.context.selection.commentId === props.commentInfo.id) {
-            props.context.workspace.commentMount(false)
-            if (comment.value) {
-                rootHeight.value = comment.value.parentElement!.clientHeight
-                rootWidth.value = comment.value.parentElement!.clientWidth
-            }
-            commentScale.value = 0
-            getDocumentComment()
-            ShowComment.value = true
-            showScale.value = true
-        }
+        unfold()
     }
     if (t === Selection.SOLVE_MENU_STATUS) {
         reply.value = props.context.selection.commentStatus
     }
     if(t === Selection.SKIP_COMMENT) {
         pageSkipComment()
+        nextTick(() => {
+            unfold()
+        })
+    }
+    if(t === Selection.ABOUT_ME) {
+        showAboutMe()
     }
 }
 

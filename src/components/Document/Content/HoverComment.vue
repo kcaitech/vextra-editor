@@ -32,6 +32,12 @@ const replyNum = computed(() => {
 const resolve = computed(() => {
     return props.commentInfo.status === 0 ? true : false
 })
+const isControls = computed(() => {
+    props.commentInfo.user.id || workspace.value.isDocumentInfo?.user.id || workspace.value.isUserInfo?.id
+    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    else return false
+})
+
 const hoverShape = (e: MouseEvent) => {
     workspace.value.hoverComment(true, props.commentInfo.id)
     hover.value = true
@@ -50,6 +56,7 @@ const onReply = (e: MouseEvent) => {
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
+    if(!isControls.value) return
     const status = props.commentInfo.status === 0 ? 1 : 0
     setCommentStatus(status)
     emit('resolve', status, props.index)
@@ -57,6 +64,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
+    if(!isControls.value) return
     emit('deleteComment', props.index)
     props.context.workspace.commentInput(false);
     deleteComment()
@@ -134,15 +142,15 @@ onUnmounted(() => {
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0">
-                            <el-button plain :icon="Delete" @click="onDelete" style="margin-right: 5px;" />
+                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px', opacity: isControls ? 1 : .3}"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0" v-if="resolve">
-                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop />
+                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop :style="{opacity: isControls ? 1 : .3}"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0" v-else>
-                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop/>
+                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop :style="{opacity: isControls ? 1 : .3}"/>
                         </el-tooltip>
                     </el-button-group>
                 </div>

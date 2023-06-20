@@ -8,6 +8,8 @@ import * as comment_api from '@/apis/comment';
 import { useRoute } from 'vue-router';
 import { WorkSpace } from "@/context/workspace";
 import { ElScrollbar } from 'element-plus'
+import { Selection } from "@/context/selection";
+import { orderBy } from "lodash";
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 type commentListMenu = {
@@ -18,12 +20,14 @@ const route = useRoute()
 const docID = (route.query.id as string)
 const commentMenu = ref<boolean>(false)
 const commentMenuItems = ref<commentListMenu[]>([
-    { text: `${t('comment.sort')}`, status_p: false},
-    { text: `${t('comment.show_about_me')}`, status_p: false},
+    { text: `${t('comment.sort')}`, status_p: props.context.selection.commentPageSort},
+    { text: `${t('comment.show_about_me')}`, status_p: props.context.selection.commentAboutMe},
     { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
 ])
 const documentCommentList = ref<any[]>(props.context.workspace.commentList)
+const commentAll = ref<any[]>() //没有转树的评论列表
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
+const isPageSort = ref(props.context.selection.commentPageSort)
 const showMenu = () => {
     if(commentMenu.value) {
         commentMenu.value = false
@@ -35,8 +39,55 @@ const closeMenu = () => {
     commentMenu.value = false
 }
 
+const getPage = (status: boolean) => {
+    const pages = props.context.data.pagesList
+    if(status) {
+        const sortArr: any = []
+        pages.forEach(item => {
+            documentCommentList.value.forEach(comment => {
+                if(item.id === comment.page_id) {
+                    sortArr.push(comment)                    
+                }
+            })
+        })
+        return sortArr
+    }
+}
+
+//关于我的评论
+const aboutMe = () => {
+    const aboutMeArr: any = []
+    const userId = props.context.workspace.isUserInfo?.id
+    const commnetList = props.context.workspace.not2treeComment
+    commnetList.forEach((item: any) => {
+        if(item.user.id === userId) {
+            const rootId = item.root_id
+            if(rootId) {
+                commnetList.forEach((i: any) => {
+                    if(i.id === rootId) {
+                        aboutMeArr.push(i)
+                    }
+                })
+            }else {
+                aboutMeArr.push(item)
+            }
+        }
+    })
+    const myComment = Array.from(new Set(aboutMeArr))
+    return myComment
+}
+
 const handleMenuStatus = (status: boolean, index: number) => {
-    props.context.selection.commentSolveMenuStatus(status)
+    if(index === 2) {
+        props.context.selection.commentSolveMenuStatus(status)
+    }
+    if(index === 0) {
+        getPage(status)
+        props.context.selection.setPageSort(status)
+    }
+    if(index === 1) {
+        props.context.selection.setCommentAboutMe(status)
+    }
     commentMenuItems.value[index].status_p = status
 }
 
@@ -48,6 +99,7 @@ const getDocumentComment = async(id :string) => {
         obj.children = []
        })
        const list  = list2Tree(data, '') 
+       props.context.workspace.setNot2TreeComment(data)
        props.context.workspace.setCommentList(list)
        documentCommentList.value = props.context.workspace.commentList
     }catch(err) {
@@ -98,15 +150,19 @@ const update = (t: number) => {
                 behavior: "smooth"
             })
         }
-        
+    }
+    if(t === Selection.PAGE_SORT) {
+        isPageSort.value = props.context.selection.commentPageSort
     }
 }
 
 onMounted(() => {
     props.context.workspace.watch(update);
+    props.context.selection.watch(update);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(update);
+    props.context.selection.unwatch(update);
 })
 </script>
 
@@ -125,8 +181,8 @@ onUnmounted(() => {
         </div>
         <div class="comment-list" v-else>
             <el-scrollbar ref="scrollbarRef">
-                <CommentItem v-for="(item, index) in documentCommentList" :key="item.id" :commentItem="item" :index="index"
-                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete" :data-comment="item.id"></CommentItem>
+                <CommentItem v-for="(item, index) in isPageSort ? getPage(true) : documentCommentList" :key="item.id" :commentItem="item" :index="index"
+                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete" :data-comment="item.id" :myComment="aboutMe()"></CommentItem>
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>

@@ -18,6 +18,7 @@ const emit = defineEmits<{
     (e: 'quickReply', name: string): void
 }>()
 const hover = ref(false)
+const workspace = computed(() => props.context.workspace);
 const textarea = ref(props.commentInfo.content)
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const showEditComment = ref(false)
@@ -26,12 +27,19 @@ const hoverShape = (e: MouseEvent) => {
     hover.value = true
 }
 
+const isControls = computed(() => {
+    props.commentInfo.user.id || workspace.value.isDocumentInfo?.user.id || workspace.value.isUserInfo?.id
+    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    else return false
+})
+
 const unHoverShape = (e: MouseEvent) => {
     hover.value = false
 }
 
 const onEditContext = (e: Event) => {
     e.stopPropagation()
+    if(!isControls.value) return
     textarea.value = props.commentInfo.content
     showEditComment.value = true
     nextTick(() => {
@@ -53,6 +61,7 @@ const onQuickReply = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
+    if(!isControls.value) return
     emit('delete', props.index, e, props.commentInfo.id)
 }
 
@@ -122,7 +131,7 @@ const formatDate = computed(() => {
                         <el-button-group class="ml-4">
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.edit_content')}`"
                                 placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                                <el-button plain :icon="Edit" @click="onEditContext" style="margin-right: 5px;"/>
+                                <el-button plain :icon="Edit" @click="onEditContext" :style="{'margin-right': 5 +'px', opacity: isControls ? 1 : .3}" />
                             </el-tooltip>
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.quick_reply')}`"
                                 placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
@@ -130,7 +139,7 @@ const formatDate = computed(() => {
                             </el-tooltip>
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
                                 placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                                <el-button plain :icon="Delete" @click.stop="onDelete"/>
+                                <el-button plain :icon="Delete" @click.stop="onDelete" :style="{opacity: isControls ? 1 : .3}"/>
                             </el-tooltip>
                         </el-button-group>
                     </div>

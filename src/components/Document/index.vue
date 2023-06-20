@@ -96,6 +96,7 @@ function switchPage(id?: string) {
         pagesMgr.get(id).then((page: Page | undefined) => {
             if (page) {
                 curPage.value = undefined;
+                ctx.workspace.commentMount(false)
                 ctx.selection.selectPage(page);
                 (window as any).__context = ctx;
                 curPage.value = page;
@@ -263,6 +264,9 @@ const getUserInfo = async() => {
     const {data} = await user_api.GetInfo()
     if(context) {
         context.workspace.setUserInfo(data)
+        localStorage.setItem('avatar', data.avatar)
+        localStorage.setItem('nickname', data.nickname)
+        localStorage.setItem('userId', data.id)
     }
 }
 
@@ -307,6 +311,7 @@ const getDocumentInfo = async () => {
             const coopRepo = new CoopRepository(document, repo)
             window.document.title = document.name;
             context = new Context(document, coopRepo);
+            context.workspace.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             switchPage(context.data.pagesList[0]?.id);
@@ -421,14 +426,14 @@ onUnmounted(() => {
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
             <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context" @switchpage="switchPage"
-                @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
-                :page="(curPage as Page)">
+                @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }" @showNavigation="showHiddenLeft"
+                :page="(curPage as Page)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
             </Navigation>
-            <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
+            <!-- <div class="showHiddenL" @showNavigation="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
                 :style="{ opacity: showLeft ? 1 : 0.6 }">
                 <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="right"></svg-icon>
-            </div>
+            </div> -->
         </template>
         <template #slot2>
             <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context" :page="(curPage as Page)">
@@ -436,12 +441,12 @@ onUnmounted(() => {
         </template>
         <template #slot3>
             <Attribute id="attributes" v-if="!null_context" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
-                @mouseleave="() => { mouseleave('right') }"></Attribute>
-            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
+                @mouseleave="() => { mouseleave('right') }" :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight"></Attribute>
+            <!-- <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
                 :style="{ opacity: showRight ? 1 : 0.6 }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
-            </div>
+            </div> -->
         </template>
     </ColSplitView>
     <SubLoading v-if="sub_loading"></SubLoading>
@@ -517,47 +522,47 @@ onUnmounted(() => {
         z-index: 9;
     }
 
-    .showHiddenR {
-        position: absolute;
-        left: -12px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1;
-        cursor: pointer;
-        height: 60px;
-        background-color: var(--theme-color-anti);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px 0px 0px 4px;
-        box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
+    // .showHiddenR {
+    //     position: absolute;
+    //     left: -12px;
+    //     top: 50%;
+    //     transform: translateY(-50%);
+    //     z-index: 9;
+    //     cursor: pointer;
+    //     height: 60px;
+    //     background-color: var(--theme-color-anti);
+    //     display: flex;
+    //     align-items: center;
+    //     justify-content: center;
+    //     border-radius: 4px 0px 0px 4px;
+    //     box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
 
-        >.svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
+    //     >.svg {
+    //         width: 12px;
+    //         height: 12px;
+    //     }
+    // }
 
-    .showHiddenL {
-        position: absolute;
-        right: -12px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1;
-        cursor: pointer;
-        height: 60px;
-        background-color: var(--theme-color-anti);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 0 4px 4px 0;
-        box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
+    // .showHiddenL {
+    //     position: absolute;
+    //     right: -12px;
+    //     top: 50%;
+    //     transform: translateY(-50%);
+    //     z-index: 9;
+    //     cursor: pointer;
+    //     height: 60px;
+    //     background-color: var(--theme-color-anti);
+    //     display: flex;
+    //     align-items: center;
+    //     justify-content: center;
+    //     border-radius: 0 4px 4px 0;
+    //     box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
-        >.svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
+    //     >.svg {
+    //         width: 12px;
+    //         height: 12px;
+    //     }
+    // }
 }
 
 .notification {

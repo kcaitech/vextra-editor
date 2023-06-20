@@ -8,12 +8,12 @@ interface Props {
     context: Context
 }
 const props = defineProps<Props>();
-</script>
 
+</script>
 <template>
     <div class="user-info">
         <Share :context="props.context"></Share>
-        <UserAvatar user="kc"></UserAvatar>
+        <UserAvatar :context="props.context"></UserAvatar>
         <Scale :context="props.context"></Scale>
     </div>
 </template>

@@ -12,7 +12,8 @@ const props = defineProps<{
     commentItem: any,
     index: number,
     context: Context,
-    pageId: string
+    pageId: string,
+    myComment: any[]
 }>()
 const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
@@ -21,7 +22,10 @@ const emit = defineEmits<{
 }>()
 const hoverIcon = ref(false)
 const hoverComment = ref(false)
+const workspace = computed(() => props.context.workspace);
 const reply = ref(props.context.selection.commentStatus)
+const myComment = ref(props.context.selection.commentAboutMe)
+const aboutMe = ref(false)
 const resolve = computed(() => {
     return props.commentItem.status === 0 ? true : false
 })
@@ -29,16 +33,51 @@ const selectComment = ref(false)
 const status = computed(() => {
     const status = props.commentItem.status
     replyStatus()
+    showAboutMe()
     if(reply.value) {
-        return true
+        if(myComment.value) {
+            if(aboutMe.value) {
+                return true
+            }else {
+                return false
+            }
+        }else {
+            return true
+        }
     }else {
-        return status === 0
+        if(status === 0) {
+            if(myComment.value) {
+                if(aboutMe.value) {
+                    return true
+                }else {
+                    return false
+                }
+            }else {
+                return true
+            }
+        }else {
+            return false
+        }
     }
 })
 
 const replyStatus = () => {
     reply.value = props.context.selection.commentStatus
 }
+const showAboutMe = () => {
+    myComment.value = props.context.selection.commentAboutMe
+    const comment = props.myComment.find(item => item.id === props.commentItem.id)
+    if(comment) {
+        aboutMe.value = true
+    } else {
+        aboutMe.value = false
+    }
+}
+const isControls = computed(() => {
+    props.commentItem.user.id || workspace.value.isDocumentInfo?.user.id || workspace.value.isUserInfo?.id
+    if(workspace.value.isUserInfo?.id === props.commentItem.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    else return false
+})
 
 const replyNum = computed(() => {
     if(props.commentItem.children) {
@@ -63,6 +102,10 @@ const unHoverShape = (e: MouseEvent) => {
 const onReply = () => {
     const id = props.context.selection.selectedPage?.id
     if(id === props.pageId) {
+        if(isInner()) {
+            props.context.selection.selectComment(props.commentItem.id)
+            return
+        }
         const workspace = props.context.workspace;
         const cx = props.commentItem.shape_frame.x1
         const cy = props.commentItem.shape_frame.y1
@@ -71,19 +114,37 @@ const onReply = () => {
         const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
         const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
         props.context.selection.selectComment(props.commentItem.id)
+        
         if (transX || transY) {
             workspace.matrix.trans(transX, transY);
             workspace.matrixTransformation();
         }
     }else {
+        props.context.workspace.commentMount(false)
         props.context.selection.selectCommentPage(props.pageId)   
         props.context.selection.setCommentSelect(true)
         props.context.selection.selectComment(props.commentItem.id)
     }
 }
+// 判断评论是否在可视区域内
+function isInner() {
+  const workspace = props.context.workspace;
+  const { x: rx, y: ry, bottom, right } = workspace.root;
+  const cx = props.commentItem.shape_frame.x1
+  const cy = props.commentItem.shape_frame.y1
+  const commentCenter = workspace.matrix.computeCoord(cx, cy) //评论在视图上的位置
+  if((commentCenter.x + rx) < rx ||(commentCenter.y + ry) < ry) {
+    return false
+  } else if ((commentCenter.x + rx) > right || (commentCenter.y + ry) > bottom) {
+    return false
+  }else {
+    return true
+  }
+}
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
+    if(!isControls.value) return
     props.context.workspace.editTabComment()
     const state = props.commentItem.status === 0 ? 1 : 0
     setCommentStatus(state)
@@ -92,6 +153,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
+    if(!isControls.value) return
     props.context.workspace.editTabComment()
     props.context.workspace.commentInput(false);
     deleteComment()
@@ -142,6 +204,9 @@ const update = (t: number) => {
     if(t === Selection.SOLVE_MENU_STATUS) {
         replyStatus()
     }
+    if(t === Selection.ABOUT_ME) {
+        showAboutMe()
+    }
     if(t === WorkSpace.CURRENT_COMMENT) {
         const curId = props.context.workspace.isHoverCommentId
         if(curId === props.commentItem.id) {
@@ -183,15 +248,15 @@ onUnmounted(() => {
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                            <el-button plain :icon="Delete" @click="onDelete" style="margin-right: 5px;"/>
+                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px', opacity: isControls ? 1 : .3}"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve">
-                            <el-button plain :icon="CircleCheck" @click="onResolve"/>
+                            <el-button plain :icon="CircleCheck" @click="onResolve" :style="{opacity: isControls ? 1 : .3}"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-else>
-                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"/>
+                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" :style="{opacity: isControls ? 1 : .3}"/>
                         </el-tooltip>
                     </el-button-group>
                 </div>

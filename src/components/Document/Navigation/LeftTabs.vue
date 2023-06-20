@@ -10,8 +10,8 @@ import { Page } from "@kcdesign/data";
 import { Action, WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 
-const props = defineProps<{ context: Context, page: Page }>();
-
+const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
+const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 type Tab = "Shape" | "Comps" | "Resource" | "Comment"
 
 const currentTab = ref<Tab>("Shape");
@@ -52,6 +52,10 @@ const selectComment = () => {
 function toggle(id: Tab) {
     currentTab.value = id
 }
+
+const showHiddenLeft = () => {
+    emit('showNavigation')
+}
 onMounted(() => {
     props.context.workspace.watch(update);
 });
@@ -67,7 +71,8 @@ onUnmounted(() => {
                 @click="toggle(i.id)">{{ i.title }}</div>
         </div>
         <div class="body">
-            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"></ShapeTab>
+            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page" 
+            :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
             <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
             <!-- <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab> -->
             <CommentTab :context="props.context" v-if="currentTab === 'Comment'"></CommentTab>
