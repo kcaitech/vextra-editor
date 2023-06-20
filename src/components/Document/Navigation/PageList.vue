@@ -113,7 +113,6 @@ const addPage = () => {
         nextTick(() => {
             props.context.selection.reName();
         })
-        props.context.workspace.toggleCommentPage();
     }
 }
 function toggle() {
