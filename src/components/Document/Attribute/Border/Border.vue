@@ -14,6 +14,7 @@ import { toHex } from "@/utils/color";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
+import { v4 } from 'uuid';
 interface BorderItem {
     id: number,
     border: Border
@@ -84,7 +85,7 @@ function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
+    const border = new Border(v4(), true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
     if (len.value === 1) {
         editor.value.addBorder(border);
     } else if (len.value > 1) {
@@ -237,7 +238,7 @@ function selection_wather(t: any) {
 }
 // hooks
 onMounted(() => {
-    props.context.selection.watch(selection_wather); // 有问题，等会再收拾你
+    props.context.selection.watch(selection_wather);
     watchShapes();
     updateData();
 })
