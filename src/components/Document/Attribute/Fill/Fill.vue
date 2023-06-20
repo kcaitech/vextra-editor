@@ -119,11 +119,12 @@ function deleteFill(idx: number) {
     }
 }
 function toggleVisible(idx: number) {
+    const _idx = fills.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setFillEnable(idx, !fills[idx].fill.isEnabled);
+        editor.value.setFillEnable(_idx, !fills[idx].fill.isEnabled);
     } else if (len.value > 1) {
         const value = !props.shapes[0].style.fills[idx].isEnabled;
-        const actions = get_actions_fill_enabled(props.shapes, idx, value);
+        const actions = get_actions_fill_enabled(props.shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -140,10 +141,11 @@ function setColor(idx: number, clr: string, alpha: number) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
+    const _idx = fills.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setFillColor(idx, new Color(alpha, r, g, b));
+        editor.value.setFillColor(_idx, new Color(alpha, r, g, b));
     } else if (len.value > 1) {
-        const actions = get_actions_fill_color(props.shapes, idx, new Color(alpha, r, g, b));
+        const actions = get_actions_fill_color(props.shapes, _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -211,10 +213,11 @@ function onAlphaChange(idx: number, e: Event) {
     }
 }
 function getColorFromPicker(idx: number, color: Color) {
+    const _idx = fills.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setFillColor(idx, color);
+        editor.value.setFillColor(_idx, color);
     } else if (len.value > 1) {
-        const actions = get_actions_fill_color(props.shapes, idx, color);
+        const actions = get_actions_fill_color(props.shapes, _idx, color);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -254,20 +257,19 @@ watchEffect(updateData);
         </div>
         <div class="fills-container" v-else-if="!mixed">
             <div class="fill" v-for="(f, idx) in fills" :key="f.id">
-                <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(f.id)">
+                <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" :context="props.context"
-                        @change="c => getColorFromPicker((fills.length - 1 - idx), c)">
+                    <ColorPicker :color="f.fill.color" :context="props.context" @change="c => getColorFromPicker(idx, c)">
                     </ColorPicker>
                     <input :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange((fills.length - 1 - idx), e)" />
+                        @change="(e) => onColorChange(idx, e)" />
                     <input ref="alphaFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'"
-                        @change="(e) => onAlphaChange((fills.length - 1 - idx), e)" />
+                        @change="(e) => onAlphaChange(idx, e)" />
                 </div>
                 <div style="width: 22px;"></div>
-                <div class="delete" @click="deleteFill((fills.length - 1 - idx))">
+                <div class="delete" @click="deleteFill(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>

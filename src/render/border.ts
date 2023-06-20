@@ -268,9 +268,9 @@ export function render(h: Function, shape: Shape, path?: string): Array<any> {
         const gradientType = border.gradient && border.gradient.gradientType;
 
         fillType == FillType.Gradient && gradientType == GradientType.Angular && (() => {
-            elArr.unshift(angularHandler[position](h, shape, border, path));
+            elArr.push(angularHandler[position](h, shape, border, path));
         })() || (fillType == FillType.SolidColor || fillType == FillType.Gradient) && (() => {
-            elArr.unshift(handler[position](h, shape, border, path));
+            elArr.push(handler[position](h, shape, border, path));
         })() || fillType == FillType.Pattern && (() => {
             return true; // todo
         })

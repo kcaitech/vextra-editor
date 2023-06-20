@@ -13,6 +13,7 @@ import { Border, BorderPosition, BorderStyle, MarkerType, Shape, ShapeType } fro
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
+import { WorkSpace } from '@/context/workspace';
 interface Props {
   context: Context
   shapes: Shape[]
@@ -95,6 +96,7 @@ function updater() {
   borderEndApex && (borderEndStyle.value = borderEndApex);
 }
 function borderStyleSelect(selected: SelectItem) {
+  props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   borderStyle.value = selected;
   if (len.value === 1) {
     const bs = selected.value === 'dash' ? new BorderStyle(10, 10) : new BorderStyle(0, 0);
@@ -110,8 +112,10 @@ function borderStyleSelect(selected: SelectItem) {
     }
   }
   popover.value.focus();
+  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function positionSelect(selected: SelectItem) {
+  props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   position.value = selected;
   if (len.value === 1) {
     editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
@@ -126,8 +130,10 @@ function positionSelect(selected: SelectItem) {
     }
   }
   popover.value.focus();
+  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function setThickness(e: Event) {
+  props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   const thickness = Number((e.target as HTMLInputElement).value);
   if (len.value === 1) {
     editor.value.setBorderThickness(props.index, thickness);
@@ -141,8 +147,10 @@ function setThickness(e: Event) {
       }
     }
   }
+  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function borderApexStyleSelect(selected: SelectItem) {
+  props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   if (selected.content.startsWith('end')) {
     borderEndStyle.value = selected;
     editor.value.setBorderApexStyle(props.index, selected.value as MarkerType, true);
@@ -151,6 +159,7 @@ function borderApexStyleSelect(selected: SelectItem) {
     editor.value.setBorderApexStyle(props.index, selected.value as MarkerType, false);
   }
   popover.value.focus();
+  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 watch(() => props.border, () => {
   updater();
