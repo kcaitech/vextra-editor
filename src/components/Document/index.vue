@@ -40,6 +40,7 @@ const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
+let loading_timer: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
@@ -281,6 +282,7 @@ const getDocumentInfo = async () => {
             context = new Context(document, coopRepo);
             null_context.value = false;
             context.selection.watch(selectionWatcher);
+            context.workspace.watch(workspaceWatcher);
             switchPage(context.data.pagesList[0]?.id);
             localStorage.setItem('docId', route.query.id as string);
             coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
@@ -336,6 +338,7 @@ function init() {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
             context.selection.watch(selectionWatcher);
+            context.workspace.watch(workspaceWatcher);
             upload();
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
@@ -345,12 +348,7 @@ function init() {
     }
 }
 function workspaceWatcher(t: number) {
-    if (t === WorkSpace.DOCUMENT_SAVE) {
-        const docID = localStorage.getItem('docId') || '';
-        if (docID && permType.value !== 1) {
-
-        }
-    } else if (t === WorkSpace.FREEZE) {
+    if (t === WorkSpace.FREEZE) {
         sub_loading.value = true;
     } else if (t === WorkSpace.THAW) {
         sub_loading.value = false;
@@ -368,6 +366,7 @@ onUnmounted(() => {
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     context?.selection.unwatch(selectionWatcher);
+    context?.workspace.unwatch(workspaceWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
     localStorage.removeItem('docId')

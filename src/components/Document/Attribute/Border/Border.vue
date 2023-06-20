@@ -274,7 +274,7 @@ watchEffect(updateData);
                         @change="e => onAlphaChange(e, idx)" />
                 </div>
                 <div class="extra-action">
-                    <BorderDetail :context="props.context" :shape="props.shapes[0]" :border="b.border" :index="idx">
+                    <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border" :index="idx">
                     </BorderDetail>
                     <div class="delete" @click="deleteBorder(idx)">
                         <svg-icon icon-class="delete"></svg-icon>

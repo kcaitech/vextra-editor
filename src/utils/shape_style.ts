@@ -1,6 +1,6 @@
 import {
     Color, Fill, Shape, FillColorAction, FillEnableAction, FillAddAction, FillDeleteAction, FillsReplaceAction,
-    Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction
+    Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction, BorderThicknessAction, BorderPositionAction, BorderStyleAction, BorderPosition, BorderStyle
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 interface FillItem {
@@ -134,7 +134,9 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
 export function get_actions_add_boder(shapes: Shape[], border: Border) {
     const actions: BorderAddAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        actions.push({ target: shapes[i], value: border });
+        const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType } = border;
+        const new_border = new Border(v4(), isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType);
+        actions.push({ target: shapes[i], value: new_border });
     }
     return actions;
 }
@@ -171,6 +173,31 @@ export function get_actions_border_delete(shapes: Shape[], index: number) {
     const actions: BorderDeleteAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index });
+    }
+    return actions;
+}
+export function get_actions_border_thickness(shapes: Shape[], index: number, thickness: number) {
+    const actions: BorderThicknessAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index, value: thickness });
+    }
+    return actions;
+}
+export function get_actions_border_position(shapes: Shape[], index: number, position: BorderPosition) {
+    const actions: BorderPositionAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index, value: position });
+    }
+    return actions;
+}
+export function get_actions_border_style(shapes: Shape[], index: number, style: 'dash' | 'solid') {
+    const actions: BorderStyleAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const bs = new BorderStyle(0, 0);
+        if (style === 'dash') {
+            bs.gap = 10, bs.length = 10;
+        }
+        actions.push({ target: shapes[i], index, value: bs });
     }
     return actions;
 }

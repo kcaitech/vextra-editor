@@ -1,6 +1,6 @@
 <template>
   <div class="wrap">
-    <div class="container" @click.stop @mousedown.stop @mousemove.stop>
+    <div class="container" @click.stop @mousedown.stop @mousemove.stop @mouseup.stop>
       <div class="loader"></div>
     </div>
   </div>
