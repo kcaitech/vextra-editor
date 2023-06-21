@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {} from "vue";
 import { Context } from "@/context";
-import developing from "@/assets/kaifazhong_3.svg"
+import developing from "@/assets/development.svg"
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{ context: Context }>();
@@ -12,7 +12,7 @@ const { t } = useI18n();
 <template>
     <div class="comps-container">
         <img :src="developing" alt="">
-        <span style="margin-top: 10px;">{{t('navi.development')}}</span>
+        <span class="text">{{t('navi.development')}}</span>
     </div>
 </template>
 
@@ -28,8 +28,12 @@ const { t } = useI18n();
     font-size: 10px;
     padding: 8px 16px;
     box-sizing: border-box;
-    >svg {
+    >img {
         width: 100%;
+    }
+    .text {
+        position: relative;
+        top: -30px;
     }
 }
 </style>
