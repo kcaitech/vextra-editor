@@ -135,7 +135,7 @@ function isInner() {
   const commentCenter = workspace.matrix.computeCoord(cx, cy) //评论在视图上的位置
   if((commentCenter.x + rx) < rx ||(commentCenter.y + ry) < ry) {
     return false
-  } else if ((commentCenter.x + rx) > right || (commentCenter.y + ry) > bottom) {
+  } else if ((commentCenter.x + rx) > right || (commentCenter.y + ry + 35) > bottom) {
     return false
   }else {
     return true

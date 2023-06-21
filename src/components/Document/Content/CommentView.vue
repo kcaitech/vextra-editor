@@ -213,7 +213,6 @@ function workspaceUpdate(t?: number) {
     const length = textarea.value.trim().length < 4
     props.context.workspace.commentInput(true);
     props.context.workspace.commentMount(true);
-
   if (t === WorkSpace.SHUTDOWN_COMMENT && length) {
     emit('close');
   }
@@ -337,6 +336,10 @@ const closeComment = (e: KeyboardEvent) => {
     e.preventDefault()
     if (e.code === 'Escape') {
         emit('close')
+    }else if (e.code === 'ArrowUp') {
+        previousArticle()
+    }else if (e.code === 'ArrowDown') {
+        nextArticle()
     }
 }
 

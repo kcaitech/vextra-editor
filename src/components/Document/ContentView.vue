@@ -205,6 +205,8 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
             paster(props.context, t, mousedownOnPageXY);
         } else if (type === WorkSpace.COPY) {
             copy(props.context);
+        } else if (type === WorkSpace.UPDATE_COMMENT_POS) {
+            saveShapeCommentXY();
         }
         const action = props.context.workspace.action;
         if (action.startsWith('add')) {
@@ -582,8 +584,7 @@ const addComment = (e: MouseEvent) => {
         return
     }else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
         return
-    }
-    
+    }    
     if(commentInput.value) return
     const {x, y, xy} = detectionShape(e)
     commentPosition.x = xy.x; //评论输入框在页面的坐标

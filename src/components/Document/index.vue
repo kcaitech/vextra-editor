@@ -414,7 +414,7 @@ onUnmounted(() => {
 <template>
     <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
-        <Toolbar :context="context" v-if="!loading && !null_context" />
+        <Toolbar :context="context!" v-if="!loading && !null_context" />
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
@@ -425,28 +425,18 @@ onUnmounted(() => {
         :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
-            <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context" @switchpage="switchPage"
+            <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!" @switchpage="switchPage"
                 @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }" @showNavigation="showHiddenLeft"
                 :page="(curPage as Page)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
             </Navigation>
-            <!-- <div class="showHiddenL" @showNavigation="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
-                :style="{ opacity: showLeft ? 1 : 0.6 }">
-                <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
-                <svg-icon v-else class="svg" icon-class="right"></svg-icon>
-            </div> -->
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!" :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" v-if="!null_context" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
+            <Attribute id="attributes" v-if="!null_context" :context="context!" @mouseenter="(e: Event) => { mouseenter('right') }"
                 @mouseleave="() => { mouseleave('right') }" :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight"></Attribute>
-            <!-- <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                :style="{ opacity: showRight ? 1 : 0.6 }">
-                <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
-                <svg-icon v-else class="svg" icon-class="left"></svg-icon>
-            </div> -->
         </template>
     </ColSplitView>
     <SubLoading v-if="sub_loading"></SubLoading>

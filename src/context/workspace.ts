@@ -115,6 +115,7 @@ export class WorkSpace extends Watchable(Object) {
     static CLAC_ATTRI = 37;
     static COPY = 38;
     static COMMENT_ALL = 39;
+    static UPDATE_COMMENT_POS = 40;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -293,7 +294,7 @@ export class WorkSpace extends Watchable(Object) {
     getImageFromDoc() {
         return this.m_image;
     }
-        startSave() {
+    startSave() {
         this.m_saving = true;
         this.notify(WorkSpace.START_SAVE);
     }
@@ -398,10 +399,10 @@ export class WorkSpace extends Watchable(Object) {
     }
     editShapeComment(state: boolean, shape?: Shape) {
         this.m_shape_comment = state
-        if(state) {
+        if (state) {
             this.m_comment_shape.push(shape!)
             this.m_comment_shape = Array.from(new Set(this.m_comment_shape));
-        }else {
+        } else {
             this.m_comment_shape = []
         }
     }
@@ -573,7 +574,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddText;
         this.notify();
     }
-    keydown_c(ctrlKey: boolean, metaKey: boolean) {
+    keydown_c(ctrlKey?: boolean, metaKey?: boolean) {
         if (ctrlKey || metaKey) {
             this.notify(WorkSpace.COPY)
         } else {
@@ -663,7 +664,7 @@ export class WorkSpace extends Watchable(Object) {
         if (!v) {
             this.notify(WorkSpace.HOVER_COMMENT);
         }
-        if(id) {
+        if (id) {
             this.notify(WorkSpace.CURRENT_COMMENT);
         }
     }
