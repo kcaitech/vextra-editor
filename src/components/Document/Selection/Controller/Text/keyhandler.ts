@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { layoutText, locateCursor, locateText } from "@/layout/text";
 import { TextShape } from "@kcdesign/data";
-import { ShapeEditor } from "@kcdesign/data";
+import { TextShapeEditor } from "@kcdesign/data";
 
 const keydelays = 150;
 function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): T {
@@ -15,7 +15,7 @@ function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): 
     } as T;
 }
 
-const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     const selection = context.selection;
     let index = selection.cursorStart;
     let end = selection.cursorEnd;
@@ -30,7 +30,7 @@ const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextS
     }
 }, keydelays);
 
-const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     const selection = context.selection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
@@ -48,7 +48,7 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
         selection.setCursor(end - 1, false);
     }
 }, keydelays);
-const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     const selection = context.selection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
@@ -66,7 +66,7 @@ const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: Te
         selection.setCursor(end + 1, false);
     }
 }, keydelays);
-const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     const layout = shape.getLayout(layoutText);
     const selection = context.selection;
     const start = selection.cursorStart;
@@ -91,7 +91,7 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
         selection.setCursor(locate.index, locate.before);
     }
 }, keydelays);
-const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     const layout = shape.getLayout(layoutText);
     const selection = context.selection;
     const start = selection.cursorStart;
@@ -117,7 +117,7 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     }
 }, keydelays);
 
-const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     const selection = context.selection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
@@ -132,7 +132,7 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: Tex
         }
     }
 }, keydelays);
-const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     const selection = context.selection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
@@ -148,7 +148,7 @@ const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextSh
     }
 }, keydelays);
 
-const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => {
+const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     const selection = context.selection;
     if (selection.cursorStart > -1) {
         selection.resetSelectShapes();
@@ -162,7 +162,7 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
 
 }, keydelays);
 
-const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) => void } = {}
+const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
 handler['arrowleft'] = enterArrowLeft;
 handler['arrowright'] = enterArrowRight;
@@ -172,7 +172,7 @@ handler['backspace'] = enterBackspace;
 handler['delete'] = enterDelete;
 handler['escape'] = escape;
 
-export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: ShapeEditor) {
+export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
     if (editor.isInComposingInput()) {
         return;
     }
