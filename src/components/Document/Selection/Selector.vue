@@ -29,8 +29,8 @@ function select() {
         const p3: XY = pageMatirx.inverseCoord(left + width, top + height); // rb
         const p4: XY = pageMatirx.inverseCoord(left, top + height); //lb
         const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
-        remove(selectedShapes, ps);
-        finder(page.childs, ps);
+        if (selectedShapes.length) remove(selectedShapes, ps); // 先剔除已经不再框选区的图形
+        finder(page.childs, ps); // 再寻找框选区外的图形
         if (selectedShapes.length !== selection.selectedShapes.length) {
             selection.rangeSelectShape(selectedShapes);
         }
