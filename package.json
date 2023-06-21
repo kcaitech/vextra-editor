@@ -17,7 +17,8 @@
     "lint": "vue-cli-service lint",
     "test": "jest",
     "generate-package-dev": "node generate-package.js dev && npm install --legacy-peer-deps",
-    "generate-package-prod": "node generate-package.js prod && npm install --legacy-peer-deps"
+    "generate-package-prod": "node generate-package.js prod && npm install --legacy-peer-deps",
+    "build-worker": "npx tsc -p src/communication/worker-tsconfig.json"
   },
   "dependencies": {
     "@kcdesign/data": "^0.1.33",
