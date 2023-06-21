@@ -7,7 +7,6 @@ import CommentView from './CommentView.vue'
 import { Matrix, Shape } from "@kcdesign/data";
 import * as comment_api from '@/apis/comment';
 import { Selection } from '@/context/selection';
-import { debounce } from "lodash";
 type CommentViewEl = InstanceType<typeof CommentView>;
 const props = defineProps<{
     context: Context

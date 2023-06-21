@@ -173,7 +173,7 @@ function createController() { // 计算控件点位以及类型判定
     }
 }
 
-function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
+function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形    
     if (props.context.workspace.action === Action.AutoV) {
         if (e.button === 0) {
             e.stopPropagation();

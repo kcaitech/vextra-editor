@@ -153,7 +153,7 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     if (isDrag) {// 抬起之前存在拖动
         if (newShape) {
             shapeCreateEnd();
-        }else {
+        } else {
             selectEnd();
         }
     } else { // 抬起之前未存在拖动
@@ -216,16 +216,16 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
         }
     }
     //更新评论
-    if(type === WorkSpace.EDIT_COMMENT) {
+    if (type === WorkSpace.EDIT_COMMENT) {
         const timer = setTimeout(() => {
             getDocumentComment()
             clearTimeout(timer)
         }, 100);
     }
-    if(type === WorkSpace.UPDATE_PAGE_COMMENT) {
+    if (type === WorkSpace.UPDATE_PAGE_COMMENT) {
         documentCommentList.value = props.context.workspace.pageCommentList
     }
-    if(type === WorkSpace.UPDATE_COMMENT) {
+    if (type === WorkSpace.UPDATE_COMMENT) {
         props.context.workspace.updateCommentList(props.page.id)
         documentCommentList.value = props.context.workspace.pageCommentList
     }
@@ -299,6 +299,7 @@ function pageViewDragging(e: MouseEvent) {
                 prePt.y = e.screenY;
             }
         }
+        workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
 function pageViewDragEnd() {
@@ -409,7 +410,7 @@ function updateMouse(e: MouseEvent) {
 }
 // #region mouse event flow
 // mousedown(target：contentview)
-function onMouseDown(e: MouseEvent) {    
+function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button == 0) { // 左键按下
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
@@ -490,8 +491,8 @@ const saveShapeCommentXY = () => {
     const shapes = workspace.value.commentShape
     shapes.forEach(item => {
         documentCommentList.value.filter((comment, i) => {
-            if(comment.target_shape_id === item.id) {
-                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)               
+            if (comment.target_shape_id === item.id) {
+                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
             }
         })
     })
@@ -551,42 +552,42 @@ type commentListMenu = {
 }
 // 左侧评论列表的菜单
 const commentMenuItems = ref<commentListMenu[]>([
-    { text: `${t('comment.sort')}`, status_p: false},
-    { text: `${t('comment.show_about_me')}`, status_p: false},
-    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false}
+    { text: `${t('comment.sort')}`, status_p: false },
+    { text: `${t('comment.show_about_me')}`, status_p: false },
+    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false }
 ])
 
 const detectionShape = (e: MouseEvent) => {
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const shapes = props.context.selection.getShapesByXY_beta(xy, false, false);
-    if(shapes.length === 0) { //点击的位置是否有图形
+    if (shapes.length === 0) { //点击的位置是否有图形
         shapePosition.x = 0;
         shapePosition.y = 0;
         shapeID.value = props.page.id
-    }else {
+    } else {
         const shape = shapes[0]
         const fp = shape.frame2Page();
-        const farmeXY = {x: fp.x, y: fp.y }
+        const farmeXY = { x: fp.x, y: fp.y }
         shapePosition.x = xy.x - farmeXY.x; //评论输入框相对于shape的距离
         shapePosition.y = xy.y - farmeXY.y;
         shapeID.value = shape.id
     }
-    return {x, y, xy}
+    return { x, y, xy }
 }
 
 //添加评论
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
-    if(workspace.value.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {        
+    if (workspace.value.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {
         workspace.value.commentOpacity(false)
         workspace.value.commentInput(false)
         return
-    }else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
+    } else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
         return
-    }    
-    if(commentInput.value) return
-    const {x, y, xy} = detectionShape(e)
+    }
+    if (commentInput.value) return
+    const { x, y, xy } = detectionShape(e)
     commentPosition.x = xy.x; //评论输入框在页面的坐标
     commentPosition.y = xy.y;
     posi.value.x = e.clientX - x // 评论弹出框的位置坐标
@@ -597,7 +598,7 @@ const addComment = (e: MouseEvent) => {
 }
 
 const getCommentInputXY = (e: MouseEvent) => {
-    const {x, y, xy} = detectionShape(e)
+    const { x, y, xy } = detectionShape(e)
     commentPosition.x = xy.x;
     commentPosition.y = xy.y;
     posi.value.x = e.clientX - x
@@ -633,13 +634,13 @@ const downOnPageXY: ClientXY = reactive({ x: 0, y: 0 });
 //移动评论
 const downMoveCommentPopup = (e: MouseEvent, index: number) => {
     setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
-    const {x, y} = getMouseOnPageXY(e)
+    const { x, y } = getMouseOnPageXY(e)
     downOnPageXY.x = x
     downOnPageXY.y = y
     workspace.value.commentMove(false)
     editCommentId.value = documentCommentList.value[index].id
     commentIndex.value = index
-    if(documentCommentList.value[index].user.id !== userId) return
+    if (documentCommentList.value[index].user.id !== userId) return
     const handleMouseMove = (e: MouseEvent) => {
         moveCommentPopup(e, index);
     };
@@ -648,52 +649,45 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
         const { x, y } = workspace.value.root;
         const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
         const shape_frame = documentCommentList.value[index].shape_frame
-        const commentxy = {x: shape_frame.x1, y: shape_frame.y1}
+        const commentxy = { x: shape_frame.x1, y: shape_frame.y1 }
         const shapes = props.context.selection.getShapesByXY_beta(commentxy, false, false);
-        const deltaX = Math.abs(xy.x - mousedownOnPageXY.x);
-        const deltaY = Math.abs(xy.y - mousedownOnPageXY.y);
-        const diff = Math.hypot(deltaX, deltaY);
         shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
         shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
         workspace.value.commentMove(false)
-            if(shapes.length === 0) {
-                const data = {
-                    id: editCommentId.value,
-                    target_shape_id: props.page.id,
-                    shape_frame: {
-                        x1: shape_frame.x1,
-                        y1: shape_frame.y1,
-                        x2: 0,
-                        y2: 0
-                    }
+        if (shapes.length === 0) {
+            const data = {
+                id: editCommentId.value,
+                target_shape_id: props.page.id,
+                shape_frame: {
+                    x1: shape_frame.x1,
+                    y1: shape_frame.y1,
+                    x2: 0,
+                    y2: 0
                 }
-                editMoveCommentPosition(data)
-            }else {
-                const shape = shapes[0]
-                // const m = shape.matrix2Page()
-                // const frame = shape.frame;
-                // let s = m.computeCoord({x: frame.x, y: frame.y})
-                // let _p = matrix.computeCoord(s.x, s.y);
-                const fp = shape.frame2Page();
-                const farmeXY = {x: fp.x, y: fp.y }
-                const data = {
-                    id: editCommentId.value,
-                    target_shape_id: shape.id,
-                    shape_frame: {
-                        x1: shape_frame.x1,
-                        y1: shape_frame.y1,
-                        x2: shape_frame.x1 - farmeXY.x,
-                        y2: shape_frame.y1 - farmeXY.y
-                    }                    
-                }
-                editMoveCommentPosition(data)
             }
+            editMoveCommentPosition(data)
+        } else {
+            const shape = shapes[0]
+            const fp = shape.frame2Page();
+            const farmeXY = { x: fp.x, y: fp.y }
+            const data = {
+                id: editCommentId.value,
+                target_shape_id: shape.id,
+                shape_frame: {
+                    x1: shape_frame.x1,
+                    y1: shape_frame.y1,
+                    x2: shape_frame.x1 - farmeXY.x,
+                    y2: shape_frame.y1 - farmeXY.y
+                }
+            }
+            editMoveCommentPosition(data)
+        }
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("mouseup", handleMouseUp);
     };
 
-  document.addEventListener("mousemove", handleMouseMove);
-  document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
 };
 const commentReflush = ref(0)
 const moveCommentPopup = (e: MouseEvent, index: number) => {
@@ -703,7 +697,7 @@ const moveCommentPopup = (e: MouseEvent, index: number) => {
     const deltaX = Math.abs(xy.x - downOnPageXY.x);
     const deltaY = Math.abs(xy.y - downOnPageXY.y);
     const diff = Math.hypot(deltaX, deltaY);
-    if(diff > 3) {
+    if (diff > 3) {
         props.context.workspace.commentMove(true)
     }
     const shape_frame = documentCommentList.value[index].shape_frame
@@ -713,7 +707,7 @@ const moveCommentPopup = (e: MouseEvent, index: number) => {
 };
 
 const updateShapeComment = (x: number, y: number, index: number) => {
-    if(documentCommentList.value[index].user.id !== userId) return
+    if (documentCommentList.value[index].user.id !== userId) return
     commentReflush.value++
     const shape_frame = documentCommentList.value[index].shape_frame
     shape_frame.x1 = x
@@ -724,7 +718,7 @@ const editShapeComment = (index: number, x: number, y: number) => {
     const comment = documentCommentList.value[index]
     const id = comment.id
     const shapeId = comment.target_shape_id
-    const {x2, y2} = comment.shape_frame
+    const { x2, y2 } = comment.shape_frame
     const data = {
         id: id,
         target_shape_id: shapeId,
@@ -737,28 +731,28 @@ const editShapeComment = (index: number, x: number, y: number) => {
     }
     editCommentShapePosition(data)
 }
-const editCommentShapePosition = async(data: any) => {
-    try{
+const editCommentShapePosition = async (data: any) => {
+    try {
         await comment_api.editCommentAPI(data)
-    }catch(err) {
+    } catch (err) {
         console.log(err);
     }
 }
-const editMoveCommentPosition = async(data: any) => {
-    try{
+const editMoveCommentPosition = async (data: any) => {
+    try {
         await comment_api.editCommentAPI(data)
         getDocumentComment()
-    }catch(err) {
+    } catch (err) {
         console.log(err);
     }
 }
 
 // 取消评论输入框
 const closeComment = (e?: MouseEvent) => {
-    if(!spacePressed.value) {
-        if(e && e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
+    if (!spacePressed.value) {
+        if (e && e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
             commentInput.value = false;
-        }else if(!e) {
+        } else if (!e) {
             commentInput.value = false;
         }
     }
@@ -775,43 +769,43 @@ const completed = () => {
 }
 
 // 获取评论列表
-const getDocumentComment = async() => {
+const getDocumentComment = async () => {
     try {
-        const {data} = await comment_api.getDocumentCommentAPI({doc_id: route.query.id})
-        if(data) {
+        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: route.query.id })
+        if (data) {
             data.forEach((obj: { children: any[]; commentMenu: any; }) => {
-             obj.commentMenu = commentMenuItems.value
-             obj.children = []
+                obj.commentMenu = commentMenuItems.value
+                obj.children = []
             })
             const list = list2Tree(data, '')
             workspace.value.setNot2TreeComment(data)
             workspace.value.setPageCommentList(list, props.page.id)
             workspace.value.setCommentList(list)
             documentCommentList.value = workspace.value.pageCommentList
-            if(props.context.selection.isSelectComment) {
+            if (props.context.selection.isSelectComment) {
                 props.context.selection.selectComment(props.context.selection.commentId)
                 documentCommentList.value = workspace.value.pageCommentList
                 props.context.selection.setCommentSelect(false)
             }
         }
-    }catch(err) {
+    } catch (err) {
         console.log(err);
     }
 }
 
 // 列表转树
 const list2Tree = (list: any, rootValue: string) => {
-  const arr: any = []
-  list.forEach((item: any) => {
-    if (item.parent_id === rootValue) {
-      const children = list2Tree(list, item.id)
-      if (children.length) {
-        item.children = children
-      }
-      arr.push(item)
-    }
-  })
-  return arr
+    const arr: any = []
+    list.forEach((item: any) => {
+        if (item.parent_id === rootValue) {
+            const children = list2Tree(list, item.id)
+            if (children.length) {
+                item.children = children
+            }
+            arr.push(item)
+        }
+    })
+    return arr
 }
 
 //关于我的评论
@@ -820,15 +814,15 @@ const aboutMe = () => {
     const userId = localStorage.getItem('userId')
     const commnetList = props.context.workspace.not2treeComment
     commnetList.forEach((item: any) => {
-        if(item.user.id === userId) {
+        if (item.user.id === userId) {
             const rootId = item.root_id
-            if(rootId) {
+            if (rootId) {
                 commnetList.forEach((i: any) => {
-                    if(i.id === rootId) {
+                    if (i.id === rootId) {
                         aboutMeArr.push(i)
                     }
                 })
-            }else {
+            } else {
                 aboutMeArr.push(item)
             }
         }
@@ -838,7 +832,7 @@ const aboutMe = () => {
 }
 
 // 删除评论
-const deleteComment = (index :number) => {
+const deleteComment = (index: number) => {
     workspace.value.sendComment()
     documentCommentList.value.splice(index, 1)
     const timer = setTimeout(() => {
@@ -933,7 +927,7 @@ onUnmounted(() => {
     <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent>
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()"/>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
@@ -942,12 +936,14 @@ onUnmounted(() => {
             </PageViewContextMenuItems>
         </ContextMenu>
         <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
-        <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y" 
-        :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" 
-        :matrix="matrix.toArray()" :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <PageCommentItem :context="props.context" :x="posi.x" @moveCommentPopup="downMoveCommentPopup" :y="posi.y" :matrix="matrix.toArray()"
-            @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush" v-for="(item, index) in documentCommentList" :key="index" 
-            :commentInfo="item" :index="index" @recover="recover" @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()">
+        <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
+            :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
+            @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"
+            :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+        <PageCommentItem :context="props.context" :x="posi.x" @moveCommentPopup="downMoveCommentPopup" :y="posi.y"
+            :matrix="matrix.toArray()" @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush"
+            v-for="(item, index) in documentCommentList" :key="index" :commentInfo="item" :index="index" @recover="recover"
+            @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()">
         </PageCommentItem>
     </div>
 </template>

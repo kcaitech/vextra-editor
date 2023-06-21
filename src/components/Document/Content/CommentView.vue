@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
 import { Close, Delete, CircleCheck, Back, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
@@ -63,6 +63,9 @@ const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 
 const close = (e: MouseEvent) => {
     emit('close', e)
+    nextTick(() => {
+        props.context.workspace.commentInput(false);
+    })
 }
 const prenvetOpacity = computed(() => {
     const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
@@ -161,6 +164,9 @@ const carriageReturn = (event: KeyboardEvent) => {
         }
     }else if(code === 'Escape' && textarea.value.trim().length < 4) {
         emit('close')
+        nextTick(() => {
+            props.context.workspace.commentInput(false);
+        })
     }else if (code === 'Escape' && textarea.value.trim().length >= 4) {
         startShake()
     }

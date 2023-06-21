@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, computed, reactive } from "vue";
+import { watchEffect, onMounted, onUnmounted, computed, reactive, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
@@ -22,6 +22,7 @@ interface Title {
     maxWidth: number
     selected: boolean
 }
+
 const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
