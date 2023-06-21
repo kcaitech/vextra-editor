@@ -14,11 +14,11 @@ const props = defineProps<{
     matrix: number[],
 }>();
 
-let editor = props.context.editor4Shape(props.shape);
+let editor = props.context.editor4TextShape(props.shape);
 watch(() => props.shape, (value, old) => {
     old.unwatch(updateInputPos);
     value.watch(updateInputPos);
-    editor = props.context.editor4Shape(props.shape);
+    editor = props.context.editor4TextShape(props.shape);
     updateInputPos();
 })
 

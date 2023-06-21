@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -125,16 +125,11 @@ function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) 
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 const rename = (value: string, id: string) => {
-    // const page = props.context.selection.selectedPage
     props.context.data.pagesMgr.get(id).then((p: Page | undefined) => {
         if (!p) return
-        const editor = computed(() => {
-            return props.context.editor4Page(p)
-        });
-        editor.value.setName(value)
-        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
+        const editor = props.context.editor4Page(p);
+        editor.setName(value);
     })
-
 }
 
 const mousedown = (id: string, e: MouseEvent) => {
@@ -199,7 +194,6 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         const index = props.context.data.pagesList.findIndex((item) => item.id === id)
         id && props.context.editor4Doc().delete(id)
         id && props.context.selection.deletePage(id, index)
-        props.context.workspace.toggleCommentPage()
     }
 }
 onMounted(() => {
