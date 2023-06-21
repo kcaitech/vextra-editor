@@ -1,9 +1,3 @@
-<!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-03-09 11:26:27
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-09 15:27:56
--->
 <script setup lang="ts">
 import {} from "vue";
 import { Context } from "@/context";
