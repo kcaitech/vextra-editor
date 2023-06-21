@@ -7,23 +7,35 @@
 <script setup lang="ts">
 import {} from "vue";
 import { Context } from "@/context";
+import developing from "@/assets/kaifazhong_3.svg"
+import { useI18n } from 'vue-i18n';
+
 const props = defineProps<{ context: Context }>();
+const { t } = useI18n();
 
 </script>
 
 <template>
     <div class="comps-container">
-        组件库...
+        <img :src="developing" alt="">
+        <span style="margin-top: 10px;">{{t('navi.development')}}</span>
     </div>
 </template>
 
 <style scoped lang="scss">
 .comps-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     height: 100%;
-    background-color: rgb(248, 239, 229);
+    background-color: #fff;
     font-size: 10px;
     padding: 8px 16px;
     box-sizing: border-box;
+    >svg {
+        width: 100%;
+    }
 }
 </style>

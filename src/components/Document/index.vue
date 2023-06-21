@@ -479,47 +479,6 @@ onUnmounted(() => {
         z-index: 2;
     }
 
-    .showHiddenR {
-        position: absolute;
-        left: -12px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1;
-        cursor: pointer;
-        height: 60px;
-        background-color: var(--theme-color-anti);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px 0px 0px 4px;
-        box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
-
-        >.svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
-
-    .showHiddenL {
-        position: absolute;
-        right: -12px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1;
-        cursor: pointer;
-        height: 60px;
-        background-color: var(--theme-color-anti);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 0 4px 4px 0;
-        box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
-
-        >.svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
 }
 
 .notification {

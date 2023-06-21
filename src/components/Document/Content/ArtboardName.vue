@@ -111,6 +111,7 @@ const selectShape = () => {
 <style scoped lang="scss">
       
 .container-name {
+    z-index: 2;
     .name {
         width: 100%;
         text-overflow: ellipsis;
