@@ -39,7 +39,20 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 localStorage.setItem('nickname', linfo.data.nickname)
                 localStorage.setItem('userId', linfo.data.id)
                 isLoading.value = false
-                router.push({ name: 'apphome' })
+                const perRoute = localStorage.getItem('perRoute') || ''
+                if(perRoute) {
+                    const params = new URLSearchParams(perRoute.split('?')[1]);
+                    const path = perRoute.split('?')[0].replace('/', '');
+                    const id = params.get('id');
+                    router.push({
+                        name: path,
+                        query: {
+                            id: id
+                        }
+                    })
+                }else {
+                    router.push({ name: 'apphome' })
+                }
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
                 loginshow.value = false
@@ -76,7 +89,20 @@ function clickaffirm() {
                 localStorage.setItem('nickname', result.data.nickname)
                 localStorage.setItem('userId', result.data.id)
                 isLoading.value = false
-                router.push({ name: 'apphome' })
+                const perRoute = localStorage.getItem('perRoute') || ''
+                if(perRoute) {
+                    const params = new URLSearchParams(perRoute.split('?')[1]);
+                    const path = perRoute.split('?')[0].replace('/', '');
+                    const id = params.get('id');
+                    router.push({
+                        name: path,
+                        query: {
+                            id: id
+                        }
+                    })
+                }else {
+                    router.push({ name: 'apphome' })
+                }
             } else if (result.code === 400) {
                 codeinput.value.focus()
                 codevalue.value = ''
