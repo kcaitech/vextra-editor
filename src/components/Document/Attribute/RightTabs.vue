@@ -9,7 +9,12 @@ const { t } = useI18n();
 
 const props = defineProps<{
     context: Context
+    rightTriggleVisible: boolean
+    showRight: boolean
 }>();
+const emit = defineEmits<{
+    (e: 'showAttrbute'): void
+}>()
 
 // type Tab = "Design" | "Prototype" | "Inspect";
 type Tab = "Design" | "Inspect";
@@ -41,6 +46,10 @@ function toggle(id: Tab) {
     currentTab.value = id;
 }
 
+const showHiddenRight = () => {
+    emit('showAttrbute')
+}
+
 </script>
 
 <template>
@@ -53,6 +62,11 @@ function toggle(id: Tab) {
             <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
             <!-- <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab> -->
             <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
+            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
+                :style="{ opacity: showRight ? 1 : 0.6 }">
+                <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
+                <svg-icon v-else class="svg" icon-class="left"></svg-icon>
+            </div>
         </div>
     </div>
 </template>
@@ -99,6 +113,26 @@ function toggle(id: Tab) {
         position: relative;
         flex: 1 1 auto;
         box-sizing: border-box;
+        .showHiddenR {
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 9;
+            cursor: pointer;
+            height: 60px;
+            background-color: var(--theme-color-anti);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px 0px 0px 4px;
+            box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
+
+            >.svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
     }
 }
 </style>

@@ -9,10 +9,14 @@ import { Context } from "@/context";
 import Tabs from "@/components/Document/Navigation/LeftTabs.vue";
 import { Page } from "@kcdesign/data";
 
-const props = defineProps<{ context: Context, page: Page }>();
+const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
+const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
+const showHiddenLeft = () => {
+    emit('showNavigation')
+}
 </script>
 
 <template>
-    <Tabs :context="props.context" v-bind="$attrs" :page="page"></Tabs>
+    <Tabs :context="props.context" v-bind="$attrs" :page="page" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></Tabs>
 </template>
