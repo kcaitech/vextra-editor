@@ -96,12 +96,17 @@ const onMouseleave = () => {
   visible.value = false
 }
 
+const customFrame = () => {
+  isSelect()
+  popoverVisible.value = false;
+}
+
 </script>
 
 <template>
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
     <div>
-      <span>{{ t('frame.custom') }}</span>
+      <span @click="customFrame">{{ t('frame.custom') }}</span>
     </div>
     <div ref="frame" v-for="(item, i) in frames" :key="i" style="position: relative;">
       <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
