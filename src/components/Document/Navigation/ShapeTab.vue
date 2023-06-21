@@ -12,7 +12,8 @@ import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
 import { Page } from "@kcdesign/data";
-const props = defineProps<{ context: Context, page: Page }>();
+const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
+const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
 const structure = ref<{pagelistHeight: number, pagelistHeightBackup: number}>({pagelistHeight: 162, pagelistHeightBackup: 36});
 const container = ref<HTMLDivElement>();
@@ -35,6 +36,9 @@ const observer = new ResizeObserver(() => {
     const el = container.value;
     el && (containerHeight.value = el.clientHeight);
 })
+const showHiddenLeft = () => {
+    emit('showNavigation')
+}
 
 onMounted(() => {
     container.value && observer.observe(container.value);
@@ -54,6 +58,11 @@ onUnmounted(() => {
         <div class="page-navi" :style="{height: isPagelistFold ? 'calc(100% - 30px)' : `calc(100% - ${structure.pagelistHeight}px)`}">
             <ShapeList :context="props.context" :page="page" :pageHeight="structure.pagelistHeight"></ShapeList>
         </div>
+        <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
+            :style="{ opacity: showLeft ? 1 : 0.6 }">
+            <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
+            <svg-icon v-else class="svg" icon-class="right"></svg-icon>
+        </div>
     </div>
     
 </template>
@@ -64,6 +73,26 @@ onUnmounted(() => {
     height: 100%;
     > .page-navi {
         position: relative;
+    }
+    .showHiddenL {
+        position: absolute;
+        right: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 9;
+        cursor: pointer;
+        height: 60px;
+        background-color: var(--theme-color-anti);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0 4px 4px 0;
+        box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
+
+        >.svg {
+            width: 12px;
+            height: 12px;
+        }
     }
 }
 </style>

@@ -1,13 +1,13 @@
 import { Watchable } from "@kcdesign/data";
-interface userInfo {
+interface UserInfo {
     id: string
     nickname: string
     avatar: string
 }
 export class User extends Watchable(Object) {
     private m_username: string = ''
-    private m_userinfo: userInfo;
-    constructor(info: userInfo) {
+    private m_userinfo: UserInfo;
+    constructor(info: UserInfo) {
         super();
         this.m_userinfo = info;
     }
