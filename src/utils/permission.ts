@@ -15,7 +15,12 @@ router.beforeEach((to, from, next) => {
             return item === to.path
         })) {
             next()
-        } else {       
+        } else {      
+            if(to.meta.requireAuth) {
+                localStorage.setItem('perRoute', to.fullPath) 
+            }else {
+                localStorage.setItem('perRoute', '') 
+            }
             next('/login')
         }
     }
