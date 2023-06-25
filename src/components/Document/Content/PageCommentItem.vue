@@ -3,15 +3,13 @@ import { onMounted, onUnmounted, ref, watchEffect, computed, nextTick } from 'vu
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import HoverComment from './HoverComment.vue'
-import CommentView from './CommentView.vue'
+import CommentPopup from './CommentPopup.vue'
 import { Matrix, Shape } from "@kcdesign/data";
 import * as comment_api from '@/apis/comment';
 import { Selection } from '@/context/selection';
-type CommentViewEl = InstanceType<typeof CommentView>;
+type CommentViewEl = InstanceType<typeof CommentPopup>;
 const props = defineProps<{
     context: Context
-    x: number
-    y: number
     matrix: number[]
     commentInfo: any
     index: number
@@ -48,27 +46,27 @@ const status = computed(() => {
     replyStatus()
     showAboutMe()
     if (reply.value) {
-        if(myComment.value) {
-            if(aboutMe.value) {
+        if (myComment.value) {
+            if (aboutMe.value) {
                 return true
-            }else {
+            } else {
                 return false
             }
-        }else {
+        } else {
             return true
         }
     } else {
-        if(status === 0) {
-            if(myComment.value) {
-                if(aboutMe.value) {
+        if (status === 0) {
+            if (myComment.value) {
+                if (aboutMe.value) {
                     return true
-                }else {
+                } else {
                     return false
                 }
-            }else {
+            } else {
                 return true
             }
-        }else {
+        } else {
             return false
         }
     }
@@ -77,7 +75,7 @@ const status = computed(() => {
 const showAboutMe = () => {
     myComment.value = props.context.selection.commentAboutMe
     const comment = props.myComment.find(item => item.id === props.commentInfo.id)
-    if(comment) {
+    if (comment) {
         aboutMe.value = true
     } else {
         aboutMe.value = false
@@ -131,6 +129,18 @@ const unHoverComment = () => {
 }
 const showComment = (e: MouseEvent) => {
     if (props.context.workspace.isCommentMove) return
+    const commentX = props.commentInfo.shape_frame.x1
+    const commentY = props.commentInfo.shape_frame.y1
+    const workspace = props.context.workspace;
+    const { bottom, right } = workspace.root;
+    const commentCenter = workspace.matrix.computeCoord(commentX, commentY) //评论在视图上的位置
+        if(bottom - commentCenter.y < 75) {
+            props.context.workspace.matrix.trans(0, -80);
+            props.context.workspace.matrixTransformation();
+        }else if (right - commentCenter.x < 330) {
+            props.context.workspace.matrix.trans(-80, 0);
+            props.context.workspace.matrixTransformation();
+    }
     props.context.workspace.commentMount(false)
     const { x, y } = props.context.workspace.root
     posi.x = e.clientX - x
@@ -145,9 +155,9 @@ const showComment = (e: MouseEvent) => {
 
 const unHover = (e: MouseEvent) => {
     var timeout = setTimeout(() => {
-        if(props.context.workspace.isHoverCommentId === props.commentInfo.id) {
+        if (props.context.workspace.isHoverCommentId === props.commentInfo.id) {
             return
-        }else {
+        } else {
             props.context.workspace.hoverComment(false);
         }
         clearTimeout(timeout)
@@ -213,10 +223,10 @@ const nextArticle = (i: number, xy?: { x: number, y: number }, id?: string) => {
 
 const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) => {
     const workspace = props.context.workspace;
-    const commentItem = props.context.workspace.pageCommentList[index] 
+    const commentItem = props.context.workspace.pageCommentList[index]
     const cx = reply.value ? commentItem.shape_frame.x1 : xy?.x
     const cy = reply.value ? commentItem.shape_frame.y1 : xy?.y
-    if(isInner(cx, cy)) {
+    if (isInner(cx, cy)) {
         props.context.selection.selectComment(reply.value ? commentItem.id : id)
         return
     }
@@ -233,18 +243,17 @@ const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) 
 
 // 判断评论是否在可视区域内
 function isInner(x: number, y: number) {
-  const workspace = props.context.workspace;
-  const { x: rx, y: ry, bottom, right } = workspace.root;
-  const commentCenter = workspace.matrix.computeCoord(x, y) //评论在视图上的位置
-  if((commentCenter.x + rx) < rx ||(commentCenter.y + ry) < ry) {
-    return false
-  } else if ((commentCenter.x + rx) > right || (commentCenter.y + ry + 35) > bottom) {
-    return false
-  }else {
-    return true
-  }
+    const workspace = props.context.workspace;
+    const { x: rx, y: ry, bottom, right } = workspace.root;
+    const commentCenter = workspace.matrix.computeCoord(x, y) //评论在视图上的位置
+    if ((commentCenter.x + rx) < rx || (commentCenter.y + ry) < ry) {
+        return false
+    } else if ((commentCenter.x + rx) > right || (commentCenter.y + ry + 35) > bottom) {
+        return false
+    } else {
+        return true
+    }
 }
-
 
 function setOrigin() { // 这个动作是让container与页面坐标系重合
     props.reflush;
@@ -261,7 +270,7 @@ const getDocumentComment = async () => {
         console.log(err);
     }
 }
-const workspaceUpdate = (t: number) => {
+const workspaceUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === WorkSpace.HOVER_COMMENT) {
         unHoverComment()
     }
@@ -273,6 +282,10 @@ const workspaceUpdate = (t: number) => {
     }
     if (props.commentInfo.shape_frame.x2 || props.commentInfo.shape_frame.y2) {
         setCommentPosition()
+    }
+    if (index === props.index) {
+        // 打开
+        showComment(me!)
     }
 }
 
@@ -314,13 +327,13 @@ const update = (t: number) => {
     if (t === Selection.SOLVE_MENU_STATUS) {
         reply.value = props.context.selection.commentStatus
     }
-    if(t === Selection.SKIP_COMMENT) {
+    if (t === Selection.SKIP_COMMENT) {
         pageSkipComment()
         nextTick(() => {
             unfold()
         })
     }
-    if(t === Selection.ABOUT_ME) {
+    if (t === Selection.ABOUT_ME) {
         showAboutMe()
     }
 }
@@ -342,6 +355,10 @@ const setCommentPosition = () => {
     })
 }
 
+defineExpose({
+    showComment
+})
+
 onMounted(() => {
     setCommentPosition()
     props.context.workspace.watch(workspaceUpdate);
@@ -359,7 +376,8 @@ watchEffect(watcher)
     <div class="container comment-mark-item" ref="comment" :style="{
         transform: `translate(${matrix.m02}px, ${matrix.m12}px)`
         , left: -2 + 'px', top: -33 + 'px'
-    }" :reflush="reflush !== 0 ? reflush : undefined" v-if="status" :class="{ hierarchy: ShowComment || commentScale === 1 ? true : false}">
+    }" :reflush="reflush !== 0 ? reflush : undefined" v-if="status"
+        :class="{ hierarchy: ShowComment || commentScale === 1 ? true : false }">
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="moveCommentPopup"
             :style="{ transform: `scale(${markScale})`, opacity: commentOpacity && !ShowComment ? '0.5' : '1' }"
             :class="{ shadow: commentScale === 1 }">
@@ -368,12 +386,12 @@ watchEffect(watcher)
         <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment"
             @unHoverComment="unHoverComment" :commentInfo="props.commentInfo" :index="props.index"
             @deleteComment="deleteComment" @resolve="resolve" @moveCommentPopup.stop="moveCommentPopup"></HoverComment>
-        <CommentView v-if="ShowComment" ref="commentPopupEl" :x="posi.x" :y="posi.y" :rootHeight="rootHeight"
+        <CommentPopup v-if="ShowComment" ref="commentPopupEl" :x="posi.x" :y="posi.y" :rootHeight="rootHeight"
             :rootWidth="rootWidth" :length="commentLength" :context="props.context" @close="closeComment"
             :commentInfo="props.commentInfo" :index="props.index" @resolve="resolve" @delete="deleteComment"
             @recover="recover" @editComment="editComment" @editCommentChild="editCommentChild"
             :documentCommentList="documentCommentList" @previousArticle="previousArticle" @next-article="nextArticle"
-            :reply="reply" @moveCommentPopup.stop="moveCommentPopup"></CommentView>
+            :reply="reply" @moveCommentPopup.stop="moveCommentPopup"></CommentPopup>
     </div>
 </template>
 

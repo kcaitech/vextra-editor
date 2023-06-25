@@ -123,8 +123,6 @@ function leftAdjust(saveWidth: number, offset: number) {
     sizeBounds.left.width = leftWidth;
     sizeBounds.right.width = rightWidth;
     sizeBounds.middle.width = middleWidth;
-    console.log(sizeBounds.left);
-    
 }
 
 type AdjustsFun = { [key: string]: (saveWidth: number, offset: number) => void }
@@ -211,7 +209,6 @@ function onSizeChange() {
     sizeBounds.left.width = sizeBounds.left.minWidth;
     sizeBounds.right.width = sizeBounds.right.minWidth;
     sizeBounds.middle.width = middleWidth;
-    console.log(sizeBounds.left, 'size');
 }
 
 function initSizeBounds() {
@@ -268,13 +265,13 @@ watchEffect(initSizeBounds);
     width: 100%;
     height: auto;
     position: relative;
-
     .column1 {
         position: relative;
     }
 
     .column2 {
         position: relative;
+        overflow: hidden;
     }
 
     .column3 {

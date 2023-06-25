@@ -116,6 +116,7 @@ export class WorkSpace extends Watchable(Object) {
     static COPY = 38;
     static COMMENT_ALL = 39;
     static UPDATE_COMMENT_POS = 40;
+    static SHOW_COMMENT_POPUP = 41;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -137,7 +138,8 @@ export class WorkSpace extends Watchable(Object) {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
-    private m_user_info: UserInfo | undefined
+    private m_user_info: UserInfo | undefined;
+    private m_document_perm: number = 3;
     private m_comment_input: boolean = false;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
@@ -189,6 +191,9 @@ export class WorkSpace extends Watchable(Object) {
         if (pageView) {
             return pageView as Element;
         }
+    }
+    get documentPerm() {
+        return this.m_document_perm;
     }
     get isPreToTranslating() {
         return this.m_pre_to_translating;
@@ -282,6 +287,12 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isDocumentInfo() {
         return this.m_document_info;
+    }
+    setDocumentPerm(perm: number) {
+        this.m_document_perm = perm;
+    }
+    showCommentPopup(index: number, e: MouseEvent) {
+        this.notify(WorkSpace.SHOW_COMMENT_POPUP, index, e);
     }
     setFreezeStatus(isFreeze: boolean) {
         this.m_freeze = isFreeze;
@@ -578,6 +589,7 @@ export class WorkSpace extends Watchable(Object) {
         if (ctrlKey || metaKey) {
             this.notify(WorkSpace.COPY)
         } else {
+            if(this.documentPerm === 1) return
             this.escSetup();
             this.m_current_action = Action.AddComment;
             this.commentInput(false);

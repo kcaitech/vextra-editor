@@ -124,7 +124,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="moveCommentPopup"
-        @mouseup="onClick" :style="{ transform: `scale(${props.scale})` }">
+         :style="{ transform: `scale(${props.scale})` }">
         <div class="avatar">
             <img :src="commentInfo.user.avatar" alt="">
         </div>

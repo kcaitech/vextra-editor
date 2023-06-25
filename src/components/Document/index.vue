@@ -20,6 +20,7 @@ import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
+import { PropSync } from 'vue-property-decorator';
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -219,7 +220,7 @@ const getDocumentAuthority = async () => {
             }
         }
         permType.value = data.data.perm_type
-
+        context && context.workspace.setDocumentPerm(data.data.perm_type)
     } catch (err) {
         console.log(err);
     }
@@ -382,7 +383,7 @@ function init() {
 }
 function workspaceWatcher(t: number) {
     if (t === WorkSpace.DOCUMENT_SAVE) {
-        const docID = localStorage.getItem('docId') || '';
+        const docID = (route.query.id as string)
         if (docID && permType.value !== 1) {
 
         }
