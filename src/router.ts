@@ -31,7 +31,10 @@ const routes = [
     {
         path: "/document",
         name: "document",
-        component: DocumentVue
+        component: DocumentVue,
+        meta: {
+            requireAuth: true
+        }
     },
     {
         path: "/apphome",
@@ -69,7 +72,10 @@ const routes = [
     {
         path: "/apply",
         name: "apply",
-        component: Apply
+        component: Apply,
+        meta: {
+            requireAuth: true
+        }
     },
     {
         path: "/pcenter",

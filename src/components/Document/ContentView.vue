@@ -281,6 +281,7 @@ function pageViewDragging(e: MouseEvent) {
                 prePt.y = e.screenY;
             }
         }
+        workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
 function pageViewDragEnd() {

@@ -13,18 +13,14 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "baseUrl": ".",
+    "baseUrl": "src",
+    "outDir": "../../public",
     "types": [
       "webpack-env",
       "jest"
     ],
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@pal/*": [
-        "src/PAL/browser/*", "src/PAL/nodejs/*"
-      ]
+
     },
     "lib": [
       "esnext",
@@ -35,13 +31,9 @@
     ]
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "tests/**/*.ts",
-    "tests/**/*.tsx", "src/utils/dom-to-image.js" ],
+    "worker.ts"
+  ],
   "exclude": [
-    "node_modules",
-    "src/**/*.js",
+
   ]
 }

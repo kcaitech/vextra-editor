@@ -129,7 +129,8 @@ export const navi = {
     resource: 'Resource',
     page: 'Page',
     add_page: 'Add new page',
-    copy: 'copy'
+    copy: 'copy',
+    development: 'Functional development……'
 }
 
 export const frame = {
