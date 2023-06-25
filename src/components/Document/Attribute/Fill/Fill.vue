@@ -107,10 +107,11 @@ function first() {
     }
 }
 function deleteFill(idx: number) {
+    const _idx = fills.length - idx - 1;
     if (len.value === 1) {
-        editor.value.deleteFill(idx);
+        editor.value.deleteFill(_idx);
     } else if (len.value > 1) {
-        const actions = get_actions_fill_delete(props.shapes, idx);
+        const actions = get_actions_fill_delete(props.shapes, _idx);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
