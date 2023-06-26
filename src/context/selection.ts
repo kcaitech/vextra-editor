@@ -1,4 +1,3 @@
-import { layoutText, locateText } from "@/layout/text";
 import { ISave4Restore, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -290,8 +289,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         x = xy.x;
         y = xy.y;
 
-        const layout = shape.getLayout(layoutText);
-        return locateText(layout, x, y);
+        return shape.text.locateText(x, y);
     }
 
     setCursor(index: number, before: boolean) {

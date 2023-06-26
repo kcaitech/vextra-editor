@@ -19,6 +19,7 @@ import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
+import { measure } from '@/layout/text/measure';
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -275,7 +276,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(importDocumentParams, path, "", "", repo)
+        const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             window.document.title = document.name;

@@ -1,6 +1,5 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { layoutText, locateCursor } from '@/layout/text';
 import { Matrix } from '@kcdesign/data';
 import { TextShape } from '@kcdesign/data';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
@@ -51,8 +50,8 @@ function _updateInputPos() {
         index = end;
     }
 
-    const layout = props.shape.getLayout(layoutText);
-    const locatepoints = locateCursor(layout, index, cursorAtBefore);
+    const text = props.shape.text;
+    const locatepoints = text.locateCursor(index, cursorAtBefore);
     const cursor = locatepoints.map((point) => matrix.computeCoord(point.x, point.y));
 
     if (cursor.length !== 2) return;
@@ -159,7 +158,7 @@ function onfocusout() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    console.log(e.key)
+    // console.log(e.key)
     handleKeyEvent(e, props.context, props.shape, editor);
 }
 
