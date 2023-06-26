@@ -1,16 +1,16 @@
-import { Watchable } from "@kcdesign/data";
+import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape } from "@kcdesign/data";
+import { Shape, TextShape } from "@kcdesign/data";
 import { Repository } from "@kcdesign/data";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
-import { ShapeEditor } from "@kcdesign/data";
+import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
 // 仅暴露必要的方法
 export class RepoWraper {
-    private m_repo: Repository;
-    constructor(repo: Repository) {
+    private m_repo: CoopRepository;
+    constructor(repo: CoopRepository) {
         this.m_repo = repo;
     }
     canRedo(): boolean {
@@ -25,6 +25,13 @@ export class RepoWraper {
     redo() {
         this.m_repo.redo();
     }
+    watch(f: Function) {
+        // todo
+        throw new Error("Not implemented")
+    }
+    unwatch(f: Function) {
+        throw new Error("Not implemented")
+    }
 }
 
 export class Context extends Watchable(Object) {
@@ -32,15 +39,48 @@ export class Context extends Watchable(Object) {
     private m_selection: Selection;
     private m_editor: Editor;
     private m_repo: RepoWraper;
+    private m_coopRepo: CoopRepository;
     private m_workspace: WorkSpace;
+    private m_taskMgr: TaskMgr;
 
-    constructor(data: Document, repo: Repository) {
+    constructor(data: Document, repo: CoopRepository) {
         super();
         this.m_data = data;
         this.m_selection = new Selection(data);
-        this.m_repo = new RepoWraper(repo);
+        this.m_coopRepo = repo;
+        this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_workspace = new WorkSpace(this);
-        this.m_editor = new Editor(this.m_data, repo, this.m_selection);
+        this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
+        this.m_taskMgr = new TaskMgr();
+
+        const pagelist = data.pagesList.slice(0);
+        this.m_taskMgr.add(new class implements Task { // page auto loader
+            isValid(): boolean {
+                return !this.isDone();
+            }
+            isDone(): boolean {
+                return pagelist.length <= 0;
+            }
+            async run(): Promise<void> {
+                let id;
+                while (pagelist.length > 0) {
+                    const i = pagelist[0];
+                    if (data.pagesMgr.getSync(i.id)) {
+                        pagelist.splice(0, 1);
+                    }
+                    else {
+                        id = i.id;
+                        break;
+                    }
+                }
+                if (id) {
+                    await data.pagesMgr.get(id);
+                    pagelist.splice(0, 1);
+                }
+            }
+        }, TaskPriority.normal);
+
+        this.m_taskMgr.startLoop();
     }
 
     get editor(): Editor {
@@ -59,12 +99,20 @@ export class Context extends Watchable(Object) {
         return this.editor.editor4Shape(shape);
     }
 
+    editor4TextShape(shape: TextShape): TextShapeEditor {
+        return this.editor.editor4TextShape(shape);
+    }
+
     get data() {
         return this.m_data;
     }
 
     get repo(): RepoWraper {
         return this.m_repo;
+    }
+
+    get coopRepo(): CoopRepository {
+        return this.m_coopRepo;
     }
 
     get selection() {

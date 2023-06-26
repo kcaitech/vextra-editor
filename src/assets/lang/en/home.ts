@@ -95,8 +95,8 @@ export const home = {
     access_record_ok: 'Removed successfully',
     access_record_no: 'Removal failed',
     exit_share: 'Exit share',
-    exit_share_success:'Exit share success',
-    exit_share_fail:'Exit share failed',
+    exit_share_success: 'Exit share success',
+    exit_share_fail: 'Exit share failed',
     restore: 'Restore',
     completely_delete: 'Completely delete',
     delete_tips: 'After deleting, the file cannot be recovered. Are you sure you want to delete it?',
@@ -109,17 +109,17 @@ export const home = {
     delete_file_no: 'Failed to delete',
     other_tips: 'Please make sure the network connection is normal',
     addComment: 'Add comment',
-    rename:'Rename',
-    rename_ok:'OK',
+    rename: 'Rename',
+    rename_ok: 'OK',
     page_sort: 'Sort by page',
-    login_failed:'Login failure',
-    login_refresh:'Click refresh QR code',
-    invitation_code_tips:'Please enter the trial invitation code'
+    login_failed: 'Login failure',
+    login_refresh: 'Click refresh QR code',
+    invitation_code_tips: 'Please enter the trial invitation code'
 }
 
 export const search = {
-    search_results:'No matching results',
-    search_history:'No search history',
+    search_results: 'No matching results',
+    search_history: 'No search history',
 }
 
 
@@ -129,7 +129,8 @@ export const navi = {
     resource: 'Resource',
     page: 'Page',
     add_page: 'Add new page',
-    copy: 'copy'
+    copy: 'copy',
+    development: 'Functional development……'
 }
 
 export const frame = {
@@ -186,7 +187,9 @@ export const attr: any = {
     'fixed_bottom': 'Bottom fixed',
     'fixed_top': 'Top fixed',
     'fixed_top_bottom': 'Fixed top and bottom',
-    'adapt': 'Resize to fit'
+    'adapt': 'Resize to fit',
+    'mixed': 'Mixed',
+    'mixed_lang': 'Click + to replace mixed content.'
 }
 
 export const login = {
@@ -206,7 +209,9 @@ export const comment = {
     show_resolved_comments: 'Show resolved comments',
     comment_area: 'Comment section'
 }
-
+export const clipboard = {
+    'invalid_data': 'invalid data'
+}
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';

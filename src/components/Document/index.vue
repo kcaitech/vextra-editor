@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page } from '@kcdesign/data';
+import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal, CoopRepository } from '@kcdesign/data';
 import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import { useRoute } from 'vue-router';
@@ -40,8 +40,10 @@ const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
+let loading_timer: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
+const null_context = ref<boolean>(true);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -237,19 +239,8 @@ const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
-let uploadTimer: any = null
-function polling() {
-    if (uploadTimer) {
-        clearTimeout(uploadTimer);
-    }
-    uploadTimer = setTimeout(() => {
-        const docID = localStorage.getItem('docId') || '';
-        if (docID && permType.value !== 1) {
-            upload(docID);
-        }
-    }, 60000);
-}
 //获取文档信息
+let coopLocal: ICoopLocal | null = null;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -272,7 +263,7 @@ const getDocumentInfo = async () => {
         }
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限   
+        //获取文档类型是否为私有文档且有无权限
 
         const repo = new Repository();
         const importDocumentParams = {
@@ -284,46 +275,50 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        await importDocument(importDocumentParams, path, "", "", repo).then((document) => {
-            if (document) {
-                window.document.title = document.name;
-                context = new Context(document, repo);
-                context.selection.watch(selectionWatcher);
-                context.workspace.watch(workspaceWatcher);
-                switchPage(context.data.pagesList[0]?.id);
-                localStorage.setItem('docId', route.query.id as string);
-                polling();
-            }
-        })
+        const document = await importDocument(importDocumentParams, path, "", "", repo)
+        if (document) {
+            const coopRepo = new CoopRepository(document, repo)
+            window.document.title = document.name;
+            context = new Context(document, coopRepo);
+            null_context.value = false;
+            context.selection.watch(selectionWatcher);
+            context.workspace.watch(workspaceWatcher);
+            switchPage(context.data.pagesList[0]?.id);
+            localStorage.setItem('docId', route.query.id as string);
+            coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
+            coopLocal.start().finally(() => loading.value = false);
+        }
     } catch (err) {
-        new Error(`${err}`);
-    } finally {
         loading.value = false;
+        console.log(err)
+        throw err;
     }
 }
-function upload(id?: string) {
+function upload() {
     const token = localStorage.getItem('token');
-    if (token) {
-        if (context) {
-            const data = context.data;
-            if (data) {
-                context.workspace.startSvae();
-                uploadExForm(data, FILE_UPLOAD, token, id || '', (successed, doc_id) => {
-                    if (successed) {
-                        localStorage.setItem('docId', doc_id);
-                        if (!id) {
-                            router.replace({
-                                path: '/document',
-                                query: { id: doc_id }
-                            })
-                        }
-                    }
-                    polling();
-                    context?.workspace.endSave();
-                })
-            }
-        }
+    if (!token || !context || !context.data) {
+        return
     }
+    context.workspace.startSave();
+    uploadExForm(context.data, FILE_UPLOAD, token, '', (isSuccess, doc_id) => {
+        if (isSuccess) {
+            localStorage.setItem('docId', doc_id);
+            router.replace({
+                path: '/document',
+                query: { id: doc_id }
+            });
+            coopLocal = new CoopLocal(
+                context!.data,
+                context!.coopRepo,
+                `${FILE_UPLOAD}/documents/ws`,
+                localStorage.getItem('token') || "",
+                doc_id,
+                "0",
+            );
+            coopLocal.start();
+        }
+        context?.workspace.endSave();
+    })
 }
 let timer: any = null;
 function setScreenSize() {
@@ -340,7 +335,8 @@ function init() {
         }, 30000);
     } else { // 从本地读取文件
         if ((window as any).sketchDocument) {
-            context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as Repository));
+            context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
+            null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             upload();
@@ -352,15 +348,7 @@ function init() {
     }
 }
 function workspaceWatcher(t: number) {
-    if (t === WorkSpace.DOCUMENT_SAVE) {
-        const docID = localStorage.getItem('docId') || '';
-        if (docID && permType.value !== 1) {
-            if (uploadTimer) {
-                clearTimeout(uploadTimer);
-            }
-            upload(docID);
-        }
-    } else if (t === WorkSpace.FREEZE) {
+    if (t === WorkSpace.FREEZE) {
         sub_loading.value = true;
     } else if (t === WorkSpace.THAW) {
         sub_loading.value = false;
@@ -371,6 +359,9 @@ onMounted(() => {
     init();
 })
 onUnmounted(() => {
+    try {
+        coopLocal?.close();
+    } catch (err) { }
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
@@ -378,57 +369,41 @@ onUnmounted(() => {
     context?.workspace.unwatch(workspaceWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
-    clearTimeout(uploadTimer);
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
 })
-watchEffect(() => {
-    if (route.query.id) {
-        const id = (route.query.id as string);
-        upload(id);
-    } else {
-        upload();
-    }
-})
 </script>
 
 <template>
-    <Loading v-if="loading || !context"></Loading>
+    <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
-        <Toolbar :context="context" v-if="!loading && context" />
+        <Toolbar :context="context!" v-if="!loading && !null_context" />
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" v-if="!loading && context"
+    <ColSplitView id="center" v-if="!loading && !null_context"
         :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
         :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
         :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
         :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
         <template #slot1>
-            <Navigation v-if="curPage !== undefined && context" id="navigation" :context="context" @switchpage="switchPage"
-                @mouseenter="() => { mouseenter('left') }" @mouseleave="() => { mouseleave('left') }"
-                :page="(curPage as Page)">
+            <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
+                @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+                @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
             </Navigation>
-            <div class="showHiddenL" @click="showHiddenLeft" v-if="!showLeft || leftTriggleVisible"
-                :style="{ opacity: showLeft ? 1 : 0.6 }">
-                <svg-icon v-if="showLeft" class="svg" icon-class="left"></svg-icon>
-                <svg-icon v-else class="svg" icon-class="right"></svg-icon>
-            </div>
         </template>
         <template #slot2>
-            <ContentView v-if="curPage !== undefined && context" id="content" :context="context" :page="(curPage as Page)">
+            <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
+                :page="(curPage as Page)">
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" v-if="context" :context="context" @mouseenter="(e: Event) => { mouseenter('right') }"
-                @mouseleave="() => { mouseleave('right') }"></Attribute>
-            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                :style="{ opacity: showRight ? 1 : 0.6 }">
-                <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
-                <svg-icon v-else class="svg" icon-class="left"></svg-icon>
-            </div>
+            <Attribute id="attributes" v-if="!null_context" :context="context!"
+                @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+            </Attribute>
         </template>
     </ColSplitView>
     <SubLoading v-if="sub_loading"></SubLoading>
@@ -504,47 +479,6 @@ watchEffect(() => {
         z-index: 2;
     }
 
-    .showHiddenR {
-        position: absolute;
-        left: -12px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1;
-        cursor: pointer;
-        height: 60px;
-        background-color: var(--theme-color-anti);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px 0px 0px 4px;
-        box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
-
-        >.svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
-
-    .showHiddenL {
-        position: absolute;
-        right: -12px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 1;
-        cursor: pointer;
-        height: 60px;
-        background-color: var(--theme-color-anti);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 0 4px 4px 0;
-        box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
-
-        >.svg {
-            width: 12px;
-            height: 12px;
-        }
-    }
 }
 
 .notification {

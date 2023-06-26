@@ -16,11 +16,17 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
     } else if (e.code === 'ArrowDown') {
         dx = 0, dy = step, transform = true;
     } else if (e.code === 'Backspace') { // 删除图层
-        for (let i = 0; i < shapes.length; i++) {
-            const editor = context.editor4Shape(shapes[i]);
+        if (shapes.length > 1) {
+            const page = context.selection.selectedPage;
+            if (page) {
+                const editor = context.editor4Page(page);
+                editor.delete_batch(shapes);
+            }
+        } else {
+            const editor = context.editor4Shape(shapes[0]);
             editor.delete();
         }
-        context.selection.selectShape();
+        context.selection.resetSelectShapes();
     } else if (e.code === 'Escape') {
         context.selection.resetSelectShapes();
     }

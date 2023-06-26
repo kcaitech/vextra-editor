@@ -70,9 +70,10 @@ function setupWatcher() {
   }
 }
 function showMenu() {
-  const workspace = props.context.workspace
-  workspace.popoverVisible(false);
-  popover.value?.show();
+  return false;
+  // const workspace = props.context.workspace
+  // workspace.popoverVisible(false);
+  // popover.value?.show();
 }
 function setConstrain(side: Side) {
   let resizingConstraint = props.shape.resizingConstraint as number;
@@ -230,6 +231,7 @@ onBeforeUpdate(() => {
       display: flex;
       justify-content: center;
       align-items: center;
+      opacity: 0;
 
       >svg {
         width: 50%;

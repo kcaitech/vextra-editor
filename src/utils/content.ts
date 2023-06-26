@@ -2,7 +2,12 @@ import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape } from "@kcdesign/data";
-import { Action, Media, ResultByAction, ClipboardItem, WorkSpace } from '@/context/workspace';
+import { Action, Media, ResultByAction } from '@/context/workspace';
+interface SystemClipboardItem {
+  type: ShapeType
+  contentType: string
+  content: Media | string
+}
 interface Root {
   init: boolean
   x: number
@@ -68,7 +73,7 @@ function isInner(context: Context, shape: Shape) {
   if ((l + rx) > right - 20 || r < 0 + 20) {
     return false;
   } else if (b < 0 + 20 || (t + ry) > bottom - 20) {
-    return false
+    return false;
   } else {
     return true;
   }
@@ -197,12 +202,34 @@ function paster(context: Context, t: Function, xy?: PageXY) {
       context.workspace.setFreezeStatus(true);
       navigator.clipboard.read()
         .then(function (data) {
-          if (data && data.length) { // 有内容
+          if (data && data.length) { // 存在有效内容
             if (data[0].types[0].indexOf('image') !== -1) { // 内容为一张图片
               set_clipboard_image(context, data[0], t, xy)
+            } else if (data[0].types.includes('text/html')) {
+              data[0].getType('text/html').then(val => { // 图形
+                const fr = new FileReader();
+                fr.onload = function (event) {
+                  const text = event.target?.result;
+                  if (text) {
+                    console.log('html', text);
+                  }
+                }
+                fr.readAsText(val);
+              });
+            } else if (data[0].types.includes('text/plain')) { // 白板文本
+              data[0].getType('text/plain').then(val => {
+                const fr = new FileReader();
+                fr.onload = function (event) {
+                  const text = event.target?.result;
+                  if (text) {
+                    console.log('plain', text);
+                  }
+                }
+                fr.readAsText(val);
+              });
             }
-          } else { // 没有有效内容
-            // todo
+          } else {
+            // todo 没有有效内容
           }
           context.workspace.setFreezeStatus(false);
         })
@@ -244,7 +271,7 @@ function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, 
 }
 // 复制一张图片
 async function set_clipboard_image(context: Context, data: any, t: Function, _xy?: PageXY) {
-  const item: ClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
+  const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
   item.contentType = data.types[0];
   const val = await data.getType(item.contentType);
   const frame: { width: number, height: number } = { width: 100, height: 100 };
@@ -298,7 +325,7 @@ function drop(e: DragEvent, context: Context, t: Function) {
   e.preventDefault();
   const data = e?.dataTransfer?.files;
   if (data && data[0].type.indexOf('image') !== -1) {
-    const item: ClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
+    const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
     const file = data[0];
     item.contentType = file.type;
     const frame = { width: 100, height: 100 };

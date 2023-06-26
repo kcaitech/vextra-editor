@@ -1,11 +1,6 @@
-<!--
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-09 17:28:05
- * @FilePath: \kcdesign\src\components\Document\Navigation\PageList.vue
--->
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
-import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -13,19 +8,24 @@ import { useI18n } from 'vue-i18n';
 import { ResourceMgr } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
-import ContextMenu from '@/components/common/ContextMenu.vue'
+import ContextMenu from '@/components/common/ContextMenu.vue';
 type List = InstanceType<typeof ListView>;
-const { t } = useI18n();
-type ContextMenuEl = InstanceType<typeof ContextMenu>;
-interface MenuItem {
-    name: string, id: string
+interface Props {
+    context: Context
 }
-const props = defineProps<{ context: Context }>();
-const emit = defineEmits<{
+interface Emits {
     (e: "fold", fold: boolean): void;
-}>();
+}
+interface MenuItem {
+    name: string
+    id: string
+}
+type ContextMenuEl = InstanceType<typeof ContextMenu>;
+const { t } = useI18n();
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
 const pagelist = ref<List>();
-const ListBody = ref<HTMLDivElement>()
+const list_body = ref<HTMLDivElement>()
 const ListH = ref<number>(0)
 const pageH = ref<number>(0)
 const fold = ref<boolean>(false)
@@ -35,22 +35,14 @@ const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标
 let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 
-const selectionChange = (t: number) => {
+const selectionWatcher = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
-onMounted(() => {
-    props.context.selection.watch(selectionChange);
-    if (ListBody.value) {
-        pageH.value = ListBody.value.clientHeight //list可视高度
-    }
-});
-
-onUnmounted(() => {
-    props.context.selection.unwatch(selectionChange);
-});
-
+function document_watcher() {
+    pageSource.notify(0, 0, 0, Number.MAX_VALUE);
+}
 class Iter implements IDataIter<ItemData> {
     private __document: Document;
     private __pagesMgr: ResourceMgr<Page>;
@@ -80,11 +72,10 @@ class Iter implements IDataIter<ItemData> {
 }
 
 const pageSource = new class implements IDataSource<ItemData> {
+    private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
     indexOf(data: ItemData): number {
         throw new Error("Method not implemented.");
     }
-
-    private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
     length(): number {
         return props.context.data.pagesList.length;
     }
@@ -100,29 +91,29 @@ const pageSource = new class implements IDataSource<ItemData> {
     }
 }
 const addPage = () => {
-    const pageMgr = props.context.editor4Doc();
-    const pageName = props.context.data.pagesList.length + 1
-    const page = pageMgr.create(`页面 ${pageName}`);
-    const id = props.context.selection.selectedPage?.id
-    const index = props.context.data.pagesList.findIndex((item) => item.id === id)
-    pageMgr.insert(index + 1, page);
-    if (ListBody.value) {
-        ListH.value = ListBody.value.clientHeight //list可视高度
-    }
-    if (pagelist.value && index + 1 >= 0) {
-        const itemScrollH = (index + 1) * 30  //page所在高度
-        if (itemScrollH + 29 >= ListH.value - pagelist.value.scroll.y) {
-            if ((itemScrollH) + pagelist.value.scroll.y < ListH.value) return
-            pagelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
-        } else if (itemScrollH + 29 < -(pagelist.value.scroll.y)) {
-            pagelist.value.clampScroll(0, -itemScrollH)
+    const editor = props.context.editor4Doc();
+    const _tail = props.context.data.pagesList.length + 1;
+    const id = props.context.selection.selectedPage?.id;
+    const index = props.context.data.pagesList.findIndex((item) => item.id === id);
+    const new_page = editor.insertPage(`${t('navi.page')} ${_tail}`, index + 1);
+    if (new_page) {
+        props.context.selection.selectPage(new_page);
+        if (list_body.value) {
+            ListH.value = list_body.value.clientHeight //list可视高度
         }
+        if (pagelist.value && index + 1 >= 0) {
+            const itemScrollH = (index + 1) * 30  //page所在高度
+            if (itemScrollH + 29 >= ListH.value - pagelist.value.scroll.y) {
+                if ((itemScrollH) + pagelist.value.scroll.y < ListH.value) return
+                pagelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
+            } else if (itemScrollH + 29 < -(pagelist.value.scroll.y)) {
+                pagelist.value.clampScroll(0, -itemScrollH)
+            }
+        }
+        nextTick(() => {
+            props.context.selection.reName();
+        })
     }
-    props.context.selection.selectPage(page);
-    pageSource.notify(0, 0, 0, Number.MAX_VALUE);
-    nextTick(() => {
-        props.context.selection.reName();
-    })
 }
 function toggle() {
     fold.value = !fold.value;
@@ -134,19 +125,14 @@ function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) 
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 const rename = (value: string, id: string) => {
-    // const page = props.context.selection.selectedPage
     props.context.data.pagesMgr.get(id).then((p: Page | undefined) => {
         if (!p) return
-        const editor = computed(() => {
-            return props.context.editor4Page(p)
-        });
-        editor.value.setName(value)
-        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
+        const editor = props.context.editor4Page(p);
+        editor.setName(value);
     })
-
 }
 
-const MouseDown = (id: string, e: MouseEvent) => {
+const mousedown = (id: string, e: MouseEvent) => {
     const workspace = props.context.workspace
     workspace.menuMount(false);
     if (e.button === MOUSE_RIGHT) {
@@ -202,7 +188,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
             pageSource.notify(0, 0, 0, Number.MAX_VALUE);
         })
     } else if (item === 'copy_link') {
-        e?.stopPropagation()
+        e?.stopPropagation();
     } else if (item === 'delete') {
         e?.stopPropagation()
         const index = props.context.data.pagesList.findIndex((item) => item.id === id)
@@ -210,8 +196,19 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         id && props.context.selection.deletePage(id, index)
     }
 }
+onMounted(() => {
+    props.context.selection.watch(selectionWatcher);
+    props.context.data.watch(document_watcher);
+    if (list_body.value) {
+        pageH.value = list_body.value.clientHeight; //list可视高度
+    }
+});
+
+onUnmounted(() => {
+    props.context.selection.unwatch(selectionWatcher);
+    props.context.data.unwatch(document_watcher);
+});
 </script>
-    
 <template>
     <div class="pagelist-wrap" ref="pageList">
         <div class="header">
@@ -221,18 +218,15 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
                 <div class="add" @click.stop="addPage" :title="t('navi.add_page')">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
-                <!-- <div class="file">
-                    <svg-icon icon-class="file"></svg-icon>
-                </div> -->
                 <div class="shrink" @click="toggle">
                     <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(270deg)' : 'rotate(0deg)' }"></svg-icon>
                 </div>
             </div>
         </div>
-        <div class="body" ref="ListBody" :style="{ height: fold ? 0 : 'calc(100% - 36px)' }">
+        <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 36px)' }">
             <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0"
                 :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
-                :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="MouseDown" @after-drag="afterDrag">
+                :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="mousedown" @after-drag="afterDrag">
             </ListView>
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
                 :context="props.context" @close="pageMenuUnmount">

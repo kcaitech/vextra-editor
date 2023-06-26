@@ -269,7 +269,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         const page = this.m_selectPage;
         let shape: Shape | undefined;
         if (page) {
-            shape = page.flat.get(id);
+            shape = page.shapes.get(id);
         }
         return shape;
     }

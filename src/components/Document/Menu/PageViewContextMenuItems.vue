@@ -29,8 +29,7 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = true;
 }
 function copy() {
-  // const copyObj = props.context.selection.selectedShapes;
-  // props.context.workspace.setClipBoard();
+  props.context.workspace.clipboard.write_html();
 }
 function paste() {
   props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
