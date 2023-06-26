@@ -1,88 +1,84 @@
 <template>
-    <!-- 表格布局 -->
-    <el-table :data="Getfavorites" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-        @row-dblclick="toDocument" @row-contextmenu="rightmenu">
-        <el-table-column prop="document.name" :label="t('home.file_name')" />
-        <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
-        <el-table-column prop="document.size" :label="t('home.size')" />
-        <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
-            <template #default="scope: any">
-                <el-icon :size=" 20 " v-if=" !Getfavorites[scope.$index].document_favorites.is_favorite ">
-                    <el-tooltip :content=" t('home.star') " :show-after=" 1000 ">
-                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
-                            @click.stop=" Starfile(scope.$index) ">
-                        </svg-icon>
-                    </el-tooltip>
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 " v-else>
-                    <el-tooltip :content=" t('home.de_star') " :show-after=" 1000 ">
-                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
-                            @click.stop=" Starfile(scope.$index) ">
-                        </svg-icon>
-                    </el-tooltip>
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 ">
-                    <el-tooltip :content=" t('home.share') " :show-after=" 1000 ">
-                        <Share @click.stop=" Sharefile(scope) " />
-                    </el-tooltip>
-                </el-icon>&nbsp;
-            </template>
-        </el-table-column>
-    </el-table>
+    <!-- 数据展示 -->
+    <div class="main">
+        <div class="title">
+            <span class="name">{{ t('home.file_name') }}</span>
+            <span class="time">{{ t('home.modification_time') }}</span>
+            <span class="size">{{ t('home.size') }}</span>
+            <div><span class="other">{{ t('home.operation') }}</span></div>
+        </div>
+        <div class="item">
+            <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile"
+                @dbclickopen="openDocument" :iconlist="iconlists" />
+        </div>
+    </div>
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li @click=" openDocument ">{{t('homerightmenu.open')}}</li>
-            <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
+            <li @click="openDocument(docId)">{{ t('homerightmenu.open') }}</li>
+            <li @click="openNewWindowDocument">{{ t('homerightmenu.newtabopen') }}</li>
             <div></div>
-            <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
-            <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
-            <div v-if=" showrenname "></div>
-            <li @click=" rrename " v-if=" showrenname ">{{t('homerightmenu.rename')}}</li>
+            <li @click.stop="rSharefile">{{ t('homerightmenu.share') }}</li>
+            <li @click="rStarfile" ref="isshow">{{ t('homerightmenu.target_star') }}</li>
+            <div v-if="showrenname"></div>
+            <li @click="rrename" v-if="showrenname">{{ t('homerightmenu.rename') }}</li>
         </ul>
     </div>
     <!-- 重命名弹框 -->
-    <el-dialog v-model=" dialogVisible " :title=" t('home.rename') " width="500" align-center>
-        <input class="newname" type="text" v-model=" newname " ref="renameinput" @keyup.enter=" rename1 " />
+    <el-dialog v-model="dialogVisible" :title="t('home.rename')" width="500" align-center>
+        <input class="newname" type="text" v-model="newname" ref="renameinput" @keyup.enter="rename1" />
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click=" rename1 "
-                    :disabled=" newname == '' ? true : false ">
+                <el-button type="primary" style="background-color: none;" @click="rename1"
+                    :disabled="newname == '' ? true : false">
                     {{ t('home.rename_ok') }}
                 </el-button>
-                <el-button @click=" dialogVisible = false ">{{t('home.cancel')}}</el-button>
+                <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
             </span>
         </template>
     </el-dialog>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue "
-        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue"
+        @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
     </FileShare>
-    <div v-if=" showFileShare " class="overlay"></div>
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
-import { Share } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import listsitem from '@/components/AppHome/listsitem.vue'
 const { t } = useI18n()
 
-const Getfavorites = ref<any[]>([]);
 const isLoading = ref(false);
-const docId = ref('')
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const selectValue = ref(1)
 const isshow = ref<HTMLElement>()
-const documentId = ref()
 const menu = ref<HTMLElement>()
 const dialogVisible = ref(false)
 const newname = ref()
 const renameinput = ref()
 const showrenname = ref<boolean>(true)
+let lists = ref<any[]>([])
+const docId = ref('')
+const mydata = ref()
+const iconlists = ref(['star', 'share'])
+
+interface data {
+    document: {
+        id: string
+        name: string
+        doc_type: number
+        user_id: string
+    }
+    document_favorites: {
+        is_favorite: boolean
+    }
+}
 
 async function getUserdata() {
     // loading
@@ -98,11 +94,10 @@ async function getUserdata() {
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
             }
         }
-        Getfavorites.value = data
+        lists.value = Object.values(data)
     } catch (error) {
         ElMessage.error(t('home.failed_list_tips'))
     }
-
     // unloading  
     isLoading.value = false;
 }
@@ -120,83 +115,89 @@ function sizeTostr(size: any) {
     return size
 }
 
-const Starfile = async (index: number) => {
-    Getfavorites.value[index].document_favorites.is_favorite = Getfavorites.value[index].document_favorites.is_favorite === true ? false : true
-    const doc_id = Getfavorites.value[index].document.id
-    if (Getfavorites.value[index].document_favorites.is_favorite == true) {
-        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
+//标星入口
+const Starfile = async (data: data) => {
+    const { document: { id } } = data
+    data.document_favorites.is_favorite = data.document_favorites.is_favorite === true ? false : true
+    if (data.document_favorites.is_favorite == true) {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: true })
         if (code === 0) {
-            ElMessage.success(t('home.star_ok'))
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.star_ok') })
         }
     } else {
-        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: false })
         if (code === 0) {
-            ElMessage.success(t('home.star_cancel'))
-            getUserdata()
+            lists.value = lists.value.filter(item => item.document.id != data.document.id)
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.star_cancel') })
         }
     }
-
 }
 
-const toDocument = (row: any) => {
-    const docId = row.document.id
-    router.push({
-        name: 'document',
-        query: {
-            id: docId
-        }
-    })
-}
-const Sharefile = (scope: any) => {
+//分享入口
+const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
         return
     }
-    docId.value = scope.row.document.id
-    selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
+    docId.value = data.document.id
+    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     showFileShare.value = true
 }
 
-const rightmenu = (row: any, column: any, event: any) => {
+//右键菜单入口
+const rightmenu = (e: MouseEvent, data: data) => {
+    const { document: { id, user_id }, document_favorites: { is_favorite } } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
-    const top = event.pageY
-    const left = event.pageX
-    if (event.target.tagName == 'DIV') {
-        rightmenu.style.left = left + 200 > viewportWidth ? (viewportWidth - 200) + "px" : left + 'px'
-        rightmenu.style.top = top + 291 > viewportHeight ? (viewportHeight - 291) + 'px' : top + 'px'
+    const top = e.pageY
+    const left = e.pageX
+
+    nextTick(() => {
+        const width = rightmenu.clientWidth
+        const height = rightmenu.clientHeight
+        rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
+        rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
+    })
+
+    if ((e.target as HTMLElement).closest('.user')) {
         rightmenu.style.display = 'block'
     }
+
     nextTick(() => {
         if (isshow.value) {
-            if (row.document_favorites.is_favorite == true) {
+            if (is_favorite == true) {
                 isshow.value.innerHTML = t('homerightmenu.unstar')
             } else {
                 isshow.value.innerHTML = t('homerightmenu.target_star')
             }
         }
-        if (row.document.user_id != localStorage.getItem('userId')) {
+        if (user_id != localStorage.getItem('userId')) {
             showrenname.value = false
         } else {
             showrenname.value = true
         }
     })
-    documentId.value = row
+    docId.value = id
+    mydata.value = data
 }
 
-const openDocument = () => {
+//右键打开
+const openDocument = (id: string) => {
     router.push({
         name: 'document',
         query: {
-            id: documentId.value.document.id
+            id: id
         }
     })
 }
 
+//右键新窗口打开
 const openNewWindowDocument = () => {
     const Name = 'document'
-    const query = { id: documentId.value.document.id }
+    const query = { id: docId.value }
     const url = router.resolve({ name: Name, query: query }).href
     window.open(url, '_blank')
     if (menu.value) {
@@ -204,6 +205,15 @@ const openNewWindowDocument = () => {
     }
 }
 
+//右键标星
+const rStarfile = () => {
+    Starfile(mydata.value)
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+//右键分享
 const rSharefile = () => {
     if (menu.value) {
         menu.value.style.display = 'none'
@@ -212,32 +222,13 @@ const rSharefile = () => {
         showFileShare.value = false
         return
     }
-    docId.value = documentId.value.document.id
-    selectValue.value = documentId.value.document.doc_type !== 0 ? documentId.value.document.doc_type : documentId.value.document.doc_type;
-    showFileShare.value = true;
+    Sharefile(mydata.value)
 }
 
-const rStarfile = async () => {
-    documentId.value.document_favorites.is_favorite = documentId.value.document_favorites.is_favorite === true ? false : true
-    const doc_id = documentId.value.document.id
-    if (documentId.value.document_favorites.is_favorite == true) {
-        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
-        if (code === 0) {
-            ElMessage.success(t('home.star_ok'))
-        }
-    } else {
-        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
-        if (code === 0) {
-            ElMessage.success(t('home.star_cancel'))
-        }
-    }
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
+//右键重命名
+//弹框
 const rrename = () => {
-    newname.value = documentId.value.document.name
+    newname.value = mydata.value.document.name
     if (dialogVisible.value) {
         dialogVisible.value = false
     } else {
@@ -253,25 +244,28 @@ const rrename = () => {
 
 }
 
+//重命名
 const rename1 = async () => {
-    const { document: { id, name } } = documentId.value
+    const { document: { id, name } } = mydata.value
     newname.value = renameinput.value.value
     if (newname.value == '') return
     if (newname.value != name)
         try {
             const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
             if (code === 0) {
-                ElMessage.success(t('percenter.successtips'))
-                getUserdata()
+                ElMessage.closeAll('success')
+                ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
+                lists.value.find((item: any) => item.document.id === id).document.name = newname.value;
             } else {
-                ElMessage.error(t('percenter.errortips1'))
+                ElMessage.closeAll('error')
+                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
             }
         } catch (error) {
-            ElMessage.error(t('home.other_tips'))
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.other_tips') })
         }
     dialogVisible.value = false
 }
-
 
 const handleClickOutside = (event: MouseEvent) => {
     if (event.target instanceof Element && event.target.closest('.rightmenu') == null) {
@@ -306,6 +300,36 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
+.item {
+    height: calc(100vh - 194px);
+}
+
+.title {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px 6px 10px;
+    color: #606266;
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+
+    span:nth-child(1) {
+        flex: 2;
+    }
+
+    span:not(:nth-child(1)) {
+        flex: 1;
+
+    }
+
+    div {
+        flex: 1;
+        padding: 0 10px 6px 0;
+        display: flex;
+
+    }
+}
+
 .newname {
     outline: none;
     height: 30px;
@@ -333,6 +357,7 @@ onUnmounted(() => {
     &:hover {
         background: rgba(80, 80, 255, 0.884);
     }
+
     &[disabled] {
         background: rgba(195, 195, 246, 0.884);
         border: 1px rgba(195, 195, 246, 0.884) solid;
