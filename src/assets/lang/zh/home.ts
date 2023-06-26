@@ -128,7 +128,9 @@ export const navi = {
     resource: '资源库',
     page: '页面',
     add_page: '添加新页面',
-    copy: '副本'
+    copy: '副本',
+    development: '功能开发中……'
+
 }
 
 export const frame = {

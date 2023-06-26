@@ -176,6 +176,7 @@ watchEffect(() => updater());
         height: 15px;
         transform-origin: bottom left;
         color: grey;
+        z-index: 1;
     }
 }
 </style>
