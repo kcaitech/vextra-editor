@@ -2,20 +2,15 @@
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { Shape, ShapeType, GroupShape } from '@kcdesign/data';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
 import { useI18n } from 'vue-i18n';
 import { getName } from '@/utils/content';
 import { debounce } from 'lodash';
+import { sort_by_layer } from '@/utils/group_ungroup';
 const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
-const editor = computed(() => {
-    if (props.selection.selectedPage == undefined) {
-        throw new Error("No Selected Page?");
-    }
-    return props.context.editor4Page(props.selection.selectedPage);
-})
 const NOGROUP = 0;
 const GROUP = 1;
 const UNGROUP = 2;
@@ -74,7 +69,9 @@ const groupClick = () => {
             if (shapes.length) {
                 const bro = Array.from(page.shapes.values());
                 const name = getName(ShapeType.Group, bro || [], t);
-                const group = editor.value.group(props.selection.selectedShapes, name);
+                const editor = props.context.editor4Page(page);
+                const shapes = sort_by_layer(props.context, props.context.selection.selectedShapes);
+                const group = editor.group(shapes, name);
                 if (group) {
                     props.selection.selectShape(group);
                 }
@@ -92,14 +89,18 @@ const ungroupClick = () => {
             const groups = shapes.filter(i => i.type === ShapeType.Group);
             const others: Shape[] = shapes.filter(i => i.type !== ShapeType.Group);
             if (groups.length) {
-                for (let i = 0, len = groups.length; i < len; i++) {
-                    const g = groups[i];
-                    const c = editor.value.ungroup(g as GroupShape);
-                    if (c) {
-                        others.push(...c);
+                const page = selection.selectedPage;
+                if (page) {
+                    const editor = props.context.editor4Page(page);
+                    for (let i = 0, len = groups.length; i < len; i++) {
+                        const g = groups[i];
+                        const c = editor.ungroup(g as GroupShape);
+                        if (c) {
+                            others.push(...c);
+                        }
                     }
+                    selection.rangeSelectShape(others);
                 }
-                selection.rangeSelectShape(others);
             }
         }
     }
