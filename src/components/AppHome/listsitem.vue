@@ -2,7 +2,7 @@
 <template>
     <RecycleScroller class="scroller" :items="props.items" :item-size="56" key-field="document" v-slot="{ item }">
         <div :class="{ 'user': 'user', 'selected': selectedId === item.document.id }" @click="selectedId = item.document.id"
-            @contextmenu="rightmeun($event, item, item.document.id)" @dblclick="$emit('dbclickopen', item.document.id)">
+            @contextmenu="rightmeun($event, item, item.document.id)" @dblclick.stop="$emit('dbclickopen', item.document.id)">
             <span> {{ item.document.name }}</span>
             <span> {{ item.document_access_record.last_access_time }}</span>
             <span> {{ item.document.size }}</span>

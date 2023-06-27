@@ -243,6 +243,7 @@ h1 {
 }
 
 .icon {
+    width: 800px;
     position: absolute;
     top: 10%;
     left: 50%;
@@ -261,7 +262,7 @@ h1 {
     }
 
     .one {
-        width: 800px;
+        width: auto;
         height: auto;
         padding: 0px 20px;
         margin-bottom: 20px;
@@ -300,5 +301,12 @@ h1 {
             text-decoration: none
         }
     }
+}
+
+@media screen and (max-width: 800px) {
+    .icon{
+        width: 100%;
+    }
+    
 }
 </style>

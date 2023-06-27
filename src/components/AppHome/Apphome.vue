@@ -34,21 +34,27 @@ function setTitle(t: string) {
 </script>
 
 <style lang="scss" scoped>
-.el-header{
+.el-header {
   margin-top: 20px;
 }
 
-.el-aside{
-  border-right: rgba(239, 239, 239, 0.838) solid 1px ;
+.main {
+  width: 100%;
+}
+
+.el-aside {
+  border-right: rgba(239, 239, 239, 0.838) solid 1px;
   transition: all .3s ease-in-out;
 }
 
-@media screen and (max-width:800px) {
-  .el-aside{
+@media screen and (max-width:1000px) {
+  .el-main {
+    padding-top: 0;
+  }
+
+  .el-aside {
     width: 100px;
   }
-  
+
 }
-
-
 </style>

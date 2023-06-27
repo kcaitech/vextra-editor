@@ -87,10 +87,7 @@ const selectValue = ref(1)
 let lists = ref<any[]>([])
 const iconlists = ref(['star', 'share', 'delete'])
 
-const teset=(id:any)=>{
-console.log(id);
 
-}
 //获取服务器我的文件列表
 async function getDoucment() {
     isLoading.value = true
@@ -360,6 +357,11 @@ main {
 
 .item {
     height: calc(100vh - 194px);
+}
+@media screen and (max-width: 1000px) {
+    .item {
+    height: calc(100vh - 154px);
+}
 }
 
 .title {

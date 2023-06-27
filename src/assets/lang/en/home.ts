@@ -114,7 +114,8 @@ export const home = {
     page_sort: 'Sort by page',
     login_failed: 'Login failure',
     login_refresh: 'Click refresh QR code',
-    invitation_code_tips: 'Please enter the trial invitation code'
+    invitation_code_tips: 'Please enter the trial invitation code',
+    delete_file_time:'Deletion time'
 }
 
 export const search = {

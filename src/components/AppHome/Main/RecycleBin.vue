@@ -3,7 +3,7 @@
     <div class="main">
         <div class="title">
             <span class="name">{{ t('home.file_name') }}</span>
-            <span class="time">{{ t('home.modification_time') }}</span>
+            <span class="time">{{ t('home.delete_file_time') }}</span>
             <span class="size">{{ t('home.size') }}</span>
             <div><span class="other">{{ t('home.operation') }}</span></div>
         </div>

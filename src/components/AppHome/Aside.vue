@@ -58,88 +58,63 @@ function Setindex(a: any, b: any) {
 }
 const x = sessionStorage.getItem('index')
 
-// window.addEventListener('popstate', function () {
-//     if (location.hash.toLowerCase() == '#/apphome/starfile') {
-//         sessionStorage.setItem('index', '2')
-//         sessionStorage.setItem('title', t('home.star_file'))
-//         location.reload()
-//     }
-//     if (location.hash.toLowerCase() == '#/apphome/recently') {
-//         sessionStorage.setItem('index', '1')
-//         sessionStorage.setItem('title', t('home.recently_opened'))
-//         location.reload()
-//     }
-//     if (location.hash.toLowerCase() == '#/apphome/meshare') {
-//         sessionStorage.setItem('index', '3')
-//         sessionStorage.setItem('title', t('home.file_shared'))
-//         location.reload()
-//     }
-//     if (location.hash.toLowerCase() == '#/apphome/shareme') {
-//         sessionStorage.setItem('index', '4')
-//         sessionStorage.setItem('title', t('home.shared_file_received'))
-//         location.reload()
-//     }
-//     if (location.hash.toLowerCase() == '#/apphome/recyclebin') {
-//         sessionStorage.setItem('index', '5')
-//         sessionStorage.setItem('title', t('home.recycling_station'))
-//         location.reload()
-//     }
-// });
-
 </script>
 <template>
-    <el-row class="tac">
-        <el-col :span="12">
-            <div class="logo">
-                <div style="width: 108px;height: 108px;"><img :src="avatar" alt="ProtoDesign" /></div>
-                <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
-            </div>
-            <div class="new">
-                <button class="newfile" @click="newFile"> <el-icon :size="22">
-                        <Plus />
-                    </el-icon>{{ t('home.New_file') }}</button>
-                <button class="openfile" @click="picker.invoke()"><el-icon :size="22">
-                        <FolderOpened />
-                    </el-icon>{{ t('home.open_local_file') }}</button>
-            </div>
-            <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
-                text-color="#000000">
-                <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1, t('home.recently_opened'))">
-                        <el-icon>
-                            <Clock />
-                        </el-icon>
-                        <span>{{ t('home.recently_opened') }}</span>
-                    </el-menu-item></router-link>
-                <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2, t('home.star_file'))">
-                        <el-icon>
-                            <Star />
-                        </el-icon>
-                        <span>{{ t('home.star_file') }}</span>
-                    </el-menu-item></router-link>
-                <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3, t('home.file_shared'))">
-                        <el-icon>
-                            <Folder />
-                        </el-icon>
-                        <span>{{ t('home.file_shared') }}</span>
-                    </el-menu-item></router-link>
-                <router-link to="/apphome/shareme"><el-menu-item index="4"
-                        @click="Setindex(4, t('home.shared_file_received'))">
-                        <el-icon>
-                            <BottomLeft />
-                        </el-icon>
-                        <span>{{ t('home.shared_file_received') }}</span>
-                    </el-menu-item></router-link>
-                <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5"
-                        @click="Setindex(5, t('home.recycling_station'))">
-                        <el-icon>
-                            <Delete />
-                        </el-icon>
-                        <span>{{ t('home.recycling_station') }}</span>
-                    </el-menu-item></router-link>
+    <Transition>
+        <el-row class="tac">
+            <el-col :span="12">
+                <div class="logo">
+                    <div><img :src="avatar" alt="ProtoDesign" /></div>
+                    <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
+                </div>
+                <div class="new">
+                    <button class="newfile" @click="newFile"> <el-icon :size="22">
+                            <Plus />
+                        </el-icon><span>{{ t('home.New_file') }}</span></button>
+                    <button class="openfile" @click="picker.invoke()"><el-icon :size="22">
+                            <FolderOpened />
+                        </el-icon><span>{{ t('home.open_local_file') }}</span></button>
+                </div>
+                <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
+                    text-color="#000000">
+                    <router-link to="/apphome/recently"><el-menu-item index="1"
+                            @click="Setindex(1, t('home.recently_opened'))">
+                            <el-icon>
+                                <Clock />
+                            </el-icon>
+                            <span>{{ t('home.recently_opened') }}</span>
+                        </el-menu-item></router-link>
+                    <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2, t('home.star_file'))">
+                            <el-icon>
+                                <Star />
+                            </el-icon>
+                            <span>{{ t('home.star_file') }}</span>
+                        </el-menu-item></router-link>
+                    <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3, t('home.file_shared'))">
+                            <el-icon>
+                                <Folder />
+                            </el-icon>
+                            <span>{{ t('home.file_shared') }}</span>
+                        </el-menu-item></router-link>
+                    <router-link to="/apphome/shareme"><el-menu-item index="4"
+                            @click="Setindex(4, t('home.shared_file_received'))">
+                            <el-icon>
+                                <BottomLeft />
+                            </el-icon>
+                            <span>{{ t('home.shared_file_received') }}</span>
+                        </el-menu-item></router-link>
+                    <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5"
+                            @click="Setindex(5, t('home.recycling_station'))">
+                            <el-icon>
+                                <Delete />
+                            </el-icon>
+                            <span>{{ t('home.recycling_station') }}</span>
+                        </el-menu-item></router-link>
 
-            </el-menu>
-        </el-col>
-    </el-row>
+                </el-menu>
+            </el-col>
+        </el-row>
+    </Transition>
 </template>
 
 <style lang="scss" scoped>
@@ -171,21 +146,18 @@ a {
             flex-direction: row;
             justify-content: center;
             align-items: center;
-
-            .el-icon {
-                margin-right: 10px;
-            }
         }
+
 
         .new {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 20px 20px auto;
+            margin: 20px 10px auto;
 
             button {
-                width: 280px;
+                width: 100%;
                 height: 56px;
                 margin: 0px 0 20px 0;
                 border: none;
@@ -196,17 +168,23 @@ a {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+
+                .el-icon {
+                    margin-right: 6px;
+                }
             }
+
 
             .newfile {
                 background: rgb(69, 69, 248);
                 color: #ffffff;
+
                 &:hover {
-                    background-color:  rgba(69, 69, 248, 0.5);
+                    background-color: rgba(69, 69, 248, 0.5);
                 }
 
                 &:active {
-                    background-color:  rgb(48, 48, 255);
+                    background-color: rgb(48, 48, 255);
                 }
             }
 
@@ -244,5 +222,26 @@ a {
             }
         }
     }
+}
+
+
+@media screen and (max-width:1000px) {
+    span,h3 {
+        display: none;
+        opacity: 0;
+    }
+    .el-menu-item {
+        justify-content: center;
+        margin: 0;
+    }
+
+    .el-row .el-col .new button .el-icon {
+        margin-right: 0;
+    }
+    .el-icon{
+        margin-right: 0;
+        font-size: 36px;
+    }
+
 }
 </style>

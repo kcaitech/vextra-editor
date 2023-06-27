@@ -160,7 +160,8 @@ const toDocument = (row: any) => {
         <div class="search">
             <el-icon size="20" class="SearchIcon" style="margin: 10px;">
                 <Search />
-            </el-icon><input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`"
+            </el-icon>
+            <input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`"
                 @focus="searchhistoryshow" @input="screenout" />
             <el-icon size="20" class="CloseIcon" style="margin: 10px;" @click="closeclick">
                 <Close />
@@ -214,6 +215,9 @@ const toDocument = (row: any) => {
     </div>
 </template>
 <style lang="scss" scoped>
+.el-avater{
+    overflow: hidden;
+}
 .el-icon:hover {
     color: #6395f9;
     background: rgba(185, 185, 185, 0.5);
@@ -232,14 +236,13 @@ const toDocument = (row: any) => {
         background: rgba(217, 217, 217, 0.67);
         width: 50%;
         max-width: 550px;
-        min-width: 150px;
         height: 45px;
-        // overflow: hidden;
         border-radius: 20px;
         position: relative;
+        box-sizing: border-box;
 
         .input {
-            width: 550px;
+            width: 85%;
             height: 45px;
             margin: 0;
             outline: none;

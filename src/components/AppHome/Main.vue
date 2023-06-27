@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { RouterView } from 'vue-router';
 interface Props {
     title: string
@@ -33,5 +34,12 @@ const props = defineProps<Props>();
         font-weight: bold;
         letter-spacing: 2px;
     }
+}
+
+@media screen and (max-width:1000px) {
+    .title{
+        margin-top:0;
+    }
+    
 }
 </style>
