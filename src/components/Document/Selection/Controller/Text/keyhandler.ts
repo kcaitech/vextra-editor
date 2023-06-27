@@ -121,7 +121,17 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) {
-        if (editor.deleteText(start - 1, 1)) {
+        if (start === 0) {
+            const firstChar = shape.text.charAt(0);
+            if (firstChar === '\n') {
+                if (editor.deleteText(start, 1)) {
+                    const index = start;
+                    const preChar = shape.text.charAt(index - 1);
+                    selection.setCursor(index, preChar !== '\n');
+                }
+            }
+        }
+        else if (editor.deleteText(start - 1, 1)) {
             const index = start - 1;
             const preChar = shape.text.charAt(index - 1);
             selection.setCursor(index, preChar !== '\n');
