@@ -29,13 +29,4 @@ html {
     }
 }
 
-.vue-recycle-scroller__item-view.hover{
-    background-color: rgb(224, 224, 224, 0.8);
-    border-radius: 6px;
-}
-
-.selected {
-    background-color: rgba(59, 100, 252, 0.1);
-    border-radius: 6px;
-}
 </style>

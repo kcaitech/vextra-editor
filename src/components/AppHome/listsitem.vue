@@ -80,7 +80,10 @@ function rightmeun(e: MouseEvent, data: object, docid: number) {
 
 </script>
 <style lang="scss" scoped>
-
+.selected {
+    background-color: rgba(59, 100, 252, 0.1);
+    border-radius: 6px;
+}
 .scroller {
     height: 100%;
 
