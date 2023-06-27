@@ -1,10 +1,10 @@
 import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape } from "@kcdesign/data";
+import { Shape, TextShape } from "@kcdesign/data";
 import { Repository } from "@kcdesign/data";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
-import { ShapeEditor } from "@kcdesign/data";
+import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
 // 仅暴露必要的方法
@@ -97,6 +97,10 @@ export class Context extends Watchable(Object) {
 
     editor4Shape(shape: Shape): ShapeEditor {
         return this.editor.editor4Shape(shape);
+    }
+
+    editor4TextShape(shape: TextShape): TextShapeEditor {
+        return this.editor.editor4TextShape(shape);
     }
 
     get data() {

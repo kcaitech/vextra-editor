@@ -286,12 +286,12 @@ const getDocumentInfo = async () => {
             switchPage(context.data.pagesList[0]?.id);
             localStorage.setItem('docId', route.query.id as string);
             coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
-            coopLocal.start();
+            coopLocal.start().finally(() => loading.value = false);
         }
     } catch (err) {
-        new Error(`${err}`);
-    } finally {
         loading.value = false;
+        console.log(err)
+        throw err;
     }
 }
 function upload() {
