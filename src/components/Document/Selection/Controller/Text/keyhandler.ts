@@ -122,12 +122,16 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const end = selection.cursorEnd;
     if (start === end) {
         if (editor.deleteText(start - 1, 1)) {
-            selection.setCursor(start - 1, true);
+            const index = start - 1;
+            const preChar = shape.text.charAt(index - 1);
+            selection.setCursor(index, preChar !== '\n');
         }
     }
     else {
         if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-            selection.setCursor(Math.min(start, end), true);
+            const index = Math.min(start, end);
+            const preChar = shape.text.charAt(index - 1);
+            selection.setCursor(index, preChar !== '\n');
         }
     }
 }, keydelays);
