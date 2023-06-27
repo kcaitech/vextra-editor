@@ -18,6 +18,7 @@ export function sort_by_layer(context: Context, selectedShapes: Shape[]) {
             const shape = childs[i];
             if (origin_map.get(shape.id)) {
                 sort_shapes.push(shape);
+                if (sort_shapes.length === origin_map.size) return;
             }
             if (shape.childs && shape.childs.length) {
                 deep(shape.childs);
