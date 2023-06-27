@@ -8,8 +8,8 @@ class Communication {
         token: "",
     }
     private worker: SharedWorker | undefined = undefined
-    private onmessage: (event: MessageEvent) => void
-    constructor(onmessage: (event: MessageEvent) => void) {
+    private onmessage: (data: any) => void
+    constructor(onmessage: (data: any) => void) {
         this.onmessage = onmessage
     }
 
@@ -33,7 +33,9 @@ class Communication {
             }
             this.clientInfo.name = data.name
             this.clientInfo.id = data.id
-            console.log(this.clientInfo)
+            port.onmessage = (event: MessageEvent) => {
+                this.onmessage(event.data)
+            }
         }
         port.start()
     }
@@ -51,3 +53,9 @@ class Communication {
         // todo
     }
 }
+
+const communication = new Communication(data => {
+    console.log(data)
+})
+communication.start(localStorage.getItem("token") ?? "")
+communication.send("hello worker")

@@ -1,12 +1,16 @@
-import { ClientInfo } from "./types"
-import { FILE_UPLOAD } from "../utils/setting"
+import { v4 as uuid } from "uuid"
+import { ClientInfo } from "@/communication/types"
+import { ClientSession } from "@/communication/clientSession"
+import { ServerSession } from "@/communication/serverSession"
 
-const apiUrl = `${FILE_UPLOAD}/documents/ws`
-
-let ws: WebSocket | undefined = undefined
-const clientMap = new Map<string, ClientInfo>()
-const clientToken: string = ""
+let serverSession: ServerSession | undefined = undefined
+const clientMap = new Map<string, ClientSession>()
+let clientToken: string = ""
 const ctx: SharedWorkerGlobalScope = self as any
+
+function receiveFromServer(event: MessageEvent) {
+    console.log("receiveFromServer", event.data)
+}
 
 ctx.onconnect = (event) => {
     const clientPort = event.ports[0]
@@ -24,21 +28,16 @@ ctx.onconnect = (event) => {
             clientPort.postMessage(sendData)
             return
         }
-        // todo 创建websocket
-        if (ws === undefined) {
-            ws = new WebSocket(apiUrl)
+        if (serverSession === undefined) {
+            serverSession = new ServerSession(data.token, receiveFromServer)
+            serverSession.connect()
         }
-        sendData.id = "123456"
+        data.id = uuid()
+        sendData.id = data.id
         clientPort.postMessage(sendData)
-        clientMap.set(sendData.id, {name: sendData.name, id: sendData.id, token: data.token})
-        clientPort.onmessage = (clientId => {
-            return (event: MessageEvent) => {
-                onClientMessage(clientId, event)
-            }
-        })(sendData.id)
+        const client = new ClientSession(clientPort, serverSession, data)
+        clientMap.set(data.id, client)
+        clientPort.onmessage = client.receiveFromClient.bind(client)
+        client.sendToClient("hello client")
     }
-}
-
-function onClientMessage(clientId: string, event: MessageEvent) {
-    console.log(event)
 }
