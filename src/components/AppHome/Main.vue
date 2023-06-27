@@ -10,9 +10,7 @@ const props = defineProps<Props>();
 
 <template>
     <div class="title">
-        <div>
-            <span>{{ props.title }}</span>
-        </div>
+        <span>{{ props.title }}</span>
     </div>
     <el-divider />
     <div class="main">
@@ -21,29 +19,17 @@ const props = defineProps<Props>();
 </template>
 
 <style lang="scss" scoped>
-.main .title {
-    width: calc(100vw - 381px);
-    height: 100vh;
-    overflow: scroll;
-
+.el-divider{
+    margin: 10px 0;
 }
-
 .title {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    margin-top: 40px;
-
-    .el-icon {
-        margin-right: 20px;
-
-        &:hover {
-            background: rgb(188, 188, 188);
-        }
-    }
+    margin-top: 20px;
 
     span {
-        width: 80px;
+        width: auto;
         font-weight: bold;
         letter-spacing: 2px;
     }

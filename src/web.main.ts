@@ -9,9 +9,11 @@ import '@/style/constant.scss';
 import '@/style/app.scss';
 import { router } from "./router";
 import '@/utils/permission'
-
+import { RecycleScroller } from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 const app = createApp(App)
+app.component('RecycleScroller', RecycleScroller)
 app.use(i18n);
 app.component('svg-icon', SvgIcon);
 app.use(ElementPlus)

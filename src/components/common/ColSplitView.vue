@@ -178,8 +178,8 @@ function onSizeChange() {
     if (savedRootWidth === rootWidth) return;
     const delta = rootWidth - savedRootWidth;
 
-    const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth).toFixed(2));
-    const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth).toFixed(2));
+    const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth));
+    const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth));
 
     // sizeBounds.left.width = props.left.width * rootWidth;
     sizeBounds.left.minWidth = Math.max(leftMinWidthImportant, props.left.minWidth) * rootWidth;
@@ -212,8 +212,8 @@ function initSizeBounds() {
     const rootWidth = getRootWidth();
     savedRootWidth = rootWidth;
 
-    const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth).toFixed(2));
-    const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth).toFixed(2));
+    const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth));
+    const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth));
     const middleMaxWidthImportant = 1 - (leftMinWidthImportant + rigthMinWidthImportant);
 
     sizeBounds.left.width = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;

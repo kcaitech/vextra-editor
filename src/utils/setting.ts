@@ -9,7 +9,7 @@ export const SKIP_LOGIN = false; // 跳过登录过程，直接进入个人首�
 
 //上传下载接口
 const production = true
-export const FILE_UPLOAD = production ? 'wss://protodesign.cn/api/v1' : 'wss://protodesign.cn/api/v1';
+export const FILE_UPLOAD = production ? 'wss://protodesign.cn/api/v1' : 'wss://protodesign.cn/api_test/v1';
 export const FILE_DOWNLOAD = production ? "https://storage.protodesign.cn" : "https://storage.protodesign.cn";
 //请求根路径
-export const BASE_URL = production ? 'https://protodesign.cn/api/v1' : 'https://test.protodesign.cn/api/v1';
+export const BASE_URL = production ? 'https://protodesign.cn/api/v1' : 'https://protodesign.cn/api_test/v1';

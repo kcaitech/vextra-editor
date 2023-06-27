@@ -1,60 +1,66 @@
 <template>
-    <!-- 表格布局 -->
-    <el-table :data="GetrecycleList" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-        @row-contextmenu="rightmenu">
-        <el-table-column prop="document.name" :label="t('home.file_name')" />
-        <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
-        <el-table-column prop="document.size" :label="t('home.size')" />
-        <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
-            <template #default="scope: any">
-                <el-icon :size=" 20 ">
-                    <el-tooltip :content=" t('home.restore') " :show-after=" 1000 " :hide-after=" 0 ">
-                        <svg-icon class="svg restore" style="width: 20px; height: 20px;" icon-class="restore"
-                            @click.stop.prevent=" Restorefile(scope.$index) "></svg-icon>
-                    </el-tooltip>
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 ">
-                    <el-tooltip :content=" t('home.completely_delete') " :show-after=" 1000 " :hide-after=" 0 ">
-                        <Delete @click.stop.prevent=" Deletefile(scope.$index) " />
-                    </el-tooltip>
-                </el-icon>&nbsp;
-            </template>
-        </el-table-column>
-    </el-table>
+    <!-- 数据展示 -->
+    <div class="main">
+        <div class="title">
+            <span class="name">{{ t('home.file_name') }}</span>
+            <span class="time">{{ t('home.modification_time') }}</span>
+            <span class="size">{{ t('home.size') }}</span>
+            <div><span class="other">{{ t('home.operation') }}</span></div>
+        </div>
+        <div class="item">
+            <listsitem :items="lists" @rightMeun="rightmenu" @restore="Restorefile" @ndelete="Deletefile"
+                :iconlist="iconlists" />
+        </div>
+    </div>
+
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li @click=" rRestorefile ">{{t('homerightmenu.restore')}}</li>
-            <li @click=" rDeletefile ">{{t('homerightmenu.completely_delete')}}</li>
+            <li @click="rRestorefile">{{ t('homerightmenu.restore') }}</li>
+            <li @click="rDeletefile">{{ t('homerightmenu.completely_delete') }}</li>
         </ul>
     </div>
+
     <!-- 确认删除弹框 -->
-    <el-dialog v-model=" dialogVisible " :title=" t('home.completely_delete') " width="500" align-center  @keyup.enter="Qdeletefile(fileid)">
-        <span>{{t('home.delete_tips')}}</span>
+    <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
+        @keyup.enter="Qdeletefile(docId)">
+        <span>{{ t('home.delete_tips') }}</span>
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" @click=" Qdeletefile(fileid) " style="background-color: none;">
+                <el-button type="primary" :disabled="false" @click=" Qdeletefile(docId)" style="background-color: none;">
                     {{ t('home.delete_ok') }}
                 </el-button>
-                <el-button @click=" dialogVisible = false ">{{t('home.cancel')}}</el-button>
+                <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
             </span>
         </template>
     </el-dialog>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
-import { Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import listsitem from '@/components/AppHome/listsitem.vue'
 const { t } = useI18n()
 
-const GetrecycleList = ref<any[]>([])
 const isLoading = ref(false)
 const dialogVisible = ref(false)
-const documentId = ref()
 const menu = ref<HTMLElement>()
-const fileid = ref('')
+const docId = ref('')
+const mydata = ref()
+let lists = ref<any[]>([])
+const iconlists = ref(['restore', 'Delete'])
+
+interface data {
+    document: {
+        id: string
+        name: string
+        doc_type: number
+    }
+    document_favorites: {
+        is_favorite: boolean
+    }
+}
 
 //获取回收站文件列表
 async function GetrecycleLists() {
@@ -71,7 +77,7 @@ async function GetrecycleLists() {
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
             }
         }
-        GetrecycleList.value = data
+        lists.value = Object.values(data)
     } catch (error) {
         ElMessage.error(t('home.failed_list_tips'))
     }
@@ -95,78 +101,85 @@ function sizeTostr(size: any) {
 }
 
 //还原对应文件
-const Restorefile = async (index: number) => {
-    const { document: { id } } = GetrecycleList.value[index]
-
+const Restorefile = async (data: data) => {
+    const { document: { id } } = data
     const { code } = await user_api.RecoverFile({ doc_id: id })
     if (code === 0) {
-        ElMessage.success(t('home.restore_ok'))
-        GetrecycleLists()
+        ElMessage.closeAll('success')
+        ElMessage.success( {duration:1500,message:t('home.restore_ok')})
+        lists.value = lists.value.filter(item => item.document.id != id)
     } else {
-        ElMessage.error(t('home.restore_no'))
+        ElMessage.closeAll('error')
+        ElMessage.error({duration:1500,message: t('home.restore_no')})
     }
 }
 
 //删除对应文件
-const Deletefile = (index: number) => {
+const Deletefile = (data: data) => {
+    const { document: { id } } = data
+    docId.value = id
     dialogVisible.value = true
-    const { document: { id } } = GetrecycleList.value[index]
-    fileid.value = id
 }
 
-const rightmenu = (row: any, column: any, event: any) => {
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
-    const rightmenu: any = document.querySelector('.rightmenu')
-    const top = event.pageY
-    const left = event.pageX
-    if (event.target.tagName == 'DIV') {
-        rightmenu.style.left = left + 200 > viewportWidth ? (viewportWidth - 200) + "px" : left + 'px'
-        rightmenu.style.top = top + 291 > viewportHeight ? (viewportHeight - 291) + 'px' : top + 'px'
-        rightmenu.style.display = 'block'
-    }
-    documentId.value = row
-}
-
-//还原对应文件
-const rRestorefile = async () => {
-    const { document: { id } } = documentId.value
-    const { code } = await user_api.RecoverFile({ doc_id: id })
-    if (code === 0) {
-        ElMessage.success(t('home.restore_ok'))
-        GetrecycleLists()
-    } else {
-        ElMessage.error(t('home.restore_no'))
-    }
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
-//删除对应文件
-const rDeletefile = () => {
-    dialogVisible.value = true
-    const { document: { id } } = documentId.value
-    fileid.value = id
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
+//删除文件
 const Qdeletefile = async (id: string) => {
     try {
         const { code } = await user_api.DeleteFile({ doc_id: id })
         if (code === 0) {
-            ElMessage.success(t('home.delete_file_ok'))
-            dialogVisible.value = false
-            GetrecycleLists()
+            lists.value = lists.value.filter(item => item.document.id != id)
+            ElMessage.closeAll('success')
+            ElMessage.success({duration:1500,message:t('home.delete_file_ok')})
+            dialogVisible.value = false  
         } else {
             dialogVisible.value = false
-            ElMessage.error(t('home.delete_file_no'))
+            ElMessage.closeAll('error')
+            ElMessage.error({duration:1500,message:t('home.delete_file_no')})
         }
     } catch (error) {
         dialogVisible.value = false
-        ElMessage.error(t('other_tips'))
+        ElMessage.closeAll('error')
+        ElMessage.error({duration:1500,message:t('other_tips')})
+    }
+}
+
+//右键菜单入口
+const rightmenu = (e: MouseEvent, data: data) => {
+    const { document: { id } } = data
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const rightmenu: any = document.querySelector('.rightmenu')
+    const top = e.pageY
+    const left = e.pageX
+
+    nextTick(() => {
+        const width = rightmenu.clientWidth
+        const height = rightmenu.clientHeight
+        rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
+        rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
+    })
+    
+    if ((e.target as HTMLElement).closest('.user')) {
+        rightmenu.style.display = 'block'
+    }
+    docId.value = id
+    mydata.value = data
+}
+
+//右键还原对应文件
+const rRestorefile = async () => {
+    Restorefile(mydata.value)
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+//右键删除对应文件
+const rDeletefile = () => {
+    dialogVisible.value = true
+    const { document: { id } } = mydata.value
+    docId.value = id
+    if (menu.value) {
+        menu.value.style.display = 'none'
     }
 }
 
@@ -190,6 +203,40 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+main {
+    height: auto;
+}
+
+.item {
+    height: calc(100vh - 194px);
+}
+
+.title {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px 6px 10px;
+    color: #606266;
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+
+    span:nth-child(1) {
+        flex: 2;
+    }
+
+    span:not(:nth-child(1)) {
+        flex: 1;
+
+    }
+
+    div {
+        flex: 1;
+        padding: 0 10px 6px 0;
+        display: flex;
+
+    }
+}
+
 .rightmenu {
     display: none;
     min-width: 200px;
@@ -204,6 +251,7 @@ onUnmounted(() => {
     ul {
         margin: 0;
         padding: 0 10px;
+
         li {
             display: block;
             padding: 10px 10px;

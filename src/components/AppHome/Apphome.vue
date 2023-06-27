@@ -1,7 +1,7 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-aside width="381px">
+      <el-aside>
         <Aside @settitle="setTitle" />
       </el-aside>
       <el-container>
@@ -33,4 +33,22 @@ function setTitle(t: string) {
 
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.el-header{
+  margin-top: 20px;
+}
+
+.el-aside{
+  border-right: rgba(239, 239, 239, 0.838) solid 1px ;
+  transition: all .3s ease-in-out;
+}
+
+@media screen and (max-width:800px) {
+  .el-aside{
+    width: 100px;
+  }
+  
+}
+
+
+</style>
