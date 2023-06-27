@@ -72,9 +72,11 @@ onUnmounted(() => {
         <div class="body">
             <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"
             :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
-            <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
+            <CompsTab :context="props.context" v-if="currentTab === 'Comps'" 
+            :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
             <!-- <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab> -->
-            <CommentTab :context="props.context" v-if="currentTab === 'Comment'"></CommentTab>
+            <CommentTab :context="props.context" v-if="currentTab === 'Comment'" 
+            :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
         </div>
     </div>
 </template>

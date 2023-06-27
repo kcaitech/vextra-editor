@@ -284,7 +284,6 @@ const getDocumentInfo = async () => {
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             switchPage(context.data.pagesList[0]?.id);
-            localStorage.setItem('docId', route.query.id as string);
             coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
             coopLocal.start().finally(() => loading.value = false);
         }
@@ -302,7 +301,6 @@ function upload() {
     context.workspace.startSave();
     uploadExForm(context.data, FILE_UPLOAD, token, '', (isSuccess, doc_id) => {
         if (isSuccess) {
-            localStorage.setItem('docId', doc_id);
             router.replace({
                 path: '/document',
                 query: { id: doc_id }

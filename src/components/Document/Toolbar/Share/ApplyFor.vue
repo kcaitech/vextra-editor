@@ -2,8 +2,9 @@
 import { ref, onMounted, onUnmounted, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import * as share_api from '@/apis/share'
+import { useRoute } from 'vue-router';
 const { t } = useI18n()
-
+const route = useRoute();
 const applyList: any = ref([])
 const container = ref<HTMLDivElement>()
 const posi = ref({
@@ -14,12 +15,10 @@ enum Audit {
   unPass,
   Pass
 }
-let docID = ''
 const timestamp  = Date.now()
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`,`${t('share.editable')}`])
 const getApplyList = async (time?: number) => {  
-    docID = localStorage.getItem('docId') || ''
-    const { data } = await share_api.getApplyListAPI({ doc_id: docID, start_time: time })
+    const { data } = await share_api.getApplyListAPI({ doc_id: route.query.id, start_time: time })
     applyList.value = [...applyList.value, ...data]
 }
 const consent = (id: string, index: number) => {

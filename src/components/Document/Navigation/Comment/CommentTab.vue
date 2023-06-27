@@ -4,12 +4,15 @@ import { Context } from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";
 import { useI18n } from 'vue-i18n';
+import ShowHiddenLeft from "../ShowHiddenLeft.vue";
 const { t } = useI18n();
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
     text: string
     status: boolean
 }
+const emit = defineEmits<{ (e: 'showNavigation'): void }>()
+
 const commentMenu = ref<boolean>(false)
 const commentMenuItems = ref<commentListMenu[]>([
     { text: `${t('comment.sort')}`, status: false},
@@ -30,6 +33,10 @@ const closeMenu = () => {
 const handleMenuStatus = (status: boolean, index: number) => {
     commentMenuItems.value[index].status = status
 }
+
+const showHiddenLeft = () => {
+    emit('showNavigation')
+}
 </script>
 
 <template>
@@ -47,6 +54,7 @@ const handleMenuStatus = (status: boolean, index: number) => {
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>
+        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShowHiddenLeft>
     </div>
 </template>
 
@@ -57,6 +65,7 @@ const handleMenuStatus = (status: boolean, index: number) => {
     background-color: var(--theme-color-anti);
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
+    overflow: hidden;
     .comment-title {
         position: relative;
         height: 30px;
