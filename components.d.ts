@@ -120,6 +120,7 @@ declare module '@vue/runtime-core' {
     ShapeTitles: typeof import('./src/components/Document/Content/ShapeTitles.vue')['default']
     Share: typeof import('./src/components/Document/Toolbar/Share/Share.vue')['default']
     ShareMe: typeof import('./src/components/AppHome/Main/ShareMe.vue')['default']
+    ShowHiddenLeft: typeof import('./src/components/Document/Navigation/ShowHiddenLeft.vue')['default']
     StarFile: typeof import('./src/components/AppHome/Main/StarFile.vue')['default']
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
     SubLoading: typeof import('./src/components/common/SubLoading.vue')['default']

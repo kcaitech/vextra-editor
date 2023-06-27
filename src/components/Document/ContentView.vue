@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop } from '@/utils/content';
+import { updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
@@ -156,7 +156,10 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
         }
     } else { // 抬起之前未存在拖动
         const action = workspace.value.action;
-        if (action.startsWith('add')) { // 存在action
+        if (action === Action.AddText) {
+            init_insert_textshape(props.context, mousedownOnPageXY, t, t('shape.input_text'));
+        }
+        else if (action.startsWith('add')) { // 存在action
             init_insert_shape(props.context, mousedownOnPageXY, t);
         }
     }

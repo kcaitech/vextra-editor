@@ -1,7 +1,7 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape } from "@kcdesign/data";
 import { Action, Media, ResultByAction } from '@/context/workspace';
 interface SystemClipboardItem {
   type: ShapeType
@@ -136,11 +136,35 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
   }
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
-    selection.selectShape(new_shape);
+    selection.selectShape(page!.getShape(new_shape.id));
   }
   workspace.setAction(Action.AutoV);
   workspace.creating(false);
 }
+// 插入文本框
+function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: Function, content: string, land?: Shape, _t?: ShapeType) {
+    const selection = context.selection;
+    const workspace = context.workspace;
+    const type = _t || ResultByAction(workspace.action);
+    const page = selection.selectedPage;
+    const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+    let asyncCreator: AsyncCreator | undefined;
+    let new_shape: Shape | undefined;
+    const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+    if (page && parent && type) {
+      const editor = context.editor.controller();
+      const name = getName(type, parent.childs, t);
+      asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+      new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
+    }
+    if (asyncCreator && new_shape) {
+      asyncCreator = asyncCreator.close();
+      selection.selectShape(page!.getShape(new_shape.id));
+      selection.selectText(0, (new_shape as TextShape).text.length)
+    }
+    workspace.setAction(Action.AutoV);
+    workspace.creating(false);
+  }
 // 图片从init到inset一气呵成
 function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
@@ -168,6 +192,7 @@ function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Funct
   }
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
+    new_shape = page!.getShape(new_shape.id)
     return new_shape;
   }
 }
@@ -264,7 +289,7 @@ function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, 
   }
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
-    selection.selectShape(new_shape);
+    selection.selectShape(page!.getShape(new_shape.id));
   }
   workspace.setAction(Action.AutoV);
   workspace.creating(false);
@@ -368,4 +393,4 @@ function drop(e: DragEvent, context: Context, t: Function) {
     img.src = URL.createObjectURL(file);
   }
 }
-export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, is_drag, paster, insert_imgs, drop };
+export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop };

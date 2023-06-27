@@ -1,5 +1,4 @@
 import { Context } from "@/context";
-import { layoutText, locateCursor, locateText } from "@/layout/text";
 import { TextShape } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
 
@@ -67,16 +66,16 @@ const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: Te
     }
 }, keydelays);
 const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
-    const layout = shape.getLayout(layoutText);
+    const text = shape.text;
     const selection = context.selection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const cursorAtBefore = start === end && selection.cursorAtBefore;
-    const cursor = locateCursor(layout, end, cursorAtBefore);
+    const cursor = text.locateCursor(end, cursorAtBefore);
     if (cursor.length !== 2) return;
     const x = cursor[0].x;
     const y = cursor[0].y - (cursor[1].y - cursor[0].y) / 2;
-    const locate = locateText(layout, x, y);
+    const locate = text.locateText(x, y);
     if (e.shiftKey) {
         const _end = locate.index;
         // 不只选择'\n'
@@ -92,16 +91,16 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
     }
 }, keydelays);
 const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
-    const layout = shape.getLayout(layoutText);
+    const text = shape.text;
     const selection = context.selection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const cursorAtBefore = start === end && selection.cursorAtBefore;
-    const cursor = locateCursor(layout, end, cursorAtBefore);
+    const cursor = text.locateCursor(end, cursorAtBefore);
     if (cursor.length !== 2) return;
     const x = cursor[0].x;
     const y = cursor[1].y + (cursor[1].y - cursor[0].y) / 2;
-    const locate = locateText(layout, x, y);
+    const locate = text.locateText(x, y);
     if (e.shiftKey) {
         const _end = locate.index;
         // 不只选择'\n'
@@ -122,13 +121,27 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) {
-        if (editor.deleteText(start - 1, 1)) {
-            selection.setCursor(start - 1, true);
+        if (start === 0) {
+            const firstChar = shape.text.charAt(0);
+            if (firstChar === '\n') {
+                if (editor.deleteText(start, 1)) {
+                    const index = start;
+                    const preChar = shape.text.charAt(index - 1);
+                    selection.setCursor(index, preChar !== '\n');
+                }
+            }
+        }
+        else if (editor.deleteText(start - 1, 1)) {
+            const index = start - 1;
+            const preChar = shape.text.charAt(index - 1);
+            selection.setCursor(index, preChar !== '\n');
         }
     }
     else {
         if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-            selection.setCursor(Math.min(start, end), true);
+            const index = Math.min(start, end);
+            const preChar = shape.text.charAt(index - 1);
+            selection.setCursor(index, preChar !== '\n');
         }
     }
 }, keydelays);
