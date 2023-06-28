@@ -79,7 +79,7 @@ const errorHandler = () => true
 function openDialog() {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.jpg, .png, .jpeg'
+    input.accept = 'image/png, image/jpeg, image/jpg'
     input.addEventListener('change', handleFileSelected)
     input.click()
 }

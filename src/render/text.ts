@@ -1,5 +1,4 @@
 import { TextShape } from "@kcdesign/data";
-import { layoutText } from "@/layout/text";
 import { Color } from "@kcdesign/data";
 import { getTextPath } from "@/textpath";
 import { Path } from "@kcdesign/data";
@@ -9,7 +8,7 @@ function toRGBA(color: Color): string {
 }
 
 export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): string {
-    const { yOffset, paras } = shape.getLayout(layoutText);
+    const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
 
     const paths = [];
@@ -40,7 +39,7 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
 }
 
 export function render(h: Function, shape: TextShape, reflush?: number) {
-    const { yOffset, paras } = shape.getLayout(layoutText);
+    const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
 
     const childs = []

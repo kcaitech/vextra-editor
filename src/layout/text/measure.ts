@@ -1,5 +1,3 @@
-import { number } from "@intlify/core-base";
-
 // https://zhuanlan.zhihu.com/p/338634062
 const canvas2D = (() => {
     let canvas: CanvasRenderingContext2D | null;

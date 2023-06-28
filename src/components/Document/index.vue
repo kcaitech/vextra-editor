@@ -19,6 +19,7 @@ import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
+import { measure } from '@/layout/text/measure';
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -275,7 +276,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(importDocumentParams, path, "", "", repo)
+        const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
         if (document) {
             console.log(document.pagesList.slice(0));
             const coopRepo = new CoopRepository(document, repo)
@@ -285,14 +286,20 @@ const getDocumentInfo = async () => {
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             switchPage(context.data.pagesList[0]?.id);
-            localStorage.setItem('docId', route.query.id as string);
             coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
-            coopLocal.start();
+            coopLocal.start().finally(() => {
+                if (!context) {
+                    router.push('/');
+                    return;
+                }
+                switchPage(context.data.pagesList[0]?.id);
+                loading.value = false
+            });
         }
     } catch (err) {
-        new Error(`${err}`);
-    } finally {
         loading.value = false;
+        console.log(err)
+        throw err;
     }
 }
 function upload() {
@@ -303,7 +310,6 @@ function upload() {
     context.workspace.startSave();
     uploadExForm(context.data, FILE_UPLOAD, token, '', (isSuccess, doc_id) => {
         if (isSuccess) {
-            localStorage.setItem('docId', doc_id);
             router.replace({
                 path: '/document',
                 query: { id: doc_id }

@@ -3,16 +3,21 @@ import {} from "vue";
 import { Context } from "@/context";
 import developing from "@/assets/development.svg"
 import { useI18n } from 'vue-i18n';
+import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 const { t } = useI18n();
-
+const emit = defineEmits<{ (e: 'showNavigation'): void }>()
+const showHiddenLeft = () => {
+    emit('showNavigation')
+}
 </script>
 
 <template>
     <div class="comps-container">
         <img :src="developing" alt="">
         <span class="text">{{t('navi.development')}}</span>
+        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShowHiddenLeft>
     </div>
 </template>
 
@@ -26,10 +31,11 @@ const { t } = useI18n();
     height: 100%;
     background-color: #fff;
     font-size: 10px;
-    padding: 8px 16px;
     box-sizing: border-box;
+    overflow: hidden;
     >img {
-        width: 100%;
+        width: 224px;
+        height: 224px;
     }
     .text {
         position: relative;
