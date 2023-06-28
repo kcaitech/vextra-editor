@@ -20,6 +20,8 @@ import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
 import { measure } from '@/layout/text/measure';
+import Home from "@/components/Document/Toolbar/BackToHome.vue";
+
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -41,7 +43,6 @@ const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
-let loading_timer: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
@@ -278,23 +279,28 @@ const getDocumentInfo = async () => {
         const path = docInfo.value.document.path;
         const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
         if (document) {
-            console.log(document.pagesList.slice(0));
             const coopRepo = new CoopRepository(document, repo)
             window.document.title = document.name;
             context = new Context(document, coopRepo);
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            switchPage(context.data.pagesList[0]?.id);
             coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
-            coopLocal.start().finally(() => {
-                if (!context) {
-                    router.push('/');
-                    return;
-                }
-                switchPage(context.data.pagesList[0]?.id);
-                loading.value = false
-            });
+            coopLocal.start()
+                .catch((e) => {
+                    if (!context) {
+                        router.push('/');
+                        throw new Error(e);
+                    }
+                }).finally(() => {
+                    if (!context) {
+                        router.push('/');
+                        return;
+                    }
+                    switchPage(context.data.pagesList[0]?.id);
+                    loading.value = false
+                });
+
         }
     } catch (err) {
         loading.value = false;
@@ -386,6 +392,7 @@ onUnmounted(() => {
     <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context!" v-if="!loading && !null_context" />
+        <Home v-else></Home>
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
