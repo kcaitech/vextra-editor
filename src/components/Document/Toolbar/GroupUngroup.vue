@@ -75,11 +75,15 @@ const groupClick = () => {
                 if (group) {
                     props.selection.selectShape(group);
                     props.selection.notify(Selection.EXTEND, group);
+                    state.value = 0;
+                    state.value = state.value ^ UNGROUP;
+                    state.value = state.value ^ GROUP;
                 }
             }
         }
         props.context.workspace.setSelectionViewUpdater(true);
         props.context.workspace.selectionViewUpdate();
+
     }
 }
 const ungroupClick = () => {
