@@ -20,10 +20,18 @@ enum Audit {
 
 const formatDate = computed(() => {
   return function (value: string): string {
-    const date = new Date(value)
-    const hours = date.getHours()
-    const minutes = date.getMinutes()
-    return `${hours}:${minutes}`
+    const date = new Date(value);
+    const zh_month = date.getMonth() + 1;
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const lang = localStorage.getItem('locale') || 'zh'
+    const en_month = date.toLocaleString('en-US', { month: 'long' });
+    if(lang === 'zh') {
+        return `${zh_month}月${day}日 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }else {
+        return `${en_month} ${day}, ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    }
   }
 })
 const consent = (id: string, index: number) => {
@@ -65,8 +73,8 @@ const close = () => {
           <div class="avatar"><img :src="item.user.avatar" alt=""></div>
           <div class="item-container">
             <div class="item-title">
-              <span>{{ item.user.nickname }}</span>
-              <span>{{ formatDate(item.apply.created_at) }}</span>
+              <span class="name">{{ item.user.nickname }}</span>
+              <span class="date">{{ formatDate(item.apply.created_at) }}</span>
             </div>
             <el-tooltip class="box-item" effect="light" placement="bottom-end">
               <template #content>
@@ -188,8 +196,9 @@ const close = () => {
   margin-top: 5px;
 
   >img {
-    width: 80%;
-    height: 80%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
   }
 }
 
@@ -200,6 +209,15 @@ const close = () => {
   .item-title {
     display: flex;
     justify-content: space-between;
+    .date {
+      width: auto;
+    }
+    .name {
+      width: calc(100% - 90px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .item-text {
