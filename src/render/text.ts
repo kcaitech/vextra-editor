@@ -23,7 +23,7 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
                 const span = garr.attr;
                 const font = span?.fontName || '';
                 const fontSize = span?.fontSize || 0;
-                const y = line.y + (line.lineHeight - fontSize) / 2 + yOffset; // top
+                const y = lines.yOffset + line.y + (line.lineHeight - fontSize) / 2 + yOffset; // top
 
                 paths.push(...garr.map((g) => {
                     if (g.char === '\n' || g.char === ' ') return '';
@@ -67,7 +67,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                 const span = garr.attr;
                 const fontSize = span?.fontSize || 0;
                 const fontName = span?.fontName;
-                const y = line.y + (line.lineHeight) / 2 + yOffset; // top
+                const y = lines.yOffset + line.y + (line.lineHeight) / 2 + yOffset; // top
 
                 const font = "normal " + fontSize + "px " + fontName;
                 childs.push(h('text', { x: gX.join(' '), y, style: { fill: span && span.color && toRGBA(span.color), font, 'alignment-baseline': 'central' } }, gText.join('')));
