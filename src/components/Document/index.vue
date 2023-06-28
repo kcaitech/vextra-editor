@@ -277,6 +277,7 @@ const getDocumentInfo = async () => {
         const path = docInfo.value.document.path;
         const document = await importDocument(importDocumentParams, path, "", "", repo)
         if (document) {
+            console.log(document.pagesList.slice(0));
             const coopRepo = new CoopRepository(document, repo)
             window.document.title = document.name;
             context = new Context(document, coopRepo);
@@ -391,7 +392,8 @@ onUnmounted(() => {
         <template #slot1>
             <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
                 @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-                @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
+                @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
+                :leftTriggleVisible="leftTriggleVisible">
             </Navigation>
         </template>
         <template #slot2>

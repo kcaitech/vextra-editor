@@ -76,7 +76,7 @@ let listviewSource = new class implements IDataSource<ItemData> {
 const shapelist = ref<List>();
 const ListBody = ref<HTMLDivElement>()
 const ListH = ref<number>(0)
-function _notifySourceChange(t?: number | string) {
+function _notifySourceChange(t?: number | string, shape?: Shape) {
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
@@ -103,6 +103,10 @@ function _notifySourceChange(t?: number | string) {
                 }
             }
         })
+    } else if (t === Selection.EXTEND) {
+        if (shape) {
+            toggleExpand(shape)
+        }
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }

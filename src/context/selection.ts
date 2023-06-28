@@ -48,6 +48,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_TEXT = 5;
     static PAGE_RENAME = 6;
     static UPDATE_RENDER_ITEM = 7;
+    static EXTEND = 8;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -106,13 +107,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.notify(Selection.CHANGE_PAGE);
     }
     async deletePage(id: string, index: number) {
-        if (this.m_document.pagesList.length > 1) {
-            if (id === this.m_selectPage?.id) {
-                index = index === this.m_document.pagesList.length ? 0 : index;
-                await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
-                    this.selectPage(p);
-                });
-            }
+        if (id === this.m_selectPage?.id) {
+            index = index === this.m_document.pagesList.length ? index - 1 : index;
+            await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
+                this.selectPage(p);
+            });
         }
     }
     reName(id?: string) {

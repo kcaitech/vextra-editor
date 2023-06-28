@@ -19,6 +19,7 @@ interface Emits {
 interface MenuItem {
     name: string
     id: string
+    disable: boolean
 }
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
@@ -146,7 +147,15 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     workspace.menuMount(false);
     pageMenuPosition.value.x = e.clientX
     pageMenuPosition.value.y = e.clientY - 75
-    pageMenuItems = [{ name: 'copy_link', id: id }, { name: 'duplicate', id: id }, { name: 'rename', id: id }, { name: 'delete', id: id }]
+    pageMenuItems = [
+        { name: 'copy_link', id: id, disable: false },
+        { name: 'duplicate', id: id, disable: false },
+        { name: 'rename', id: id, disable: false },
+        { name: 'delete', id: id, disable: false }
+    ]
+    if (props.context.data.pagesList.length === 1) {
+        pageMenuItems[3].disable = true;
+    }
     pageMenu.value = true
     e.stopPropagation()
     document.addEventListener('keydown', Menuesc);
@@ -166,11 +175,9 @@ function Menuesc(e: KeyboardEvent) {
 }
 function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     document.removeEventListener('keydown', Menuesc);
-    pageMenu.value = false;
     if (item === 'rename') {
         e?.stopPropagation();
         props.context.selection.reName(id);
-
     } else if (item === 'duplicate') {
         e?.stopPropagation()
         const pageMgr = props.context.editor4Doc();
@@ -190,11 +197,16 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     } else if (item === 'copy_link') {
         e?.stopPropagation();
     } else if (item === 'delete') {
-        e?.stopPropagation()
-        const index = props.context.data.pagesList.findIndex((item) => item.id === id)
-        id && props.context.editor4Doc().delete(id)
-        id && props.context.selection.deletePage(id, index)
+        e?.stopPropagation();
+        const pagesList = props.context.data.pagesList;
+        if (pagesList.length === 1) return;
+        if (id) {
+            const index = pagesList.findIndex((item) => item.id === id)
+            props.context.editor4Doc().delete(id)
+            props.context.selection.deletePage(id, index)
+        }
     }
+    pageMenu.value = false;
 }
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
@@ -230,8 +242,8 @@ onUnmounted(() => {
             </ListView>
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
                 :context="props.context" @close="pageMenuUnmount">
-                <div class="items-wrap" v-for="(item, index) in pageMenuItems" :key="index"
-                    @click="e => pageMenuUnmount(e, item.name, item.id)">
+                <div :class="item.disable ? 'items-wrap-disable' : 'items-wrap'" v-for="(item, index) in pageMenuItems"
+                    :key="index" @click="e => pageMenuUnmount(e, item.name, item.id)">
                     <span>{{ t(`pageMenu.${item.name}`) }}</span>
                 </div>
             </ContextMenu>
@@ -323,6 +335,13 @@ onUnmounted(() => {
     &:hover {
         background-color: var(--active-color);
     }
+}
+
+.items-wrap-disable {
+    font-size: var(--font-default-fontsize);
+    line-height: 30px;
+    padding: 0 10px;
+    color: grey;
 }
 </style>
     

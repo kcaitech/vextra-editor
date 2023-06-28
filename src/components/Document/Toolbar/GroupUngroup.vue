@@ -41,7 +41,7 @@ function _updater(t?: number) {
         }
     }
 }
-const updater = debounce(_updater, 150);
+const updater = debounce(_updater, 50);
 function workspaceUpdate(t?: number) {
     if (t === WorkSpace.GROUP) {
         groupClick();
@@ -74,6 +74,7 @@ const groupClick = () => {
                 const group = editor.group(shapes, name);
                 if (group) {
                     props.selection.selectShape(group);
+                    props.selection.notify(Selection.EXTEND, group);
                 }
             }
         }
