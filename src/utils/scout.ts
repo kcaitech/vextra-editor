@@ -1,3 +1,4 @@
+import { Context } from "@/context";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
@@ -8,7 +9,7 @@ interface Scout {
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条闭合路径(d)上
-function scout(): Scout {
+function scout(context: Context): Scout {
     const scoutId = (uuid().split('-').at(-1)) || 'scout';
     const pathId = (uuid().split('-').at(-1)) || 'path';
     const ele: SVGElement = createSVGGeometryElement(scoutId);
@@ -16,18 +17,21 @@ function scout(): Scout {
     ele.appendChild(path);
     document.body.appendChild(ele);
 
+    // 任意初始化一个point
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
     function isPointInShape(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
-        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         let result: boolean = false;
         if (shape.type === ShapeType.Line) {
-            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14);
+            // 线条元素(不管是否闭合，都当不闭合)额外处理point是否在边框上
+            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14 / context.workspace.matrix.m00);
             path.setAttributeNS(null, 'stroke-width', `${thickness}`);
             result = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
         } else {
+            // 判断point是否在闭合路径的填充中
             result = (path as SVGGeometryElement).isPointInFill(SVGPoint);
         }
         return result;
@@ -35,9 +39,7 @@ function scout(): Scout {
 
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
-        if (s) {
-            document.body.removeChild(s)
-        }
+        if (s) document.body.removeChild(s);
     }
     return { path, isPointInShape, remove }
 }
@@ -196,6 +198,7 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
     }
     return result;
 }
+// 寻找当前位置下的容器
 function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Shape): Shape | undefined {
     let result: Shape | undefined = undefined;
     for (let i = g.length - 1; i > -1; i--) {

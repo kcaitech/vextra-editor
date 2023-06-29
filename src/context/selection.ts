@@ -6,6 +6,7 @@ import { cloneDeep } from "lodash";
 import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
 // import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
 import { Artboard } from "@kcdesign/data";
+import { Context } from ".";
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -72,8 +73,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     // get canvaskitScout(): CanvasKitScout | undefined {
     //     return this.m_scout_beta;
     // }
-    scoutMount() {
-        this.m_scout = scout();
+    scoutMount(context: Context) {
+        this.m_scout = scout(context);
     }
     // async canvaskitScoutMount() {
     //     this.m_scout_beta = await canvasKitScout();

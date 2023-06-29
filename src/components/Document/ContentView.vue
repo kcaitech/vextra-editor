@@ -594,17 +594,17 @@ renderinit()
         props.context.workspace.setFreezeStatus(false);
     })
 onMounted(() => {
-    initMatrix(props.page);
+    initMatrix(props.page); // 初始化页面坐标
     props.context.workspace.watch(workspaceWatcher);
     props.page.watch(watcher);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     window.addEventListener('blur', windowBlur);
-    stylerForCursorMount();
-    rootRegister(true);
-    props.context.selection.scoutMount();
-    props.context.workspace.setFreezeStatus(true);
-    props.context.workspace.init(t);
+    stylerForCursorMount(); // 安装鼠标光标处理器
+    rootRegister(true); // 在workspace注册contentview dom节点
+    props.context.selection.scoutMount(props.context); // 安装图形检索器
+    props.context.workspace.setFreezeStatus(true); // 开始加载静态资源
+    props.context.workspace.init(t); // 在workspace存储多语言
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);
@@ -612,11 +612,11 @@ onUnmounted(() => {
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('blur', windowBlur);
-    styler.value.remove();
-    rootRegister(false);
+    styler.value.remove(); // 卸载鼠标光标处理器
+    rootRegister(false); // 在workspace注销contentview dom节点
     stopWatch();
-    props.context.selection.scout?.remove();
-    resizeObserver.disconnect();
+    props.context.selection.scout?.remove(); // 卸载图形检索器
+    resizeObserver.disconnect(); // 停止监听contentview dom节点的frame变化
 })
 </script>
 <template>
