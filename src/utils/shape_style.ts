@@ -1,7 +1,8 @@
 import {
     Color, Fill, Shape, FillColorAction, FillEnableAction, FillAddAction, FillDeleteAction, FillsReplaceAction,
-    Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction
+    Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction, BorderThicknessAction, BorderPositionAction, BorderStyleAction, BorderPosition, BorderStyle
 } from "@kcdesign/data";
+import { v4 } from "uuid";
 interface FillItem {
     id: number,
     fill: Fill
@@ -54,7 +55,14 @@ export function get_actions_fill_unify(shapes: Shape[]) {
     const actions: FillsReplaceAction[] = [];
     const fills = shapes[0].style.fills;
     for (let i = 1; i < shapes.length; i++) {
-        actions.push({ target: shapes[i], value: fills });
+        const new_fills: Fill[] = [];
+        for (let i = 0; i < fills.length; i++) {
+            const fill = fills[i];
+            const { isEnabled, fillType, color, contextSettings } = fill;
+            const new_fill = new Fill(v4(), isEnabled, fillType, color, contextSettings);
+            new_fills.push(new_fill);
+        }
+        actions.push({ target: shapes[i], value: new_fills });
     }
     return actions;
 }
@@ -126,7 +134,9 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
 export function get_actions_add_boder(shapes: Shape[], border: Border) {
     const actions: BorderAddAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        actions.push({ target: shapes[i], value: border });
+        const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType } = border;
+        const new_border = new Border(v4(), isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType);
+        actions.push({ target: shapes[i], value: new_border });
     }
     return actions;
 }
@@ -141,7 +151,14 @@ export function get_actions_border_unify(shapes: Shape[]) {
     const actions: BordersReplaceAction[] = [];
     const borders = shapes[0].style.borders;
     for (let i = 1; i < shapes.length; i++) {
-        actions.push({ target: shapes[i], value: borders });
+        const new_borders: Border[] = [];
+        for (let i = 0; i < borders.length; i++) {
+            const border = borders[i];
+            const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType } = border;
+            const new_border = new Border(v4(), isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType);
+            new_borders.push(new_border);
+        }
+        actions.push({ target: shapes[i], value: new_borders });
     }
     return actions;
 }
@@ -156,6 +173,31 @@ export function get_actions_border_delete(shapes: Shape[], index: number) {
     const actions: BorderDeleteAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index });
+    }
+    return actions;
+}
+export function get_actions_border_thickness(shapes: Shape[], index: number, thickness: number) {
+    const actions: BorderThicknessAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index, value: thickness });
+    }
+    return actions;
+}
+export function get_actions_border_position(shapes: Shape[], index: number, position: BorderPosition) {
+    const actions: BorderPositionAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index, value: position });
+    }
+    return actions;
+}
+export function get_actions_border_style(shapes: Shape[], index: number, style: 'dash' | 'solid') {
+    const actions: BorderStyleAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const bs = new BorderStyle(0, 0);
+        if (style === 'dash') {
+            bs.gap = 10, bs.length = 10;
+        }
+        actions.push({ target: shapes[i], index, value: bs });
     }
     return actions;
 }

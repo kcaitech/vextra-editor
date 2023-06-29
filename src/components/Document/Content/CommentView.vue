@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, watchEffect, nextTick } from 'vue';
 import { Context } from '@/context';
 import PageCommentItem from '@/components/Document/Content/PageCommentItem.vue'
 import * as comment_api from '@/apis/comment';
@@ -7,6 +7,9 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { useRoute } from 'vue-router';
 import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
+import { searchCommentShape } from '@/utils/comment';
+import { ShapeType } from "@kcdesign/data";
+
 type CommentView = InstanceType<typeof PageCommentItem>;
 
 const { t } = useI18n();
@@ -73,7 +76,6 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
     workspace.value.commentMove(false)
     editCommentId.value = documentCommentList.value[index].id
     commentIndex.value = index
-    if (documentCommentList.value[index].user.id !== userId) return
     const handleMouseMove = (e: MouseEvent) => {
         moveCommentPopup(e, index);
     };
@@ -85,11 +87,12 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
         const diff = Math.hypot(dx, dy);
         if (diff < 4) {
             props.context.workspace.showCommentPopup(commentIndex.value, e)
-        }else {
+        } else {
+            if (documentCommentList.value[index].user.id !== userId) return
             const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
             const shape_frame = documentCommentList.value[index].shape_frame
             const commentxy = { x: shape_frame.x1, y: shape_frame.y1 }
-            const shapes = props.context.selection.getShapesByXY_beta(commentxy, false, false);
+            const shapes = searchCommentShape(props.context, commentxy);
             shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
             shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
             workspace.value.commentMove(false)
@@ -132,6 +135,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
 };
 const commentReflush = ref(0)
 const moveCommentPopup = (e: MouseEvent, index: number) => {
+    if (documentCommentList.value[index].user.id !== userId) return
     commentReflush.value++
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
@@ -197,15 +201,21 @@ const getDocumentComment = async () => {
                 obj.commentMenu = commentMenuItems.value
                 obj.children = []
             })
-            const list = list2Tree(data, '')
-            workspace.value.setNot2TreeComment(data)
+            const manageData = data.map((item: any) => {
+                item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+                return item
+            })
+            const list = list2Tree(manageData, '')
+            workspace.value.setNot2TreeComment(manageData)
             workspace.value.setPageCommentList(list, props.pageId)
             workspace.value.setCommentList(list)
             documentCommentList.value = workspace.value.pageCommentList
             if (props.context.selection.isSelectComment) {
                 props.context.selection.selectComment(props.context.selection.commentId)
                 documentCommentList.value = workspace.value.pageCommentList
-                props.context.selection.setCommentSelect(false)
+                nextTick(() => {
+                    props.context.selection.setCommentSelect(false)
+                })
             }
         }
     } catch (err) {
@@ -287,6 +297,33 @@ const saveShapeCommentXY = () => {
     workspace.value.editShapeComment(false, undefined)
 }
 
+const watchedShapes = new Map();
+function watchShapes() { // 监听评论相关shape的变化
+    const needWatchShapes = new Map();
+    let shapes = props.context.selection.selectedPage!.shapes;
+    for (let i = 0; i < documentCommentList.value.length; i++) {
+        const _com = documentCommentList.value[i];
+        const shape = shapes.get(_com.target_shape_id);
+        if (shape) {
+            needWatchShapes.set(_com.target_shape_id, shape);
+        }
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(update);
+        watchedShapes.delete(k);
+    });
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        v.watch(update);
+        watchedShapes.set(k, v);
+    });
+}
+
+function update() {
+    commentReflush.value
+}
+
 function workspaceWatcher(type?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (type === WorkSpace.CURSOR_CHANGE) {
         if (type === WorkSpace.UPDATE_COMMENT_POS) {
@@ -295,6 +332,12 @@ function workspaceWatcher(type?: number) { // 更新编辑器状态，包括光�
     }
     //更新评论
     if (type === WorkSpace.EDIT_COMMENT) {
+        const timer = setTimeout(() => {
+            getDocumentComment()
+            clearTimeout(timer)
+        }, 100);
+    } else if (type === WorkSpace.TOGGLE_COMMENT_PAGE) {
+        documentCommentList.value = []
         const timer = setTimeout(() => {
             getDocumentComment()
             clearTimeout(timer)
@@ -308,7 +351,7 @@ function workspaceWatcher(type?: number) { // 更新编辑器状态，包括光�
         documentCommentList.value = props.context.workspace.pageCommentList
     }
 }
-
+watchEffect(update)
 onMounted(() => {
     getDocumentComment()
     props.context.workspace.watch(workspaceWatcher);

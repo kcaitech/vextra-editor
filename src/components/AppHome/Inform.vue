@@ -3,6 +3,9 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import * as share_api from '@/apis/share'
 import { useI18n } from 'vue-i18n'
+import moment = require('moment');
+import 'moment/locale/zh-cn';
+import { mapDateLang } from '@/utils/date_lang'
 const { t } = useI18n()
 
 const emit = defineEmits<{
@@ -20,12 +23,19 @@ enum Audit {
 
 const formatDate = computed(() => {
   return function (value: string): string {
-    const date = new Date(value)
-    const hours = date.getHours()
-    const minutes = date.getMinutes()
-    return `${hours}:${minutes}`
+    const lang = localStorage.getItem('locale') || 'zh'
+    moment.locale(mapDateLang.get(lang) || 'zh-cn');
+    return filterDate(value);
   }
 })
+
+const filterDate = (time: string) => {
+  const date = new Date(time);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
 const consent = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.Pass)
 }
@@ -65,8 +75,8 @@ const close = () => {
           <div class="avatar"><img :src="item.user.avatar" alt=""></div>
           <div class="item-container">
             <div class="item-title">
-              <span>{{ item.user.nickname }}</span>
-              <span>{{ formatDate(item.apply.created_at) }}</span>
+              <span class="name">{{ item.user.nickname }}</span>
+              <span class="date">{{ formatDate(item.apply.created_at) }}</span>
             </div>
             <el-tooltip class="box-item" effect="light" placement="bottom-end">
               <template #content>
@@ -188,8 +198,9 @@ const close = () => {
   margin-top: 5px;
 
   >img {
-    width: 80%;
-    height: 80%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
   }
 }
 
@@ -200,6 +211,15 @@ const close = () => {
   .item-title {
     display: flex;
     justify-content: space-between;
+    .date {
+      width: auto;
+    }
+    .name {
+      width: calc(100% - 90px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .item-text {

@@ -7,7 +7,6 @@ import { Shape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { clipboard_write } from '@/utils/clipaboard';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -23,6 +22,7 @@ const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 const isLock = ref<boolean>()
 const isVisible = ref<boolean>()
+const isComment = ref<boolean>(props.context.workspace.isVisibleComment)
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
@@ -30,7 +30,7 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = true;
 }
 function copy() {
-  clipboard_write(props.context.selection.selectedShapes);
+  props.context.workspace.clipboard.write_html();
 }
 function paste() {
   props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
@@ -55,7 +55,9 @@ function cursor() {
 
 }
 function comment() {
-
+  const status = props.context.workspace.isVisibleComment
+  isComment.value = !status
+  props.context.workspace.setVisibleComment(isComment.value)
 }
 function ruler() {
 
@@ -160,7 +162,7 @@ function closeLayerSubMenu(e: MouseEvent) {
       <span>{{ t('system.show_many_cursor') }}</span>
     </div>
     <div class="item" v-if="props.items.includes('comment')" @click="comment">
-      <div class="choose"></div>
+      <div class="choose" v-show="isComment"></div>
       <span>{{ t('system.show_comment') }}</span>
       <span></span>
     </div>

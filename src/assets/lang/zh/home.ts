@@ -128,7 +128,9 @@ export const navi = {
     resource: '资源库',
     page: '页面',
     add_page: '添加新页面',
-    copy: '副本'
+    copy: '副本',
+    development: '功能开发中……'
+
 }
 
 export const frame = {
@@ -212,9 +214,13 @@ export const comment = {
     month: '月',
     day: '日',
     no_comment: '当前无评论',
-    leave_a_comment: '点击任意位置留下你的评论'
+    leave_a_comment: '点击任意位置留下你的评论',
+    comments_hide: '评论已设置隐藏',
+    show_comments: '显示评论'
 }
-
+export const clipboard = {
+    'invalid_data': '该内容无法解析'
+}
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';

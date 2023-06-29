@@ -52,7 +52,6 @@ const selectComment = () => {
 function toggle(id: Tab) {
     currentTab.value = id
 }
-
 const showHiddenLeft = () => {
     emit('showNavigation')
 }
@@ -71,7 +70,7 @@ onUnmounted(() => {
                 @click="toggle(i.id)">{{ i.title }}</div>
         </div>
         <div class="body">
-            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page" 
+            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"
             :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
             <CompsTab :context="props.context" v-if="currentTab === 'Comps'"></CompsTab>
             <!-- <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab> -->

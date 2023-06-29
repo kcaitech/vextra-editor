@@ -88,7 +88,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     // scope 编组子元素
     let shape: Shape | undefined;
     for (let i = scope.length - 1; i > -1; i--) {
-        if (scope[i].type === ShapeType.Group) {
+        if ([ShapeType.Group, ShapeType.FlattenShape].includes(scope[i].type)) {
             const items: Shape[] = delayering(scope[i]); // 扁平一个编组的树结构
             for (let j = items.length - 1; j > -1; j--) {
                 if (isTarget(scout, items[j], position)) {
@@ -114,7 +114,7 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, sele
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
             const item = g[i];
-            if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
+            if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
                 const isItemIsTarget = isTarget(scout, item, position);
                 if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
                 const c = item.childs as Shape[];
@@ -126,7 +126,7 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, sele
                         result.push(item);
                         if (!force && result.length) return result;
                     }
-                } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
+                } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
                     const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
                     if (g) {
                         result.push(g);
@@ -152,7 +152,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
         if (g[j].isVisible) {
             const childIsTarget = isTarget(scout, g[j], position);
             if (childIsTarget) {
-                if (g[j].type === ShapeType.Group) {
+                if ([ShapeType.Group, ShapeType.FlattenShape].includes(g[j].type)) {
                     const c: Shape[] = (g[j] as GroupShape).childs;
                     return forGroupHover(scout, c, position, selected, isCtrl);
                 } else {
@@ -161,7 +161,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
                         return g[j];
                     }
                     let max = 0;
-                    while (target?.parent && target?.parent?.type == ShapeType.Group && max <= 10000) {
+                    while (target?.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target?.parent?.type) && max <= 10000) {
                         if (selected) {
                             const isBroSelected: boolean = isPartSelect(target?.parent, selected);
                             if (isBroSelected) break;
@@ -230,4 +230,4 @@ function canBeTarget(shape: Shape): boolean { // 可以被选择的前提是没�
         return false;
     }
 }
-export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, artboardFinder }
+export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, artboardFinder, canBeTarget }

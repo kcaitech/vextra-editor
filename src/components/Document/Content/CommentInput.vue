@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watchEffect, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
-import { Back } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment'
 import { useRoute } from 'vue-router';
@@ -43,10 +42,12 @@ const comment = ref<HTMLDivElement>()
 const surplusX = ref<number>(0)
 const commentWidth = 360
 const offside = ref(false)
-const input = ref<HTMLInputElement>()
+const input = ref()
+const textareaEl = ref<HTMLDivElement>()
 const inputIcon = ref<HTMLInputElement>()
 const isShaking = ref(false)
 const position = ref({ x: 0, y: 0 })
+
 const commentData = ref<Comment>({
     doc_id: docID,
     page_id: props.pageID,
@@ -78,9 +79,9 @@ const sendBright = computed(() => textarea.value.trim().length > 0)
 
 const carriageReturn = (event: KeyboardEvent) => {
     event.stopPropagation()
-    const { code, ctrlKey, shiftKey } = event;
+    const { code, ctrlKey, metaKey } = event;
     if(event.key === 'Enter') {
-        if(ctrlKey) {
+        if(ctrlKey || metaKey) {
             textarea.value = textarea.value + '\n'
         }else {
             event.preventDefault()
@@ -153,6 +154,23 @@ const startShake = () => {
       }, 500); // 停止时间可以根据需要进行调整
 }
 
+const scrollVisible = ref(false)
+const handleInput = () => {
+    nextTick(() => {
+        if(textareaEl.value) {
+            const text = input.value.$refs.textarea
+            if (text) {
+                text.style.height = "auto"; // 重置高度，避免高度叠加
+                text.style.height = text.scrollHeight + "px";
+                const lineHeight = parseInt(getComputedStyle(text).lineHeight)
+                const textareaHeight = text.clientHeight
+                const numberOfLines = Math.ceil(textareaHeight / lineHeight)    
+                scrollVisible.value = numberOfLines > 10 ? true : false
+            }            
+        }
+    })
+}
+
 defineExpose({
     comment
 })
@@ -183,17 +201,19 @@ onUnmounted(() => {
             <div class="line1"></div>
             <div class="line2"></div>
         </div>
-        <div class="textarea" :class="{'shake': isShaking}">
+        <div class="textarea" ref="textareaEl" :class="{'shake': isShaking}">
             <el-input
                 ref="input"
                 class="input"
                 v-model="textarea"
-                :autosize="{ minRows: 1, maxRows: 12 }"
+                :autosize="{ minRows: 1, maxRows: 10 }"
                 type="textarea"
                 :placeholder="t('comment.input_comments')"
                 resize="none"
                 size="small"
+                :input-style="{ overflow: scrollVisible ? 'visible' :'hidden'}"
                 @keydown="carriageReturn"
+                @input="handleInput"
             />
             <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><svg-icon icon-class="send"></svg-icon></div>
         </div>
@@ -204,7 +224,7 @@ onUnmounted(() => {
     .comment-input {
         position: absolute;
         width: 330px;
-        z-index: 1;
+        z-index: 9;
         font-size: var(--font-default-fontsize);
         cursor: default;
 
@@ -316,5 +336,5 @@ onUnmounted(() => {
     :deep(.el-textarea__inner::-webkit-scrollbar-track) {
         background-color: transparent ;
     }
-   
+
 </style>

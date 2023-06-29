@@ -12,9 +12,9 @@ import { Context } from '@/context';
 const props = defineProps<{ 
     context: Context
 }>();
+
 const avatar = localStorage.getItem('avatar') || ''
 const name = localStorage.getItem('nickname') || ''
-
 </script>
 
 <template>

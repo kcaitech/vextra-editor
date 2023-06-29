@@ -6,10 +6,9 @@ import CommentMenu from "./CommentMenu.vue";
 import { useI18n } from 'vue-i18n';
 import * as comment_api from '@/apis/comment';
 import { useRoute } from 'vue-router';
-import { WorkSpace } from "@/context/workspace";
+import { WorkSpace, Action } from "@/context/workspace";
 import { ElScrollbar } from 'element-plus'
 import { Selection } from "@/context/selection";
-import { orderBy } from "lodash";
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 type commentListMenu = {
@@ -28,6 +27,8 @@ const documentCommentList = ref<any[]>(props.context.workspace.commentList)
 const commentAll = ref<any[]>() //没有转树的评论列表
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 const isPageSort = ref(props.context.selection.commentPageSort)
+const visibleComment = ref(props.context.workspace.isVisibleComment)
+const action = ref()
 const showMenu = () => {
     if(commentMenu.value) {
         commentMenu.value = false
@@ -131,6 +132,11 @@ const onDelete = (index:number) => {
     documentCommentList.value.splice(index, 1)
     props.context.workspace.setCommentList(documentCommentList.value)
 }
+
+const onVisibleComment = () => {
+    props.context.workspace.setVisibleComment(true)
+}
+
 const update = (t: number) => {
     if(t === WorkSpace.SEND_COMMENT) {
         const timer = setTimeout(() => {
@@ -154,6 +160,10 @@ const update = (t: number) => {
     if(t === Selection.PAGE_SORT) {
         isPageSort.value = props.context.selection.commentPageSort
     }
+    if (t === WorkSpace.VISIBLE_COMMENT) {
+        visibleComment.value = props.context.workspace.isVisibleComment
+    }
+    action.value = props.context.workspace.action;
 }
 
 onMounted(() => {
@@ -178,6 +188,10 @@ onUnmounted(() => {
         <div class="no_comment" v-if="documentCommentList.length <= 0">
             <div>{{t('comment.no_comment')}}</div>
             <div>{{t('comment.leave_a_comment')}}</div>
+        </div>
+        <div class="visible-comment" v-else-if="!visibleComment && action !== Action.AddComment">
+            <div>{{t('comment.comments_hide')}}</div>
+            <button @click="onVisibleComment">{{t('comment.show_comments')}}</button>
         </div>
         <div class="comment-list" v-else>
             <el-scrollbar ref="scrollbarRef">
@@ -227,6 +241,24 @@ onUnmounted(() => {
         justify-content: center;
         align-items: center;
         color: #999;
+    }
+    .visible-comment {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        >button {
+            margin-top: 10px;
+            font-size: 10px;
+            border: none;
+            height: 30px;
+            color: #fff;
+            width: 70px;
+            border-radius: 4px;
+            background-color: var(--active-color);
+        }
     }
 }
 .el-scrollbar {

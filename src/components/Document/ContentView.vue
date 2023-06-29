@@ -14,12 +14,12 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName, init_shape, init_insert_shape, is_drag, paster, insert_imgs, drop } from '@/utils/content';
-import { copy } from '@/utils/clipaboard';
+import { updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop } from '@/utils/content';
+import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
-import PageCommentItem from './Content/PageCommentItem.vue'
 import CommentView from './Content/CommentView.vue';
+import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
 import { useRoute } from 'vue-router';
 
@@ -205,24 +205,22 @@ function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状�
         } else if (type === WorkSpace.PASTE_RIGHT) {
             paster(props.context, t, mousedownOnPageXY);
         } else if (type === WorkSpace.COPY) {
-            copy(props.context);
+            props.context.workspace.clipboard.write_html();
         } else if (type === WorkSpace.UPDATE_COMMENT_POS) {
             saveShapeCommentXY();
         }
         const action = props.context.workspace.action;
         if (action.startsWith('add')) {
-            setClass('cross-0');
+            if (action === Action.AddComment) {
+                setClass('comment-0');
+            } else {
+                setClass('cross-0');
+            }
         } else {
             setClass('auto-0');
         }
     }
     //更新评论
-    if (type === WorkSpace.EDIT_COMMENT) {
-        const timer = setTimeout(() => {
-            getDocumentComment()
-            clearTimeout(timer)
-        }, 100);
-    }
     if (type === WorkSpace.UPDATE_PAGE_COMMENT) {
         documentCommentList.value = props.context.workspace.pageCommentList
     }
@@ -430,6 +428,7 @@ function onMouseDown(e: MouseEvent) {
         document.addEventListener("mouseup", onMouseUp);
     } else if (e.button == 2) { // 右键按下，右键菜单处理
         e.stopPropagation();
+        if (workspace.value.action === Action.AddComment) return
         contextMenuMount(e);
     }
 }
@@ -561,7 +560,7 @@ const commentMenuItems = ref<commentListMenu[]>([
 const detectionShape = (e: MouseEvent) => {
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, false, false);
+    const shapes = searchCommentShape(props.context, xy);
     if (shapes.length === 0) { //点击的位置是否有图形
         shapePosition.x = 0;
         shapePosition.y = 0;
@@ -684,8 +683,12 @@ const getDocumentComment = async () => {
                 obj.commentMenu = commentMenuItems.value
                 obj.children = []
             })
-            const list = list2Tree(data, '')
-            workspace.value.setNot2TreeComment(data)
+            const manageData = data.map((item: any) => {
+                item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+                return item
+            })
+            const list = list2Tree(manageData, '')
+            workspace.value.setNot2TreeComment(manageData)
             workspace.value.setPageCommentList(list, props.page.id)
             workspace.value.setCommentList(list)
             documentCommentList.value = workspace.value.pageCommentList
@@ -757,6 +760,7 @@ onMounted(() => {
     rootRegister(true);
     props.context.selection.scoutMount();
     props.context.workspace.setFreezeStatus(true);
+    props.context.workspace.init(t);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);
@@ -775,7 +779,7 @@ onUnmounted(() => {
     <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent>
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()"/>
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
@@ -788,7 +792,8 @@ onUnmounted(() => {
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
             @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"
             :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <CommentView :context="props.context" :pageId="page.id" :root="root" :cursorClass="cursorClass" :spacePressed="spacePressed"></CommentView>
+        <CommentView :context="props.context" :pageId="page.id" :root="root" :cursorClass="cursorClass"
+            :spacePressed="spacePressed"></CommentView>
     </div>
 </template>
 <style scoped lang="scss">

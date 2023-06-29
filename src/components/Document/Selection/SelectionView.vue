@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watchEffect, onMounted, onUnmounted, ref } from "vue";
+import { watchEffect, onMounted, onUnmounted, ref, nextTick } from "vue";
 import { Context } from "@/context";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
@@ -34,7 +34,9 @@ const controllerFrame = ref<Point[]>([]);
 const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 const tracing = ref<boolean>(false);
+const traceEle = ref<Element>();
 let tracingFrame: TracingFrame = { path: '', viewBox: '', height: 0, width: 0, };
+const altKey = ref<boolean>(false);
 const watchedShapes = new Map();
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -101,6 +103,14 @@ function createShapeTracing() { // 描边
             const h = bottom - y;
             tracingFrame = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
             tracing.value = true;
+            if (altKey.value) {
+                nextTick(() => {
+                    if (traceEle.value) {
+                        traceEle.value.classList.add('cursor-copy');
+                    }
+                })
+            }
+
         }
     } else {
         tracing.value = false;
@@ -190,24 +200,45 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
         }
     }
 }
+function keyboard_down_watcher(e: KeyboardEvent) {
+    if (e.code === 'AltLeft') {
+        if (traceEle.value) {
+            traceEle.value.classList.add('cursor-copy');
+            altKey.value = true;
+        }
+    }
+}
+function keyboard_up_watcher(e: KeyboardEvent) {
+    if (e.code === 'AltLeft') {
+        if (traceEle.value) {
+            traceEle.value.classList.remove('cursor-copy');
+            altKey.value = false;
+        }
+    }
+}
 // hooks
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspaceWatcher);
+    document.addEventListener('keydown', keyboard_down_watcher);
+    document.addEventListener('keyup', keyboard_up_watcher);
+
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspaceWatcher);
+    document.removeEventListener('keydown', keyboard_down_watcher);
+    document.removeEventListener('keyup', keyboard_up_watcher);
 })
 watchEffect(updater);
 </script>
 <template>
     <!-- 描边 -->
-    <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px)"
-        :reflush="reflush !== 0 ? reflush : undefined">
+    <svg ref="traceEle" v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        preserveAspectRatio="xMinYMin meet" overflow="visible" :width="tracingFrame.width" :height="tracingFrame.height"
+        :viewBox="tracingFrame.viewBox" @mousedown="(e: MouseEvent) => pathMousedown(e)"
+        style="transform: translate(0px, 0px)" :reflush="reflush !== 0 ? reflush : undefined">
         <path :d="tracingFrame.path" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;">
         </path>
     </svg>
@@ -217,3 +248,4 @@ watchEffect(updater);
         :shape="context.selection.selectedShapes[0]">
     </component>
 </template>
+<style lang="scss"></style>

@@ -4,6 +4,10 @@ import { Context } from '@/context';
 import { Delete, Edit, Back } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
+import { WorkSpace } from '@/context/workspace';
+import moment = require('moment');
+import 'moment/locale/zh-cn';
+import { mapDateLang } from '@/utils/date_lang'
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -22,14 +26,21 @@ const workspace = computed(() => props.context.workspace);
 const textarea = ref(props.commentInfo.content)
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const showEditComment = ref(false)
-const input = ref<HTMLInputElement>()
+const input = ref()
+const popupItem = ref<HTMLDivElement>()
+const scrollVisible = ref(false)
+
 const hoverShape = (e: MouseEvent) => {
     hover.value = true
 }
 
 const isControls = computed(() => {
-    props.commentInfo.user.id || workspace.value.isDocumentInfo?.user.id || workspace.value.isUserInfo?.id
     if(workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    else return false
+})
+
+const isControlsDel = computed(() => {
+    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
@@ -40,10 +51,16 @@ const unHoverShape = (e: MouseEvent) => {
 const onEditContext = (e: Event) => {
     e.stopPropagation()
     if(!isControls.value) return
-    textarea.value = props.commentInfo.content
+    if(showEditComment.value) {
+        return input.value && input.value.focus()
+    }
+    textarea.value = props.commentInfo.content.replaceAll("<br/>", "\n").replaceAll("&nbsp;", " ")
     showEditComment.value = true
+    const p =  popupItem.value!.offsetTop - 10
+    workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT, p)
     nextTick(() => {
         input.value && input.value.focus()
+        scrollVisible.value = true
     })
     document.addEventListener('click', closeEdit)
 }
@@ -51,7 +68,8 @@ const onEditContext = (e: Event) => {
 const closeEdit = (e: Event) => {
     if(e.target instanceof Element && e.target.closest('.textarea')) return
     document.removeEventListener('click', closeEdit)
-    showEditComment.value = false
+    workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT)
+    updateComment()
 }
 
 const onQuickReply = (e: Event) => {
@@ -61,30 +79,48 @@ const onQuickReply = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControls.value) return
+    if(!isControlsDel.value) return
     emit('delete', props.index, e, props.commentInfo.id)
 }
 
 const carriageReturn = (event: KeyboardEvent) => {
     event.stopPropagation()
-    const { code, ctrlKey, shiftKey } = event;
+    const { code, ctrlKey, metaKey } = event;
+    workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT)
     if(event.key === 'Enter') {
-        if(ctrlKey) {
+        if(ctrlKey || metaKey) {
             textarea.value = textarea.value + '\n'
         }else {
             event.preventDefault()
-            addComment()
+            updateComment()
         }
     }else if(code === 'Escape') {
         emit('close')
     }
 }
 
-const addComment = () => {
-    const text = textarea.value
+const updateComment = () => {
+    const text = textarea.value.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+    workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT)
     emit('editComment', props.index, text)
     editComment(text)
     showEditComment.value = false
+}
+
+
+const handleInput = () => {
+    // workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT)
+    nextTick(() => {
+        input.value?.focus()
+    })
+    const text = input.value?.$refs.textarea
+    if (text) {
+        const lineHeight = parseInt(getComputedStyle(text).lineHeight)
+        const textareaHeight = text.clientHeight
+        const numberOfLines = Math.ceil(textareaHeight / lineHeight)    
+        scrollVisible.value = numberOfLines >= 9 ? true : false
+    } 
+    
 }
 
 const editComment = async(content: string) => {
@@ -99,24 +135,22 @@ const editComment = async(content: string) => {
 
 const formatDate = computed(() => {
   return function (value: string): string {
-    const date = new Date(value);
-    const zh_month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
     const lang = localStorage.getItem('locale') || 'zh'
-    const en_month = date.toLocaleString('en-US', { month: 'long' });
-    if(lang === 'zh') {
-        return `${zh_month}月${day}日 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }else {
-        return `${en_month} ${day}, ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }
+    moment.locale(mapDateLang.get(lang) || 'zh-cn');
+    return filterDate(value);
   }
 })
+
+const filterDate = (time: string) => {
+  const date = new Date(time);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
 </script>
 
 <template>
-    <div class="popup-body"  @mouseenter="hoverShape" @mouseleave="unHoverShape">
+    <div class="popup-body" ref="popupItem"  @mouseenter="hoverShape" @mouseleave="unHoverShape">
         <div class="container">
             <div class="avatar">
                 <img :src="commentInfo.user.avatar" alt="">
@@ -138,26 +172,28 @@ const formatDate = computed(() => {
                                 <el-button plain @click="onQuickReply" style="margin-right: 5px;"><i style="font-size: 13px;">@</i></el-button>
                             </el-tooltip>
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                                <el-button plain :icon="Delete" @click.stop="onDelete" v-if="isControls"/>
+                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
+                                <el-button plain :icon="Delete" @click.stop="onDelete" v-if="isControlsDel"/>
                             </el-tooltip>
                         </el-button-group>
                     </div>
                 </div>
-                <div class="box-context" v-if="!showEditComment" @dblclick="onEditContext">{{ commentInfo.content }}</div>
+                <div class="box-context" v-if="!showEditComment" @dblclick="onEditContext" v-html="commentInfo.content"></div>
                 <div class="textarea" v-if="showEditComment">
                     <el-input
                         ref="input"
                         class="input"
                         v-model="textarea"
-                        :autosize="{ minRows: 1, maxRows: 12 }"
+                        :autosize="{ minRows: 1, maxRows: 10 }"
                         type="textarea"
                         :placeholder="t('comment.input_comments')"
                         resize="none"
                         size="small"
+                        :input-style="{ overflow: scrollVisible ? 'visible' :'hidden'}"
                         @keydown="carriageReturn"
+                        @input="handleInput"
                     />
-                    <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><svg-icon icon-class="send"></svg-icon></div>
+                    <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="updateComment"><svg-icon icon-class="send"></svg-icon></div>
                 </div>
             </div>
         </div>
@@ -196,15 +232,17 @@ const formatDate = computed(() => {
                 justify-content: space-between;
                 .item_heard {
                     display: flex;
-                    width: calc(100% - 80px);
+                    align-items: center;
+                    height: 100%;
+                    width: calc(100% - 70px);
                     .name {
-                        max-width: calc(100% - 82px);
+                        max-width: calc(100% - 103px);
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
                     }
                     .date {
-                        width: 82px;
+                        width: 120px;
                     }
                 }
                 .icon {
@@ -231,7 +269,8 @@ const formatDate = computed(() => {
             }
             .textarea {
                 display: flex;
-                width: 260px;
+                flex-direction: column;
+                width: 270px;
                 align-items:self-end ;
                 background-color: #fff;
                 .send {
@@ -239,10 +278,12 @@ const formatDate = computed(() => {
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    width: 22px;
+                    width: 20px;
                     height: 20px;
                     background-color: var(--active-color);
                     border-radius: 50%;
+                    margin-top: 3px;
+                    margin-right: 10px;
                     >svg {
                         width: 13px;
                         height: 13px;
@@ -263,5 +304,7 @@ const formatDate = computed(() => {
     padding-left: 0;
     padding-top: 0;
     padding-bottom: 0;
+    margin-right: 0;
+    color: black;
   }
 </style>

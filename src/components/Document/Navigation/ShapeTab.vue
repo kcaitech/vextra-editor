@@ -36,7 +36,6 @@ const observer = new ResizeObserver(() => {
     const el = container.value;
     el && (containerHeight.value = el.clientHeight);
 })
-
 const showHiddenLeft = () => {
     emit('showNavigation')
 }

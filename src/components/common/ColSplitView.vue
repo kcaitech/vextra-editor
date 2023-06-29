@@ -94,7 +94,8 @@ function leftAdjust(saveWidth: number, offset: number) {
     let leftWidth = saveWidth + offset;
     let rightWidth = sizeBounds.right.width;
     let middleWidth = Math.max(totalWidth - leftWidth - rightWidth, 0);
-
+    console.log(leftWidth, sizeBounds.left.width);
+    
     if (leftWidth === sizeBounds.left.width) {
         return;
     }
@@ -194,7 +195,6 @@ function onSizeChange() {
     sizeBounds.right.minWidth = Math.max(rigthMinWidthImportant, props.right.minWidth) * rootWidth;
     sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;
 
-
     let leftWidth = sizeBounds.left.width + (savedRootWidth ? sizeBounds.left.width / savedRootWidth * delta : 0);
     let rightWidth = sizeBounds.right.width + (savedRootWidth ? sizeBounds.right.width / savedRootWidth * delta : 0);
     
@@ -218,7 +218,7 @@ function initSizeBounds() {
     const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth));
     const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth));
     const middleMaxWidthImportant = 1 - (leftMinWidthImportant + rigthMinWidthImportant);
-
+    
     sizeBounds.left.width = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.minWidth = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;

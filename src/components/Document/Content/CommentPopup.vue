@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick, watch } from 'vue'
 import { Context } from '@/context';
 import { Close, Delete, CircleCheck, Back, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
@@ -10,11 +10,11 @@ import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
 import { v4 } from 'uuid';
 import { ElScrollbar } from 'element-plus'
+import { Selection } from '@/context/selection';
+import { text } from 'express';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
-    x: number
-    y: number
     rootWidth: number
     rootHeight: number
     commentInfo: any
@@ -53,14 +53,14 @@ const commentPopup = ref<HTMLDivElement>()
 const commentTop = ref(-10)
 const scrollHeight = ref(0)
 const textareaEl = ref<HTMLDivElement>()
-const inputPopup = ref<HTMLInputElement>()
+const inputPopup = ref()
 const isShaking = ref(false)
 const selectedPerson = ref('')
 const itemHeight = ref<HTMLDivElement>()
 const scrollMaxHeight = ref(0)
 const commentShowList = ref<any[]>([])
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
-
+const reply = ref<boolean>(props.context.selection.commentStatus)
 const close = (e: MouseEvent) => {
     emit('close', e)
     nextTick(() => {
@@ -77,14 +77,14 @@ const nextOpacity = computed(() => {
 })
 
 const disablePrevent = computed(() => { 
-    if (props.reply) {
+    if (reply.value) {
         return props.index === 0
     } else {
         return prenvetOpacity.value === 0
     }
 })
 const disableNext = computed(() => {
-    if (props.reply) {
+    if (reply.value) {
         return props.index === props.length - 1
     } else {
         return nextOpacity.value === commentShowList.value.length -1
@@ -107,8 +107,12 @@ const resolve = computed(() => {
 })
 
 const isControls = computed(() => {
-    props.commentInfo.user.id || workspace.value.isDocumentInfo?.user.id || workspace.value.isUserInfo?.id
     if(workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    else return false
+})
+
+const isControlsDel = computed(() => {
+    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
@@ -116,25 +120,49 @@ const height = ref()
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const commentPosition = () => {
     nextTick(() => {
-        inputPopup.value && inputPopup.value.focus()
-        height.value = height.value ? textareaEl.value?.clientHeight : 52
-        const p = matrix.computeCoord({ x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1 });
-        offside.value = props.rootWidth! - p.x < 360
-        let t = 0
-        t = props.rootHeight! - p.y //剩余的高度
-        scrollMaxHeight.value = props.rootHeight - 55 - (height.value as number) - 30
-        nextTick(() => {
+        const text = inputPopup.value?.$refs.textarea
+        if (text) {
+            const computedStyle = window.getComputedStyle(text);
+            const _height = text.clientHeight + parseInt(computedStyle.paddingTop) + parseInt(computedStyle.paddingBottom);
+            height.value = Math.min(_height + 14, 214)
+            inputPopup.value && inputPopup.value.focus()
+            const p = matrix.computeCoord({ x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1 });
+            offside.value = props.rootWidth! - p.x < 360
+            let t = 0
+            t = props.rootHeight! - p.y //剩余的高度
+            scrollMaxHeight.value = (props.rootHeight - 55 - (height.value as number) - 30) * 0.7
             scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
-            scrollbarRef.value!.setScrollTop(itemHeight.value!.clientHeight)            
-            if(commentPopup.value) {
-                const commentPopupH = scrollHeight.value + height.value + 45
-                if(t - commentPopupH < -45) {
-                    commentTop.value = t - commentPopupH + 10
-                }else {
-                    commentTop.value = -10
+            nextTick(() => {
+                if(commentPopup.value) {
+                    const commentPopupH = scrollHeight.value + height.value + 45
+                    if(t - commentPopupH < -45) {
+                        commentTop.value = t - commentPopupH + 10
+                    }else {
+                        commentTop.value = -10
+                    }
                 }
-            }
-        })
+                scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
+                text.scrollTo(0, text.clientHeight)
+            })
+        }
+    })
+}
+const scrollVisible = ref(false)
+
+const handleInput = () => {
+    nextTick(() => {
+        if(textareaEl.value) {
+            const text = inputPopup.value.$refs.textarea
+            if (text) {
+                text.style.height = "auto"; // 重置高度，避免高度叠加
+                text.style.height = text.scrollHeight + "px";
+                const lineHeight = parseInt(getComputedStyle(text).lineHeight)
+                const textareaHeight = text.clientHeight
+                const numberOfLines = Math.ceil(textareaHeight / lineHeight)    
+                scrollVisible.value = numberOfLines > 10 ? true : false
+                commentPosition()
+            }            
+        }
     })
 }
 
@@ -153,11 +181,11 @@ function handleClickOutside(event: MouseEvent) {
 
 const carriageReturn = (event: KeyboardEvent) => {
     event.stopPropagation()
-    commentPosition()
-    const { code, ctrlKey, shiftKey } = event;
+    const { code, ctrlKey, metaKey } = event;
     if(event.key === 'Enter') {
-        if(ctrlKey) {
+        if(ctrlKey || metaKey) {
             textarea.value = textarea.value + '\n'
+            handleInput()
         }else {
             event.preventDefault()
             addComment()
@@ -182,7 +210,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControls.value) return
+    if(!isControlsDel.value) return
     props.context.workspace.commentInput(false);
     deleteComment(props.commentInfo.id)
     emit('delete', props.index)
@@ -215,7 +243,7 @@ const deleteComment = async(id: string) => {
     }
 }
 
-function workspaceUpdate(t?: number) {  
+function workspaceUpdate(t?: number, p?: number) {  
     const length = textarea.value.trim().length < 4
     props.context.workspace.commentInput(true);
     props.context.workspace.commentMount(true);
@@ -225,10 +253,31 @@ function workspaceUpdate(t?: number) {
   if (t === WorkSpace.COMMENT_POPUP) {
     emit('close');
   }
+  if(t === WorkSpace.COMMENT_HANDLE_INPUT) {
+    let timeout =  setTimeout(() => {
+        if(scrollbarRef.value) {
+            if(itemHeight.value) {
+                scrollbarRef.value!.scrollTo(0, p)  
+                scrollMaxHeight.value = (props.rootHeight - 55 - (height.value as number) - 30) * 0.7
+                scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
+            }
+        }    
+        clearTimeout(timeout)
+    },10)
+  }
+  if(t === WorkSpace.UPDATE_COMMENT_CHILD) {
+    const timeout = setTimeout(() => {
+        if(scrollbarRef.value) {
+            scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
+            commentPosition()
+        }
+        clearTimeout(timeout)
+    },200)
+  }
 }
 
 const previousArticle = () => {
-    if(props.reply) {
+    if(reply.value) {
         const index = props.index
         if(index === 0) return
         emit('previousArticle', index)
@@ -242,7 +291,7 @@ const previousArticle = () => {
 }
 
 const nextArticle = () => {
-    if (props.reply) {
+    if (reply.value) {
         const index = props.index
         if(index === props.length - 1) return
         emit('nextArticle', index)
@@ -280,6 +329,7 @@ const addComment = () => {
     createComment(data)
     emit('recover')
     textarea.value = ''
+    
 }
 
 const getCurrentTime = () => {
@@ -329,11 +379,21 @@ const quickReply = (name: string) => {
     selectedPerson.value = `@${name}`
     inputPopup.value && inputPopup.value.focus()
 }
-
 watchEffect(() => {
-    props.documentCommentList
     commentPosition()
 })
+
+// watch(
+//     () => props.documentCommentList,
+//     () => {
+//         nextTick(() => {
+//             if(scrollbarRef.value) {
+//                 scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
+//             }
+//         })
+//     }
+// )
+
 const scrollup = (e: MouseEvent) => {
 }
 
@@ -354,6 +414,12 @@ const moveCommentPopup = (e: MouseEvent) => {
     emit('moveCommentPopup', e, props.index)
 }
 
+const update = (t: number) => {
+    if (t === Selection.SOLVE_MENU_STATUS) {
+        reply.value = props.context.selection.commentStatus
+    }
+}
+
 defineExpose({
     commentPopup,
     textarea,
@@ -365,12 +431,14 @@ onMounted(() => {
   props.context.workspace.commentOpacity(true);
   props.context.workspace.commentInput(true);
   props.context.workspace.watch(workspaceUpdate);
+  props.context.selection.watch(update)
   document.addEventListener('mouseup', handleClickOutside);
   document.addEventListener('mouseup', scrollup)
   document.addEventListener('keydown', closeComment);
 })
 onUnmounted(() => {
   props.context.workspace.unwatch(workspaceUpdate);
+  props.context.selection.unwatch(update);
   document.removeEventListener('mouseup', handleClickOutside);
   document.removeEventListener('mouseup', scrollup);
   document.removeEventListener('keydown', closeComment);
@@ -389,8 +457,8 @@ onUnmounted(() => {
             <div class="comment-commands">
                 <el-button-group class="ml-4">
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                        placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls"/>
+                        placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
+                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControlsDel"/>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                         placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
@@ -419,12 +487,14 @@ onUnmounted(() => {
                     ref="inputPopup"
                     class="input"
                     v-model="textarea"
-                    :autosize="{ minRows: 1, maxRows: 12 }"
+                    :autosize="{ minRows: 1, maxRows: 10 }"
                     type="textarea"
                     :placeholder="t('comment.input_comments')"
                     resize="none"
                     size="small"
+                    :input-style="{ overflow: scrollVisible ? 'visible' :'hidden'}"
                     @keydown="carriageReturn"
+                    @input="handleInput"
                 />
                 <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><svg-icon icon-class="send"></svg-icon></div>
             </div>

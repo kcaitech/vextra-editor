@@ -129,7 +129,8 @@ export const navi = {
     resource: 'Resource',
     page: 'Page',
     add_page: 'Add new page',
-    copy: 'copy'
+    copy: 'copy',
+    development: 'Functional development……'
 }
 
 export const frame = {
@@ -213,9 +214,13 @@ export const comment = {
     month: 'month',
     day: 'day',
     no_comment: 'No current comments',
-    leave_a_comment: 'Click anywhere to leave a comment'
+    leave_a_comment: 'Click anywhere to leave a comment',
+    comments_hide: 'Comments are set to hide',
+    show_comments: 'Show comments'
 }
-
+export const clipboard = {
+    'invalid_data': 'invalid data'
+}
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';

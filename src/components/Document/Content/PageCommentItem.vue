@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
-import { WorkSpace } from '@/context/workspace';
+import { WorkSpace, Action } from '@/context/workspace';
 import HoverComment from './HoverComment.vue'
 import CommentPopup from './CommentPopup.vue'
-import { Matrix, Shape } from "@kcdesign/data";
+import { Matrix, Shape, ShapeType } from "@kcdesign/data";
 import * as comment_api from '@/apis/comment';
 import { Selection } from '@/context/selection';
 type CommentViewEl = InstanceType<typeof CommentPopup>;
@@ -34,14 +34,18 @@ const rootHeight = ref(0)
 const rootWidth = ref(0)
 const comment = ref<HTMLDivElement>()
 const matrix = new Matrix();
-const posi = { x: 0, y: 0 }
 const documentCommentList = ref<any[]>(workspace.value.pageCommentList[props.index].children || [])
 const commentOpacity = ref(workspace.value.isCommentOpacity)
 const reply = ref(props.context.selection.commentStatus)
 const commentLength = ref(props.context.workspace.pageCommentList.length)
 const myComment = ref(props.context.selection.commentAboutMe)
+const visibleComment = ref(props.context.workspace.isVisibleComment)
+const action = ref()
 const aboutMe = ref(false)
 const status = computed(() => {
+    if (!visibleComment.value && action.value !== Action.AddComment) {
+        return false
+    }
     const status = props.commentInfo.status
     replyStatus()
     showAboutMe()
@@ -82,33 +86,6 @@ const showAboutMe = () => {
     }
 }
 
-function watcher() {
-    watchShapes();
-    if (props.commentInfo.shape_frame.x2 || props.commentInfo.shape_frame.y2) {
-        setCommentPosition()
-    }
-}
-
-const watchedShapes = new Map();
-function watchShapes() { // 监听相关shape的变化
-    const needWatchShapes = new Map();
-    const selection = props.context.selection.selectedPage?.childs;
-    if (selection) {
-        selection.forEach((v) => {
-            needWatchShapes.set(v.id, v);
-        })
-    }
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
-        watchedShapes.delete(k);
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(watcher);
-        watchedShapes.set(k, v);
-    })
-}
 const hoverComment = () => {
     if (!showScale.value) {
         props.context.workspace.hoverComment(false);
@@ -134,17 +111,15 @@ const showComment = (e: MouseEvent) => {
     const workspace = props.context.workspace;
     const { bottom, right } = workspace.root;
     const commentCenter = workspace.matrix.computeCoord(commentX, commentY) //评论在视图上的位置
-        if(bottom - commentCenter.y < 75) {
-            props.context.workspace.matrix.trans(0, -80);
-            props.context.workspace.matrixTransformation();
-        }else if (right - commentCenter.x < 330) {
-            props.context.workspace.matrix.trans(-80, 0);
-            props.context.workspace.matrixTransformation();
+    if (bottom - commentCenter.y < 75) {
+        props.context.workspace.matrix.trans(0, -80);
+        props.context.workspace.matrixTransformation();
+    } else if (right - commentCenter.x < 330) {
+        props.context.workspace.matrix.trans(-80, 0);
+        props.context.workspace.matrixTransformation();
     }
     props.context.workspace.commentMount(false)
     const { x, y } = props.context.workspace.root
-    posi.x = e.clientX - x
-    posi.y = e.clientY - y
     commentScale.value = 0
     rootHeight.value = comment.value!.parentElement!.clientHeight
     rootWidth.value = comment.value!.parentElement!.clientWidth
@@ -180,6 +155,8 @@ const closeComment = (e?: MouseEvent) => {
 }
 
 const deleteComment = () => {
+    commentScale.value = 0
+    markScale.value = 1
     emit('deleteComment', props.index)
 }
 
@@ -195,6 +172,9 @@ const recover = (index?: number) => {
     } else {
         const timer = setTimeout(() => {
             getDocumentComment()
+            nextTick(() => {
+                workspace.value.notify(WorkSpace.UPDATE_COMMENT_CHILD)
+            })
             clearTimeout(timer)
         }, 100);
     }
@@ -264,7 +244,10 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
 const getDocumentComment = async () => {
     try {
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id })
-        documentCommentList.value = data
+        documentCommentList.value = data.map((item: any) => {
+            item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+            return item
+        })
         documentCommentList.value = documentCommentList.value.reverse()
     } catch (err) {
         console.log(err);
@@ -280,13 +263,15 @@ const workspaceUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin()
     }
-    if (props.commentInfo.shape_frame.x2 || props.commentInfo.shape_frame.y2) {
-        setCommentPosition()
-    }
+    watcher()
     if (index === props.index) {
         // 打开
         showComment(me!)
     }
+    if (t === WorkSpace.VISIBLE_COMMENT) {
+        visibleComment.value = workspace.value.isVisibleComment
+    }
+    action.value = workspace.value.action;
 }
 
 const pageSkipComment = () => {
@@ -300,6 +285,7 @@ const pageSkipComment = () => {
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
     const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
+    props.context.selection.selectComment(commentId)
     if (transX || transY) {
         workspace.matrix.trans(transX, transY);
         workspace.matrixTransformation();
@@ -317,6 +303,7 @@ const unfold = () => {
         getDocumentComment()
         ShowComment.value = true
         showScale.value = true
+        props.context.workspace.saveCommentId(props.commentInfo.id);
     }
 }
 
@@ -338,21 +325,28 @@ const update = (t: number) => {
     }
 }
 
+function watcher() {
+    if (props.commentInfo.page_id !== props.commentInfo.target_shape_id) {
+        setCommentPosition()
+    }
+}
+
 const setCommentPosition = () => {
-    const shape: Shape[] = props.context.selection.selectedPage!.childs
-    const selection: Shape[] = props.context.selection.selectedShapes;
+    const shapes = props.context.selection.selectedPage!.shapes;
+    const comment = props.commentInfo
+    if (comment.page_id == comment.target_shape_id) return
     if (!workspace.value.transforming) return
-    shape.forEach(item => {
-        if (item.id === props.commentInfo.target_shape_id) {
-            if (selection.includes(item)) {
-                workspace.value.editShapeComment(true, item)
-                const { x, y } = item.frame2Page();
-                const farmeX = x + props.commentInfo.shape_frame.x2
-                const farmeY = y + props.commentInfo.shape_frame.y2
-                emit('updateShapeComment', farmeX, farmeY, props.index)
-            }
-        }
-    })
+    const shape = shapes.get(comment.target_shape_id);
+    const s = props.context.selection.getShapesByXY_beta({x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1}, false, false)
+    console.log(s);
+    
+    if (shape) {
+        workspace.value.editShapeComment(true, props.context.selection.selectedShapes)
+        const { x, y } = shape.frame2Page();
+        const farmeX = x + props.commentInfo.shape_frame.x2
+        const farmeY = y + props.commentInfo.shape_frame.y2
+        emit('updateShapeComment', farmeX, farmeY, props.index)
+    }
 }
 
 defineExpose({
@@ -386,12 +380,12 @@ watchEffect(watcher)
         <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment"
             @unHoverComment="unHoverComment" :commentInfo="props.commentInfo" :index="props.index"
             @deleteComment="deleteComment" @resolve="resolve" @moveCommentPopup.stop="moveCommentPopup"></HoverComment>
-        <CommentPopup v-if="ShowComment" ref="commentPopupEl" :x="posi.x" :y="posi.y" :rootHeight="rootHeight"
-            :rootWidth="rootWidth" :length="commentLength" :context="props.context" @close="closeComment"
-            :commentInfo="props.commentInfo" :index="props.index" @resolve="resolve" @delete="deleteComment"
-            @recover="recover" @editComment="editComment" @editCommentChild="editCommentChild"
-            :documentCommentList="documentCommentList" @previousArticle="previousArticle" @next-article="nextArticle"
-            :reply="reply" @moveCommentPopup.stop="moveCommentPopup"></CommentPopup>
+        <CommentPopup v-if="ShowComment" ref="commentPopupEl" :rootHeight="rootHeight" :rootWidth="rootWidth"
+            :length="commentLength" :context="props.context" @close="closeComment" :commentInfo="props.commentInfo"
+            :index="props.index" @resolve="resolve" @delete="deleteComment" @recover="recover" @editComment="editComment"
+            @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"
+            @previousArticle="previousArticle" @next-article="nextArticle" :reply="reply"
+            @moveCommentPopup.stop="moveCommentPopup"></CommentPopup>
     </div>
 </template>
 
@@ -403,6 +397,7 @@ watchEffect(watcher)
     height: 35px;
     border-radius: calc(14px);
     border-bottom-left-radius: 0;
+    z-index: 1;
 
     .comment-mark {
         display: flex;

@@ -7,6 +7,9 @@ import { Page } from '@kcdesign/data';
 import { Selection } from '@/context/selection'
 import { WorkSpace } from "@/context/workspace";
 import * as comment_api from '@/apis/comment';
+import moment = require('moment');
+import 'moment/locale/zh-cn';
+import { mapDateLang } from '@/utils/date_lang'
 const { t } = useI18n()
 const props = defineProps<{
     commentItem: any,
@@ -74,8 +77,12 @@ const showAboutMe = () => {
     }
 }
 const isControls = computed(() => {
-    props.commentItem.user.id || workspace.value.isDocumentInfo?.user.id || workspace.value.isUserInfo?.id
     if(workspace.value.isUserInfo?.id === props.commentItem.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    else return false
+})
+
+const isControlsDel = computed(() => {
+    if(workspace.value.isUserInfo?.id === props.commentItem.user.id) return true
     else return false
 })
 
@@ -121,7 +128,7 @@ const onReply = () => {
         }
     }else {
         props.context.workspace.commentMount(false)
-        props.context.selection.selectCommentPage(props.pageId)   
+        props.context.selection.selectCommentPage(props.pageId) 
         props.context.selection.setCommentSelect(true)
         props.context.selection.selectComment(props.commentItem.id)
     }
@@ -153,7 +160,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControls.value) return
+    if(!isControlsDel.value) return
     props.context.workspace.editTabComment()
     props.context.workspace.commentInput(false);
     deleteComment()
@@ -178,20 +185,19 @@ const deleteComment = async() => {
 
 const formatDate = computed(() => {
   return function (value: string): string {
-    const date = new Date(value);
-    const zh_month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
     const lang = localStorage.getItem('locale') || 'zh'
-    const en_month = date.toLocaleString('en-US', { month: 'long' });
-    if(lang === 'zh') {
-        return `${zh_month}月${day}日 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }else {
-        return `${en_month} ${day}, ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }
+    moment.locale(mapDateLang.get(lang) || 'zh-cn');
+    return filterDate(value);
   }
 })
+
+const filterDate = (time: string) => {
+  const date = new Date(time);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
 const getPage = () => {
     const p = props.context.data
     p.pagesMgr.get(props.pageId).then((p: Page | undefined) => {
@@ -247,8 +253,8 @@ onUnmounted(() => {
                             <el-button plain :icon="ChatDotSquare" @click.stop="onReply" style="margin-right: 5px;"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>
+                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
+                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControlsDel"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
@@ -261,7 +267,7 @@ onUnmounted(() => {
                     </el-button-group>
                 </div>
             </div>
-            <div class="text">{{ props.commentItem.content }}</div>
+            <div class="text" v-html="commentItem.content"></div>
             <div class="bottom-info">
                 <div class="reply" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">{{replyNum}} {{ t('comment.a_few_reply') }}</div>
                 <div class="page">{{ page?.name }}</div>
@@ -304,9 +310,9 @@ onUnmounted(() => {
                 justify-content: space-between;
                 .item_heard {
                     display: flex;
-                    width: calc(100% - 80px);
+                    width: calc(100% - 70px);
                     .name {
-                        width: calc(100% - 82px);
+                        width: calc(100% - 95px);
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;

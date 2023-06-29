@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { Context } from '@/context';
 import { ChatDotSquare, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
 import { WorkSpace } from '@/context/workspace';
+import moment = require('moment');
+import 'moment/locale/zh-cn';
+import { mapDateLang } from '@/utils/date_lang'
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -12,6 +15,7 @@ const props = defineProps<{
     commentInfo: any
     index: number
 }>()
+
 const emit = defineEmits<{
     (e: 'unHoverComment'): void
     (e: 'showComment', event: MouseEvent): void
@@ -21,6 +25,8 @@ const emit = defineEmits<{
 }>()
 const workspace = computed(() => props.context.workspace);
 const hover = ref(false)
+const commentShow = ref(props.context.workspace.isHoverComment)
+const hoverCommentId = ref(workspace.value.isHoverCommentId)
 const replyNum = computed(() => {
     if (props.commentInfo.children) {
         const child = props.commentInfo.children.length
@@ -33,8 +39,12 @@ const resolve = computed(() => {
     return props.commentInfo.status === 0 ? true : false
 })
 const isControls = computed(() => {
-    props.commentInfo.user.id || workspace.value.isDocumentInfo?.user.id || workspace.value.isUserInfo?.id
     if(workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    else return false
+})
+
+const isControlsDel = computed(() => {
+    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
@@ -43,7 +53,9 @@ const hoverShape = (e: MouseEvent) => {
     hover.value = true
 }
 const unHoverShape = (e: MouseEvent) => {
-    workspace.value.hoverComment(false, props.commentInfo.id)
+    if(!props.context.workspace.isCommentMove) {
+        workspace.value.hoverComment(false, props.commentInfo.id)
+    }
     hover.value = false
     emit('unHoverComment')
 }
@@ -64,10 +76,14 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControls.value) return
-    emit('deleteComment', props.index)
+    if(!isControlsDel.value) return
+    props.context.workspace.hoverComment(false);
     props.context.workspace.commentInput(false);
-    deleteComment()
+    let timeout = setTimeout(() => {
+        emit('deleteComment', props.index)
+        deleteComment()
+        clearTimeout(timeout)
+    },150)
 }
 
 const onClick = (e: MouseEvent) => {
@@ -96,36 +112,46 @@ const moveCommentPopup = (e: MouseEvent) => {
 }
 
 const formatDate = computed(() => {
-    return function (value: string): string {
-        const date = new Date(value);
-        const zh_month = date.getMonth() + 1;
-        const day = date.getDate();
-        const hours = date.getHours();
-        const minutes = date.getMinutes();
-        const lang = localStorage.getItem('locale') || 'zh'
-        const en_month = date.toLocaleString('en-US', { month: 'long' });
-        if (lang === 'zh') {
-            return `${zh_month}月${day}日 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        } else {
-            return `${en_month} ${day}, ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        }
-    }
+  return function (value: string): string {
+    const lang = localStorage.getItem('locale') || 'zh'
+    moment.locale(mapDateLang.get(lang) || 'zh-cn');
+    return filterDate(value);
+  }
 })
 
+const filterDate = (time: string) => {
+  const date = new Date(time);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+const workspaceUpdate = (t: number) => {
+    if(t === WorkSpace.CURRENT_COMMENT) {
+        hoverCommentId.value = workspace.value.isHoverCommentId
+    }
+    if(t === WorkSpace.HOVER_COMMENT) {
+        commentShow.value = workspace.value.isHoverComment
+    }
+    if(t === WorkSpace.HOVER_SHOW_COMMENT) {
+        commentShow.value = workspace.value.isHoverComment
+    }
+}
+
 onMounted(() => {
-    // props.context.workspace.watch(workspaceUpdate);
+    props.context.workspace.watch(workspaceUpdate);
 })
 onUnmounted(() => {
     props.context.workspace.commentOpacity(false)
     props.context.workspace.commentInput(false);
-    // props.context.workspace.unwatch(workspaceUpdate);
+    props.context.workspace.unwatch(workspaceUpdate);
 })
 </script>
 
 <template>
     <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="moveCommentPopup"
-         :style="{ transform: `scale(${props.scale})` }">
-        <div class="avatar">
+         :style="{ transform: `scale(${scale && commentShow ? scale : 0})` }">
+        <div class="avatar" @click="onReply">
             <img :src="commentInfo.user.avatar" alt="">
         </div>
         <div class="content">
@@ -141,8 +167,8 @@ onUnmounted(() => {
                             <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;" />
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>
+                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
+                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControlsDel"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
@@ -155,10 +181,10 @@ onUnmounted(() => {
                     </el-button-group>
                 </div>
             </div>
-            <div class="box-context">{{ commentInfo.content }}</div>
+            <div class="box-context" v-html="commentInfo.content"></div>
             <div class="box-footer">
                 <div class="reply">{{ replyNum }} {{ t('comment.a_few_reply') }}</div>
-                <div class="check">{{ t('comment.check') }}</div>
+                <div class="check" @click="onReply">{{ t('comment.check') }}</div>
             </div>
         </div>
     </div>
@@ -212,15 +238,16 @@ onUnmounted(() => {
 
             .item_heard {
                     display: flex;
-                    width: calc(100% - 80px);
+                    align-items: center;
+                    width: calc(100% - 70px);
                     .name {
-                        max-width: calc(100% - 82px);
+                        max-width: calc(100% - 103px);
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
                     }
                     .date {
-                        width: 82px;
+                        width: 120px;
                     }
                 }
 

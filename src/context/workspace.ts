@@ -4,6 +4,7 @@ import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
 import { UserInfo, DocInfo } from '@/context/user'
+import { Clipboard } from "@/utils/clipaboard";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -19,6 +20,7 @@ export enum Action {
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
+    A = 'KeyA',
     R = 'KeyR',
     V = 'KeyV',
     L = 'KeyL',
@@ -69,11 +71,6 @@ const A2R = new Map([
     [Action.AddText, ShapeType.Text],
     [Action.AddImage, ShapeType.Image]
 ]);
-export interface ClipboardItem {
-    index: number
-    type: ShapeType
-    content: Shape
-}
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
@@ -117,10 +114,14 @@ export class WorkSpace extends Watchable(Object) {
     static COMMENT_ALL = 39;
     static UPDATE_COMMENT_POS = 40;
     static SHOW_COMMENT_POPUP = 41;
+    static COMMENT_HANDLE_INPUT = 42;
+    static VISIBLE_COMMENT = 43;
+    static TOGGLE_COMMENT_PAGE = 44;
+    static HOVER_SHOW_COMMENT = 45;
+    static UPDATE_COMMENT_CHILD = 46;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
-    private m_clip_board: ClipboardItem[] | undefined; // 剪切板
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -159,9 +160,13 @@ export class WorkSpace extends Watchable(Object) {
     private m_shape_comment: boolean = false; //是否在编辑shape上的评论（移动shape修改评论位置）
     private m_comment_shape: Shape[] = [] //保存移动shape上有评论的shape
     private m_not2tree_comment: any = [] //没有转树的评论列表
+    private m_clipboard: Clipboard;
+    private m_comment_visible: boolean = true; //是否显示评论
+    private m_t: Function = () => { };
     constructor(context: Context) {
         super();
-        this.context = context
+        this.context = context;
+        this.m_clipboard = new Clipboard(context);
     }
     get matrix() {
         return this.m_matrix;
@@ -203,9 +208,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     get action() {
         return this.m_current_action;
-    }
-    get clipBoard() {
-        return this.m_clip_board;
     }
     get frameSize() {
         return this.m_frame_size;
@@ -288,11 +290,23 @@ export class WorkSpace extends Watchable(Object) {
     get isDocumentInfo() {
         return this.m_document_info;
     }
+    get isVisibleComment() {
+        return this.m_comment_visible;
+    }
     setDocumentPerm(perm: number) {
         this.m_document_perm = perm;
     }
     showCommentPopup(index: number, e: MouseEvent) {
         this.notify(WorkSpace.SHOW_COMMENT_POPUP, index, e);
+    }
+    get clipboard() {
+        return this.m_clipboard;
+    }
+    t(content: string) {
+        return this.m_t(content);
+    }
+    init(t: Function) {
+        this.m_t = t;
     }
     setFreezeStatus(isFreeze: boolean) {
         this.m_freeze = isFreeze;
@@ -376,6 +390,10 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.SHUTDOWN_MENU);
         }
     }
+    setVisibleComment(visible: boolean) {
+        this.m_comment_visible = visible;
+        this.notify(WorkSpace.VISIBLE_COMMENT)
+    }
     setCommentList(list: any[]) {
         this.m_comment_list = list;
         this.notify(WorkSpace.UPDATE_COMMENT);
@@ -408,10 +426,10 @@ export class WorkSpace extends Watchable(Object) {
         this.m_select_comment_id = id
         this.notify(WorkSpace.SELECTE_COMMENT)
     }
-    editShapeComment(state: boolean, shape?: Shape) {
+    editShapeComment(state: boolean, shapes?: Shape[]) {
         this.m_shape_comment = state
         if (state) {
-            this.m_comment_shape.push(shape!)
+            this.m_comment_shape.push(...shapes!)
             this.m_comment_shape = Array.from(new Set(this.m_comment_shape));
         } else {
             this.m_comment_shape = []
@@ -436,7 +454,9 @@ export class WorkSpace extends Watchable(Object) {
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (this.isFreeze) return;
-        if (event.code === KeyboardKeys.R) {
+        if (event.code === KeyboardKeys.A) {
+            this.keydown_a(ctrlKey, metaKey);
+        } else if (event.code === KeyboardKeys.R) {
             if (!metaKey && !ctrlKey) {
                 event.preventDefault();
                 this.keydown_r();
@@ -517,6 +537,15 @@ export class WorkSpace extends Watchable(Object) {
         this.m_setting = v;
     }
     // keyboard
+    keydown_a(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) {
+            const selection = this.context.selection
+            const page = selection.selectedPage;
+            if (page) {
+                selection.rangeSelectShape(page.childs);
+            }
+        }
+    }
     keydown_r() {
         this.escSetup();
         this.m_current_action = Action.AddRect;
@@ -543,7 +572,7 @@ export class WorkSpace extends Watchable(Object) {
             const shapes = context.selection.selectedShapes;
             const page = context.selection.selectedPage;
             if (page) {
-                const flat = page.flat;
+                const flat = page.shapes;
                 if (shapes.length) {
                     for (let i = 0; i < shapes.length; i++) {
                         const item = shapes[i];
@@ -675,12 +704,16 @@ export class WorkSpace extends Watchable(Object) {
         this.m_hover_comment_id = id
         if (!v) {
             this.notify(WorkSpace.HOVER_COMMENT);
+        }else {
+            this.notify(WorkSpace.HOVER_SHOW_COMMENT)
         }
         if (id) {
             this.notify(WorkSpace.CURRENT_COMMENT);
         }
     }
     toggleCommentPage() {
-        this.notify(WorkSpace.EDIT_COMMENT);//点击评论跳转页面
+        this.m_comment_list = [];
+        this.m_page_comment_list = [];
+        this.notify(WorkSpace.TOGGLE_COMMENT_PAGE);//点击评论跳转页面
     }
 }
