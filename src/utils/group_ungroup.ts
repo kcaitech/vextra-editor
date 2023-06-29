@@ -164,7 +164,7 @@ function get_node_path(shape: Shape): number[] {
     let p = self.parent;
     while (p) {
         const childs = (p as GroupShape).childs;
-        for (let i = childs.length - 1; i > -1; i--) { // 从后面往前找更快，因为大多数情况下操作的是新生成的图形
+        for (let i = childs.length - 1; i > -1; i--) { // 从后面往前找更快，因为大多数情况下操作的是新生成的图形，即index靠近length的图形
             if (childs[i].id === self.id) {
                 path.unshift(i);
                 break;
