@@ -424,6 +424,7 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     keydown_l(shiftKey: boolean) {
+        if (shiftKey) return; // 暂时停止使用箭头图形
         this.escSetup();
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
