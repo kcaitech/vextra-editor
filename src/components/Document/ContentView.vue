@@ -433,14 +433,14 @@ function onMouseMove(e: MouseEvent) {
 }
 // mousemove(target：contentview) 
 function onMouseMove_CV(e: MouseEvent) {
-    if (workspace.value.controller == 'page') {
+    if (workspace.value.controller === 'page') {
         if (!spacePressed.value) {
-            if (e.buttons == 1) {
-                if (workspace.value.action == Action.AutoV && isMouseLeftPress) {
+            if (e.buttons === 1) {
+                if (workspace.value.action === Action.AutoV && isMouseLeftPress) {
                     select(e); // 选区
                 }
-            } else if (e.buttons == 0) {
-                if (workspace.value.action == Action.AutoV) {
+            } else if (e.buttons === 0) {
+                if (workspace.value.action === Action.AutoV) {
                     search(e); // 图形检索(hover)
                 }
             }
