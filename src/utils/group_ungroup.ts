@@ -8,11 +8,12 @@ import { GroupShape, Shape } from "@kcdesign/data";
 * @return {Shape[]} z轴层级有序的图形列表
 */
 export function sort_by_layer(context: Context, selectedShapes: Shape[], reverse = 1) {
-    if (selectedShapes.length < 10) {
-        return compare_layer_2(selectedShapes, reverse); // 速度取决于selectedShapes数组的长度，selectedShapes元素的深度，两个元素共同父亲子元素的长度
-    } else {
-        return compare_layer_1(context, selectedShapes, reverse); // 最糟糕的情况下会遍历整棵树，但是通常只会遍历一小段
-    }
+    return compare_layer_3(selectedShapes, reverse); // 方案三：基于节点路径排序
+    // if (selectedShapes.length < 10) {
+    //     return compare_layer_2(selectedShapes, reverse); // 速度取决于selectedShapes数组的长度，selectedShapes元素的深度，两个元素共同父亲子元素的长度
+    // } else {
+    //     return compare_layer_1(context, selectedShapes, reverse); // 最糟糕的情况下会遍历整棵树，但是通常只会遍历一小段
+    // }
 }
 
 /**
@@ -57,7 +58,7 @@ function compare_layer_1(context: Context, selectedShapes: Shape[], reverse = 1)
 */
 function compare_layer_2(selectedShapes: Shape[], reverse = 1): Shape[] {
     return selectedShapes.sort((a, b) => {
-        if (compare_layer_a_b(a, b)) {
+        if (compare_layer_a_b_1(a, b)) {
             return reverse * 1;
         } else {
             return reverse * -1;
@@ -71,7 +72,7 @@ function compare_layer_2(selectedShapes: Shape[], reverse = 1): Shape[] {
 * @param {Shape} another 比较的图形 
 * @return {boolean} 图形shape的z轴层级较高则为真
 */
-function compare_layer_a_b(shape: Shape, another: Shape) {
+function compare_layer_a_b_1(shape: Shape, another: Shape) {
     const shape_parents_id = new Map();
     let self = shape;
     let s_p = self.parent;
@@ -106,4 +107,74 @@ function compare_layer_a_b(shape: Shape, another: Shape) {
         }
     }
     return first?.id !== bro?.id;
+}
+
+/**
+* @description: 输入z轴层级无序的图形列表，输出有序的图形列表, 采用两两图形比较，不会遍历整棵树，但是在列表比较长的情况下会两两的对数比较多，消耗较大
+* @param {Shape[]} shapes z轴层级无序的图形列表
+* @return {Shape[]} z轴层级有序的图形列表
+*/
+function compare_layer_3(selectedShapes: Shape[], reverse = 1): Shape[] {
+    const path_map = new Map();
+    for (let i = 0; i < selectedShapes.length; i++) {
+        const shape = selectedShapes[i];
+        path_map.set(shape.id, get_node_path(shape));
+    }
+
+    const sort = selectedShapes.sort((a, b) => {
+        if (compare_layer_a_b_2(a, b, path_map)) {
+            return reverse * -1;
+        } else {
+            return reverse * 1;
+        }
+    });
+    return sort;
+}
+/**
+* @description: 比较图形shape的z轴层级是否比another高
+* @param {Shape} shape 被比较的图形
+* @param {Shape} another 比较的图形 
+* @return {boolean} 图形shape的z轴层级较高则为真
+*/
+function compare_layer_a_b_2(shape: Shape, another: Shape, paths: Map<string, number[]>) {
+    const path1 = paths.get(shape.id);
+    const path2 = paths.get(another.id);
+    if (!path1 || !path2) return false;
+
+    const len = Math.min(path1.length, path2.length);
+    for (let i = 0; i < len; i++) {
+        if (path1[i] === path2[i]) {
+            if (path1[i + 1] === path2[i + 1]) {
+                continue;
+            } else if (path1[i + 1] > path2[i + 1]) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return false;
+}
+/**
+* @description: 获取图形shape的路径序列
+* @param {Shape} shape
+* @return {number[]} 图形shape的路径序列
+*/
+function get_node_path(shape: Shape): number[] {
+    const path: number[] = [];
+    let self = shape;
+    let p = self.parent;
+    while (p) {
+        const childs = (p as GroupShape).childs;
+        for (let i = childs.length - 1; i > -1; i--) { // 从后面往前找更快，因为大多数情况下操作的是新生成的图形
+            if (childs[i].id === self.id) {
+                path.unshift(i);
+                break;
+            }
+        }
+        self = p!;
+        p = self.parent;
+    }
+    path.unshift(0);
+    return path;
 }
