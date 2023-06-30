@@ -263,7 +263,6 @@ const workspaceUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin()
     }
-    watcher()
     if (index === props.index) {
         // 打开
         showComment(me!)
@@ -307,7 +306,7 @@ const unfold = () => {
     }
 }
 
-const update = (t: number) => {
+const selectedUpdate = (t: number) => {
     if (t === Selection.CHANGE_COMMENT) {
         unfold()
     }
@@ -325,7 +324,48 @@ const update = (t: number) => {
     }
 }
 
+const watchedShapes = new Map();
+const watchCommentShape = new Map();
+function watchShapes() { // 监听评论相关shape的变化
+    const comment = props.commentInfo
+    if (comment.page_id == comment.target_shape_id) return
+    const needWatchShapes = new Map();
+    let shapes = props.context.selection.selectedPage!.shapes;
+    const shape = shapes.get(comment.target_shape_id);
+    if (shape) {
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) {
+            needWatchShapes.set(p.id, p);
+            p = p.parent;
+        }
+        needWatchShapes.set(comment.target_shape_id, shape);
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(watchCommentShape.get(k));
+        watchedShapes.delete(k);
+    });
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        const _ck = () => update(shape)
+        v.watch(_ck);
+        watchCommentShape.set(k, _ck);
+        watchedShapes.set(k, v);
+    });
+}
+
+const update = (shape?: Shape) => {
+    watcher()
+    if(!shape) return
+    const { x, y } = shape.frame2Page();
+    const farmeX = x + props.commentInfo.shape_frame.x2
+    const farmeY = y + props.commentInfo.shape_frame.y2
+    emit('updateShapeComment', farmeX, farmeY, props.index)
+    workspace.value.editShapeComment(true, [shape])
+}
+
 function watcher() {
+    watchShapes()
     if (props.commentInfo.page_id !== props.commentInfo.target_shape_id) {
         setCommentPosition()
     }
@@ -338,7 +378,6 @@ const setCommentPosition = () => {
     if (!workspace.value.transforming) return
     const shape = shapes.get(comment.target_shape_id);
     if (shape) {
-        // workspace.value.editShapeComment(true, shape)
         workspace.value.editShapeComment(true, props.context.selection.selectedShapes)
         const { x, y } = shape.frame2Page();
         const farmeX = x + props.commentInfo.shape_frame.x2
@@ -354,11 +393,11 @@ defineExpose({
 onMounted(() => {
     setCommentPosition()
     props.context.workspace.watch(workspaceUpdate);
-    props.context.selection.watch(update);
+    props.context.selection.watch(selectedUpdate);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
-    props.context.selection.unwatch(update);
+    props.context.selection.unwatch(selectedUpdate);
 })
 watchEffect(setOrigin)
 watchEffect(watcher)

@@ -8,7 +8,7 @@ import { useRoute } from 'vue-router';
 import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
-import { Shape } from "@kcdesign/data";
+import { Shape, ShapeType } from "@kcdesign/data";
 
 type CommentView = InstanceType<typeof PageCommentItem>;
 
@@ -152,11 +152,11 @@ const moveCommentPopup = (e: MouseEvent, index: number) => {
 };
 
 const updateShapeComment = (x: number, y: number, index: number) => {
-    if (documentCommentList.value[index].user.id !== userId) return
-    commentReflush.value++
+    // if (documentCommentList.value[index].user.id !== userId) return
     const shape_frame = documentCommentList.value[index].shape_frame
     shape_frame.x1 = x
-    shape_frame.y1 = y
+    shape_frame.y1 = y    
+    commentReflush.value++
 }
 
 const editShapeComment = (index: number, x: number, y: number) => {
@@ -286,7 +286,7 @@ const editComment = (index: number, text: string) => {
 
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = workspace.value.commentShape    
+    const shapes = workspace.value.commentShape
     const sleectShapes = flattenShapes(shapes)
     sleectShapes.forEach((item: any) => {
         documentCommentList.value.filter((comment, i) => {
@@ -300,40 +300,13 @@ const saveShapeCommentXY = () => {
 
 // 递归函数，用于将数组扁平化处理
 function flattenShapes(shapes: any) {
-  return shapes.reduce((result: any, item: Shape) => {
-    if (Array.isArray(item.childs)) {
-      // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-      result = result.concat(flattenShapes(item.childs));
-    }
-    return result.concat(item);
-  }, []);
-}
-
-const watchedShapes = new Map();
-function watchShapes() { // 监听评论相关shape的变化
-    const needWatchShapes = new Map();
-    let shapes = props.context.selection.selectedPage!.shapes;
-    for (let i = 0; i < documentCommentList.value.length; i++) {
-        const _com = documentCommentList.value[i];
-        const shape = shapes.get(_com.target_shape_id);
-        if (shape) {
-            needWatchShapes.set(_com.target_shape_id, shape);
+    return shapes.reduce((result: any, item: Shape) => {
+        if (Array.isArray(item.childs)) {
+            // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
+            result = result.concat(flattenShapes(item.childs));
         }
-    }
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(update);
-        watchedShapes.delete(k);
-    });
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(update);
-        watchedShapes.set(k, v);
-    });
-}
-
-function update() {
-    commentReflush.value
+        return result.concat(item);
+    }, []);
 }
 
 function workspaceWatcher(type?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
@@ -363,7 +336,56 @@ function workspaceWatcher(type?: number) { // 更新编辑器状态，包括光�
         documentCommentList.value = props.context.workspace.pageCommentList
     }
 }
-watchEffect(update)
+
+// const watchedShapes = new Map();
+// const watchCommentShape = new Map();
+// function watchShapes() { // 监听评论相关shape的变化
+//     const needWatchShapes = new Map();
+//     let shapes = props.context.selection.selectedPage!.shapes;
+//     for (let i = 0; i < documentCommentList.value.length; i++) {
+//         const _com = documentCommentList.value[i];
+//         const shape = shapes.get(_com.target_shape_id);
+//         if (shape) {
+//             let p = shape.parent;
+//             while (p && p.type !== ShapeType.Page) {
+//                 needWatchShapes.set(p.id, p);
+//                 p = p.parent;
+//             }
+//             needWatchShapes.set(_com.target_shape_id, shape);
+//         }
+//     }
+//     watchedShapes.forEach((v, k) => {
+//         if (needWatchShapes.has(k)) return;
+//         v.unwatch(watchCommentShape.get(k));
+//         watchedShapes.delete(k);
+//     });
+//     needWatchShapes.forEach((v, k) => {
+//         if (watchedShapes.has(k)) return;
+//         const _ck = () => update(v)
+//         v.watch(_ck);
+//         watchCommentShape.set(k, _ck);
+//         watchedShapes.set(k, v);
+//     });
+// }
+
+// const update = (shape: Shape) => {
+//     const { x, y } = shape.frame2Page();
+//     for (let i = 0; i < documentCommentList.value.length; i++) {
+//         const _com = documentCommentList.value[i];
+//         if(shape.id === _com.target_shape_id) {
+//             const shape_frame = _com.shape_frame
+//             const farmeX = x + shape_frame.x2
+//             const farmeY = y + shape_frame.y2
+//             shape_frame.x1 = farmeX
+//             shape_frame.y1 = farmeY
+//             commentReflush.value++
+//         }
+//     }
+// }
+// function watcher() {
+//     watchShapes()
+// }
+// watchEffect(watcher)
 onMounted(() => {
     getDocumentComment()
     props.context.workspace.watch(workspaceWatcher);
