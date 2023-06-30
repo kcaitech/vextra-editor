@@ -1,79 +1,74 @@
 <template>
-    <!-- 表格布局 -->
-    <el-table :data="ShareList" height="83vh" style="width: 100%" v-loading="isLoading" empty-text="没有内容"
-        @row-dblclick="toDocument" @row-contextmenu="rightmenu">
-        <el-table-column prop="document.name" :label="t('home.file_name')" />
-        <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')" />
-        <el-table-column prop="document.size" :label="t('home.size')" />
-        <el-table-column class="operation" :label="t('home.operation')" type="index" width="180">
-            <template #default="scope: any">
-                <el-icon :size=" 20 " v-if=" !ShareList[scope.$index].document_favorites.is_favorite ">
-                    <el-tooltip :content=" t('home.star') " show-after="1000">
-                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="star"
-                            @click.stop=" Starfile(scope.$index) ">
-                        </svg-icon>
-                    </el-tooltip>
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 " v-else>
-                    <el-tooltip :content=" t('home.de_star') " show-after="1000">
-                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="stared"
-                            @click.stop=" Starfile(scope.$index) ">
-                        </svg-icon>
-                    </el-tooltip>
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 ">
-                    <el-tooltip :content=" t('home.share') " show-after="1000">
-                        <Share @click.stop=" Sharefile(scope) " />
-                    </el-tooltip>
-                </el-icon>&nbsp;
-                <el-icon :size=" 20 ">
-                    <el-tooltip :content=" t('home.exit_share') " show-after="1000">
-                        <svg-icon class="svg star" style="width: 20px; height: 20px;" icon-class="exitshar"
-                            @click.stop=" Exitshar(scope.$index) ">
-                        </svg-icon>
-                    </el-tooltip>
-                </el-icon>&nbsp;
-            </template>
-        </el-table-column>
-    </el-table>
+    <!-- 数据展示 -->
+    <div class="main">
+        <div class="title">
+            <span class="name">{{ t('home.file_name') }}</span>
+            <span class="time">{{ t('home.modification_time') }}</span>
+            <span class="size">{{ t('home.size') }}</span>
+            <div><span class="other">{{ t('home.operation') }}</span></div>
+        </div>
+        <div class="item">
+            <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile"
+                @exit_share="Exitshar" @dbclickopen="openDocument" :iconlist="iconlists" />
+        </div>
+    </div>
+
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
-            <li @click=" openDocument ">{{t('homerightmenu.open')}}</li>
-            <li @click=" openNewWindowDocument ">{{t('homerightmenu.newtabopen')}}</li>
+            <li @click="openDocument(docId)">{{ t('homerightmenu.open') }}</li>
+            <li @click="openNewWindowDocument">{{ t('homerightmenu.newtabopen') }}</li>
             <div></div>
-            <li @click.stop=" rSharefile ">{{t('homerightmenu.share')}}</li>
-            <li @click=" rStarfile " ref="isshow">{{t('homerightmenu.target_star')}}</li>
+            <li @click.stop="rSharefile">{{ t('homerightmenu.share') }}</li>
+            <li @click="rStarfile" ref="isshow">{{ t('homerightmenu.target_star') }}</li>
         </ul>
     </div>
     <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :docUserId="docUserId" :userInfo="userInfo"
         @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
-    <div v-if=" showFileShare " class="overlay"></div>
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
-import { Share } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import listsitem from '@/components/AppHome/listsitem.vue'
 import { useI18n } from 'vue-i18n'
 import { UserInfo } from '@/context/user';
-const { t } = useI18n()
 
-const ShareList = ref<any[]>([]);
+interface data {
+    document: {
+        id: string
+        name: string
+        doc_type: number
+        user_id: string
+    }
+    document_favorites: {
+        is_favorite: boolean
+    }
+    document_permission: {
+        id: string
+        perm_source_type: number
+        perm_type: number
+    }
+}
+
+const { t } = useI18n()
 const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
-const docId = ref('')
 const docUserId = ref('')
 const selectValue = ref(1)
-const documentId = ref()
 const menu = ref<HTMLElement>()
 const isshow = ref<HTMLElement>()
 const userInfo = ref<UserInfo | undefined>()
+const docId = ref('')
+const mydata = ref()
+let lists = ref<any[]>([])
+const iconlists = ref(['star', 'share', 'EXshare'])
 
 async function ShareLists() {
     // loading
@@ -81,7 +76,8 @@ async function ShareLists() {
     try {
         const { data } = await user_api.ShareLists()
         if (data == null) {
-            ElMessage.error(t('home.failed_list_tips'))
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
         } else {
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
@@ -89,9 +85,10 @@ async function ShareLists() {
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
             }
         }
-        ShareList.value = data
+        lists.value = Object.values(data)
     } catch (error) {
-        ElMessage.error(t('home.failed_list_tips'))
+        ElMessage.closeAll('error')
+        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
 
     // // unloading  
@@ -111,21 +108,23 @@ function sizeTostr(size: any) {
     return size
 }
 
-const Starfile = async (index: number) => {
-    ShareList.value[index].document_favorites.is_favorite = ShareList.value[index].document_favorites.is_favorite === true ? false : true
-    const doc_id = ShareList.value[index].document.id
-    if (ShareList.value[index].document_favorites.is_favorite == true) {
-        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
+//标星入口
+const Starfile = async (data: data) => {
+    const { document: { id } } = data
+    data.document_favorites.is_favorite = data.document_favorites.is_favorite === true ? false : true
+    if (data.document_favorites.is_favorite == true) {
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: true })
         if (code === 0) {
-            ElMessage.success(t('home.star_ok'))
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.star_ok') })
         }
     } else {
-        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
+        const { code } = await user_api.SetfavoriteStatus({ doc_id: id, status: false })
         if (code === 0) {
-            ElMessage.success(t('home.star_cancel'))
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.star_cancel') })
         }
     }
-
 }
 
 const userData = ref({
@@ -134,53 +133,86 @@ const userData = ref({
     nickname: localStorage.getItem('nickname') || ''
 })
 
-const Sharefile = (scope: any) => {
+//分享入口
+const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
         return
     }
-    docId.value = scope.row.document.id
-    docUserId.value = scope.row.document.user_id
-    selectValue.value = scope.row.document.doc_type !== 0 ? scope.row.document.doc_type : scope.row.document.doc_type
+    docUserId.value = data.document.user_id
     userInfo.value = userData.value
+    docId.value = data.document.id
+    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     showFileShare.value = true
 }
 
-const rightmenu = (row: any, column: any, event: any) => {
+//退出分享入口
+const Exitshar = async (data: data) => {
+    const { document_permission: { id } } = data
+    try {
+        const { code } = await user_api.ExitSharing({ share_id: id })
+        if (code === 0) {
+            ElMessage.closeAll('success')
+            ElMessage.success({ duration: 1500, message: t('home.exit_share_success') })
+            lists.value = lists.value.filter(item => item.document.id != data.document.id)
+        } else {
+            ElMessage.error(t('home.exit_share_fail'))
+        }
+    } catch (error) {
+        ElMessage.error(t('home.other_tips'))
+    }
+
+
+}
+
+//右键菜单入口
+const rightmenu = (e: MouseEvent, data: data) => {
+    const { document: { id }, document_favorites: { is_favorite } } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
-    const top = event.pageY
-    const left = event.pageX
-    if (event.target.tagName == 'DIV') {
-        rightmenu.style.left = left + 200 > viewportWidth ? (viewportWidth - 200) + "px" : left + 'px'
-        rightmenu.style.top = top + 291 > viewportHeight ? (viewportHeight - 291) + 'px' : top + 'px'
+    const top = e.pageY
+    const left = e.pageX
+
+    nextTick(() => {
+        const width = rightmenu.clientWidth
+        const height = rightmenu.clientHeight
+        rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
+        rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
+    })
+
+    if ((e.target as HTMLElement).closest('.user')) {
         rightmenu.style.display = 'block'
     }
+
     nextTick(() => {
         if (isshow.value) {
-            if (row.document_favorites.is_favorite == true) {
+            if (is_favorite == true) {
                 isshow.value.innerHTML = t('homerightmenu.unstar')
             } else {
                 isshow.value.innerHTML = t('homerightmenu.target_star')
             }
         }
     })
-    documentId.value = row
+    docId.value = id
+    mydata.value = data
 }
 
-const openDocument = () => {
+//右键打开
+const openDocument = (id: string) => {
     router.push({
         name: 'document',
         query: {
-            id: documentId.value.document.id
+            id: id
         }
     })
 }
 
+
+//右键新窗口打开
 const openNewWindowDocument = () => {
     const Name = 'document'
-    const query = { id: documentId.value.document.id }
+    const query = { id: docId.value }
     const url = router.resolve({ name: Name, query: query }).href
     window.open(url, '_blank')
     if (menu.value) {
@@ -188,37 +220,21 @@ const openNewWindowDocument = () => {
     }
 }
 
+//右键标星
+const rStarfile = () => {
+    Starfile(mydata.value)
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
+}
+
+//右键分享
 const rSharefile = () => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
-    }
-    docId.value = documentId.value.document.id
-    selectValue.value = documentId.value.document.doc_type !== 0 ? documentId.value.document.doc_type : documentId.value.document.doc_type;
-    userInfo.value = userData.value
-    showFileShare.value = true;
-}
+    Sharefile(mydata.value)
 
-const rStarfile = async () => {
-    documentId.value.document_favorites.is_favorite = documentId.value.document_favorites.is_favorite === true ? false : true
-    const doc_id = documentId.value.document.id
-    if (documentId.value.document_favorites.is_favorite == true) {
-        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: true })
-        if (code === 0) {
-            ElMessage.success(t('home.star_ok'))
-        }
-    } else {
-        const { code } = await user_api.SetfavoriteStatus({ doc_id: doc_id, status: false })
-        if (code === 0) {
-            ElMessage.success(t('home.star_cancel'))
-        }
-    }
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -242,32 +258,6 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
-const Exitshar = async (index: number) => {
-    const { document_permission: { id } } = ShareList.value[index]
-    try {
-        const { code } = await user_api.ExitSharing({ share_id: id })
-        if (!code) {
-            ElMessage.success(t('home.exit_share_success'))
-            ShareLists()
-        } else {
-            ElMessage.error(t('home.exit_share_fail'))
-        }
-    } catch (error) {
-        ElMessage.error(t('home.other_tips'))
-    }
-
-
-}
-
-const toDocument = (row: any) => {
-    const docId = row.document.id
-    router.push({
-        name: 'document',
-        query: {
-            id: docId
-        }
-    })
-}
 
 onMounted(() => {
     ShareLists()
@@ -281,6 +271,36 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
+.item {
+    height: calc(100vh - 194px);
+}
+
+.title {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px 6px 10px;
+    color: #606266;
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+
+    span:nth-child(1) {
+        flex: 2;
+    }
+
+    span:not(:nth-child(1)) {
+        flex: 1;
+
+    }
+
+    div {
+        flex: 1;
+        padding: 0 10px 6px 0;
+        display: flex;
+
+    }
+}
+
 .rightmenu {
     display: none;
     min-width: 200px;
@@ -377,4 +397,5 @@ onUnmounted(() => {
     height: 100%;
     z-index: 999;
     background-color: rgba(0, 0, 0, 0.5);
-}</style>
+}
+</style>

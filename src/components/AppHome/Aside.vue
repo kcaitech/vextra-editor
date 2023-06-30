@@ -3,10 +3,10 @@ import {
     Clock,
     Star,
     Delete,
-    Share,
     BottomLeft,
     Plus,
     Folder,
+    FolderOpened,
     Menu as IconMenu,
 } from '@element-plus/icons-vue'
 import { router } from '@/router'
@@ -19,6 +19,7 @@ import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
 import avatar from '@/assets/pd-logo-svg.svg';
+import { measure } from '@/layout/text/measure';
 
 interface Emits {
     (e: 'settitle', title: string): void;
@@ -30,7 +31,7 @@ const picker = new FilePicker((file) => {
     if (!file) return;
     const lzdata = new LzDataLocal(new Zip(file));
     const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document: Document) => {
+    importSketch(file.name, lzdata, repo, measure).then((document: Document) => {
         window.document.title = document.name;
         const coopRepo = new CoopRepository(document, repo);
         (window as any).skrepo = coopRepo;
@@ -41,7 +42,7 @@ const picker = new FilePicker((file) => {
 
 function newFile() {
     const repo = new Repository();
-    const nd = createDocument(t('system.new_file'), repo);
+    const nd = createDocument(t('system.new_file'), repo, measure);
     const coopRepo = new CoopRepository(nd, repo)
     const editor = new DocEditor(nd, coopRepo);
     const page = editor.create(t('system.page1'));
@@ -58,38 +59,35 @@ function Setindex(a: any, b: any) {
 }
 const x = sessionStorage.getItem('index')
 
-window.addEventListener('popstate', function () {
-  if(location.hash.toLowerCase()=='#/apphome/starfile'){
-    sessionStorage.setItem('index', '2')
-    sessionStorage.setItem('title', t('home.star_file'))
-    location.reload()
-  }
-  if(location.hash.toLowerCase()=='#/apphome/recently'){
-    sessionStorage.setItem('index', '1')
-    sessionStorage.setItem('title',t('home.recently_opened'))
-    location.reload()
-  }
-  if(location.hash.toLowerCase()=='#/apphome/meshare'){
-    sessionStorage.setItem('index', '3')
-    sessionStorage.setItem('title', t('home.file_shared'))
-    location.reload()
-  }
-  if(location.hash.toLowerCase()=='#/apphome/shareme'){
-    sessionStorage.setItem('index', '4')
-    sessionStorage.setItem('title', t('home.shared_file_received'))
-    location.reload()
-  }
-  if(location.hash.toLowerCase()=='#/apphome/recyclebin'){
-    sessionStorage.setItem('index', '5')
-    sessionStorage.setItem('title', t('home.recycling_station'))
-    location.reload()
-  }
-});
-
-
+// window.addEventListener('popstate', function () {
+//     if (location.hash.toLowerCase() == '#/apphome/starfile') {
+//         sessionStorage.setItem('index', '2')
+//         sessionStorage.setItem('title', t('home.star_file'))
+//         location.reload()
+//     }
+//     if (location.hash.toLowerCase() == '#/apphome/recently') {
+//         sessionStorage.setItem('index', '1')
+//         sessionStorage.setItem('title', t('home.recently_opened'))
+//         location.reload()
+//     }
+//     if (location.hash.toLowerCase() == '#/apphome/meshare') {
+//         sessionStorage.setItem('index', '3')
+//         sessionStorage.setItem('title', t('home.file_shared'))
+//         location.reload()
+//     }
+//     if (location.hash.toLowerCase() == '#/apphome/shareme') {
+//         sessionStorage.setItem('index', '4')
+//         sessionStorage.setItem('title', t('home.shared_file_received'))
+//         location.reload()
+//     }
+//     if (location.hash.toLowerCase() == '#/apphome/recyclebin') {
+//         sessionStorage.setItem('index', '5')
+//         sessionStorage.setItem('title', t('home.recycling_station'))
+//         location.reload()
+//     }
+// });
 
 </script>
-
 <template>
     <el-row class="tac">
         <el-col :span="12">
@@ -100,10 +98,10 @@ window.addEventListener('popstate', function () {
             <div class="new">
                 <button class="newfile" @click="newFile"> <el-icon :size="22">
                         <Plus />
-                    </el-icon><span>{{ t('home.New_file') }}</span></button>
+                    </el-icon>{{ t('home.New_file') }}</button>
                 <button class="openfile" @click="picker.invoke()"><el-icon :size="22">
-                        <Folder />
-                    </el-icon><span>{{ t('home.open_local_file') }}</span></button>
+                        <FolderOpened />
+                    </el-icon>{{ t('home.open_local_file') }}</button>
             </div>
             <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                 text-color="#000000">
@@ -121,7 +119,7 @@ window.addEventListener('popstate', function () {
                     </el-menu-item></router-link>
                 <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3, t('home.file_shared'))">
                         <el-icon>
-                            <Share />
+                            <Folder />
                         </el-icon>
                         <span>{{ t('home.file_shared') }}</span>
                     </el-menu-item></router-link>
@@ -150,23 +148,47 @@ a {
     text-decoration: none;
 }
 
+.logo {
+    position: sticky;
+    top: 0px;
+    left: 0px;
+    margin: auto;
+    background-color: white;
+    z-index: 2;
+}
+
 .el-row {
     height: 100vh;
-    background: rgba(216, 216, 216, 0.22);
+    overflow: hidden;
+    overflow-y: auto;
+    background-color: white;
 
     .el-col {
         max-width: 100%;
         flex: 1;
 
+        .logo {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+
+            .el-icon {
+                margin-right: 10px;
+            }
+        }
+
         .new {
             display: flex;
             flex-direction: column;
-            margin: 40px 20px 40px 20px;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 20px auto;
 
             button {
-                height: 50px;
-                margin: 20px 0 20px 0;
-                background: white;
+                width: 280px;
+                height: 56px;
+                margin: 0px 0 20px 0;
                 border: none;
                 font-size: 16px;
                 letter-spacing: 2px;
@@ -175,44 +197,41 @@ a {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+            }
 
-                span {
-                    margin-left: 10px;
-                }
-
-
-                &.newfile {
-                    background: rgb(69, 69, 248);
-                    color: #ffffff;
+            .newfile {
+                background: rgb(69, 69, 248);
+                color: #ffffff;
+                &:hover {
+                    background-color:  rgba(69, 69, 248, 0.5);
                 }
 
                 &:active {
-                    background: rgb(143, 143, 255);
+                    background-color:  rgb(48, 48, 255);
                 }
             }
 
-        }
+            .openfile {
+                &:hover {
+                    background-color: rgba(192, 192, 192, 0.6);
+                }
 
-        .logo {
-            display: flex;
-            flex-direction: row;
-            justify-content: flex-start;
-            align-items: center;
-            margin-left: 20px;
+                &:active {
+                    background-color: rgba(170, 170, 255, 0.6)
+                }
 
-            .el-icon {
-                margin-right: 10px;
             }
+
+
         }
 
         .el-menu {
             border: none;
             background: none;
 
-
             .el-menu-item {
                 border-radius: 5px;
-                margin: 20px;
+                margin: 10px;
 
                 &:hover {
                     background: rgb(70, 76, 248);

@@ -12,6 +12,7 @@ import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import { isInner } from "@/utils/content";
+import { debounce } from "lodash";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -75,7 +76,7 @@ let listviewSource = new class implements IDataSource<ItemData> {
 const shapelist = ref<List>();
 const ListBody = ref<HTMLDivElement>()
 const ListH = ref<number>(0)
-function notifySourceChange(t?: number | string) {
+function _notifySourceChange(t?: number | string, shape?: Shape) {
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
@@ -102,10 +103,15 @@ function notifySourceChange(t?: number | string) {
                 }
             }
         })
+    } else if (t === Selection.EXTEND) {
+        if (shape) {
+            toggleExpand(shape)
+        }
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
+const notifySourceChange = debounce(_notifySourceChange, 20);
 const stopWatch = watch(() => props.page, () => {
     let source = shapeListMap.get(props.page.id)
     if (!source) {
@@ -114,6 +120,7 @@ const stopWatch = watch(() => props.page, () => {
     }
     if (shapeDirList) shapeDirList.unwatch(notifySourceChange)
     shapeDirList = source;
+    (window as any).sd = shapeDirList;
     shapeDirList.watch(notifySourceChange)
     notifySourceChange();
 }, { immediate: true })

@@ -94,7 +94,6 @@ function leftAdjust(saveWidth: number, offset: number) {
     let leftWidth = saveWidth + offset;
     let rightWidth = sizeBounds.right.width;
     let middleWidth = Math.max(totalWidth - leftWidth - rightWidth, 0);
-    console.log(leftWidth, sizeBounds.left.width);
     
     if (leftWidth === sizeBounds.left.width) {
         return;

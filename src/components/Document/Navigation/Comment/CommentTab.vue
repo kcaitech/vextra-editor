@@ -9,14 +9,17 @@ import { useRoute } from 'vue-router';
 import { WorkSpace, Action } from "@/context/workspace";
 import { ElScrollbar } from 'element-plus'
 import { Selection } from "@/context/selection";
+import ShowHiddenLeft from "../ShowHiddenLeft.vue";
 const { t } = useI18n();
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
     text: string
     status_p: boolean
 }
 const route = useRoute()
 const docID = (route.query.id as string)
+const emit = defineEmits<{ (e: 'showNavigation'): void }>()
+
 const commentMenu = ref<boolean>(false)
 const commentMenuItems = ref<commentListMenu[]>([
     { text: `${t('comment.sort')}`, status_p: props.context.selection.commentPageSort},
@@ -174,6 +177,9 @@ onUnmounted(() => {
     props.context.workspace.unwatch(update);
     props.context.selection.unwatch(update);
 })
+const showHiddenLeft = () => {
+    emit('showNavigation')
+}
 </script>
 
 <template>
@@ -200,6 +206,7 @@ onUnmounted(() => {
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>
+        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShowHiddenLeft>
     </div>
 </template>
 
@@ -210,6 +217,7 @@ onUnmounted(() => {
     background-color: var(--theme-color-anti);
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
+    overflow: hidden;
     .comment-title {
         position: relative;
         height: 30px;

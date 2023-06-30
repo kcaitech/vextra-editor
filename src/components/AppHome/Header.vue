@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { onMounted, reactive, toRefs, ref, onUnmounted } from 'vue'
-import { Search, User, SwitchButton, Close } from '@element-plus/icons-vue'
+import { Search, User, SwitchButton, Close, InfoFilled, Bell } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, useTimeout } from 'element-plus'
 
 const { t } = useI18n()
 const state = reactive({
     circleUrl: localStorage.getItem('avatar')
 })
 const { circleUrl } = toRefs(state)
+const showabout = ref(false)
 const num = ref(0)
 const showInForm = ref(false)
 const applyList = ref<any[]>([])
@@ -172,7 +173,6 @@ const toDocument = (row: any) => {
                             align="center" />
                         <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')"
                             header-align="center" align="center" />
-                        <!-- <el-table-column prop="document.size" :label="t('home.size')" header-align="center" align="center" /> -->
                     </el-table>
                 </div>
                 <div class="nullcontent" v-else style="line-height: 300px; font-size: 12px;">{{ t('search.search_history')
@@ -181,12 +181,16 @@ const toDocument = (row: any) => {
         </div>
         <div class="right">
             <div class="notice" @click="showInForm = true">
-                <svg-icon class="svg" icon-class="notice"></svg-icon>
+                <el-icon size="24">
+                    <Bell />
+                </el-icon>
                 <div class="num" v-if="num > 0" :class="{ after: num > 99 }"
                     :style="{ paddingRight: num > 99 ? 9 + 'px' : 4 + 'px' }">{{ num > 99 ? 99 : num }}</div>
             </div>
             <div class="about">
-                <span>{{ t('system.about') }}</span>
+                <el-icon size="24">
+                    <InfoFilled />
+                </el-icon>
                 <div class="about-items">
                     <div>{{ t('system.help_manual') }}</div>
                     <div>{{ t('system.about_software') }}</div>
@@ -205,29 +209,34 @@ const toDocument = (row: any) => {
                         </el-icon>{{ t('system.login_out') }}</div>
                 </div>
             </div>
-            <!-- <button @click="toDocument">跳转</button> -->
             <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList" @reviewed="reviewed"></Inform>
         </div>
     </div>
 </template>
 <style lang="scss" scoped>
+.el-icon:hover {
+    color: #6395f9;
+    background: rgba(185, 185, 185, 0.5);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
 .header {
-    width: calc(100vw - 381px - 50px);
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin-top: 20px;
-
 
     .search {
         display: flex;
-        flex-direction: row;
         align-items: center;
         background: rgba(217, 217, 217, 0.67);
-        width: 550px;
+        width: 50%;
+        max-width: 550px;
+        min-width: 150px;
         height: 45px;
+        // overflow: hidden;
         border-radius: 20px;
+        position: relative;
 
         .input {
             width: 550px;
@@ -246,24 +255,34 @@ const toDocument = (row: any) => {
                 color: blue
             }
         }
+
+        .searchhistory {
+            box-sizing: border-box;
+            position: absolute;
+            top: 50px;
+            width: 100%;
+            min-height: 300px;
+            max-height: 600px;
+            background: rgb(255, 255, 255);
+            z-index: 9;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            text-align: center;
+
+            content {
+                text-align: center;
+            }
+        }
     }
 
     .right {
-        position: relative;
+        height: 40px;
         display: flex;
-        flex-direction: row;
         align-items: center;
 
         .notice {
             position: relative;
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-
-            >.svg {
-                width: 100%;
-                height: 100%;
-            }
+            display: flex;
 
             >.num {
                 position: absolute;
@@ -294,20 +313,21 @@ const toDocument = (row: any) => {
 
         .about {
             margin: 0 20px;
-            font-size: 16px;
             position: relative;
-            display: inline-block;
+            display: flex;
 
             .about-items {
+                display: none;
                 position: absolute;
                 background-color: #f9f9f9;
                 min-width: 80px;
                 box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-                right: -30px;
-                z-index: 99;
+                top: 25px;
+                right: -35px;
+                z-index: 1;
                 padding: 0 10px;
                 border-radius: 2px;
-                display: none;
+
 
                 div {
                     font-size: 14px;
@@ -325,10 +345,18 @@ const toDocument = (row: any) => {
                         background: rgb(113, 110, 110);
                     }
                 }
+
+                &:hover {
+                    .about-items {
+                        display: block;
+                    }
+                }
             }
 
-            &:hover .about-items {
-                display: block;
+            &:hover {
+                .about-items {
+                    display: block;
+                }
             }
         }
 
@@ -346,7 +374,7 @@ const toDocument = (row: any) => {
             position: absolute;
             background-color: #f9f9f9;
             min-width: 80px;
-            right: -30px;
+            right: 0;
             z-index: 99;
             padding: 0 10px;
             border-radius: 2px;
@@ -385,26 +413,6 @@ const toDocument = (row: any) => {
                 font-size: 10px;
             }
         }
-    }
-}
-
-.searchhistory {
-    margin-top: 20px;
-    box-sizing: border-box;
-    position: absolute;
-    top: 60px;
-    left: calc(381px + 20px);
-    width: 550px;
-    min-height: 300px;
-    max-height: 600px;
-    background: white;
-    z-index: 9999;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    border-radius: 5px;
-    text-align: center;
-
-    content {
-        text-align: center;
     }
 }
 </style>

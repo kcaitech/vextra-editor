@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop } from '@/utils/content';
+import { updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
@@ -159,7 +159,10 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
         }
     } else { // 抬起之前未存在拖动
         const action = workspace.value.action;
-        if (action.startsWith('add')) { // 存在action
+        if (action === Action.AddText) {
+            init_insert_textshape(props.context, mousedownOnPageXY, t, t('shape.input_text'));
+        }
+        else if (action.startsWith('add')) { // 存在action
             init_insert_shape(props.context, mousedownOnPageXY, t);
         }
     }
@@ -489,8 +492,9 @@ function onMouseUp(e: MouseEvent) {
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
     const shapes = workspace.value.commentShape
+    const sleectShapes = flattenShapes(shapes)
     const commentList = props.context.workspace.pageCommentList
-    shapes.forEach(item => {
+    sleectShapes.forEach((item: any) => {
         commentList.filter((comment, i) => {
             if (comment.target_shape_id === item.id) {
                 editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
@@ -498,6 +502,17 @@ const saveShapeCommentXY = () => {
         })
     })
     workspace.value.editShapeComment(false, undefined)
+}
+
+// 递归函数，用于将数组扁平化处理
+function flattenShapes(shapes: any) {
+  return shapes.reduce((result: any, item: Shape) => {
+    if (Array.isArray(item.childs)) {
+      // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
+      result = result.concat(flattenShapes(item.childs));
+    }
+    return result.concat(item);
+  }, []);
 }
 
 // mouseleave

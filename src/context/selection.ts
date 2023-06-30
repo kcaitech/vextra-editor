@@ -1,4 +1,3 @@
-import { layoutText, locateText } from "@/layout/text";
 import { ISave4Restore, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -54,6 +53,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static SKIP_COMMENT = 11;
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
+    static EXTEND = 14;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -161,13 +161,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.notify(Selection.CHANGE_PAGE);
     }
     async deletePage(id: string, index: number) {
-        if (this.m_document.pagesList.length > 1) {
-            if (id === this.m_selectPage?.id) {
-                index = index === this.m_document.pagesList.length ? 0 : index;
-                await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
-                    this.selectPage(p);
-                });
-            }
+        if (id === this.m_selectPage?.id) {
+            index = index === this.m_document.pagesList.length ? index - 1 : index;
+            await this.m_document.pagesMgr.get(this.m_document.pagesList[index].id).then(p => {
+                this.selectPage(p);
+            });
         }
     }
     reName(id?: string) {
@@ -349,8 +347,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         x = xy.x;
         y = xy.y;
 
-        const layout = shape.getLayout(layoutText);
-        return locateText(layout, x, y);
+        return shape.text.locateText(x, y);
     }
 
     setCursor(index: number, before: boolean) {

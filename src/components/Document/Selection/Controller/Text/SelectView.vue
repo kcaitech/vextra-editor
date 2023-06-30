@@ -1,6 +1,5 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { layoutText, locateRange, locateCursor } from '@/layout/text';
 import { TextShape } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
@@ -56,15 +55,13 @@ function _update() {
         // selected range
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
-        const layout = props.shape.getLayout(layoutText);
-        selectPath.value = genRectPath(locateRange(layout, start, end).map((point) => matrix.computeCoord(point.x, point.y)));
+        selectPath.value = genRectPath(props.shape.text.locateRange(start, end).map((point) => matrix.computeCoord(point.x, point.y)));
     } else {
         isCursor.value = true;
         // cursor
         const cursorAtBefore = selection.cursorAtBefore;
         const index = selection.cursorStart;
-        const layout = props.shape.getLayout(layoutText);
-        const cursor = locateCursor(layout, index, cursorAtBefore).map((point) => matrix.computeCoord(point.x, point.y));
+        const cursor = props.shape.text.locateCursor(index, cursorAtBefore).map((point) => matrix.computeCoord(point.x, point.y));
         cursorPath.value = genCursorPath(cursor);
     }
 }

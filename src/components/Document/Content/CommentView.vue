@@ -8,7 +8,7 @@ import { useRoute } from 'vue-router';
 import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
-import { ShapeType } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
 
 type CommentView = InstanceType<typeof PageCommentItem>;
 
@@ -286,8 +286,9 @@ const editComment = (index: number, text: string) => {
 
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = workspace.value.commentShape
-    shapes.forEach(item => {
+    const shapes = workspace.value.commentShape    
+    const sleectShapes = flattenShapes(shapes)
+    sleectShapes.forEach((item: any) => {
         documentCommentList.value.filter((comment, i) => {
             if (comment.target_shape_id === item.id) {
                 editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
@@ -295,6 +296,17 @@ const saveShapeCommentXY = () => {
         })
     })
     workspace.value.editShapeComment(false, undefined)
+}
+
+// 递归函数，用于将数组扁平化处理
+function flattenShapes(shapes: any) {
+  return shapes.reduce((result: any, item: Shape) => {
+    if (Array.isArray(item.childs)) {
+      // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
+      result = result.concat(flattenShapes(item.childs));
+    }
+    return result.concat(item);
+  }, []);
 }
 
 const watchedShapes = new Map();

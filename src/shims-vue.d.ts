@@ -9,6 +9,7 @@ declare module '*.vue' {
   export default component
 }
 declare module "*/dom-to-image.js";
+declare module "vue-virtual-scroller";
 // 声明静态资源作为模块
 declare module "*.png";
 declare module "*.svg";
