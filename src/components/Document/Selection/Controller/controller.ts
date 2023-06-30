@@ -11,6 +11,7 @@ import { Action, WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
 import { paster_short } from '@/utils/clipaboard';
+import { sort_by_layer } from '@/utils/group_ungroup';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -40,6 +41,7 @@ export function useController(context: Context) {
             }
             const m = getCloesetContainer(shapes[0]).id != targetParent.id;
             if (m && asyncTransfer) {
+                shapes = sort_by_layer(context, shapes);
                 asyncTransfer.migrate(targetParent as GroupShape);
             }
         }

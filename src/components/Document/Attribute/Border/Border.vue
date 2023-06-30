@@ -114,11 +114,12 @@ function first() {
     }
 }
 function deleteBorder(idx: number) {
+    const _idx = borders.length - idx - 1;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     if (len.value === 1) {
-        editor.value.deleteBorder(idx);
+        editor.value.deleteBorder(_idx);
     } else if (len.value > 1) {
-        const actions = get_actions_border_delete(props.shapes, idx);
+        const actions = get_actions_border_delete(props.shapes, _idx);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);

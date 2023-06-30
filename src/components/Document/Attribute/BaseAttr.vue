@@ -87,6 +87,7 @@ function _calcFrame() {
         rotate.value = Number(shape.rotation?.toFixed(2)) || 0;
         isFlippedHorizontal.value = Boolean(shape.isFlippedHorizontal);
         isFlippedVertical.value = Boolean(shape.isFlippedVertical);
+        isLock.value = Boolean(shape.constrainerProportions);
     } else if (len.value > 1) {
         const shape = props.shapes[0];
         const xy = shape.frame2Page();
@@ -318,7 +319,6 @@ function layout() {
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
         shapeType.value = shape.type;
-        isLock.value = Boolean(shape.constrainerProportions);
         if (shapeType.value === ShapeType.Rectangle) {
             getRectShapeAttr(shape);
         }
