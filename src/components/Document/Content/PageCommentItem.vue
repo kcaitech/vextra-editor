@@ -337,11 +337,8 @@ const setCommentPosition = () => {
     if (comment.page_id == comment.target_shape_id) return
     if (!workspace.value.transforming) return
     const shape = shapes.get(comment.target_shape_id);
-    const s = props.context.selection.getShapesByXY_beta({x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1}, false, false)
-    console.log(s);
-    
     if (shape) {
-        workspace.value.editShapeComment(true, props.context.selection.selectedShapes)
+        workspace.value.editShapeComment(true, shape)
         const { x, y } = shape.frame2Page();
         const farmeX = x + props.commentInfo.shape_frame.x2
         const farmeY = y + props.commentInfo.shape_frame.y2

@@ -426,10 +426,10 @@ export class WorkSpace extends Watchable(Object) {
         this.m_select_comment_id = id
         this.notify(WorkSpace.SELECTE_COMMENT)
     }
-    editShapeComment(state: boolean, shapes?: Shape[]) {
+    editShapeComment(state: boolean, shape?: Shape) {
         this.m_shape_comment = state
         if (state) {
-            this.m_comment_shape.push(...shapes!)
+            this.m_comment_shape.push(shape!)
             this.m_comment_shape = Array.from(new Set(this.m_comment_shape));
         } else {
             this.m_comment_shape = []
