@@ -29,17 +29,19 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
         }))
     }
     childs.push(...gR(h, shape, comsMap));
-    // <svg>
-    //  <svg></svg>
-    // </svg>
-    // 当一个<svg />里面嵌套一个<svg />(如上结构)时，会无法给里面的<svg />设置旋转属性，这里利用foreignObject隔离(如下结构)这种嵌套
-    // <svg>
-    //  <foreignObject>
-    //      <div>
-    //          <svg></svg>   <----真实展示的元素
-    //      </div>
-    //  </foreignObject>
-    // </svg>
+    /**
+     * <svg>
+     *   <svg></svg>
+     * </svg>
+     * 当一个<svg />里面嵌套一个<svg />(如上结构)时，会无法给里面的<svg />设置旋转属性，这里利用foreignObject隔离(如下结构)这种嵌套
+     * <svg>
+     *   <foreignObject>
+     *      <div>
+     *          <svg></svg>   <----真实展示的元素
+     *      </div>
+     *   </foreignObject>
+     * </svg>
+     */
     if (shape.rotation) {
         const foreign_object_props = {
             x: frame.x,
