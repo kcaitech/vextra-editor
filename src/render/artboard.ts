@@ -53,21 +53,18 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
             overflow: "visible",
         }
         ab_props.x = 0, ab_props.y = 0;
-
-        const cx = frame.x + frame.width / 2;
-        const cy = frame.y + frame.height / 2;
-
-        let transform = `transform:translate(${cx}px, ${cy}px)`;
-        if (shape.rotation) {
-            transform += ` rotate(${shape.rotation}deg)`
-        }
+        let transform = `transform:`;
         if (shape.isFlippedHorizontal) {
             transform += ' rotateX(180deg)'
         }
         if (shape.isFlippedVertical) {
             transform += ' rotateY(180deg)'
         }
+        if (shape.rotation) {
+            transform += ` rotate(${shape.rotation}deg)`
+        }
         ab_props.style = `transform-origin: center center; ${transform}`;
+        ab_props.style = transform;
         const div_props = {
             width: frame.width,
             height: frame.height,
