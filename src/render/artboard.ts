@@ -42,7 +42,9 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
      *   </foreignObject>
      * </svg>
      */
-    if (shape.rotation) {
+    if (shape.isNoTransform()) {
+        return h('svg', ab_props, childs);
+    } else {
         const foreign_object_props = {
             x: frame.x,
             y: frame.y,
@@ -51,14 +53,26 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
             overflow: "visible",
         }
         ab_props.x = 0, ab_props.y = 0;
-        ab_props.style = `transform-origin: center center; transform: rotate(${shape.rotation}deg)`;
+
+        const cx = frame.x + frame.width / 2;
+        const cy = frame.y + frame.height / 2;
+
+        let transform = `transform:translate(${cx}px, ${cy}px)`;
+        if (shape.rotation) {
+            transform += ` rotate(${shape.rotation}deg)`
+        }
+        if (shape.isFlippedHorizontal) {
+            transform += ' rotateX(180deg)'
+        }
+        if (shape.isFlippedVertical) {
+            transform += ' rotateY(180deg)'
+        }
+        ab_props.style = `transform-origin: center center; ${transform}`;
         const div_props = {
             width: frame.width,
             height: frame.height,
             overflow: "visible",
         }
         return h('foreignObject', foreign_object_props, h('div', div_props, h('svg', ab_props, childs)));
-    } else {
-        return h('svg', ab_props, childs);
     }
 }
