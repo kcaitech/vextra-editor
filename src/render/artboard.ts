@@ -33,7 +33,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
      * <svg>
      *   <svg></svg>
      * </svg>
-     * 当一个<svg />里面嵌套一个<svg />(如上结构)时，会无法给里面的<svg />设置旋转属性，这里利用foreignObject隔离(如下结构)这种嵌套
+     * 当一个<svg />里面嵌套一个<svg />(如上结构)时，会无法给里面的<svg />设置旋转属性，这里利用foreignObject隔离这种嵌套(如下结构)
      * <svg>
      *   <foreignObject>
      *      <div>
