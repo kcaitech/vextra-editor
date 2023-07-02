@@ -7,7 +7,7 @@ interface Scout {
     isPointInShape: (shape: Shape, point: PageXY) => boolean
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
-// 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条闭合路径(d)上
+// 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
 function scout(): Scout {
     const scoutId = (uuid().split('-').at(-1)) || 'scout';
     const pathId = (uuid().split('-').at(-1)) || 'path';

@@ -19,6 +19,7 @@ import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
 import PageCommentItem from './Content/PageCommentItem.vue';
+import { debounce } from 'lodash';
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
@@ -112,7 +113,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
             }
         }
     }
-    search(e) // 滚动过程进行常规图形检索
+    search_once(e) // 滚动过程进行常规图形检索
     workspace.value.matrixTransformation();
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
@@ -186,7 +187,7 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
         }
     }
 }
-function workspaceWatcher(type?: number, name?: string) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
+function workspace_watcher(type?: number, name?: string) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (type === WorkSpace.CURSOR_CHANGE) {
         if (name !== undefined) {
             setClass(name);
@@ -261,6 +262,7 @@ function search(e: MouseEvent) { // 常规图形检索
     const shapes = props.context.selection.getShapesByXY_beta(xy, false, metaKey || ctrlKey); // xy: PageXY
     selectShapes(shapes);
 }
+const search_once = debounce(search, 50) // 连续操作结尾处调用
 function pageViewDragStart(e: MouseEvent) {
     state = STATE_CHECKMOVE;
     prePt.x = e.screenX;
@@ -595,7 +597,7 @@ renderinit()
     })
 onMounted(() => {
     initMatrix(props.page);
-    props.context.workspace.watch(workspaceWatcher);
+    props.context.workspace.watch(workspace_watcher);
     props.page.watch(watcher);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
@@ -607,7 +609,7 @@ onMounted(() => {
     props.context.workspace.init(t);
 })
 onUnmounted(() => {
-    props.context.workspace.unwatch(workspaceWatcher);
+    props.context.workspace.unwatch(workspace_watcher);
     props.page.unwatch(watcher);
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
