@@ -159,7 +159,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             position = cloneDeep(position);
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
-            shapes.push(...finder(this.scout, childs, position, force, this.selectedShapes[0], isCtrl));
+            shapes.push(...finder(this.scout, childs, position, this.selectedShapes[0], isCtrl));
         }
         return shapes;
     }
