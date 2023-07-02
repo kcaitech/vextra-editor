@@ -121,7 +121,16 @@ function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, sele
                 if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
                     if (c.length) {
                         result.push(...finder(scout, c, position, false, selected, isCtrl, result));
-                        if (!force && result.length) return result;
+                        if (!force) {
+                            if (result.length) {
+                                return result;
+                            } else {
+                                if (isCtrl) {
+                                    result.push(item);
+                                    return result;
+                                }
+                            }
+                        };
                     } else {
                         result.push(item);
                         if (!force && result.length) return result;
