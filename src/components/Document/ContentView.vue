@@ -729,8 +729,7 @@ const list2Tree = (list: any, rootValue: string) => {
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id);
     if (!info) {
-        const m = new Matrix();
-        m.reset(adapt_page(props.context));
+        const m = new Matrix(adapt_page(props.context));
         info = { m, x: cur.frame.x, y: cur.frame.y };
         matrixMap.set(cur.id, info);
     }
