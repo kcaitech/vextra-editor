@@ -311,19 +311,21 @@ function contextMenuMount(e: MouseEvent) {
         contextMenuItems = ['all', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'ruler', 'pixel', 'operation'];
         selection.resetSelectShapes();
     } else if (shapes.length === 1) {
-        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
-        selection.selectShape(shapes[0]);
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'component', 'instance', 'reset', 'edit'];
+        right_select(props.context, shapes);
+        if (shapes[0].type === ShapeType.Artboard) {
+            contextMenuItems.push('dissolution');
+        } else if (shapes[0].type === ShapeType.Group) {
+            contextMenuItems.push('un_group');
+        }
     } else if (shapes.length > 1) {
         right_select(props.context, shapes);
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
     }
-
     contextMenu.value = true;
-
     document.addEventListener('keydown', esc);
-
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;

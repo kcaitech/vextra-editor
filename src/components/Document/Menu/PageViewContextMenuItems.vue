@@ -3,11 +3,11 @@ import { reactive, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
-import { Shape } from "@kcdesign/data";
+import { Artboard, Shape, ShapeType } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { adapt_page } from '@/utils/content';
+import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
 const { t } = useI18n();
 interface Props {
@@ -137,7 +137,30 @@ function groups() {
 
 }
 function container() {
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
 
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const artboard = editor.create_artboard(selction.selectedShapes, getName(ShapeType.Artboard, page.childs, t));
+    if (artboard) {
+      selction.selectShape(artboard);
+    }
+  }
+  emit('close');
+}
+function dissolution_container() {
+  const selction = props.context.selection;
+  if (selction.selectedShapes[0].type !== ShapeType.Artboard) return;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shapes = editor.dissolution_artboard(selction.selectedShapes[0] as Artboard);
+    if (shapes) {
+      selction.rangeSelectShape(shapes);
+    }
+  }
+  emit('close');
 }
 function unGroup() {
 
@@ -271,6 +294,10 @@ function closeLayerSubMenu(e: MouseEvent) {
     </div>
     <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
       <span>{{ t('system.un_group') }}</span>
+      <span></span>
+    </div>
+    <div class="item" v-if="props.items.includes('dissolution')" @click="dissolution_container">
+      <span>{{ t('system.dissolution') }}</span>
       <span></span>
     </div>
     <!-- 组件操作 -->

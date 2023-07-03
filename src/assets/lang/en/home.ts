@@ -46,7 +46,8 @@ export const system = {
     'personal_center': 'Personal center',
     'login_out': 'Login out',
     'new_file': 'New file',
-    'page1': 'Page 1'
+    'page1': 'Page 1',
+    'dissolution': 'Dissolution'
 }
 
 export const home = {

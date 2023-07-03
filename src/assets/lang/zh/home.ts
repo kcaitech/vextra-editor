@@ -46,7 +46,8 @@ export const system = {
     'personal_center': '个人中心',
     'login_out': '退出登录',
     'new_file': '新文件',
-    'page1': '页面 1'
+    'page1': '页面 1',
+    'dissolution': '取消容器'
 }
 
 export const home = {

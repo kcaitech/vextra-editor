@@ -471,15 +471,18 @@ function page_scale(context: Context, scale: number) {
 function right_select(context: Context, pre_shapes: Shape[]) {
   const selection = context.selection;
   const selected = selection.selectedShapes;
-  for (let i = 0; i < pre_shapes.length; i++) {
-    const ps = pre_shapes[i];
-    for (let j = 0; j < selected.length; j++) {
-      const s = selected[j];
-      if (s.id === ps.id) {
-        return;
+  if (selected.length <= 1) {
+    if (selected.length === 0) {
+      selection.selectShape(pre_shapes[0]);
+    } else {
+      const fshape = selected[0];
+      for (let i = 0; i < pre_shapes.length; i++) {
+        const ps = pre_shapes[i];
+        if (fshape.id === ps.id) {
+          return;
+        }
       }
     }
   }
-  selection.selectShape(pre_shapes[0]);
 }
-export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale,right_select };
+export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale, right_select };
