@@ -20,8 +20,8 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
-const isLock = ref<boolean>()
-const isVisible = ref<boolean>()
+const isLock = ref<boolean>();
+const isVisible = ref<boolean>();
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
@@ -30,13 +30,15 @@ function showLayerSubMenu(e: MouseEvent) {
 }
 function copy() {
   props.context.workspace.clipboard.write_html();
+  emit('close');
 }
 function paste() {
   props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
   emit('close');
 }
 function selectAll() {
-
+  props.context.workspace.keydown_a(true, true);
+  emit('close');
 }
 function half() {
 
@@ -133,7 +135,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 常用功能 -->
     <div class="item" v-if="props.items.includes('all')" @click="selectAll">
       <span>{{ t('system.select_all') }}</span>
-      <span class="shortkey"></span>
+      <span class="shortkey">Ctrl + A</span>
     </div>
     <div class="item" v-if="props.items.includes('copy')" @click="copy">
       <span>{{ t('system.copy') }}</span>

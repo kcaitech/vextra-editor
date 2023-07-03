@@ -251,7 +251,7 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix.inverseCoord(mx - x, my - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, false, auto);
+    const shapes = props.context.selection.getShapesByXY_beta(xy, auto);
     selectShapes(shapes);
 }
 function search(e: MouseEvent) { // 常规图形检索
@@ -259,7 +259,7 @@ function search(e: MouseEvent) { // 常规图形检索
     const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, false, metaKey || ctrlKey); // xy: PageXY
+    const shapes = props.context.selection.getShapesByXY_beta(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(shapes);
 }
 const search_once = debounce(search, 50) // 连续操作结尾处调用
@@ -297,6 +297,7 @@ function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
     const selection = props.context.selection;
     workspace.menuMount(false);
+    selection.unHoverShape();
     site.x = e.clientX
     site.y = e.clientY
     const { x, y } = workspace.root;
@@ -305,21 +306,17 @@ function contextMenuMount(e: MouseEvent) {
     setMousedownXY(e); // 更新鼠标定位
     const shapes = selection.getShapesByXY(mousedownOnPageXY);
 
-    contextMenuItems = ['paste', 'copy'];
+    contextMenuItems = ['all', 'paste'];
     if (!shapes.length) {
-        contextMenuItems = ['all', 'copy', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'ruler', 'pixel', 'operation'];
+        contextMenuItems = ['all', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'ruler', 'pixel', 'operation'];
         selection.resetSelectShapes();
     } else if (shapes.length === 1) {
-        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
         selection.selectShape(shapes[shapes.length - 1]);
     } else if (shapes.length > 1) {
-        const isCommon = hasCommon(selection.selectedShapes, shapes);
-        if (!isCommon) {
-            selection.selectShape(shapes[shapes.length - 1]);
-        }
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
-        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
     }
 
     contextMenu.value = true;
@@ -339,17 +336,6 @@ function contextMenuMount(e: MouseEvent) {
             }
         }
     })
-
-    function hasCommon(arr1: any[], arr2: any[]) {
-        const arr = [];
-        for (let i = 0; i < arr1.length; i++) {
-            arr[i] = arr1[i].__uuid;
-        }
-        for (let i = 0; i < arr2.length; i++) {
-            if (arr.includes(arr2[i].__uuid)) return true;
-        }
-        return false;
-    }
 }
 function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') contextMenuUnmount();
