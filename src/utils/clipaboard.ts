@@ -22,20 +22,8 @@ export class Clipboard {
         const shapes = this.context.selection.selectedShapes;
         const content = this.clipboard_write_shapes(shapes);
         if (!content) return;
-        const inner_text = `<span>${identity}${JSON.stringify(content)}</span>`;
-        const temp_ele = document.createElement('meta');
-        temp_ele.setAttribute('charset', 'utf-8');
-
-        temp_ele.innerHTML = inner_text;
-
         if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
-            navigator.clipboard.write([
-                new ClipboardItem({
-                    'text/html': new Blob([temp_ele.innerHTML], { type: 'text/html' })
-                })
-            ])
-
-            const blob = new Blob([temp_ele.innerHTML], { type: 'text/html' });
+            const blob = new Blob([`${identity}${JSON.stringify(content)}` || ''], { type: 'text/html' });
             navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
         }
     }
@@ -83,15 +71,11 @@ function clipboard_text_html(context: Context, data: any) {
         const fr = new FileReader();
         fr.onload = function (event) {
             const text_html = event.target?.result;
-            console.log('text_html', text_html);
-
             if (text_html && typeof text_html === 'string') {
                 if (text_html.slice(0, 60).indexOf(identity) > -1) {
                     const source = JSON.parse(text_html.split(identity)[1]);
                     const shapes = import_shape(context.data, source);
                     const result: Shape[] = [];
-                    console.log('shapes', shapes);
-
                     if (shapes.length) {
                         for (let i = 0; i < shapes.length; i++) {
                             const shape = shapes[i];
