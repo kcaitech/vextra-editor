@@ -3,7 +3,7 @@ import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust,
 import { getHorizontalAngle } from "@/utils/common"
 
 export function is_mixed(shapes: Shape[]) {
-  const frame0 = shapes[0].frame2Page();
+  const frame0 = shapes[0].frame2Root();
   const frame = shapes[0].frame;
   const result: {
     x: number | string,
@@ -22,7 +22,7 @@ export function is_mixed(shapes: Shape[]) {
   }
   for (let i = 1; i < shapes.length; i++) {
     const shape = shapes[i];
-    const frame_i = shape.frame2Page();
+    const frame_i = shape.frame2Root();
     const frame = shape.frame;
     if (frame_i.x !== result.x) result.x = 'mixed';
     if (frame_i.y !== result.y) result.y = 'mixed';
@@ -46,7 +46,7 @@ export function get_actions_frame_x(shapes: Shape[], value: number) {
   const actions: PositonAdjust[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    const frame = shape.frame2Page();
+    const frame = shape.frame2Root();
     actions.push({ target: shape, transX: value - frame.x, transY: 0 });
   }
   return actions;
@@ -55,7 +55,7 @@ export function get_actions_frame_y(shapes: Shape[], value: number) {
   const actions: PositonAdjust[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    const frame = shape.frame2Page();
+    const frame = shape.frame2Root();
     actions.push({ target: shape, transX: 0, transY: value - frame.y });
   }
   return actions;

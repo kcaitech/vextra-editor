@@ -7,6 +7,7 @@ import { Shape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
+import { createHorizontalBox } from '@/utils/common';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -40,17 +41,83 @@ function selectAll() {
   props.context.workspace.keydown_a(true, true);
   emit('close');
 }
-function half() {
-
+function half(e: MouseEvent, scale: number) {
+  e.preventDefault();
+  page_scale(e, scale);
+  emit('close');
 }
-function hundred() {
-
+function hundred(e: MouseEvent, scale: number) {
+  e.preventDefault();
+  page_scale(e, scale);
+  emit('close');
 }
-function double() {
-
+function double(e: MouseEvent, scale: number) {
+  e.preventDefault();
+  page_scale(e, scale);
+  emit('close');
 }
+/**
+ * 页面缩放
+ * @param scale 缩放倍数 > 0
+ */
+function page_scale(e: MouseEvent, scale: number) {
+  const workspace = props.context.workspace;
+  const root = workspace.root;
+  const matrix = workspace.matrix;
+  const offsetX = e.x - root.x;
+  const offsetY = e.y - root.y;
+  matrix.trans(-offsetX, -offsetY);
+  matrix.scale(scale / matrix.m00);
+  matrix.trans(offsetX, offsetY);
+  workspace.matrixTransformation();
+}
+// 画布自适应 
 function canvas() {
+  const childs = props.context.selection.selectedPage?.childs || [];
+  const points: [number, number][] = [];
+  const matrix = props.context.workspace.matrix;
+  for (let i = 0; i < childs.length; i++) {
+    const item = childs[i];
+    const frame = item.frame;
+    const m = item.matrix2Page();
+    const _points: [number, number][] = [
+      [0, 0],
+      [frame.width, 0],
+      [frame.width, frame.height],
+      [0, frame.height]
+    ]
+    points.push(..._points.map(p => {
+      const r = m.computeCoord(p[0], p[1]);
+      const _r = matrix.computeCoord(r.x, r.y);
+      return [_r.x, _r.y] as [number, number];
+    }))
+  }
+  const box = createHorizontalBox(points);
+  console.log('-box-', box);
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  const root = props.context.workspace.root;
+  const scale = matrix.m00;
+  const w_max = root.width;
+  const h_max = root.height;
 
+  const ratio_h = width / w_max;
+  const ratio_w = height / h_max;
+
+  const ratio = Math.max(ratio_h, ratio_w);
+  console.log('ratio', ratio);
+
+  if (ratio > 1) {
+    console.log('ganma');
+
+    matrix.scale(1 / (scale * (1 / scale) * ratio));
+  }
+  const root_center = { x: root.x + root.width / 2, y: root.y + root.height / 2 };
+  const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+  const del = { x: root_center.x - p_center.x, y: root_center.y - p_center.y };
+  console.log('del', del);
+  matrix.trans(del.x, del.y);
+  props.context.workspace.matrixTransformation();
 }
 function cursor() {
 
@@ -148,9 +215,16 @@ function closeLayerSubMenu(e: MouseEvent) {
 
     <!-- 视图比例 -->
     <div class="line" v-if="props.items.includes('half')"></div>
-    <div class="item" v-if="props.items.includes('half')" @click="half"><span>50%</span></div>
-    <div class="item" v-if="props.items.includes('hundred')" @click="hundred"><span>100%</span></div>
-    <div class="item" v-if="props.items.includes('double')" @click="double"><span>200%</span></div>
+    <div class="item" v-if="props.items.includes('half')" @click="(e: MouseEvent) => half(e, 0.5)">
+      <span>50%</span>
+    </div>
+    <div class="item" v-if="props.items.includes('hundred')" @click="(e: MouseEvent) => hundred(e, 1)">
+      <span>100%</span>
+      <span class="shortkey">Ctrl + 0</span>
+    </div>
+    <div class="item" v-if="props.items.includes('double')" @click="(e: MouseEvent) => double(e, 2)">
+      <span>200%</span>
+    </div>
     <div class="item" v-if="props.items.includes('canvas')" @click="canvas">
       <span>{{ t('system.fit_canvas') }}</span>
     </div>

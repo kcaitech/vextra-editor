@@ -510,7 +510,7 @@ export class WorkSpace extends Watchable(Object) {
         if (ctrl || meta) {
             const { center } = this.root;
             this.m_matrix.trans(-center.x, -center.y);
-            const _s = 1 / this.m_matrix.toArray()[0];
+            const _s = 1 / this.m_matrix.m00;
             this.m_matrix.scale(_s);
             this.m_matrix.trans(center.x, center.y);
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);

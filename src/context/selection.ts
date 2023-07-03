@@ -282,7 +282,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         const shape = this.m_selectShapes[0] as TextShape;
         // translate x,y
-        const matrix = shape.matrix2Page();
+        const matrix = shape.matrix2Root();
         const xy = matrix.inverseCoord(x, y);
         x = xy.x;
         y = xy.y;
