@@ -16,7 +16,6 @@ const { t } = useI18n();
 const props = defineProps<{
     context: Context,
     pageId: string,
-    spacePressed: boolean,
     root: HTMLDivElement | undefined,
     cursorClass: string,
     page: Page
@@ -295,7 +294,7 @@ const saveShapeCommentXY = () => {
     const shapes = workspace.value.commentShape
     const sleectShapes = flattenShapes(shapes)
     sleectShapes.forEach((item: any) => {
-        documentCommentList.value.filter((comment, i) => {
+        documentCommentList.value.forEach((comment, i) => {
             if (comment.target_shape_id === item.id) {
                 editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
             }

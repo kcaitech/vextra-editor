@@ -497,7 +497,7 @@ const saveShapeCommentXY = () => {
     const sleectShapes = flattenShapes(shapes)
     const commentList = props.context.workspace.pageCommentList
     sleectShapes.forEach((item: any) => {
-        commentList.filter((comment, i) => {
+        commentList.forEach((comment, i) => {
             if (comment.target_shape_id === item.id) {
                 editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
             }
@@ -809,8 +809,7 @@ onUnmounted(() => {
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
             @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"
             :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursorClass"
-            :spacePressed="spacePressed"></CommentView>
+        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursorClass"></CommentView>
     </div>
 </template>
 <style scoped lang="scss">
