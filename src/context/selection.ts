@@ -139,7 +139,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         if (this.scout) {
             const page = this.m_selectPage;
             if (page && page.childs.length) {
-                result.push(...finder_layers(this.scout, page.childs, position, []));
+                result.push(...finder_layers(this.scout, page.childs, position));
             }
         }
         return result;
