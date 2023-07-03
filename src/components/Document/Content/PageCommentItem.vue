@@ -22,7 +22,7 @@ const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
     (e: 'recover'): void
     (e: 'editComment', index: number, text: string): void
-    (e: 'updateShapeComment', x: number, y: number, index: number): void
+    (e: 'updateShapeComment', index: number): void
 }>()
 const commentPopupEl = ref<CommentViewEl>()
 const workspace = computed(() => props.context.workspace);
@@ -327,11 +327,11 @@ const selectedUpdate = (t: number) => {
 const watchedShapes = new Map();
 const watchCommentShape = new Map();
 function watchShapes() { // 监听评论相关shape的变化
-    const comment = props.commentInfo
-    if (comment.page_id == comment.target_shape_id) return
+    const comment = workspace.value.pageCommentList[props.index]
+    const cid = comment.page_id === comment.target_shape_id ? comment.page_id : comment.target_shape_id
     const needWatchShapes = new Map();
     let shapes = props.context.selection.selectedPage!.shapes;
-    const shape = shapes.get(comment.target_shape_id);
+    const shape = shapes.get(cid);
     if (shape) {
         let p = shape.parent;
         while (p && p.type !== ShapeType.Page) {
@@ -357,41 +357,20 @@ function watchShapes() { // 监听评论相关shape的变化
 const update = (shape?: Shape) => {
     watcher()
     if(!shape) return
-    const { x, y } = shape.frame2Page();
-    const farmeX = x + props.commentInfo.shape_frame.x2
-    const farmeY = y + props.commentInfo.shape_frame.y2
-    emit('updateShapeComment', farmeX, farmeY, props.index)
+    emit('updateShapeComment', props.index)
     workspace.value.editShapeComment(true, [shape])
 }
 
 function watcher() {
     watchShapes()
-    if (props.commentInfo.page_id !== props.commentInfo.target_shape_id) {
-        setCommentPosition()
-    }
 }
 
-const setCommentPosition = () => {
-    const shapes = props.context.selection.selectedPage!.shapes;
-    const comment = props.commentInfo
-    if (comment.page_id == comment.target_shape_id) return
-    if (!workspace.value.transforming) return
-    const shape = shapes.get(comment.target_shape_id);
-    if (shape) {
-        workspace.value.editShapeComment(true, props.context.selection.selectedShapes)
-        const { x, y } = shape.frame2Page();
-        const farmeX = x + props.commentInfo.shape_frame.x2
-        const farmeY = y + props.commentInfo.shape_frame.y2
-        emit('updateShapeComment', farmeX, farmeY, props.index)
-    }
-}
 
 defineExpose({
     showComment
 })
 
 onMounted(() => {
-    setCommentPosition()
     props.context.workspace.watch(workspaceUpdate);
     props.context.selection.watch(selectedUpdate);
 })

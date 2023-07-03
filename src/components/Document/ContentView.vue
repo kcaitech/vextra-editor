@@ -22,6 +22,7 @@ import CommentView from './Content/CommentView.vue';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
 import { useRoute } from 'vue-router';
+import { pa } from 'element-plus/es/locale';
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
@@ -577,15 +578,18 @@ const detectionShape = (e: MouseEvent) => {
     const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const shapes = searchCommentShape(props.context, xy);
     if (shapes.length === 0) { //点击的位置是否有图形
-        shapePosition.x = 0;
-        shapePosition.y = 0;
+        const page = props.page.frame
+        const fp = props.page.frame2Page();
+        const farmeXY = { x: fp.x, y: fp.y }
+        shapePosition.x = xy.x - farmeXY.x
+        shapePosition.y = xy.y - farmeXY.y
         shapeID.value = props.page.id
     } else {
         const shape = shapes[0]
         const fp = shape.frame2Page();
         const farmeXY = { x: fp.x, y: fp.y }
-        shapePosition.x = xy.x - farmeXY.x; //评论输入框相对于shape的距离
-        shapePosition.y = xy.y - farmeXY.y;
+        shapePosition.x = xy.x - farmeXY.x //评论输入框相对于shape的距离
+        shapePosition.y = xy.y - farmeXY.y
         shapeID.value = shape.id
     }
     return { x, y, xy }
@@ -807,7 +811,7 @@ onUnmounted(() => {
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
             @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"
             :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <CommentView :context="props.context" :pageId="page.id" :root="root" :cursorClass="cursorClass"
+        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursorClass"
             :spacePressed="spacePressed"></CommentView>
     </div>
 </template>

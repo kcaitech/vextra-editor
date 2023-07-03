@@ -8,7 +8,7 @@ import { useRoute } from 'vue-router';
 import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
-import { Shape, ShapeType } from "@kcdesign/data";
+import { Page, Shape, ShapeType } from "@kcdesign/data";
 
 type CommentView = InstanceType<typeof PageCommentItem>;
 
@@ -19,6 +19,7 @@ const props = defineProps<{
     spacePressed: boolean,
     root: HTMLDivElement | undefined,
     cursorClass: string,
+    page: Page
 }>();
 const commentItem = ref<CommentView>();
 const commentInput = ref(false);
@@ -97,14 +98,17 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
             shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
             workspace.value.commentMove(false)
             if (shapes.length === 0) {
+                const page = props.page.frame
+                const fp = props.page.frame2Page();
+                const farmeXY = { x: fp.x, y: fp.y }
                 const data = {
                     id: editCommentId.value,
                     target_shape_id: props.pageId,
                     shape_frame: {
                         x1: shape_frame.x1,
                         y1: shape_frame.y1,
-                        x2: 0,
-                        y2: 0
+                        x2: shape_frame.x1 - farmeXY.x,
+                        y2: shape_frame.y1 - farmeXY.y
                     }
                 }
                 editMoveCommentPosition(data)
@@ -151,12 +155,17 @@ const moveCommentPopup = (e: MouseEvent, index: number) => {
     setMousedownXY(e);
 };
 
-const updateShapeComment = (x: number, y: number, index: number) => {
+const updateShapeComment = (index: number) => {
     // if (documentCommentList.value[index].user.id !== userId) return
+    const shapes = props.context.selection.selectedPage!.shapes;
     const shape_frame = documentCommentList.value[index].shape_frame
-    shape_frame.x1 = x
-    shape_frame.y1 = y    
-    commentReflush.value++
+    const shape = shapes.get(documentCommentList.value[index].target_shape_id);
+    if(shape) {
+        const { x, y } = shape.frame2Page()
+        shape_frame.x1 = shape_frame.x2 + x
+        shape_frame.y1 = shape_frame.y2 + y    
+        commentReflush.value++
+    }
 }
 
 const editShapeComment = (index: number, x: number, y: number) => {
@@ -337,55 +346,6 @@ function workspaceWatcher(type?: number) { // 更新编辑器状态，包括光�
     }
 }
 
-// const watchedShapes = new Map();
-// const watchCommentShape = new Map();
-// function watchShapes() { // 监听评论相关shape的变化
-//     const needWatchShapes = new Map();
-//     let shapes = props.context.selection.selectedPage!.shapes;
-//     for (let i = 0; i < documentCommentList.value.length; i++) {
-//         const _com = documentCommentList.value[i];
-//         const shape = shapes.get(_com.target_shape_id);
-//         if (shape) {
-//             let p = shape.parent;
-//             while (p && p.type !== ShapeType.Page) {
-//                 needWatchShapes.set(p.id, p);
-//                 p = p.parent;
-//             }
-//             needWatchShapes.set(_com.target_shape_id, shape);
-//         }
-//     }
-//     watchedShapes.forEach((v, k) => {
-//         if (needWatchShapes.has(k)) return;
-//         v.unwatch(watchCommentShape.get(k));
-//         watchedShapes.delete(k);
-//     });
-//     needWatchShapes.forEach((v, k) => {
-//         if (watchedShapes.has(k)) return;
-//         const _ck = () => update(v)
-//         v.watch(_ck);
-//         watchCommentShape.set(k, _ck);
-//         watchedShapes.set(k, v);
-//     });
-// }
-
-// const update = (shape: Shape) => {
-//     const { x, y } = shape.frame2Page();
-//     for (let i = 0; i < documentCommentList.value.length; i++) {
-//         const _com = documentCommentList.value[i];
-//         if(shape.id === _com.target_shape_id) {
-//             const shape_frame = _com.shape_frame
-//             const farmeX = x + shape_frame.x2
-//             const farmeY = y + shape_frame.y2
-//             shape_frame.x1 = farmeX
-//             shape_frame.y1 = farmeY
-//             commentReflush.value++
-//         }
-//     }
-// }
-// function watcher() {
-//     watchShapes()
-// }
-// watchEffect(watcher)
 onMounted(() => {
     getDocumentComment()
     props.context.workspace.watch(workspaceWatcher);
