@@ -41,16 +41,17 @@ function select() {
 function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
     let ids = 0;
     while (ids < childs.length) {
-        if (selectedShapes.find(i => i.id === childs[ids].id)) {
+        const shape = childs[ids];
+        if (selectedShapes.find(i => i.id === shape.id)) {
             ids++;
             continue;
         }
-        if (childs[ids].isLocked || !childs[ids].isVisible) {
+        if (shape.isLocked || !shape.isVisible) {
             ids++;
             continue;
         }
         const m = childs[ids].matrix2Root();
-        const { width: w, height: h } = childs[ids].frame;
+        const { width: w, height: h } = shape.frame;
         const ps: XY[] = [
             { x: 0, y: 0 },
             { x: w, y: 0 },
@@ -59,7 +60,7 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             { x: 0, y: 0 },
         ].map(p => m.computeCoord(p.x, p.y));
         if (isTarget(Points, ps)) {
-            selectedShapes.push(childs[ids]);
+            selectedShapes.push(shape);
         }
         ids++;
     }

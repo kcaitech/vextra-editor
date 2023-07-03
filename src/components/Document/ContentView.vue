@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop } from '@/utils/content';
+import { updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
@@ -268,7 +268,7 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix.inverseCoord(mx - x, my - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, false, auto);
+    const shapes = props.context.selection.getShapesByXY(xy, auto);
     selectShapes(shapes);
 }
 function search(e: MouseEvent) { // 常规图形检索
@@ -276,7 +276,7 @@ function search(e: MouseEvent) { // 常规图形检索
     const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, false, metaKey || ctrlKey); // xy: PageXY
+    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(shapes);
 }
 const search_once = debounce(search, 50) // 连续操作结尾处调用
@@ -314,35 +314,35 @@ function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
     const selection = props.context.selection;
     workspace.menuMount(false);
+    selection.unHoverShape();
     site.x = e.clientX
     site.y = e.clientY
     const { x, y } = workspace.root;
     contextMenuPosition.x = e.clientX - x;
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
-    const shapes = selection.getShapesByXY(mousedownOnPageXY);
+    const shapes = selection.getLayers(mousedownOnPageXY);
 
-    contextMenuItems = ['paste', 'copy'];
+    contextMenuItems = ['all', 'paste'];
     if (!shapes.length) {
-        contextMenuItems = ['all', 'copy', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'ruler', 'pixel', 'operation'];
+        contextMenuItems = ['all', 'paste', 'half', 'hundred', 'double', 'canvas', 'cursor', 'comment', 'ruler', 'pixel', 'operation'];
         selection.resetSelectShapes();
     } else if (shapes.length === 1) {
-        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
-        selection.selectShape(shapes[shapes.length - 1]);
-    } else if (shapes.length > 1) {
-        const isCommon = hasCommon(selection.selectedShapes, shapes);
-        if (!isCommon) {
-            selection.selectShape(shapes[shapes.length - 1]);
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'component', 'instance', 'reset', 'edit'];
+        right_select(props.context, shapes);
+        if (shapes[0].type === ShapeType.Artboard) {
+            contextMenuItems.push('dissolution');
+        } else if (shapes[0].type === ShapeType.Group) {
+            contextMenuItems.push('un_group');
         }
+    } else if (shapes.length > 1) {
+        right_select(props.context, shapes);
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
-        contextMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
     }
-
     contextMenu.value = true;
-
     document.addEventListener('keydown', esc);
-
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
@@ -356,17 +356,6 @@ function contextMenuMount(e: MouseEvent) {
             }
         }
     })
-
-    function hasCommon(arr1: any[], arr2: any[]) {
-        const arr = [];
-        for (let i = 0; i < arr1.length; i++) {
-            arr[i] = arr1[i].__uuid;
-        }
-        for (let i = 0; i < arr2.length; i++) {
-            if (arr.includes(arr2[i].__uuid)) return true;
-        }
-        return false;
-    }
 }
 function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') contextMenuUnmount();
@@ -453,14 +442,14 @@ function onMouseMove(e: MouseEvent) {
 }
 // mousemove(target：contentview) 
 function onMouseMove_CV(e: MouseEvent) {
-    if (workspace.value.controller == 'page') {
+    if (workspace.value.controller === 'page') {
         if (!spacePressed.value) {
-            if (e.buttons == 1) {
-                if (workspace.value.action == Action.AutoV && isMouseLeftPress) {
+            if (e.buttons === 1) {
+                if (workspace.value.action === Action.AutoV && isMouseLeftPress) {
                     select(e); // 选区
                 }
-            } else if (e.buttons == 0) {
-                if (workspace.value.action == Action.AutoV) {
+            } else if (e.buttons === 0) {
+                if (workspace.value.action === Action.AutoV) {
                     search(e); // 图形检索(hover)
                 }
             }
@@ -773,11 +762,11 @@ onMounted(() => {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     window.addEventListener('blur', windowBlur);
-    stylerForCursorMount();
-    rootRegister(true);
-    props.context.selection.scoutMount();
-    props.context.workspace.setFreezeStatus(true);
-    props.context.workspace.init(t);
+    stylerForCursorMount(); // 安装鼠标光标处理器
+    rootRegister(true); // 在workspace注册contentview dom节点
+    props.context.selection.scoutMount(props.context); // 安装图形检索器
+    props.context.workspace.setFreezeStatus(true); // 开始加载静态资源
+    props.context.workspace.init(t); // 在workspace存储多语言
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
@@ -785,11 +774,11 @@ onUnmounted(() => {
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('blur', windowBlur);
-    styler.value.remove();
-    rootRegister(false);
+    styler.value.remove(); // 卸载鼠标光标处理器
+    rootRegister(false); // 在workspace注销contentview dom节点
     stopWatch();
-    props.context.selection.scout?.remove();
-    resizeObserver.disconnect();
+    props.context.selection.scout?.remove(); // 卸载图形检索器
+    resizeObserver.disconnect(); // 停止监听contentview dom节点的frame变化
 })
 </script>
 <template>

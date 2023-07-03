@@ -3,10 +3,12 @@ import { reactive, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
-import { Shape } from "@kcdesign/data";
+import { Artboard, Shape, ShapeType } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
+import { adapt_page, getName } from '@/utils/content';
+import { message } from '@/utils/message';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -31,25 +33,50 @@ function showLayerSubMenu(e: MouseEvent) {
 }
 function copy() {
   props.context.workspace.clipboard.write_html();
+  emit('close');
 }
 function paste() {
   props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
   emit('close');
 }
 function selectAll() {
-
+  props.context.workspace.keydown_a(true, true);
+  emit('close');
 }
-function half() {
-
+function half(e: MouseEvent, scale: number) {
+  e.preventDefault();
+  page_scale(e, scale);
+  emit('close');
 }
-function hundred() {
-
+function hundred(e: MouseEvent, scale: number) {
+  e.preventDefault();
+  page_scale(e, scale);
+  emit('close');
 }
-function double() {
-
+function double(e: MouseEvent, scale: number) {
+  e.preventDefault();
+  page_scale(e, scale);
+  emit('close');
 }
+/**
+ * 页面缩放
+ * @param scale 缩放倍数 > 0
+ */
+function page_scale(e: MouseEvent, scale: number) {
+  const workspace = props.context.workspace;
+  const root = workspace.root;
+  const matrix = workspace.matrix;
+  const offsetX = e.x - root.x;
+  const offsetY = e.y - root.y;
+  matrix.trans(-offsetX, -offsetY);
+  matrix.scale(scale / matrix.m00);
+  matrix.trans(offsetX, offsetY);
+  workspace.matrixTransformation();
+}
+// 画布自适应 
 function canvas() {
-
+  adapt_page(props.context);
+  emit('close');
 }
 function cursor() {
 
@@ -68,23 +95,75 @@ function pixel() {
 function operation() {
 
 }
+// 上移一层
 function forward() {
-
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const result = editor.uppper_layer(selction.selectedShapes[0], 1);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_upper'));
+    }
+  }
 }
 function back() {
-
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const result = editor.lower_layer(selction.selectedShapes[0], 1);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_lower'));
+    }
+  }
 }
 function top() {
-
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    editor.uppper_layer(selction.selectedShapes[0]);
+  }
+  emit('close');
 }
 function bottom() {
-
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    editor.lower_layer(selction.selectedShapes[0]);
+  }
+  emit('close');
 }
 function groups() {
 
 }
 function container() {
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
 
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const artboard = editor.create_artboard(selction.selectedShapes, getName(ShapeType.Artboard, page.childs, t));
+    if (artboard) {
+      selction.selectShape(artboard);
+    }
+  }
+  emit('close');
+}
+function dissolution_container() {
+  const selction = props.context.selection;
+  if (selction.selectedShapes[0].type !== ShapeType.Artboard) return;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shapes = editor.dissolution_artboard(selction.selectedShapes[0] as Artboard);
+    if (shapes) {
+      selction.rangeSelectShape(shapes);
+    }
+  }
+  emit('close');
 }
 function unGroup() {
 
@@ -136,7 +215,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 常用功能 -->
     <div class="item" v-if="props.items.includes('all')" @click="selectAll">
       <span>{{ t('system.select_all') }}</span>
-      <span class="shortkey"></span>
+      <span class="shortkey">Ctrl + A</span>
     </div>
     <div class="item" v-if="props.items.includes('copy')" @click="copy">
       <span>{{ t('system.copy') }}</span>
@@ -149,11 +228,19 @@ function closeLayerSubMenu(e: MouseEvent) {
 
     <!-- 视图比例 -->
     <div class="line" v-if="props.items.includes('half')"></div>
-    <div class="item" v-if="props.items.includes('half')" @click="half"><span>50%</span></div>
-    <div class="item" v-if="props.items.includes('hundred')" @click="hundred"><span>100%</span></div>
-    <div class="item" v-if="props.items.includes('double')" @click="double"><span>200%</span></div>
+    <div class="item" v-if="props.items.includes('half')" @click="(e: MouseEvent) => half(e, 0.5)">
+      <span>50%</span>
+    </div>
+    <div class="item" v-if="props.items.includes('hundred')" @click="(e: MouseEvent) => hundred(e, 1)">
+      <span>100%</span>
+      <span class="shortkey">Ctrl + 0</span>
+    </div>
+    <div class="item" v-if="props.items.includes('double')" @click="(e: MouseEvent) => double(e, 2)">
+      <span>200%</span>
+    </div>
     <div class="item" v-if="props.items.includes('canvas')" @click="canvas">
       <span>{{ t('system.fit_canvas') }}</span>
+      <span class="shortkey">Ctrl + 1</span>
     </div>
     <!-- 协作 -->
     <div class="line" v-if="props.items.includes('cursor')"></div>
@@ -210,6 +297,10 @@ function closeLayerSubMenu(e: MouseEvent) {
     </div>
     <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
       <span>{{ t('system.un_group') }}</span>
+      <span></span>
+    </div>
+    <div class="item" v-if="props.items.includes('dissolution')" @click="dissolution_container">
+      <span>{{ t('system.dissolution') }}</span>
       <span></span>
     </div>
     <!-- 组件操作 -->

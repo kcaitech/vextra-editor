@@ -1,5 +1,6 @@
-import { Shape } from "@kcdesign/data";
+import { Shape, ShapeType } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
+import { getHorizontalAngle } from "@/utils/common"
 
 export function is_mixed(shapes: Shape[]) {
   const frame0 = shapes[0].frame2Root();
@@ -110,4 +111,17 @@ export function get_actions_flip_h(shapes: Shape[]) {
     actions.push({ target: shape, direction: 'horizontal' });
   }
   return actions;
+}
+
+export function get_rotation(shape: Shape) {
+  let rotation: number = Number(shape.rotation?.toFixed(2)) || 0;
+  if (shape.type === ShapeType.Line) {
+    if (shape.getPath(true).length === 3) {
+      const m = shape.matrix2Page();
+      const lt = m.computeCoord(0, 0);
+      const rb = m.computeCoord(shape.frame.width, shape.frame.height);
+      rotation = Number(getHorizontalAngle(lt, rb).toFixed(2));
+    }
+  }
+  return rotation;
 }

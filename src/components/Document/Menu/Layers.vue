@@ -25,7 +25,7 @@ function mouseout() {
 <template>
   <div class="items-wrap">
     <div class="item" v-for="shape in props.layers" :key="shape.id" @click="select(shape)"
-      @mouseenter="() => mouseenter(shape)" @mouseleave="() => mouseout">
+      @mouseenter="() => mouseenter(shape)" @mouseleave="mouseout">
       <div>
         <div class="check" v-if="selectedShapes.find(i => i.id === shape.id)"></div>
       </div>

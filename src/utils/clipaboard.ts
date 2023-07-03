@@ -1,10 +1,9 @@
-import { export_shape, import_shape, Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape } from '@kcdesign/data';
+import { export_shape, import_shape, Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
 import { Media, Action } from '@/context/workspace';
 import { getName } from '@/utils/content';
 import { message } from './message';
-
 interface SystemClipboardItem {
     type: ShapeType
     contentType: string
@@ -22,8 +21,9 @@ export class Clipboard {
     write_html() {
         const shapes = this.context.selection.selectedShapes;
         const content = this.clipboard_write_shapes(shapes);
+        if (!content) return;
         if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
-            const blob = new Blob([identity + JSON.stringify(content)], { type: 'text/html' });
+            const blob = new Blob([`${identity}${JSON.stringify(content)}` || ''], { type: 'text/html' });
             navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
         }
     }
@@ -55,6 +55,7 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
                     context.workspace.setFreezeStatus(false);
                 })
                 .catch((e) => {
+                    console.log('e', e);
                     message('info', t('clipboard.invalid_data'));
                     context.workspace.setFreezeStatus(false);
                 })
@@ -78,6 +79,9 @@ function clipboard_text_html(context: Context, data: any) {
                     if (shapes.length) {
                         for (let i = 0; i < shapes.length; i++) {
                             const shape = shapes[i];
+                            if (shape.type === ShapeType.Text) {
+                                parse_text(shape as TextShape);
+                            }
                             const page = context.selection.selectedPage;
                             if (page) {
                                 const editor = context.editor.editor4Page(page);
@@ -230,4 +234,16 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
         context.selection.rangeSelectShape(result);
     }
     return result;
+}
+function parse_text(shape: TextShape) {
+    const paras = shape.text.paras;
+    const textarea = document.createElement('textarea');
+    document.body.appendChild(textarea);
+    for (let i = 0; i < paras.length; i++) {
+        const para = paras[i];
+        textarea.innerText = para.text;
+        const n_v = textarea.value;
+        para.text = n_v;
+    }
+    document.body.removeChild(textarea);
 }

@@ -3,6 +3,8 @@ import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape } from "@kcdesign/data";
 import { Action, Media, ResultByAction } from '@/context/workspace';
+import { createHorizontalBox } from '@/utils/common';
+
 interface SystemClipboardItem {
   type: ShapeType
   contentType: string
@@ -143,28 +145,28 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
 }
 // 插入文本框
 function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: Function, content: string, land?: Shape, _t?: ShapeType) {
-    const selection = context.selection;
-    const workspace = context.workspace;
-    const type = _t || ResultByAction(workspace.action);
-    const page = selection.selectedPage;
-    const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
-    let asyncCreator: AsyncCreator | undefined;
-    let new_shape: Shape | undefined;
-    const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-    if (page && parent && type) {
-      const editor = context.editor.controller();
-      const name = getName(type, parent.childs, t);
-      asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-      new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
-    }
-    if (asyncCreator && new_shape) {
-      asyncCreator = asyncCreator.close();
-      selection.selectShape(page!.getShape(new_shape.id));
-      selection.selectText(0, (new_shape as TextShape).text.length)
-    }
-    workspace.setAction(Action.AutoV);
-    workspace.creating(false);
+  const selection = context.selection;
+  const workspace = context.workspace;
+  const type = _t || ResultByAction(workspace.action);
+  const page = selection.selectedPage;
+  const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+  let asyncCreator: AsyncCreator | undefined;
+  let new_shape: Shape | undefined;
+  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+  if (page && parent && type) {
+    const editor = context.editor.controller();
+    const name = getName(type, parent.childs, t);
+    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+    new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
   }
+  if (asyncCreator && new_shape) {
+    asyncCreator = asyncCreator.close();
+    selection.selectShape(page!.getShape(new_shape.id));
+    selection.selectText(0, (new_shape as TextShape).text.length)
+  }
+  workspace.setAction(Action.AutoV);
+  workspace.creating(false);
+}
 // 图片从init到inset一气呵成
 function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
@@ -393,4 +395,94 @@ function drop(e: DragEvent, context: Context, t: Function) {
     img.src = URL.createObjectURL(file);
   }
 }
-export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop };
+/**
+ * 使page全部内容都在可视区，并居中
+ * @param context 
+ */
+function adapt_page(context: Context) {
+  const childs = context.selection.selectedPage?.childs || [];
+  const points: [number, number][] = [];
+  const matrix = context.workspace.matrix;
+  for (let i = 0; i < childs.length; i++) {
+    const item = childs[i];
+    const frame = item.frame;
+    const m = item.matrix2Root();
+    const _points: [number, number][] = [
+      [0, 0],
+      [frame.width, 0],
+      [frame.width, frame.height],
+      [0, frame.height]
+    ]
+    points.push(..._points.map(p => {
+      const r = m.computeCoord(p[0], p[1]);
+      const _r = matrix.computeCoord(r.x, r.y);
+      return [_r.x, _r.y] as [number, number];
+    }))
+  }
+  const box = createHorizontalBox(points);
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  const root = context.workspace.root;
+  const w_max = root.width;
+  const h_max = root.height;
+
+  const ratio_h = width / w_max;
+  const ratio_w = height / h_max;
+
+  const ratio = Math.max(ratio_h, ratio_w);
+
+  if (ratio > 1) {
+    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+    matrix.trans(del.x, del.y);
+    matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
+    if (matrix.m00 * 1 / ratio > 0.02) { // 不能小于2%
+      matrix.scale(1 / ratio);
+    } else {
+      matrix.scale(0.02 / matrix.m00);
+    }
+    matrix.trans(root.width / 2, root.height / 2);
+    context.workspace.matrixTransformation();
+  } else {
+    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+    if (del.x || del.y) {
+      matrix.trans(del.x, del.y);
+      context.workspace.matrixTransformation();
+    }
+  }
+}
+function page_scale(context: Context, scale: number) {
+  const workspace = context.workspace;
+  const root = workspace.root;
+  const matrix = workspace.matrix;
+  const offsetX = root.center.x - root.x;
+  const offsetY = root.center.y - root.y;
+  matrix.trans(-offsetX, -offsetY);
+  matrix.scale(scale / matrix.m00);
+  matrix.trans(offsetX, offsetY);
+  workspace.matrixTransformation();
+}
+/**
+ * 右键选择图形的规则
+ * @param context 
+ * @param pre_shapes 预选图形
+ */
+function right_select(context: Context, pre_shapes: Shape[]) {
+  const selection = context.selection;
+  const selected = selection.selectedShapes;
+  if (selected.length <= 1) {
+    if (selected.length === 0) {
+      selection.selectShape(pre_shapes[0]);
+    } else {
+      const fshape = selected[0];
+      for (let i = 0; i < pre_shapes.length; i++) {
+        const ps = pre_shapes[i];
+        if (fshape.id === ps.id) {
+          return;
+        }
+      }
+    }
+  }
+}
+export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale, right_select };

@@ -46,8 +46,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <div ref="menu" class="__context-menu Menu"
-    :style="{ top: `${props.y}px`, left: `${props.width && surplusX < 216 + props.width ? -props.width : props.x}px`, width: `${props.width || 216}px` }">
+  <div ref="menu" class="__context-menu Menu" @mousemove.stop
+    :style="{ top: `${props.y}px`, left: `${props.width && surplusX < 198 + props.width ? -props.width : props.x}px`, width: `${props.width || 198}px` }">
     <div class="header"></div>
     <slot></slot>
     <div class="bottom"></div>
@@ -63,6 +63,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   border-radius: 2px;
+  box-shadow: 4px 4px 10px rgba($color: #000000, $alpha: 0.2);
 
   >.header {
     width: 100%;

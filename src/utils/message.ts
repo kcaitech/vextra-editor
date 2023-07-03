@@ -14,7 +14,7 @@ const C = {
     info: {
         backgroundColor: '#F4F4F5',
         color: '#909399',
-        border: '#EAEAEC',
+        border: '#AAAAAA',
     },
     danger: {
         backgroundColor: '#FEF0F0',
@@ -23,7 +23,7 @@ const C = {
     }
 }
 export const message = (type: MessageType, context: string) => {
-    const top = 100;
+    const top = 240;
     const duration: number = 2.5;
     const fadeDur: number = 0.5;
     const style = toStyle({

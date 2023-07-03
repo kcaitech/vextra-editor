@@ -223,7 +223,7 @@ export function useController(context: Context) {
         const selected = context.selection.selectedShapes;
         if (selected.length > 1) {
             if (!e.shiftKey) {
-                const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, e.metaKey || e.ctrlKey, selected).reverse()[0];
+                const target: Shape | undefined = context.selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).reverse()[0];
                 context.selection.selectShape(target);
             }
         } else if (selected.length === 1) {
@@ -231,7 +231,7 @@ export function useController(context: Context) {
                 const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage, selected[0], e.metaKey || e.ctrlKey);
                 if (!isHasTarget) context.selection.resetSelectShapes();
             } else {
-                const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, e.metaKey || e.ctrlKey, selected)[0];
+                const target: Shape | undefined = context.selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected)[0];
                 if (!target) {
                     context.selection.resetSelectShapes();
                 }
