@@ -452,4 +452,15 @@ function adapt_page(context: Context) {
     }
   }
 }
-export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page };
+function page_scale(context: Context, scale: number) {
+  const workspace = context.workspace;
+  const root = workspace.root;
+  const matrix = workspace.matrix;
+  const offsetX = root.center.x - root.x;
+  const offsetY = root.center.y - root.y;
+  matrix.trans(-offsetX, -offsetY);
+  matrix.scale(scale / matrix.m00);
+  matrix.trans(offsetX, offsetY);
+  workspace.matrixTransformation();
+}
+export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale };
