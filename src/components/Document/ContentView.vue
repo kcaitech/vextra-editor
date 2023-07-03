@@ -578,11 +578,8 @@ const detectionShape = (e: MouseEvent) => {
     const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const shapes = searchCommentShape(props.context, xy);
     if (shapes.length === 0) { //点击的位置是否有图形
-        const page = props.page.frame
-        const fp = props.page.frame2Page();
-        const farmeXY = { x: fp.x, y: fp.y }
-        shapePosition.x = xy.x - farmeXY.x
-        shapePosition.y = xy.y - farmeXY.y
+        shapePosition.x = 0
+        shapePosition.y = 0
         shapeID.value = props.page.id
     } else {
         const shape = shapes[0]

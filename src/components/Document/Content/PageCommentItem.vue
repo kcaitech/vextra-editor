@@ -327,11 +327,11 @@ const selectedUpdate = (t: number) => {
 const watchedShapes = new Map();
 const watchCommentShape = new Map();
 function watchShapes() { // 监听评论相关shape的变化
-    const comment = workspace.value.pageCommentList[props.index]
-    const cid = comment.page_id === comment.target_shape_id ? comment.page_id : comment.target_shape_id
+    const comment = props.commentInfo
+    if (comment.page_id == comment.target_shape_id) return
     const needWatchShapes = new Map();
     let shapes = props.context.selection.selectedPage!.shapes;
-    const shape = shapes.get(cid);
+    const shape = shapes.get(comment.target_shape_id);
     if (shape) {
         let p = shape.parent;
         while (p && p.type !== ShapeType.Page) {

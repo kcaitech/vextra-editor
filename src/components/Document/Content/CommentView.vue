@@ -98,17 +98,14 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
             shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
             workspace.value.commentMove(false)
             if (shapes.length === 0) {
-                const page = props.page.frame
-                const fp = props.page.frame2Page();
-                const farmeXY = { x: fp.x, y: fp.y }
                 const data = {
                     id: editCommentId.value,
                     target_shape_id: props.pageId,
                     shape_frame: {
                         x1: shape_frame.x1,
                         y1: shape_frame.y1,
-                        x2: shape_frame.x1 - farmeXY.x,
-                        y2: shape_frame.y1 - farmeXY.y
+                        x2: 0,
+                        y2: 0
                     }
                 }
                 editMoveCommentPosition(data)
