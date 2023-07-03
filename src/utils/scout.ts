@@ -277,4 +277,4 @@ function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果�
         return false;
     }
 }
-export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, finder_layers, artboardFinder }
+export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, finder_layers, artboardFinder, canBeTarget }
