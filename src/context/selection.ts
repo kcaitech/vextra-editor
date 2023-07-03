@@ -3,7 +3,7 @@ import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, TextShape } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
-import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
+import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
 // import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
 import { Artboard } from "@kcdesign/data";
 import { Context } from ".";
@@ -128,29 +128,30 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get selectedPage(): Page | undefined {
         return this.m_selectPage;
     }
+    /**
+     * 在page范围内获取一个点上的所有图层
+     * @param position 点位置，坐标系时page
+     * @returns 符合检索条件的图形
+     */
     getLayers(position: PageXY): Shape[] {
         position = cloneDeep(position);
-        const shapes: Shape[] = [];
-        const page = this.m_selectPage!;
-        const childs = page.childs;
-        position.x -= page.frame.x;
-        position.y -= page.frame.y;
-
-        if (childs?.length) deep(childs, position);
-        return shapes;
-
-        function deep(source: Shape[], position: PageXY) {
-            for (let i = 0; i < source.length; i++) {
-                const { x, y, width, height } = source[i].frame;
-                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height && source[i].isVisible) shapes.push(source[i]);
-                const suppos = { x: position.x - x, y: position.y - y };
-                if (source[i].childs?.length) deep(source[i].childs, suppos);
+        const result: Shape[] = [];
+        if (this.scout) {
+            const page = this.m_selectPage;
+            if (page && page.childs.length) {
+                result.push(...finder_layers(this.scout, page.childs, position, []));
             }
         }
+        return result;
     }
-    getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape[] { // 基于SVGGeometryElement的图形检索
-        // force 深度检索。检索在某一位置的所有visible图形，返回的shape[]长度可以大于1
-        // !force：只检索可见图形，被裁剪的、unVisible的不检索，返回的shape[]长度等于1或0，更适用于hover判定、左键点击。
+    /**
+     * 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
+     * @param position 点位置，坐标系时page
+     * @param isCtrl 是否取消编组、容器等图形的特殊处理
+     * @param scope 在scope范围内进行检索
+     * @returns 符合检索条件的图形
+     */
+    getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape[] {
         // scope 检索范围限定，如果没有限定范围则在全域(page)下寻找
         const shapes: Shape[] = [];
         if (this.scout) {

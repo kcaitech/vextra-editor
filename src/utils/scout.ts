@@ -161,7 +161,38 @@ function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isC
     }
     return result;
 }
+/**
+ * 与finder相比，finder结果通常不会大于1，而这里通常可以大于1
+ * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
+ * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
+ * @param { PageXY } position 一个点，在页面坐标系上的点
+ * @param { Shape[] } init 在下次一递归开始时需要继承的结果
+ */
+function finder_layers(scout: Scout, g: Shape[], position: PageXY, init?: Shape[]): Shape[] {
+    const result = init || [];
+    for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
+        if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
+            const item = g[i];
+            // 特殊处理的三类图形：容器、编组、flatten
+            if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) {
+                const isItemIsTarget = isTarget(scout, item, position);
+                if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
+                const c = item.childs as Shape[];
+                if (c.length) {
+                    result.push(...finder_layers(scout, c, position, result));
+                }
+                result.push(item);
+            } else {
+                if (isTarget(scout, item, position)) {
+                    result.push(item);
+                }
+            }
+        }
+    }
+    console.log('result', result.map(i => i.name).toString());
 
+    return result;
+}
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
 // 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
 function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
@@ -249,4 +280,4 @@ function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果�
         return false;
     }
 }
-export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, artboardFinder }
+export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, finder_layers, artboardFinder }
