@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop } from '@/utils/content';
+import { updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
@@ -312,8 +312,9 @@ function contextMenuMount(e: MouseEvent) {
         selection.resetSelectShapes();
     } else if (shapes.length === 1) {
         contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];
-        selection.selectShape(shapes[shapes.length - 1]);
+        selection.selectShape(shapes[0]);
     } else if (shapes.length > 1) {
+        right_select(props.context, shapes);
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit'];

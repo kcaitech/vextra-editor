@@ -463,4 +463,23 @@ function page_scale(context: Context, scale: number) {
   matrix.trans(offsetX, offsetY);
   workspace.matrixTransformation();
 }
-export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale };
+/**
+ * 右键选择图形的规则
+ * @param context 
+ * @param pre_shapes 预选图形
+ */
+function right_select(context: Context, pre_shapes: Shape[]) {
+  const selection = context.selection;
+  const selected = selection.selectedShapes;
+  for (let i = 0; i < pre_shapes.length; i++) {
+    const ps = pre_shapes[i];
+    for (let j = 0; j < selected.length; j++) {
+      const s = selected[j];
+      if (s.id === ps.id) {
+        return;
+      }
+    }
+  }
+  selection.selectShape(pre_shapes[0]);
+}
+export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale,right_select };

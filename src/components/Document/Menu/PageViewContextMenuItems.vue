@@ -8,6 +8,7 @@ import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { adapt_page } from '@/utils/content';
+import { message } from '@/utils/message';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -91,17 +92,46 @@ function pixel() {
 function operation() {
 
 }
+// 上移一层
 function forward() {
-
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const result = editor.uppper_layer(selction.selectedShapes[0], 1);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_upper'));
+    }
+  }
 }
 function back() {
-
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const result = editor.lower_layer(selction.selectedShapes[0], 1);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_lower'));
+    }
+  }
 }
 function top() {
-
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    editor.uppper_layer(selction.selectedShapes[0]);
+  }
+  emit('close');
 }
 function bottom() {
-
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    editor.lower_layer(selction.selectedShapes[0]);
+  }
+  emit('close');
 }
 function groups() {
 
