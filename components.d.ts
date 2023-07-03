@@ -108,6 +108,7 @@ declare module '@vue/runtime-core' {
     Saving: typeof import('./src/components/Document/Toolbar/Saving.vue')['default']
     Scale: typeof import('./src/components/Document/Toolbar/Scale.vue')['default']
     Select: typeof import('./src/components/common/Select.vue')['default']
+    SelectFont: typeof import('./src/components/Document/Attribute/Text/SelectFont.vue')['default']
     SelectionView: typeof import('./src/components/Document/Selection/SelectionView.vue')['default']
     Selector: typeof import('./src/components/Document/Selection/Selector.vue')['default']
     SelectView: typeof import('./src/components/Document/Selection/Controller/Text/SelectView.vue')['default']
