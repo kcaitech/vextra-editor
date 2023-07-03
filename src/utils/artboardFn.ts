@@ -29,7 +29,7 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
         ];
 
         for (let i = 0; i < shapes.length; i++) {
-            const m = shapes[i].matrix2Page();
+            const m = shapes[i].matrix2Root();
             const { width: w, height: h } = shapes[i].frame;
             const ps: XY[] = [
                 { x: 0, y: 0 },
@@ -54,7 +54,7 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
 // 使容器滚动到可视区域
 export function scrollToContentView(shape: Shape, context: Context) {
     const selection = context.selection, workspace = context.workspace;
-    const { x: sx, y: sy, height, width } = shape.frame2Page();
+    const { x: sx, y: sy, height, width } = shape.frame2Root();
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2);
     const contentViewCenter = workspace.root.center;
     const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;

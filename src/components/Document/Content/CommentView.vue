@@ -111,7 +111,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
                 editMoveCommentPosition(data)
             } else {
                 const shape = shapes[0]
-                const fp = shape.frame2Page();
+                const fp = shape.frame2Root();
                 const farmeXY = { x: fp.x, y: fp.y }
                 const data = {
                     id: editCommentId.value,
@@ -158,7 +158,7 @@ const updateShapeComment = (index: number) => {
     const shape_frame = documentCommentList.value[index].shape_frame
     const shape = shapes.get(documentCommentList.value[index].target_shape_id);
     if(shape) {
-        const { x, y } = shape.frame2Page()
+        const { x, y } = shape.frame2Root()
         shape_frame.x1 = shape_frame.x2 + x
         shape_frame.y1 = shape_frame.y2 + y    
         commentReflush.value++

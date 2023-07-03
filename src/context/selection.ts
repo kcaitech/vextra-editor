@@ -218,7 +218,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             position = cloneDeep(position);
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
-            shapes.push(...finder(this.scout, childs, position, force, this.selectedShapes[0], isCtrl));
+            shapes.push(...finder(this.scout, childs, position, this.selectedShapes[0], isCtrl));
         }
         return shapes;
     }
@@ -342,7 +342,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         const shape = this.m_selectShapes[0] as TextShape;
         // translate x,y
-        const matrix = shape.matrix2Page();
+        const matrix = shape.matrix2Root();
         const xy = matrix.inverseCoord(x, y);
         x = xy.x;
         y = xy.y;

@@ -7,7 +7,7 @@ export function get_colony_left(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let xs: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -29,7 +29,7 @@ export function get_colony_center_x(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let xs: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -50,7 +50,7 @@ export function get_colony_right(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let xs: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -71,7 +71,7 @@ export function get_colony_top(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let ys: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -92,7 +92,7 @@ export function get_colony_center_y(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let ys: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -113,7 +113,7 @@ export function get_colony_bottom(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let ys: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -134,7 +134,7 @@ export function get_colony_width(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let xs: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -155,7 +155,7 @@ export function get_colony_l_r(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let xs: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -176,7 +176,7 @@ export function get_colony_height(shapes: Shape[]) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const frame = shape.frame;
-        const m = shape.matrix2Page();
+        const m = shape.matrix2Root();
         let ys: [number, number][] = [
             [0, 0],
             [frame.width, 0],
@@ -195,7 +195,7 @@ export function get_colony_height(shapes: Shape[]) {
 export function get_individuality_left(shape: Shape) {
     const _xs: number[] = [];
     const frame = shape.frame;
-    const m = shape.matrix2Page();
+    const m = shape.matrix2Root();
     let xs: [number, number][] = [
         [0, 0],
         [frame.width, 0],
@@ -213,7 +213,7 @@ export function get_individuality_left(shape: Shape) {
 export function get_individuality_center_x(shape: Shape) {
     const _xs: number[] = [];
     const frame = shape.frame;
-    const m = shape.matrix2Page();
+    const m = shape.matrix2Root();
     let xs: [number, number][] = [
         [0, 0],
         [frame.width, 0],
@@ -231,7 +231,7 @@ export function get_individuality_center_x(shape: Shape) {
 export function get_individuality_right(shape: Shape) {
     const _xs: number[] = [];
     const frame = shape.frame;
-    const m = shape.matrix2Page();
+    const m = shape.matrix2Root();
     let xs: [number, number][] = [
         [0, 0],
         [frame.width, 0],
@@ -249,7 +249,7 @@ export function get_individuality_right(shape: Shape) {
 export function get_individuality_top(shape: Shape) {
     const _ys: number[] = [];
     const frame = shape.frame;
-    const m = shape.matrix2Page();
+    const m = shape.matrix2Root();
     let ys: [number, number][] = [
         [0, 0],
         [frame.width, 0],
@@ -267,7 +267,7 @@ export function get_individuality_top(shape: Shape) {
 export function get_individuality_center_y(shape: Shape) {
     const _ys: number[] = [];
     const frame = shape.frame;
-    const m = shape.matrix2Page();
+    const m = shape.matrix2Root();
     let ys: [number, number][] = [
         [0, 0],
         [frame.width, 0],
@@ -285,7 +285,7 @@ export function get_individuality_center_y(shape: Shape) {
 export function get_individuality_bottom(shape: Shape) {
     const _ys: number[] = [];
     const frame = shape.frame;
-    const m = shape.matrix2Page();
+    const m = shape.matrix2Root();
     let ys: [number, number][] = [
         [0, 0],
         [frame.width, 0],
@@ -303,7 +303,7 @@ export function get_individuality_bottom(shape: Shape) {
 export function get_individuality_l_r(shape: Shape) {
     const _xs: number[] = [];
     const frame = shape.frame;
-    const m = shape.matrix2Page();
+    const m = shape.matrix2Root();
     let xs: [number, number][] = [
         [0, 0],
         [frame.width, 0],
@@ -321,7 +321,7 @@ export function get_individuality_l_r(shape: Shape) {
 export function get_individuality_t_b(shape: Shape) {
     const _ys: number[] = [];
     const frame = shape.frame;
-    const m = shape.matrix2Page();
+    const m = shape.matrix2Root();
     let ys: [number, number][] = [
         [0, 0],
         [frame.width, 0],
