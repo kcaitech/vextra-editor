@@ -4,6 +4,7 @@ import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipaboard";
+import { adapt_page } from "@/utils/content";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -34,7 +35,8 @@ export enum KeyboardKeys { // 键盘按键类型
     Digit0 = 'Digit0',
     G = 'KeyG',
     T = 'KeyT',
-    C = 'KeyC'
+    C = 'KeyC',
+    Digit1 = 'Digit1'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -315,6 +317,10 @@ export class WorkSpace extends Watchable(Object) {
     setPageViewId(id: string) {
         this.m_pageViewId = id
     }
+    /**
+     * 编辑器键盘事件，支持工具快捷键、视图快捷键、选区快捷键 的实现
+     * @param {KeyboardEvent} event 
+     */
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (this.isFreeze) return;
@@ -339,7 +345,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_k(ctrlKey, shiftKey);
         } else if (event.code === KeyboardKeys.O) {
             event.preventDefault();
-            this.keydown_o();
+            this.keydown_o(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.F) {
             event.preventDefault();
             this.keydown_f();
@@ -355,6 +361,11 @@ export class WorkSpace extends Watchable(Object) {
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
             this.keydown_c(ctrlKey, metaKey);
+        } else if (event.code === KeyboardKeys.Digit1) {
+            event.preventDefault();
+            if (ctrlKey || metaKey) {
+                adapt_page(this.context);
+            }
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -482,10 +493,12 @@ export class WorkSpace extends Watchable(Object) {
             this.notify();
         }
     }
-    keydown_o() {
-        this.escSetup();
-        this.m_current_action = Action.AddEllipse;
-        this.notify();
+    keydown_o(ctrl: boolean, meta: boolean) {
+        if (!ctrl && !meta) {
+            this.escSetup();
+            this.m_current_action = Action.AddEllipse;
+            this.notify();
+        }
     }
     keydown_f() {
         this.escSetup();

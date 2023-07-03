@@ -7,7 +7,7 @@ import { Shape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { createHorizontalBox } from '@/utils/common';
+import { adapt_page } from '@/utils/content';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -73,57 +73,7 @@ function page_scale(e: MouseEvent, scale: number) {
 }
 // 画布自适应 
 function canvas() {
-  const childs = props.context.selection.selectedPage?.childs || [];
-  const points: [number, number][] = [];
-  const matrix = props.context.workspace.matrix;
-  for (let i = 0; i < childs.length; i++) {
-    const item = childs[i];
-    const frame = item.frame;
-    const m = item.matrix2Root();
-    const _points: [number, number][] = [
-      [0, 0],
-      [frame.width, 0],
-      [frame.width, frame.height],
-      [0, frame.height]
-    ]
-    points.push(..._points.map(p => {
-      const r = m.computeCoord(p[0], p[1]);
-      const _r = matrix.computeCoord(r.x, r.y);
-      return [_r.x, _r.y] as [number, number];
-    }))
-  }
-  const box = createHorizontalBox(points);
-  const width = box.right - box.left;
-  const height = box.bottom - box.top;
-  const root = props.context.workspace.root;
-  const w_max = root.width;
-  const h_max = root.height;
-
-  const ratio_h = width / w_max;
-  const ratio_w = height / h_max;
-
-  const ratio = Math.max(ratio_h, ratio_w);
-
-  if (ratio > 1) {
-    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
-    matrix.trans(del.x, del.y);
-    matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
-    if (matrix.m00 * 1 / ratio > 0.02) { // 不能小于2%
-      matrix.scale(1 / ratio);
-    } else {
-      matrix.scale(0.02 / matrix.m00);
-    }
-    matrix.trans(root.width / 2, root.height / 2);
-    props.context.workspace.matrixTransformation();
-  } else {
-    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
-    if (del.x || del.y) {
-      matrix.trans(del.x, del.y);
-      props.context.workspace.matrixTransformation();
-    }
-  }
+  adapt_page(props.context);
   emit('close');
 }
 function cursor() {
@@ -234,6 +184,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     </div>
     <div class="item" v-if="props.items.includes('canvas')" @click="canvas">
       <span>{{ t('system.fit_canvas') }}</span>
+      <span class="shortkey">Ctrl + 1</span>
     </div>
     <!-- 协作 -->
     <div class="line" v-if="props.items.includes('cursor')"></div>
