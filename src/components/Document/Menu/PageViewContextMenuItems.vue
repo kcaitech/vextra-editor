@@ -79,7 +79,7 @@ function canvas() {
   for (let i = 0; i < childs.length; i++) {
     const item = childs[i];
     const frame = item.frame;
-    const m = item.matrix2Page();
+    const m = item.matrix2Root();
     const _points: [number, number][] = [
       [0, 0],
       [frame.width, 0],
@@ -93,11 +93,9 @@ function canvas() {
     }))
   }
   const box = createHorizontalBox(points);
-  console.log('-box-', box);
   const width = box.right - box.left;
   const height = box.bottom - box.top;
   const root = props.context.workspace.root;
-  const scale = matrix.m00;
   const w_max = root.width;
   const h_max = root.height;
 
@@ -105,19 +103,28 @@ function canvas() {
   const ratio_w = height / h_max;
 
   const ratio = Math.max(ratio_h, ratio_w);
-  console.log('ratio', ratio);
 
   if (ratio > 1) {
-    console.log('ganma');
-
-    matrix.scale(1 / (scale * (1 / scale) * ratio));
+    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+    matrix.trans(del.x, del.y);
+    matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
+    if (matrix.m00 * 1 / ratio > 0.02) { // 不能小于2%
+      matrix.scale(1 / ratio);
+    } else {
+      matrix.scale(0.02 / matrix.m00);
+    }
+    matrix.trans(root.width / 2, root.height / 2);
+    props.context.workspace.matrixTransformation();
+  } else {
+    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+    if (del.x || del.y) {
+      matrix.trans(del.x, del.y);
+      props.context.workspace.matrixTransformation();
+    }
   }
-  const root_center = { x: root.x + root.width / 2, y: root.y + root.height / 2 };
-  const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-  const del = { x: root_center.x - p_center.x, y: root_center.y - p_center.y };
-  console.log('del', del);
-  matrix.trans(del.x, del.y);
-  props.context.workspace.matrixTransformation();
+  emit('close');
 }
 function cursor() {
 
