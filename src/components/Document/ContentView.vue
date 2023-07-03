@@ -251,7 +251,7 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix.inverseCoord(mx - x, my - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, auto);
+    const shapes = props.context.selection.getShapesByXY(xy, auto);
     selectShapes(shapes);
 }
 function search(e: MouseEvent) { // 常规图形检索
@@ -259,7 +259,7 @@ function search(e: MouseEvent) { // 常规图形检索
     const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY_beta(xy, metaKey || ctrlKey); // xy: PageXY
+    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(shapes);
 }
 const search_once = debounce(search, 50) // 连续操作结尾处调用
@@ -304,7 +304,7 @@ function contextMenuMount(e: MouseEvent) {
     contextMenuPosition.x = e.clientX - x;
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
-    const shapes = selection.getShapesByXY(mousedownOnPageXY);
+    const shapes = selection.getLayers(mousedownOnPageXY);
 
     contextMenuItems = ['all', 'paste'];
     if (!shapes.length) {
