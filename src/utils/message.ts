@@ -23,7 +23,7 @@ const C = {
     }
 }
 export const message = (type: MessageType, context: string) => {
-    const top = 240;
+    const top = 160;
     const duration: number = 2.5;
     const fadeDur: number = 0.5;
     const style = toStyle({

@@ -137,7 +137,17 @@ function bottom() {
   emit('close');
 }
 function groups() {
+  const selction = props.context.selection;
+  const page = selction.selectedPage;
 
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const group = editor.group(selction.selectedShapes, getName(ShapeType.Group, page.childs, t));
+    if (group) {
+      selction.selectShape(group);
+    }
+  }
+  emit('close');
 }
 function container() {
   const selction = props.context.selection;

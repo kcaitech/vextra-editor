@@ -155,7 +155,6 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: F
   const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
   if (page && parent && type) {
     const editor = context.editor.controller();
-    const name = getName(type, parent.childs, t);
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
     new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
   }
@@ -399,7 +398,7 @@ function drop(e: DragEvent, context: Context, t: Function) {
  * 使page全部内容都在可视区，并居中
  * @param context 
  */
-function adapt_page(context: Context) {
+function adapt_page(context: Context, r?: Root) {
   const childs = context.selection.selectedPage?.childs || [];
   const points: [number, number][] = [];
   const matrix = context.workspace.matrix;
@@ -422,12 +421,12 @@ function adapt_page(context: Context) {
   const box = createHorizontalBox(points);
   const width = box.right - box.left;
   const height = box.bottom - box.top;
-  const root = context.workspace.root;
+  const root = r || context.workspace.root;
   const w_max = root.width;
   const h_max = root.height;
 
-  const ratio_h = width / w_max;
-  const ratio_w = height / h_max;
+  const ratio_w = width / w_max * 1.12; // 两边留点空白
+  const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
 
   const ratio = Math.max(ratio_h, ratio_w);
 
@@ -449,8 +448,10 @@ function adapt_page(context: Context) {
     if (del.x || del.y) {
       matrix.trans(del.x, del.y);
       context.workspace.matrixTransformation();
+
     }
   }
+  return matrix;
 }
 function page_scale(context: Context, scale: number) {
   const workspace = context.workspace;
@@ -485,4 +486,4 @@ function right_select(context: Context, pre_shapes: Shape[]) {
     }
   }
 }
-export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale, right_select };
+export { Root, updateRoot, _updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale, right_select };
