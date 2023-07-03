@@ -35,7 +35,7 @@ function _updateInputPos() {
     if (!inputel.value) return;
     // inputel.value.hidden = false;
     const selection = props.context.selection;
-    // const m2p = props.shape.matrix2Page();
+    // const m2p = props.shape.matrix2Root();
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
     matrix.reset(props.matrix);

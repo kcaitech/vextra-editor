@@ -36,7 +36,7 @@ const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let editing: boolean = false;
 function _update() {
-    const m2p = props.shape.matrix2Page();
+    const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
 

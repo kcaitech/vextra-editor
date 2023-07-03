@@ -49,7 +49,7 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             ids++;
             continue;
         }
-        const m = childs[ids].matrix2Page();
+        const m = childs[ids].matrix2Root();
         const { width: w, height: h } = childs[ids].frame;
         const ps: XY[] = [
             { x: 0, y: 0 },
@@ -68,7 +68,7 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
 function remove(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
     let ids = 0;
     while (ids < childs.length) {
-        const m = childs[ids].matrix2Page();
+        const m = childs[ids].matrix2Root();
         const { width: w, height: h } = childs[ids].frame;
         const ps: XY[] = [
             { x: 0, y: 0 },

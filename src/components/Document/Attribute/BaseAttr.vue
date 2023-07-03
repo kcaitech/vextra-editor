@@ -78,7 +78,7 @@ function watchShapes() {
 function _calcFrame() {
     if (len.value === 1) {
         const shape = props.shapes[0];
-        const xy = shape.frame2Page();
+        const xy = shape.frame2Root();
         const frame = shape.frame;
         x.value = xy.x;
         y.value = xy.y;
@@ -90,7 +90,7 @@ function _calcFrame() {
         isLock.value = Boolean(shape.constrainerProportions);
     } else if (len.value > 1) {
         const shape = props.shapes[0];
-        const xy = shape.frame2Page();
+        const xy = shape.frame2Root();
         const frame = shape.frame;
         if (x.value !== mixed) {
             x.value = xy.x;
@@ -139,7 +139,7 @@ function onChangeX(value: string) {
     if (len.value === 1) {
         const shape = props.shapes[0];
         if (shape.frame.x.toFixed(fix) != value) {
-            const xy = shape.frame2Page();
+            const xy = shape.frame2Root();
             editor.value.translateTo(_x, xy.y);
         }
     } else if (len.value > 1) {
@@ -159,7 +159,7 @@ function onChangeY(value: string) {
     if (len.value === 1) {
         const shape = props.shapes[0];
         if (shape.frame.y.toFixed(fix) != value) {
-            const xy = shape.frame2Page();
+            const xy = shape.frame2Root();
             editor.value.translateTo(xy.x, _y);
         }
     } else if (len.value > 1) {
