@@ -122,6 +122,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.code === KeyboardKeys.Space) {
+        if (workspace.value.select) return;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
@@ -139,7 +140,7 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
-    setClass('grab-0');
+    // setClass('grab-0');
 }
 function endDragPage() { // 编辑器完成拖动页面
     const action: Action = props.context.workspace.action;
@@ -308,7 +309,7 @@ function pageViewDragging(e: MouseEvent) {
     }
 }
 function pageViewDragEnd() {
-    setClass('grab-0');
+    // setClass('grab-0');
     state = STATE_NONE;
 }
 function contextMenuMount(e: MouseEvent) {
@@ -335,13 +336,16 @@ function contextMenuMount(e: MouseEvent) {
     } else if (area === 'group') {
         contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
     } else if (area === 'controller') {
-        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'groups', 'container'];
         const types = get_selected_type(props.context);
         if (types & 1) {
             contextMenuItems.push('dissolution');
         }
         if (types & 2) {
             contextMenuItems.push('un_group');
+        }
+        if (props.context.selection.selectedShapes.length <= 1) {
+            contextMenuItems.push('forward', 'back', 'top', 'bottom');
         }
     } else if (area === 'normal') {
         contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
