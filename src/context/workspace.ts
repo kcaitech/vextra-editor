@@ -37,7 +37,8 @@ export enum KeyboardKeys { // 键盘按键类型
     G = 'KeyG',
     T = 'KeyT',
     C = 'KeyC',
-    Digit1 = 'Digit1'
+    Digit1 = 'Digit1',
+    Backspace = 'Backspace'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -121,6 +122,7 @@ export class WorkSpace extends Watchable(Object) {
     static TOGGLE_COMMENT_PAGE = 44;
     static HOVER_SHOW_COMMENT = 45;
     static UPDATE_COMMENT_CHILD = 46;
+    static HIDDEN_UI = 47;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -490,7 +492,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_0(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.G) {
             event.preventDefault();
-            this.keydown_g(ctrlKey, metaKey, shiftKey);
+            this.keydown_g(ctrlKey, metaKey, altKey);
         } else if (event.code === KeyboardKeys.T) {
             event.preventDefault();
             this.keydown_t();
@@ -501,6 +503,11 @@ export class WorkSpace extends Watchable(Object) {
             event.preventDefault();
             if (ctrlKey || metaKey) {
                 adapt_page(this.context);
+            }
+        } else if (event.code === KeyboardKeys.Backspace) {
+            event.preventDefault();
+            if (ctrlKey || metaKey) {
+                this.notify(WorkSpace.UNGROUP);
             }
         }
     }
@@ -650,7 +657,7 @@ export class WorkSpace extends Watchable(Object) {
         if (ctrlKey || metaKey) {
             this.notify(WorkSpace.COPY)
         } else {
-            if(this.documentPerm === 1) return
+            if (this.documentPerm === 1) return
             this.escSetup();
             this.m_current_action = Action.AddComment;
             this.commentInput(false);
@@ -667,11 +674,13 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }
-    keydown_g(ctrl: boolean, meta: boolean, shift: boolean) {
-        if ((ctrl || meta) && !shift) { // 编组
-            this.notify(WorkSpace.GROUP);
-        } else if ((ctrl || meta) && shift) { // 解组
-            this.notify(WorkSpace.UNGROUP)
+    keydown_g(ctrl: boolean, meta: boolean, alt: boolean) {
+        if (ctrl || meta) { // 编组
+            if (alt) {
+                this.notify(WorkSpace.GROUP, alt);
+            } else {
+                this.notify(WorkSpace.GROUP);
+            }
         }
     }
 
@@ -736,7 +745,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_hover_comment_id = id
         if (!v) {
             this.notify(WorkSpace.HOVER_COMMENT);
-        }else {
+        } else {
             this.notify(WorkSpace.HOVER_SHOW_COMMENT)
         }
         if (id) {

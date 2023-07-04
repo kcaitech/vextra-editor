@@ -17,6 +17,7 @@ export const system = {
     'bring_to_top': 'Bring to top',
     'send_to_bottom': 'Send to bottom',
     'visible': 'Visible/Hidden',
+    'hidden': 'Hidden',
     'Lock': 'Lock/Unlock',
     'select_all': 'Select all',
     'fit_canvas': 'Adapt to artboard',

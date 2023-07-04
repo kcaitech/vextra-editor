@@ -3,7 +3,7 @@ import { reactive, ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
-import { Artboard, Shape, ShapeType } from "@kcdesign/data";
+import { Artboard, GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -93,7 +93,8 @@ function pixel() {
 
 }
 function operation() {
-
+  props.context.workspace.notify(WorkSpace.HIDDEN_UI);
+  emit('close');
 }
 // 上移一层
 function forward() {
@@ -176,7 +177,17 @@ function dissolution_container() {
   emit('close');
 }
 function unGroup() {
-
+  const selction = props.context.selection;
+  if (selction.selectedShapes[0].type !== ShapeType.Group) return;
+  const page = selction.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shapes = editor.ungroup(selction.selectedShapes[0] as GroupShape);
+    if (shapes) {
+      selction.rangeSelectShape(shapes);
+    }
+  }
+  emit('close');
 }
 function component() {
 
@@ -275,9 +286,8 @@ function closeLayerSubMenu(e: MouseEvent) {
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('operation')" @click="operation">
-      <div class="choose"></div>
       <span>{{ t('system.hide_operation_interface') }}</span>
-      <span></span>
+      <span class="shortkey">Ctrl(+Shift) + \</span>
     </div>
     <!-- 顺序调整 -->
     <div class="line" v-if="props.items.includes('forward')"></div>
@@ -300,18 +310,19 @@ function closeLayerSubMenu(e: MouseEvent) {
     <div class="line" v-if="props.items.includes('groups')"></div>
     <div class="item" v-if="props.items.includes('groups')" @click="groups">
       <span>{{ t('system.creating_groups') }}</span>
+      <span class="shortkey">Ctrl + G</span>
     </div>
     <div class="item" v-if="props.items.includes('container')" @click="container">
       <span>{{ t('system.create_container') }}</span>
-      <span></span>
+      <span class="shortkey">Ctrl + Alt + G</span>
     </div>
     <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
       <span>{{ t('system.un_group') }}</span>
-      <span></span>
+      <span class="shortkey">Ctrl + Backspace</span>
     </div>
     <div class="item" v-if="props.items.includes('dissolution')" @click="dissolution_container">
       <span>{{ t('system.dissolution') }}</span>
-      <span></span>
+      <span class="shortkey">Ctrl + Backspace</span>
     </div>
     <!-- 组件操作 -->
     <div class="line" v-if="props.items.includes('component')"></div>
@@ -397,7 +408,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     border-width: 0 0 2px 2px;
     border-style: solid;
     border-color: var(--theme-color-anti);
-    transform: rotate(-45deg) translateY(-30%);
+    transform: rotate(-45deg) translateY(-4%);
   }
 }
 </style>

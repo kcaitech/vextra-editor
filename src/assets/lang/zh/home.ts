@@ -17,6 +17,7 @@ export const system = {
     'bring_to_top': '置于顶层',
     'send_to_bottom': '置于底层',
     'visible': '显示/隐藏',
+    'hidden': '隐藏',
     'Lock': '锁定/解锁',
     'select_all': '选择全部',
     'fit_canvas': '适应画布',

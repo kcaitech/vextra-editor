@@ -1,7 +1,7 @@
 import { Context } from "@/context"
 
 export function keyboardHandle(e: KeyboardEvent, context: Context) {
-    const { target, shiftKey } = e;
+    const { target, shiftKey, ctrlKey, metaKey } = e;
     if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;
     if (!shapes.length) return;
@@ -15,7 +15,8 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
         dx = 0, dy = -step, transform = true;
     } else if (e.code === 'ArrowDown') {
         dx = 0, dy = step, transform = true;
-    } else if (e.code === 'Backspace') { // 删除图层
+    } else if (e.code === 'Backspace' || e.code === 'Delete') { // 删除图层
+        if (ctrlKey || metaKey) return;
         if (shapes.length > 1) {
             const page = context.selection.selectedPage;
             if (page) {

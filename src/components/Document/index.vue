@@ -120,7 +120,7 @@ function selectionWatcher(t: number) {
             const pageId = context.selection.commentPageId
             switchPage(pageId)
         }
-        
+
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
@@ -252,21 +252,9 @@ const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
-// let uploadTimer: any = null
-// function polling() {
-//     if (uploadTimer) {
-//         clearTimeout(uploadTimer);
-//     }
-//     uploadTimer = setTimeout(() => {
-//         const docID = localStorage.getItem('docId') || '';
-//         if (docID && permType.value !== 1) {
-//             upload(docID);
-//         }
-//     }, 60000);
-// }
-const getUserInfo = async() => {
-    const {data} = await user_api.GetInfo()
-    if(context) {
+const getUserInfo = async () => {
+    const { data } = await user_api.GetInfo()
+    if (context) {
         context.workspace.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
         localStorage.setItem('nickname', data.nickname)
@@ -401,6 +389,8 @@ function workspaceWatcher(t: number) {
         sub_loading.value = true;
     } else if (t === WorkSpace.THAW) {
         sub_loading.value = false;
+    } else if (t === WorkSpace.HIDDEN_UI) {
+        keyToggleTB();
     }
 }
 onMounted(() => {

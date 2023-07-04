@@ -16,7 +16,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page } from '@/utils/content';
+import { updateRoot, _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, get_selected_type } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -322,25 +322,31 @@ function contextMenuMount(e: MouseEvent) {
     contextMenuPosition.x = e.clientX - x;
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
+    contextMenuItems = ['copy', 'paste']
     const shapes = selection.getLayers(mousedownOnPageXY);
-
-    contextMenuItems = ['all', 'paste'];
-    if (!shapes.length) {
-        contextMenuItems = ['all', 'paste', 'half', 'hundred', 'double', 'canvas', 'operation'];
-        selection.resetSelectShapes();
-    } else if (shapes.length === 1) {
-        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
-        right_select(props.context, shapes);
-        if (shapes[0].type === ShapeType.Artboard) {
-            contextMenuItems.push('dissolution');
-        } else if (shapes[0].type === ShapeType.Group) {
-            contextMenuItems.push('un_group');
-        }
-    } else if (shapes.length > 1) {
-        right_select(props.context, shapes);
+    if (shapes.length > 1) {
+        contextMenuItems.push('layers')
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
-        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'layers', 'groups', 'container'];
+    }
+    const area = right_select(e, mousedownOnPageXY, props.context);
+    if (area === 'artboard') {
+        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+    } else if (area === 'group') {
+        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+    } else if (area === 'controller') {
+        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+        const types = get_selected_type(props.context);
+        if (types & 1) {
+            contextMenuItems.push('dissolution');
+        }
+        if (types & 2) {
+            contextMenuItems.push('un_group');
+        }
+    } else if (area === 'normal') {
+        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+    } else {
+        contextMenuItems = ['all', 'paste', 'half', 'hundred', 'double', 'canvas', 'operation'];
     }
     contextMenu.value = true;
     document.addEventListener('keydown', esc);

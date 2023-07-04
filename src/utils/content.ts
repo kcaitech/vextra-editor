@@ -4,7 +4,7 @@ import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape } from "@kcdesign/data";
 import { Action, Media, ResultByAction } from '@/context/workspace';
 import { createHorizontalBox } from '@/utils/common';
-
+import { searchCommentShape as finder } from '@/utils/comment'
 interface SystemClipboardItem {
   type: ShapeType
   contentType: string
@@ -425,7 +425,7 @@ function adapt_page(context: Context, r?: Root) {
   const w_max = root.width;
   const h_max = root.height;
 
-  const ratio_w = width / w_max * 1.12; // 两边留点空白
+  const ratio_w = width / w_max * 1.06; // 两边留点空白
   const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
 
   const ratio = Math.max(ratio_h, ratio_w);
@@ -466,24 +466,50 @@ function page_scale(context: Context, scale: number) {
 }
 /**
  * 右键选择图形的规则
+ * @param p 点击位置在页面中所处的位置
  * @param context 
  * @param pre_shapes 预选图形
+ * @param { 'controller' | 'group'| 'artboard'| 'null' | 'normal' } area
  */
-function right_select(context: Context, pre_shapes: Shape[]) {
+function right_select(e: MouseEvent, p: PageXY, context: Context): 'controller' | 'group' | 'artboard' | 'null' | 'normal' {
+  if ((e.target as Element).closest('[data-area="controller"]')) { // 点在了控件上
+    return 'controller';
+  }
   const selection = context.selection;
-  const selected = selection.selectedShapes;
-  if (selected.length <= 1) {
-    if (selected.length === 0) {
-      selection.selectShape(pre_shapes[0]);
-    } else {
-      const fshape = selected[0];
-      for (let i = 0; i < pre_shapes.length; i++) {
-        const ps = pre_shapes[i];
-        if (fshape.id === ps.id) {
-          return;
-        }
-      }
+  const area_1 = context.selection.getShapesByXY(p, false);
+  if (area_1.length) {
+    if (area_1[0].type === ShapeType.Group) {
+      selection.selectShape(area_1[0]);
+      return 'group';
     }
   }
+  const area_2 = finder(context, p);
+  if (area_2.length) {
+    if (area_2[0].type === ShapeType.Artboard) {
+      selection.selectShape(area_2[0]);
+      return 'artboard';
+    } else {
+      selection.selectShape(area_2[0]);
+      return 'normal';
+    }
+  }
+  return 'null';
 }
-export { Root, updateRoot, _updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale, right_select };
+/**
+ * 判断选区存在的类型
+ * @param context
+ * @returns { number } 两位二进制 00 
+ */
+function get_selected_type(context: Context): number {
+  let result = 0;
+  const shapes = context.selection.selectedShapes;
+  for (let i = shapes.length - 1; i > -1; i--) {
+    if (shapes[i].type === ShapeType.Artboard) {
+      result = result | 1;
+    } else if (shapes[i].type === ShapeType.Group) {
+      result = result | 2;
+    }
+  }
+  return result;
+}
+export { Root, updateRoot, _updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale, right_select, get_selected_type };
