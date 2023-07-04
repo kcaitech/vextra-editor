@@ -104,6 +104,7 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-items: center;
+        margin-right: 4px;
 
         >svg {
             width: 88%;
@@ -122,6 +123,7 @@ onUnmounted(() => {
         outline: none;
         background-color: transparent;
         color: #ffffff;
+        font-size: var(--font-default-fontsize);
     }
 
     .save {
