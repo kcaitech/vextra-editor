@@ -22,7 +22,10 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
         const page = selction.selectedPage;
         if (page) {
             const editor = context.editor4Page(page);
-            editor.uppper_layer(selction.selectedShapes[0]);
+            const result = editor.uppper_layer(selction.selectedShapes[0]);
+            if (!result) {
+                message('info', context.workspace.t('homerightmenu.unable_upper'));
+            }
         }
     } else if (e.code === 'BracketLeft') {
         const selction = context.selection;
@@ -30,7 +33,10 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
         const page = selction.selectedPage;
         if (page) {
             const editor = context.editor4Page(page);
-            editor.lower_layer(selction.selectedShapes[0]);
+            const result = editor.lower_layer(selction.selectedShapes[0]);
+            if (!result) {
+                message('info', context.workspace.t('homerightmenu.unable_lower'));
+            }
         }
     } else if (e.code === 'Minus') {
         const selction = context.selection;

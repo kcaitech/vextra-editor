@@ -67,12 +67,12 @@ onUnmounted(() => {
 
   >.header {
     width: 100%;
-    height: 10px;
+    height: 16px;
   }
 
   >.bottom {
     width: 100%;
-    height: 10px;
+    height: 16px;
     align-self: flex-end;
   }
 }

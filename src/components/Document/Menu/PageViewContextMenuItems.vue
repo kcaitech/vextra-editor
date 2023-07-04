@@ -129,18 +129,26 @@ function top() {
   const page = selction.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    editor.uppper_layer(selction.selectedShapes[0]);
+    const result = editor.uppper_layer(selction.selectedShapes[0]);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_upper'));
+    } else {
+      emit('close');
+    }
   }
-  emit('close');
 }
 function bottom() {
   const selction = props.context.selection;
   const page = selction.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    editor.lower_layer(selction.selectedShapes[0]);
+    const result = editor.lower_layer(selction.selectedShapes[0]);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_lower'));
+    } else {
+      emit('close');
+    }
   }
-  emit('close');
 }
 function groups() {
   const selction = props.context.selection;
@@ -326,11 +334,11 @@ function closeLayerSubMenu(e: MouseEvent) {
     </div>
     <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
       <span>{{ t('system.un_group') }}</span>
-      <span class="shortkey">Ctrl + Backspace</span>
+      <span class="shortkey">Ctrl + Shift + G</span>
     </div>
     <div class="item" v-if="props.items.includes('dissolution')" @click="dissolution_container">
       <span>{{ t('system.dissolution') }}</span>
-      <span class="shortkey">Ctrl + Backspace</span>
+      <span class="shortkey">Ctrl + Shift + G</span>
     </div>
     <!-- 组件操作 -->
     <div class="line" v-if="props.items.includes('component')"></div>
@@ -383,9 +391,10 @@ function closeLayerSubMenu(e: MouseEvent) {
       margin-left: auto;
       width: 0;
       height: 0;
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-      border-left: 10px solid var(--theme-color-anti);
+      border-top: 3px solid transparent;
+      border-bottom: 3px solid transparent;
+      border-left: 6px solid var(--theme-color-anti);
+      transition: 0.35s;
     }
 
     >.shortkey {
@@ -393,7 +402,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     }
   }
 
-  .line {
+  .item .line {
     width: 100%;
     height: 17px;
     border-width: 8px 0 8px 0;
@@ -405,6 +414,16 @@ function closeLayerSubMenu(e: MouseEvent) {
 
   .item:hover {
     background-color: var(--active-color);
+
+    >.triangle {
+      margin-left: auto;
+      width: 0;
+      height: 0;
+      border-top: 3px solid transparent;
+      border-bottom: 3px solid transparent;
+      border-left: 6px solid var(--theme-color-anti);
+      transform: rotate(90deg);
+    }
   }
 
   .choose {

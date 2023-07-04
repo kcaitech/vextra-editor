@@ -148,7 +148,7 @@ const ungroupClick = () => {
                 </ToolButton>
             </div>
         </el-tooltip>
-        <el-tooltip class="box-item" effect="dark" :content="`${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Backspace`"
+        <el-tooltip class="box-item" effect="dark" :content="`${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Shift+G`"
             placement="bottom" :show-after="500" :offset="5" :hide-after="0">
             <div class="group">
                 <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">

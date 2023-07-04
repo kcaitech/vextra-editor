@@ -493,7 +493,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_0(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.G) {
             event.preventDefault();
-            this.keydown_g(ctrlKey, metaKey, altKey);
+            this.keydown_g(ctrlKey, metaKey, shiftKey, altKey);
         } else if (event.code === KeyboardKeys.T) {
             event.preventDefault();
             this.keydown_t();
@@ -504,11 +504,6 @@ export class WorkSpace extends Watchable(Object) {
             event.preventDefault();
             if (ctrlKey || metaKey) {
                 adapt_page(this.context);
-            }
-        } else if (event.code === KeyboardKeys.Backspace) {
-            event.preventDefault();
-            if (ctrlKey || metaKey) {
-                this.notify(WorkSpace.UNGROUP);
             }
         }
     }
@@ -675,13 +670,15 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }
-    keydown_g(ctrl: boolean, meta: boolean, alt: boolean) {
-        if (ctrl || meta) { // 编组
+    keydown_g(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
+        if ((ctrl || meta) && !shift) { // 编组
             if (alt) {
                 this.notify(WorkSpace.GROUP, alt);
             } else {
                 this.notify(WorkSpace.GROUP);
             }
+        } else if ((ctrl || meta) && shift) {
+            this.notify(WorkSpace.UNGROUP);
         }
     }
 
