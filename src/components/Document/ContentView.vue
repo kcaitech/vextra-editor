@@ -324,19 +324,14 @@ function contextMenuMount(e: MouseEvent) {
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
     contextMenuItems = ['copy', 'paste']
-    const shapes = selection.getLayers(mousedownOnPageXY);
-    if (shapes.length > 1) {
-        contextMenuItems.push('layers')
-        shapesContainsMousedownOnPageXY.length = 0;
-        shapesContainsMousedownOnPageXY = shapes;
-    }
+
     const area = right_select(e, mousedownOnPageXY, props.context);
     if (area === 'artboard') {
-        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
     } else if (area === 'group') {
-        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
     } else if (area === 'controller') {
-        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'groups', 'container'];
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'groups', 'container'];
         const types = get_selected_type(props.context);
         if (types & 1) {
             contextMenuItems.push('dissolution');
@@ -348,9 +343,15 @@ function contextMenuMount(e: MouseEvent) {
             contextMenuItems.push('forward', 'back', 'top', 'bottom');
         }
     } else if (area === 'normal') {
-        contextMenuItems = ['copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
     } else {
         contextMenuItems = ['all', 'paste', 'half', 'hundred', 'double', 'canvas', 'operation'];
+    }
+    const shapes = selection.getLayers(mousedownOnPageXY);
+    if (shapes.length > 1) {
+        contextMenuItems.push('layers')
+        shapesContainsMousedownOnPageXY.length = 0;
+        shapesContainsMousedownOnPageXY = shapes;
     }
     contextMenu.value = true;
     document.addEventListener('keydown', esc);

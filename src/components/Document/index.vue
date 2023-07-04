@@ -337,7 +337,6 @@ function upload() {
     if (!token || !context || !context.data) {
         return
     }
-    context.workspace.startSave();
     uploadExForm(context.data, FILE_UPLOAD, token, '', (isSuccess, doc_id) => {
         if (isSuccess) {
             router.replace({
@@ -353,8 +352,8 @@ function upload() {
                 "0",
             );
             coopLocal.start();
+            context?.workspace.notify(WorkSpace.INIT_DOC_NAME)
         }
-        context?.workspace.endSave();
     })
 }
 let timer: any = null;
@@ -418,7 +417,6 @@ onUnmounted(() => {
     <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context!" v-if="!loading && !null_context" />
-        <Home v-else></Home>
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>

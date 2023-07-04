@@ -8,7 +8,6 @@ import CtrlBar from "./Bars/CtrlBar.vue";
 import CtrlPoint from "./Points/CtrlPoint.vue";
 import { Point, Bar } from "../SelectionView.vue";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
-import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { Shape } from "@kcdesign/data";
@@ -130,6 +129,9 @@ function windowBlur() {
     // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
+    if (ctrlrectEle.value) {
+        ctrlrectEle.value.classList.remove('cursor-copy');
+    }
 }
 onMounted(() => {
     props.context.selection.watch(updater);
