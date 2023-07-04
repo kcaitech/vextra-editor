@@ -7,6 +7,9 @@ export interface SizeBound {
     minWidth: number,
     maxWidth: number
 }
+const emit = defineEmits<{
+    (e: 'changeLeftWidth', width: number): void
+}>()
 
 interface SizeBoundEx extends SizeBound {
     userWidth: number // 用户调整的大小
@@ -91,7 +94,7 @@ function leftAdjust(saveWidth: number, offset: number) {
     let leftWidth = saveWidth + offset;
     let rightWidth = sizeBounds.right.width;
     let middleWidth = Math.max(totalWidth - leftWidth - rightWidth, 0);
-
+    
     if (leftWidth === sizeBounds.left.width) {
         return;
     }
@@ -180,7 +183,7 @@ function onSizeChange() {
 
     const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth));
     const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth));
-
+    
     // sizeBounds.left.width = props.left.width * rootWidth;
     sizeBounds.left.minWidth = Math.max(leftMinWidthImportant, props.left.minWidth) * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
@@ -190,7 +193,6 @@ function onSizeChange() {
     // sizeBounds.right.width = props.right.width * rootWidth;
     sizeBounds.right.minWidth = Math.max(rigthMinWidthImportant, props.right.minWidth) * rootWidth;
     sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;
-
 
     let leftWidth = sizeBounds.left.width + (savedRootWidth ? sizeBounds.left.width / savedRootWidth * delta : 0);
     let rightWidth = sizeBounds.right.width + (savedRootWidth ? sizeBounds.right.width / savedRootWidth * delta : 0);
@@ -215,7 +217,7 @@ function initSizeBounds() {
     const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth));
     const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth));
     const middleMaxWidthImportant = 1 - (leftMinWidthImportant + rigthMinWidthImportant);
-
+    
     sizeBounds.left.width = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.minWidth = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
@@ -226,7 +228,7 @@ function initSizeBounds() {
 
     sizeBounds.right.width = Math.max(props.right.width, rigthMinWidthImportant) * rootWidth;
     sizeBounds.right.minWidth = Math.max(props.right.minWidth, rigthMinWidthImportant) * rootWidth;
-    sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;
+    sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;  
 }
 
 onMounted(() => {
@@ -262,13 +264,13 @@ watchEffect(initSizeBounds);
     width: 100%;
     height: auto;
     position: relative;
-
     .column1 {
         position: relative;
     }
 
     .column2 {
         position: relative;
+        overflow: hidden;
     }
 
     .column3 {

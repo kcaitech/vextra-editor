@@ -26,6 +26,7 @@ export function useController(context: Context) {
     let editing: boolean = false;
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
+    let need_update_comment: boolean = false;
     const trans = { x: 0, y: 0 };
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
@@ -189,6 +190,10 @@ export function useController(context: Context) {
             document.removeEventListener('mousemove', mousemove);
             document.removeEventListener('mouseup', mouseup);
         }
+        if (need_update_comment) {
+            workspace.value.notify(WorkSpace.UPDATE_COMMENT_POS);
+            need_update_comment = false;
+        }
         workspace.value.setCtrl('page');
     }
     function transform(start: ClientXY, end: ClientXY) {
@@ -242,6 +247,7 @@ export function useController(context: Context) {
             setPosition(start!);
             preTodo(start!);
             workspace.value.preToTranslating(false);
+            need_update_comment = true;
         }
     }
     function setPosition(e: MouseEvent) {

@@ -52,7 +52,7 @@ function get_image_name(brothers: Shape[], name: string) {
 function isInner(context: Context, shape: Shape) {
   const pMatrix = context.workspace.matrix;
   const { x: rx, y: ry, bottom, right } = context.workspace.root;
-  const s2pMatirx = shape.matrix2Page();
+  const s2pMatirx = shape.matrix2Root();
   const { width, height } = shape.frame;
   let point = [
     [0, 0],

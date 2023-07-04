@@ -22,6 +22,7 @@ interface Title {
     maxWidth: number
     selected: boolean
 }
+
 const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
@@ -58,8 +59,8 @@ const setPosition = () => {
                 } else {
                     selected = false
                 }
-                const m = artboard.matrix2Page(); // 图形到页面的转换矩阵
-                const f2p = artboard.frame2Page(); // 
+                const m = artboard.matrix2Root(); // 图形到页面的转换矩阵
+                const f2p = artboard.frame2Root(); // 
                 const frame = artboard.frame;
                 const matrix = props.context.workspace.matrix; // 页面坐标系转换矩阵
                 let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系

@@ -47,7 +47,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static CHANGE_TEXT = 5;
     static PAGE_RENAME = 6;
     static UPDATE_RENDER_ITEM = 7;
-    static EXTEND = 8;
+    static CHANGE_COMMENT = 8;
+    static SOLVE_MENU_STATUS = 9;
+    static COMMENT_CHANGE_PAGE = 10;
+    static SKIP_COMMENT = 11;
+    static PAGE_SORT = 12;
+    static ABOUT_ME = 13;
+    static EXTEND = 14;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -61,6 +67,12 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;
+    private m_comment_id: string = '';
+    private m_comment_status: boolean = false;
+    private m_comment_page_id: string | undefined;
+    private m_select_comment: boolean = false;
+    private m_comment_page_sort: boolean = false;
+    private m_comment_about_me: boolean = false;
 
     constructor(document: Document) {
         super();
@@ -94,6 +106,49 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get isSelectText() {
         return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape;
     }
+    get commentId() {
+        return this.m_comment_id;
+    }
+    get commentStatus() { //评论列表是否显示解决
+        return this.m_comment_status;
+    }
+    get commentPageId() {
+        return this.m_comment_page_id;
+    }
+    get isSelectComment() {
+        return this.m_select_comment;
+    }
+    get commentPageSort() { //评论是否按页面排序
+        return this.m_comment_page_sort;
+    }
+    get commentAboutMe() { //评论显示关于我的
+        return this.m_comment_about_me;
+    }
+
+    selectCommentPage(id: string) {
+        this.m_comment_page_id = id
+        this.notify(Selection.COMMENT_CHANGE_PAGE)
+    }
+
+    setCommentSelect(s: boolean) {
+        this.m_select_comment = s
+        if(!s) {
+            this.notify(Selection.SKIP_COMMENT)
+        }
+    }
+
+    commentSolveMenuStatus(status: boolean) { //设置列表评论菜单解决状态
+        this.m_comment_status = status
+        this.notify(Selection.SOLVE_MENU_STATUS)
+    }
+    setPageSort(status: boolean) {
+        this.m_comment_page_sort = status
+        this.notify(Selection.PAGE_SORT)
+    }
+    setCommentAboutMe(status: boolean) {
+        this.m_comment_about_me = status
+        this.notify(Selection.ABOUT_ME)
+    }
 
     selectPage(p: Page | undefined) {
         if (this.m_selectPage === p) {
@@ -122,6 +177,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     rename() {
         this.notify(Selection.PAGE_RENAME);
+    }
+    selectComment(id: string) {
+        this.m_comment_id = id
+        this.notify(Selection.CHANGE_COMMENT);
     }
 
     get selectedPage(): Page | undefined {
@@ -159,7 +218,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             position = cloneDeep(position);
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
-            shapes.push(...finder(this.scout, childs, position, force, this.selectedShapes[0], isCtrl));
+            shapes.push(...finder(this.scout, childs, position, this.selectedShapes[0], isCtrl));
         }
         return shapes;
     }
@@ -283,7 +342,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         const shape = this.m_selectShapes[0] as TextShape;
         // translate x,y
-        const matrix = shape.matrix2Page();
+        const matrix = shape.matrix2Root();
         const xy = matrix.inverseCoord(x, y);
         x = xy.x;
         y = xy.y;

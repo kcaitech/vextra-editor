@@ -95,7 +95,7 @@ function createShapeTracing() { // 描边
             tracing.value = false;
         } else {
             const path = hoveredShape.getPath(true);
-            const m2page = hoveredShape.matrix2Page();
+            const m2page = hoveredShape.matrix2Root();
             path.transform(m2page);
             path.transform(matrix);
             const { x, y, right, bottom } = props.context.workspace.root;
@@ -123,7 +123,7 @@ function createController() { // 计算控件点位以及类型判定
     } else {
         if (selection.length === 1) { // 单选
             const shape = selection[0];
-            const m = shape.matrix2Page();
+            const m = shape.matrix2Root();
             const frame = shape.frame;
             // p1 p2
             // p4 p3
@@ -152,7 +152,7 @@ function createController() { // 计算控件点位以及类型判定
         } else { // 多选
             const __points: [number, number][] = [];
             selection.forEach(p => {
-                const m = p.matrix2Page();
+                const m = p.matrix2Root();
                 const frame = p.frame;
                 let _ps: [number, number][] = [
                     [0, 0],
@@ -183,7 +183,7 @@ function createController() { // 计算控件点位以及类型判定
     }
 }
 
-function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
+function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形    
     if (props.context.workspace.action === Action.AutoV) {
         if (e.button === 0) {
             e.stopPropagation();

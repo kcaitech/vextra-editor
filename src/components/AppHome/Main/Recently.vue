@@ -40,8 +40,8 @@
             </span>
         </template>
     </el-dialog>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :selectValue="selectValue"
-        @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " @switch-state=" onSwitch " :userInfo="userInfo"
+        :selectValue=" selectValue " @select-type=" onSelectType " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
 </template>
@@ -54,6 +54,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import { UserInfo } from '@/context/user';
 import listsitem from '@/components/AppHome/listsitem.vue'
 
 const isLoading = ref(false)
@@ -69,6 +70,7 @@ const newname = ref()
 const renameinput = ref()
 const showrenname = ref<boolean>(true)
 const showcopyfile = ref<boolean>(true)
+const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
 const mydata = ref()
 const iconlists = ref(['star', 'share', 'remove'])
@@ -159,12 +161,19 @@ const Starfile = async (data: data) => {
     }
 }
 
+const userData = ref({
+    avatar: localStorage.getItem('avatar') || '',
+    id: localStorage.getItem('userId') || '',
+    nickname: localStorage.getItem('nickname') || ''
+})
+
 //分享入口
 const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
         return
     }
+    userInfo.value = userData.value
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     showFileShare.value = true
@@ -258,11 +267,7 @@ const rSharefile = () => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
-    }
-    Sharefile(mydata.value)
+     Sharefile(mydata.value)
 }
 
 //右键重命名

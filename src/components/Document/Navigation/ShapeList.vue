@@ -215,7 +215,7 @@ function shapeScrollToContentView(shape: Shape) {
         return;
     }
     const workspace = props.context.workspace;
-    const { x: sx, y: sy, height, width } = shape.frame2Page();
+    const { x: sx, y: sy, height, width } = shape.frame2Root();
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
     const { x, y, bottom, right } = workspace.root;
     const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置

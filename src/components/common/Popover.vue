@@ -93,7 +93,7 @@ onUnmounted(() => {
 .__popover-container {
   position: relative;
   outline: none;
-
+  z-index: 99;
   >.popover {
     position: absolute;
     outline: none;

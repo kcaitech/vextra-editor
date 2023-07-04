@@ -42,11 +42,9 @@
             </span>
         </template>
     </el-dialog>
-
-    <!-- 分享弹框 -->
-    <div v-if="showFileShare" class="overlay"></div>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue"
-        @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
+    <div v-if=" showFileShare " class="overlay"></div>
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo"
+        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
 </template>
 
@@ -58,6 +56,7 @@ import { onMounted, ref, onUnmounted, nextTick, computed } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import { UserInfo } from '@/context/user';
 import listsitem from '@/components/AppHome/listsitem.vue'
 
 interface data {
@@ -84,6 +83,9 @@ const pageHeight = ref(0)
 const docId = ref('')
 const mydata = ref()
 const selectValue = ref(1)
+const getDoucmentList = ref<any[]>([])
+const documentId = ref()
+const userInfo = ref<UserInfo | undefined>()
 let lists = ref<any[]>([])
 const iconlists = ref(['star', 'share', 'delete'])
 
@@ -145,17 +147,6 @@ const Starfile = async (data: data) => {
             ElMessage.success({ duration: 1500, message: t('home.star_cancel') })
         }
     }
-}
-
-//分享入口
-const Sharefile = (data: data) => {
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
-    }
-    docId.value = data.document.id
-    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
-    showFileShare.value = true
 }
 
 //删除文件入口
@@ -227,6 +218,12 @@ const openNewWindowDocument = () => {
     }
 }
 
+const userData = ref({
+    avatar: localStorage.getItem('avatar') || '',
+    id: localStorage.getItem('userId') || '',
+    nickname: localStorage.getItem('nickname') || ''
+})
+
 //右键标星
 const rStarfile = () => {
     Starfile(mydata.value)
@@ -235,17 +232,41 @@ const rStarfile = () => {
     }
 }
 
+
+//分享入口
+const Sharefile = (data: data) => {
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = data.document.id
+    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
+    userInfo.value = userData.value
+    showFileShare.value = true
+}
+
 //右键分享
 const rSharefile = () => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
-    }
     Sharefile(mydata.value)
 }
+
+
+const closeShare = () => {
+    showFileShare.value = false
+}
+const getPageHeight = () => {
+    pageHeight.value = window.innerHeight
+}
+const onSwitch = (state: boolean) => {
+    shareSwitch.value = state
+}
+const onSelectType = (type: number) => {
+    selectValue.value = type
+}
+
 
 //右键重命名
 //弹框
@@ -311,19 +332,6 @@ const rDeletefile = async () => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-}
-
-const closeShare = () => {
-    showFileShare.value = false
-}
-const getPageHeight = () => {
-    pageHeight.value = window.innerHeight
-}
-const onSwitch = (state: boolean) => {
-    shareSwitch.value = state
-}
-const onSelectType = (type: number) => {
-    selectValue.value = type
 }
 
 //监听页面点击事件，

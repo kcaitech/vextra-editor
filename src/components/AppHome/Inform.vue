@@ -3,6 +3,9 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import * as share_api from '@/apis/share'
 import { useI18n } from 'vue-i18n'
+import moment = require('moment');
+import 'moment/locale/zh-cn';
+import { mapDateLang } from '@/utils/date_lang'
 const { t } = useI18n()
 
 const emit = defineEmits<{
@@ -20,20 +23,19 @@ enum Audit {
 
 const formatDate = computed(() => {
   return function (value: string): string {
-    const date = new Date(value);
-    const zh_month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
     const lang = localStorage.getItem('locale') || 'zh'
-    const en_month = date.toLocaleString('en-US', { month: 'long' });
-    if(lang === 'zh') {
-        return `${zh_month}月${day}日 ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }else {
-        return `${en_month} ${day}, ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }
+    moment.locale(mapDateLang.get(lang) || 'zh-cn');
+    return filterDate(value);
   }
 })
+
+const filterDate = (time: string) => {
+  const date = new Date(time);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
 const consent = (id: string, index: number) => {
   promissionApplyAudit(id, Audit.Pass)
 }

@@ -67,7 +67,7 @@
 //     for (let i = 0; i < load.length; i++) {
 //         const item = load[i];
 //         const path = item.getPath(true);
-//         const m2page = item.matrix2Page();
+//         const m2page = item.matrix2Root();
 //         path.transform(m2page);
 //         const d = path.toString();
 //         // console.log('judge');

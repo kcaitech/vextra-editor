@@ -64,7 +64,7 @@ watchEffect(() => {
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
-    pageViewRegister(true);
+    pageViewRegister(true);    
     renderItems = props.data.childs;
 })
 onMounted(() => {

@@ -8,8 +8,8 @@ interface Props {
     context: Context
 }
 const props = defineProps<Props>();
-</script>
 
+</script>
 <template>
     <div class="user-info">
         <Share :context="props.context"></Share>

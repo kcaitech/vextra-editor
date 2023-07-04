@@ -20,7 +20,6 @@ const esc = ref<boolean>(false)
 const MOUSE_LEFT = 0;
 function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
-
     if (e.button === MOUSE_LEFT) {
         document.addEventListener("mouseup", function onMouseUp() {
             e.stopPropagation();

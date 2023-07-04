@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed } from "vue";
+import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import ToolButton from './ToolButton.vue';
@@ -28,6 +28,11 @@ const selected = ref<Action>(Action.AutoV);
 
 function select(action: Action) {
     workspace.value.setAction(action);
+    if(action === Action.AddComment) {
+        nextTick(() => {
+            props.context.workspace.commentInput(false);
+        })
+    }
 }
 
 function update() {

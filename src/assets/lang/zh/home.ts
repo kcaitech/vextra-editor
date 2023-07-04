@@ -207,7 +207,16 @@ export const comment = {
     sort: '按页面排序',
     show_about_me: '仅显示关于我的',
     show_resolved_comments: '显示已解决评论',
-    comment_area: '评论区'
+    comment_area: '评论区',
+    input_comments: '输入评论',
+    check: '查看',
+    a_few_reply: '条回复',
+    month: '月',
+    day: '日',
+    no_comment: '当前无评论',
+    leave_a_comment: '点击任意位置留下你的评论',
+    comments_hide: '评论已设置隐藏',
+    show_comments: '显示评论'
 }
 export const clipboard = {
     'invalid_data': '该内容无法解析'

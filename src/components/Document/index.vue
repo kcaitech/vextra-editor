@@ -11,6 +11,7 @@ import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal, CoopRepository } from '@kcdesign/data';
 import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
+import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
@@ -97,7 +98,9 @@ function switchPage(id?: string) {
         const pagesMgr = ctx.data.pagesMgr;
         pagesMgr.get(id).then((page: Page | undefined) => {
             if (page) {
+                ctx.workspace.toggleCommentPage()
                 curPage.value = undefined;
+                ctx.workspace.commentMount(false)
                 ctx.selection.selectPage(page);
                 (window as any).__context = ctx;
                 curPage.value = page;
@@ -111,6 +114,13 @@ function selectionWatcher(t: number) {
             const ctx: Context = context;
             curPage.value = ctx.selection.selectedPage;
         }
+    }
+    if (t === Selection.COMMENT_CHANGE_PAGE) {
+        if (context) {
+            const pageId = context.selection.commentPageId
+            switchPage(pageId)
+        }
+        
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
@@ -160,6 +170,7 @@ const showHiddenLeft = () => {
         showLeft.value = true
     }
 }
+
 function keyToggleLR() {
     if (showRight.value !== showLeft.value) {
         showHiddenLeft();
@@ -211,7 +222,7 @@ const getDocumentAuthority = async () => {
             }
         }
         permType.value = data.data.perm_type
-
+        context && context.workspace.setDocumentPerm(data.data.perm_type)
     } catch (err) {
         console.log(err);
     }
@@ -241,6 +252,28 @@ const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
+// let uploadTimer: any = null
+// function polling() {
+//     if (uploadTimer) {
+//         clearTimeout(uploadTimer);
+//     }
+//     uploadTimer = setTimeout(() => {
+//         const docID = localStorage.getItem('docId') || '';
+//         if (docID && permType.value !== 1) {
+//             upload(docID);
+//         }
+//     }, 60000);
+// }
+const getUserInfo = async() => {
+    const {data} = await user_api.GetInfo()
+    if(context) {
+        context.workspace.setUserInfo(data)
+        localStorage.setItem('avatar', data.avatar)
+        localStorage.setItem('nickname', data.nickname)
+        localStorage.setItem('userId', data.id)
+    }
+}
+
 //获取文档信息
 let coopLocal: ICoopLocal | null = null;
 const getDocumentInfo = async () => {
@@ -254,6 +287,7 @@ const getDocumentInfo = async () => {
             ElMessage({ message: `${t('apply.link_not')}` });
             router.push('/');
         }
+        //获取文档类型是否为私有文档且有无权限   
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -265,7 +299,6 @@ const getDocumentInfo = async () => {
         }
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限
 
         const repo = new Repository();
         const importDocumentParams = {
@@ -282,6 +315,7 @@ const getDocumentInfo = async () => {
             const coopRepo = new CoopRepository(document, repo)
             window.document.title = document.name;
             context = new Context(document, coopRepo);
+            context.workspace.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
@@ -302,12 +336,14 @@ const getDocumentInfo = async () => {
                 });
 
         }
+        getUserInfo()
     } catch (err) {
         loading.value = false;
         console.log(err)
         throw err;
     }
 }
+
 function upload() {
     const token = localStorage.getItem('token');
     if (!token || !context || !context.data) {
@@ -479,7 +515,7 @@ onUnmounted(() => {
     #navigation {
         height: 100%;
         background-color: var(--left-navi-bg-color);
-        z-index: 2;
+        z-index: 9;
     }
 
     #content {
@@ -491,9 +527,8 @@ onUnmounted(() => {
     #attributes {
         height: 100%;
         background-color: var(--right-attr-bg-color);
-        z-index: 2;
+        z-index: 9;
     }
-
 }
 
 .notification {
