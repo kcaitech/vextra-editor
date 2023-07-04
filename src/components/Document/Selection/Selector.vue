@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { Shape } from '@kcdesign/data';
+import { Shape, ShapeType } from '@kcdesign/data';
 import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget } from '@/utils/common';
@@ -9,7 +9,8 @@ export interface SelectorFrame {
     top: number,
     left: number,
     width: number,
-    height: number
+    height: number,
+    includes: boolean
 }
 interface Props {
     selectorFrame: SelectorFrame,
@@ -59,7 +60,15 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             { x: 0, y: h },
             { x: 0, y: 0 },
         ].map(p => m.computeCoord(p.x, p.y));
-        if (isTarget(Points, ps)) {
+        if (shape.type === ShapeType.Artboard) { // 容器的判定为真条件是完全被选区覆盖
+            if (isTarget(Points, ps, true)) {
+                selectedShapes.push(shape);
+            }
+            finder(shape.childs, Points);
+            ids++;
+            continue;
+        }
+        if (isTarget(Points, ps, props.selectorFrame.includes)) {
             selectedShapes.push(shape);
         }
         ids++;
@@ -78,7 +87,14 @@ function remove(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             { x: 0, y: h },
             { x: 0, y: 0 },
         ].map(p => m.computeCoord(p.x, p.y));
-        if (!isTarget(Points, ps)) {
+        if (childs[ids].type === ShapeType.Artboard) {
+            if (!isTarget(Points, ps, true)) {
+                selectedShapes.splice(ids, 1);
+            }
+            ids++;
+            continue;
+        }
+        if (!isTarget(Points, ps, props.selectorFrame.includes)) {
             selectedShapes.splice(ids, 1);
         }
         ids++;

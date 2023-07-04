@@ -60,7 +60,7 @@ const contextMenuEl = ref<ContextMenuEl>();
 const surplusY = ref<number>(0);
 const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector = ref<boolean>(false);
-const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0 });
+const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursorClass = ref<string>('');
 const styler = ref<StyleSheetController>(styleSheetController());
 const rootId = ref<string>('content');
@@ -386,7 +386,7 @@ function select(e: MouseEvent) {
     }
 }
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
-    const { clientX, clientY } = e;
+    const { clientX, clientY, altKey } = e;
     const { x: rx, y: ry } = workspace.value.root;
     const { x: mx, y: my } = { x: clientX - rx, y: clientY - ry };
     const { x: sx, y: sy } = mousedownOnClientXY;
@@ -398,6 +398,7 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
     selectorFrame.value.left = left;
     selectorFrame.value.width = right - left;
     selectorFrame.value.height = bottom - top;
+    selectorFrame.value.includes = altKey;
     selector.value = true;
 }
 function wheelSetup() { // 安装滚轮

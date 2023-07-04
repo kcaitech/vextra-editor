@@ -191,10 +191,11 @@ export function isIncluded(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY
 }
 
 // 两个形状既不🍌也没有包含关系，返回false
-export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]) {
+export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[], includes?: boolean) {
   if (isIncluded(selectorPoints, shapePoints)) {
     return true
   }
+  if (includes) return false;
   let s = 0;
   while (s < selectorPoints.length - 1) {
     const p1 = selectorPoints[s], q1 = selectorPoints[s + 1];

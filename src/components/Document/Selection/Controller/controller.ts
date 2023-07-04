@@ -136,7 +136,7 @@ export function useController(context: Context) {
             const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
             if (isDragging) {
                 workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
-                context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
+                // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
                 if (!editing) { // 处于编辑状态时，不拖动图形
                     if (wheel && asyncTransfer) {
                         const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
@@ -154,6 +154,7 @@ export function useController(context: Context) {
                             shapes = paster_short(context, shapes);
                         }
                         asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
+                        context.selection.unHoverShape();
                         workspace.value.setSelectionViewUpdater(false);
                     }
                 }
