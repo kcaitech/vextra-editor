@@ -344,6 +344,7 @@ function watchShapes() { // 监听评论相关shape的变化
         if (needWatchShapes.has(k)) return;
         v.unwatch(watchCommentShape.get(k));
         watchedShapes.delete(k);
+        watchCommentShape.delete(k)
     });
     needWatchShapes.forEach((v, k) => {
         if (watchedShapes.has(k)) return;

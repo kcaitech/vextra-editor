@@ -129,6 +129,7 @@ declare module '@vue/runtime-core' {
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
     Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']
+    TextAdvancedSettings: typeof import('./src/components/Document/Attribute/Text/TextAdvancedSettings.vue')['default']
     TextInput: typeof import('./src/components/Document/Selection/Controller/Text/TextInput.vue')['default']
     TextView: typeof import('./src/components/Document/Content/TextView.vue')['default']
     Toolbar: typeof import('./src/components/Document/Toolbar/index.vue')['default']

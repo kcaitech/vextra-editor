@@ -21,13 +21,14 @@ const { t } = useI18n();
     .font-container {
         position: absolute;
         top: 30px;
-        right: 0px;
-        width: 100%;
+        right: 22px;
+        width: 208;
         height: 300px;
         border-radius: 4px;
         background-color: #fff;
         border: 1px solid #ccc;
         box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        z-index: 9;
         .search {
             width: auto;
             height: 26px;
@@ -55,7 +56,9 @@ const { t } = useI18n();
         }
         .font-scroll {
             height: 260px;
-            padding-left: 10px;
+            .item {
+                padding: 0 10px;
+            }
         }
     }
 </style>
