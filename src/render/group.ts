@@ -15,8 +15,6 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
 }
 
 export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
-    console.log('render', shape.isVisible);
-
     if (!shape.isVisible) return;
     const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
     const frame = shape.frame;
