@@ -43,6 +43,10 @@ function enter(e: KeyboardEvent) {
 async function blur() {
     if (input.value) {
         const p_name = input.value.value.slice(0, 64);
+        if (p_name === name.value) {
+            ele.value = 1;
+            return;
+        }
         ele.value = 3;
         await user_api.Setfilename({ doc_id: route.query.id, name: p_name });
         ele.value = 1;

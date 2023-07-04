@@ -105,8 +105,11 @@ function forward() {
     const result = editor.uppper_layer(selction.selectedShapes[0], 1);
     if (!result) {
       message('info', props.context.workspace.t('homerightmenu.unable_upper'));
+    } else {
+      emit('close');
     }
   }
+
 }
 function back() {
   const selction = props.context.selection;
@@ -116,6 +119,8 @@ function back() {
     const result = editor.lower_layer(selction.selectedShapes[0], 1);
     if (!result) {
       message('info', props.context.workspace.t('homerightmenu.unable_lower'));
+    } else {
+      emit('close');
     }
   }
 }
@@ -207,6 +212,8 @@ function visible() {
     const editor = props.context.editor4Shape(shpaes[i]);
     editor.toggleVisible();
   }
+  props.context.selection.resetSelectShapes();
+  emit('close');
 }
 function lock() {
   const shpaes = props.context.selection.selectedShapes;
@@ -214,6 +221,8 @@ function lock() {
     const editor = props.context.editor4Shape(shpaes[i]);
     editor.toggleLock();
   }
+  props.context.selection.resetSelectShapes();
+  emit('close');
 }
 function closeLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = false;
@@ -291,18 +300,19 @@ function closeLayerSubMenu(e: MouseEvent) {
     <div class="line" v-if="props.items.includes('forward')"></div>
     <div class="item" v-if="props.items.includes('forward')" @click="forward">
       <span>{{ t('system.bring_forward') }}</span>
+      <span class="shortkey">+</span>
     </div>
     <div class="item" v-if="props.items.includes('back')" @click="back">
       <span>{{ t('system.send_backward') }}</span>
-      <span></span>
+      <span class="shortkey">- </span>
     </div>
     <div class="item" v-if="props.items.includes('top')" @click="top">
       <span>{{ t('system.bring_to_top') }}</span>
-      <span></span>
+      <span class="shortkey">]</span>
     </div>
     <div class="item" v-if="props.items.includes('bottom')" @click="bottom">
       <span>{{ t('system.send_to_bottom') }}</span>
-      <span></span>
+      <span class="shortkey">[</span>
     </div>
     <!-- 组合容器 -->
     <div class="line" v-if="props.items.includes('groups')"></div>

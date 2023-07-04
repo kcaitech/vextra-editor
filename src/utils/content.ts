@@ -1,7 +1,7 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix } from "@kcdesign/data";
 import { Action, Media, ResultByAction } from '@/context/workspace';
 import { createHorizontalBox } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
@@ -400,8 +400,9 @@ function drop(e: DragEvent, context: Context, t: Function) {
  */
 function adapt_page(context: Context, r?: Root) {
   const childs = context.selection.selectedPage?.childs || [];
-  const points: [number, number][] = [];
+  if (!childs.length) return new Matrix();
   const matrix = context.workspace.matrix;
+  const points: [number, number][] = [];
   for (let i = 0; i < childs.length; i++) {
     const item = childs[i];
     const frame = item.frame;
@@ -430,15 +431,19 @@ function adapt_page(context: Context, r?: Root) {
 
   const ratio = Math.max(ratio_h, ratio_w);
 
-  if (ratio > 1) {
+  if (ratio != 1) {
     const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     matrix.trans(del.x, del.y);
     matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
-    if (matrix.m00 * 1 / ratio > 0.02) { // 不能小于2%
+    if (matrix.m00 * 1 / ratio > 0.02 && matrix.m00 * 1 / ratio < 256) { // 不能小于2%,不能大于25600%
       matrix.scale(1 / ratio);
     } else {
-      matrix.scale(0.02 / matrix.m00);
+      if (matrix.m00 * 1 / ratio <= 0.02) {
+        matrix.scale(0.02 / matrix.m00);
+      } else if (matrix.m00 * 1 / ratio >= 256) {
+        matrix.scale(256 / matrix.m00);
+      }
     }
     matrix.trans(root.width / 2, root.height / 2);
     context.workspace.matrixTransformation();
@@ -448,7 +453,6 @@ function adapt_page(context: Context, r?: Root) {
     if (del.x || del.y) {
       matrix.trans(del.x, del.y);
       context.workspace.matrixTransformation();
-
     }
   }
   return matrix;
