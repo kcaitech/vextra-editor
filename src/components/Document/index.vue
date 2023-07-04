@@ -132,11 +132,6 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
-        } else if (code === 'KeyS') {
-            if (ctrlKey || metaKey) {
-                evevt.preventDefault();
-                context.workspace.documentSave();
-            }
         }
     }
 }

@@ -4,7 +4,6 @@ import { Page } from "@kcdesign/data";
 import { Shape, TextShape } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
 import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
-// import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
 import { Artboard } from "@kcdesign/data";
 import { Context } from ".";
 interface Saved {
@@ -133,7 +132,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     setCommentSelect(s: boolean) {
         this.m_select_comment = s
-        if(!s) {
+        if (!s) {
             this.notify(Selection.SKIP_COMMENT)
         }
     }

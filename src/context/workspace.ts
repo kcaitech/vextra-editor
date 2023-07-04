@@ -150,7 +150,6 @@ export class WorkSpace extends Watchable(Object) {
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
-    private m_saving: boolean = false;
     private m_document_info: DocInfo | undefined;
     private m_comment_list: any[] = []; // 当前文档评论
     private m_page_comment_list: any[] = []; // 当前页面评论
@@ -323,19 +322,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     getImageFromDoc() {
         return this.m_image;
-    }
-    startSave() {
-        this.m_saving = true;
-        this.notify(WorkSpace.START_SAVE);
-    }
-    endSave() {
-        this.m_saving = false;
-        this.notify(WorkSpace.END_SAVE);
-    }
-    documentSave() {
-        if (!this.m_saving) {
-            this.notify(WorkSpace.DOCUMENT_SAVE);
-        }
     }
     setDocumentInfo(info: DocInfo) {
         this.m_document_info = info
