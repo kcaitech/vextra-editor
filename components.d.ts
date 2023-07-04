@@ -134,6 +134,7 @@ declare module '@vue/runtime-core' {
     TextView: typeof import('./src/components/Document/Content/TextView.vue')['default']
     Toolbar: typeof import('./src/components/Document/Toolbar/index.vue')['default']
     ToolButton: typeof import('./src/components/Document/Toolbar/ToolButton.vue')['default']
+    Tooltip: typeof import('./src/components/common/Tooltip.vue')['default']
     TypeHeader: typeof import('./src/components/Document/Attribute/TypeHeader.vue')['default']
     UndoRedo: typeof import('./src/components/Document/Toolbar/UndoRedo.vue')['default']
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']

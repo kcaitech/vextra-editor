@@ -3,73 +3,123 @@ import Popover from '@/components/common/Popover.vue';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
+import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n();
 interface Props {
   context: Context
 }
 const popover = ref();
 const props = defineProps<Props>();
-const selectVertical = ref('')
-const selectLevel = ref('left')
+const selectCase = ref('no-list')
+const selectText = ref('autowidth')
+const selectId = ref('no-list')
+const wordSpace = ref('0%')
+const rowHeight = ref(`${t('attr.auto')}`)
+const paragraphSpace = ref('0')
 function showMenu() {
   props.context.workspace.popoverVisible(false);
   popover.value.show();
 }
 
-const onSelectVertical = (icon: string) => {
-    selectVertical.value = icon
+const onSelectId = (icon: string) => {
+  selectId.value = icon
 }
-const onSelectLevel = (icon: string) => {
-    selectLevel.value = icon
+const onSelectText = (icon: string) => {
+  selectText.value = icon
+}
+const onSelectCase = (icon: string) => {
+  selectCase.value = icon
 }
 </script>
 
 <template>
     <div class="text-detail-container">
       <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="-435"
-        :title="'文本高级设置'">
+        :title="t('attr.text_advanced_settings')">
         <template #trigger>
           <div class="trigger">
-            <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+            <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
+              <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+            </Tooltip>
           </div>
         </template>
         <template #body>
           <div class="options-container">
             <div>
-                <span>字间距</span>
-                <div><input type="text" class="input"></div>
+                <span>{{t('attr.word_space')}}</span>
+                <div><input type="text" v-model="wordSpace" class="input"></div>
             </div>
             <div>
-                <span>行高</span>
-                <div><input type="text" class="input"></div>
+                <span>{{t('attr.row_height')}}</span>
+                <div><input type="text" v-model="rowHeight" class="input"></div>
             </div>
             <div>
-                <span>段落间距</span>
-                <div><input type="text" class="input"></div>
+                <span>{{t('attr.paragraph_space')}}</span>
+                <div><input type="text" v-model="paragraphSpace" class="input"></div>
             </div>
             <div>
-                <span>编号样式</span>
+                <span>{{t('attr.id_style')}}</span>
                 <div class="vertical-aligning jointly-text">
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'top'}" @click="onSelectVertical('top')"><svg-icon icon-class="text-no-list"></svg-icon></i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'middle'}" @click="onSelectVertical('middle')"><svg-icon icon-class="text-bulleted-list"></svg-icon></i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'bottom'}" @click="onSelectVertical('bottom')"><svg-icon icon-class="text-number-list"></svg-icon></i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'no-list'}" @click="onSelectId('no-list')">
+                      <Tooltip :content="t('attr.none_list')" :offset="15">
+                        <svg-icon icon-class="text-no-list"></svg-icon>
+                      </Tooltip>
+                    </i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'bulleted-list'}" @click="onSelectId('bulleted-list')">
+                      <Tooltip :content="t('attr.unordered_list')" :offset="15">
+                        <svg-icon icon-class="text-bulleted-list"></svg-icon>
+                      </Tooltip>
+                    </i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'number-list'}" @click="onSelectId('number-list')">
+                      <Tooltip :content="t('attr.ordered_list')" :offset="15">
+                        <svg-icon icon-class="text-number-list"></svg-icon>
+                      </Tooltip>
+                    </i>
                 </div>
             </div>
             <div>
-                <span>字母大小写</span>
+                <span>{{t('attr.letter_case')}}</span>
                 <div class="level-aligning jointly-text">
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'left'}" @click="onSelectLevel('left')"><svg-icon icon-class="text-no-list"></svg-icon></i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'center'}" @click="onSelectLevel('center')"><svg-icon icon-class="text-center"></svg-icon></i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'right'}" @click="onSelectLevel('right')"><svg-icon icon-class="text-right"></svg-icon></i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'justify'}" @click="onSelectLevel('justify')"><svg-icon icon-class="text-justify"></svg-icon></i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'no-list'}" @click="onSelectCase('no-list')">
+                      <Tooltip :content="t('attr.as_typed')" :offset="15">
+                        <svg-icon icon-class="text-no-list"></svg-icon>
+                      </Tooltip>
+                    </i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'uppercase'}" @click="onSelectCase('uppercase')">
+                      <Tooltip :content="t('attr.uppercase')" :offset="15">
+                        <svg-icon icon-class="text-uppercase"></svg-icon>
+                      </Tooltip>
+                    </i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'lowercase'}" @click="onSelectCase('lowercase')">
+                      <Tooltip :content="t('attr.lowercase')" :offset="15">
+                        <svg-icon icon-class="text-lowercase"></svg-icon>
+                      </Tooltip>
+                    </i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'titlecase'}" @click="onSelectCase('titlecase')">
+                      <Tooltip :content="t('attr.titlecase')" :offset="15">
+                        <svg-icon icon-class="text-titlecase"></svg-icon>
+                      </Tooltip>
+                    </i>
                 </div>
             </div>
             <div>
-                <span>文本样式</span>
+                <span>{{t('attr.text_style')}}</span>
                 <div class="vertical-aligning jointly-text">
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'top'}" @click="onSelectVertical('top')"><svg-icon icon-class="align-top"></svg-icon></i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'middle'}" @click="onSelectVertical('middle')"><svg-icon icon-class="align-middle"></svg-icon></i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'bottom'}" @click="onSelectVertical('bottom')"><svg-icon icon-class="align-bottom"></svg-icon></i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'autowidth'}" @click="onSelectText('autowidth')">
+                      <Tooltip :content="t('attr.autowidth')" :offset="15">
+                        <svg-icon icon-class="text-autowidth"></svg-icon>
+                      </Tooltip>
+                    </i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'autoheight'}" @click="onSelectText('autoheight')">
+                      <Tooltip :content="t('attr.autoheight')" :offset="15">
+                        <svg-icon icon-class="text-autoheight"></svg-icon>
+                      </Tooltip>
+                    </i>
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'fixedsize'}" @click="onSelectText('fixedsize')">
+                      <Tooltip :content="t('attr.fixedsize')" :offset="15">
+                        <svg-icon icon-class="text-fixedsize"></svg-icon>
+                      </Tooltip>
+                    </i>
                 </div>
             </div>
           </div>
@@ -80,6 +130,7 @@ const onSelectLevel = (icon: string) => {
 
 <style scoped lang="scss">
 .text-detail-container {
+
   >.popover {
     width: 18px;
     height: 22px;
@@ -124,8 +175,8 @@ const onSelectLevel = (icon: string) => {
             justify-content: space-between;
             align-items: center;    
             >svg {
-                width: 12px;
-                height: 12px;
+                width: 13px;
+                height: 13px;
             } 
         }
         >span {
@@ -166,10 +217,16 @@ const onSelectLevel = (icon: string) => {
         outline: none;
         }
       }
+
     }
   }
     .selected_bgc {
         background-color: var(--left-navi-button-select-color) !important;
     }
+   
 }
+:deep(.el-tooltip__trigger:focus) {
+  outline: none !important;
+}
+
 </style>

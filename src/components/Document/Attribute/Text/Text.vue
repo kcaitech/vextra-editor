@@ -2,10 +2,11 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import {ref} from 'vue';
+import {onMounted, ref} from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import { Shape } from "@kcdesign/data";
+import Tooltip from '@/components/common/Tooltip.vue';
 
 interface Props {
     context: Context
@@ -22,7 +23,8 @@ const isTilt = ref(false)
 const isUnderline = ref(false)
 const isDeleteline = ref(false)
 const selectLevel = ref('left')
-const selectVertical = ref('')
+const selectVertical = ref('top')
+const systemFonts = ref<string[]>([]);
 
 const onShowFont = () => {
     if(showFont.value) return showFont.value = false
@@ -78,6 +80,7 @@ const changeTextSize = (size: number) => {
     textValue.value = size
     showSize.value = false;
 }
+
 </script>
 
 <template>
@@ -114,16 +117,24 @@ const changeTextSize = (size: number) => {
                         </div>
                     </div>
                     <div class="overbold jointly-text" :class="{selected_bgc: isBold}" @click="onBold">
-                        <svg-icon icon-class="text-bold"></svg-icon>
+                        <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl+B`" :offset="15">
+                            <svg-icon icon-class="text-bold"></svg-icon>
+                        </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{selected_bgc: isTilt}" @click="onTilt">
-                        <svg-icon icon-class="text-tilt"></svg-icon>
+                        <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl+I`" :offset="15">
+                            <svg-icon icon-class="text-tilt"></svg-icon>
+                        </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{selected_bgc: isUnderline}" @click="onUnderlint">
-                        <svg-icon icon-class="text-underline"></svg-icon>
+                        <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl+U`" :offset="15">
+                            <svg-icon icon-class="text-underline"></svg-icon>
+                        </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{selected_bgc: isDeleteline}" @click="onDeleteline">
-                        <svg-icon icon-class="text-deleteline"></svg-icon>
+                        <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl+Shift+X`" :offset="15">
+                            <svg-icon icon-class="text-deleteline"></svg-icon>
+                        </Tooltip>
                     </div>
                 </div>
                 <div class="perch"></div>
@@ -131,15 +142,43 @@ const changeTextSize = (size: number) => {
             <div class="text-bottom">
                 <div class="text-bottom-align">
                     <div class="level-aligning jointly-text">
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'left'}" @click="onSelectLevel('left')"><svg-icon icon-class="text-left"></svg-icon></i>
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'center'}" @click="onSelectLevel('center')"><svg-icon icon-class="text-center"></svg-icon></i>
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'right'}" @click="onSelectLevel('right')"><svg-icon icon-class="text-right"></svg-icon></i>
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'justify'}" @click="onSelectLevel('justify')"><svg-icon icon-class="text-justify"></svg-icon></i>
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'left'}" @click="onSelectLevel('left')">
+                            <Tooltip :content="t('attr.align_left')" :offset="15">
+                                <svg-icon icon-class="text-left"></svg-icon>
+                            </Tooltip>
+                        </i>
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'center'}" @click="onSelectLevel('center')">
+                            <Tooltip :content="t('attr.align_center')" :offset="15">
+                                <svg-icon icon-class="text-center"></svg-icon>
+                            </Tooltip>
+                        </i>
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'right'}" @click="onSelectLevel('right')">
+                            <Tooltip :content="t('attr.align_right')" :offset="15">
+                                <svg-icon icon-class="text-right"></svg-icon>
+                            </Tooltip>
+                        </i>
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectLevel === 'justify'}" @click="onSelectLevel('justify')">
+                            <Tooltip :content="t('attr.align_the_sides')" :offset="15">
+                                <svg-icon icon-class="text-justify"></svg-icon>
+                            </Tooltip>
+                        </i>
                     </div>
                     <div class="vertical-aligning jointly-text">
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'top'}" @click="onSelectVertical('top')"><svg-icon icon-class="align-top"></svg-icon></i>
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'middle'}" @click="onSelectVertical('middle')"><svg-icon icon-class="align-middle"></svg-icon></i>
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'bottom'}" @click="onSelectVertical('bottom')"><svg-icon icon-class="align-bottom"></svg-icon></i>
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'top'}" @click="onSelectVertical('top')">
+                            <Tooltip :content="t('attr.align_top')" :offset="15">
+                                <svg-icon icon-class="align-top"></svg-icon>
+                            </Tooltip>
+                        </i>
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'middle'}" @click="onSelectVertical('middle')">
+                            <Tooltip :content="t('attr.align_middle')" :offset="15">
+                                <svg-icon icon-class="align-middle"></svg-icon>
+                            </Tooltip>
+                        </i>
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'bottom'}" @click="onSelectVertical('bottom')">
+                            <Tooltip :content="t('attr.align_bottom')" :offset="15">
+                                <svg-icon icon-class="align-bottom"></svg-icon>
+                            </Tooltip>
+                        </i>
                     </div>
                 </div>
                 <div class="perch"></div>
@@ -183,6 +222,7 @@ const changeTextSize = (size: number) => {
             >svg {
                 width: 12px;
                 height: 12px;
+                overflow: visible !important;
             } 
         }
         .text-top {
@@ -293,6 +333,9 @@ const changeTextSize = (size: number) => {
     .selected_bgc {
         background-color: var(--left-navi-button-select-color) !important;
     }
+}
+:deep(.el-tooltip__trigger:focus) {
+  outline: none !important;
 }
 
 </style>

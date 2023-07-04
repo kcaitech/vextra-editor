@@ -7,7 +7,7 @@ const { t } = useI18n();
     <div class="font-container">
         <div class="search">
             <svg-icon icon-class="search"></svg-icon>
-            <input type="text" :placeholder="'搜索字体…'" >
+            <input type="text" :placeholder="t('attr.search_for_fonts')" >
         </div>
         <div class="font-scroll">
             <el-scrollbar>
