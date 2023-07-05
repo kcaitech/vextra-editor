@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
@@ -9,6 +9,7 @@ import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
+import { replace } from '@/utils/clipaboard';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -22,8 +23,6 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
-const isLock = ref<boolean>()
-const isVisible = ref<boolean>()
 const isComment = ref<boolean>(props.context.workspace.isVisibleComment)
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
@@ -37,6 +36,23 @@ function copy() {
 }
 function paste() {
   props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
+  emit('close');
+}
+function paste_here() {
+  const workspace = props.context.workspace;
+  const root = workspace.root;
+  const matrix = workspace.matrix;
+  const page_xy = matrix.inverseCoord(props.site?.x || 0 - root.x, props.site?.y || 0 - root.y);
+  console.log(page_xy);
+
+  emit('close');
+}
+function _replace() {
+  const selction = props.context.selection;
+  const selected = selction.selectedShapes;
+  if (selected.length) {
+    replace(props.context, t, selected);
+  }
   emit('close');
 }
 function selectAll() {
@@ -260,6 +276,13 @@ function closeLayerSubMenu(e: MouseEvent) {
     <div class="item" v-if="props.items.includes('paste')" @click="paste">
       <span>{{ t('system.paste') }}</span>
       <span class="shortkey">Ctrl + V</span>
+    </div>
+    <div class="item" v-if="props.items.includes('paste-here')" @click="paste_here">
+      <span>{{ t('system.paste_here') }}</span>
+    </div>
+    <div class="item" v-if="props.items.includes('replace')" @click="_replace">
+      <span>{{ t('system.replace') }}</span>
+      <span class="shortkey">Ctrl + Shift + R</span>
     </div>
 
     <!-- 视图比例 -->

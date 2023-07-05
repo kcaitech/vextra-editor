@@ -41,7 +41,8 @@ export const message = (type: MessageType, context: string) => {
         'font-size': '10px',
         padding: '0 8px',
         border: `1px solid ${C[type].border}`,
-        opacity: '0'
+        opacity: '0',
+        'text-align': 'center'
     });
 
     const el = document.createElement('div');

@@ -108,24 +108,20 @@ export function useController(context: Context) {
         return (e.target as Element)?.closest(`#content`) ? true : false;
     }
     function mousedown(e: MouseEvent) {
-        if (context.workspace.isEditing) {
-            context.selection.selectShape(context.selection.hoveredShape);
-        }
-        const working = !context.workspace.isPageDragging && !context.workspace.isEditing;
-        if (working) {
-            if (isElement(e)) {
-                matrix.reset(workspace.value.matrix);
-                setPosition(e);
-                if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
-                    handleDblClick();
-                }
-                initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
-                preTodo(e);
-            } else {
-                if (isMouseOnContent(e)) {
-                    if (!context.selection.hoveredShape) {
-                        context.selection.selectShape();
-                    }
+        const de_working = context.workspace.isPageDragging || context.workspace.isEditing;
+        if (de_working) return;
+        if (isElement(e)) {
+            matrix.reset(workspace.value.matrix);
+            setPosition(e);
+            if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
+                handleDblClick();
+            }
+            initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
+            preTodo(e);
+        } else {
+            if (isMouseOnContent(e)) {
+                if (!context.selection.hoveredShape) {
+                    context.selection.resetSelectShapes();
                 }
             }
         }

@@ -1,26 +1,31 @@
-import { Context } from "@/context";
 import { Shape, ShapeType } from "@kcdesign/data";
 export type Area = number | 'artboard' | 'group' | 'normal'; // number 说明在选区内
-export function right_area(context: Context, shape: Shape): Area {
-    let area: Area = 'normal';
-    const selection = context.selection;
-    if (shape.type === ShapeType.Artboard) {
-        area = 'artboard';
-    }
-    if (shape.type === ShapeType.Group) {
-        area = 'group';
-    }
-    const selected = selection.selectedShapes;
-    const selected_map = new Map();
-    for (let i = 0; i < selected.length; i++) {
-        selected_map.set(selected[i].id, selected[i]);
+export function is_shape_in_selection(shapes: Shape[], shape: Shape): boolean {
+    const map: Map<string, Shape> = new Map();
+    for (let i = 0; i < shapes.length; i++) {
+        if (shape.id === shapes[i].id) return true;
+        map.set(shapes[i].id, shapes[i])
     }
 
-    let p = shape;
+    let p = shape.parent;
 
-    while(p) {
-        
+    while (p && p.type !== ShapeType.Page) {
+        if (map.get(p.id)) {
+            return true;
+        }
+        p = p.parent;
     }
-
-    return area;
+    return false;
+}
+export function selection_types(shapes: Shape[]): number {
+    let types = 0;
+    for (let i = 0; i < shapes.length; i++) {
+        if (shapes[i].type === ShapeType.Artboard) {
+            types = types | 2;
+        } else if (shapes[i].type === ShapeType.Group) {
+            types = types | 1;
+        }
+        if (types === 3) return types;
+    }
+    return types;
 }

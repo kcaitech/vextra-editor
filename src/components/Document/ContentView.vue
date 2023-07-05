@@ -327,11 +327,11 @@ function contextMenuMount(e: MouseEvent) {
 
     const area = right_select(e, mousedownOnPageXY, props.context);
     if (area === 'artboard') {
-        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+        contextMenuItems = ['all', 'copy', 'paste', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
     } else if (area === 'group') {
-        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+        contextMenuItems = ['all', 'copy', 'paste', 'replace', 'paste-here', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
     } else if (area === 'controller') {
-        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'groups', 'container'];
+        contextMenuItems = ['all', 'copy', 'paste', 'replace', 'paste-here', 'visible', 'lock', 'groups', 'container'];
         const types = get_selected_type(props.context);
         if (types & 1) {
             contextMenuItems.push('dissolution');
@@ -343,9 +343,9 @@ function contextMenuMount(e: MouseEvent) {
             contextMenuItems.push('forward', 'back', 'top', 'bottom');
         }
     } else if (area === 'normal') {
-        contextMenuItems = ['all', 'copy', 'paste', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+        contextMenuItems = ['all', 'copy', 'paste', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
     } else {
-        contextMenuItems = ['all', 'paste', 'half', 'hundred', 'double', 'canvas', 'operation'];
+        contextMenuItems = ['all', 'paste', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation'];
     }
     const shapes = selection.getLayers(mousedownOnPageXY);
     if (shapes.length > 1) {

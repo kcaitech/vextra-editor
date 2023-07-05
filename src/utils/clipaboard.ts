@@ -20,8 +20,19 @@ export class Clipboard {
     }
     write_html() {
         const shapes = this.context.selection.selectedShapes;
+        const position_map: Map<string, ShapeFrame> = new Map();
+        for (let i = 0; i < shapes.length; i++) {
+            position_map.set(shapes[i].id, shapes[i].frame2Root());
+        }
         const content = this.clipboard_write_shapes(shapes);
         if (!content) return;
+        for (let i = 0; i < content.length; i++) {
+            const shape = content[i].content;
+            const root_frame = position_map.get(shape.id);
+            if (root_frame) {
+                shape.frame = root_frame;
+            }
+        }
         if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
             const blob = new Blob([`${identity}${JSON.stringify(content)}` || ''], { type: 'text/html' });
             navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
@@ -55,7 +66,7 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
                     context.workspace.setFreezeStatus(false);
                 })
                 .catch((e) => {
-                    console.log('e', e);
+                    console.log(e);
                     message('info', t('clipboard.invalid_data'));
                     context.workspace.setFreezeStatus(false);
                 })
@@ -63,6 +74,42 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
     } catch (error) {
         message('info', t('clipboard.invalid_data'));
         context.workspace.setFreezeStatus(false);
+    }
+}
+export function replace(context: Context, t: Function, src: Shape[]) {
+    try {
+        if (navigator.clipboard && navigator.clipboard.read) {
+            context.workspace.setFreezeStatus(true);
+            navigator.clipboard.read()
+                .then(function (data) {
+                    if (data && data.length) { // 存在有效内容
+                        if (data[0].types.length === 1) {
+                            if (data[0].types.includes('text/html')) { // 内容为Shape[]
+                                clipboard_text_html_replace(context, data[0], src);
+                            } else {
+                                message('info', t('system.failed'));
+                                context.workspace.setFreezeStatus(false);
+                                return false;
+                            }
+                        }
+                    } else {
+                        message('info', t('system.failed'));
+                        context.workspace.setFreezeStatus(false);
+                        return false;
+                    }
+                    context.workspace.setFreezeStatus(false);
+                })
+                .catch((e) => {
+                    console.log('e', e);
+                    message('info', t('system.failed'));
+                    context.workspace.setFreezeStatus(false);
+                })
+        }
+        return true;
+    } catch (error) {
+        message('info', t('system.failed'));
+        context.workspace.setFreezeStatus(false);
+        return false;
     }
 }
 // 内部shapes复制
@@ -95,6 +142,33 @@ function clipboard_text_html(context: Context, data: any) {
                     }
                 } else {
                     message('info', context.workspace.t('clipboard.invalid_data'));
+                }
+            }
+        }
+        fr.readAsText(val);
+    }).catch((e: Error) => {
+        console.log(e);
+    });
+}
+function clipboard_text_html_replace(context: Context, data: any, src: Shape[]) {
+    data.getType('text/html').then((val: any) => {
+        const fr = new FileReader();
+        fr.onload = function (event) {
+            const text_html = event.target?.result;
+            if (text_html && typeof text_html === 'string') {
+                if (text_html.slice(0, 60).indexOf(identity) > -1) {
+                    const source = JSON.parse(text_html.split(identity)[1]);
+                    const shapes = import_shape(context.data, source);
+                    if (shapes.length) {
+                        const page = context.selection.selectedPage;
+                        if (page) {
+                            const editor = context.editor.editor4Page(page);
+                            const r = editor.replace(shapes, src);
+                            if (r) context.selection.rangeSelectShape(r);
+                        }
+                    }
+                } else {
+                    message('info', context.workspace.t('system.failed'));
                 }
             }
         }

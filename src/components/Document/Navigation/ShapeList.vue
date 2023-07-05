@@ -13,6 +13,7 @@ import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
+import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -136,18 +137,57 @@ function selectShape(shape: Shape, ctrlKey: boolean, metaKey: boolean, shiftKey:
     if (shiftKey) {
         selectShapeWhenShiftIsPressed(shape);
     } else {
-        props.context.selection.selectShape(shape, ctrlKey, metaKey);
+        if (ctrlKey || metaKey) {
+            const selected_map: Map<string, Shape> = new Map();
+            const selected = props.context.selection.selectedShapes;
+            for (let i = 0; i < selected.length; i++) {
+                if (selected[i].id === shape.id) {
+                    props.context.selection.unSelectShape(shape); // 元素本身被选中的话就取消选中
+                    return;
+                }
+                selected_map.set(selected[i].id, selected[i]);
+            }
+            let p = shape.parent;
+            while (p && p.type !== ShapeType.Page) { // 元素有父级被选中就不需要在选中了
+                if (selected_map.get(p.id)) {
+                    return;
+                }
+                p = p.parent;
+            }
+            selected.push(shape);
+            selected_map.set(shape.id, shape);
+            for (let i = 0; i < selected.length; i++) {
+                const s = selected[i];
+                let need_remove = false;
+                let p = s.parent;
+                while (p && p.type !== ShapeType.Page) {
+                    if (selected_map.get(p.id)) {
+                        need_remove = true;
+                        break;
+                    }
+                    p = p.parent;
+                }
+                if (need_remove) selected_map.delete(s.id);
+            }
+            props.context.selection.rangeSelectShape(Array.from(selected_map.values()));
+        } else {
+            props.context.selection.selectShape(shape);
+        }
     }
 }
 function selectShapeWhenShiftIsPressed(shape: Shape) {
     const to = shapeDirList.indexOf(shape);
     const selectedShapes = props.context.selection.selectedShapes;
-    const selectShapesIndex = getSelectShapesIndex(selectedShapes);
-    const from = selectShapesIndex.reduce((pre, cur) => {
-        return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
-    }, selectShapesIndex[0]);
-    const shapes = getShapeRange(from, to);
-    props.context.selection.rangeSelectShape(shapes);
+    if (selectedShapes.length) {
+        const selectShapesIndex = getSelectShapesIndex(selectedShapes);
+        const from = selectShapesIndex.reduce((pre, cur) => {
+            return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
+        }, selectShapesIndex[0]);
+        const shapes = getShapeRange(from, to);
+        props.context.selection.rangeSelectShape(shapes);
+    } else {
+        props.context.selection.selectShape(shape);
+    }
 }
 function getSelectShapesIndex(shapes: Shape[]): number[] {
     return shapes.map(s => shapeDirList.indexOf(s));
@@ -156,12 +196,30 @@ function getSelectShapesIndex(shapes: Shape[]): number[] {
 function getShapeRange(start: number, end: number): Shape[] {
     const from = Math.min(start, end);
     const to = Math.max(start, end);
-    const dataRange: Shape[] = [];
+    const range: Map<string, Shape> = new Map();
     const it = listviewSource.iterAt(from);
     for (let i = from; i <= to && it.hasNext(); i++) {
-        dataRange.push(it.next().shape);
+        const shape = it.next().shape;
+        const childs = shape.childs;
+        if (childs && childs.length) {
+            for (let c_i = 0; c_i < childs.length; c_i++) {
+                range.delete(childs[c_i].id);
+            }
+        }
+        let need_set = true;
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) {
+            if (range.get(p.id)) {
+                need_set = false;
+                break;
+            }
+            p = p.parent;
+        }
+        if (need_set) {
+            range.set(shape.id, shape);
+        }
     }
-    return dataRange;
+    return Array.from(range.values());
 }
 
 function hoverShape(shape: Shape) {
@@ -241,19 +299,34 @@ function shapeScrollToContentView(shape: Shape) {
     }
 
 }
-
+function selectshape_right(shape: Shape, shiftKey: boolean) {
+    const selection = props.context.selection;
+    if (is_shape_in_selection(selection.selectedShapes, shape)) return;
+    if (shiftKey) {
+        selectShapeWhenShiftIsPressed(shape);
+    } else {
+        selection.selectShape(shape);
+    }
+}
 const list_mousedown = (e: MouseEvent, shape: Shape) => {
     const workspace = props.context.workspace;
-    const selection = props.context.selection;
     workspace.menuMount(false);
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
         e.stopPropagation(); // 右键事件到这就不上去了
-        console.log('right-click');
-        // todo
-        selection.selectShape(shape);
         workspace.menuMount(false);
-        if (e.target instanceof Element && e.target.closest(`.__context-menu`)) return;
+        if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
+        selectshape_right(shape, e.shiftKey);
+        const selected = props.context.selection.selectedShapes;
+        chartMenuItems = ['all', 'copy', 'groups', 'container'];
+        if (selected.length === 1) {
+            chartMenuItems.push('replace', 'forward', 'back', 'top', 'bottom');
+        } else if (selected.length > 1) {
+            chartMenuItems.push('replace', 'visible', 'lock');
+        }
+        const types = selection_types(selected);
+        if (types & 1) chartMenuItems.push('un_group');
+        if (types & 2) chartMenuItems.push('dissolution');
         chartMenuMount(e);
     }
 }
@@ -262,8 +335,7 @@ const chartMenuMount = (e: MouseEvent) => {
     e.stopPropagation()
     chartMenuPosition.value.x = e.clientX
     chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
-    chartMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container']
-    chartMenu.value = true
+    chartMenu.value = true;
     document.addEventListener('keydown', menu_unmount);
     nextTick(() => {
         if (contextMenuEl.value) {

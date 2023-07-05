@@ -1,5 +1,6 @@
 import { Context } from "@/context";
 import { message } from "./message";
+import { replace } from "./clipaboard";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context) {
     const { target, shiftKey, ctrlKey, metaKey } = e;
@@ -76,6 +77,14 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
         context.selection.resetSelectShapes();
     } else if (e.code === 'Escape') {
         context.selection.resetSelectShapes();
+    } else if (e.code === 'KeyR') {
+        if (shiftKey && ctrlKey) {
+            e.preventDefault();
+            const selected = context.selection.selectedShapes;
+            if (selected.length) {
+                replace(context, context.workspace.t, selected);
+            }
+        }
     }
     if (transform) {
         for (let i = 0; i < shapes.length; i++) {

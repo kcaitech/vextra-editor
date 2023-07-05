@@ -231,20 +231,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return result;
     }
 
-    selectShape(shape?: Shape, ctrl?: boolean, meta?: boolean) {
+    selectShape(shape?: Shape) {
         if (!shape) { // 取消所有已经选择的图形
             this.resetSelectShapes();
         } else {
             if (shape.isLocked) return;
-            if (ctrl || meta) {
-                if (this.isSelectedShape(shape)) {
-                    this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
-                } else {
-                    this.m_selectShapes.push(shape);
-                }
-                this.notify(Selection.CHANGE_SHAPE);
-                return;
-            }
             this.m_selectShapes.length = 0;
             this.m_selectShapes.push(shape);
             this.m_cursorStart = -1;
@@ -255,7 +246,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     }
     unSelectShape(shape: Shape) {
-        const index = this.m_selectShapes.findIndex((s: Shape) => s === shape);
+        const index = this.m_selectShapes.findIndex((s: Shape) => s.id === shape.id);
         if (index > -1) {
             this.m_selectShapes.splice(index, 1);
             this.notify(Selection.CHANGE_SHAPE);
