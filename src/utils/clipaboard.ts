@@ -51,13 +51,13 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
                             clipboard_image(context, data[0], t, xy)
                         } else if (data[0].types.length === 1) {
                             if (data[0].types.includes('text/html')) { // 内容为Shape[]
-                                clipboard_text_html(context, data[0]);
+                                clipboard_text_html(context, data[0], xy);
                             } else if (data[0].types.includes('text/plain')) { // 内容为白板文本
-                                clipboard_text_plain(context, data[0]);
+                                clipboard_text_plain(context, data[0], xy);
                             }
                         } else if (data[0].types.length === 2) {
                             if (data[0].types.includes('text/plain')) { // 内容为白板文本
-                                clipboard_text_plain(context, data[0]);
+                                clipboard_text_plain(context, data[0], xy);
                             }
                         }
                     } else {
@@ -113,7 +113,7 @@ export function replace(context: Context, t: Function, src: Shape[]) {
     }
 }
 // 内部shapes复制
-function clipboard_text_html(context: Context, data: any) {
+function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     data.getType('text/html').then((val: any) => {
         const fr = new FileReader();
         fr.onload = function (event) {
@@ -124,8 +124,27 @@ function clipboard_text_html(context: Context, data: any) {
                     const shapes = import_shape(context.data, source);
                     const result: Shape[] = [];
                     if (shapes.length) {
+                        const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
+                        if (xy) {
+                            for (let i = 0; i < shapes.length; i++) {
+                                const frame = shapes[i].frame;
+                                if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
+                                if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
+                            }
+                        }
+                        const deltas = [];
+                        if (xy) {
+                            for (let i = 0; i < shapes.length; i++) {
+                                const frame = shapes[i].frame;
+                                deltas.push({ x: frame.x - lt_shape_xy.x, y: frame.y - lt_shape_xy.y });
+                            }
+                        }
                         for (let i = 0; i < shapes.length; i++) {
                             const shape = shapes[i];
+                            if (xy) {
+                                shape.frame.x = xy.x + deltas[i].x;
+                                shape.frame.y = xy.y + deltas[i].y;
+                            }
                             if (shape.type === ShapeType.Text) {
                                 parse_text(shape as TextShape);
                             }
@@ -223,6 +242,7 @@ function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
         }
         fr.readAsText(val);
     }).catch((e: Error) => {
+        console.log(e);
         message('info', context.workspace.t('clipboard.invalid_data'));
     });
 }

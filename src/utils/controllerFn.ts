@@ -78,7 +78,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
     } else if (e.code === 'Escape') {
         context.selection.resetSelectShapes();
     } else if (e.code === 'KeyR') {
-        if (shiftKey && ctrlKey) {
+        if (shiftKey && (ctrlKey || metaKey)) {
             e.preventDefault();
             const selected = context.selection.selectedShapes;
             if (selected.length) {

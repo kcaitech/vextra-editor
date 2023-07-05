@@ -9,7 +9,7 @@ import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
-import { replace } from '@/utils/clipaboard';
+import { paster, replace } from '@/utils/clipaboard';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -34,17 +34,12 @@ function copy() {
   props.context.workspace.clipboard.write_html();
   emit('close');
 }
-function paste() {
-  props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
+function paste() { // 粘贴在原位
+  paster(props.context, t);
   emit('close');
 }
 function paste_here() {
-  const workspace = props.context.workspace;
-  const root = workspace.root;
-  const matrix = workspace.matrix;
-  const page_xy = matrix.inverseCoord(props.site?.x || 0 - root.x, props.site?.y || 0 - root.y);
-  console.log(page_xy);
-
+  props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
   emit('close');
 }
 function _replace() {
@@ -425,8 +420,8 @@ function closeLayerSubMenu(e: MouseEvent) {
 
   .line {
     width: 100%;
-    height: 18px;
-    border-width: 9px 0 9px 0;
+    height: 17px;
+    border-width: 8px 0 8px 0;
     border-style: solid;
     border-color: var(--theme-color);
     box-sizing: border-box;
