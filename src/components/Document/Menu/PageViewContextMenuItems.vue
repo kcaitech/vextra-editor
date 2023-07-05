@@ -360,12 +360,10 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 隐藏/锁定 -->
     <div class="line" v-if="props.items.includes('visible')"></div>
     <div class="item" v-if="props.items.includes('visible')" @click="visible">
-      <!-- <div class="choose" :style="{ visibility: isVisible ? 'visible' : 'hidden' }"></div> -->
       <span>{{ t('system.visible') }}</span>
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('lock')" @click="lock">
-      <!-- <div class="choose" :style="{ visibility: isLock ? 'visible' : 'hidden' }"></div> -->
       <span>{{ t('system.Lock') }}</span>
       <span></span>
     </div>
@@ -402,10 +400,10 @@ function closeLayerSubMenu(e: MouseEvent) {
     }
   }
 
-  .item .line {
+  .line {
     width: 100%;
-    height: 17px;
-    border-width: 8px 0 8px 0;
+    height: 18px;
+    border-width: 9px 0 9px 0;
     border-style: solid;
     border-color: var(--theme-color);
     box-sizing: border-box;

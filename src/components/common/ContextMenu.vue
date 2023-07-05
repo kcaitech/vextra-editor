@@ -46,7 +46,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <div ref="menu" class="__context-menu Menu" @mousemove.stop
+  <div ref="menu" class="__context-menu" @mousemove.stop
     :style="{ top: `${props.y}px`, left: `${props.width && surplusX < 198 + props.width ? -props.width : props.x}px`, width: `${props.width || 198}px` }">
     <div class="header"></div>
     <slot></slot>

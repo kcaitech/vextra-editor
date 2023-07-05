@@ -74,7 +74,7 @@ let listviewSource = new class implements IDataSource<ItemData> {
     }
 }
 const shapelist = ref<List>();
-const ListBody = ref<HTMLDivElement>()
+const listBody = ref<HTMLDivElement>()
 const ListH = ref<number>(0)
 function _notifySourceChange(t?: number | string, shape?: Shape) {
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
@@ -90,8 +90,8 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
                 p.type !== ShapeType.Page && !shapeDirList.isExpand(p) && toggleExpand(p);
             })
             const indexItem = shapeDirList.indexOf(item)
-            if (ListBody.value) {
-                ListH.value = ListBody.value.clientHeight //list可视高度
+            if (listBody.value) {
+                ListH.value = listBody.value.clientHeight //list可视高度
             }
             if (shapelist.value && indexItem >= 0) {
                 const itemScrollH = indexItem * 30
@@ -111,7 +111,7 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
-const notifySourceChange = debounce(_notifySourceChange, 20);
+const notifySourceChange = debounce(_notifySourceChange, 48);
 const stopWatch = watch(() => props.page, () => {
     let source = shapeListMap.get(props.page.id)
     if (!source) {
@@ -132,15 +132,15 @@ function search(e: Event) {
 function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)
 }
-function selectShape(data: ItemData, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
+function selectShape(shape: Shape, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
     if (shiftKey) {
-        selectShapeWhenShiftIsPressed(data);
+        selectShapeWhenShiftIsPressed(shape);
     } else {
-        props.context.selection.selectShape(data.shape, ctrlKey, metaKey);
+        props.context.selection.selectShape(shape, ctrlKey, metaKey);
     }
 }
-function selectShapeWhenShiftIsPressed(curData: ItemData) {
-    const to = shapeDirList.indexOf(curData.shape);
+function selectShapeWhenShiftIsPressed(shape: Shape) {
+    const to = shapeDirList.indexOf(shape);
     const selectedShapes = props.context.selection.selectedShapes;
     const selectShapesIndex = getSelectShapesIndex(selectedShapes);
     const from = selectShapesIndex.reduce((pre, cur) => {
@@ -167,9 +167,9 @@ function getShapeRange(start: number, end: number): Shape[] {
 function hoverShape(shape: Shape) {
     if (props.context.workspace.transforming) return;
     props.context.selection.hoverShape(shape);
-    if (shapeList.value)
+    if (shapeList.value) {
         shapeH.value = shapeList.value.offsetHeight
-
+    }
 }
 
 function unHovershape() {
@@ -242,27 +242,29 @@ function shapeScrollToContentView(shape: Shape) {
 
 }
 
-const MouseDown = (e: MouseEvent) => {
-    const workspace = props.context.workspace
+const list_mousedown = (e: MouseEvent, shape: Shape) => {
+    const workspace = props.context.workspace;
+    const selection = props.context.selection;
     workspace.menuMount(false);
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
-        const workspace = props.context.workspace
+        e.stopPropagation(); // 右键事件到这就不上去了
+        console.log('right-click');
+        // todo
+        selection.selectShape(shape);
         workspace.menuMount(false);
-        e.stopPropagation();
-        if (e.target instanceof Element && e.target.closest(`.Menu`)) return;
+        if (e.target instanceof Element && e.target.closest(`.__context-menu`)) return;
         chartMenuMount(e);
-        e.stopPropagation()
     }
 }
 
 const chartMenuMount = (e: MouseEvent) => {
-    chartMenuPosition.value.x = e.clientX
-    chartMenuPosition.value.y = e.clientY - props.pageHeight - ListBody.value!.offsetTop - 12
-    chartMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit']
-    chartMenu.value = true
     e.stopPropagation()
-    document.addEventListener('keydown', Menuesc);
+    chartMenuPosition.value.x = e.clientX
+    chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
+    chartMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container']
+    chartMenu.value = true
+    document.addEventListener('keydown', menu_unmount);
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
@@ -279,7 +281,7 @@ const chartMenuMount = (e: MouseEvent) => {
         }
     })
 }
-function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
+function after_drag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
     const selection = props.context.selection;
     const page = selection.selectedPage;
     if (page) {
@@ -291,12 +293,17 @@ function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) 
         }
     }
 }
-function Menuesc(e: KeyboardEvent) {
-    if (e.code === 'Escape') chartMenuUnmount();
+function menu_unmount(e: KeyboardEvent) {
+    if (e.code === 'Escape') {
+        close();
+    }
 }
-function chartMenuUnmount() {
-    document.removeEventListener('keydown', Menuesc);
+function close() {
+    document.removeEventListener('keydown', menu_unmount);
     chartMenu.value = false;
+}
+function reset_selection() {
+    props.context.selection.resetSelectShapes();
 }
 
 onMounted(() => {
@@ -313,23 +320,23 @@ onUnmounted(() => {
 
 <template>
     <div class="shapelist-wrap" ref="shapeList">
-        <div class="header">
+        <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
                 <input type="text" :placeholder="t('home.search_layer') + '…'" @change="(e: Event) => search(e)">
             </div>
         </div>
-        <div class="body" ref="ListBody">
-            <ListView ref="shapelist" location="shapelist" :allowDrag="true" draging="shapeList" :shapeHeight="shapeH"
+        <div class="body" ref="listBody" @click="reset_selection">
+            <ListView ref="shapelist" location="shapelist" :allow-drag="true" draging="shapeList" :shapeHeight="shapeH"
                 :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
                 :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
                 @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
-                @isLock="isLock" @onMouseDown="MouseDown" orientation="vertical" @after-drag="afterDrag">
+                @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical" @after-drag="after_drag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
-                :context="props.context" ref="contextMenuEl">
-                <PageViewContextMenuItems :items="chartMenuItems" :context="props.context">
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
+                :context="props.context" ref="contextMenuEl" @click.stop>
+                <PageViewContextMenuItems :items="chartMenuItems" :context="props.context" @close="close">
                 </PageViewContextMenuItems>
             </ContextMenu>
         </div>
