@@ -108,9 +108,9 @@ export function useController(context: Context) {
         return (e.target as Element)?.closest(`#content`) ? true : false;
     }
     function mousedown(e: MouseEvent) {
-        if (context.workspace.isEditing) {
-            context.selection.selectShape(context.selection.hoveredShape);
-        }
+        // if (context.workspace.isEditing) {
+        //     context.selection.selectShape(context.selection.hoveredShape);
+        // }
         const working = !context.workspace.isPageDragging && !context.workspace.isEditing;
         if (working) {
             if (isElement(e)) {

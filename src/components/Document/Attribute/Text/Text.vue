@@ -2,11 +2,12 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, computed} from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { Shape } from "@kcdesign/data";
+import { TextShape, Shape } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
+import { TextVerAlign } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -24,7 +25,12 @@ const isUnderline = ref(false)
 const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const systemFonts = ref<string[]>([]);
+const fontStyle = ref('微软雅黑')
+const selection = computed(() => props.context.selection)
+const textShape = computed(() =>  props.context.selection.selectedShapes)
+const editor = computed(() => {
+    return props.context.editor4TextShape((textShape.value[0] as TextShape))
+});
 
 const onShowFont = () => {
     if(showFont.value) return showFont.value = false
@@ -73,14 +79,32 @@ const onDeleteline = () => {
 const onSelectLevel = (icon: string) => {
     selectLevel.value = icon
 }
-const onSelectVertical = (icon: string) => {
+const onSelectVertical = (icon: TextVerAlign) => {
     selectVertical.value = icon
+    editor.value.setTextVerAlign(icon)
 }
 const changeTextSize = (size: number) => {
     textValue.value = size
     showSize.value = false;
+    const {textIndex, selectLength} = getTextIndexAndLen()
+    console.log(textIndex,'下标', selectLength,'长度', size);
+    editor.value.setTextFontSize(textIndex, selectLength, size) 
 }
 
+const setFont = (font: string) => {
+    fontStyle.value = font
+    showFont.value = false;
+    const {textIndex, selectLength} = getTextIndexAndLen()
+    console.log(textIndex,'下标', selectLength,'长度', font);
+    editor.value.setTextFontName(textIndex, selectLength, font)    
+}
+
+//获取选中字体的长度和下标
+const getTextIndexAndLen = () => {
+    const textIndex = Math.min(selection.value.cursorEnd, selection.value.cursorStart)
+    const selectLength = Math.abs(selection.value.cursorEnd - selection.value.cursorStart)
+    return {textIndex, selectLength}
+}
 </script>
 
 <template>
@@ -93,10 +117,10 @@ const changeTextSize = (size: number) => {
         <div class="text-container">
             <div class="text-top">
                 <div class="select-font jointly-text" @click="onShowFont">
-                    <span>思源黑体</span>
+                    <span>{{fontStyle}}</span>
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <SelectFont v-if="showFont"></SelectFont>
+                <SelectFont v-if="showFont" @set-font="setFont" :fontStyle="fontStyle"></SelectFont>
                 <div class="perch"></div>
             </div>
             <div class="text-middle">
@@ -164,17 +188,17 @@ const changeTextSize = (size: number) => {
                         </i>
                     </div>
                     <div class="vertical-aligning jointly-text">
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'top'}" @click="onSelectVertical('top')">
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'top'}" @click="onSelectVertical(TextVerAlign.Top)">
                             <Tooltip :content="t('attr.align_top')" :offset="15">
                                 <svg-icon icon-class="align-top"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'middle'}" @click="onSelectVertical('middle')">
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'middle'}" @click="onSelectVertical(TextVerAlign.Middle)">
                             <Tooltip :content="t('attr.align_middle')" :offset="15">
                                 <svg-icon icon-class="align-middle"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'bottom'}" @click="onSelectVertical('bottom')">
+                        <i class="jointly-text font-posi" :class="{selected_bgc: selectVertical === 'bottom'}" @click="onSelectVertical(TextVerAlign.Bottom)">
                             <Tooltip :content="t('attr.align_bottom')" :offset="15">
                                 <svg-icon icon-class="align-bottom"></svg-icon>
                             </Tooltip>

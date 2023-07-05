@@ -1,6 +1,29 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
+import {ref} from 'vue'
 const { t } = useI18n();
+const emit = defineEmits<{
+    (e: 'setFont', font: string): void
+}>()
+const prop = defineProps<{
+    fontStyle: string
+}>()
+
+const fontList = ref< {
+    used: string[],
+    ch: string[],
+    en: string[]
+}>({
+    used: [],
+    ch: ['宋体','黑体','仿宋','微软雅黑','新宋体','楷体','等线', 'OPPOSans'],
+    en: ['Arial','Adobe Arabic', 'Adobe Gothic Std', 'Candara', 'Courier New',
+     'Comic Sans MS', 'D-DIN', 'Ink Free', 'Impact', 'Mv Boli']
+})
+
+const selectFont = (font: string) => {
+    emit('setFont', font)
+}
+
 </script>
 
 <template>
@@ -11,7 +34,16 @@ const { t } = useI18n();
         </div>
         <div class="font-scroll">
             <el-scrollbar>
-                <p class="item" v-for="item in 20" :key="item">{{ item }}</p>
+                <span class="font-title">中文字体</span>
+                <div class="item" v-for="item in fontList.ch" :key="item" :style="{ fontFamily: item }" @click="selectFont(item)">
+                    <div class="choose" :style="{visibility: item == fontStyle ? 'visible' : 'hidden'}"></div>
+                   <span> {{ item }}</span>
+                </div>
+                <span class="font-title">英文字体</span>
+                <div class="item" v-for="item in fontList.en" :key="item" :style="{ fontFamily: item }" @click="selectFont(item)">
+                    <div class="choose" :style="{visibility: item == fontStyle ? 'visible' : 'hidden'}"></div>
+                    <span> {{ item }}</span>
+                </div>
             </el-scrollbar>
         </div>
     </div>
@@ -56,8 +88,31 @@ const { t } = useI18n();
         }
         .font-scroll {
             height: 260px;
-            .item {
+            .font-title {
                 padding: 0 10px;
+                margin: 5px 0;
+                height: 25px;
+            }
+            .item {
+                display: flex;
+                align-items: center;
+                height: 25px;
+                padding: 0 10px;
+                margin: 0;
+                &:hover {
+                    background-color: var(--input-background);
+                }
+                .choose {
+                    box-sizing: border-box;
+                    width: 10px;
+                    height: 6px;
+                    margin-right: 10px;
+                    margin-left: 2px;
+                    border-width: 0 0 1px 1px;
+                    border-style: solid;
+                    border-color: rgb(0, 0, 0,.75);
+                    transform: rotate(-45deg) translateY(-30%);
+                }
             }
         }
     }

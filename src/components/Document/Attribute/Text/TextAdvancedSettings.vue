@@ -4,6 +4,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
+import { TextShape } from "@kcdesign/data";
 const { t } = useI18n();
 interface Props {
   context: Context
@@ -16,6 +17,16 @@ const selectId = ref('no-list')
 const wordSpace = ref('0%')
 const rowHeight = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref('0')
+const selection = computed(() => props.context.selection)
+const textShape = computed(() =>  props.context.selection.selectedShapes)
+const editor = computed(() => {
+    return props.context.editor4TextShape((textShape.value[0] as TextShape))
+});
+enum TextBehaviour {
+    Flexible = 'flexible',
+    Fixed = 'fixed',
+    FixWidthAndHeight = 'fixWidthAndHeight',
+}
 function showMenu() {
   props.context.workspace.popoverVisible(false);
   popover.value.show();
@@ -24,8 +35,10 @@ function showMenu() {
 const onSelectId = (icon: string) => {
   selectId.value = icon
 }
-const onSelectText = (icon: string) => {
+
+const onSelectText = (icon: TextBehaviour) => {
   selectText.value = icon
+  editor.value.setTextBehaviour(icon)
 }
 const onSelectCase = (icon: string) => {
   selectCase.value = icon
@@ -105,17 +118,17 @@ const onSelectCase = (icon: string) => {
             <div>
                 <span>{{t('attr.text_style')}}</span>
                 <div class="vertical-aligning jointly-text">
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'autowidth'}" @click="onSelectText('autowidth')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'flexible'}" @click="onSelectText(TextBehaviour.Flexible)">
                       <Tooltip :content="t('attr.autowidth')" :offset="15">
                         <svg-icon icon-class="text-autowidth"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'autoheight'}" @click="onSelectText('autoheight')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'fixed'}" @click="onSelectText(TextBehaviour.Fixed)">
                       <Tooltip :content="t('attr.autoheight')" :offset="15">
                         <svg-icon icon-class="text-autoheight"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'fixedsize'}" @click="onSelectText('fixedsize')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectText === 'fixWidthAndHeight'}" @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
                       <Tooltip :content="t('attr.fixedsize')" :offset="15">
                         <svg-icon icon-class="text-fixedsize"></svg-icon>
                       </Tooltip>
