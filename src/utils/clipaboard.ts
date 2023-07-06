@@ -1,4 +1,8 @@
-import { export_shape, import_shape, Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape } from '@kcdesign/data';
+import {
+    export_shape, import_shape,
+    Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
+    export_paras, import_paras, trasnform_paras
+} from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
 import { Media, Action } from '@/context/workspace';
@@ -10,6 +14,7 @@ interface SystemClipboardItem {
     content: Media | string
 }
 const identity = 'cn.protodesign/clipboard';
+const paras = 'paras';
 export class Clipboard {
     private context: Context;
     constructor(context: Context) {
@@ -22,26 +27,36 @@ export class Clipboard {
      * 往剪切板写入图形数据
      * @returns 
      */
-    async write_html(): Promise<boolean> {
-        const shapes = this.context.selection.selectedShapes;
-        if (!shapes.length) return false;
-        const position_map: Map<string, ShapeFrame> = new Map();
-        for (let i = 0; i < shapes.length; i++) {
-            position_map.set(shapes[i].id, shapes[i].frame2Root());
-        }
-        const content = this.clipboard_write_shapes(shapes);
-        if (!content) return false;
-        for (let i = 0; i < content.length; i++) {
-            const shape = content[i].content;
-            const root_frame = position_map.get(shape.id);
-            if (root_frame) {
-                shape.frame = root_frame;
+    async write_html(para?: Text): Promise<boolean> {
+        if (para) { // 写入文字段落
+            const _paras = export_paras(para);
+            if (!_paras) return false;
+            if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
+                const blob = new Blob([`${identity}-${paras}${JSON.stringify(_paras)}` || ''], { type: 'text/html' });
+                await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+                return true;
             }
-        }
-        if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
-            const blob = new Blob([`${identity}${JSON.stringify(content)}` || ''], { type: 'text/html' });
-            await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
-            return true;
+        } else {
+            const shapes = this.context.selection.selectedShapes;
+            if (!shapes.length) return false;
+            const position_map: Map<string, ShapeFrame> = new Map();
+            for (let i = 0; i < shapes.length; i++) {
+                position_map.set(shapes[i].id, shapes[i].frame2Root());
+            }
+            const content = this.clipboard_write_shapes(shapes);
+            if (!content) return false;
+            for (let i = 0; i < content.length; i++) {
+                const shape = content[i].content;
+                const root_frame = position_map.get(shape.id);
+                if (root_frame) {
+                    shape.frame = root_frame;
+                }
+            }
+            if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
+                const blob = new Blob([`${identity}${JSON.stringify(content)}` || ''], { type: 'text/html' });
+                await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+                return true;
+            }
         }
         return false;
     }
@@ -58,6 +73,36 @@ export class Clipboard {
             return false;
         }
         return false;
+    }
+}
+/**
+ * 粘贴一段文本
+ * @param xy 以xy为锚点，不存在xy时，粘贴在原来的位置
+ */
+export function paster_paras(context: Context, t: Function, xy?: PageXY) {
+    try {
+        if (navigator.clipboard && navigator.clipboard.read) {
+            context.workspace.setFreezeStatus(true);
+            navigator.clipboard.read()
+                .then(function (data) {
+                    if (data && data.length) { // 存在有效内容
+                        if (data[0].types.includes('text/html')) { // 内容为Shape[]
+                            clipboard_text_html(context, data[0], xy);
+                        }
+                    } else {
+                        message('info', t('clipboard.invalid_data'));
+                    }
+                    context.workspace.setFreezeStatus(false);
+                })
+                .catch((e) => {
+                    console.log(e);
+                    message('info', t('clipboard.invalid_data'));
+                    context.workspace.setFreezeStatus(false);
+                })
+        }
+    } catch (error) {
+        message('info', t('clipboard.invalid_data'));
+        context.workspace.setFreezeStatus(false);
     }
 }
 /**
@@ -191,6 +236,39 @@ function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                         if (result.length) {
                             context.selection.rangeSelectShape(result);
                         }
+                    }
+                } else {
+                    message('info', context.workspace.t('clipboard.invalid_data'));
+                }
+            }
+        }
+        fr.readAsText(val);
+    }).catch((e: Error) => {
+        console.log(e);
+    });
+}
+/**
+ * 从剪切板拿出图形数据并插入文档
+ * @param data 剪切板拿出的数据
+ * @param gen_shape 直接生成图形
+ * @param xy 插入的地方
+ */
+function clipboard_text_html_paras(context: Context, data: any, gen_shape: boolean, xy?: PageXY) {
+    data.getType('text/html').then((val: any) => {
+        const fr = new FileReader();
+        fr.onload = function (event) {
+            const text_html = event.target?.result;
+            if (text_html && typeof text_html === 'string') {
+                if (text_html.slice(0, 60).indexOf(`${identity}-${paras}`) > -1) {
+                    const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+                    if (gen_shape) {
+                        const t_s = trasnform_paras(context.data, source, true);
+                        const page = context.selection.selectedPage;
+                        if (!page) return;
+                        const editor = context.editor4Page(page);
+                        const r = editor.insert(page, page.childs.length, t_s as TextShape, true);
+                    } else {
+                        const t_s = import_paras(source);
                     }
                 } else {
                     message('info', context.workspace.t('clipboard.invalid_data'));

@@ -174,7 +174,33 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
     }
 
 }, keydelays);
-
+function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
+    if (e.ctrlKey || e.metaKey) {
+        e.stopPropagation();
+        const selection = context.selection;
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+        const text = shape.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
+    }
+}
+function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
+    if (e.ctrlKey || e.metaKey) {
+        e.stopPropagation();
+        const selection = context.selection;
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+        if (start === end) {
+            if (editor.deleteText(start, 1)) {
+                selection.setCursor(start, false);
+            }
+        }
+        else {
+            if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+                selection.setCursor(Math.min(start, end), false);
+            }
+        }
+    }
+}
 const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
 handler['arrowleft'] = enterArrowLeft;
@@ -184,6 +210,8 @@ handler['arrowdown'] = enterArrowDown;
 handler['backspace'] = enterBackspace;
 handler['delete'] = enterDelete;
 handler['escape'] = escape;
+handler['c'] = copy;
+handler['x'] = cut;
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
     if (editor.isInComposingInput()) {
