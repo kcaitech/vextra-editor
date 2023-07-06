@@ -51,6 +51,7 @@ async function blur() {
             ele.value = 3;
             await user_api.Setfilename({ doc_id: route.query.id, name: p_name });
             name.value = p_name;
+            window.document.title = name.value.length > 8 ? `${name.value.slice(0, 8)}... - ${t('product.name')}` : `${name.value} - ${t('product.name')}`
             document.removeEventListener('keydown', enter);
         } catch (error) {
             console.log(error);

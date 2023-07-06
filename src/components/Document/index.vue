@@ -296,7 +296,8 @@ const getDocumentInfo = async () => {
         const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
-            window.document.title = document.name;
+            const file_name = docInfo.value.document?.name || document.name;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
             context.workspace.setDocumentInfo(dataInfo.data)
             null_context.value = false;
