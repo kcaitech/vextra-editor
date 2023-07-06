@@ -39,6 +39,7 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
 }
 
 export function render(h: Function, shape: TextShape, reflush?: number) {
+    if (!shape.isVisible) return null;
     const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
 
@@ -103,7 +104,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 export function render_(h: Function, shape: TextShape, reflush?: number) {
     const path = renderText2Path(shape, 0, 0);
 
-    const childs = [h('path', {d: path})]
+    const childs = [h('path', { d: path })]
 
     const frame = shape.frame;
     const props: any = {}
