@@ -15,7 +15,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
-const textValue = ref<any>(12)
+const fonstSize = ref<any>(14)
 const showSize = ref(false)
 const sizeList = ref<HTMLDivElement>()
 const showFont = ref(false)
@@ -99,7 +99,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
     editor.value.setTextVerAlign(icon)
 }
 const changeTextSize = (size: number) => {
-    textValue.value = size
+    fonstSize.value = size
     showSize.value = false;
     const { textIndex, selectLength } = getTextIndexAndLen()
     console.log(textIndex, '下标', selectLength, '长度', size);
@@ -123,20 +123,23 @@ const getTextIndexAndLen = () => {
 
 //输入框设置字体大小
 const setTextSize = () => {
-    textValue.value = textValue.value.trim()
-    if (textValue.value.length < 1) {
-        textValue.value = 1
+    fonstSize.value = fonstSize.value.trim()
+    if (fonstSize.value.length < 1) {
+        fonstSize.value = 1
     }
-    if (!isNaN(Number(textValue.value))) {
-        changeTextSize(textValue.value)
+    if (!isNaN(Number(fonstSize.value))) {
+        changeTextSize(fonstSize.value)
     }
 
 }
+
 const textFormat = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     selectLevel.value = format.alignment || 'left'
     selectVertical.value = format.verAlign || 'top'
+    fontName.value = format.fontName || 'PingFangSC-Regular'
+    fonstSize.value = format.fontSize || 14
     fontNameIsMulti.value = format.fontNameIsMulti
     fontSizeIsMulti.value = format.fontSizeIsMulti
     colorIsMulti.value = format.colorIsMulti
@@ -145,13 +148,24 @@ const textFormat = () => {
     kerningIsMulti.value = format.kerningIsMulti
     console.log(format,'format');
 }
+const textDefaultFormat = () => {
+    const defaultFormat = (textShape.value[0] as TextShape).text.getDefaultTextFormat()
+    console.log(defaultFormat,'defaultFormat');
+}
 function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
         textFormat()
+        if(fontNameIsMulti.value) {
+            fontName.value = '多值'
+        }
+        if(fontSizeIsMulti.value) {
+            fonstSize.value = '多值'
+        }
     }
 }
 onMounted(() => {
     textFormat()
+    textDefaultFormat()
     props.context.selection.watch(selection_wather);
 })
 onUnmounted(() => {
@@ -178,7 +192,7 @@ onUnmounted(() => {
             <div class="text-middle">
                 <div class="text-middle-size">
                     <div class="text-size jointly-text">
-                        <input type="text" v-model="textValue" class="input" @change="setTextSize">
+                        <input type="text" v-model="fonstSize" class="input" @change="setTextSize">
                         <svg-icon icon-class="down" @click="onShowSize"></svg-icon>
                         <div class="font-size-list" ref="sizeList" v-if="showSize">
                             <div @click="changeTextSize(10)">10</div>
@@ -349,13 +363,13 @@ onUnmounted(() => {
                     border: none;
                 }
 
-                input[type="number"]::-webkit-inner-spin-button,
-                input[type="number"]::-webkit-outer-spin-button {
+                input[type="text"]::-webkit-inner-spin-button,
+                input[type="text"]::-webkit-outer-spin-button {
                     -webkit-appearance: none;
                     margin: 0;
                 }
 
-                input[type="number"] {
+                input[type="text"] {
                     -moz-appearance: textfield;
                     appearance: textfield;
                     font-size: 10px;

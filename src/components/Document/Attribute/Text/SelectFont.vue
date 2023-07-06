@@ -15,7 +15,7 @@ const fontList = ref< {
     en: string[]
 }>({
     used: [],
-    ch: ['宋体','黑体','仿宋','微软雅黑','新宋体','楷体','等线', 'OPPOSans'],
+    ch: ['宋体','黑体','仿宋','微软雅黑','新宋体','楷体','等线', 'OPPOSans','PingFangSC-Regular'],
     en: ['Arial','Adobe Arabic', 'Adobe Gothic Std', 'Candara', 'Courier New',
      'Comic Sans MS', 'D-DIN', 'Ink Free', 'Impact', 'Mv Boli']
 })
