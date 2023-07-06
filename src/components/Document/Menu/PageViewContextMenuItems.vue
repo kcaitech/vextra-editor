@@ -347,7 +347,7 @@ function closeLayerSubMenu() {
     <div class="item" v-if="props.items.includes('comment')" @click="comment">
       <div class="choose" v-show="isComment"></div>
       <span>{{ t('system.show_comment') }}</span>
-      <span></span>
+      <span class="shortkey">Shift + C</span>
     </div>
     <!-- 界面显示 -->
     <div class="line" v-if="props.items.includes('ruler')"></div>

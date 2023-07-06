@@ -485,7 +485,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_t();
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
-            this.keydown_c(ctrlKey, metaKey);
+            this.keydown_c(ctrlKey, metaKey, shiftKey);
         } else if (event.code === KeyboardKeys.Digit1) {
             event.preventDefault();
             if (ctrlKey || metaKey) {
@@ -635,9 +635,11 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddText;
         this.notify();
     }
-    keydown_c(ctrlKey?: boolean, metaKey?: boolean) {
+    keydown_c(ctrlKey?: boolean, metaKey?: boolean, shift?: boolean) {
         if (ctrlKey || metaKey) {
             this.notify(WorkSpace.COPY)
+        } else if (shift) {
+            this.setVisibleComment(!this.m_comment_visible);
         } else {
             if (this.documentPerm === 1) return
             this.escSetup();
