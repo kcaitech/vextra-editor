@@ -180,6 +180,7 @@ function onKeyPress(e: KeyboardEvent) {
 .input {
     z-index: -999;
     background-color: transparent;
+    color: transparent;
     border: none;
     box-shadow: none;
     outline: none;
