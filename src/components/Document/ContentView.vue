@@ -347,7 +347,7 @@ function contextMenuMount(e: MouseEvent) {
     } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
         contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
     } else {
-        contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation'];
+        contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
     }
     const shapes = selection.getLayers(mousedownOnPageXY);
     if (shapes.length > 1) {

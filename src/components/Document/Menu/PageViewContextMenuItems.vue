@@ -104,9 +104,10 @@ function canvas() {
 }
 function cursor() { }
 function comment() {
-  const status = props.context.workspace.isVisibleComment
-  isComment.value = !status
-  props.context.workspace.setVisibleComment(isComment.value)
+  const status = props.context.workspace.isVisibleComment;
+  isComment.value = !status;
+  props.context.workspace.setVisibleComment(isComment.value);
+  emit('close');
 }
 function ruler() { }
 function pixel() { }
@@ -338,7 +339,7 @@ function closeLayerSubMenu() {
       <span class="shortkey">Ctrl + 1</span>
     </div>
     <!-- 协作 -->
-    <div class="line" v-if="props.items.includes('cursor')"></div>
+    <div class="line" v-if="props.items.includes('comment')"></div>
     <div class="item" v-if="props.items.includes('cursor')" @click="cursor">
       <div class="choose"></div>
       <span>{{ t('system.show_many_cursor') }}</span>
