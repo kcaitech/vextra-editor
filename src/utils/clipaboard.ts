@@ -207,7 +207,7 @@ function clipboard_text_html_replace(context: Context, data: any, src: Shape[]) 
                         const page = context.selection.selectedPage;
                         if (page) {
                             const editor = context.editor.editor4Page(page);
-                            const r = editor.replace(shapes, src);
+                            const r = editor.replace(context.data, shapes, src);
                             if (r) context.selection.rangeSelectShape(r);
                         }
                     }

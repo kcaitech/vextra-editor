@@ -206,11 +206,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
      * @param position 点位置，坐标系时page
      * @param isCtrl 是否取消编组、容器等图形的特殊处理
-     * @param scope 在scope范围内进行检索
+     * @param scope 在scope范围内进行检索，如果没有限定范围则在全域(page)下寻找
      * @returns 符合检索条件的图形
      */
     getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape[] {
-        // scope 检索范围限定，如果没有限定范围则在全域(page)下寻找
         const shapes: Shape[] = [];
         if (this.scout) {
             position = cloneDeep(position);

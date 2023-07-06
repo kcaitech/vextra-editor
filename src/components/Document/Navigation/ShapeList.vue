@@ -318,11 +318,9 @@ const list_mousedown = (e: MouseEvent, shape: Shape) => {
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
         selectshape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
-        chartMenuItems = ['all', 'copy', 'groups', 'container'];
+        chartMenuItems = ['all', 'replace', 'visible', 'lock', 'copy', 'groups', 'container'];
         if (selected.length === 1) {
-            chartMenuItems.push('replace', 'forward', 'back', 'top', 'bottom');
-        } else if (selected.length > 1) {
-            chartMenuItems.push('replace', 'visible', 'lock');
+            chartMenuItems.push('forward', 'back', 'top', 'bottom');
         }
         const types = selection_types(selected);
         if (types & 1) chartMenuItems.push('un_group');
