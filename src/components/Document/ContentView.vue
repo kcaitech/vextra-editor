@@ -748,7 +748,10 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     initMatrix(cur)
 })
 const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
-    root.value && _updateRoot(props.context, root.value);
+    // root.value && _updateRoot(props.context, root.value);
+    if (root.value) {
+        _updateRoot(props.context, root.value);
+    }
 })
 
 renderinit()
