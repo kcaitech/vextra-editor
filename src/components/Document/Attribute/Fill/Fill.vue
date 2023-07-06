@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, ContextSettings, Shape, BlendMode, FillType } from "@kcdesign/data";
+import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, TextShape, ShapeType } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -21,6 +21,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
+const editorText = computed(() => props.context.editor4TextShape((props.shapes[0] as TextShape)))
 const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 const watchedShapes = new Map();
@@ -145,6 +146,8 @@ function setColor(idx: number, clr: string, alpha: number) {
     const _idx = fills.length - idx - 1;
     if (len.value === 1) {
         editor.value.setFillColor(_idx, new Color(alpha, r, g, b));
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        editorText.value.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
     } else if (len.value > 1) {
         const actions = get_actions_fill_color(props.shapes, _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
@@ -217,6 +220,8 @@ function getColorFromPicker(idx: number, color: Color) {
     const _idx = fills.length - idx - 1;
     if (len.value === 1) {
         editor.value.setFillColor(_idx, color);
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        editorText.value.setTextColor(textIndex, selectLength, color)
     } else if (len.value > 1) {
         const actions = get_actions_fill_color(props.shapes, _idx, color);
         const page = props.context.selection.selectedPage;
@@ -226,14 +231,32 @@ function getColorFromPicker(idx: number, color: Color) {
         }
     }
 }
+
+const getTextIndexAndLen = () => {
+    const textIndex = Math.min(props.context.selection.cursorEnd, props.context.selection.cursorStart)
+    const selectLength = Math.abs(props.context.selection.cursorEnd - props.context.selection.cursorStart)
+    return { textIndex, selectLength }
+}
+const textFormat = () => {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const format = (props.shapes[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+    console.log(format,'fillFormat');
+}
+
 function selection_wather(t: any) {
     if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
         watchShapes();
         updateData();
     }
+    if(t === Selection.CHANGE_TEXT) {
+        textFormat()
+    }
 }
 // hooks
 onMounted(() => {
+    if(props.shapes[0].type === ShapeType.Text) {
+        textFormat()
+    }
     props.context.selection.watch(selection_wather); // 有问题，等会再收拾你
     watchShapes();
     updateData();

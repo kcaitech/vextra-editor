@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextShape } from "@kcdesign/data";
+import { TextBehaviour } from "@kcdesign/data";
+import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
   context: Context
@@ -15,18 +17,22 @@ const selectCase = ref('no-list')
 const selectText = ref('autowidth')
 const selectId = ref('no-list')
 const wordSpace = ref('0%')
-const rowHeight = ref(`${t('attr.auto')}`)
+const rowHeight = ref()
+const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref('0')
 const selection = computed(() => props.context.selection)
 const textShape = computed(() =>  props.context.selection.selectedShapes)
 const editor = computed(() => {
     return props.context.editor4TextShape((textShape.value[0] as TextShape))
 });
-enum TextBehaviour {
-    Flexible = 'flexible',
-    Fixed = 'fixed',
-    FixWidthAndHeight = 'fixWidthAndHeight',
+
+//获取选中字体的长度和下标
+const getTextIndexAndLen = () => {
+    const textIndex = Math.min(selection.value.cursorEnd, selection.value.cursorStart)
+    const selectLength = Math.abs(selection.value.cursorEnd - selection.value.cursorStart)
+    return { textIndex, selectLength }
 }
+
 function showMenu() {
   props.context.workspace.popoverVisible(false);
   popover.value.show();
@@ -43,6 +49,35 @@ const onSelectText = (icon: TextBehaviour) => {
 const onSelectCase = (icon: string) => {
   selectCase.value = icon
 }
+
+const setRowHeight = () => {
+  const { textIndex, selectLength } = getTextIndexAndLen();
+  rowHeight.value = rowHeight.value.trim()
+  if (rowHeight.value.length < 1) {
+    rowHeight.value = 1
+  }
+  if (!isNaN(Number(rowHeight.value))) {
+    editor.value.setMinLineHeight(rowHeight.value, textIndex, selectLength)
+  }
+}
+
+const textFormat = () => {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+    selectText.value = format.textBehaviour || 'flexible'
+}
+function selection_wather(t: any) {
+    if(t === Selection.CHANGE_TEXT) {
+        textFormat()
+    }
+}
+onMounted(() => {
+    textFormat()
+    props.context.selection.watch(selection_wather);
+})
+onUnmounted(() => {
+    props.context.selection.unwatch(selection_wather);
+})
 </script>
 
 <template>
@@ -64,7 +99,7 @@ const onSelectCase = (icon: string) => {
             </div>
             <div>
                 <span>{{t('attr.row_height')}}</span>
-                <div><input type="text" v-model="rowHeight" class="input"></div>
+                <div><input type="text" v-model="rowHeight" :placeholder="row_height" class="input" @change="setRowHeight"></div>
             </div>
             <div>
                 <span>{{t('attr.paragraph_space')}}</span>
