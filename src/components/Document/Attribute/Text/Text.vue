@@ -25,7 +25,13 @@ const isUnderline = ref(false)
 const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontStyle = ref('微软雅黑')
+const fontName = ref('微软雅黑')
+const fontNameIsMulti = ref(false)
+const fontSizeIsMulti = ref(false)
+const colorIsMulti = ref(false)
+const alignmentIsMulti = ref(false)
+const paraSpacingIsMulti = ref(false)
+const kerningIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
 const textShape = computed(() => props.context.selection.selectedShapes)
 const editor = computed(() => {
@@ -80,7 +86,12 @@ const onDeleteline = () => {
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
     console.log(icon,'ee');
-    editor.value.setTextDefaultHorAlign(icon)
+    if((selection.value.cursorEnd !== -1) && (selection.value.cursorStart !== -1)) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        editor.value.setTextHorAlign(icon, textIndex, selectLength)
+    } else {
+        editor.value.setTextDefaultHorAlign(icon)
+    }
 }
 //设置垂直对齐
 const onSelectVertical = (icon: TextVerAlign) => {
@@ -96,7 +107,7 @@ const changeTextSize = (size: number) => {
 }
 
 const setFont = (font: string) => {
-    fontStyle.value = font
+    fontName.value = font
     showFont.value = false;
     const { textIndex, selectLength } = getTextIndexAndLen()
     console.log(textIndex, '下标', selectLength, '长度', font);
@@ -126,6 +137,12 @@ const textFormat = () => {
     const format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     selectLevel.value = format.alignment || 'left'
     selectVertical.value = format.verAlign || 'top'
+    fontNameIsMulti.value = format.fontNameIsMulti
+    fontSizeIsMulti.value = format.fontSizeIsMulti
+    colorIsMulti.value = format.colorIsMulti
+    alignmentIsMulti.value = format.alignmentIsMulti
+    paraSpacingIsMulti.value = format.paraSpacingIsMulti
+    kerningIsMulti.value = format.kerningIsMulti
     console.log(format,'format');
 }
 function selection_wather(t: any) {
@@ -152,10 +169,10 @@ onUnmounted(() => {
         <div class="text-container">
             <div class="text-top">
                 <div class="select-font jointly-text" @click="onShowFont">
-                    <span>{{ fontStyle }}</span>
+                    <span>{{ fontName }}</span>
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontStyle="fontStyle"></SelectFont>
+                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName"></SelectFont>
                 <div class="perch"></div>
             </div>
             <div class="text-middle">

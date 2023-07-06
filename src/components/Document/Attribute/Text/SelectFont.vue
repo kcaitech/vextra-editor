@@ -6,7 +6,7 @@ const emit = defineEmits<{
     (e: 'setFont', font: string): void
 }>()
 const prop = defineProps<{
-    fontStyle: string
+    fontName: string
 }>()
 
 const fontList = ref< {
@@ -36,12 +36,12 @@ const selectFont = (font: string) => {
             <el-scrollbar>
                 <span class="font-title">中文字体</span>
                 <div class="item" v-for="item in fontList.ch" :key="item" :style="{ fontFamily: item }" @click="selectFont(item)">
-                    <div class="choose" :style="{visibility: item == fontStyle ? 'visible' : 'hidden'}"></div>
+                    <div class="choose" :style="{visibility: item == fontName ? 'visible' : 'hidden'}"></div>
                    <span> {{ item }}</span>
                 </div>
                 <span class="font-title">英文字体</span>
                 <div class="item" v-for="item in fontList.en" :key="item" :style="{ fontFamily: item }" @click="selectFont(item)">
-                    <div class="choose" :style="{visibility: item == fontStyle ? 'visible' : 'hidden'}"></div>
+                    <div class="choose" :style="{visibility: item == fontName ? 'visible' : 'hidden'}"></div>
                     <span> {{ item }}</span>
                 </div>
             </el-scrollbar>
