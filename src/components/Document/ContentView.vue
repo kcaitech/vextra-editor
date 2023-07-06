@@ -16,21 +16,20 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, get_selected_types } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, get_selected_types, list2Tree } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
 import * as comment_api from '@/apis/comment';
-
-
+interface Props {
+    context: Context
+    page: Page
+}
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const { t } = useI18n();
-const props = defineProps<{
-    context: Context,
-    page: Page,
-}>();
+const props = defineProps<Props>();
 const STATE_NONE = 0;
 const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
@@ -44,7 +43,7 @@ const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
 const dragActiveDis = 4; // 拖动 3px 后开始触发移动
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
-const matrix = reactive(props.context.workspace.matrix); // 一切图形可视变换的根源！！！
+const matrix = reactive(props.context.workspace.matrix);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const watcher = () => { reflush.value++ };
@@ -59,7 +58,7 @@ let newShape: Shape | undefined;
 const contextMenuEl = ref<ContextMenuEl>();
 const surplusY = ref<number>(0);
 const site: { x: number, y: number } = { x: 0, y: 0 };
-const selector = ref<boolean>(false);
+const selector_mount = ref<boolean>(false);
 const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursorClass = ref<string>('');
 const styler = ref<StyleSheetController>(styleSheetController());
@@ -312,6 +311,9 @@ function pageViewDragEnd() {
     // setClass('grab-0');
     state = STATE_NONE;
 }
+/**
+ * 打开右键菜单
+ */
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
     const selection = props.context.selection;
@@ -407,7 +409,7 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
     selectorFrame.value.width = right - left;
     selectorFrame.value.height = bottom - top;
     selectorFrame.value.includes = altKey;
-    selector.value = true;
+    selector_mount.value = true;
 }
 function wheelSetup() { // 安装滚轮
     wheel = fourWayWheel(props.context, { rolling: undefined }, mousedownOnPageXY);
@@ -530,7 +532,7 @@ function onMouseLeave() {
 function selectEnd() {
     if (props.context.workspace.select) {
         props.context.workspace.selecting(false);
-        selector.value = false;
+        selector_mount.value = false;
     }
 }
 function removeWheel() {
@@ -725,20 +727,7 @@ const getDocumentComment = async () => {
     }
 }
 
-// 列表转树
-const list2Tree = (list: any, rootValue: string) => {
-    const arr: any = []
-    list.forEach((item: any) => {
-        if (item.parent_id === rootValue) {
-            const children = list2Tree(list, item.id)
-            if (children.length) {
-                item.children = children
-            }
-            arr.push(item)
-        }
-    })
-    return arr
-}
+
 
 // hooks
 function initMatrix(cur: Page) {
@@ -759,7 +748,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     initMatrix(cur)
 })
 const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
-    root.value && updateRoot(props.context, root.value);
+    root.value && _updateRoot(props.context, root.value);
 })
 
 renderinit()
@@ -768,7 +757,7 @@ renderinit()
         nextTick(() => {
             if (root.value) {
                 resizeObserver.observe(root.value);
-                _updateRoot(props.context, root.value);
+                _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
                 initMatrix(props.page); // 初始化页面视图
             }
         });
@@ -814,7 +803,7 @@ onUnmounted(() => {
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
-        <Selector v-if="selector" :selector-frame="selectorFrame" :context="props.context"></Selector>
+        <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
             @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"

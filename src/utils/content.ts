@@ -514,10 +514,25 @@ function get_selected_types(context: Context): number {
   }
   return result;
 }
+// 列表转树
+const list2Tree = (list: any, rootValue: string) => {
+  const arr: any = []
+  list.forEach((item: any) => {
+    if (item.parent_id === rootValue) {
+      const children = list2Tree(list, item.id)
+      if (children.length) {
+        item.children = children
+      }
+      arr.push(item)
+    }
+  })
+  return arr
+}
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,
   isInner, is_drag,
   init_shape, init_insert_shape, init_insert_textshape,
-  paster, insert_imgs, drop, adapt_page, page_scale, right_select
+  paster, insert_imgs, drop, adapt_page, page_scale, right_select,
+  list2Tree
 };
