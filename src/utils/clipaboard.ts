@@ -100,7 +100,6 @@ export function replace(context: Context, t: Function, src: Shape[]) {
                         if (data[0].types.length === 1) {
                             if (data[0].types.includes('text/html')) { // 内容为Shape[]
                                 clipboard_text_html_replace(context, data[0], src);
-                                return true;
                             } else {
                                 message('info', t('system.replace_failed'));
                                 context.workspace.setFreezeStatus(false);
