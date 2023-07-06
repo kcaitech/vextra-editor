@@ -367,6 +367,7 @@ function init_doc() {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
+            getUserInfo()
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             upload();
