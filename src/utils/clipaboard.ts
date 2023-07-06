@@ -22,8 +22,9 @@ export class Clipboard {
      * 往剪切板写入图形数据
      * @returns 
      */
-    write_html(): boolean {
+    async write_html(): Promise<boolean> {
         const shapes = this.context.selection.selectedShapes;
+        if (!shapes.length) return false;
         const position_map: Map<string, ShapeFrame> = new Map();
         for (let i = 0; i < shapes.length; i++) {
             position_map.set(shapes[i].id, shapes[i].frame2Root());
@@ -39,12 +40,25 @@ export class Clipboard {
         }
         if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
             const blob = new Blob([`${identity}${JSON.stringify(content)}` || ''], { type: 'text/html' });
-            navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+            await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
             return true;
         }
         return false;
     }
     write_plain() { }
+    async cut() {
+        const res = await this.write_html();
+        if (res) {
+            const page = this.context.selection.selectedPage;
+            if (page) {
+                const editor = this.context.editor4Page(page);
+                const del_res = editor.delete_batch(this.context.selection.selectedShapes);
+                return del_res;
+            }
+            return false;
+        }
+        return false;
+    }
 }
 /**
  * 粘贴

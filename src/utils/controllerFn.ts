@@ -85,6 +85,13 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
                 replace(context, context.workspace.t, selected);
             }
         }
+    } else if (e.code === 'KeyX') {
+        context.workspace.clipboard.cut().then((res) => {
+            if (res) {
+                context.selection.resetSelectShapes();
+            }
+        })
+
     }
     if (transform) {
         for (let i = 0; i < shapes.length; i++) {
