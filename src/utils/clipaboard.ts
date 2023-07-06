@@ -88,7 +88,6 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
 }
 /**
  * 从剪切板拿出数据替换掉src的内容，以src中每个图形的左上角为锚点
- * @param src 
  * @returns 
  */
 export function replace(context: Context, t: Function, src: Shape[]) {
@@ -101,29 +100,30 @@ export function replace(context: Context, t: Function, src: Shape[]) {
                         if (data[0].types.length === 1) {
                             if (data[0].types.includes('text/html')) { // 内容为Shape[]
                                 clipboard_text_html_replace(context, data[0], src);
+                                return true;
                             } else {
-                                message('info', t('system.failed'));
+                                message('info', t('system.replace_failed'));
                                 context.workspace.setFreezeStatus(false);
                                 return false;
                             }
                         }
                     } else {
-                        message('info', t('system.failed'));
+                        message('info', t('system.replace_failed'));
                         context.workspace.setFreezeStatus(false);
                         return false;
                     }
                     context.workspace.setFreezeStatus(false);
                 })
                 .catch((e) => {
-                    console.log('e', e);
-                    message('info', t('system.failed'));
+                    console.log(e);
+                    message('info', t('system.replace_failed'));
                     context.workspace.setFreezeStatus(false);
-                    return false
+                    return false;
                 })
         }
         return true;
     } catch (error) {
-        message('info', t('system.failed'));
+        message('info', t('system.replace_failed'));
         context.workspace.setFreezeStatus(false);
         return false;
     }
@@ -212,7 +212,7 @@ function clipboard_text_html_replace(context: Context, data: any, src: Shape[]) 
                         }
                     }
                 } else {
-                    message('info', context.workspace.t('system.failed'));
+                    message('info', context.workspace.t('system.replace_failed'));
                 }
             }
         }

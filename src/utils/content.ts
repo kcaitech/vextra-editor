@@ -80,9 +80,6 @@ function isInner(context: Context, shape: Shape) {
     return true;
   }
 }
-function init_scale(context: Context, shapes: Shape[]) {
-  // todo
-}
 function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
   const selection = context.selection;
   const workspace = context.workspace;
@@ -521,6 +518,6 @@ export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,
   isInner, is_drag,
-  init_scale, init_shape, init_insert_shape, init_insert_textshape,
+  init_shape, init_insert_shape, init_insert_textshape,
   paster, insert_imgs, drop, adapt_page, page_scale, right_select
 };

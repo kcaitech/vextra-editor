@@ -14,6 +14,7 @@ export const system = {
     copy: 'Copy',
     replace: 'Replace',
     failed: 'Failed',
+    'replace_failed': 'Replacement failed, please try pasting',
     'select_layer': 'Select layer',
     'bring_forward': 'Bring forward',
     'send_backward': 'Send backward',

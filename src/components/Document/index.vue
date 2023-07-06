@@ -352,12 +352,10 @@ function upload() {
     })
 }
 let timer: any = null;
-function setScreenSize() {
-    if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
-        document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-    }
+function init_screen_size() {
+    localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
 }
-function init() {
+function init_doc() {
     if (route.query.id) { // 从远端读取文件
         getDocumentInfo();
         document.addEventListener('keydown', keyboardEventHandler);
@@ -388,8 +386,8 @@ function workspaceWatcher(t: number) {
     }
 }
 onMounted(() => {
-    setScreenSize();
-    init();
+    init_screen_size();
+    init_doc();
 })
 onUnmounted(() => {
     try {
