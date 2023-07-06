@@ -108,8 +108,18 @@ export function useController(context: Context) {
         return (e.target as Element)?.closest(`#content`) ? true : false;
     }
     function mousedown(e: MouseEvent) {
-        const de_working = context.workspace.isPageDragging || context.workspace.isEditing;
-        if (de_working) return;
+        if (context.workspace.isEditing) {
+            if (isMouseOnContent(e)) {
+                const selected = context.selection.selectedShapes;
+                if (selected.length === 1 && selected[0].type === ShapeType.Text) {
+                    const save = selected.slice(0, 1);
+                    context.selection.resetSelectShapes();
+                    context.selection.rangeSelectShape(save);
+                }
+            }
+            return;
+        }
+        if (context.workspace.isPageDragging) return;
         if (isElement(e)) {
             matrix.reset(workspace.value.matrix);
             setPosition(e);
