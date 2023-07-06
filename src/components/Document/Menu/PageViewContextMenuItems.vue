@@ -7,9 +7,11 @@ import { Artboard, GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
+import { Selection } from '@/context/selection';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
 import { paster, replace } from '@/utils/clipaboard';
+import { sort_by_layer } from '@/utils/group_ungroup';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -181,14 +183,16 @@ function bottom() {
  * 创建编组
  */
 function groups() {
-  const selction = props.context.selection;
-  const page = selction.selectedPage;
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
 
   if (page) {
     const editor = props.context.editor4Page(page);
-    const group = editor.group(selction.selectedShapes, getName(ShapeType.Group, page.childs, t));
+    const shapes = sort_by_layer(props.context, selection.selectedShapes);
+    const group = editor.group(shapes, getName(ShapeType.Group, page.childs, t));
     if (group) {
-      selction.selectShape(group);
+      selection.selectShape(group);
+      selection.notify(Selection.EXTEND, group);
     }
   }
   emit('close');
@@ -197,14 +201,15 @@ function groups() {
  * 创建容器
  */
 function container() {
-  const selction = props.context.selection;
-  const page = selction.selectedPage;
-
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    const artboard = editor.create_artboard(selction.selectedShapes, getName(ShapeType.Artboard, page.childs, t));
+    const shapes = sort_by_layer(props.context, selection.selectedShapes);
+    const artboard = editor.create_artboard(shapes, getName(ShapeType.Artboard, page.childs, t));
     if (artboard) {
-      selction.selectShape(artboard);
+      selection.selectShape(artboard);
+      selection.notify(Selection.EXTEND, artboard);
     }
   }
   emit('close');
