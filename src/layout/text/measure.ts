@@ -39,7 +39,7 @@ const _tabMetrics = new class implements TextMetrics {
     actualBoundingBoxRight: number = 0;
     fontBoundingBoxAscent: number = 0;
     fontBoundingBoxDescent: number = 0;
-    width: number = 29;
+    width: number = 28;
 }
 
 export function measure(code: number, font: string) {
