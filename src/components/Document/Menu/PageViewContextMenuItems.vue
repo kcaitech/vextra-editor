@@ -45,8 +45,8 @@ function paste_here() {
   emit('close');
 }
 function _replace() {
-  const selction = props.context.selection;
-  const selected = selction.selectedShapes;
+  const selection = props.context.selection;
+  const selected = selection.selectedShapes;
   if (selected.length) {
     replace(props.context, t, selected);
   }
@@ -118,11 +118,11 @@ function operation() {
  * 上移一层
  */
 function forward() {
-  const selction = props.context.selection;
-  const page = selction.selectedPage;
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    const result = editor.uppper_layer(selction.selectedShapes[0], 1);
+    const result = editor.uppper_layer(selection.selectedShapes[0], 1);
     if (!result) {
       message('info', props.context.workspace.t('homerightmenu.unable_upper'));
     } else {
@@ -135,11 +135,11 @@ function forward() {
  * 下移一层
  */
 function back() {
-  const selction = props.context.selection;
-  const page = selction.selectedPage;
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    const result = editor.lower_layer(selction.selectedShapes[0], 1);
+    const result = editor.lower_layer(selection.selectedShapes[0], 1);
     if (!result) {
       message('info', props.context.workspace.t('homerightmenu.unable_lower'));
     } else {
@@ -151,11 +151,11 @@ function back() {
  * 置于顶层
  */
 function top() {
-  const selction = props.context.selection;
-  const page = selction.selectedPage;
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    const result = editor.uppper_layer(selction.selectedShapes[0]);
+    const result = editor.uppper_layer(selection.selectedShapes[0]);
     if (!result) {
       message('info', props.context.workspace.t('homerightmenu.unable_upper'));
     } else {
@@ -167,11 +167,11 @@ function top() {
  * 置于底层
  */
 function bottom() {
-  const selction = props.context.selection;
-  const page = selction.selectedPage;
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    const result = editor.lower_layer(selction.selectedShapes[0]);
+    const result = editor.lower_layer(selection.selectedShapes[0]);
     if (!result) {
       message('info', props.context.workspace.t('homerightmenu.unable_lower'));
     } else {
@@ -185,7 +185,6 @@ function bottom() {
 function groups() {
   const selection = props.context.selection;
   const page = selection.selectedPage;
-
   if (page) {
     const editor = props.context.editor4Page(page);
     const shapes = sort_by_layer(props.context, selection.selectedShapes);
@@ -218,14 +217,14 @@ function container() {
  * 解除容器
  */
 function dissolution_container() {
-  const selction = props.context.selection;
-  if (selction.selectedShapes[0].type !== ShapeType.Artboard) return;
-  const page = selction.selectedPage;
+  const selection = props.context.selection;
+  if (selection.selectedShapes[0].type !== ShapeType.Artboard) return;
+  const page = selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    const shapes = editor.dissolution_artboard(selction.selectedShapes[0] as Artboard);
+    const shapes = editor.dissolution_artboard(selection.selectedShapes[0] as Artboard);
     if (shapes) {
-      selction.rangeSelectShape(shapes);
+      selection.rangeSelectShape(shapes);
     }
   }
   emit('close');
@@ -234,14 +233,14 @@ function dissolution_container() {
  * 解除编组
  */
 function unGroup() {
-  const selction = props.context.selection;
-  if (selction.selectedShapes[0].type !== ShapeType.Group) return;
-  const page = selction.selectedPage;
+  const selection = props.context.selection;
+  if (selection.selectedShapes[0].type !== ShapeType.Group) return;
+  const page = selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    const shapes = editor.ungroup(selction.selectedShapes[0] as GroupShape);
+    const shapes = editor.ungroup(selection.selectedShapes[0] as GroupShape);
     if (shapes) {
-      selction.rangeSelectShape(shapes);
+      selection.rangeSelectShape(shapes);
     }
   }
   emit('close');
