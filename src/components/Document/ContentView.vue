@@ -16,7 +16,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, get_selected_type } from '@/utils/content';
+import { updateRoot, _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, get_selected_types } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -323,26 +323,26 @@ function contextMenuMount(e: MouseEvent) {
     contextMenuPosition.x = e.clientX - x;
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
-    contextMenuItems = ['copy', 'paste']
+    contextMenuItems = [];
 
     const area = right_select(e, mousedownOnPageXY, props.context);
-    if (area === 'artboard') {
+    if (area === 'artboard') { // 点击在容器上
         contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
-    } else if (area === 'group') {
-        contextMenuItems = ['all', 'copy', 'replace', 'paste-here', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
-    } else if (area === 'controller') {
-        contextMenuItems = ['all', 'copy', 'replace', 'paste-here', 'visible', 'lock', 'groups', 'container'];
-        const types = get_selected_type(props.context);
-        if (types & 1) {
+    } else if (area === 'group') { // 点击在编组上
+        contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+    } else if (area === 'controller') { // 点击在选区上
+        contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
+        const types = get_selected_types(props.context); // 点击在选区上时，需要判定选区内存在图形的类型
+        if (types & 1) { // 存在容器
             contextMenuItems.push('dissolution');
         }
-        if (types & 2) {
+        if (types & 2) { // 存在编组
             contextMenuItems.push('un_group');
         }
-        if (props.context.selection.selectedShapes.length <= 1) {
+        if (props.context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
             contextMenuItems.push('forward', 'back', 'top', 'bottom');
         }
-    } else if (area === 'normal') {
+    } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
         contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
     } else {
         contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation'];
@@ -353,8 +353,11 @@ function contextMenuMount(e: MouseEvent) {
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
     }
+
+    // 数据准备就绪之后打开菜单
     contextMenu.value = true;
     document.addEventListener('keydown', esc);
+    // 打开菜单之后调整菜单位置
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;

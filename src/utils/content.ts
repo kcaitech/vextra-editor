@@ -502,9 +502,9 @@ function right_select(e: MouseEvent, p: PageXY, context: Context): 'controller' 
 /**
  * 判断选区存在的类型
  * @param context
- * @returns { number } 两位二进制 00 
+ * @returns { number } 只判断了两种图形 两位二进制 00 
  */
-function get_selected_type(context: Context): number {
+function get_selected_types(context: Context): number {
   let result = 0;
   const shapes = context.selection.selectedShapes;
   for (let i = shapes.length - 1; i > -1; i--) {
@@ -513,7 +513,14 @@ function get_selected_type(context: Context): number {
     } else if (shapes[i].type === ShapeType.Group) {
       result = result | 2;
     }
+    if (result >= 3) return result; // 已经得到了最多类型，不可能再有新的类型，不需要继续判断
   }
   return result;
 }
-export { Root, updateRoot, _updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop, adapt_page, page_scale, right_select, get_selected_type };
+export {
+  Root, updateRoot, _updateRoot,
+  getName, get_image_name, get_selected_types,
+  isInner, is_drag,
+  init_scale, init_shape, init_insert_shape, init_insert_textshape,
+  paster, insert_imgs, drop, adapt_page, page_scale, right_select
+};
