@@ -86,11 +86,11 @@ const onDeleteline = () => {
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
     console.log(icon,'ee');
-    if((selection.value.cursorEnd !== -1) && (selection.value.cursorStart !== -1)) {
+    if(isSelectText()) {
+        editor.value.setTextDefaultHorAlign(icon)
+    } else {
         const { textIndex, selectLength } = getTextIndexAndLen()
         editor.value.setTextHorAlign(icon, textIndex, selectLength)
-    } else {
-        editor.value.setTextDefaultHorAlign(icon)
     }
 }
 //设置垂直对齐
@@ -120,6 +120,14 @@ const getTextIndexAndLen = () => {
     const selectLength = Math.abs(selection.value.cursorEnd - selection.value.cursorStart)
     return { textIndex, selectLength }
 }
+//判断是否选择文本框还是光标聚焦了
+const isSelectText = () => {
+    if((selection.value.cursorEnd !== -1) && (selection.value.cursorStart !== -1)) {
+        return false
+    }else {
+        return true
+    }
+}
 
 //输入框设置字体大小
 const setTextSize = () => {
@@ -129,6 +137,8 @@ const setTextSize = () => {
     }
     if (!isNaN(Number(fonstSize.value))) {
         changeTextSize(fonstSize.value)
+    }else {
+        textFormat()
     }
 
 }
@@ -136,16 +146,18 @@ const setTextSize = () => {
 const textFormat = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
-    selectLevel.value = format.alignment || 'left'
-    selectVertical.value = format.verAlign || 'top'
-    fontName.value = format.fontName || 'PingFangSC-Regular'
-    fonstSize.value = format.fontSize || 14
     fontNameIsMulti.value = format.fontNameIsMulti
     fontSizeIsMulti.value = format.fontSizeIsMulti
     colorIsMulti.value = format.colorIsMulti
     alignmentIsMulti.value = format.alignmentIsMulti
     paraSpacingIsMulti.value = format.paraSpacingIsMulti
     kerningIsMulti.value = format.kerningIsMulti
+    selectLevel.value = format.alignment || 'left'
+    selectVertical.value = format.verAlign || 'top'
+    fontName.value = format.fontName || 'PingFangSC-Regular'
+    fonstSize.value = format.fontSize || 14
+    if(fontNameIsMulti.value) fontName.value = '多值'
+    if(fontSizeIsMulti.value) fonstSize.value = '多值'
     console.log(format,'format');
 }
 const textDefaultFormat = () => {
@@ -155,12 +167,6 @@ const textDefaultFormat = () => {
 function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
         textFormat()
-        if(fontNameIsMulti.value) {
-            fontName.value = '多值'
-        }
-        if(fontSizeIsMulti.value) {
-            fonstSize.value = '多值'
-        }
     }
 }
 onMounted(() => {

@@ -268,6 +268,8 @@ const getUserInfo = async() => {
     const {data} = await user_api.GetInfo()
     if(context) {
         context.workspace.setUserInfo(data)
+        console.log(data);
+        
         localStorage.setItem('avatar', data.avatar)
         localStorage.setItem('nickname', data.nickname)
         localStorage.setItem('userId', data.id)
@@ -386,6 +388,7 @@ function init() {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
+            getUserInfo()
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             upload();
