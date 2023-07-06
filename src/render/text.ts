@@ -7,6 +7,16 @@ function toRGBA(color: Color): string {
     return "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
 }
 
+function isBlankChar(charCode: number) {
+    switch (charCode) {
+        case 0x09: // '\t'
+        case 0x0a: // '\n'
+        case 0x20: // ' '
+            return true;
+    }
+    return false;
+}
+
 export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): string {
     const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
@@ -26,7 +36,7 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
                 const y = lines.yOffset + line.y + (line.lineHeight - fontSize) / 2 + yOffset; // top
 
                 paths.push(...garr.map((g) => {
-                    if (g.char === '\n' || g.char === ' ') return '';
+                    if (isBlankChar(g.char.charCodeAt(0))) return '';
                     const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
                     path.translate(g.x + offsetX, y + offsetY);
@@ -57,7 +67,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                 const garr = line[garrIdx];
                 for (let gIdx = 0, gCount = garr.length; gIdx < gCount; gIdx++) {
                     const graph = garr[gIdx];
-                    if (graph.char === ' ' || graph.char === '\n') { // 两个连续的空格或者首个空格，svg显示有问题
+                    if (isBlankChar(graph.char.charCodeAt(0))) { // 两个连续的空格或者首个空格，svg显示有问题
                         continue;
                     }
                     gText.push(graph.char);
@@ -103,7 +113,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
 export function render_(h: Function, shape: TextShape, reflush?: number) {
     const path = renderText2Path(shape, 0, 0);
 
-    const childs = [h('path', {d: path})]
+    const childs = [h('path', { d: path })]
 
     const frame = shape.frame;
     const props: any = {}
