@@ -9,7 +9,7 @@ interface SystemClipboardItem {
     contentType: string
     content: Media | string
 }
-const identity = 'cn.protodesign/shapes';
+const identity = 'cn.protodesign/clipboard';
 export class Clipboard {
     private context: Context;
     constructor(context: Context) {
@@ -18,14 +18,18 @@ export class Clipboard {
     clipboard_write_shapes(shapes: Shape[]) {
         return export_shape(shapes);
     }
-    write_html() {
+    /**
+     * 往剪切板写入图形数据
+     * @returns 
+     */
+    write_html(): boolean {
         const shapes = this.context.selection.selectedShapes;
         const position_map: Map<string, ShapeFrame> = new Map();
         for (let i = 0; i < shapes.length; i++) {
             position_map.set(shapes[i].id, shapes[i].frame2Root());
         }
         const content = this.clipboard_write_shapes(shapes);
-        if (!content) return;
+        if (!content) return false;
         for (let i = 0; i < content.length; i++) {
             const shape = content[i].content;
             const root_frame = position_map.get(shape.id);
@@ -36,10 +40,16 @@ export class Clipboard {
         if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
             const blob = new Blob([`${identity}${JSON.stringify(content)}` || ''], { type: 'text/html' });
             navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+            return true;
         }
+        return false;
     }
     write_plain() { }
 }
+/**
+ * 粘贴
+ * @param xy 以xy为锚点，不存在xy时，粘贴在原来的位置
+ */
 export function paster(context: Context, t: Function, xy?: PageXY) {
     try {
         if (navigator.clipboard && navigator.clipboard.read) {
@@ -76,6 +86,11 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
         context.workspace.setFreezeStatus(false);
     }
 }
+/**
+ * 从剪切板拿出数据替换掉src的内容，以src中每个图形的左上角为锚点
+ * @param src 
+ * @returns 
+ */
 export function replace(context: Context, t: Function, src: Shape[]) {
     try {
         if (navigator.clipboard && navigator.clipboard.read) {
@@ -103,6 +118,7 @@ export function replace(context: Context, t: Function, src: Shape[]) {
                     console.log('e', e);
                     message('info', t('system.failed'));
                     context.workspace.setFreezeStatus(false);
+                    return false
                 })
         }
         return true;
@@ -112,7 +128,11 @@ export function replace(context: Context, t: Function, src: Shape[]) {
         return false;
     }
 }
-// 内部shapes复制
+/**
+ * 从剪切板拿出图形数据并插入文档
+ * @param data 剪切板拿出的数据
+ * @param xy 插入的地方
+ */
 function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     data.getType('text/html').then((val: any) => {
         const fr = new FileReader();
@@ -151,7 +171,7 @@ function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                             const page = context.selection.selectedPage;
                             if (page) {
                                 const editor = context.editor.editor4Page(page);
-                                const r = editor.insert(page, page.childs.length, shape, true);
+                                const r = editor.insert(page, page.childs.length, shape);
                                 if (r) result.push(r);
                             }
                         }
@@ -169,6 +189,11 @@ function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
         console.log(e);
     });
 }
+/**
+ * 从剪切板拿出图形数据并替换掉src中的内容
+ * @param data 剪切板拿出的数据
+ * @param src 将被替换的内容
+ */
 function clipboard_text_html_replace(context: Context, data: any, src: Shape[]) {
     data.getType('text/html').then((val: any) => {
         const fr = new FileReader();
@@ -196,7 +221,11 @@ function clipboard_text_html_replace(context: Context, data: any, src: Shape[]) 
         console.log(e);
     });
 }
-// 从外部复制一张图片进来
+/**
+ * 从剪切板上拿出一张图片，并插入文档
+ * @param data 剪切板上的图片资源
+ * @param _xy 插入位置
+ */
 async function clipboard_image(context: Context, data: any, t: Function, _xy?: PageXY) {
     const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
     item.contentType = data.types[0];
@@ -227,7 +256,11 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
     }
     img.src = URL.createObjectURL(val);
 }
-// 从外部复制一段文字进来
+/**
+ * 从剪切板上拿出一段文字，并插入文档
+ * @param data 剪切板上的文字资源
+ * @param _xy 插入位置
+ */
 function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
     const frame: { width: number, height: number } = { width: 400, height: 100 };
     data.getType('text/plain').then((val: any) => {
@@ -246,6 +279,10 @@ function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
         message('info', context.workspace.t('clipboard.invalid_data'));
     });
 }
+/**
+ * 调整插入数据的位置以及大小，让插入的数据不会超过可视区域的大小并居中
+ * @returns { {x: number,y: number} } 位置
+ */
 function adjust_content_xy(context: Context, m: { width: number, height: number }) {
     const workspace = context.workspace;
     const root = workspace.root;
@@ -267,6 +304,9 @@ function adjust_content_xy(context: Context, m: { width: number, height: number 
     const page_center = matrix.inverseCoord(root.center);
     return { x: page_center.x - m.width / 2, y: page_center.y - m.height / 2 };
 }
+/** 
+ * 将图片插入文档
+*/
 function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
     const selection = context.selection;
     const workspace = context.workspace;
@@ -290,6 +330,9 @@ function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, 
     workspace.setAction(Action.AutoV);
     workspace.creating(false);
 }
+/**
+ * 将文字插入文档
+ */
 function paster_text(context: Context, mousedownOnPageXY: PageXY, content: string) {
     const selection = context.selection;
     const workspace = context.workspace;
@@ -329,6 +372,10 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
     }
     return result;
 }
+/**
+ * 解析文字字符串，转义特殊字符
+ * @param shape 
+ */
 function parse_text(shape: TextShape) {
     const paras = shape.text.paras;
     const textarea = document.createElement('textarea');

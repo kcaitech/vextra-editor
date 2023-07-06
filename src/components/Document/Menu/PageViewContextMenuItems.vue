@@ -54,19 +54,28 @@ function selectAll() {
   props.context.workspace.keydown_a(true, true);
   emit('close');
 }
-function half(e: MouseEvent, scale: number) {
+/**
+ * 50%视图
+ */
+function half(e: MouseEvent) {
   e.preventDefault();
-  page_scale(e, scale);
+  page_scale(e, 0.5);
   emit('close');
 }
-function hundred(e: MouseEvent, scale: number) {
+/**
+ * 全比例视图
+ */
+function hundred(e: MouseEvent) {
   e.preventDefault();
-  page_scale(e, scale);
+  page_scale(e, 1);
   emit('close');
 }
-function double(e: MouseEvent, scale: number) {
+/**
+ * 两倍视图
+ */
+function double(e: MouseEvent) {
   e.preventDefault();
-  page_scale(e, scale);
+  page_scale(e, 2);
   emit('close');
 }
 /**
@@ -84,30 +93,28 @@ function page_scale(e: MouseEvent, scale: number) {
   matrix.trans(offsetX, offsetY);
   workspace.matrixTransformation();
 }
-// 画布自适应 
+/**
+ * 使整个page在可视区域
+ */
 function canvas() {
   adapt_page(props.context);
   emit('close');
 }
-function cursor() {
-
-}
+function cursor() { }
 function comment() {
   const status = props.context.workspace.isVisibleComment
   isComment.value = !status
   props.context.workspace.setVisibleComment(isComment.value)
 }
-function ruler() {
-
-}
-function pixel() {
-
-}
+function ruler() { }
+function pixel() { }
 function operation() {
   props.context.workspace.notify(WorkSpace.HIDDEN_UI);
   emit('close');
 }
-// 上移一层
+/**
+ * 上移一层
+ */
 function forward() {
   const selction = props.context.selection;
   const page = selction.selectedPage;
@@ -122,6 +129,9 @@ function forward() {
   }
 
 }
+/**
+ * 下移一层
+ */
 function back() {
   const selction = props.context.selection;
   const page = selction.selectedPage;
@@ -135,6 +145,9 @@ function back() {
     }
   }
 }
+/**
+ * 置于顶层
+ */
 function top() {
   const selction = props.context.selection;
   const page = selction.selectedPage;
@@ -148,6 +161,9 @@ function top() {
     }
   }
 }
+/**
+ * 置于底层
+ */
 function bottom() {
   const selction = props.context.selection;
   const page = selction.selectedPage;
@@ -161,6 +177,9 @@ function bottom() {
     }
   }
 }
+/**
+ * 创建编组
+ */
 function groups() {
   const selction = props.context.selection;
   const page = selction.selectedPage;
@@ -174,6 +193,9 @@ function groups() {
   }
   emit('close');
 }
+/**
+ * 创建容器
+ */
 function container() {
   const selction = props.context.selection;
   const page = selction.selectedPage;
@@ -187,6 +209,9 @@ function container() {
   }
   emit('close');
 }
+/**
+ * 解除容器
+ */
 function dissolution_container() {
   const selction = props.context.selection;
   if (selction.selectedShapes[0].type !== ShapeType.Artboard) return;
@@ -200,6 +225,9 @@ function dissolution_container() {
   }
   emit('close');
 }
+/**
+ * 解除编组
+ */
 function unGroup() {
   const selction = props.context.selection;
   if (selction.selectedShapes[0].type !== ShapeType.Group) return;
@@ -225,6 +253,9 @@ function reset() {
 function edit() {
 
 }
+/**
+ * 隐藏图层
+ */
 function visible() {
   const shpaes = props.context.selection.selectedShapes;
   for (let i = 0; i < shpaes.length; i++) {
@@ -234,6 +265,9 @@ function visible() {
   props.context.selection.resetSelectShapes();
   emit('close');
 }
+/**
+ * 解锁
+ */
 function lock() {
   const shpaes = props.context.selection.selectedShapes;
   for (let i = 0; i < shpaes.length; i++) {
@@ -243,14 +277,17 @@ function lock() {
   props.context.selection.resetSelectShapes();
   emit('close');
 }
-function closeLayerSubMenu(e: MouseEvent) {
+/**
+ * 关闭图层菜单 
+ */
+function closeLayerSubMenu() {
   layerSubMenuVisiable.value = false;
 }
 </script>
 <template>
   <div class="items-wrap">
     <div v-if="props.items.includes('layers')" class="item layer-select"
-      @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="(e: MouseEvent) => closeLayerSubMenu(e)">
+      @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
       <span>{{ t('system.select_layer') }}</span>
       <div class="triangle"></div>
       <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
@@ -282,14 +319,14 @@ function closeLayerSubMenu(e: MouseEvent) {
 
     <!-- 视图比例 -->
     <div class="line" v-if="props.items.includes('half')"></div>
-    <div class="item" v-if="props.items.includes('half')" @click="(e: MouseEvent) => half(e, 0.5)">
+    <div class="item" v-if="props.items.includes('half')" @click="(e: MouseEvent) => half(e)">
       <span>50%</span>
     </div>
-    <div class="item" v-if="props.items.includes('hundred')" @click="(e: MouseEvent) => hundred(e, 1)">
+    <div class="item" v-if="props.items.includes('hundred')" @click="(e: MouseEvent) => hundred(e)">
       <span>100%</span>
       <span class="shortkey">Ctrl + 0</span>
     </div>
-    <div class="item" v-if="props.items.includes('double')" @click="(e: MouseEvent) => double(e, 2)">
+    <div class="item" v-if="props.items.includes('double')" @click="(e: MouseEvent) => double(e)">
       <span>200%</span>
     </div>
     <div class="item" v-if="props.items.includes('canvas')" @click="canvas">
