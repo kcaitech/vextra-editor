@@ -16,10 +16,14 @@ const props = defineProps<Props>();
 const selectCase = ref('no-list')
 const selectText = ref('autowidth')
 const selectId = ref('no-list')
-const wordSpace = ref('0%')
+const wordSpace = ref()
 const rowHeight = ref()
 const row_height = ref(`${t('attr.auto')}`)
-const paragraphSpace = ref('0')
+const paragraphSpace = ref()
+const minimumLineHeightIsMulti = ref(false)
+const maximumLineHeightIsMulti = ref(false)
+const paraSpacingIsMulti = ref(false)
+const kerningIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
 const textShape = computed(() =>  props.context.selection.selectedShapes)
 const editor = computed(() => {
@@ -57,22 +61,75 @@ const setRowHeight = () => {
     rowHeight.value = 1
   }
   if (!isNaN(Number(rowHeight.value))) {
-    editor.value.setMinLineHeight(rowHeight.value, textIndex, selectLength)
+    console.log(Number(rowHeight.value));
+    
+    editor.value.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
+    editor.value.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+  }else {
+      textFormat()
   }
+}
+
+const setWordSpace = () => {
+  const { textIndex, selectLength } = getTextIndexAndLen();
+  wordSpace.value = wordSpace.value.trim()
+  if (wordSpace.value.slice(-1) === '%') {
+      wordSpace.value = Number(wordSpace.value.slice(0, -1))
+  }
+  if (!isNaN(Number(wordSpace.value))) {
+    editor.value.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
+    wordSpace.value = wordSpace.value + '%'
+  }else {
+      textFormat()
+  }
+}
+
+const setParagraphSpace = () => {
+  const { textIndex, selectLength } = getTextIndexAndLen();
+  paragraphSpace.value = paragraphSpace.value.trim()
+  if (!isNaN(Number(paragraphSpace.value))) {
+    editor.value.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
+  }else {
+      textFormat()
+  }
+}
+
+//判断是否选择文本框还是光标聚焦了
+const isSelectText = () => {
+    if((selection.value.cursorEnd !== -1) && (selection.value.cursorStart !== -1)) {
+        return false
+    }else {
+        return true
+    }
 }
 
 const textFormat = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+    minimumLineHeightIsMulti.value = format.minimumLineHeightIsMulti
+    maximumLineHeightIsMulti.value = format.maximumLineHeightIsMulti
+    kerningIsMulti.value = format.kerningIsMulti
+    paraSpacingIsMulti.value = format.paraSpacingIsMulti
+    wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'
+    rowHeight.value = format.minimumLineHeight || ''
+    paragraphSpace.value = format.paraSpacing || 0
+    if(minimumLineHeightIsMulti.value) rowHeight.value = '多值'
+    if(kerningIsMulti.value) wordSpace.value = '多值'
+    if(paraSpacingIsMulti.value) paragraphSpace.value = '多值'
+    wordSpace.value = wordSpace.value + '%'
 }
 function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
         textFormat()
     }
 }
+const textDefaultFormat = () => {
+    const defaultFormat = (textShape.value[0] as TextShape).text.getDefaultTextFormat()
+}
 onMounted(() => {
     textFormat()
+    textDefaultFormat()
     props.context.selection.watch(selection_wather);
 })
 onUnmounted(() => {
@@ -95,7 +152,7 @@ onUnmounted(() => {
           <div class="options-container">
             <div>
                 <span>{{t('attr.word_space')}}</span>
-                <div><input type="text" v-model="wordSpace" class="input"></div>
+                <div><input type="text" v-model="wordSpace" class="input" @change="setWordSpace"></div>
             </div>
             <div>
                 <span>{{t('attr.row_height')}}</span>
@@ -103,7 +160,7 @@ onUnmounted(() => {
             </div>
             <div>
                 <span>{{t('attr.paragraph_space')}}</span>
-                <div><input type="text" v-model="paragraphSpace" class="input"></div>
+                <div><input type="text" v-model="paragraphSpace" class="input" @change="setParagraphSpace"></div>
             </div>
             <div>
                 <span>{{t('attr.id_style')}}</span>

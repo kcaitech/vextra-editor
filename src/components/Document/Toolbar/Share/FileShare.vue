@@ -15,7 +15,8 @@ const props = defineProps<{
   selectValue: number,
   docUserId?: string,
   context?: Context,
-  userInfo:UserInfo | undefined
+  userInfo:UserInfo | undefined,
+  docInfo?: DocInfo
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -34,7 +35,7 @@ const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=$
 
 const value1 = ref(props.shareSwitch)
 const authority = ref(false)
-const docInfo = ref<DocInfo>()
+const docInfo = ref<DocInfo>(props.docInfo!)
 const index = ref(0)
 const card = ref<HTMLDivElement>()
 const editable = ref(`${t('share.editable')}`)
@@ -209,11 +210,11 @@ watch(value1, (nVal, oVal) => {
 watchEffect(() => {
   if (route.query.id) {
     const userId = userInfo.value?.id
-    if (docInfo.value) {
+    if (props.docInfo) {
       if(props.docUserId) {
         props.docUserId != userId ? founder.value = true : founder.value = false
       }else {
-        docInfo.value.user.id != userId ? founder.value = true : founder.value = false
+        props.docInfo.user.id != userId ? founder.value = true : founder.value = false
       }
     }
   }
