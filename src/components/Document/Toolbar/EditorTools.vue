@@ -15,6 +15,7 @@ import CreateImage from "./Buttons/CreateImage.vue";
 import Comment from "./Buttons/Comment.vue"
 import { Action, WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n'
+import { message } from "@/utils/message";
 const { t } = useI18n()
 
 const props = defineProps<{
@@ -35,8 +36,14 @@ function select(action: Action) {
     }
 }
 
-function update() {
+function update(t?: number) {
     selected.value = workspace.value.action;
+    if(t === WorkSpace.COMPS) {
+        selectComps()
+    }
+}
+const selectComps = () => {
+    message('feature', t('navi.development'));
 }
 // hooks
 onMounted(() => {
@@ -62,7 +69,7 @@ onUnmounted(() => {
         <el-tooltip class="box-item" effect="dark" :content="`${t('navi.comps')} &nbsp;&nbsp; Shift+I`" placement="bottom"
             :show-after="500" :offset="10" :hide-after="0">
             <ToolButton>
-                <div class="temp">
+                <div class="temp" @click="selectComps">
                     <svg-icon icon-class="resource"></svg-icon>
                 </div>
             </ToolButton>

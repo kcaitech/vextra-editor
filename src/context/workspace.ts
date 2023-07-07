@@ -38,7 +38,8 @@ export enum KeyboardKeys { // 键盘按键类型
     T = 'KeyT',
     C = 'KeyC',
     Digit1 = 'Digit1',
-    Backspace = 'Backspace'
+    Backspace = 'Backspace',
+    I = 'KeyI'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -124,6 +125,7 @@ export class WorkSpace extends Watchable(Object) {
     static UPDATE_COMMENT_CHILD = 46;
     static HIDDEN_UI = 47;
     static INIT_DOC_NAME = 48;
+    static COMPS = 49;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -491,6 +493,9 @@ export class WorkSpace extends Watchable(Object) {
             if (ctrlKey || metaKey) {
                 adapt_page(this.context);
             }
+        } else if (event.code === KeyboardKeys.I) {
+            event.preventDefault();
+            this.keydown_i(shiftKey);
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -582,6 +587,11 @@ export class WorkSpace extends Watchable(Object) {
         this.escSetup();
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
+    }
+    keydown_i(shiftKey: boolean) {
+        if (shiftKey) {
+            this.notify(WorkSpace.COMPS);
+        }
     }
     keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         const repo = context.repo;
