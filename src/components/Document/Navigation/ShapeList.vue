@@ -76,7 +76,7 @@ let listviewSource = new class implements IDataSource<ItemData> {
 }
 const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
-const ListH = ref<number>(0)
+const list_h = ref<number>(0)
 function _notifySourceChange(t?: number | string, shape?: Shape) {
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
@@ -92,13 +92,13 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
             })
             const indexItem = shapeDirList.indexOf(item)
             if (listBody.value) {
-                ListH.value = listBody.value.clientHeight //list可视高度
+                list_h.value = listBody.value.clientHeight //list可视高度
             }
             if (shapelist.value && indexItem >= 0) {
                 const itemScrollH = indexItem * 30
-                if (itemScrollH + 29 >= ListH.value - shapelist.value.scroll.y) {
-                    if ((itemScrollH) + shapelist.value.scroll.y < ListH.value - 30) return
-                    shapelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
+                if (itemScrollH + 29 >= list_h.value - shapelist.value.scroll.y) {
+                    if ((itemScrollH) + shapelist.value.scroll.y < list_h.value - 30) return
+                    shapelist.value.clampScroll(0, -(itemScrollH + 30 - list_h.value))
                 } else if (itemScrollH < -(shapelist.value.scroll.y)) {
                     shapelist.value.clampScroll(0, -itemScrollH)
                 }

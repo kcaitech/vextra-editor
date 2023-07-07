@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_paras, import_paras, trasnform_paras
+    export_text, import_text, TextShapeEditor
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -27,13 +27,14 @@ export class Clipboard {
      * 往剪切板写入图形数据
      * @returns 
      */
-    async write_html(para?: Text): Promise<boolean> {
-        if (para) { // 写入文字段落
-            const _paras = export_paras(para);
-            if (!_paras) return false;
+    async write_html(text?: Text): Promise<boolean> {
+        if (text) { // 写入文字段落
+            const _text = export_text(text);
+            if (!_text) return false;
             if (navigator.clipboard && navigator.clipboard.write && ClipboardItem) {
-                const blob = new Blob([`${identity}-${paras}${JSON.stringify(_paras)}` || ''], { type: 'text/html' });
-                await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+                const blob = new Blob([`${identity}-${paras}${JSON.stringify(_text)}` || ''], { type: 'text/html' });
+                const content = [new ClipboardItem({ 'text/html': blob })];
+                await navigator.clipboard.write(content);
                 return true;
             }
         } else {
@@ -60,49 +61,72 @@ export class Clipboard {
         }
         return false;
     }
-    write_plain() { }
     async cut() {
         const res = await this.write_html();
         if (res) {
             const page = this.context.selection.selectedPage;
             if (page) {
                 const editor = this.context.editor4Page(page);
-                const del_res = editor.delete_batch(this.context.selection.selectedShapes);
-                return del_res;
+                const delete_res = editor.delete_batch(this.context.selection.selectedShapes);
+                if (delete_res) {
+                    this.context.selection.resetSelectShapes();
+                }
+                return delete_res;
             }
             return false;
         }
         return false;
     }
 }
-/**
- * 粘贴一段文本
- * @param xy 以xy为锚点，不存在xy时，粘贴在原来的位置
- */
-export function paster_paras(context: Context, t: Function, xy?: PageXY) {
+export function paster_inner_shape(context: Context, editor: TextShapeEditor) {
     try {
-        if (navigator.clipboard && navigator.clipboard.read) {
-            context.workspace.setFreezeStatus(true);
-            navigator.clipboard.read()
-                .then(function (data) {
-                    if (data && data.length) { // 存在有效内容
-                        if (data[0].types.includes('text/html')) { // 内容为Shape[]
-                            clipboard_text_html(context, data[0], xy);
-                        }
-                    } else {
-                        message('info', t('clipboard.invalid_data'));
+        if (navigator.clipboard) {
+            navigator.clipboard.read().then(function (data) {
+                if (data && data.length) {
+                    const _d = data[0];
+                    const types = _d.types;
+                    if (types.includes('text/plain')) {
+                        _d.getType('text/plain').then((val: any) => {
+                            const fr = new FileReader();
+                            fr.onload = function (event) {
+                                const text = event.target?.result;
+                                if (text && typeof text === 'string') {
+                                    const selection = context.selection;
+                                    const start = selection.cursorStart;
+                                    const end = selection.cursorEnd;
+                                    console.log(start, end, text);
+                                    const s = Math.min(start, end);
+                                    editor.insertText(text, s);
+                                    selection.setCursor(s + text.length, false);
+                                }
+                            }
+                            fr.readAsText(val);
+                        })
+                    } else if (types.includes('text/html')) {
+                        _d.getType('text/html').then((val: any) => {
+                            const fr = new FileReader();
+                            fr.onload = function (event) {
+                                const text_html = event.target?.result;
+                                if (text_html && typeof text_html === 'string') {
+                                    if (text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1) {
+                                        const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+                                        const text = import_text(context.data, source, false) as Text;
+                                        const selection = context.selection;
+                                        const start = selection.cursorStart;
+                                        const end = selection.cursorEnd;
+                                        editor.insertFormatText(text, start, Math.abs(start - end));
+                                        selection.setCursor(start + text.length, false);
+                                    }
+                                }
+                            }
+                            fr.readAsText(val);
+                        })
                     }
-                    context.workspace.setFreezeStatus(false);
-                })
-                .catch((e) => {
-                    console.log(e);
-                    message('info', t('clipboard.invalid_data'));
-                    context.workspace.setFreezeStatus(false);
-                })
+                }
+            })
         }
     } catch (error) {
-        message('info', t('clipboard.invalid_data'));
-        context.workspace.setFreezeStatus(false);
+
     }
 }
 /**
@@ -197,7 +221,27 @@ function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
         fr.onload = function (event) {
             const text_html = event.target?.result;
             if (text_html && typeof text_html === 'string') {
-                if (text_html.slice(0, 60).indexOf(identity) > -1) {
+                if (text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1) {
+                    const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+                    const t_s = import_text(context.data, source, true);
+                    if (t_s) {
+                        const page = context.selection.selectedPage;
+                        if (!page) return;
+                        const shape: TextShape = (t_s as TextShape);
+                        const layout = shape.getLayout();
+                        shape.frame.width = layout.contentWidth;
+                        shape.frame.height = layout.contentHeight;
+                        const _f = shape.frame;
+                        const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
+                        shape.frame.x = xy?.x || _xy.x;
+                        shape.frame.y = xy?.y || _xy.y;
+                        const editor = context.editor.editor4Page(page);
+                        const r = editor.insert(page, page.childs.length, shape);
+                        if (r) {
+                            context.selection.selectShape(r);
+                        }
+                    }
+                } else if (text_html.slice(0, 60).indexOf(identity) > -1) {
                     const source = JSON.parse(text_html.split(identity)[1]);
                     const shapes = import_shape(context.data, source);
                     const result: Shape[] = [];
@@ -236,39 +280,6 @@ function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                         if (result.length) {
                             context.selection.rangeSelectShape(result);
                         }
-                    }
-                } else {
-                    message('info', context.workspace.t('clipboard.invalid_data'));
-                }
-            }
-        }
-        fr.readAsText(val);
-    }).catch((e: Error) => {
-        console.log(e);
-    });
-}
-/**
- * 从剪切板拿出图形数据并插入文档
- * @param data 剪切板拿出的数据
- * @param gen_shape 直接生成图形
- * @param xy 插入的地方
- */
-function clipboard_text_html_paras(context: Context, data: any, gen_shape: boolean, xy?: PageXY) {
-    data.getType('text/html').then((val: any) => {
-        const fr = new FileReader();
-        fr.onload = function (event) {
-            const text_html = event.target?.result;
-            if (text_html && typeof text_html === 'string') {
-                if (text_html.slice(0, 60).indexOf(`${identity}-${paras}`) > -1) {
-                    const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
-                    if (gen_shape) {
-                        const t_s = trasnform_paras(context.data, source, true);
-                        const page = context.selection.selectedPage;
-                        if (!page) return;
-                        const editor = context.editor4Page(page);
-                        const r = editor.insert(page, page.childs.length, t_s as TextShape, true);
-                    } else {
-                        const t_s = import_paras(source);
                     }
                 } else {
                     message('info', context.workspace.t('clipboard.invalid_data'));
