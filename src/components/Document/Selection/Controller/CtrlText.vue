@@ -176,7 +176,7 @@ onUnmounted(() => {
         :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
         @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
-        <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
+        <path :d="boundrectPath" fill="none" stroke='#2561D9' stroke-width="1px"></path>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>
