@@ -4,7 +4,7 @@ const toStyle = (obj: any) => {
         return pre += `${cur}:${obj[cur]};`
     }, '')
 }
-type MessageType = "success" | "info" | "danger";
+type MessageType = "success" | "info" | "danger" | "feature";
 const C = {
     success: {
         backgroundColor: '#F0F9EB',
@@ -20,6 +20,11 @@ const C = {
         backgroundColor: '#FEF0F0',
         color: '#F56C6C',
         border: '#FDE3E3',
+    },
+    feature: {
+        backgroundColor: '#000',
+        color: '#fff',
+        border: 'none',
     }
 }
 export const message = (type: MessageType, context: string) => {
