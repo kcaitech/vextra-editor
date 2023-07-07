@@ -94,7 +94,6 @@ export function paster_inner_shape(context: Context, editor: TextShapeEditor) {
                                     const selection = context.selection;
                                     const start = selection.cursorStart;
                                     const end = selection.cursorEnd;
-                                    console.log(start, end, text);
                                     const s = Math.min(start, end);
                                     editor.insertText(text, s);
                                     selection.setCursor(s + text.length, false);
