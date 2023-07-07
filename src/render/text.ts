@@ -90,7 +90,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                     if (span.italic) style['font-style'] = "italic";
                 }
 
-                childs.push(h('text', { x: gX.join(' '), y, style: { fill: span && span.color && toRGBA(span.color), font, 'alignment-baseline': 'central' } }, gText.join('')));
+                childs.push(h('text', { x: gX.join(' '), y, style }, gText.join('')));
             }
         }
     }
