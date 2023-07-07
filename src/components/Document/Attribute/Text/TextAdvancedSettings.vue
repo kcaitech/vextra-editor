@@ -4,12 +4,13 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextShape } from "@kcdesign/data";
-import { TextBehaviour } from "@kcdesign/data";
+import { AttrGetter, TextShape } from "@kcdesign/data";
+import { TextBehaviour, Shape } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
-  context: Context
+  context: Context,
+  textShape: Shape[]
 }
 const popover = ref();
 const props = defineProps<Props>();
@@ -25,9 +26,8 @@ const maximumLineHeightIsMulti = ref(false)
 const paraSpacingIsMulti = ref(false)
 const kerningIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
-const textShape = computed(() =>  props.context.selection.selectedShapes)
 const editor = computed(() => {
-    return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    return props.context.editor4TextShape((props.textShape[0] as TextShape))
 });
 
 //获取选中字体的长度和下标
@@ -61,10 +61,18 @@ const setRowHeight = () => {
     rowHeight.value = 1
   }
   if (!isNaN(Number(rowHeight.value))) {
-    console.log(Number(rowHeight.value));
-    
-    editor.value.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
-    editor.value.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+    if(isSelectText()) {
+      editor.value.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
+      editor.value.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+    }else {
+      if(selectLength === 0) {
+        editor.value.setDefaultMaxLineHeight(Number(rowHeight.value))
+        editor.value.setTextDefaultMinLineHeight(Number(rowHeight.value))
+      }else {
+        editor.value.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
+        editor.value.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+      }
+    }
   }else {
       textFormat()
   }
@@ -77,8 +85,17 @@ const setWordSpace = () => {
       wordSpace.value = Number(wordSpace.value.slice(0, -1))
   }
   if (!isNaN(Number(wordSpace.value))) {
-    editor.value.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
-    wordSpace.value = wordSpace.value + '%'
+    if(isSelectText()) {
+      editor.value.setCharSpacing(Number(wordSpace.value / 100), 0, Infinity)
+      wordSpace.value = wordSpace.value + '%'
+    }else {
+      if(selectLength === 0) {
+        editor.value.setDefaultCharSpacing(Number(wordSpace.value))
+      }else {
+        editor.value.setCharSpacing(Number(wordSpace.value /100), textIndex, selectLength)
+      }
+      wordSpace.value = wordSpace.value + '%'
+    }
   }else {
       textFormat()
   }
@@ -88,7 +105,15 @@ const setParagraphSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
   paragraphSpace.value = paragraphSpace.value.trim()
   if (!isNaN(Number(paragraphSpace.value))) {
-    editor.value.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
+    if(isSelectText()) {
+      editor.value.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
+    }else {
+      if(selectLength === 0) {
+        editor.value.setDefaultParaSpacing(Number(paragraphSpace.value))
+      }else {
+        editor.value.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
+      }
+    }
   }else {
       textFormat()
   }
@@ -104,8 +129,18 @@ const isSelectText = () => {
 }
 
 const textFormat = () => {
+    if(!(props.textShape[0] as TextShape) || !(props.textShape[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
-    const format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+    let format: AttrGetter
+    if(textIndex !== -1 && textIndex !== 0 && selectLength === 0) {
+        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex - 1, selectLength + 1)
+    }else if (textIndex !== -1 && textIndex === 0 && selectLength === 0) {
+        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength + 1)
+    }else if (textIndex === -1) {
+        format = (props.textShape[0] as TextShape).text.getTextFormat(0, Infinity)
+    }else {
+        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+    }
     minimumLineHeightIsMulti.value = format.minimumLineHeightIsMulti
     maximumLineHeightIsMulti.value = format.maximumLineHeightIsMulti
     kerningIsMulti.value = format.kerningIsMulti
@@ -123,9 +158,12 @@ function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
         textFormat()
     }
+    if(t === Selection.CHANGE_SHAPE) {
+        textFormat()
+    }
 }
 const textDefaultFormat = () => {
-    const defaultFormat = (textShape.value[0] as TextShape).text.getDefaultTextFormat()
+    const defaultFormat = (props.textShape[0] as TextShape).text.getDefaultTextFormat()
 }
 onMounted(() => {
     textFormat()

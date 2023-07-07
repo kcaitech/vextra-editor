@@ -268,8 +268,6 @@ const getUserInfo = async() => {
     const {data} = await user_api.GetInfo()
     if(context) {
         context.workspace.setUserInfo(data)
-        console.log(data);
-        
         localStorage.setItem('avatar', data.avatar)
         localStorage.setItem('nickname', data.nickname)
         localStorage.setItem('userId', data.id)

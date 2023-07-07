@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, computed, onUnmounted } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { TextShape, Shape } from "@kcdesign/data";
+import { TextShape, Shape, AttrGetter } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
@@ -72,24 +72,60 @@ const onShowSizeBlur = (e: Event) => {
 
 const onBold = () => {
     isBold.value = !isBold.value
+    const { textIndex, selectLength } = getTextIndexAndLen()
+    if(isSelectText()) {
+        editor.value.setTextBold(isBold.value, 0, Infinity)
+    }else {
+        if(selectLength === 0) {
+            editor.value.setTextDefaultBold(isBold.value)
+        }
+        editor.value.setTextBold(isBold.value, textIndex,selectLength)
+    }
 }
 const onTilt = () => {
     isTilt.value = !isTilt.value
+    const { textIndex, selectLength } = getTextIndexAndLen()
+    if(isSelectText()) {
+        editor.value.setTextItalic(isTilt.value, 0, Infinity)
+    }else {
+        if(selectLength === 0) {
+            editor.value.setTextDefaultItalic(isTilt.value)
+        }
+        editor.value.setTextItalic(isTilt.value, textIndex,selectLength)
+    }
 }
 const onUnderlint = () => {
     isUnderline.value = !isUnderline.value
+    const { textIndex, selectLength } = getTextIndexAndLen()
+    if(isSelectText()) {
+        editor.value.setTextUnderline(isUnderline.value, 0, Infinity)
+    }else {
+        if(selectLength === 0) {
+            editor.value.setTextDefaultUnderline(isUnderline.value)
+        }
+        editor.value.setTextUnderline(isUnderline.value, textIndex,selectLength)
+    }
 }
 const onDeleteline = () => {
     isDeleteline.value = !isDeleteline.value
+    const { textIndex, selectLength } = getTextIndexAndLen()
+    if(isSelectText()) {
+        editor.value.setTextStrikethrough(isUnderline.value, 0,Infinity)
+    }else {
+        if(selectLength === 0) {
+            editor.value.setTextDefaultStrikethrough(isUnderline.value)
+        }
+        editor.value.setTextStrikethrough(isUnderline.value, textIndex,selectLength)
+    }
 }
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
-    console.log(icon,'ee');
+    const { textIndex, selectLength } = getTextIndexAndLen()
     if(isSelectText()) {
-        editor.value.setTextDefaultHorAlign(icon)
+        // editor.value.setTextDefaultHorAlign(icon)
+        editor.value.setTextHorAlign(icon, 0, Infinity)
     } else {
-        const { textIndex, selectLength } = getTextIndexAndLen()
         editor.value.setTextHorAlign(icon, textIndex, selectLength)
     }
 }
@@ -98,20 +134,33 @@ const onSelectVertical = (icon: TextVerAlign) => {
     selectVertical.value = icon
     editor.value.setTextVerAlign(icon)
 }
+//设置字体大小
 const changeTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
     const { textIndex, selectLength } = getTextIndexAndLen()
-    console.log(textIndex, '下标', selectLength, '长度', size);
-    editor.value.setTextFontSize(textIndex, selectLength, size)
+    if(isSelectText()) {
+        editor.value.setTextFontSize(0, Infinity, size)
+    }else {
+        if(selectLength === 0) {
+            editor.value.setTextDefaultFontSize(size)
+        }
+        editor.value.setTextFontSize(textIndex, selectLength, size)
+    }
 }
-
+//设置字体
 const setFont = (font: string) => {
     fontName.value = font
     showFont.value = false;
     const { textIndex, selectLength } = getTextIndexAndLen()
-    console.log(textIndex, '下标', selectLength, '长度', font);
-    editor.value.setTextFontName(textIndex, selectLength, font)
+    if(isSelectText()) {
+        editor.value.setTextFontName(0, Infinity, font)
+    }else {
+        if(selectLength === 0) {
+            editor.value.setTextDefaultFontName(font)
+        }
+        editor.value.setTextFontName(textIndex, selectLength, font)
+    }
 }
 
 //获取选中字体的长度和开始下标
@@ -142,10 +191,20 @@ const setTextSize = () => {
     }
 
 }
-
+// 获取当前文字格式
 const textFormat = () => {
+    if(!(textShape.value[0] as TextShape) || !(textShape.value[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
-    const format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+    let format: AttrGetter
+    if(textIndex !== -1 && textIndex !== 0 && selectLength === 0) {
+        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex - 1, selectLength + 1)
+    }else if (textIndex !== -1 && textIndex === 0 && selectLength === 0) {
+        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength + 1)
+    }else if (textIndex === -1) {
+        format = (textShape.value[0] as TextShape).text.getTextFormat(0, Infinity)
+    }else {
+        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+    }
     fontNameIsMulti.value = format.fontNameIsMulti
     fontSizeIsMulti.value = format.fontSizeIsMulti
     colorIsMulti.value = format.colorIsMulti
@@ -160,12 +219,15 @@ const textFormat = () => {
     if(fontSizeIsMulti.value) fonstSize.value = '多值'
     console.log(format,'format');
 }
+// 获取默认文字格式
 const textDefaultFormat = () => {
     const defaultFormat = (textShape.value[0] as TextShape).text.getDefaultTextFormat()
-    console.log(defaultFormat,'defaultFormat');
 }
 function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
+        textFormat()
+    }
+    if(t === Selection.CHANGE_SHAPE) {
         textFormat()
     }
 }
@@ -183,7 +245,7 @@ onUnmounted(() => {
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24">
             <template #tool>
-                <TextAdvancedSettings :context="props.context"></TextAdvancedSettings>
+                <TextAdvancedSettings :context="props.context" :textShape="textShape"></TextAdvancedSettings>
             </template>
         </TypeHeader>
         <div class="text-container">
@@ -192,7 +254,7 @@ onUnmounted(() => {
                     <span>{{ fontName }}</span>
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName"></SelectFont>
+                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>
                 <div class="perch"></div>
             </div>
             <div class="text-middle">
@@ -396,7 +458,7 @@ onUnmounted(() => {
                     border-radius: 4px;
                     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
                     padding: 10px 0;
-                    z-index: 9;
+                    z-index: 100;
 
                     >div {
                         display: flex;

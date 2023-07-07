@@ -35,7 +35,12 @@ export enum KeyboardKeys { // 键盘按键类型
     Digit0 = 'Digit0',
     G = 'KeyG',
     T = 'KeyT',
-    C = 'KeyC'
+    C = 'KeyC',
+    B = 'KeyB',
+    I = 'KeyI',
+    X = 'KeyX',
+    U = 'KeyU',
+
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -119,6 +124,10 @@ export class WorkSpace extends Watchable(Object) {
     static TOGGLE_COMMENT_PAGE = 44;
     static HOVER_SHOW_COMMENT = 45;
     static UPDATE_COMMENT_CHILD = 46;
+    static BOLD = 47;
+    static UNDER_LINE = 48;
+    static ITALIC = 49;
+    static DELETE_LINE = 50;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -491,6 +500,18 @@ export class WorkSpace extends Watchable(Object) {
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
             this.keydown_c(ctrlKey, metaKey);
+        }else if (event.code === KeyboardKeys.B) {
+            event.preventDefault();
+            this.keydown_b(ctrlKey, metaKey);
+        }else if (event.code === KeyboardKeys.I) {
+            event.preventDefault();
+            this.keydown_i(ctrlKey, metaKey);
+        }else if (event.code === KeyboardKeys.U) {
+            event.preventDefault();
+            this.keydown_u(ctrlKey, metaKey);
+        }else if (event.code === KeyboardKeys.X) {
+            event.preventDefault();
+            this.keydown_x(ctrlKey, metaKey, shiftKey);
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -635,11 +656,31 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }
+    keydown_b(ctrl: boolean, meta: boolean) {
+        if (ctrl || meta) {
+            this.notify(WorkSpace.BOLD);
+        }
+    }
+    keydown_u(ctrl: boolean, meta: boolean) {
+        if (ctrl || meta) {
+            this.notify(WorkSpace.UNDER_LINE);
+        }
+    }
+    keydown_i(ctrl: boolean, meta: boolean) {
+        if (ctrl || meta) {
+            this.notify(WorkSpace.ITALIC);
+        }
+    }
     keydown_g(ctrl: boolean, meta: boolean, shift: boolean) {
         if ((ctrl || meta) && !shift) { // 编组
             this.notify(WorkSpace.GROUP);
         } else if ((ctrl || meta) && shift) { // 解组
             this.notify(WorkSpace.UNGROUP)
+        }
+    }
+    keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
+        if ((ctrl || meta) && shift) {
+            this.notify(WorkSpace.DELETE_LINE)
         }
     }
 

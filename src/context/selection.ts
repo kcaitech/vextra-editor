@@ -365,7 +365,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             this.m_cursorStart = index;
             this.m_cursorEnd = index;
             this.m_cursorAtBefore = before;
-            console.log(this.m_cursorStart, this.m_cursorEnd);
             this.notify(Selection.CHANGE_TEXT);
         }
     }
