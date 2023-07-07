@@ -32,9 +32,19 @@ function isAsciiCode(code: number) {
 // measure equal width code cache
 const _mEWCCache: { [key: string]: TextMetrics | undefined } = {};
 const _mAsciiCache: { [key: string]: { [key: string]: TextMetrics | undefined } } = {};
+const _tabMetrics = new class implements TextMetrics {
+    actualBoundingBoxAscent: number = 0;
+    actualBoundingBoxDescent: number = 0;
+    actualBoundingBoxLeft: number = 0;
+    actualBoundingBoxRight: number = 0;
+    fontBoundingBoxAscent: number = 0;
+    fontBoundingBoxDescent: number = 0;
+    width: number = 28;
+}
 
 export function measure(code: number, font: string) {
     if (isAsciiCode(code)) {
+        if (code === 0x09) return _tabMetrics; // '\t'
         let cache: { [key: string]: TextMetrics | undefined } = _mAsciiCache[font];
         if (!cache) {
             cache = {}
