@@ -114,8 +114,9 @@ export function paster_inner_shape(context: Context, editor: TextShapeEditor) {
                                         const selection = context.selection;
                                         const start = selection.cursorStart;
                                         const end = selection.cursorEnd;
-                                        editor.insertFormatText(text, start, Math.abs(start - end));
-                                        selection.setCursor(start + text.length, false);
+                                        const s = Math.min(start, end);
+                                        editor.insertFormatText(text, s, Math.abs(start - end));
+                                        selection.setCursor(s + text.length, false);
                                     }
                                 }
                             }
