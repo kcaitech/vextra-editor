@@ -78,8 +78,9 @@ const onBold = () => {
     }else {
         if(selectLength === 0) {
             editor.value.setTextDefaultBold(isBold.value)
+        }else {
+            editor.value.setTextBold(isBold.value, textIndex,selectLength)
         }
-        editor.value.setTextBold(isBold.value, textIndex,selectLength)
     }
 }
 const onTilt = () => {
@@ -90,8 +91,9 @@ const onTilt = () => {
     }else {
         if(selectLength === 0) {
             editor.value.setTextDefaultItalic(isTilt.value)
+        }else {
+            editor.value.setTextItalic(isTilt.value, textIndex,selectLength)
         }
-        editor.value.setTextItalic(isTilt.value, textIndex,selectLength)
     }
 }
 const onUnderlint = () => {
@@ -102,8 +104,9 @@ const onUnderlint = () => {
     }else {
         if(selectLength === 0) {
             editor.value.setTextDefaultUnderline(isUnderline.value)
+        }else {
+            editor.value.setTextUnderline(isUnderline.value, textIndex,selectLength)
         }
-        editor.value.setTextUnderline(isUnderline.value, textIndex,selectLength)
     }
 }
 const onDeleteline = () => {
@@ -114,8 +117,9 @@ const onDeleteline = () => {
     }else {
         if(selectLength === 0) {
             editor.value.setTextDefaultStrikethrough(isUnderline.value)
+        }else {
+            editor.value.setTextStrikethrough(isUnderline.value, textIndex,selectLength)
         }
-        editor.value.setTextStrikethrough(isUnderline.value, textIndex,selectLength)
     }
 }
 // 设置水平对齐
@@ -144,8 +148,9 @@ const changeTextSize = (size: number) => {
     }else {
         if(selectLength === 0) {
             editor.value.setTextDefaultFontSize(size)
+        }else {
+            editor.value.setTextFontSize(textIndex, selectLength, size)
         }
-        editor.value.setTextFontSize(textIndex, selectLength, size)
     }
 }
 //设置字体
@@ -158,8 +163,9 @@ const setFont = (font: string) => {
     }else {
         if(selectLength === 0) {
             editor.value.setTextDefaultFontName(font)
+        }else {
+            editor.value.setTextFontName(textIndex, selectLength, font)
         }
-        editor.value.setTextFontName(textIndex, selectLength, font)
     }
 }
 
