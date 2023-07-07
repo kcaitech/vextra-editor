@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { onBeforeMount, onBeforeUpdate, ref, computed, nextTick, InputHTMLAttributes } from "vue";
 import { Shape, GroupShape } from '@kcdesign/data';
 import { Context } from "@/context";
@@ -11,28 +10,30 @@ export interface ItemData {
     level: number
     context: Context
 }
-
+interface Props {
+    data: ItemData
+}
 const isLock = ref<boolean>()
 const isRead = ref<boolean>()
 const isVisible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
-const props = defineProps<{ data: ItemData }>();
+const props = defineProps<Props>();
 const esc = ref<boolean>(false)
-const phWidth = computed(() => {
+const ph_width = computed(() => {
     return (props.data.level - 1) * 10;
 })
 
 const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
-    (e: "selectshape", data: ItemData, ctrl: boolean, meta: boolean, shift: boolean): void;
+    (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
     (e: "hovershape", shape: Shape): void;
     (e: "unhovershape"): void;
     (e: "isLock", isLock: boolean, shape: Shape): void;
     (e: "isRead", isRead: boolean, shape: Shape): void;
     (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
     (e: "scrolltoview", shape: Shape): void;
-    (e: "onMouseDown", event: MouseEvent): void;
+    (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
 }>();
 let showTriangle = ref<boolean>(false);
 function updater() {
@@ -41,7 +42,6 @@ function updater() {
     isLock.value = props.data.shape.isLocked;
     isRead.value = props.data.shape.isVisible;
 }
-// const { proxy } = getCurrentInstance() as ComponentInternalInstance;
 function toggleExpand(e: Event) {
     if (!showTriangle.value) {
         return;
@@ -58,7 +58,7 @@ const toggleContainer = (e: MouseEvent) => {
 function selectShape(e: MouseEvent) {
     e.stopPropagation();
     const { ctrlKey, metaKey, shiftKey } = e;
-    emit("selectshape", props.data, ctrlKey, metaKey, shiftKey);
+    emit("selectshape", props.data.shape, ctrlKey, metaKey, shiftKey);
 }
 
 function hoverShape(e: MouseEvent) {
@@ -140,10 +140,10 @@ const selectedChild = () => {
     }
     return child
 }
-const onMouseDown = (e: MouseEvent) => {
+const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
-    emit('onMouseDown', e)
-    selectedChild()
+    emit('item-mousedown', e, props.data.shape)
+    selectedChild();
 }
 
 onBeforeMount(() => {
@@ -157,13 +157,13 @@ onBeforeUpdate(() => {
 
 <template>
     <div class="contain" :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }"
-        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="onMouseDown">
-        <div class="ph" :style="{ width: `${phWidth}px`, height: '100%', minWidth: `${phWidth}px` }"></div>
+        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+        <div class="ph" :style="{ width: `${ph_width}px`, height: '100%', minWidth: `${ph_width}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
             <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
             </div>
         </div>
-        <div class="containerSvg" @dblclick="toggleContainer">
+        <div class="container-svg" @dblclick="toggleContainer">
             <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
         </div>
         <div class="text" :class="{ container: true, selected: props.data.selected }"
@@ -184,7 +184,7 @@ onBeforeUpdate(() => {
                 </div>
             </div>
         </div>
-        <input v-if="isInput" @change="onChangeName" class="rename" type="text" ref="nameInput">
+        <input v-if="isInput" @change="onChangeName" @click.stop class="rename" type="text" ref="nameInput">
     </div>
 </template>
 
@@ -261,7 +261,7 @@ div.triangle-down {
     top: 13px;
 }
 
-div.containerSvg {
+div.container-svg {
     display: flex;
     width: 10px;
     justify-content: center;

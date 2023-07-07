@@ -8,7 +8,6 @@ import CtrlBar from "./Bars/CtrlBar.vue";
 import CtrlPoint from "./Points/CtrlPoint.vue";
 import { Point, Bar } from "../SelectionView.vue";
 import { createRect, getAxle, getRectWH } from "@/utils/common";
-import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { Shape } from "@kcdesign/data";
@@ -68,7 +67,7 @@ function updater(t?: number) {
         editing.value = isEditing();
     }
 }
-function workspaceUpdate(t?: number) {
+function workspace_watch(t?: number) {
     if (t === WorkSpace.TRANSLATING) {
         if (!workspace.value.isTranslating) {
             visible.value = true;
@@ -130,10 +129,13 @@ function windowBlur() {
     // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
+    if (ctrlrectEle.value) {
+        ctrlrectEle.value.classList.remove('cursor-copy');
+    }
 }
 onMounted(() => {
     props.context.selection.watch(updater);
-    props.context.workspace.watch(workspaceUpdate);
+    props.context.workspace.watch(workspace_watch);
     window.addEventListener('blur', windowBlur);
     document.addEventListener('keydown', keyboard_down_watcher);
     document.addEventListener('keyup', keyboard_up_watcher);
@@ -141,7 +143,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
-    props.context.workspace.unwatch(workspaceUpdate);
+    props.context.workspace.unwatch(workspace_watch);
     window.removeEventListener('blur', windowBlur);
     document.removeEventListener('keydown', keyboard_down_watcher);
     document.removeEventListener('keyup', keyboard_up_watcher);

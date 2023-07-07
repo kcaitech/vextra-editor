@@ -100,11 +100,12 @@ onUpdated(() => {
     <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
       @mouseleave.stop="onMouseleave">
       <div class="svg-container">
-        <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
+        <!-- <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon> -->
+        <svg-icon icon-class="cursor"></svg-icon>
       </div>
-      <div class="menu" @click="showMenu">
+      <!-- <div class="menu" @click="showMenu">
         <svg-icon icon-class="down"></svg-icon>
-      </div>
+      </div> -->
     </ToolButton>
   </el-tooltip>
 </template>
@@ -118,7 +119,7 @@ onUpdated(() => {
   align-items: center;
   margin-left: 3px;
   color: #ffffff;
-
+  
   >svg {
     width: 17px;
     height: 17px;

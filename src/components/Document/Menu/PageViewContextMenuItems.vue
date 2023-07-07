@@ -1,12 +1,17 @@
 <script setup lang='ts'>
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
-import { Shape } from "@kcdesign/data";
+import { Artboard, GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
+import { Selection } from '@/context/selection';
+import { adapt_page, getName } from '@/utils/content';
+import { message } from '@/utils/message';
+import { paster, replace } from '@/utils/clipaboard';
+import { sort_by_layer } from '@/utils/group_ungroup';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -20,8 +25,6 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
-const isLock = ref<boolean>()
-const isVisible = ref<boolean>()
 const isComment = ref<boolean>(props.context.workspace.isVisibleComment)
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
@@ -31,63 +34,217 @@ function showLayerSubMenu(e: MouseEvent) {
 }
 function copy() {
   props.context.workspace.clipboard.write_html();
+  emit('close');
 }
-function paste() {
+function paste() { // 粘贴在原位
+  paster(props.context, t);
+  emit('close');
+}
+function paste_here() {
   props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
   emit('close');
 }
+function _replace() {
+  const selection = props.context.selection;
+  const selected = selection.selectedShapes;
+  if (selected.length) {
+    replace(props.context, t, selected);
+  }
+  emit('close');
+}
 function selectAll() {
-
+  props.context.workspace.keydown_a(true, true);
+  emit('close');
 }
-function half() {
-
+/**
+ * 50%视图
+ */
+function half(e: MouseEvent) {
+  e.preventDefault();
+  page_scale(e, 0.5);
+  emit('close');
 }
-function hundred() {
-
+/**
+ * 全比例视图
+ */
+function hundred(e: MouseEvent) {
+  e.preventDefault();
+  page_scale(e, 1);
+  emit('close');
 }
-function double() {
-
+/**
+ * 两倍视图
+ */
+function double(e: MouseEvent) {
+  e.preventDefault();
+  page_scale(e, 2);
+  emit('close');
 }
+/**
+ * 页面缩放
+ * @param scale 缩放倍数 > 0
+ */
+function page_scale(e: MouseEvent, scale: number) {
+  const workspace = props.context.workspace;
+  const root = workspace.root;
+  const matrix = workspace.matrix;
+  const offsetX = e.x - root.x;
+  const offsetY = e.y - root.y;
+  matrix.trans(-offsetX, -offsetY);
+  matrix.scale(scale / matrix.m00);
+  matrix.trans(offsetX, offsetY);
+  workspace.matrixTransformation();
+}
+/**
+ * 使整个page在可视区域
+ */
 function canvas() {
-
+  adapt_page(props.context);
+  emit('close');
 }
-function cursor() {
-
-}
+function cursor() { }
 function comment() {
-  const status = props.context.workspace.isVisibleComment
-  isComment.value = !status
-  props.context.workspace.setVisibleComment(isComment.value)
+  const status = props.context.workspace.isVisibleComment;
+  isComment.value = !status;
+  props.context.workspace.setVisibleComment(isComment.value);
+  emit('close');
 }
-function ruler() {
-
-}
-function pixel() {
-
-}
+function ruler() { }
+function pixel() { }
 function operation() {
-
+  props.context.workspace.notify(WorkSpace.HIDDEN_UI);
+  emit('close');
 }
+/**
+ * 上移一层
+ */
 function forward() {
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const result = editor.uppper_layer(selection.selectedShapes[0], 1);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_upper'));
+    } else {
+      emit('close');
+    }
+  }
 
 }
+/**
+ * 下移一层
+ */
 function back() {
-
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const result = editor.lower_layer(selection.selectedShapes[0], 1);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_lower'));
+    } else {
+      emit('close');
+    }
+  }
 }
+/**
+ * 置于顶层
+ */
 function top() {
-
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const result = editor.uppper_layer(selection.selectedShapes[0]);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_upper'));
+    } else {
+      emit('close');
+    }
+  }
 }
+/**
+ * 置于底层
+ */
 function bottom() {
-
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const result = editor.lower_layer(selection.selectedShapes[0]);
+    if (!result) {
+      message('info', props.context.workspace.t('homerightmenu.unable_lower'));
+    } else {
+      emit('close');
+    }
+  }
 }
+/**
+ * 创建编组
+ */
 function groups() {
-
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shapes = sort_by_layer(props.context, selection.selectedShapes);
+    const group = editor.group(shapes, getName(ShapeType.Group, page.childs, t));
+    if (group) {
+      selection.selectShape(group);
+      selection.notify(Selection.EXTEND, group);
+    }
+  }
+  emit('close');
 }
+/**
+ * 创建容器
+ */
 function container() {
-
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shapes = sort_by_layer(props.context, selection.selectedShapes);
+    const artboard = editor.create_artboard(shapes, getName(ShapeType.Artboard, page.childs, t));
+    if (artboard) {
+      selection.selectShape(artboard);
+      selection.notify(Selection.EXTEND, artboard);
+    }
+  }
+  emit('close');
 }
+/**
+ * 解除容器
+ */
+function dissolution_container() {
+  const selection = props.context.selection;
+  if (selection.selectedShapes[0].type !== ShapeType.Artboard) return;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shapes = editor.dissolution_artboard(selection.selectedShapes[0] as Artboard);
+    if (shapes) {
+      selection.rangeSelectShape(shapes);
+    }
+  }
+  emit('close');
+}
+/**
+ * 解除编组
+ */
 function unGroup() {
-
+  const selection = props.context.selection;
+  if (selection.selectedShapes[0].type !== ShapeType.Group) return;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shapes = editor.ungroup(selection.selectedShapes[0] as GroupShape);
+    if (shapes) {
+      selection.rangeSelectShape(shapes);
+    }
+  }
+  emit('close');
 }
 function component() {
 
@@ -101,30 +258,41 @@ function reset() {
 function edit() {
 
 }
+/**
+ * 隐藏图层
+ */
 function visible() {
-  const visible = props.context.selection.selectedShapes;
-  const editor = computed(() => {
-    return props.context.editor4Shape(visible[0]);
-  });
-  editor.value.toggleVisible();
-  isVisible.value = props.context.selection.selectedShapes[0].isVisible
+  const shpaes = props.context.selection.selectedShapes;
+  for (let i = 0; i < shpaes.length; i++) {
+    const editor = props.context.editor4Shape(shpaes[i]);
+    editor.toggleVisible();
+  }
+  props.context.selection.resetSelectShapes();
+  emit('close');
 }
+/**
+ * 解锁
+ */
 function lock() {
-  const lock = props.context.selection.selectedShapes;
-  const editor = computed(() => {
-    return props.context.editor4Shape(lock[0]);
-  });
-  editor.value.toggleLock();
-  isLock.value = props.context.selection.selectedShapes[0].isLocked
+  const shpaes = props.context.selection.selectedShapes;
+  for (let i = 0; i < shpaes.length; i++) {
+    const editor = props.context.editor4Shape(shpaes[i]);
+    editor.toggleLock();
+  }
+  props.context.selection.resetSelectShapes();
+  emit('close');
 }
-function closeLayerSubMenu(e: MouseEvent) {
+/**
+ * 关闭图层菜单 
+ */
+function closeLayerSubMenu() {
   layerSubMenuVisiable.value = false;
 }
 </script>
 <template>
   <div class="items-wrap">
     <div v-if="props.items.includes('layers')" class="item layer-select"
-      @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="(e: MouseEvent) => closeLayerSubMenu(e)">
+      @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
       <span>{{ t('system.select_layer') }}</span>
       <div class="triangle"></div>
       <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
@@ -136,7 +304,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 常用功能 -->
     <div class="item" v-if="props.items.includes('all')" @click="selectAll">
       <span>{{ t('system.select_all') }}</span>
-      <span class="shortkey"></span>
+      <span class="shortkey">Ctrl + A</span>
     </div>
     <div class="item" v-if="props.items.includes('copy')" @click="copy">
       <span>{{ t('system.copy') }}</span>
@@ -146,17 +314,32 @@ function closeLayerSubMenu(e: MouseEvent) {
       <span>{{ t('system.paste') }}</span>
       <span class="shortkey">Ctrl + V</span>
     </div>
+    <div class="item" v-if="props.items.includes('paste-here')" @click="paste_here">
+      <span>{{ t('system.paste_here') }}</span>
+    </div>
+    <div class="item" v-if="props.items.includes('replace')" @click="_replace">
+      <span>{{ t('system.replace') }}</span>
+      <span class="shortkey">Ctrl + Shift + R</span>
+    </div>
 
     <!-- 视图比例 -->
     <div class="line" v-if="props.items.includes('half')"></div>
-    <div class="item" v-if="props.items.includes('half')" @click="half"><span>50%</span></div>
-    <div class="item" v-if="props.items.includes('hundred')" @click="hundred"><span>100%</span></div>
-    <div class="item" v-if="props.items.includes('double')" @click="double"><span>200%</span></div>
+    <div class="item" v-if="props.items.includes('half')" @click="(e: MouseEvent) => half(e)">
+      <span>50%</span>
+    </div>
+    <div class="item" v-if="props.items.includes('hundred')" @click="(e: MouseEvent) => hundred(e)">
+      <span>100%</span>
+      <span class="shortkey">Ctrl + 0</span>
+    </div>
+    <div class="item" v-if="props.items.includes('double')" @click="(e: MouseEvent) => double(e)">
+      <span>200%</span>
+    </div>
     <div class="item" v-if="props.items.includes('canvas')" @click="canvas">
       <span>{{ t('system.fit_canvas') }}</span>
+      <span class="shortkey">Ctrl + 1</span>
     </div>
     <!-- 协作 -->
-    <div class="line" v-if="props.items.includes('cursor')"></div>
+    <div class="line" v-if="props.items.includes('comment')"></div>
     <div class="item" v-if="props.items.includes('cursor')" @click="cursor">
       <div class="choose"></div>
       <span>{{ t('system.show_many_cursor') }}</span>
@@ -164,7 +347,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     <div class="item" v-if="props.items.includes('comment')" @click="comment">
       <div class="choose" v-show="isComment"></div>
       <span>{{ t('system.show_comment') }}</span>
-      <span></span>
+      <span class="shortkey">Shift + C</span>
     </div>
     <!-- 界面显示 -->
     <div class="line" v-if="props.items.includes('ruler')"></div>
@@ -178,39 +361,44 @@ function closeLayerSubMenu(e: MouseEvent) {
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('operation')" @click="operation">
-      <div class="choose"></div>
       <span>{{ t('system.hide_operation_interface') }}</span>
-      <span></span>
+      <span class="shortkey">Ctrl(+Shift) + \</span>
     </div>
     <!-- 顺序调整 -->
     <div class="line" v-if="props.items.includes('forward')"></div>
     <div class="item" v-if="props.items.includes('forward')" @click="forward">
       <span>{{ t('system.bring_forward') }}</span>
+      <span class="shortkey">+</span>
     </div>
     <div class="item" v-if="props.items.includes('back')" @click="back">
       <span>{{ t('system.send_backward') }}</span>
-      <span></span>
+      <span class="shortkey">- </span>
     </div>
     <div class="item" v-if="props.items.includes('top')" @click="top">
       <span>{{ t('system.bring_to_top') }}</span>
-      <span></span>
+      <span class="shortkey">]</span>
     </div>
     <div class="item" v-if="props.items.includes('bottom')" @click="bottom">
       <span>{{ t('system.send_to_bottom') }}</span>
-      <span></span>
+      <span class="shortkey">[</span>
     </div>
     <!-- 组合容器 -->
     <div class="line" v-if="props.items.includes('groups')"></div>
     <div class="item" v-if="props.items.includes('groups')" @click="groups">
       <span>{{ t('system.creating_groups') }}</span>
+      <span class="shortkey">Ctrl + G</span>
     </div>
     <div class="item" v-if="props.items.includes('container')" @click="container">
       <span>{{ t('system.create_container') }}</span>
-      <span></span>
+      <span class="shortkey">Ctrl + Alt + G</span>
     </div>
     <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
       <span>{{ t('system.un_group') }}</span>
-      <span></span>
+      <span class="shortkey">Ctrl + Shift + G</span>
+    </div>
+    <div class="item" v-if="props.items.includes('dissolution')" @click="dissolution_container">
+      <span>{{ t('system.dissolution') }}</span>
+      <span class="shortkey">Ctrl + Shift + G</span>
     </div>
     <!-- 组件操作 -->
     <div class="line" v-if="props.items.includes('component')"></div>
@@ -232,12 +420,10 @@ function closeLayerSubMenu(e: MouseEvent) {
     <!-- 隐藏/锁定 -->
     <div class="line" v-if="props.items.includes('visible')"></div>
     <div class="item" v-if="props.items.includes('visible')" @click="visible">
-      <div class="choose" :style="{ visibility: isVisible ? 'visible' : 'hidden' }"></div>
       <span>{{ t('system.visible') }}</span>
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('lock')" @click="lock">
-      <div class="choose" :style="{ visibility: isLock ? 'visible' : 'hidden' }"></div>
       <span>{{ t('system.Lock') }}</span>
       <span></span>
     </div>
@@ -263,9 +449,10 @@ function closeLayerSubMenu(e: MouseEvent) {
       margin-left: auto;
       width: 0;
       height: 0;
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-      border-left: 10px solid var(--theme-color-anti);
+      border-top: 3px solid transparent;
+      border-bottom: 3px solid transparent;
+      border-left: 6px solid var(--theme-color-anti);
+      transition: 0.35s;
     }
 
     >.shortkey {
@@ -285,6 +472,16 @@ function closeLayerSubMenu(e: MouseEvent) {
 
   .item:hover {
     background-color: var(--active-color);
+
+    >.triangle {
+      margin-left: auto;
+      width: 0;
+      height: 0;
+      border-top: 3px solid transparent;
+      border-bottom: 3px solid transparent;
+      border-left: 6px solid var(--theme-color-anti);
+      transform: rotate(90deg);
+    }
   }
 
   .choose {
@@ -296,7 +493,7 @@ function closeLayerSubMenu(e: MouseEvent) {
     border-width: 0 0 2px 2px;
     border-style: solid;
     border-color: var(--theme-color-anti);
-    transform: rotate(-45deg) translateY(-30%);
+    transform: rotate(-45deg) translateY(-4%);
   }
 }
 </style>

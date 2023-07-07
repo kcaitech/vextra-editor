@@ -120,7 +120,7 @@ function selectionWatcher(t: number) {
             const pageId = context.selection.commentPageId
             switchPage(pageId)
         }
-        
+
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
@@ -131,11 +131,6 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
         if (code === 'Backslash') {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
-            }
-        } else if (code === 'KeyS') {
-            if (ctrlKey || metaKey) {
-                evevt.preventDefault();
-                context.workspace.documentSave();
             }
         }
     }
@@ -252,21 +247,9 @@ const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
-// let uploadTimer: any = null
-// function polling() {
-//     if (uploadTimer) {
-//         clearTimeout(uploadTimer);
-//     }
-//     uploadTimer = setTimeout(() => {
-//         const docID = localStorage.getItem('docId') || '';
-//         if (docID && permType.value !== 1) {
-//             upload(docID);
-//         }
-//     }, 60000);
-// }
-const getUserInfo = async() => {
-    const {data} = await user_api.GetInfo()
-    if(context) {
+const getUserInfo = async () => {
+    const { data } = await user_api.GetInfo()
+    if (context) {
         context.workspace.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
         localStorage.setItem('nickname', data.nickname)
@@ -313,7 +296,8 @@ const getDocumentInfo = async () => {
         const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
-            window.document.title = document.name;
+            const file_name = docInfo.value.document?.name || document.name;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
             context.workspace.setDocumentInfo(dataInfo.data)
             null_context.value = false;
@@ -349,7 +333,6 @@ function upload() {
     if (!token || !context || !context.data) {
         return
     }
-    context.workspace.startSave();
     uploadExForm(context.data, FILE_UPLOAD, token, '', (isSuccess, doc_id) => {
         if (isSuccess) {
             router.replace({
@@ -365,17 +348,15 @@ function upload() {
                 "0",
             );
             coopLocal.start();
+            context?.workspace.notify(WorkSpace.INIT_DOC_NAME)
         }
-        context?.workspace.endSave();
     })
 }
 let timer: any = null;
-function setScreenSize() {
-    if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
-        document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-    }
+function init_screen_size() {
+    localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
 }
-function init() {
+function init_doc() {
     if (route.query.id) { // 从远端读取文件
         getDocumentInfo();
         document.addEventListener('keydown', keyboardEventHandler);
@@ -386,6 +367,7 @@ function init() {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
+            getUserInfo()
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             upload();
@@ -401,11 +383,13 @@ function workspaceWatcher(t: number) {
         sub_loading.value = true;
     } else if (t === WorkSpace.THAW) {
         sub_loading.value = false;
+    } else if (t === WorkSpace.HIDDEN_UI) {
+        keyToggleTB();
     }
 }
 onMounted(() => {
-    setScreenSize();
-    init();
+    init_screen_size();
+    init_doc();
 })
 onUnmounted(() => {
     try {
@@ -428,7 +412,6 @@ onUnmounted(() => {
     <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context!" v-if="!loading && !null_context" />
-        <Home v-else></Home>
     </div>
     <div id="visit">
         <ApplyFor></ApplyFor>
@@ -522,6 +505,7 @@ onUnmounted(() => {
         width: 100%;
         height: 100%;
         overflow: hidden;
+        position: absolute;
     }
 
     #attributes {

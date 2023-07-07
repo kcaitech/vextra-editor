@@ -81,7 +81,6 @@ declare module '@vue/runtime-core' {
     Loading: typeof import('./src/components/common/Loading.vue')['default']
     Login: typeof import('./src/components/Login/Login.vue')['default']
     Main: typeof import('./src/components/AppHome/Main.vue')['default']
-    Menu: typeof import('./src/components/Document/Menu/index.vue')['default']
     MeShare: typeof import('./src/components/AppHome/Main/MeShare.vue')['default']
     Navigation: typeof import('./src/components/Document/Navigation/index.vue')['default']
     PageAttr: typeof import('./src/components/Document/Attribute/PageAttr.vue')['default']

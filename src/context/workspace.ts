@@ -5,6 +5,7 @@ import { Context } from "./index";
 import { Root } from "@/utils/content";
 import { UserInfo, DocInfo } from '@/context/user'
 import { Clipboard } from "@/utils/clipaboard";
+import { adapt_page } from "@/utils/content";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -35,7 +36,10 @@ export enum KeyboardKeys { // 键盘按键类型
     Digit0 = 'Digit0',
     G = 'KeyG',
     T = 'KeyT',
-    C = 'KeyC'
+    C = 'KeyC',
+    Digit1 = 'Digit1',
+    Backspace = 'Backspace',
+    I = 'KeyI'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -119,6 +123,9 @@ export class WorkSpace extends Watchable(Object) {
     static TOGGLE_COMMENT_PAGE = 44;
     static HOVER_SHOW_COMMENT = 45;
     static UPDATE_COMMENT_CHILD = 46;
+    static HIDDEN_UI = 47;
+    static INIT_DOC_NAME = 48;
+    static COMPS = 49;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -145,7 +152,6 @@ export class WorkSpace extends Watchable(Object) {
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
-    private m_saving: boolean = false;
     private m_document_info: DocInfo | undefined;
     private m_comment_list: any[] = []; // 当前文档评论
     private m_page_comment_list: any[] = []; // 当前页面评论
@@ -319,19 +325,6 @@ export class WorkSpace extends Watchable(Object) {
     getImageFromDoc() {
         return this.m_image;
     }
-    startSave() {
-        this.m_saving = true;
-        this.notify(WorkSpace.START_SAVE);
-    }
-    endSave() {
-        this.m_saving = false;
-        this.notify(WorkSpace.END_SAVE);
-    }
-    documentSave() {
-        if (!this.m_saving) {
-            this.notify(WorkSpace.DOCUMENT_SAVE);
-        }
-    }
     setDocumentInfo(info: DocInfo) {
         this.m_document_info = info
     }
@@ -451,6 +444,10 @@ export class WorkSpace extends Watchable(Object) {
     setPageViewId(id: string) {
         this.m_pageViewId = id
     }
+    /**
+     * 编辑器键盘事件，支持工具快捷键、视图快捷键、选区快捷键 的实现
+     * @param {KeyboardEvent} event 
+     */
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, altKey, target } = event;
         if (this.isFreeze) return;
@@ -475,7 +472,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_k(ctrlKey, shiftKey);
         } else if (event.code === KeyboardKeys.O) {
             event.preventDefault();
-            this.keydown_o();
+            this.keydown_o(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.F) {
             event.preventDefault();
             this.keydown_f();
@@ -484,13 +481,21 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_0(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.G) {
             event.preventDefault();
-            this.keydown_g(ctrlKey, metaKey, shiftKey);
+            this.keydown_g(ctrlKey, metaKey, shiftKey, altKey);
         } else if (event.code === KeyboardKeys.T) {
             event.preventDefault();
             this.keydown_t();
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
-            this.keydown_c(ctrlKey, metaKey);
+            this.keydown_c(ctrlKey, metaKey, shiftKey);
+        } else if (event.code === KeyboardKeys.Digit1) {
+            event.preventDefault();
+            if (ctrlKey || metaKey) {
+                adapt_page(this.context);
+            }
+        } else if (event.code === KeyboardKeys.I) {
+            event.preventDefault();
+            this.keydown_i(shiftKey);
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -539,10 +544,28 @@ export class WorkSpace extends Watchable(Object) {
     // keyboard
     keydown_a(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) {
-            const selection = this.context.selection
-            const page = selection.selectedPage;
-            if (page) {
-                selection.rangeSelectShape(page.childs);
+            const selection = this.context.selection;
+            if (selection.selectedShapes.length) {
+                const p_map = new Map();
+                selection.selectedShapes.forEach(s => {
+                    if (s.parent) {
+                        p_map.set(s.parent.id, s.parent);
+                    }
+                })
+                if (p_map.size > 1) {
+                    const page = selection.selectedPage;
+                    if (page) {
+                        selection.rangeSelectShape(page.childs);
+                    }
+                } else {
+                    const childs = Array.from(p_map.values())[0].childs;
+                    selection.rangeSelectShape(childs);
+                }
+            } else {
+                const page = selection.selectedPage;
+                if (page) {
+                    selection.rangeSelectShape(page.childs);
+                }
             }
         }
     }
@@ -560,9 +583,15 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     keydown_l(shiftKey: boolean) {
+        if (shiftKey) return; // 暂时停止使用箭头图形
         this.escSetup();
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
+    }
+    keydown_i(shiftKey: boolean) {
+        if (shiftKey) {
+            this.notify(WorkSpace.COMPS);
+        }
     }
     keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         const repo = context.repo;
@@ -599,10 +628,12 @@ export class WorkSpace extends Watchable(Object) {
             this.notify();
         }
     }
-    keydown_o() {
-        this.escSetup();
-        this.m_current_action = Action.AddEllipse;
-        this.notify();
+    keydown_o(ctrl: boolean, meta: boolean) {
+        if (!ctrl && !meta) {
+            this.escSetup();
+            this.m_current_action = Action.AddEllipse;
+            this.notify();
+        }
     }
     keydown_f() {
         this.escSetup();
@@ -614,11 +645,13 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = Action.AddText;
         this.notify();
     }
-    keydown_c(ctrlKey?: boolean, metaKey?: boolean) {
+    keydown_c(ctrlKey?: boolean, metaKey?: boolean, shift?: boolean) {
         if (ctrlKey || metaKey) {
             this.notify(WorkSpace.COPY)
+        } else if (shift) {
+            this.setVisibleComment(!this.m_comment_visible);
         } else {
-            if(this.documentPerm === 1) return
+            if (this.documentPerm === 1) return
             this.escSetup();
             this.m_current_action = Action.AddComment;
             this.commentInput(false);
@@ -629,17 +662,21 @@ export class WorkSpace extends Watchable(Object) {
         if (ctrl || meta) {
             const { center } = this.root;
             this.m_matrix.trans(-center.x, -center.y);
-            const _s = 1 / this.m_matrix.toArray()[0];
+            const _s = 1 / this.m_matrix.m00;
             this.m_matrix.scale(_s);
             this.m_matrix.trans(center.x, center.y);
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }
-    keydown_g(ctrl: boolean, meta: boolean, shift: boolean) {
+    keydown_g(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
         if ((ctrl || meta) && !shift) { // 编组
-            this.notify(WorkSpace.GROUP);
-        } else if ((ctrl || meta) && shift) { // 解组
-            this.notify(WorkSpace.UNGROUP)
+            if (alt) {
+                this.notify(WorkSpace.GROUP, alt);
+            } else {
+                this.notify(WorkSpace.GROUP);
+            }
+        } else if ((ctrl || meta) && shift) {
+            this.notify(WorkSpace.UNGROUP);
         }
     }
 
@@ -704,7 +741,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_hover_comment_id = id
         if (!v) {
             this.notify(WorkSpace.HOVER_COMMENT);
-        }else {
+        } else {
             this.notify(WorkSpace.HOVER_SHOW_COMMENT)
         }
         if (id) {

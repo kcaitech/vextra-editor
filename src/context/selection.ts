@@ -3,9 +3,9 @@ import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, TextShape } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
-import { scout, Scout, finder, artboardFinder } from "@/utils/scout";
-// import { CanvasKitScout, canvasKitScout } from "@/utils/scout_beta";
+import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
 import { Artboard } from "@kcdesign/data";
+import { Context } from ".";
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -84,8 +84,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     // get canvaskitScout(): CanvasKitScout | undefined {
     //     return this.m_scout_beta;
     // }
-    scoutMount() {
-        this.m_scout = scout();
+    scoutMount(context: Context) {
+        this.m_scout = scout(context);
     }
     // async canvaskitScoutMount() {
     //     this.m_scout_beta = await canvasKitScout();
@@ -132,7 +132,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     setCommentSelect(s: boolean) {
         this.m_select_comment = s
-        if(!s) {
+        if (!s) {
             this.notify(Selection.SKIP_COMMENT)
         }
     }
@@ -187,32 +187,29 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_selectPage;
     }
     /**
-     * @deprecated
+     * 在page范围内获取一个点上的所有图层
+     * @param position 点位置，坐标系时page
+     * @returns 符合检索条件的图形
      */
-    getShapesByXY(position: PageXY, force: boolean = true): Shape[] { // force 暴力矿工，深度搜索。
+    getLayers(position: PageXY): Shape[] {
         position = cloneDeep(position);
-        const shapes: Shape[] = [];
-        const page = this.m_selectPage!;
-        const childs = page.childs;
-        position.x -= page.frame.x;
-        position.y -= page.frame.y;
-
-        if (childs?.length) deep(childs, position);
-        return shapes;
-
-        function deep(source: Shape[], position: PageXY) {
-            for (let i = 0; i < source.length; i++) {
-                const { x, y, width, height } = source[i].frame;
-                if (position.x >= x && position.x <= x + width && position.y >= y && position.y <= y + height && source[i].isVisible) shapes.push(source[i]);
-                const suppos = { x: position.x - x, y: position.y - y };
-                if (source[i].childs?.length) deep(source[i].childs, suppos);
+        const result: Shape[] = [];
+        if (this.scout) {
+            const page = this.m_selectPage;
+            if (page && page.childs.length) {
+                result.push(...finder_layers(this.scout, page.childs, position));
             }
         }
+        return result;
     }
-    getShapesByXY_beta(position: PageXY, force: boolean, isCtrl: boolean, scope?: Shape[]): Shape[] { // 基于SVGGeometryElement的图形检索
-        // force 深度检索。检索在某一位置的所有visible图形，返回的shape[]长度可以大于1
-        // !force：只检索可见图形，被裁剪的、unVisible的不检索，返回的shape[]长度等于1或0，更适用于hover判定、左键点击。
-        // scope 检索范围限定，如果没有限定范围则在全域(page)下寻找
+    /**
+     * 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
+     * @param position 点位置，坐标系时page
+     * @param isCtrl 是否取消编组、容器等图形的特殊处理
+     * @param scope 在scope范围内进行检索，如果没有限定范围则在全域(page)下寻找
+     * @returns 符合检索条件的图形
+     */
+    getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape[] {
         const shapes: Shape[] = [];
         if (this.scout) {
             position = cloneDeep(position);
@@ -233,20 +230,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return result;
     }
 
-    selectShape(shape?: Shape, ctrl?: boolean, meta?: boolean) {
+    selectShape(shape?: Shape) {
         if (!shape) { // 取消所有已经选择的图形
             this.resetSelectShapes();
         } else {
             if (shape.isLocked) return;
-            if (ctrl || meta) {
-                if (this.isSelectedShape(shape)) {
-                    this.m_selectShapes.splice(this.m_selectShapes.findIndex((s: Shape) => s === shape), 1);
-                } else {
-                    this.m_selectShapes.push(shape);
-                }
-                this.notify(Selection.CHANGE_SHAPE);
-                return;
-            }
             this.m_selectShapes.length = 0;
             this.m_selectShapes.push(shape);
             this.m_cursorStart = -1;
@@ -257,7 +245,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     }
     unSelectShape(shape: Shape) {
-        const index = this.m_selectShapes.findIndex((s: Shape) => s === shape);
+        const index = this.m_selectShapes.findIndex((s: Shape) => s.id === shape.id);
         if (index > -1) {
             this.m_selectShapes.splice(index, 1);
             this.notify(Selection.CHANGE_SHAPE);

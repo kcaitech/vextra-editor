@@ -10,13 +10,19 @@ export const system = {
     space: '...',
     empty: '暂无数据',
     paste: '粘贴',
+    'paste_here': '粘贴在这里',
     copy: '复制',
+    replace: '替换',
+    failed: '操作失败',
+    'null_file_name': '文件名不能为空',
+    'replace_failed': '替换失败，请使用粘贴功能',
     'select_layer': '图层选择',
     'bring_forward': '上移一层',
     'send_backward': '下移一层',
     'bring_to_top': '置于顶层',
     'send_to_bottom': '置于底层',
     'visible': '显示/隐藏',
+    'hidden': '隐藏',
     'Lock': '锁定/解锁',
     'select_all': '选择全部',
     'fit_canvas': '适应画布',
@@ -46,7 +52,8 @@ export const system = {
     'personal_center': '个人中心',
     'login_out': '退出登录',
     'new_file': '新文件',
-    'page1': '页面 1'
+    'page1': '页面 1',
+    'dissolution': '取消容器'
 }
 
 export const home = {
@@ -129,7 +136,7 @@ export const navi = {
     page: '页面',
     add_page: '添加新页面',
     copy: '副本',
-    development: '功能开发中……'
+    development: '功能开发中…'
 
 }
 

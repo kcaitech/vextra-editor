@@ -47,7 +47,7 @@ export function useController(context: Context) {
             }
         }
     }
-    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 80); // 停留80ms之后做环境判断和迁移
+    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100); // 停留100ms之后做环境判断和迁移
     function downpoint() {
         return startPosition;
     }
@@ -65,13 +65,6 @@ export function useController(context: Context) {
             p = p.parent;
         }
         return result
-    }
-    function updater(t?: number) {
-        if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
-            initController();
-            editing = false;
-            context.workspace.contentEdit(false);
-        }
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
@@ -109,23 +102,29 @@ export function useController(context: Context) {
     }
     function mousedown(e: MouseEvent) {
         if (context.workspace.isEditing) {
-            context.selection.selectShape(context.selection.hoveredShape);
-        }
-        const working = !context.workspace.isPageDragging && !context.workspace.isEditing;
-        if (working) {
-            if (isElement(e)) {
-                matrix.reset(workspace.value.matrix);
-                setPosition(e);
-                if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
-                    handleDblClick();
+            if (isMouseOnContent(e)) {
+                const selected = context.selection.selectedShapes;
+                if (selected.length === 1 && selected[0].type === ShapeType.Text) {
+                    const save = selected.slice(0, 1);
+                    context.selection.resetSelectShapes();
+                    context.selection.rangeSelectShape(save);
                 }
-                initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
-                preTodo(e);
-            } else {
-                if (isMouseOnContent(e)) {
-                    if (!context.selection.hoveredShape) {
-                        context.selection.selectShape();
-                    }
+            }
+            return;
+        }
+        if (context.workspace.isPageDragging) return;
+        if (isElement(e)) {
+            matrix.reset(workspace.value.matrix);
+            setPosition(e);
+            if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
+                handleDblClick();
+            }
+            initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
+            preTodo(e);
+        } else {
+            if (isMouseOnContent(e)) {
+                if (!context.selection.hoveredShape) {
+                    context.selection.resetSelectShapes();
                 }
             }
         }
@@ -136,7 +135,7 @@ export function useController(context: Context) {
             const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
             if (isDragging) {
                 workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
-                context.selection.unHoverShape(); // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
+                // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
                 if (!editing) { // 处于编辑状态时，不拖动图形
                     if (wheel && asyncTransfer) {
                         const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
@@ -154,6 +153,7 @@ export function useController(context: Context) {
                             shapes = paster_short(context, shapes);
                         }
                         asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
+                        context.selection.unHoverShape();
                         workspace.value.setSelectionViewUpdater(false);
                     }
                 }
@@ -167,16 +167,6 @@ export function useController(context: Context) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
                     _migrate(shapes, startPosition, mousePosition);
-                    // const len = shapes.length;
-                    // if (len > 1) {
-                    //     const m = matrix.inverseCoord({ x: mousePosition.x, y: mousePosition.y });
-                    //     asyncTransfer.trans(startPositionOnPage, m);
-                    //     const tool = context.workspace.toolGroup;
-                    //     if (tool) {
-                    //         tool.removeAttribute('style');
-                    //         trans.x = 0, trans.y = 0;
-                    //     }
-                    // }
                     asyncTransfer = asyncTransfer?.close();
                 }
                 isDragging = false;
@@ -199,21 +189,6 @@ export function useController(context: Context) {
     function transform(start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.inverseCoord(start.x, start.y);
         const pe: PageXY = matrix.inverseCoord(end.x, end.y);
-        // if (shapes.length > 1) {
-        //     const tool = context.workspace.toolGroup;
-        //     if (tool) {
-        //         const tx = ps.x - pe.x;
-        //         const ty = ps.y - pe.y;
-        //         trans.x -= tx;
-        //         trans.y -= ty;
-        //         tool.style.transform = `translate(${trans.x}px, ${trans.y}px)`;
-        //     }
-        // } else {
-        //     if (asyncTransfer) {
-        //         asyncTransfer.trans(ps, pe);
-        //         migrate(shapes, start, end);
-        //     }
-        // }
         if (asyncTransfer) {
             asyncTransfer.trans(ps, pe);
             migrate(shapes, start, end);
@@ -223,7 +198,7 @@ export function useController(context: Context) {
         const selected = context.selection.selectedShapes;
         if (selected.length > 1) {
             if (!e.shiftKey) {
-                const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, e.metaKey || e.ctrlKey, selected).reverse()[0];
+                const target: Shape | undefined = context.selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).reverse()[0];
                 context.selection.selectShape(target);
             }
         } else if (selected.length === 1) {
@@ -231,7 +206,7 @@ export function useController(context: Context) {
                 const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage, selected[0], e.metaKey || e.ctrlKey);
                 if (!isHasTarget) context.selection.resetSelectShapes();
             } else {
-                const target: Shape | undefined = context.selection.getShapesByXY_beta(startPositionOnPage, false, e.metaKey || e.ctrlKey, selected)[0];
+                const target: Shape | undefined = context.selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected)[0];
                 if (!target) {
                     context.selection.resetSelectShapes();
                 }
@@ -260,7 +235,20 @@ export function useController(context: Context) {
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context);
     }
-    function workspaceUpdate(t?: number) {
+    /**
+    * @description 选区监听器 
+    */
+    function selection_watcher(t?: number) {
+        if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
+            initController();
+            editing = false;
+            context.workspace.contentEdit(false);
+        }
+    }
+    /**
+     * @description workspace监听器
+     */
+    function workspace_watcher(t?: number) {
         if (t === WorkSpace.CHECKSTATUS) {
             checkStatus();
         }
@@ -311,8 +299,8 @@ export function useController(context: Context) {
         timerClear();
     }
     onMounted(() => {
-        context.workspace.watch(workspaceUpdate);
-        context.selection.watch(updater);
+        context.workspace.watch(workspace_watcher);
+        context.selection.watch(selection_watcher);
         window.addEventListener('blur', windowBlur);
         document.addEventListener('keydown', keyboardHandle);
         document.addEventListener('mousedown', mousedown);
@@ -321,12 +309,12 @@ export function useController(context: Context) {
         context.workspace.contentEdit(false);
     })
     onUnmounted(() => {
-        context.workspace.unwatch(workspaceUpdate);
-        context.selection.unwatch(updater);
+        context.workspace.unwatch(workspace_watcher);
+        context.selection.unwatch(selection_watcher);
         window.removeEventListener('blur', windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
     })
-    return { isDblClick, isEditing, isDrag, downpoint, downpoint_page }
+    return { isDblClick, isEditing, isDrag, downpoint, downpoint_page };
 }
