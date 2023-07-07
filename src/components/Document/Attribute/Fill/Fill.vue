@@ -240,7 +240,6 @@ const getTextIndexAndLen = () => {
 const textFormat = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const format = (props.shapes[0] as TextShape).text.getTextFormat(textIndex, selectLength)
-    console.log(format,'fillFormat');
 }
 
 function selection_wather(t: any) {

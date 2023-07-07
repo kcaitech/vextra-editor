@@ -26,9 +26,6 @@ const maximumLineHeightIsMulti = ref(false)
 const paraSpacingIsMulti = ref(false)
 const kerningIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
-const editor = computed(() => {
-    return props.context.editor4TextShape((props.textShape[0] as TextShape))
-});
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -48,6 +45,9 @@ const onSelectId = (icon: string) => {
 
 const onSelectText = (icon: TextBehaviour) => {
   selectText.value = icon
+  const editor = computed(() => {
+      return props.context.editor4TextShape((props.textShape[0] as TextShape))
+  });
   editor.value.setTextBehaviour(icon)
 }
 const onSelectCase = (icon: string) => {
@@ -56,6 +56,9 @@ const onSelectCase = (icon: string) => {
 
 const setRowHeight = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
+  const editor = computed(() => {
+      return props.context.editor4TextShape((props.textShape[0] as TextShape))
+  });
   rowHeight.value = rowHeight.value.trim()
   if (rowHeight.value.length < 1) {
     rowHeight.value = 1
@@ -80,6 +83,9 @@ const setRowHeight = () => {
 
 const setWordSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
+  const editor = computed(() => {
+      return props.context.editor4TextShape((props.textShape[0] as TextShape))
+  });
   wordSpace.value = wordSpace.value.trim()
   if (wordSpace.value.slice(-1) === '%') {
       wordSpace.value = Number(wordSpace.value.slice(0, -1))
@@ -103,6 +109,9 @@ const setWordSpace = () => {
 
 const setParagraphSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
+  const editor = computed(() => {
+      return props.context.editor4TextShape((props.textShape[0] as TextShape))
+  });
   paragraphSpace.value = paragraphSpace.value.trim()
   if (!isNaN(Number(paragraphSpace.value))) {
     if(isSelectText()) {

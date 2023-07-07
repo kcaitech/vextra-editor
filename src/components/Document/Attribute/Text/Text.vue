@@ -9,6 +9,7 @@ import { TextShape, Shape, AttrGetter } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
 interface Props {
     context: Context
     shape: Shape
@@ -34,9 +35,6 @@ const paraSpacingIsMulti = ref(false)
 const kerningIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
 const textShape = computed(() => props.context.selection.selectedShapes)
-const editor = computed(() => {
-    return props.context.editor4TextShape((textShape.value[0] as TextShape))
-});
 
 const onShowFont = () => {
     if (showFont.value) return showFont.value = false
@@ -73,6 +71,9 @@ const onShowSizeBlur = (e: Event) => {
 const onBold = () => {
     isBold.value = !isBold.value
     const { textIndex, selectLength } = getTextIndexAndLen()
+    const editor = computed(() => {
+        return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    });
     if(isSelectText()) {
         editor.value.setTextBold(isBold.value, 0, Infinity)
     }else {
@@ -86,6 +87,9 @@ const onBold = () => {
 const onTilt = () => {
     isTilt.value = !isTilt.value
     const { textIndex, selectLength } = getTextIndexAndLen()
+    const editor = computed(() => {
+        return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    });
     if(isSelectText()) {
         editor.value.setTextItalic(isTilt.value, 0, Infinity)
     }else {
@@ -99,6 +103,9 @@ const onTilt = () => {
 const onUnderlint = () => {
     isUnderline.value = !isUnderline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
+    const editor = computed(() => {
+        return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    });
     if(isSelectText()) {
         editor.value.setTextUnderline(isUnderline.value, 0, Infinity)
     }else {
@@ -112,6 +119,9 @@ const onUnderlint = () => {
 const onDeleteline = () => {
     isDeleteline.value = !isDeleteline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
+    const editor = computed(() => {
+        return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    });
     if(isSelectText()) {
         editor.value.setTextStrikethrough(isUnderline.value, 0,Infinity)
     }else {
@@ -126,6 +136,9 @@ const onDeleteline = () => {
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
     const { textIndex, selectLength } = getTextIndexAndLen()
+    const editor = computed(() => {
+        return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    });
     if(isSelectText()) {
         // editor.value.setTextDefaultHorAlign(icon)
         editor.value.setTextHorAlign(icon, 0, Infinity)
@@ -136,12 +149,20 @@ const onSelectLevel = (icon: TextHorAlign) => {
 //设置垂直对齐
 const onSelectVertical = (icon: TextVerAlign) => {
     selectVertical.value = icon
+    const editor = computed(() => {
+        return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    });
     editor.value.setTextVerAlign(icon)
+    console.log(textShape.value[0]);
+    
 }
 //设置字体大小
 const changeTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
+    const editor = computed(() => {
+        return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    });
     const { textIndex, selectLength } = getTextIndexAndLen()
     if(isSelectText()) {
         editor.value.setTextFontSize(0, Infinity, size)
@@ -157,6 +178,9 @@ const changeTextSize = (size: number) => {
 const setFont = (font: string) => {
     fontName.value = font
     showFont.value = false;
+    const editor = computed(() => {
+        return props.context.editor4TextShape((textShape.value[0] as TextShape))
+    });
     const { textIndex, selectLength } = getTextIndexAndLen()
     if(isSelectText()) {
         editor.value.setTextFontName(0, Infinity, font)
@@ -197,6 +221,7 @@ const setTextSize = () => {
     }
 
 }
+
 // 获取当前文字格式
 const textFormat = () => {
     if(!(textShape.value[0] as TextShape) || !(textShape.value[0] as TextShape).text) return
@@ -229,7 +254,7 @@ const textFormat = () => {
 const textDefaultFormat = () => {
     const defaultFormat = (textShape.value[0] as TextShape).text.getDefaultTextFormat()
 }
-function selection_wather(t: any) {
+function selection_wather(t: number) {
     if(t === Selection.CHANGE_TEXT) {
         textFormat()
     }
@@ -237,13 +262,26 @@ function selection_wather(t: any) {
         textFormat()
     }
 }
+function workspace_wather(t: number) {
+    if(t === WorkSpace.BOLD) {
+        onBold()
+    }else if(t === WorkSpace.UNDER_LINE) {
+        onUnderlint()
+    }else if(t === WorkSpace.DELETE_LINE) {
+        onDeleteline()
+    }else if(t === WorkSpace.ITALIC) {
+        onTilt()
+    }
+}
 onMounted(() => {
     textFormat()
     textDefaultFormat()
     props.context.selection.watch(selection_wather);
+    props.context.workspace.watch(workspace_wather);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
+    props.context.workspace.unwatch(workspace_wather);
 })
 </script>
 
