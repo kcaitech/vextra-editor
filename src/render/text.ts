@@ -80,6 +80,16 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                 const y = lines.yOffset + line.y + (line.lineHeight) / 2 + yOffset; // top
 
                 const font = "normal " + fontSize + "px " + fontName;
+                const style: any = {
+                    font,
+                    'alignment-baseline': 'central'
+                }
+                if (span) {
+                    if (span.color) style['fill'] = toRGBA(span.color);
+                    if (span.bold) style['font-weight'] = "bold";
+                    if (span.italic) style['font-style'] = "italic";
+                }
+
                 childs.push(h('text', { x: gX.join(' '), y, style: { fill: span && span.color && toRGBA(span.color), font, 'alignment-baseline': 'central' } }, gText.join('')));
             }
         }
