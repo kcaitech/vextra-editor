@@ -14,6 +14,7 @@ export const system = {
     copy: '复制',
     replace: '替换',
     failed: '操作失败',
+    'null_file_name': '文件名不能为空',
     'replace_failed': '替换失败，请使用粘贴功能',
     'select_layer': '图层选择',
     'bring_forward': '上移一层',

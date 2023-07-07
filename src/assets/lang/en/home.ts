@@ -14,6 +14,7 @@ export const system = {
     copy: 'Copy',
     replace: 'Replace',
     failed: 'Failed',
+    'null_file_name': 'The file name cannot be empty',
     'replace_failed': 'Replacement failed, please try pasting',
     'select_layer': 'Select layer',
     'bring_forward': 'Bring forward',

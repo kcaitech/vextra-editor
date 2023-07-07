@@ -8,6 +8,7 @@ import { nextTick, ref, onMounted, onUnmounted } from 'vue';
 import Saving from './Saving.vue';
 import { useRoute } from 'vue-router';
 import { WorkSpace } from '@/context/workspace';
+import { message } from '@/utils/message';
 const route = useRoute();
 interface Props {
     context: Context
@@ -43,6 +44,11 @@ function enter(e: KeyboardEvent) {
 async function blur() {
     if (input.value) {
         const p_name = input.value.value.trim().slice(0, 12);
+        if (p_name.length < 1) {
+            ele.value = 1;
+            message('info', props.context.workspace.t('system.null_file_name'));
+            return;
+        }
         if (p_name === name.value) {
             ele.value = 1;
             return;
