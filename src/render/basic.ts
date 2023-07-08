@@ -36,6 +36,8 @@
 //     });
 // }
 
+import { Color } from "@kcdesign/data";
+
 
 // export { h } from "vue";
 // import { VNode } from "vue";
@@ -44,3 +46,12 @@
 // export function transform(e: EL | ELArray, h: (tag: string, attr: any, childs:VNode[]) => VNode): VNode | VNode[] {
 //     return e;
 // }
+
+export function isColorEqual(lhs: Color, rhs: Color): boolean {
+    return lhs.alpha === rhs.alpha &&
+        lhs.blue === rhs.blue &&
+        lhs.green === rhs.green &&
+        lhs.red === rhs.red;
+}
+
+export const DefaultColor = new Color(0, 0, 0, 0);
