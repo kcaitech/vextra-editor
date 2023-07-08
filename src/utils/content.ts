@@ -470,9 +470,13 @@ function page_scale(context: Context, scale: number) {
  * @param p 点击位置在页面中所处的位置
  * @param context 
  * @param pre_shapes 预选图形
- * @param { 'controller' | 'group'| 'artboard'| 'null' | 'normal' } area
+ * @param { 'text-selection' | 'controller' | 'group'| 'artboard'| 'null' | 'normal' } area
  */
-function right_select(e: MouseEvent, p: PageXY, context: Context): 'controller' | 'group' | 'artboard' | 'null' | 'normal' {
+function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' {
+  const is_edting = context.workspace.isEditing;
+  if ((e.target as Element).closest('#text-selection') && is_edting) {
+    return 'text-selection';
+  }
   if ((e.target as Element).closest('[data-area="controller"]')) { // 点在了控件上
     return 'controller';
   }

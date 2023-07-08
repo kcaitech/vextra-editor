@@ -346,16 +346,17 @@ function contextMenuMount(e: MouseEvent) {
         }
     } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
         contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+    } else if (area === 'text-selection') {
+        contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
     } else {
         contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
     }
     const shapes = selection.getLayers(mousedownOnPageXY);
-    if (shapes.length > 1) {
+    if (shapes.length > 1 && area !== 'text-selection') {
         contextMenuItems.push('layers')
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
     }
-
     // 数据准备就绪之后打开菜单
     contextMenu.value = true;
     document.addEventListener('keydown', esc);

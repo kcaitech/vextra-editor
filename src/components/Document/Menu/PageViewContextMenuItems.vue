@@ -3,15 +3,16 @@ import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
-import { Artboard, GroupShape, Shape, ShapeType } from "@kcdesign/data";
+import { Artboard, GroupShape, Shape, ShapeType, TextShape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, replace } from '@/utils/clipaboard';
+import { paster, paster_inner_shape, replace } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
+import { Key } from '@/components/common';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -32,12 +33,60 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuPosition.y = -10;
   layerSubMenuVisiable.value = true;
 }
+function is_inner_textshape() {
+  const selected = props.context.selection.selectedShapes;
+  const isEditing = props.context.workspace.isEditing;
+  return (selected.length === 1 && selected[0].type === ShapeType.Text && isEditing);
+}
 function copy() {
-  props.context.workspace.clipboard.write_html();
+  if (is_inner_textshape()) {
+    const selection = props.context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    const s = Math.min(start, end);
+    const len = Math.abs(start - end);
+    if (s === end) return emit('close');
+    const text = selection.selectedShapes[0].text.getTextWithFormat(s, len);
+    props.context.workspace.clipboard.write_html(text);
+  } else {
+    props.context.workspace.clipboard.write_html();
+  }
   emit('close');
 }
-function paste() { // 粘贴在原位
-  paster(props.context, t);
+async function cut() {
+  if (is_inner_textshape()) {
+    const selection = props.context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    if (start === end) return emit('close');
+    const shape = selection.selectedShapes[0];
+    const text = shape.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
+    const copy_result = await props.context.workspace.clipboard.write_html(text);
+    if (copy_result) {
+      const editor = props.context.editor4TextShape(shape as TextShape);
+      if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+        selection.setCursor(Math.min(start, end), false);
+      }
+    }
+  }
+  emit('close');
+}
+function paste() {
+  if (is_inner_textshape()) {
+    const shape = props.context.selection.selectedShapes[0];
+    const editor = props.context.editor4TextShape(shape as TextShape);
+    paster_inner_shape(props.context, editor);
+  } else {
+    paster(props.context, t);
+  }
+  emit('close');
+}
+function paste_text() {
+  if (is_inner_textshape()) {
+    const shape = props.context.selection.selectedShapes[0];
+    const editor = props.context.editor4TextShape(shape as TextShape);
+    paster_inner_shape(props.context, editor, true);
+  }
   emit('close');
 }
 function paste_here() {
@@ -53,7 +102,13 @@ function _replace() {
   emit('close');
 }
 function selectAll() {
-  props.context.workspace.keydown_a(true, true);
+  if (is_inner_textshape()) {
+    const selection = props.context.selection;
+    const end = selection.selectedShapes[0].text.length;
+    selection.selectText(0, end);
+  } else {
+    props.context.workspace.keydown_a(true, true);
+  }
   emit('close');
 }
 /**
@@ -310,9 +365,17 @@ function closeLayerSubMenu() {
       <span>{{ t('system.copy') }}</span>
       <span class="shortkey">Ctrl + C</span>
     </div>
+    <div class="item" v-if="props.items.includes('cut')" @click="cut">
+      <span>{{ t('system.cut') }}</span>
+      <span class="shortkey">Ctrl + X</span>
+    </div>
     <div class="item" v-if="props.items.includes('paste')" @click="paste">
       <span>{{ t('system.paste') }}</span>
       <span class="shortkey">Ctrl + V</span>
+    </div>
+    <div class="item" v-if="props.items.includes('only_text')" @click="paste_text">
+      <span>{{ t('system.only_text') }}</span>
+      <span class="shortkey">Ctrl + Alt + V</span>
     </div>
     <div class="item" v-if="props.items.includes('paste-here')" @click="paste_here">
       <span>{{ t('system.paste_here') }}</span>
