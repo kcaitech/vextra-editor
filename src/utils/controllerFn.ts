@@ -92,6 +92,24 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
             }
         })
 
+    } else if (e.code === 'KeyH') {
+        if (shiftKey) {
+            const shpaes = context.selection.selectedShapes;
+            for (let i = 0; i < shpaes.length; i++) {
+                const editor = context.editor4Shape(shpaes[i]);
+                editor.toggleVisible();
+            }
+            context.selection.resetSelectShapes();
+        }
+    } else if (e.code === 'KeyL') {
+        if (shiftKey) {
+            const shpaes = context.selection.selectedShapes;
+            for (let i = 0; i < shpaes.length; i++) {
+                const editor = context.editor4Shape(shpaes[i]);
+                editor.toggleLock();
+            }
+            context.selection.resetSelectShapes();
+        }
     }
     if (transform) {
         for (let i = 0; i < shapes.length; i++) {

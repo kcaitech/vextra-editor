@@ -16,6 +16,7 @@ import Comment from "./Buttons/Comment.vue"
 import { Action, WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
+import { string_by_sys } from "@/utils/common";
 const { t } = useI18n()
 
 const props = defineProps<{
@@ -29,7 +30,7 @@ const selected = ref<Action>(Action.AutoV);
 
 function select(action: Action) {
     workspace.value.setAction(action);
-    if(action === Action.AddComment) {
+    if (action === Action.AddComment) {
         nextTick(() => {
             props.context.workspace.commentInput(false);
         })
@@ -38,7 +39,7 @@ function select(action: Action) {
 
 function update(t?: number) {
     selected.value = workspace.value.action;
-    if(t === WorkSpace.COMPS) {
+    if (t === WorkSpace.COMPS) {
         selectComps()
     }
 }
@@ -66,8 +67,8 @@ onUnmounted(() => {
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <div class="vertical-line" />
-        <el-tooltip class="box-item" effect="dark" :content="`${t('navi.comps')} &nbsp;&nbsp; Shift+I`" placement="bottom"
-            :show-after="500" :offset="10" :hide-after="0">
+        <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
+            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
             <ToolButton>
                 <div class="temp" @click="selectComps">
                     <svg-icon icon-class="resource"></svg-icon>
