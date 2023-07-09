@@ -316,8 +316,6 @@ function _update() {
       height_content.value = '90%';
     }
   }
-  console.log('---', result_by_content.map(i => i.name).toString());
-
   source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
   source_by_content.notify(0, 0, 0, Number.MAX_VALUE);
   loading_by_shape.value = false;
@@ -360,7 +358,7 @@ onUnmounted(() => {
       <Loading v-if="loading_by_content" :size="20" :width="2"></Loading>
       <div v-else>
         <ListView v-if="valid_result_by_content" ref="by_name" :source="source_by_content" :item-view="TextResultItem"
-          :item-height="30" :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape"
+          :item-height="50" :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape"
           @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
           @isRead="isRead" draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
@@ -379,28 +377,46 @@ onUnmounted(() => {
   >.result-by-name {
     height: 60%;
     position: relative;
+    overflow: hidden;
 
-    >div>.container {
+    >div {
       height: 100%;
-    }
+      position: relative;
+      overflow: hidden;
 
-    >div>.null-result {
-      font-size: var(--font-default-fontsize);
-      width: 100%;
-      text-align: center;
-      margin-top: 16px;
+      .container {
+        height: 100%;
+      }
+
+      .null-result {
+        font-size: var(--font-default-fontsize);
+        width: 100%;
+        text-align: center;
+        margin-top: 16px;
+      }
     }
   }
 
   >.result-by-context {
     height: 40%;
     position: relative;
+    overflow: hidden;
 
-    >div>.null-result {
-      font-size: var(--font-default-fontsize);
-      width: 100%;
-      text-align: center;
-      margin-top: 16px;
+    >div {
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+
+      .container {
+        height: calc(100% - 30px);
+      }
+
+      >.null-result {
+        font-size: var(--font-default-fontsize);
+        width: 100%;
+        text-align: center;
+        margin-top: 16px;
+      }
     }
 
     >.tips {
@@ -408,8 +424,9 @@ onUnmounted(() => {
       font-size: var(--font-default-fontsize);
       width: 100%;
       text-align: center;
-      padding: 0 16px;
+      padding: 8px 16px 0;
       box-sizing: border-box;
+      border-top: 1px solid var(--grey-light);
     }
   }
 }

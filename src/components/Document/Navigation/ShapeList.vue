@@ -134,6 +134,7 @@ const stopWatch = watch(() => props.page, () => {
 
 function search(e: Event) {
     // console.log((e.target as HTMLInputElement).value);
+    props.context.navi.notify(Navi.SEARCHING);
 }
 function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)
@@ -386,23 +387,38 @@ function close() {
 function reset_selection() {
     props.context.selection.resetSelectShapes();
 }
+function esc(e: KeyboardEvent) {
+    if (e.code === 'Escape') {
+        keywords.value = '';
+        if (search_el.value) {
+            search_el.value.blur()
+        }
+    }
+}
 function preto_search() {
+    if (search_el.value) {
+        search_el.value.select();
+    }
     props.context.navi.notify(Navi.SEARCH);
+    document.addEventListener('keydown', esc);
 }
 function leave_search() {
     if (!keywords.value.trim().length) {
         props.context.navi.notify(Navi.SEARCH_FINISHED);
     }
+    document.removeEventListener('keydown', esc)
 }
 function navi_watcher(t: number) {
     if (t === Navi.SEARCH_PRE) {
         if (search_el.value) {
-            search_el.value.focus();
             search_el.value.select();
         }
     }
 }
 function keyboard_watcher(e: KeyboardEvent) {
+    if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+    }
     if (e.target instanceof HTMLInputElement) return;
     if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
