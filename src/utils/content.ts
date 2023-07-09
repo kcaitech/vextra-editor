@@ -532,11 +532,51 @@ const list2Tree = (list: any, rootValue: string) => {
   })
   return arr
 }
+function flattenShapes(shapes: any) {
+  return shapes.reduce((result: any, item: Shape) => {
+    if (Array.isArray(item.childs)) {
+      // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
+      result = result.concat(flattenShapes(item.childs));
+    }
+    return result.concat(item);
+  }, []);
+}
+function set_menu_pos() {
+
+}
+function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal"): string[] {
+  let contextMenuItems = []
+  if (area === 'artboard') { // 点击在容器上
+    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+  } else if (area === 'group') { // 点击在编组上
+    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+  } else if (area === 'controller') { // 点击在选区上
+    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
+    const types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
+    if (types & 1) { // 存在容器
+      contextMenuItems.push('dissolution');
+    }
+    if (types & 2) { // 存在编组
+      contextMenuItems.push('un_group');
+    }
+    if (context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
+      contextMenuItems.push('forward', 'back', 'top', 'bottom');
+    }
+  } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
+    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+  } else if (area === 'text-selection') {
+    contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+  } else {
+    contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
+  }
+  return contextMenuItems;
+}
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,
   isInner, is_drag,
   init_shape, init_insert_shape, init_insert_textshape,
   paster, insert_imgs, drop, adapt_page, page_scale, right_select,
-  list2Tree
+  list2Tree, flattenShapes,
+  set_menu_pos, get_menu_items
 };

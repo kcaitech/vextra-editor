@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
+import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
@@ -135,8 +136,8 @@ const rename = (value: string, id: string) => {
 }
 
 const mousedown = (id: string, e: MouseEvent) => {
-    const workspace = props.context.workspace
-    workspace.menuMount(false);
+    const menu = props.context.menu
+    menu.menuMount(false);
     if (e.button === MOUSE_RIGHT) {
         e.stopPropagation()
         if (e.target instanceof Element && e.target.closest(`.Menu`)) return
@@ -144,8 +145,8 @@ const mousedown = (id: string, e: MouseEvent) => {
     }
 }
 const pageMenuMount = (id: string, e: MouseEvent) => {
-    const workspace = props.context.workspace
-    workspace.menuMount(false);
+    const menu = props.context.menu
+    menu.menuMount(false);
     pageMenuPosition.value.x = e.clientX
     pageMenuPosition.value.y = e.clientY - 75
     pageMenuItems = [
@@ -210,9 +211,15 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     }
     pageMenu.value = false;
 }
+function menu_watcher(t?: number) {
+    if (t === Menu.SHUTDOWN_MENU) {
+        pageMenu.value = false;
+    }
+}
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.data.watch(document_watcher);
+    props.context.menu.watch(menu_watcher);
     if (list_body.value) {
         pageH.value = list_body.value.clientHeight; //list可视高度
     }
@@ -221,6 +228,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.data.unwatch(document_watcher);
+    props.context.menu.unwatch(menu_watcher);
 });
 </script>
 <template>

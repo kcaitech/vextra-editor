@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
+import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
@@ -309,12 +310,12 @@ function selectshape_right(shape: Shape, shiftKey: boolean) {
     }
 }
 const list_mousedown = (e: MouseEvent, shape: Shape) => {
-    const workspace = props.context.workspace;
-    workspace.menuMount(false);
+    const menu = props.context.menu;
+    menu.menuMount(false);
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
         e.stopPropagation(); // 右键事件到这就不上去了
-        workspace.menuMount(false);
+        menu.menuMount(false);
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
         selectshape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
@@ -334,6 +335,7 @@ const chartMenuMount = (e: MouseEvent) => {
     chartMenuPosition.value.x = e.clientX
     chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
     chartMenu.value = true;
+    props.context.menu.menuMount(true);
     document.addEventListener('keydown', menu_unmount);
     nextTick(() => {
         if (contextMenuEl.value) {
@@ -363,6 +365,11 @@ function after_drag(wandererId: string, hostId: string, offsetOverhalf: boolean)
         }
     }
 }
+function menu_watcher(t: number) {
+    if (t === Menu.SHUTDOWN_MENU) {
+        close();
+    }
+}
 function menu_unmount(e: KeyboardEvent) {
     if (e.code === 'Escape') {
         close();
@@ -378,10 +385,12 @@ function reset_selection() {
 
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
+    props.context.menu.watch(menu_watcher);
 });
 
 onUnmounted(() => {
     props.context.selection.unwatch(notifySourceChange)
+    props.context.menu.unwatch(menu_watcher);
     stopWatch();
     if (shapeDirList) shapeDirList.unwatch(notifySourceChange)
 });
