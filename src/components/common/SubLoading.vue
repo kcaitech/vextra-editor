@@ -24,9 +24,9 @@
     >.loader {
       width: 100%;
       height: 100%;
-      border: 4px solid transparent;
-      border-top: 4px solid grey;
-      border-left: 4px solid grey;
+      border: 2px solid transparent;
+      border-top: 2px solid grey;
+      border-left: 2px solid grey;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       box-sizing: border-box;

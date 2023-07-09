@@ -16,7 +16,7 @@ import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
-const structure = ref<{pagelistHeight: number, pagelistHeightBackup: number}>({pagelistHeight: 162, pagelistHeightBackup: 36});
+const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: 162, pagelistHeightBackup: 36 });
 const container = ref<HTMLDivElement>();
 const sash = ref<HTMLDivElement>();
 const containerHeight = ref<number>(0);
@@ -52,24 +52,27 @@ onUnmounted(() => {
 
 <template>
     <div class="shapetab-container" ref="container">
-        <div class="page-navi" :style="{height: isPagelistFold ? '30px' : `${structure.pagelistHeight}px`}">
+        <div class="page-navi" :style="{ height: isPagelistFold ? '30px' : `${structure.pagelistHeight}px` }">
             <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"></PageList>
             <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"></Sash>
         </div>
-        <div class="page-navi" :style="{height: isPagelistFold ? 'calc(100% - 30px)' : `calc(100% - ${structure.pagelistHeight}px)`}">
+        <div class="page-navi"
+            :style="{ height: isPagelistFold ? 'calc(100% - 30px)' : `calc(100% - ${structure.pagelistHeight}px)` }">
             <ShapeList :context="props.context" :page="page" :pageHeight="structure.pagelistHeight"></ShapeList>
         </div>
-        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShowHiddenLeft>
+        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft">
+        </ShowHiddenLeft>
     </div>
-    
 </template>
 
 <style scoped lang="scss">
 .shapetab-container {
     width: 100%;
     height: 100%;
-    > .page-navi {
+
+    >.page-navi {
         position: relative;
+        transition: all 0.5s ease 0s;
     }
 }
 </style>

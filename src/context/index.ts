@@ -9,6 +9,7 @@ import { WorkSpace } from "./workspace";
 import { Comment } from "./comment";
 import { Menu } from "./menu";
 import { Tool } from "./tool";
+import { Navi } from "./navigate";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -47,6 +48,7 @@ export class Context extends Watchable(Object) {
     private m_comment: Comment;
     private m_menu: Menu;
     private m_tool: Tool;
+    private m_navi: Navi;
 
     constructor(data: Document, repo: CoopRepository) {
         super();
@@ -59,6 +61,7 @@ export class Context extends Watchable(Object) {
         this.m_comment = new Comment();
         this.m_menu = new Menu();
         this.m_tool = new Tool();
+        this.m_navi = new Navi();
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
 
         const pagelist = data.pagesList.slice(0);
@@ -140,6 +143,10 @@ export class Context extends Watchable(Object) {
     }
 
     get tool() {
+        return this.m_tool;
+    }
+
+    get navi() {
         return this.m_tool;
     }
 }

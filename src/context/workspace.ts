@@ -460,6 +460,7 @@ export class WorkSpace extends Watchable(Object) {
             event.preventDefault();
             this.keydown_o(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.F) {
+            if (event.metaKey || event.ctrlKey) return;
             event.preventDefault();
             this.keydown_f();
         } else if (event.code === KeyboardKeys.Digit0) {

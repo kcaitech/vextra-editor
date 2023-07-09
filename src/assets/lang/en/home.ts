@@ -55,7 +55,8 @@ export const system = {
     'login_out': 'Login out',
     'new_file': 'New file',
     'page1': 'Page 1',
-    'dissolution': 'Dissolution'
+    'dissolution': 'Dissolution',
+    'content_includes': 'Content includes'
 }
 
 export const home = {

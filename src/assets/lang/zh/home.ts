@@ -55,7 +55,8 @@ export const system = {
     'login_out': '退出登录',
     'new_file': '新文件',
     'page1': '页面 1',
-    'dissolution': '取消容器'
+    'dissolution': '取消容器',
+    'content_includes': '文本包含'
 }
 
 export const home = {

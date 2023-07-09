@@ -28,4 +28,3 @@ onMounted(() => {
     {{ render_code }}
   </span>
 </template>
-<style scoped lang="scss"></style>
