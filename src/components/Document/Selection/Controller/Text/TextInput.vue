@@ -52,7 +52,8 @@ function _updateInputPos() {
 
     const text = props.shape.text;
     const locatepoints = text.locateCursor(index, cursorAtBefore);
-    const cursor = locatepoints.map((point) => matrix.computeCoord(point.x, point.y));
+    if (!locatepoints) return;
+    const cursor = locatepoints.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y));
 
     if (cursor.length !== 2) return;
 
