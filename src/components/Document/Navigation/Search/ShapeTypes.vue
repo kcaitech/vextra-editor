@@ -25,11 +25,27 @@ const template: SelectedItem[] = [
   },
   {
     selected: false,
+    shapetype: ShapeType.Group
+  },
+  {
+    selected: false,
     shapetype: ShapeType.Rectangle
   },
   {
     selected: false,
     shapetype: ShapeType.Oval
+  },
+  {
+    selected: false,
+    shapetype: ShapeType.Line
+  },
+  {
+    selected: false,
+    shapetype: ShapeType.Image
+  },
+  {
+    selected: false,
+    shapetype: ShapeType.Group
   },
   {
     selected: false,
