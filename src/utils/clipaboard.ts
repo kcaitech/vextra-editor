@@ -78,7 +78,11 @@ export class Clipboard {
         return false;
     }
 }
-export function paster_inner_shape(context: Context, editor: TextShapeEditor) {
+/**
+ * 文本编辑状态下的粘贴
+ * @param only_text 只粘贴文本
+ */
+export function paster_inner_shape(context: Context, editor: TextShapeEditor, only_text?: boolean) {
     try {
         if (navigator.clipboard) {
             navigator.clipboard.read().then(function (data) {
@@ -114,8 +118,17 @@ export function paster_inner_shape(context: Context, editor: TextShapeEditor) {
                                         const start = selection.cursorStart;
                                         const end = selection.cursorEnd;
                                         const s = Math.min(start, end);
-                                        editor.insertFormatText(text, s, Math.abs(start - end));
-                                        selection.setCursor(s + text.length, false);
+                                        if (only_text) {
+                                            const ot = text.getText(0, text.length);
+                                            if (start !== end) {
+                                                editor.deleteText(s, Math.abs(start - end));
+                                            }
+                                            editor.insertText(ot, s);
+                                            selection.setCursor(s + ot.length, false);
+                                        } else {
+                                            editor.insertFormatText(text, s, Math.abs(start - end));
+                                            selection.setCursor(s + text.length, false);
+                                        }
                                     }
                                 }
                             }

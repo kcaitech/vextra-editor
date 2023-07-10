@@ -216,4 +216,17 @@ export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]
   }
   return false;
 }
-
+export function is_mac() {
+  return /macintosh|mac os x/i.test(navigator.userAgent);
+}
+export function string_by_sys(str: string): string {
+  if (is_mac()) {
+    let src = str;
+    src = src.replace(/ctrl|Ctrl/g, "⌘");
+    src = src.replace(/shift|Shift/g, "⇧");
+    src = src.replace(/alt|Alt/g, "⌥");
+    return src;
+  } else {
+    return str;
+  }
+}

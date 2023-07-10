@@ -68,7 +68,7 @@ export function useController(context: Context) {
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
-            workspace.value.menuMount(false); // 取消右键事件
+            context.menu.menuMount(false); // 取消右键事件
             root = context.workspace.root;
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;

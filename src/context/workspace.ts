@@ -83,7 +83,6 @@ export class WorkSpace extends Watchable(Object) {
     static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
-    static SHUTDOWN_MENU = 6;
     static SHUTDOWN_POPOVER = 7;
     static TRANSLATING = 8;
     static CHECKSTATUS = 9;
@@ -91,9 +90,6 @@ export class WorkSpace extends Watchable(Object) {
     static UNGROUP = 11;
     static SELECTION_VIEW_UPDATE = 12;
     static REMOVE_COLOR_PICKER = 13;
-    static START_SAVE = 14;
-    static END_SAVE = 15;
-    static DOCUMENT_SAVE = 16;
     static SHUTDOWN_COMMENT = 17;
     static SELECT_LIST_TAB = 18;
     static SEND_COMMENT = 19;
@@ -138,7 +134,6 @@ export class WorkSpace extends Watchable(Object) {
     private m_setting: boolean = false; // 是否正在设置属性
     private m_page_dragging: boolean = false; // 编辑器正在拖动页面
     private m_content_editing: boolean = false; // 编辑器正在内容编辑
-    private m_menu_mount: boolean = false;
     private m_popover: boolean = false;
     private m_rootId: string = 'content';
     private m_pageViewId: string = 'pageview';
@@ -224,13 +219,10 @@ export class WorkSpace extends Watchable(Object) {
     get select() {
         return this.m_selecting;
     }
-    get isMenuMount() {
-        return this.m_menu_mount;
-    }
-    get ispopover() {
+    get ispopover() { //xxx
         return this.m_popover;
     }
-    get isColorPickerMount() {
+    get isColorPickerMount() { //xxx
         return this.m_color_picker;
     }
     get isTranslating() {
@@ -331,7 +323,7 @@ export class WorkSpace extends Watchable(Object) {
     setUserInfo(info: UserInfo) {
         this.m_user_info = info
     }
-    colorPickerSetup(id: string) {
+    colorPickerSetup(id: string) { //xxx
         this.m_color_picker = id;
     }
     removeColorPicker() {
@@ -375,12 +367,6 @@ export class WorkSpace extends Watchable(Object) {
         } else {
             this.m_pre_to_translating = false;
             this.m_mousedown_on_page = undefined;
-        }
-    }
-    menuMount(mount: boolean) {
-        this.m_menu_mount = mount;
-        if (!mount) {
-            this.notify(WorkSpace.SHUTDOWN_MENU);
         }
     }
     setVisibleComment(visible: boolean) {
@@ -474,6 +460,7 @@ export class WorkSpace extends Watchable(Object) {
             event.preventDefault();
             this.keydown_o(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.F) {
+            if (event.metaKey || event.ctrlKey) return;
             event.preventDefault();
             this.keydown_f();
         } else if (event.code === KeyboardKeys.Digit0) {

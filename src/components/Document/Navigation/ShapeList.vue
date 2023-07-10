@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
+import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
@@ -11,9 +12,11 @@ import { ShapeType } from '@kcdesign/data';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
+import SearchPanel from "./Search/SearchPanel.vue";
 import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
+import { Navi } from "@/context/navigate";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -54,7 +57,9 @@ const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠�
 let chartMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const shapeList = ref<HTMLDivElement>()
-const shapeH = ref(0)
+const shapeH = ref(0);
+const keywords = ref<string>('');
+const search_el = ref<HTMLInputElement>();
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
 
@@ -129,7 +134,12 @@ const stopWatch = watch(() => props.page, () => {
 
 function search(e: Event) {
     // console.log((e.target as HTMLInputElement).value);
+    props.context.navi.notify(Navi.SEARCHING);
 }
+function inputing() {
+    props.context.navi.notify(Navi.SEARCHING);
+}
+
 function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)
 }
@@ -309,12 +319,12 @@ function selectshape_right(shape: Shape, shiftKey: boolean) {
     }
 }
 const list_mousedown = (e: MouseEvent, shape: Shape) => {
-    const workspace = props.context.workspace;
-    workspace.menuMount(false);
+    const menu = props.context.menu;
+    menu.menuMount(false);
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
         e.stopPropagation(); // 右键事件到这就不上去了
-        workspace.menuMount(false);
+        menu.menuMount(false);
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
         selectshape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
@@ -334,6 +344,7 @@ const chartMenuMount = (e: MouseEvent) => {
     chartMenuPosition.value.x = e.clientX
     chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
     chartMenu.value = true;
+    props.context.menu.menuMount(true);
     document.addEventListener('keydown', menu_unmount);
     nextTick(() => {
         if (contextMenuEl.value) {
@@ -363,6 +374,11 @@ function after_drag(wandererId: string, hostId: string, offsetOverhalf: boolean)
         }
     }
 }
+function menu_watcher(t: number) {
+    if (t === Menu.SHUTDOWN_MENU) {
+        close();
+    }
+}
 function menu_unmount(e: KeyboardEvent) {
     if (e.code === 'Escape') {
         close();
@@ -375,15 +391,71 @@ function close() {
 function reset_selection() {
     props.context.selection.resetSelectShapes();
 }
-
+function esc(e: KeyboardEvent) {
+    if (e.code === 'Escape') {
+        keywords.value = '';
+        if (search_el.value) {
+            search_el.value.blur()
+        }
+    }
+}
+function preto_search() {
+    if (search_el.value) {
+        search_el.value.select();
+    }
+    props.context.navi.notify(Navi.SEARCH);
+    document.addEventListener('keydown', esc);
+}
+function leave_search() {
+    if (!keywords.value.trim().length) {
+        const timer = setTimeout(() => {
+            props.context.navi.notify(Navi.SEARCH_FINISHED);
+            clearTimeout(timer);
+        }, 100)
+    }
+    document.removeEventListener('keydown', esc)
+}
+function navi_watcher(t: number) {
+    if (t === Navi.SEARCH_PRE) {
+        if (search_el.value) {
+            search_el.value.select();
+        }
+    }
+}
+function clear_text() {
+    keywords.value = '';
+    if (search_el.value) {
+        search_el.value.select();
+    }
+}
+function keyboard_watcher(e: KeyboardEvent) {
+    if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+    }
+    if (e.target instanceof HTMLInputElement) return;
+    if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        if (search_el.value) {
+            search_el.value.focus();
+            search_el.value.select();
+            preto_search();
+        }
+    }
+}
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
+    props.context.menu.watch(menu_watcher);
+    props.context.navi.watch(navi_watcher);
+    document.addEventListener('keydown', keyboard_watcher);
 });
 
 onUnmounted(() => {
     props.context.selection.unwatch(notifySourceChange)
+    props.context.menu.unwatch(menu_watcher);
+    props.context.navi.unwatch(navi_watcher);
     stopWatch();
-    if (shapeDirList) shapeDirList.unwatch(notifySourceChange)
+    if (shapeDirList) { shapeDirList.unwatch(notifySourceChange) }
+    document.removeEventListener('keydown', keyboard_watcher);
 });
 
 </script>
@@ -394,15 +466,21 @@ onUnmounted(() => {
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" :placeholder="t('home.search_layer') + '…'" @change="(e: Event) => search(e)">
+                <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
+                    @blur="leave_search" @click="preto_search" @change="(e: Event) => search(e)" @input="inputing">
+                <div @click="clear_text" class="close" v-if="keywords">
+                    <svg-icon icon-class="close"></svg-icon>
+                </div>
             </div>
         </div>
         <div class="body" ref="listBody" @click="reset_selection">
-            <ListView ref="shapelist" location="shapelist" :allow-drag="true" draging="shapeList" :shapeHeight="shapeH"
-                :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
-                :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
-                @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
-                @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical" @after-drag="after_drag">
+            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords"></SearchPanel>
+            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="true" draging="shapeList"
+                :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"
+                :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
+                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
+                @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"
+                @item-mousedown="list_mousedown" orientation="vertical" @after-drag="after_drag">
             </ListView>
             <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
                 :context="props.context" ref="contextMenuEl" @click.stop>
@@ -460,6 +538,24 @@ onUnmounted(() => {
                 margin-left: 4px;
                 background-color: transparent;
                 font-size: var(--font-default-fontsize);
+                caret-color: var(--active-color);
+                color: var(--active-color);
+            }
+
+            >.close {
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background-color: var(--grey-dark);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+
+                >svg {
+                    width: 60%;
+                    height: 60%;
+                }
             }
         }
     }
