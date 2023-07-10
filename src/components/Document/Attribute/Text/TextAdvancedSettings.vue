@@ -45,10 +45,8 @@ const onSelectId = (icon: string) => {
 
 const onSelectText = (icon: TextBehaviour) => {
   selectText.value = icon
-  const editor = computed(() => {
-      return props.context.editor4TextShape((props.textShape[0] as TextShape))
-  });
-  editor.value.setTextBehaviour(icon)
+  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  editor.setTextBehaviour(icon)
 }
 const onSelectCase = (icon: string) => {
   selectCase.value = icon
@@ -56,24 +54,21 @@ const onSelectCase = (icon: string) => {
 
 const setRowHeight = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = computed(() => {
-      return props.context.editor4TextShape((props.textShape[0] as TextShape))
-  });
+  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
   rowHeight.value = rowHeight.value.trim()
   if (rowHeight.value.length < 1) {
     rowHeight.value = 1
   }
   if (!isNaN(Number(rowHeight.value))) {
     if(isSelectText()) {
-      editor.value.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
-      editor.value.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+      editor.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
+      editor.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
     }else {
       if(selectLength === 0) {
-        editor.value.setDefaultMaxLineHeight(Number(rowHeight.value))
-        editor.value.setTextDefaultMinLineHeight(Number(rowHeight.value))
+        console.log('selectLength', selectLength);
       }else {
-        editor.value.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
-        editor.value.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+        editor.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
+        editor.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
       }
     }
   }else {
@@ -83,22 +78,20 @@ const setRowHeight = () => {
 
 const setWordSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = computed(() => {
-      return props.context.editor4TextShape((props.textShape[0] as TextShape))
-  });
+  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
   wordSpace.value = wordSpace.value.trim()
   if (wordSpace.value.slice(-1) === '%') {
       wordSpace.value = Number(wordSpace.value.slice(0, -1))
   }
   if (!isNaN(Number(wordSpace.value))) {
     if(isSelectText()) {
-      editor.value.setCharSpacing(Number(wordSpace.value / 100), 0, Infinity)
+      editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
       wordSpace.value = wordSpace.value + '%'
     }else {
       if(selectLength === 0) {
-        editor.value.setDefaultCharSpacing(Number(wordSpace.value))
+        console.log('selectLength', selectLength);
       }else {
-        editor.value.setCharSpacing(Number(wordSpace.value /100), textIndex, selectLength)
+        editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
       }
       wordSpace.value = wordSpace.value + '%'
     }
@@ -109,18 +102,16 @@ const setWordSpace = () => {
 
 const setParagraphSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = computed(() => {
-      return props.context.editor4TextShape((props.textShape[0] as TextShape))
-  });
+  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
   paragraphSpace.value = paragraphSpace.value.trim()
   if (!isNaN(Number(paragraphSpace.value))) {
     if(isSelectText()) {
-      editor.value.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
+      editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
     }else {
       if(selectLength === 0) {
-        editor.value.setDefaultParaSpacing(Number(paragraphSpace.value))
+        console.log('selectLength', selectLength);
       }else {
-        editor.value.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
+        editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
       }
     }
   }else {
