@@ -71,64 +71,56 @@ const onShowSizeBlur = (e: Event) => {
 const onBold = () => {
     isBold.value = !isBold.value
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = computed(() => {
-        return props.context.editor4TextShape((textShape.value[0] as TextShape))
-    });
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     if(isSelectText()) {
-        editor.value.setTextBold(isBold.value, 0, Infinity)
+        editor.setTextBold(isBold.value, 0, Infinity)
     }else {
         if(selectLength === 0) {
-            editor.value.setTextDefaultBold(isBold.value)
+            editor.setTextDefaultBold(isBold.value)
         }else {
-            editor.value.setTextBold(isBold.value, textIndex,selectLength)
+            editor.setTextBold(isBold.value, textIndex,selectLength)
         }
     }
 }
 const onTilt = () => {
     isTilt.value = !isTilt.value
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = computed(() => {
-        return props.context.editor4TextShape((textShape.value[0] as TextShape))
-    });
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     if(isSelectText()) {
-        editor.value.setTextItalic(isTilt.value, 0, Infinity)
+        editor.setTextItalic(isTilt.value, 0, Infinity)
     }else {
         if(selectLength === 0) {
-            editor.value.setTextDefaultItalic(isTilt.value)
+            editor.setTextDefaultItalic(isTilt.value)
         }else {
-            editor.value.setTextItalic(isTilt.value, textIndex,selectLength)
+            editor.setTextItalic(isTilt.value, textIndex,selectLength)
         }
     }
 }
 const onUnderlint = () => {
     isUnderline.value = !isUnderline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = computed(() => {
-        return props.context.editor4TextShape((textShape.value[0] as TextShape))
-    });
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     if(isSelectText()) {
-        editor.value.setTextUnderline(isUnderline.value, 0, Infinity)
+        editor.setTextUnderline(isUnderline.value, 0, Infinity)
     }else {
         if(selectLength === 0) {
-            editor.value.setTextDefaultUnderline(isUnderline.value)
+            editor.setTextDefaultUnderline(isUnderline.value)
         }else {
-            editor.value.setTextUnderline(isUnderline.value, textIndex,selectLength)
+            editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
         }
     }
 }
 const onDeleteline = () => {
     isDeleteline.value = !isDeleteline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = computed(() => {
-        return props.context.editor4TextShape((textShape.value[0] as TextShape))
-    });
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     if(isSelectText()) {
-        editor.value.setTextStrikethrough(isUnderline.value, 0,Infinity)
+        editor.setTextStrikethrough(isUnderline.value, 0,Infinity)
     }else {
         if(selectLength === 0) {
-            editor.value.setTextDefaultStrikethrough(isUnderline.value)
+            editor.setTextDefaultStrikethrough(isUnderline.value)
         }else {
-            editor.value.setTextStrikethrough(isUnderline.value, textIndex,selectLength)
+            editor.setTextStrikethrough(isUnderline.value, textIndex,selectLength)
         }
     }
 }
@@ -136,41 +128,33 @@ const onDeleteline = () => {
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = computed(() => {
-        return props.context.editor4TextShape((textShape.value[0] as TextShape))
-    });
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     if(isSelectText()) {
         // editor.value.setTextDefaultHorAlign(icon)
-        editor.value.setTextHorAlign(icon, 0, Infinity)
+        editor.setTextHorAlign(icon, 0, Infinity)
     } else {
-        editor.value.setTextHorAlign(icon, textIndex, selectLength)
+        editor.setTextHorAlign(icon, textIndex, selectLength)
     }
 }
 //设置垂直对齐
 const onSelectVertical = (icon: TextVerAlign) => {
     selectVertical.value = icon
-    const editor = computed(() => {
-        return props.context.editor4TextShape((textShape.value[0] as TextShape))
-    });
-    editor.value.setTextVerAlign(icon)
-    console.log(textShape.value[0]);
-    
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    editor.setTextVerAlign(icon)
 }
 //设置字体大小
 const changeTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
-    const editor = computed(() => {
-        return props.context.editor4TextShape((textShape.value[0] as TextShape))
-    });
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     const { textIndex, selectLength } = getTextIndexAndLen()
     if(isSelectText()) {
-        editor.value.setTextFontSize(0, Infinity, size)
+        editor.setTextFontSize(0, Infinity, size)
     }else {
         if(selectLength === 0) {
-            editor.value.setTextDefaultFontSize(size)
+            editor.setTextDefaultFontSize(size)
         }else {
-            editor.value.setTextFontSize(textIndex, selectLength, size)
+            editor.setTextFontSize(textIndex, selectLength, size)
         }
     }
 }
@@ -178,17 +162,15 @@ const changeTextSize = (size: number) => {
 const setFont = (font: string) => {
     fontName.value = font
     showFont.value = false;
-    const editor = computed(() => {
-        return props.context.editor4TextShape((textShape.value[0] as TextShape))
-    });
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     const { textIndex, selectLength } = getTextIndexAndLen()
     if(isSelectText()) {
-        editor.value.setTextFontName(0, Infinity, font)
+        editor.setTextFontName(0, Infinity, font)
     }else {
         if(selectLength === 0) {
-            editor.value.setTextDefaultFontName(font)
+            editor.setTextDefaultFontName(font)
         }else {
-            editor.value.setTextFontName(textIndex, selectLength, font)
+            editor.setTextFontName(textIndex, selectLength, font)
         }
     }
 }
