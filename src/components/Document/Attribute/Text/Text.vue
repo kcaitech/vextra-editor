@@ -76,7 +76,7 @@ const onBold = () => {
         editor.setTextBold(isBold.value, 0, Infinity)
     }else {
         if(selectLength === 0) {
-            editor.setTextDefaultBold(isBold.value)
+            console.log('selectLength', selectLength);
         }else {
             editor.setTextBold(isBold.value, textIndex,selectLength)
         }
@@ -90,7 +90,7 @@ const onTilt = () => {
         editor.setTextItalic(isTilt.value, 0, Infinity)
     }else {
         if(selectLength === 0) {
-            editor.setTextDefaultItalic(isTilt.value)
+            console.log('selectLength', selectLength);
         }else {
             editor.setTextItalic(isTilt.value, textIndex,selectLength)
         }
@@ -104,7 +104,7 @@ const onUnderlint = () => {
         editor.setTextUnderline(isUnderline.value, 0, Infinity)
     }else {
         if(selectLength === 0) {
-            editor.setTextDefaultUnderline(isUnderline.value)
+            console.log('selectLength', selectLength);
         }else {
             editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
         }
@@ -118,7 +118,7 @@ const onDeleteline = () => {
         editor.setTextStrikethrough(isUnderline.value, 0,Infinity)
     }else {
         if(selectLength === 0) {
-            editor.setTextDefaultStrikethrough(isUnderline.value)
+            console.log('selectLength', selectLength);
         }else {
             editor.setTextStrikethrough(isUnderline.value, textIndex,selectLength)
         }
@@ -130,7 +130,6 @@ const onSelectLevel = (icon: TextHorAlign) => {
     const { textIndex, selectLength } = getTextIndexAndLen()
     const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     if(isSelectText()) {
-        // editor.value.setTextDefaultHorAlign(icon)
         editor.setTextHorAlign(icon, 0, Infinity)
     } else {
         editor.setTextHorAlign(icon, textIndex, selectLength)
@@ -152,7 +151,7 @@ const changeTextSize = (size: number) => {
         editor.setTextFontSize(0, Infinity, size)
     }else {
         if(selectLength === 0) {
-            editor.setTextDefaultFontSize(size)
+            console.log('selectLength', selectLength);
         }else {
             editor.setTextFontSize(textIndex, selectLength, size)
         }
@@ -168,7 +167,7 @@ const setFont = (font: string) => {
         editor.setTextFontName(0, Infinity, font)
     }else {
         if(selectLength === 0) {
-            editor.setTextDefaultFontName(font)
+            console.log('selectLength', selectLength);
         }else {
             editor.setTextFontName(textIndex, selectLength, font)
         }

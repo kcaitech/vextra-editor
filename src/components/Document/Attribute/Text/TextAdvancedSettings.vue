@@ -65,8 +65,7 @@ const setRowHeight = () => {
       editor.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
     }else {
       if(selectLength === 0) {
-        editor.setDefaultMaxLineHeight(Number(rowHeight.value))
-        editor.setTextDefaultMinLineHeight(Number(rowHeight.value))
+        console.log('selectLength', selectLength);
       }else {
         editor.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
         editor.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
@@ -86,13 +85,13 @@ const setWordSpace = () => {
   }
   if (!isNaN(Number(wordSpace.value))) {
     if(isSelectText()) {
-      editor.setCharSpacing(Number(wordSpace.value / 100), 0, Infinity)
+      editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
       wordSpace.value = wordSpace.value + '%'
     }else {
       if(selectLength === 0) {
-        editor.setDefaultCharSpacing(Number(wordSpace.value))
+        console.log('selectLength', selectLength);
       }else {
-        editor.setCharSpacing(Number(wordSpace.value /100), textIndex, selectLength)
+        editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
       }
       wordSpace.value = wordSpace.value + '%'
     }
@@ -110,7 +109,7 @@ const setParagraphSpace = () => {
       editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
     }else {
       if(selectLength === 0) {
-        editor.setDefaultParaSpacing(Number(paragraphSpace.value))
+        console.log('selectLength', selectLength);
       }else {
         editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
       }
