@@ -4,8 +4,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape } from "@kcdesign/data";
-import { TextBehaviour, Shape } from "@kcdesign/data";
+import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape  } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
@@ -24,6 +23,7 @@ const paragraphSpace = ref()
 const minimumLineHeightIsMulti = ref(false)
 const paraSpacingIsMulti = ref(false)
 const kerningIsMulti = ref(false)
+const transformIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
 
 //获取选中字体的长度和下标
@@ -47,8 +47,14 @@ const onSelectText = (icon: TextBehaviour) => {
   const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
   editor.setTextBehaviour(icon)
 }
-const onSelectCase = (icon: string) => {
+const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon
+  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  if(isSelectText()) {
+      editor.setTextTransform(icon)
+  } else {
+      editor.setTextTransform(icon)
+  }
 }
 
 const setRowHeight = () => {
@@ -142,13 +148,16 @@ const textFormat = () => {
     minimumLineHeightIsMulti.value = format.minimumLineHeightIsMulti
     kerningIsMulti.value = format.kerningIsMulti
     paraSpacingIsMulti.value = format.paraSpacingIsMulti
+    transformIsMulti.value = format.transformIsMulti
     wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'
     rowHeight.value = format.minimumLineHeight || ''
     paragraphSpace.value = format.paraSpacing || 0
+    selectCase.value = format.transform
     if(minimumLineHeightIsMulti.value) rowHeight.value = '多值'
     if(kerningIsMulti.value) wordSpace.value = '多值'
     if(paraSpacingIsMulti.value) paragraphSpace.value = '多值'
+    if(transformIsMulti.value) selectCase.value = ''
 }
 function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
@@ -216,22 +225,22 @@ onUnmounted(() => {
             <div>
                 <span>{{t('attr.letter_case')}}</span>
                 <div class="level-aligning jointly-text">
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'no-list'}" @click="onSelectCase('no-list')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'none'}" @click="onSelectCase(TextTransformType.None)">
                       <Tooltip :content="t('attr.as_typed')" :offset="15">
                         <svg-icon icon-class="text-no-list"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'uppercase'}" @click="onSelectCase('uppercase')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'uppercase'}" @click="onSelectCase(TextTransformType.Uppercase)">
                       <Tooltip :content="t('attr.uppercase')" :offset="15">
                         <svg-icon icon-class="text-uppercase"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'lowercase'}" @click="onSelectCase('lowercase')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'lowercase'}" @click="onSelectCase(TextTransformType.Lowercase)">
                       <Tooltip :content="t('attr.lowercase')" :offset="15">
                         <svg-icon icon-class="text-lowercase"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'titlecase'}" @click="onSelectCase('titlecase')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'uppercase-first'}" @click="onSelectCase(TextTransformType.UppercaseFirst)">
                       <Tooltip :content="t('attr.titlecase')" :offset="15">
                         <svg-icon icon-class="text-titlecase"></svg-icon>
                       </Tooltip>

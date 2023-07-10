@@ -3,6 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { Context } from '@/context';
 import { fontNameListEn, fontNameListZh, FontAvailable } from './FontNameList'
+import { ShapeType, Shape } from "@kcdesign/data";
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'setFont', font: string): void
@@ -61,23 +62,42 @@ function highlightText(text: string) {
 }
 
 function checkFontsAvailability(fontName: string[], fontList: FontName, lang: string) {
-      const promises = fontName.map(name => FontAvailable(name));
-      Promise.all(promises)
-        .then(results => {
-            if(lang === 'ch') {
-                const ch = fontName.filter((name, index) => results[index]);
-                fontList.ch.push(...ch)
-            }else {
-                const en = fontName.filter((name, index) => results[index]);
-                fontList.en.push(...en)
+    const promises = fontName.map(name => FontAvailable(name));
+    Promise.all(promises)
+    .then(results => {
+        if(lang === 'ch') {
+            const ch = fontName.filter((name, index) => results[index]);
+            fontList.ch.push(...ch)
+        }else {
+            const en = fontName.filter((name, index) => results[index]);
+            fontList.en.push(...en)
+        }
+    })
+    .catch(error => {
+        console.error('Error checking font availability:', error);
+    });
+}
+
+const getAllTextFontName = () => {
+    const shapes = props.context.selection.selectedPage?.childs
+    if (shapes) {
+        const textShape = shapes.filter((item: Shape) => {
+            if (item.type === ShapeType.Text) {
+                return item
             }
         })
-        .catch(error => {
-          console.error('Error checking font availability:', error);
-        });
+        textShape.forEach(item => {
+            const format = item.text.attr
+            if(format && format.fontName) {
+                fontList.value.used.push(format.fontName)
+                fontList.value.used = Array.from(new Set(fontList.value.used))
+            }
+        })
     }
+}
 
 onMounted(() => {
+    getAllTextFontName()
     checkFontsAvailability(fontNameListZh, fontList.value, 'ch')
     checkFontsAvailability(fontNameListEn, fontList.value, 'en')
 })

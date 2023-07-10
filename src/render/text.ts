@@ -87,7 +87,7 @@ function renderDecorateRects(h: Function, y: number, hight: number, decorateRang
         const d = "M" + l.start + ' ' + y + // lt
             " L" + l.end + ' ' + y + // rt
             " L" + l.end + ' ' + (y + hight) + // rb
-            " L" + ' ' + l.start + (y + hight) + // lb
+            " L" + ' ' + l.start + ' ' + (y + hight) + // lb
             'Z';
         const props: any = {};
         props["fill-opacity"] = 1;
