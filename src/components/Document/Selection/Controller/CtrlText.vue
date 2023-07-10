@@ -72,6 +72,7 @@ function _update() {
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
+        props.context.menu.menuMount(false);
         const workspace = props.context.workspace;
         if (!editing && isDblClick()) {
             editing = true;
