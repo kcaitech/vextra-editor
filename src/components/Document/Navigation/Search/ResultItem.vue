@@ -157,7 +157,6 @@ function update_slice() {
     content: src.slice(index + word.length),
   }
   )
-  console.log('update', name_display.value.map(i => i.content).toString());
   reflush.value++;
 }
 function navi_watcher(t: number) {

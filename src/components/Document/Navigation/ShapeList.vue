@@ -408,7 +408,10 @@ function preto_search() {
 }
 function leave_search() {
     if (!keywords.value.trim().length) {
-        props.context.navi.notify(Navi.SEARCH_FINISHED);
+        const timer = setTimeout(() => {
+            props.context.navi.notify(Navi.SEARCH_FINISHED);
+            clearTimeout(timer);
+        }, 100)
     }
     document.removeEventListener('keydown', esc)
 }
