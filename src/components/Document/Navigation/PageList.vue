@@ -2,7 +2,7 @@
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
 import { Navi } from "@/context/navigate";
-import { onMounted, onUnmounted, ref, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, nextTick, computed } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -37,9 +37,10 @@ const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
-
-const selectionWatcher = (t: number) => {
-    if (t === Selection.CHANGE_PAGE) {
+const cur_page_name = ref<string>(props.context.selection.selectedPage?.name || t('navi.page'));
+const selectionWatcher = (type: number) => {
+    if (type === Selection.CHANGE_PAGE) {
+        cur_page_name.value = props.context.selection.selectedPage?.name || t('navi.page');
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
@@ -221,10 +222,14 @@ function navi_watcher(t?: number) {
     if (t === Navi.SEARCH) {
         if (!fold.value) {
             toggle();
+            props.context.navi.set_page_need_extend(true);
         }
     } else if (t === Navi.SEARCH_FINISHED) {
         if (fold.value) {
-            toggle();
+            if (props.context.navi.needExtend) {
+                toggle();
+                props.context.navi.set_page_need_extend(false);
+            }
         }
     }
 }
@@ -248,7 +253,7 @@ onUnmounted(() => {
 <template>
     <div class="pagelist-wrap" ref="pageList">
         <div class="header">
-            <div class="title">{{ t('navi.page') }}</div>
+            <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
                 <div class="add" @click.stop="addPage" :title="t('navi.add_page')">
@@ -298,6 +303,10 @@ onUnmounted(() => {
             height: 36px;
             font-weight: var(--font-default-bold);
             line-height: 36px;
+            max-width: 150px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         .btn {
