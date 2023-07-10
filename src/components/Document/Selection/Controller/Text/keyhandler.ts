@@ -74,7 +74,7 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
     const cursor = text.locateCursor(end, cursorAtBefore);
     if (!cursor || cursor.cursorPoints.length !== 2) return;
     const x = cursor.cursorPoints[0].x;
-    const y = cursor.lineY - (cursor.preLineHeight) / 2;
+    const y = cursor.preLineY + (cursor.preLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
         const _end = locate.index;
@@ -99,7 +99,7 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const cursor = text.locateCursor(end, cursorAtBefore);
     if (!cursor || cursor.cursorPoints.length !== 2) return;
     const x = cursor.cursorPoints[0].x;
-    const y = cursor.lineY + cursor.lineHeight + (cursor.nextLineHeight) / 2;
+    const y = cursor.nextLineY + (cursor.nextLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
         const _end = locate.index;
