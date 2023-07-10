@@ -67,6 +67,7 @@ let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
 const commentInput = ref(false);
+const resizeObserver = new ResizeObserver(frame_watcher);
 
 function rootRegister(mount: boolean) {
     if (mount) {
@@ -747,13 +748,10 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     info!.m.reset(matrix.toArray())
     initMatrix(cur)
 })
-const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
-    // root.value && _updateRoot(props.context, root.value);
-    if (root.value) {
-        _updateRoot(props.context, root.value);
-    }
-})
-
+function frame_watcher() {
+    if (!root.value) return;
+    _updateRoot(props.context, root.value);
+}
 renderinit()
     .then(() => {
         inited.value = true;
@@ -779,7 +777,7 @@ onMounted(() => {
     rootRegister(true); // 在workspace注册contentview dom节点
     props.context.selection.scoutMount(props.context); // 安装图形检索器
     props.context.workspace.setFreezeStatus(true); // 开始加载静态资源
-    props.context.workspace.init(t); // 在workspace存储多语言
+    props.context.workspace.init(t); // 在workspace存储多语言工具
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);

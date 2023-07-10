@@ -178,7 +178,7 @@ export class WorkSpace extends Watchable(Object) {
         return this.m_matrix;
     }
     get root(): Root { //return contentView HTMLElement info
-        const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构0.6s后会进行root数据更新)；
+        const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构后会进行root数据更新)；
         if (root.init) {
             return root;
         } else { // 如果未初始化，则查找一次，在contentView的一个生命周期内，只查找一次或零次Dom；

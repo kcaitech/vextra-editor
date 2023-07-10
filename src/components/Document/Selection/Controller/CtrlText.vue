@@ -71,16 +71,19 @@ function _update() {
 
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
+    const workspace = props.context.workspace;
     if (!editing && isDblClick()) {
         editing = true;
-        props.context.workspace.contentEdit(editing);
-        props.context.workspace.setCursorStyle('text', 0);
+        workspace.contentEdit(editing);
+        workspace.setCursorStyle('text', 0);
     }
     if (!editing) return;
-    props.context.workspace.setCtrl('controller');
+    workspace.setCtrl('controller');
     const selection = props.context.selection;
+    const root = workspace.root;
     matrix.reset(props.matrix);
-    const xy = matrix.inverseCoord(e.offsetX + bounds.left, e.offsetY + bounds.top);
+    // const xy = matrix.inverseCoord(e.offsetX + bounds.left, e.offsetY + bounds.top); // 统一计算方式
+    const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
     downIndex = selection.locateText(xy.x, xy.y);
     e.stopPropagation();
     document.addEventListener("mousemove", onMouseMove);

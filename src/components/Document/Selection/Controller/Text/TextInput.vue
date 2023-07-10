@@ -173,17 +173,18 @@ function onKeyPress(e: KeyboardEvent) {
 <template>
     <input type="text" class="input" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
         @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
-        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }"
-        ref="inputel" />
+        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel" />
 </template>
 <style lang='scss' scoped>
 .input {
     z-index: -999;
     background-color: transparent;
+    position: absolute;
     border: none;
     box-shadow: none;
     outline: none;
     caret-color: transparent;
     height: 10px;
+    width: 1px;
 }
 </style>
