@@ -5,7 +5,7 @@ import Loading from '@/components/common/Loading.vue';
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ResultItem, { ItemData } from "./ResultItem.vue";
 import TextResultItem, { TItemData } from "./TextResultItem.vue";
-
+import { Navi } from '@/context/navigate';
 import { Context } from '@/context';
 import { Shape, ShapeType, TextShape } from '@kcdesign/data';
 import { isInner } from '@/utils/content';
@@ -332,7 +332,7 @@ function close() {
   chartMenu.value = false;
 }
 
-const stop = watch(() => props.keywords, update, { immediate: true });
+const stop = watch(() => props.keywords, _update, { immediate: true });
 onUnmounted(() => {
   stop();
 })

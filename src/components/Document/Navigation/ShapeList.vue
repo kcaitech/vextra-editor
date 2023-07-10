@@ -136,6 +136,10 @@ function search(e: Event) {
     // console.log((e.target as HTMLInputElement).value);
     props.context.navi.notify(Navi.SEARCHING);
 }
+function inputing() {
+    props.context.navi.notify(Navi.SEARCHING);
+}
+
 function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)
 }
@@ -415,6 +419,12 @@ function navi_watcher(t: number) {
         }
     }
 }
+function clear_text() {
+    keywords.value = '';
+    if (search_el.value) {
+        search_el.value.select();
+    }
+}
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -454,7 +464,10 @@ onUnmounted(() => {
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
                 <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
-                    @blur="leave_search" @click="preto_search" @change="(e: Event) => search(e)">
+                    @blur="leave_search" @click="preto_search" @change="(e: Event) => search(e)" @input="inputing">
+                <div @click="clear_text" class="close" v-if="keywords">
+                    <svg-icon icon-class="close"></svg-icon>
+                </div>
             </div>
         </div>
         <div class="body" ref="listBody" @click="reset_selection">
@@ -522,6 +535,22 @@ onUnmounted(() => {
                 margin-left: 4px;
                 background-color: transparent;
                 font-size: var(--font-default-fontsize);
+            }
+
+            >.close {
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background-color: var(--grey-dark);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+
+                >svg {
+                    width: 60%;
+                    height: 60%;
+                }
             }
         }
     }

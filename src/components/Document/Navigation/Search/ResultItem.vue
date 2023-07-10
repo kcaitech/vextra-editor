@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onBeforeMount, onBeforeUpdate, ref, computed, nextTick, InputHTMLAttributes } from "vue";
+import { onBeforeMount, onBeforeUpdate, ref, computed, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
 import { Shape, GroupShape } from '@kcdesign/data';
 import { Context } from "@/context";
+import { Navi } from "@/context/navigate";
 export interface ItemData {
   id: string
   shape: Shape
@@ -12,14 +13,19 @@ export interface ItemData {
 interface Props {
   data: ItemData
 }
+interface Slice {
+  content: string
+  isKeywords: boolean
+}
 const isLock = ref<boolean>()
 const isRead = ref<boolean>()
 const isVisible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<Props>();
-const esc = ref<boolean>(false)
-
+const esc = ref<boolean>(false);
+const name_display = ref<Slice[]>([{ content: props.data.shape.name, isKeywords: false }]);
+const reflush = ref<number>(0);
 const emit = defineEmits<{
   (e: "toggleexpand", shape: Shape): void;
   (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
@@ -33,17 +39,10 @@ const emit = defineEmits<{
 }>();
 let showTriangle = ref<boolean>(false);
 function updater() {
-  let shape = props.data.shape;
+  const shape = props.data.shape;
   showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0;
   isLock.value = props.data.shape.isLocked;
   isRead.value = props.data.shape.isVisible;
-}
-function toggleExpand(e: Event) {
-  if (!showTriangle.value) {
-    return;
-  }
-  e.stopPropagation();
-  emit("toggleexpand", props.data.shape);
 }
 
 const toggleContainer = (e: MouseEvent) => {
@@ -141,12 +140,43 @@ const mousedown = (e: MouseEvent) => {
   emit('item-mousedown', e, props.data.shape)
   selectedChild();
 }
-
+function update_slice() {
+  name_display.value = [];
+  const src = props.data.shape.name;
+  const word = props.data.keywords;
+  const reg = new RegExp(`${word}`, 'img');
+  const index = src.search(reg);
+  name_display.value.push({
+    isKeywords: false,
+    content: src.slice(0, index)
+  }, {
+    isKeywords: true,
+    content: src.slice(index, index + word.length),
+  }, {
+    isKeywords: false,
+    content: src.slice(index + word.length),
+  }
+  )
+  console.log('update', name_display.value.map(i => i.content).toString());
+  reflush.value++;
+}
+function navi_watcher(t: number) {
+  if (t === Navi.SEARCHING) {
+    update_slice();
+  }
+}
 onBeforeMount(() => {
   updater();
 })
 onBeforeUpdate(() => {
   updater();
+})
+onMounted(() => {
+  update_slice();
+  props.data.context.navi.watch(navi_watcher);
+})
+onUnmounted(() => {
+  props.data.context.navi.unwatch(navi_watcher);
 })
 
 </script>
@@ -160,9 +190,10 @@ onBeforeUpdate(() => {
     <div class="text" :class="{ container: true, selected: props.data.selected }"
       :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
       <div class="txt" @dblclick="onRename">
-        <span>{{ props.data.shape.name.split(props.data.keywords)[0] }}</span>
-        <span style="color: #0d99ff;">{{ props.data.keywords }}</span>
-        <span>{{ props.data.shape.name.split(props.data.keywords)[1] }}</span>
+        <span v-for="(item, index) in name_display" :key="index" :class="{ active: item.isKeywords }"
+          :reflush="reflush">{{
+            item.content
+          }}</span>
       </div>
       <div class="tool_icon"
         :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}`, width: `${isVisible ? 66 + 'px' : isLock || !isRead ? 66 + 'px' : 0}` }">
@@ -249,6 +280,10 @@ div.text {
     white-space: nowrap;
     overflow: hidden;
     padding-left: 2px;
+
+    .active {
+      color: var(--active-color);
+    }
   }
 }
 

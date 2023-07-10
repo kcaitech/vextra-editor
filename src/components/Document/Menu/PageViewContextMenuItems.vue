@@ -530,7 +530,6 @@ function closeLayerSubMenu() {
 .items-wrap {
   width: 100%;
   font-size: var(--font-default-fontsize);
-  overflow-y: scroll;
 
   .item {
     position: relative;

@@ -145,30 +145,30 @@ function update_slice() {
   const len = (props.data.shape as TextShape).text.length;
   const src = (props.data.shape as TextShape).text.getText(0, len);
   const word = props.data.keywords;
-  const index = src.indexOf(word);
+  const reg = new RegExp(`${word}`, 'img');
+  const index = src.search(reg);
   if (index < 8) {
     tips.value.push({
       isKeywords: false,
       content: src.slice(0, index)
     }, {
       isKeywords: true,
-      content: word,
+      content: src.slice(index, index + word.length),
     }, {
       isKeywords: false,
-      content: src.slice(index + word.length + 1),
+      content: src.slice(index + word.length),
     }
     )
   } else {
-    console.log('index', index);
     tips.value.push({
       isKeywords: false,
       content: '...' + src.slice(index - 7, index)
     }, {
       isKeywords: true,
-      content: word,
+      content: src.slice(index, index + word.length),
     }, {
       isKeywords: false,
-      content: src.slice(index + word.length + 1),
+      content: src.slice(index + word.length),
     }
     )
   }
@@ -195,8 +195,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="contain" :class="{ selected: props.data.selected, selectedChild: selectedChild() }" @click="selectShape"
-    @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+  <div class="contain" @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
     <div class="item-warp">
       <div class="container-svg" @dblclick="toggleContainer">
         <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
@@ -368,7 +367,6 @@ onUnmounted(() => {
   height: 20px;
   width: calc(100% - 32px);
   font-size: var(--font-default-fontsize);
-  padding: 0 16px;
   line-height: 20px;
   white-space: nowrap;
   margin-left: 16px;
