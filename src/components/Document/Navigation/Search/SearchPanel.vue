@@ -12,6 +12,7 @@ import { is_shape_in_selection, selection_types } from '@/utils/shapelist';
 interface Props {
   keywords: string
   context: Context
+  shapeTypes: ShapeType[]
 }
 class Iter implements IDataIter<ItemData> {
   private __it: Shape[];
@@ -285,6 +286,18 @@ function update() {
   const shapes = props.context.selection.selectedPage?.shapes;
   if (shapes) {
     shapes.forEach((v) => {
+      if (props.shapeTypes.length) {
+        if (!props.shapeTypes.includes(v.type)) {
+          return;
+        }
+      }
+      if (!props.keywords.length) {
+        if (props.shapeTypes.includes(v.type)) {
+          result_by_shape.push(v);
+          return;
+        }
+        return;
+      }
       if (v.name.search(reg) > -1) {
         result_by_shape.push(v);
       }
@@ -314,6 +327,8 @@ function update() {
   }
   source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
   source_by_content.notify(0, 0, 0, Number.MAX_VALUE);
+  console.log('update');
+
 }
 function menu_unmount(e: KeyboardEvent) {
   if (e.code === 'Escape') {
@@ -325,9 +340,11 @@ function close() {
   chartMenu.value = false;
 }
 
-const stop = watch(() => props.keywords, update, { immediate: true });
+const stop1 = watch(() => props.keywords, update, { immediate: true });
+const stop2 = watch(() => props.shapeTypes, update, { immediate: true, deep: true });
 onUnmounted(() => {
-  stop();
+  stop1();
+  stop2();
 })
 </script>
 <template>

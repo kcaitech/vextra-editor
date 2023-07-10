@@ -17,6 +17,7 @@ import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
+import ShapeTypes from "./Search/ShapeTypes.vue";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -61,6 +62,8 @@ const shapeH = ref(0);
 const keywords = ref<string>('');
 const search_el = ref<HTMLInputElement>();
 const includes_type = ref<ShapeType[]>([]);
+const popoverVisible = ref<boolean>(false);
+const popover = ref<HTMLDivElement>();
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
 
@@ -410,7 +413,7 @@ function preto_search() {
 function leave_search() {
     if (!keywords.value.trim().length) {
         const timer = setTimeout(() => {
-            props.context.navi.notify(Navi.SEARCH_FINISHED);
+            // props.context.navi.notify(Navi.SEARCH_FINISHED);
             clearTimeout(timer);
         }, 100)
     }
@@ -428,6 +431,45 @@ function clear_text() {
     if (search_el.value) {
         search_el.value.select();
     }
+}
+function showMenu() {
+    if (popoverVisible.value) return popoverVisible.value = false;
+    if (search_el.value) {
+        popoverVisible.value = true;
+        nextTick(() => {
+            if (popover.value && search_el.value) {
+                popover.value.style.left = search_el.value.offsetLeft - 16 + 'px';
+                popover.value.style.top = search_el.value.offsetHeight + 50 + 'px';
+            }
+        })
+        document.addEventListener('click', onMenuBlur);
+    }
+
+}
+function update_types(st: ShapeType, push: boolean) {
+    if (push) {
+        const index = includes_type.value.findIndex(i => i === st);
+        if (index === -1) {
+            includes_type.value.push(st);
+        }
+    } else {
+        const index = includes_type.value.findIndex(i => i === st);
+        if (index > -1) {
+            includes_type.value.splice(index, 1);
+        }
+    }
+    props.context.navi.notify(Navi.SEARCH);
+    document.addEventListener('keydown', esc);
+}
+function onMenuBlur(e: MouseEvent) {
+    if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu-f')) {
+        var timer = setTimeout(() => {
+            popoverVisible.value = false;
+            clearTimeout(timer)
+            document.removeEventListener('click', onMenuBlur);
+        }, 10)
+    }
+
 }
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
@@ -463,23 +505,36 @@ onUnmounted(() => {
 
 <template>
     <div class="shapelist-wrap" ref="shapeList">
+        <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+            <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types"></ShapeTypes>
+        </div>
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <div class="tool-container">
                     <svg-icon icon-class="search"></svg-icon>
                 </div>
+                <div class="menu-f" @click="showMenu">
+                    <svg-icon icon-class="down"></svg-icon>
+                </div>
                 <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
                     @blur="leave_search" @click="preto_search" @change="(e: Event) => search(e)" @input="inputing">
                 <div @click="clear_text" class="close" v-if="keywords">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
-
             </div>
-            <div class="blocks"></div>
+            <div class="blocks">
+                <div class="block-wrap" v-for="(item, index) in includes_type" :key="index">
+                    <div class="block">
+                        <div class="content">{{ t(`shape.${item}`) }}</div>
+                        <div class="close" @click="() => update_types(item, false)">x</div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="body" ref="listBody" @click="reset_selection">
-            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords"></SearchPanel>
+            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords" :shape-types="includes_type">
+            </SearchPanel>
             <ListView v-else ref="shapelist" location="shapelist" :allow-drag="true" draging="shapeList"
                 :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"
                 :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
@@ -505,7 +560,6 @@ onUnmounted(() => {
     background-color: #fff;
 
     .header {
-        // height: 70px;
         width: 100%;
         font-size: 10px;
         box-sizing: border-box;
@@ -522,7 +576,7 @@ onUnmounted(() => {
 
         .search {
             height: 26px;
-            margin: 3px 10px;
+            margin: 3px 13px;
             display: flex;
             align-items: center;
             box-sizing: border-box;
@@ -540,8 +594,29 @@ onUnmounted(() => {
                     width: 12px;
                     height: 12px;
                 }
+
+
             }
 
+            .menu-f {
+                width: 10px;
+                height: 28px;
+                display: flex;
+                margin-left: 4px;
+                justify-content: center;
+                align-items: center;
+                transition: 0.3s;
+                cursor: pointer;
+
+                >svg {
+                    width: 80%;
+                    height: 60%;
+                }
+            }
+
+            .menu-f:hover {
+                transform: translateY(2px);
+            }
 
             >input {
                 flex: 1 1 auto;
@@ -571,7 +646,47 @@ onUnmounted(() => {
             }
         }
 
-        .blocks {}
+        .blocks {
+            padding: 2px 13px;
+
+            .block-wrap {
+                display: inline-block;
+                border-radius: 4px;
+                background-color: rgba($color: #0d99ff, $alpha: 1);
+                max-width: 96px;
+                padding: 2px 4px;
+                height: 20px;
+                font-size: var(--font-default-fontsize);
+                box-sizing: border-box;
+                margin-right: 4px;
+                margin-bottom: 4px;
+
+                .block {
+                    height: 100%;
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+
+                    .content {
+                        flex-wrap: 1;
+                        height: 100%;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        color: #fff;
+                    }
+
+                    .close {
+                        height: 100%;
+                        width: 14px;
+                        text-align: center;
+                        cursor: pointer;
+                        color: #fff;
+                    }
+                }
+            }
+        }
     }
 
     .body {
@@ -582,6 +697,18 @@ onUnmounted(() => {
         >.container {
             height: 100%;
         }
+    }
+
+    .popover {
+        position: absolute;
+        color: #ffffff;
+        z-index: 999;
+        width: 202px;
+        font-size: var(--font-default-fontsize);
+        background-color: var(--theme-color);
+        border-radius: 4px;
+        outline: none;
+        padding: var(--default-padding-half) 0;
     }
 }
 </style>
