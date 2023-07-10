@@ -59,10 +59,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;
     private m_document: Document;
-    private m_search_keyword: string | undefined;
-    // Scout、CanvasKitScout是两种实现方案不同的图形检索对象
     private m_scout: Scout | undefined;
-    // private m_scout_beta: CanvasKitScout | undefined;
     // todo
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
@@ -81,15 +78,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get scout(): Scout | undefined {
         return this.m_scout;
     }
-    // get canvaskitScout(): CanvasKitScout | undefined {
-    //     return this.m_scout_beta;
-    // }
     scoutMount(context: Context) {
         this.m_scout = scout(context);
     }
-    // async canvaskitScoutMount() {
-    //     this.m_scout_beta = await canvasKitScout();
-    // }
     get artboarts() {
         const abs = Array.from(this.m_artboart_list.values());
         return abs;
@@ -203,7 +194,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return result;
     }
     /**
-     * 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
+     * @description 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
      * @param position 点位置，坐标系时page
      * @param isCtrl 是否取消编组、容器等图形的特殊处理
      * @param scope 在scope范围内进行检索，如果没有限定范围则在全域(page)下寻找
