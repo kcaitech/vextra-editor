@@ -29,6 +29,7 @@ function _updateRoot(context: Context, element: HTMLElement) {
     center: { x: (right - x) / 2, y: (bottom - y) / 2 }
   }
   context.workspace.updateRoot(root);
+  console.log('update', context.workspace.root);
 }
 const updateRoot = debounce(_updateRoot, updateRootTime);
 
@@ -143,28 +144,28 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
 }
 // 插入文本框
 function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: Function, content: string, land?: Shape, _t?: ShapeType) {
-    const selection = context.selection;
-    const workspace = context.workspace;
-    const type = _t || ResultByAction(workspace.action);
-    const page = selection.selectedPage;
-    const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
-    let asyncCreator: AsyncCreator | undefined;
-    let new_shape: Shape | undefined;
-    const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-    if (page && parent && type) {
-      const editor = context.editor.controller();
-      const name = getName(type, parent.childs, t);
-      asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-      new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
-    }
-    if (asyncCreator && new_shape) {
-      asyncCreator = asyncCreator.close();
-      selection.selectShape(page!.getShape(new_shape.id));
-      selection.selectText(0, (new_shape as TextShape).text.length)
-    }
-    workspace.setAction(Action.AutoV);
-    workspace.creating(false);
+  const selection = context.selection;
+  const workspace = context.workspace;
+  const type = _t || ResultByAction(workspace.action);
+  const page = selection.selectedPage;
+  const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+  let asyncCreator: AsyncCreator | undefined;
+  let new_shape: Shape | undefined;
+  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+  if (page && parent && type) {
+    const editor = context.editor.controller();
+    const name = getName(type, parent.childs, t);
+    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+    new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
   }
+  if (asyncCreator && new_shape) {
+    asyncCreator = asyncCreator.close();
+    selection.selectShape(page!.getShape(new_shape.id));
+    selection.selectText(0, (new_shape as TextShape).text.length)
+  }
+  workspace.setAction(Action.AutoV);
+  workspace.creating(false);
+}
 // 图片从init到inset一气呵成
 function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
@@ -393,4 +394,4 @@ function drop(e: DragEvent, context: Context, t: Function) {
     img.src = URL.createObjectURL(file);
   }
 }
-export { Root, updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop };
+export { Root, updateRoot, _updateRoot, getName, get_image_name, isInner, init_scale, init_shape, init_insert_shape, init_insert_textshape, is_drag, paster, insert_imgs, drop };

@@ -32,6 +32,8 @@ const fontSizeIsMulti = ref(false)
 const colorIsMulti = ref(false)
 const alignmentIsMulti = ref(false)
 const paraSpacingIsMulti = ref(false)
+const underlineIsMulti = ref(false)
+const strikethroughIsMulti = ref(false)
 const kerningIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
 const textShape = computed(() => props.context.selection.selectedShapes)
@@ -67,7 +69,7 @@ const onShowSizeBlur = (e: Event) => {
         }, 10)
     }
 }
-
+// 设置加粗
 const onBold = () => {
     isBold.value = !isBold.value
     const { textIndex, selectLength } = getTextIndexAndLen()
@@ -82,6 +84,7 @@ const onBold = () => {
         }
     }
 }
+// 设置文本倾斜
 const onTilt = () => {
     isTilt.value = !isTilt.value
     const { textIndex, selectLength } = getTextIndexAndLen()
@@ -96,6 +99,7 @@ const onTilt = () => {
         }
     }
 }
+//设置下划线
 const onUnderlint = () => {
     isUnderline.value = !isUnderline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
@@ -110,17 +114,18 @@ const onUnderlint = () => {
         }
     }
 }
+// 设置删除线
 const onDeleteline = () => {
     isDeleteline.value = !isDeleteline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
     const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     if(isSelectText()) {
-        editor.setTextStrikethrough(isUnderline.value, 0,Infinity)
+        editor.setTextStrikethrough(isDeleteline.value, 0,Infinity)
     }else {
         if(selectLength === 0) {
             console.log('selectLength', selectLength);
         }else {
-            editor.setTextStrikethrough(isUnderline.value, textIndex,selectLength)
+            editor.setTextStrikethrough(isDeleteline.value, textIndex,selectLength)
         }
     }
 }
@@ -223,18 +228,19 @@ const textFormat = () => {
     alignmentIsMulti.value = format.alignmentIsMulti
     paraSpacingIsMulti.value = format.paraSpacingIsMulti
     kerningIsMulti.value = format.kerningIsMulti
+    strikethroughIsMulti.value = format.strikethroughIsMulti
+    underlineIsMulti.value = format.underlineIsMulti
     selectLevel.value = format.alignment || 'left'
     selectVertical.value = format.verAlign || 'top'
     fontName.value = format.fontName || 'PingFangSC-Regular'
     fonstSize.value = format.fontSize || 14
+    isUnderline.value = format.underline !== 'none'
+    isDeleteline.value = format.strikethrough !== 'none'
     if(fontNameIsMulti.value) fontName.value = '多值'
     if(fontSizeIsMulti.value) fonstSize.value = '多值'
     console.log(format,'format');
 }
-// 获取默认文字格式
-const textDefaultFormat = () => {
-    const defaultFormat = (textShape.value[0] as TextShape).text.getDefaultTextFormat()
-}
+
 function selection_wather(t: number) {
     if(t === Selection.CHANGE_TEXT) {
         textFormat()
@@ -256,7 +262,6 @@ function workspace_wather(t: number) {
 }
 onMounted(() => {
     textFormat()
-    textDefaultFormat()
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
 })

@@ -14,15 +14,14 @@ interface Props {
 }
 const popover = ref();
 const props = defineProps<Props>();
-const selectCase = ref('no-list')
+const selectCase = ref()
 const selectText = ref('autowidth')
-const selectId = ref('no-list')
+const selectId = ref()
 const wordSpace = ref()
 const rowHeight = ref()
 const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref()
 const minimumLineHeightIsMulti = ref(false)
-const maximumLineHeightIsMulti = ref(false)
 const paraSpacingIsMulti = ref(false)
 const kerningIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
@@ -61,14 +60,12 @@ const setRowHeight = () => {
   }
   if (!isNaN(Number(rowHeight.value))) {
     if(isSelectText()) {
-      editor.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
-      editor.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+      editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
     }else {
       if(selectLength === 0) {
         console.log('selectLength', selectLength);
       }else {
-        editor.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
-        editor.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+        editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
       }
     }
   }else {
@@ -80,20 +77,21 @@ const setWordSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
   const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
   wordSpace.value = wordSpace.value.trim()
-  if (wordSpace.value.slice(-1) === '%') {
-      wordSpace.value = Number(wordSpace.value.slice(0, -1))
+  // if (wordSpace.value.slice(-1) === '%') {
+  //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
+  // }
+  if(wordSpace.value.length < 1) {
+    wordSpace.value = 0
   }
   if (!isNaN(Number(wordSpace.value))) {
     if(isSelectText()) {
       editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
-      wordSpace.value = wordSpace.value + '%'
     }else {
       if(selectLength === 0) {
         console.log('selectLength', selectLength);
       }else {
         editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
       }
-      wordSpace.value = wordSpace.value + '%'
     }
   }else {
       textFormat()
@@ -142,7 +140,6 @@ const textFormat = () => {
         format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     }
     minimumLineHeightIsMulti.value = format.minimumLineHeightIsMulti
-    maximumLineHeightIsMulti.value = format.maximumLineHeightIsMulti
     kerningIsMulti.value = format.kerningIsMulti
     paraSpacingIsMulti.value = format.paraSpacingIsMulti
     wordSpace.value = format.kerning || 0
@@ -152,7 +149,6 @@ const textFormat = () => {
     if(minimumLineHeightIsMulti.value) rowHeight.value = '多值'
     if(kerningIsMulti.value) wordSpace.value = '多值'
     if(paraSpacingIsMulti.value) paragraphSpace.value = '多值'
-    wordSpace.value = wordSpace.value + '%'
 }
 function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
@@ -162,12 +158,9 @@ function selection_wather(t: any) {
         textFormat()
     }
 }
-const textDefaultFormat = () => {
-    const defaultFormat = (props.textShape[0] as TextShape).text.getDefaultTextFormat()
-}
+
 onMounted(() => {
     textFormat()
-    textDefaultFormat()
     props.context.selection.watch(selection_wather);
 })
 onUnmounted(() => {

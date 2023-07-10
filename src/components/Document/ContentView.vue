@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop } from '@/utils/content';
+import { updateRoot, _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import CommentInput from './Content/CommentInput.vue';
@@ -508,13 +508,13 @@ const saveShapeCommentXY = () => {
 
 // 递归函数，用于将数组扁平化处理
 function flattenShapes(shapes: any) {
-  return shapes.reduce((result: any, item: Shape) => {
-    if (Array.isArray(item.childs)) {
-      // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-      result = result.concat(flattenShapes(item.childs));
-    }
-    return result.concat(item);
-  }, []);
+    return shapes.reduce((result: any, item: Shape) => {
+        if (Array.isArray(item.childs)) {
+            // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
+            result = result.concat(flattenShapes(item.childs));
+        }
+        return result.concat(item);
+    }, []);
 }
 
 // mouseleave
@@ -753,14 +753,24 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     info!.m.reset(matrix.toArray())
     initMatrix(cur)
 })
-const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
-    root.value && updateRoot(props.context, root.value);
-})
+const resizeObserver = new ResizeObserver(frame_watcher);
+function frame_watcher() {
+    if (!root.value) return;
+    _updateRoot(props.context, root.value);
+}
 
 renderinit()
     .then(() => {
         inited.value = true;
-        nextTick(() => { root.value && resizeObserver.observe(root.value) });
+        nextTick(() => {
+            if (root.value) {
+                const _r = document.querySelector('#content');
+                if (!_r) return;
+                resizeObserver.observe(_r);
+                console.log('-r', _r);
+                // _updateRoot(props.context, _r as HTMLElement);
+            }
+        });
     }).catch((e) => {
         console.log(e);
     }).finally(() => {
@@ -809,7 +819,8 @@ onUnmounted(() => {
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
             @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"
             :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursorClass"></CommentView>
+        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursorClass">
+        </CommentView>
     </div>
 </template>
 <style scoped lang="scss">
