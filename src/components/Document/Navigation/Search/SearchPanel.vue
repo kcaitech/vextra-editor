@@ -395,7 +395,7 @@ onUnmounted(() => {
       display: block;
       font-size: var(--font-default-fontsize);
       width: 100%;
-      padding: 8px 16px 0;
+      padding: 8px 13px 0;
       box-sizing: border-box;
       border-top: 1px solid var(--grey-light);
       white-space: nowrap;
@@ -433,7 +433,7 @@ onUnmounted(() => {
       display: block;
       font-size: var(--font-default-fontsize);
       width: 100%;
-      padding: 8px 16px 0;
+      padding: 8px 13px 0;
       box-sizing: border-box;
       border-top: 1px solid var(--grey-light);
       white-space: nowrap;

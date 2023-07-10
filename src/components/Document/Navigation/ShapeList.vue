@@ -60,6 +60,7 @@ const shapeList = ref<HTMLDivElement>()
 const shapeH = ref(0);
 const keywords = ref<string>('');
 const search_el = ref<HTMLInputElement>();
+const includes_type = ref<ShapeType[]>([]);
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
 
@@ -465,13 +466,17 @@ onUnmounted(() => {
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
-                <svg-icon icon-class="search"></svg-icon>
+                <div class="tool-container">
+                    <svg-icon icon-class="search"></svg-icon>
+                </div>
                 <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
                     @blur="leave_search" @click="preto_search" @change="(e: Event) => search(e)" @input="inputing">
                 <div @click="clear_text" class="close" v-if="keywords">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
+
             </div>
+            <div class="blocks"></div>
         </div>
         <div class="body" ref="listBody" @click="reset_selection">
             <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords"></SearchPanel>
@@ -493,30 +498,29 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .shapelist-wrap {
+    display: flex;
     height: 100%;
+    width: 100%;
+    flex-direction: column;
     background-color: #fff;
 
     .header {
+        // height: 70px;
         width: 100%;
-        height: 70px;
         font-size: 10px;
         box-sizing: border-box;
         position: relative;
-        overflow: hidden;
-
-        >div:not(.space) {
-            flex-shrink: 0;
-        }
 
         .title {
+            height: 36px;
             margin-left: 13px;
             font-weight: var(--font-default-bold);
             line-height: 36px;
-            height: 36px;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .search {
-            width: auto;
             height: 26px;
             margin: 3px 10px;
             display: flex;
@@ -525,11 +529,19 @@ onUnmounted(() => {
             background-color: var(--grey-light);
             padding: 4px var(--default-padding-half);
             border-radius: 8px;
+            box-sizing: border-box;
+            overflow: hidden;
 
-            >svg {
-                width: 12px;
-                height: 12px;
+            >.tool-container {
+                display: flex;
+                align-items: center;
+
+                >svg {
+                    width: 12px;
+                    height: 12px;
+                }
             }
+
 
             >input {
                 flex: 1 1 auto;
@@ -558,10 +570,14 @@ onUnmounted(() => {
                 }
             }
         }
+
+        .blocks {}
     }
 
     .body {
-        height: calc(100% - 64px);
+        flex-grow: 1;
+        width: 100%;
+        overflow: hidden;
 
         >.container {
             height: 100%;
