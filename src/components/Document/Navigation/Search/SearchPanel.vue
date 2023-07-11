@@ -327,8 +327,6 @@ function update() {
   }
   source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
   source_by_content.notify(0, 0, 0, Number.MAX_VALUE);
-  console.log('update');
-
 }
 function menu_unmount(e: KeyboardEvent) {
   if (e.code === 'Escape') {
