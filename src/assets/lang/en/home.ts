@@ -219,7 +219,17 @@ export const attr: any = {
     titlecase: 'Title case',
     autowidth: 'Auto width',
     autoheight: 'Auto height',
-    fixedsize: 'Fixed size'
+    fixedsize: 'Fixed size',
+    more_value: 'More value',
+    used_font: 'Used font',
+    no_font_is_currently_in_use: 'No font is currently in use',
+    chinese_font: 'Chinese font',
+    english_font: 'English font',
+    find_the_fonts: "Can't find the fonts",
+    font_is_not: 'The font is not present locally. Use the default font effect instead',
+    font_color: 'Font color',
+    highlight_color: 'Highlight color',
+    multiple_colors: 'There are many color values, click + can be unified set',
 }
 
 export const login = {

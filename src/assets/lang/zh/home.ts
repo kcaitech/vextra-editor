@@ -219,8 +219,17 @@ export const attr: any = {
     titlecase: '首字母大写',
     autowidth: '单行模式',
     autoheight: '自动高度',
-    fixedsize: '固定宽高'
-
+    fixedsize: '固定宽高',
+    more_value: '多值',
+    used_font: '已使用字体',
+    no_font_is_currently_in_use: '当前无已使用字体',
+    chinese_font: '中文字体',
+    english_font: '英文字体',
+    find_the_fonts: '查找不到相关字体',
+    font_is_not: '本地不存在该字体，使用默认字体效果替代显示',
+    font_color: '字体颜色',
+    highlight_color: '高亮颜色',
+    multiple_colors: '存在多种颜色值，点击+可统一设置',
 }
 
 export const login = {

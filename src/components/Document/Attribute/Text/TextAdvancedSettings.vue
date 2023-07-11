@@ -4,7 +4,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape  } from "@kcdesign/data";
+import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType  } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
@@ -38,8 +38,19 @@ function showMenu() {
   popover.value.show();
 }
 
-const onSelectId = (icon: string) => {
+const onSelectId = (icon: BulletNumbersType) => {
   selectId.value = icon
+  const { textIndex, selectLength } = getTextIndexAndLen();
+  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  if(isSelectText()) {
+      editor.setTextBulletNumbers(icon, 0, Infinity)
+  } else {
+    if(selectLength === 0) {
+        console.log('selectLength', selectLength);
+      }else {
+        editor.setTextBulletNumbers(icon, textIndex, selectLength)
+      }
+  }
 }
 
 const onSelectText = (icon: TextBehaviour) => {
@@ -49,11 +60,16 @@ const onSelectText = (icon: TextBehaviour) => {
 }
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon
+  const { textIndex, selectLength } = getTextIndexAndLen();
   const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
   if(isSelectText()) {
-      editor.setTextTransform(icon)
+      editor.setTextTransform(icon, 0, Infinity)
   } else {
-      editor.setTextTransform(icon)
+    if(selectLength === 0) {
+        console.log('selectLength', selectLength);
+      }else {
+        editor.setTextTransform(icon, textIndex, selectLength)
+      }
   }
 }
 
@@ -154,9 +170,9 @@ const textFormat = () => {
     rowHeight.value = format.minimumLineHeight || ''
     paragraphSpace.value = format.paraSpacing || 0
     selectCase.value = format.transform
-    if(minimumLineHeightIsMulti.value) rowHeight.value = '多值'
-    if(kerningIsMulti.value) wordSpace.value = '多值'
-    if(paraSpacingIsMulti.value) paragraphSpace.value = '多值'
+    if(minimumLineHeightIsMulti.value) rowHeight.value = `${t('attr.more_value')}`
+    if(kerningIsMulti.value) wordSpace.value = `${t('attr.more_value')}`
+    if(paraSpacingIsMulti.value) paragraphSpace.value = `${t('attr.more_value')}`
     if(transformIsMulti.value) selectCase.value = ''
 }
 function selection_wather(t: any) {
@@ -210,12 +226,12 @@ onUnmounted(() => {
                         <svg-icon icon-class="text-no-list"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'bulleted-list'}" @click="onSelectId('bulleted-list')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'ordered-1ai'}" @click="onSelectId(BulletNumbersType.Ordered1Ai)">
                       <Tooltip :content="t('attr.unordered_list')" :offset="15">
                         <svg-icon icon-class="text-bulleted-list"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'number-list'}" @click="onSelectId('number-list')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'disorded'}" @click="onSelectId(BulletNumbersType.Disorded)">
                       <Tooltip :content="t('attr.ordered_list')" :offset="15">
                         <svg-icon icon-class="text-number-list"></svg-icon>
                       </Tooltip>

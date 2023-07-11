@@ -2,17 +2,27 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, computed, onUnmounted } from 'vue';
+import { onMounted, ref, computed, onUnmounted, reactive, watchEffect } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import { TextShape, Shape, AttrGetter } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign } from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, Color, Fill, ShapeType, FillType, BlendMode, ContextSettings } from "@kcdesign/data";
+import ColorPicker from '@/components/common/ColorPicker/index.vue';
+import { Reg_HEX } from "@/utils/RegExp";
+import { get_fills, get_actions_fill_color, get_actions_add_fill, get_actions_fill_unify, get_actions_fill_enabled, get_actions_fill_delete } from '@/utils/shape_style';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
+import { message } from "@/utils/message";
+import { v4 } from 'uuid';
+import { text } from 'express';
 interface Props {
     context: Context
     shape: Shape
+}
+interface FillItem {
+    id: number,
+    fill: Fill
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -26,7 +36,7 @@ const isUnderline = ref(false)
 const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
-const fontName = ref('微软雅黑')
+const fontName = ref()
 const fontNameIsMulti = ref(false)
 const fontSizeIsMulti = ref(false)
 const colorIsMulti = ref(false)
@@ -34,9 +44,23 @@ const alignmentIsMulti = ref(false)
 const paraSpacingIsMulti = ref(false)
 const underlineIsMulti = ref(false)
 const strikethroughIsMulti = ref(false)
+const highlightIsMulti = ref(false)
 const kerningIsMulti = ref(false)
+const alphaFill = ref<HTMLInputElement>();
+const fills: FillItem[] = reactive([]);
+const mixed = ref<boolean>(false);
+const higMixed = ref<boolean>(false);
+const textColor = ref<Color>()
+const highlight = ref<Color>()
+const isRead = ref(false)
+const len = computed<number>(() => props.context.selection.selectedShapes.length);
 const selection = computed(() => props.context.selection)
 const textShape = computed(() => props.context.selection.selectedShapes)
+
+function toHex(r: number, g: number, b: number) {
+    const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
+    return '#' + hex(r) + hex(g) + hex(b);
+}
 
 const onShowFont = () => {
     if (showFont.value) return showFont.value = false
@@ -230,14 +254,19 @@ const textFormat = () => {
     kerningIsMulti.value = format.kerningIsMulti
     strikethroughIsMulti.value = format.strikethroughIsMulti
     underlineIsMulti.value = format.underlineIsMulti
+    highlightIsMulti.value = format.highlightIsMulti
     selectLevel.value = format.alignment || 'left'
     selectVertical.value = format.verAlign || 'top'
     fontName.value = format.fontName || 'PingFangSC-Regular'
     fonstSize.value = format.fontSize || 14
     isUnderline.value = format.underline !== 'none'
     isDeleteline.value = format.strikethrough !== 'none'
-    if(fontNameIsMulti.value) fontName.value = '多值'
-    if(fontSizeIsMulti.value) fonstSize.value = '多值'
+    textColor.value = format.color 
+    highlight.value = format.highlight
+    if (colorIsMulti.value) mixed.value = true;
+    if (highlightIsMulti.value) higMixed.value = true;
+    if(fontNameIsMulti.value) fontName.value = `${t('attr.more_value')}`
+    if(fontSizeIsMulti.value) fonstSize.value = `${t('attr.more_value')}`
     console.log(format,'format');
 }
 
@@ -260,8 +289,180 @@ function workspace_wather(t: number) {
         onTilt()
     }
 }
-onMounted(() => {
+function onAlphaChange(e: Event, type: string) {
+    let value = (e.currentTarget as any)['value'];
+    if (alphaFill.value) {
+        if (value?.slice(-1) === '%') {
+            value = Number(value?.slice(0, -1))
+            if (value >= 0) {
+                if (value > 100) {
+                    value = 100
+                }
+                value = value.toFixed(2) / 100
+                let color
+                if(type === 'color') {
+                    color = textColor.value
+                }else {
+                    color = highlight.value
+                }
+                if(!color) return
+                let clr = toHex(color.red, color.green, color.blue);
+                if (clr.slice(0, 1) !== '#') {
+                    clr = "#" + clr
+                }
+                setColor(0, clr, value, type);
+                return
+            } else {
+                message('danger', t('system.illegal_input'));
+                if(type === 'color') {
+                    return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
+                }else {
+                    return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
+                }
+            }
+        } else if (!isNaN(Number(value))) {
+            if (value >= 0) {
+                if (value > 100) {
+                    value = 100
+                }
+                value = Number((Number(value)).toFixed(2)) / 100
+                let color
+                if(type === 'color') {
+                    color = textColor.value
+                }else {
+                    color = highlight.value
+                }
+                if(!color) return
+                let clr = toHex(color.red, color.green, color.blue);
+                if (clr.slice(0, 1) !== '#') {
+                    clr = "#" + clr
+                }
+                setColor(0, clr, value, type);
+                return
+            } else {
+                message('danger', t('system.illegal_input'));
+                if(type === 'color') {
+                    return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
+                }else {
+                    return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
+                }
+            }
+        } else {
+            message('danger', t('system.illegal_input'));
+            if(type === 'color') {
+                return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
+            }else {
+                return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
+            }
+        }
+    }
+}
+function onColorChange(e: Event, type: string) {
+    let value = (e.target as HTMLInputElement)?.value;
+    if (value.slice(0, 1) !== '#') {
+        value = "#" + value
+    }
+    if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
+    if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
+    if(type === 'color') {
+        if (Reg_HEX.test(value)) {
+            const alpha = textColor.value!.alpha;
+            setColor(0, value, alpha, type);
+        } else {
+            message('danger', t('system.illegal_input'));
+            return (e.target as HTMLInputElement).value = toHex(textColor.value!.red,textColor.value!.green, textColor.value!.blue);
+        }
+    }else {
+        if (Reg_HEX.test(value)) {
+            const alpha = highlight.value!.alpha;
+            setColor(0, value, alpha, type);
+        } else {
+            message('danger', t('system.illegal_input'));
+            return (e.target as HTMLInputElement).value = toHex(highlight.value!.red, highlight.value!.green, highlight.value!.blue);
+        }
+    }
+}
+function getColorFromPicker(color: Color, type: string) {
+    if (len.value === 1) {
+        const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        if(isSelectText()) {
+            if(type === 'color') {
+                editor.setTextColor(0, Infinity, color)
+            }else {
+                editor.setTextHighlightColor(0, Infinity, color)
+            }
+        }else {
+            if(type === 'color') {
+                editor.setTextColor(textIndex, selectLength, color)
+            }else {
+                editor.setTextHighlightColor(textIndex, selectLength, color)
+            }
+        }
+        textFormat()
+    } else if (len.value > 1) {
+        console.log(len);
+    }
+}
+
+function setColor(idx: number, clr: string, alpha: number, type: string) {
+    const res = clr.match(Reg_HEX);
+    if (!res) {
+        message('danger', t('system.illegal_input'));
+        return;
+    }
+    const r = Number.parseInt(res[1], 16);
+    const g = Number.parseInt(res[2], 16);
+    const b = Number.parseInt(res[3], 16);
+    if (len.value === 1) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+        if(isSelectText()) {
+            if(type === 'color') {
+                editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
+            }else {
+                editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b))
+            }
+        }else {
+            if(type === 'color') {
+                editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
+            }else {
+                editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
+            }
+        }
+        textFormat()
+    } else if (len.value > 1) {
+        console.log(len);
+    }
+}
+
+const showHighlight = () => {
+    isRead.value = !isRead.value
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+}
+
+const addHighlight = () => {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    if(isSelectText()) {
+        editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216))
+    }else {
+        editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216))
+    }
+}
+const addTextColor = () => {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    if(isSelectText()) {
+        editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6))
+    }else {
+        editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6))
+    }
     textFormat()
+}
+watchEffect(textFormat)
+onMounted(() => {
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
 })
@@ -377,6 +578,47 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="perch"></div>
+            </div>
+            <div class="text-color" v-if="!colorIsMulti" style="margin-bottom: 10px;">
+                <div>{{t('attr.font_color')}}:</div>
+                <div class="color">
+                    <ColorPicker :color="textColor!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'color')">
+                    </ColorPicker>
+                    <input :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)" @change="(e) => onColorChange(e, 'color')"/>
+                    <input ref="alphaFill" style="text-align: center;" :value="(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
+                </div>
+                <div class="perch"></div>
+            </div>
+            <div class="text-colors" v-else style="margin-bottom: 10px;">
+                <div class="color-title">
+                    <div>{{t('attr.font_color')}}:</div>
+                    <div class="add" @click="addTextColor">
+                        <svg-icon icon-class="add"></svg-icon>
+                    </div>
+                </div>
+                <div class="color-text">{{t('attr.multiple_colors')}}</div>
+            </div>
+            <div class="text-color" v-if="!highlightIsMulti">
+                <div :style="{ opacity: isRead ? '1' : '0.5' }">{{t('attr.highlight_color')}}:</div>
+                <div class="color">
+                    <ColorPicker :color="highlight!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'highlight')">
+                    </ColorPicker>
+                    <input :spellcheck="false" :value="toHex(highlight!.red, highlight!.green, highlight!.blue)" @change="(e) => onColorChange(e, 'highlight')" :style="{ opacity: isRead ? '1' : '0.5' }"/>
+                    <input ref="alphaFill" style="text-align: center;" :value="(highlight!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')" :style="{ opacity: isRead ? '1' : '0.5' }"/>
+                </div>
+                <div class="perch" @click="showHighlight" :style="{ opacity: isRead ? '1' : '0.5' }">
+                    <svg-icon v-if="isRead" class="svg" icon-class="eye-open"></svg-icon>
+                    <svg-icon v-else class="svg" icon-class="eye-closed"></svg-icon>
+                </div>
+            </div>
+            <div class="text-colors" v-else>
+                <div class="color-title">
+                    <div>{{t('attr.highlight_color')}}:</div>
+                    <div class="add" @click="addHighlight">
+                        <svg-icon icon-class="add"></svg-icon>
+                    </div>
+                </div>
+                <div class="color-text">{{t('attr.multiple_colors')}}</div>
             </div>
         </div>
     </div>
@@ -516,7 +758,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-
+            margin-bottom: 10px;
             .text-bottom-align {
                 display: flex;
                 align-items: center;
@@ -541,10 +783,69 @@ onUnmounted(() => {
                 justify-content: center;
             }
         }
+        .text-color {
+            display: flex;
+            align-items: center;
+            .color {
+                background-color: rgba(#D8D8D8, 0.4);
+                height: 25px;
+                padding: 0px 3px;
+                margin-left: 3px;
+                border-radius: 3px;
+                box-sizing: border-box;
+                display: flex;
+                align-items: center;
 
+                input {
+                    outline: none;
+                    border: none;
+                    width: 72px;
+                    background-color: transparent;
+                    margin-left: 3px;
+                }
+
+                input+input {
+                    width: 45px;
+                }
+            }
+        }
+        .text-colors {
+            .color-title {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 5px;
+                .add {
+                    width: 22px;
+                    height: 22px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    >svg {
+                        width: 50%;
+                        height: 50%;
+                    }
+
+                    transition: .2s;
+                }
+            }
+            .color-text {
+                color: rgba(0, 0, 0, 0.5);
+                text-align: center;
+            }
+        }
         .perch {
+            display: flex;
+            justify-content: center;
+            align-items: center;
             width: 22px;
             height: 22px;
+            >svg {
+                height: 70%;
+                width: 70%;
+                color: #000;
+            }
         }
     }
 

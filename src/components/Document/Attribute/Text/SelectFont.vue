@@ -4,6 +4,8 @@ import { computed, nextTick, onMounted, ref } from 'vue'
 import { Context } from '@/context';
 import { fontNameListEn, fontNameListZh, FontAvailable } from './FontNameList'
 import { ShapeType, Shape } from "@kcdesign/data";
+import { InfoFilled } from '@element-plus/icons-vue'
+import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'setFont', font: string): void
@@ -13,19 +15,28 @@ const props = defineProps<{
     context: Context
 }>()
 type FontName = {
-    used: string[],
+    used: {
+        success: string[],
+        failurel: string[]
+    },
     ch: string[],
     en: string[]
 }
 const searchFont = ref('')
 const fontList = ref<FontName>({
-    used: [],
-    ch: ['PingFangSC-Regular'],
+    used: {
+        success: [],
+        failurel: []
+    },
+    ch: [],
     en: []
 })
 
 const filterFontList = ref<FontName>({
-    used: [],
+    used: {
+        success: [],
+        failurel: []
+    },
     ch: [],
     en: []
 })
@@ -41,16 +52,20 @@ const onSearchFont = () => {
     const pattern = new RegExp(escapeRegExp(searchFont.value), 'i');
     const chList = fontList.value.ch.filter(item => pattern.test(item))
     const enList = fontList.value.en.filter(item => pattern.test(item))
-    const usedList = fontList.value.used.filter(item => pattern.test(item))
+    const usedSuccess= fontList.value.used.success.filter(item => pattern.test(item))
+    const usedFailureL = fontList.value.used.failurel.filter(item => pattern.test(item))
     filterFontList.value.ch = []
     filterFontList.value.en = []
-    filterFontList.value.used = []
+    filterFontList.value.used.success = []
+    filterFontList.value.used.failurel = []
     filterFontList.value.ch.push(...chList)
     filterFontList.value.en.push(...enList)
-    filterFontList.value.used.push(...usedList)
+    filterFontList.value.used.success.push(...usedSuccess)
+    filterFontList.value.used.failurel.push(...usedFailureL)
     filterFontList.value.ch = Array.from(new Set(filterFontList.value.ch));
     filterFontList.value.en = Array.from(new Set(filterFontList.value.en));
-    filterFontList.value.used = Array.from(new Set(filterFontList.value.used));
+    filterFontList.value.used.success = Array.from(new Set(filterFontList.value.used.success));
+    filterFontList.value.used.failurel = Array.from(new Set(filterFontList.value.used.failurel));
 }
 
 function highlightText(text: string) {
@@ -79,19 +94,21 @@ function checkFontsAvailability(fontName: string[], fontList: FontName, lang: st
 }
 
 const getAllTextFontName = () => {
-    const shapes = props.context.selection.selectedPage?.childs
-    if (shapes) {
-        const textShape = shapes.filter((item: Shape) => {
-            if (item.type === ShapeType.Text) {
-                return item
-            }
-        })
-        textShape.forEach(item => {
-            const format = item.text.attr
-            if(format && format.fontName) {
-                fontList.value.used.push(format.fontName)
-                fontList.value.used = Array.from(new Set(fontList.value.used))
-            }
+    const pageFont = props.context.selection.selectedPage?.getUsedFontNames()
+    if(pageFont) {
+        const font = Array.from(pageFont)
+        const promises = font.map(name => FontAvailable(name));        
+        Promise.all(promises).then(res => {
+            const usedSuccess = font.filter((name, index) => res[index]);
+            fontList.value.used.success.push(...usedSuccess)
+            const usedFailurel = font.filter((name, index) => {
+                if(!res[index]) {
+                    return name
+                }
+            });
+            fontList.value.used.failurel.push(...usedFailurel)
+        }).catch(err => {
+            console.log(err);
         })
     }
 }
@@ -111,22 +128,30 @@ onMounted(() => {
         </div>
         <div class="font-scroll">
             <el-scrollbar v-if="searchFont.trim().length === 0">
-                <span class="font-title">已使用字体</span>
-                <div class="item" v-for="item in fontList.used" :key="item" :style="{ fontFamily: item }"
+                <span class="font-title">{{t('attr.used_font')}}</span>
+                <div class="item" v-for="item in fontList.used.success" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
                     <span> {{ item }}</span>
                 </div>
-                <div class="item-none" style="height: 40px;" v-if="fontList.used.length === 0">
-                    <div class="none-font">当前无已使用字体</div>
+                <div class="item failurel" v-for="item in fontList.used.failurel" :key="item" :style="{ fontFamily: item }"
+                    @click="selectFont(item)">
+                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+                    <span> {{ item }}</span>
+                    <Tooltip :content="`${t('attr.font_is_not')}`">
+                        <el-icon><InfoFilled /></el-icon>
+                    </Tooltip>
                 </div>
-                <span class="font-title">中文字体</span>
+                <div class="item-none" style="height: 40px;" v-if="fontList.used.success.length === 0 && fontList.used.failurel.length === 0">
+                    <div class="none-font">{{t('attr.no_font_is_currently_in_use')}}</div>
+                </div>
+                <span class="font-title">{{t('attr.chinese_font')}}</span>
                 <div class="item" v-for="item in fontList.ch" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
                     <span> {{ item }}</span>
                 </div>
-                <span class="font-title">英文字体</span>
+                <span class="font-title">{{t('attr.english_font')}}</span>
                 <div class="item" v-for="item in fontList.en" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
@@ -134,26 +159,34 @@ onMounted(() => {
                 </div>
             </el-scrollbar>
             <el-scrollbar v-else>
-                <span class="font-title" v-if="filterFontList.used.length !== 0">已使用字体</span>
-                <div class="item" v-for="item in filterFontList.used" :key="item" :style="{ fontFamily: item }"
+                <span class="font-title" v-if="filterFontList.used.success.length !== 0 && filterFontList.used.failurel.length !== 0">{{t('attr.used_font')}}</span>
+                <div class="item" v-for="item in filterFontList.used.success" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
                     <span v-html="highlightText(item)"></span>
                 </div>
-                <span class="font-title" v-if="filterFontList.ch.length !== 0">中文字体</span>
+                <div class="item failurel" v-for="item in filterFontList.used.failurel" :key="item" :style="{ fontFamily: item }"
+                    @click="selectFont(item)">
+                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+                    <span v-html="highlightText(item)"></span>
+                    <Tooltip :content="`${t('attr.font_is_not')}`">
+                        <el-icon><InfoFilled /></el-icon>
+                    </Tooltip>
+                </div>
+                <span class="font-title" v-if="filterFontList.ch.length !== 0">{{t('attr.chinese_font')}}</span>
                 <div class="item" v-for="item in filterFontList.ch" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
                     <span v-html="highlightText(item)"></span>
                 </div>
-                <span class="font-title" v-if="filterFontList.en.length !== 0">英文字体</span>
+                <span class="font-title" v-if="filterFontList.en.length !== 0">{{t('attr.english_font')}}</span>
                 <div class="item" v-for="item in filterFontList.en" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
                     <span v-html="highlightText(item)"></span>
                 </div>
                 <div class="item-none" style="height: 40px;" v-if="filterFontList.en.length === 0 && filterFontList.ch.length === 0">
-                    <div class="none-font">查找不到相关字体</div>
+                    <div class="none-font">{{t('attr.find_the_fonts')}}</div>
                 </div>
             </el-scrollbar>
         </div>
@@ -214,6 +247,14 @@ onMounted(() => {
             height: 25px;
             padding: 0 10px;
             margin: 0;
+            >span {
+                display: block;
+                width: 130px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-right: 5px
+            };
 
             &:hover {
                 background-color: var(--input-background);
@@ -230,6 +271,18 @@ onMounted(() => {
                 border-color: rgb(0, 0, 0, .75);
                 transform: rotate(-45deg) translateY(-30%);
             }
+            .el-icon {
+                height: 100%;
+                width: 25px;
+                >svg {
+                    width: 16px;
+                    height: 16px;
+                    color: rgb(0, 0, 0, .5);
+                }
+            }
+        }
+        .failurel {
+            color: rgb(0, 0, 0, .2);
         }
 
         .item-none {

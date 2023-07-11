@@ -21,7 +21,6 @@ interface Props {
 }
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
-const editorText = computed(() => props.context.editor4TextShape((props.shapes[0] as TextShape)))
 const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 const watchedShapes = new Map();
@@ -60,33 +59,10 @@ function updateData() {
     if (len.value === 1) {
         const shape = props.shapes[0];
         const style = shape.style;
-        if (shape.type === ShapeType.Text) {
-            const { textIndex, selectLength } = getTextIndexAndLen();
-            let format: AttrGetter
-            if(isSelectText()) {
-                format = (shape as TextShape).text.getTextFormat(0, Infinity);
-            }else {
-                if(textIndex !== -1 && textIndex !== 0 && selectLength === 0) {
-                    format = (shape as TextShape).text.getTextFormat(textIndex - 1, selectLength + 1)
-                }else if (textIndex !== -1 && textIndex === 0 && selectLength === 0) {
-                    format = (shape as TextShape).text.getTextFormat(textIndex, selectLength + 1)
-                }else {
-                    format = (shape as TextShape).text.getTextFormat(textIndex, selectLength);
-                }
-            }
-            const color = format.colorIsMulti ? undefined : format.color;
-            if (color) {
-                const f = new Fill(v4(), true, FillType.SolidColor, color, new ContextSettings(BlendMode.Normal, 1));
-                fills.unshift({ id: 0, fill: f });
-            } else {
-                mixed.value = true;
-            }
-        } else {
-            for (let i = 0, len = style.fills.length; i < len; i++) {
-                const fill = style.fills[i];
-                const f = { id: i, fill };
-                fills.unshift(f);
-            }
+        for (let i = 0, len = style.fills.length; i < len; i++) {
+            const fill = style.fills[i];
+            const f = { id: i, fill };
+            fills.unshift(f);
         }
     } else if (len.value > 1) {
         const _fs = get_fills(props.shapes);
@@ -105,18 +81,7 @@ function addFill(): void {
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const fill = new Fill(v4(), true, FillType.SolidColor, color, contextSettings);
     if (len.value === 1) {
-        if(props.shapes[0].type === ShapeType.Text) {
-            const c = new Color(1, 61, 61, 61);
-            const { textIndex, selectLength } = getTextIndexAndLen();
-            if(isSelectText()) {
-                editorText.value.setTextColor(0, Infinity, c)
-            }else {
-                editorText.value.setTextColor(textIndex, selectLength, c)
-            }
-            updateData();
-        }else {
-            editor.value.addFill(fill);
-        }
+        editor.value.addFill(fill);
     } else if (len.value > 1) {
         if (mixed.value) {
             const actions = get_actions_fill_unify(props.shapes);
@@ -178,17 +143,7 @@ function setColor(idx: number, clr: string, alpha: number) {
     const b = Number.parseInt(res[3], 16);
     const _idx = fills.length - idx - 1;
     if (len.value === 1) {
-        if(props.shapes[0].type === ShapeType.Text) {
-            const { textIndex, selectLength } = getTextIndexAndLen();
-            if(isSelectText()) {
-                editorText.value.setTextColor(0, Infinity, new Color(alpha, r, g, b))
-            }else {
-                editorText.value.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
-            }
-            updateData()
-        }else {
-            editor.value.setFillColor(_idx, new Color(alpha, r, g, b));
-        }
+        editor.value.setFillColor(_idx, new Color(alpha, r, g, b));
     } else if (len.value > 1) {
         const actions = get_actions_fill_color(props.shapes, _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
@@ -260,19 +215,7 @@ function onAlphaChange(idx: number, e: Event) {
 function getColorFromPicker(idx: number, color: Color) {
     const _idx = fills.length - idx - 1;
     if (len.value === 1) {
-        if(props.shapes[0].type === ShapeType.Text) {
-            const { textIndex, selectLength } = getTextIndexAndLen();
-            if(isSelectText()) {
-                editorText.value.setTextColor(0, Infinity, color)
-                // editorText.value.setTextHighlightColor(0, Infinity,color) //高亮接口
-
-            }else {
-                editorText.value.setTextColor(textIndex, selectLength, color)
-            }
-            updateData()
-        }else {
-            editor.value.setFillColor(_idx, color);
-        }
+        editor.value.setFillColor(_idx, color);
     } else if (len.value > 1) {
         const actions = get_actions_fill_color(props.shapes, _idx, color);
         const page = props.context.selection.selectedPage;
@@ -283,37 +226,14 @@ function getColorFromPicker(idx: number, color: Color) {
     }
 }
 
-const getTextIndexAndLen = () => {
-    const textIndex = Math.min(props.context.selection.cursorEnd, props.context.selection.cursorStart)
-    const selectLength = Math.abs(props.context.selection.cursorEnd - props.context.selection.cursorStart)
-    return { textIndex, selectLength }
-}
-const textFormat = () => {
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    const format = (props.shapes[0] as TextShape).text.getTextFormat(textIndex, selectLength)
-}
-const isSelectText = () => {
-    if((props.context.selection.cursorEnd !== -1) && (props.context.selection.cursorStart !== -1)) {
-        return false
-    }else {
-        return true
-    }
-}
-
 function selection_wather(t: any) {
     if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
         watchShapes();
-        updateData();
-    } else if (t === Selection.CHANGE_TEXT) {
-        textFormat();
         updateData();
     }
 }
 // hooks
 onMounted(() => {
-    if (props.shapes[0].type === ShapeType.Text) {
-        textFormat()
-    }
     props.context.selection.watch(selection_wather); // 有问题，等会再收拾你
     watchShapes();
     updateData();
