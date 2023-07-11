@@ -24,6 +24,7 @@ import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
+import Placement from './Menu/Placement.vue';
 
 interface Props {
     context: Context
@@ -782,6 +783,8 @@ onUnmounted(() => {
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent>
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :context="props.context" :matrix="matrix.toArray()" />
+        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
+        </Placement>
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"

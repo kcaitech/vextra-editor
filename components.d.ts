@@ -93,6 +93,7 @@ declare module '@vue/runtime-core' {
     Path: typeof import('./src/components/Document/Toolbar/Buttons/Path.vue')['default']
     Pen: typeof import('./src/components/Document/Toolbar/Buttons/Pen.vue')['default']
     Per_center: typeof import('./src/components/Userinfo/per_center.vue')['default']
+    Placement: typeof import('./src/components/Document/Menu/Placement.vue')['default']
     Popover: typeof import('./src/components/common/Popover.vue')['default']
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
     RadiusForIos: typeof import('./src/components/Document/Attribute/PopoverMenu/RadiusForIos.vue')['default']

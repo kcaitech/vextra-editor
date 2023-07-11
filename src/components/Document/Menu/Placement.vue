@@ -1,0 +1,170 @@
+<script lang="ts" setup>
+import { Context } from '@/context';
+import { Menu } from '@/context/menu';
+import { onMounted, onUnmounted, ref } from 'vue';
+
+interface Props {
+    x: number
+    y: number
+    context: Context
+}
+const props = defineProps<Props>();
+const show_placement = ref<boolean>(false);
+function menu_watcher(t?: number) {
+    if (t === Menu.SHOW_PLACEMENT) {
+        show_placement.value = true;
+    } else if (t === Menu.HIDE_PLACEMENT) {
+        show_placement.value = false;
+    }
+}
+onMounted(() => {
+    props.context.menu.watch(menu_watcher);
+})
+onUnmounted(() => {
+    props.context.menu.unwatch(menu_watcher);
+})
+</script>
+<template>
+    <div class="container" :style="{ left: `${props.x}px`, top: `${props.y}px`, opacity: show_placement ? 1 : 0 }">
+        <div class="dot"></div>
+        <div class="pulse"></div>
+        <div class="pulse1"></div>
+    </div>
+</template>
+<style lang="scss" scoped>
+@keyframes warn {
+    0% {
+        transform: scale(0.3);
+        -webkit-transform: scale(0.3);
+        opacity: 0.0;
+    }
+
+    25% {
+        transform: scale(0.3);
+        -webkit-transform: scale(0.3);
+        opacity: 0.1;
+    }
+
+    50% {
+        transform: scale(0.5);
+        -webkit-transform: scale(0.5);
+        opacity: 0.3;
+    }
+
+    75% {
+        transform: scale(0.8);
+        -webkit-transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        -webkit-transform: scale(1);
+        opacity: 0.0;
+    }
+}
+
+@keyframes warn1 {
+    0% {
+        transform: scale(0.3);
+        -webkit-transform: scale(0.3);
+        opacity: 0.0;
+    }
+
+    25% {
+        transform: scale(0.3);
+        -webkit-transform: scale(0.3);
+        opacity: 0.1;
+    }
+
+    50% {
+        transform: scale(0.3);
+        -webkit-transform: scale(0.3);
+        opacity: 0.3;
+    }
+
+    75% {
+        transform: scale(0.5);
+        -webkit-transform: scale(0.5);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(0.8);
+        -webkit-transform: scale(0.8);
+        opacity: 0.0;
+    }
+}
+
+.container {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: transparent;
+    transition: 0.32s;
+}
+
+/* 保持大小不变的小圆点 */
+.dot {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    left: -3px;
+    top: -3px;
+
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border: 1px solid var(--active-color);
+    border-radius: 50%;
+    background-color: var(--active-color);
+    /* 实心圆 ，如果没有这个就是一个小圆圈 */
+    z-index: 2;
+    opacity: 0.8;
+}
+
+/* 产生动画（向外扩散变大）的圆圈 第一个圆 */
+.pulse {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    left: -17.5px;
+    top: -17.5px;
+    border: 1px solid #3399ff;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+    z-index: 1;
+    opacity: 0;
+    -webkit-animation: warn 1.2s ease-out;
+    -moz-animation: warn 1.2s ease-out;
+    animation: warn 1.2s ease-out;
+    -webkit-animation-iteration-count: infinite;
+    -moz-animation-iteration-count: infinite;
+    animation-iteration-count: infinite;
+    box-shadow: 1px 1px 30px #3399ff;
+    /* 阴影效果 */
+}
+
+/* 产生动画（向外扩散变大）的圆圈 第二个圆 */
+.pulse1 {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    left: -17.5px;
+    top: -17.5px;
+    border: 1px solid #3399ff;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%;
+    z-index: 1;
+    opacity: 0;
+    -webkit-animation: warn1 1.2s ease-out;
+    -moz-animation: warn1 1.2s ease-out;
+    animation: warn1 1.2s ease-out;
+    -webkit-animation-iteration-count: infinite;
+    -moz-animation-iteration-count: infinite;
+    animation-iteration-count: infinite;
+    box-shadow: 1px 1px 30px #3399ff;
+    /* 阴影效果 */
+}
+</style>

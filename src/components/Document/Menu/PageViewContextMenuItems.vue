@@ -13,6 +13,7 @@ import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
 import { paster, paster_inner_shape, replace } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
+import { Menu } from '@/context/menu';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -343,6 +344,9 @@ function lock() {
 function closeLayerSubMenu() {
   layerSubMenuVisiable.value = false;
 }
+function show_placement(val: boolean) {
+  props.context.menu.notify(val ? Menu.SHOW_PLACEMENT : Menu.HIDE_PLACEMENT);
+}
 </script>
 <template>
   <div class="items-wrap">
@@ -387,7 +391,8 @@ function closeLayerSubMenu() {
         <Key code="Ctrl Alt V"></Key>
       </span>
     </div>
-    <div class="item" v-if="props.items.includes('paste-here')" @click="paste_here">
+    <div class="item" v-if="props.items.includes('paste-here')" @click="paste_here"
+      @mouseenter="() => { show_placement(true) }" @mouseleave="() => { show_placement(false) }">
       <span>{{ t('system.paste_here') }}</span>
     </div>
     <div class="item" v-if="props.items.includes('replace')" @click="_replace">

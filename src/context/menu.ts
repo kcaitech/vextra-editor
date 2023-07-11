@@ -4,6 +4,8 @@ export class Menu extends Watchable(Object) {
   static SHUTDOWN_MENU = 1;
   static SHUTDOWN_POPOVER = 2;
   static REMOVE_COLOR_PICKER = 3;
+  static SHOW_PLACEMENT = 4;
+  static HIDE_PLACEMENT = 5;
   private m_menu_mounted: boolean = false;
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
