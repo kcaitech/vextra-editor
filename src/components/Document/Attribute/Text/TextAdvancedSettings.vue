@@ -24,6 +24,7 @@ const minimumLineHeightIsMulti = ref(false)
 const paraSpacingIsMulti = ref(false)
 const kerningIsMulti = ref(false)
 const transformIsMulti = ref(false)
+const bulletNumbersIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
 
 //获取选中字体的长度和下标
@@ -165,11 +166,13 @@ const textFormat = () => {
     kerningIsMulti.value = format.kerningIsMulti
     paraSpacingIsMulti.value = format.paraSpacingIsMulti
     transformIsMulti.value = format.transformIsMulti
+    bulletNumbersIsMulti.value = format.bulletNumbersIsMulti
     wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'
     rowHeight.value = format.minimumLineHeight || ''
     paragraphSpace.value = format.paraSpacing || 0
     selectCase.value = format.transform
+    selectId.value = format.bulletNumbers?.type || ''
     if(minimumLineHeightIsMulti.value) rowHeight.value = `${t('attr.more_value')}`
     if(kerningIsMulti.value) wordSpace.value = `${t('attr.more_value')}`
     if(paraSpacingIsMulti.value) paragraphSpace.value = `${t('attr.more_value')}`
@@ -195,7 +198,7 @@ onUnmounted(() => {
 
 <template>
     <div class="text-detail-container">
-      <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="-435"
+      <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="-450"
         :title="t('attr.text_advanced_settings')">
         <template #trigger>
           <div class="trigger">
@@ -221,17 +224,17 @@ onUnmounted(() => {
             <div>
                 <span>{{t('attr.id_style')}}</span>
                 <div class="vertical-aligning jointly-text">
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'no-list'}" @click="onSelectId('no-list')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'none'}" @click="onSelectId(BulletNumbersType.None)">
                       <Tooltip :content="t('attr.none_list')" :offset="15">
                         <svg-icon icon-class="text-no-list"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'ordered-1ai'}" @click="onSelectId(BulletNumbersType.Ordered1Ai)">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'disorded'}" @click="onSelectId(BulletNumbersType.Disorded)">
                       <Tooltip :content="t('attr.unordered_list')" :offset="15">
                         <svg-icon icon-class="text-bulleted-list"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'disorded'}" @click="onSelectId(BulletNumbersType.Disorded)">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectId === 'ordered-1ai'}" @click="onSelectId(BulletNumbersType.Ordered1Ai)">
                       <Tooltip :content="t('attr.ordered_list')" :offset="15">
                         <svg-icon icon-class="text-number-list"></svg-icon>
                       </Tooltip>

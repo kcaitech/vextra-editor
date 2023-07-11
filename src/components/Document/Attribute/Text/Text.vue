@@ -47,12 +47,10 @@ const strikethroughIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const kerningIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
-const fills: FillItem[] = reactive([]);
 const mixed = ref<boolean>(false);
 const higMixed = ref<boolean>(false);
 const textColor = ref<Color>()
 const highlight = ref<Color>()
-const isRead = ref(false)
 const len = computed<number>(() => props.context.selection.selectedShapes.length);
 const selection = computed(() => props.context.selection)
 const textShape = computed(() => props.context.selection.selectedShapes)
@@ -436,10 +434,26 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     }
 }
 
-const showHighlight = () => {
-    isRead.value = !isRead.value
+const deleteHighlight = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    if(isSelectText()) {
+        editor.setTextHighlightColor(0, Infinity, undefined)
+    }else {
+        editor.setTextHighlightColor(textIndex, selectLength, undefined)
+    }
+    textFormat()
+}
+
+const deleteColor = () => {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    if(isSelectText()) {
+        editor.setTextColor(0, Infinity, undefined)
+    }else {
+        editor.setTextColor(textIndex, selectLength, undefined)
+    }
+    textFormat()
 }
 
 const addHighlight = () => {
@@ -450,6 +464,7 @@ const addHighlight = () => {
     }else {
         editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216))
     }
+    textFormat()
 }
 const addTextColor = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
@@ -579,7 +594,8 @@ onUnmounted(() => {
                 </div>
                 <div class="perch"></div>
             </div>
-            <div class="text-color" v-if="!colorIsMulti" style="margin-bottom: 10px;">
+            <!-- 字体颜色 -->
+            <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
                 <div>{{t('attr.font_color')}}:</div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'color')">
@@ -587,9 +603,11 @@ onUnmounted(() => {
                     <input :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)" @change="(e) => onColorChange(e, 'color')"/>
                     <input ref="alphaFill" style="text-align: center;" :value="(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
                 </div>
-                <div class="perch"></div>
+                <div class="perch" @click="deleteColor">
+                    <svg-icon class="svg" icon-class="delete"></svg-icon>
+                </div>
             </div>
-            <div class="text-colors" v-else style="margin-bottom: 10px;">
+            <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
                     <div>{{t('attr.font_color')}}:</div>
                     <div class="add" @click="addTextColor">
@@ -598,20 +616,28 @@ onUnmounted(() => {
                 </div>
                 <div class="color-text">{{t('attr.multiple_colors')}}</div>
             </div>
-            <div class="text-color" v-if="!highlightIsMulti">
-                <div :style="{ opacity: isRead ? '1' : '0.5' }">{{t('attr.highlight_color')}}:</div>
+            <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
+                <div class="color-title">
+                    <div>{{t('attr.font_color')}}:</div>
+                    <div class="add" @click="addTextColor">
+                        <svg-icon icon-class="add"></svg-icon>
+                    </div>
+                </div>
+            </div>
+            <!-- 高亮颜色 -->
+            <div class="text-color" v-if="!highlightIsMulti && highlight">
+                <div>{{t('attr.highlight_color')}}:</div>
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
-                    <input :spellcheck="false" :value="toHex(highlight!.red, highlight!.green, highlight!.blue)" @change="(e) => onColorChange(e, 'highlight')" :style="{ opacity: isRead ? '1' : '0.5' }"/>
-                    <input ref="alphaFill" style="text-align: center;" :value="(highlight!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')" :style="{ opacity: isRead ? '1' : '0.5' }"/>
+                    <input :spellcheck="false" :value="toHex(highlight!.red, highlight!.green, highlight!.blue)" @change="(e) => onColorChange(e, 'highlight')"/>
+                    <input ref="alphaFill" style="text-align: center;" :value="(highlight!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')"/>
                 </div>
-                <div class="perch" @click="showHighlight" :style="{ opacity: isRead ? '1' : '0.5' }">
-                    <svg-icon v-if="isRead" class="svg" icon-class="eye-open"></svg-icon>
-                    <svg-icon v-else class="svg" icon-class="eye-closed"></svg-icon>
+                <div class="perch" @click="deleteHighlight">
+                    <svg-icon class="svg" icon-class="delete"></svg-icon>
                 </div>
             </div>
-            <div class="text-colors" v-else>
+            <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
                     <div>{{t('attr.highlight_color')}}:</div>
                     <div class="add" @click="addHighlight">
@@ -619,6 +645,14 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="color-text">{{t('attr.multiple_colors')}}</div>
+            </div>
+            <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
+                <div class="color-title">
+                    <div>{{t('attr.highlight_color')}}:</div>
+                    <div class="add" @click="addHighlight">
+                        <svg-icon icon-class="add"></svg-icon>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
