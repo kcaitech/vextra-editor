@@ -12,6 +12,7 @@ import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
 import { paster_short } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
+import { useI18n } from 'vue-i18n';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -28,6 +29,7 @@ export function useController(context: Context) {
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let need_update_comment: boolean = false;
     const trans = { x: 0, y: 0 };
+    const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
             const ps: PageXY = matrix.inverseCoord(start.x, start.y);
@@ -233,7 +235,7 @@ export function useController(context: Context) {
         startPositionOnPage = matrix.inverseCoord(startPosition.x, startPosition.y);
     }
     function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context);
+        handle(e, context, t);
     }
     /**
     * @description 选区监听器 

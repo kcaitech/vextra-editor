@@ -135,9 +135,9 @@ onUnmounted(() => {
     border-radius: 50%;
     z-index: 1;
     opacity: 0;
-    -webkit-animation: warn 1.2s ease-out;
-    -moz-animation: warn 1.2s ease-out;
-    animation: warn 1.2s ease-out;
+    -webkit-animation: warn 0.95s ease-out;
+    -moz-animation: warn 0.95s ease-out;
+    animation: warn 0.95s ease-out;
     -webkit-animation-iteration-count: infinite;
     -moz-animation-iteration-count: infinite;
     animation-iteration-count: infinite;
@@ -157,9 +157,9 @@ onUnmounted(() => {
     border-radius: 50%;
     z-index: 1;
     opacity: 0;
-    -webkit-animation: warn1 1.2s ease-out;
-    -moz-animation: warn1 1.2s ease-out;
-    animation: warn1 1.2s ease-out;
+    -webkit-animation: warn1 0.95s ease-out;
+    -moz-animation: warn1 0.95s ease-out;
+    animation: warn1 0.95s ease-out;
     -webkit-animation-iteration-count: infinite;
     -moz-animation-iteration-count: infinite;
     animation-iteration-count: infinite;

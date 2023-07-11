@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
@@ -11,7 +11,7 @@ import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, paster_inner_shape, replace } from '@/utils/clipaboard';
+import { paster, paster_inner_shape, replace, identity, paras } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 const { t } = useI18n();
@@ -27,7 +27,55 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
-const isComment = ref<boolean>(props.context.workspace.isVisibleComment)
+const isComment = ref<boolean>(props.context.workspace.isVisibleComment);
+const invalid_items = ref<string[]>([]);
+/** 
+ * @description 右键菜单开启，检查剪切板内容，禁用一些无法执行的项
+*/
+async function check() {
+  try {
+    invalid_items.value = ['replace'];
+    if (!navigator.clipboard || !navigator.clipboard.read) { // 不支持clipboard api
+      invalid_items.value.push('copy', 'paste-here', 'replace', 'copy', 'cut');
+      return;
+    }
+    const _data = await navigator.clipboard.read();
+    const data = _data[0];
+    const types = data.types;
+
+    if (types.includes('text/html') && !types.includes('text/plain')) {
+      const val = await data.getType('text/html');
+      if (!val) {
+        invalid_items.value.push('replace', 'paste-here', 'paste');
+        return;
+      }
+      const fr = new FileReader();
+      fr.onload = function (event) {
+        const text_html = event.target?.result;
+        if (!(text_html && typeof text_html === 'string')) {
+          invalid_items.value.push('replace', 'paste-here', 'paste');
+          return;
+        }
+        const is_paras = text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1;
+        const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
+        if (!(is_paras || is_shape)) {
+          invalid_items.value.push('replace', 'paste-here', 'paste');
+        }
+        if (is_shape) {
+          const index = invalid_items.value.indexOf('replace');
+          if (index > -1) {
+            invalid_items.value.splice(index, 1);
+          }
+        }
+      }
+      fr.readAsText(val);
+    }
+  } catch (error) {
+    invalid_items.value.push('replace', 'paste-here', 'paste');
+    console.log(error);
+  }
+  props.context.menu.setInvalidItems(invalid_items.value);
+}
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
@@ -73,6 +121,7 @@ async function cut() {
   emit('close');
 }
 function paste() {
+  if (invalid_items.value.includes('paste')) return;
   if (is_inner_textshape()) {
     const shape = props.context.selection.selectedShapes[0];
     const editor = props.context.editor4TextShape(shape as TextShape);
@@ -83,6 +132,7 @@ function paste() {
   emit('close');
 }
 function paste_text() {
+  if (invalid_items.value.includes('paste-text')) return;
   if (is_inner_textshape()) {
     const shape = props.context.selection.selectedShapes[0];
     const editor = props.context.editor4TextShape(shape as TextShape);
@@ -91,10 +141,12 @@ function paste_text() {
   emit('close');
 }
 function paste_here() {
+  if (invalid_items.value.includes('paste-here')) return;
   props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
   emit('close');
 }
 function _replace() {
+  if (invalid_items.value.includes('replace')) return;
   const selection = props.context.selection;
   const selected = selection.selectedShapes;
   if (selected.length) {
@@ -345,8 +397,16 @@ function closeLayerSubMenu() {
   layerSubMenuVisiable.value = false;
 }
 function show_placement(val: boolean) {
+  if (invalid_items.value.includes('paste-here')) return;
   props.context.menu.notify(val ? Menu.SHOW_PLACEMENT : Menu.HIDE_PLACEMENT);
 }
+function menu_watcher() {
+  check();
+}
+const stop = watch(() => props.items, menu_watcher, { deep: true, immediate: true })
+onUnmounted(() => {
+  stop();
+})
 </script>
 <template>
   <div class="items-wrap">
@@ -379,23 +439,26 @@ function show_placement(val: boolean) {
         <Key code="Ctrl X"></Key>
       </span>
     </div>
-    <div class="item" v-if="props.items.includes('paste')" @click="paste">
+    <div :class="invalid_items.includes('paste') ? 'invalid' : 'item'" v-if="props.items.includes('paste')"
+      @click="paste">
       <span>{{ t('system.paste') }}</span>
       <span class="shortkey">
         <Key code="Ctrl V"></Key>
       </span>
     </div>
-    <div class="item" v-if="props.items.includes('only_text')" @click="paste_text">
+    <div :class="invalid_items.includes('only_text') ? 'invalid' : 'item'" v-if="props.items.includes('only_text')"
+      @click="paste_text">
       <span>{{ t('system.only_text') }}</span>
       <span class="shortkey">
         <Key code="Ctrl Alt V"></Key>
       </span>
     </div>
-    <div class="item" v-if="props.items.includes('paste-here')" @click="paste_here"
-      @mouseenter="() => { show_placement(true) }" @mouseleave="() => { show_placement(false) }">
+    <div :class="invalid_items.includes('paste-here') ? 'invalid' : 'item'" v-if="props.items.includes('paste-here')"
+      @click="paste_here" @mouseenter="() => { show_placement(true) }" @mouseleave="() => { show_placement(false) }">
       <span>{{ t('system.paste_here') }}</span>
     </div>
-    <div class="item" v-if="props.items.includes('replace')" @click="_replace">
+    <div :class="invalid_items.includes('replace') ? 'invalid' : 'item'" v-if="props.items.includes('replace')"
+      @click="_replace">
       <span>{{ t('system.replace') }}</span>
       <span class="shortkey">
         <Key code="Ctrl Shift R"></Key>
@@ -583,6 +646,23 @@ function show_placement(val: boolean) {
       border-bottom: 3px solid transparent;
       border-left: 6px solid var(--theme-color-anti);
       transform: rotate(90deg);
+    }
+  }
+
+  .invalid {
+    position: relative;
+    width: 100%;
+    height: 28px;
+    padding: 0 var(--default-padding) 0 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    box-sizing: border-box;
+    background-color: var(--theme-color);
+    color: grey;
+
+    >.shortkey {
+      margin-left: auto;
     }
   }
 

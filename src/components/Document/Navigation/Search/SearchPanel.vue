@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
@@ -13,6 +13,7 @@ interface Props {
   keywords: string
   context: Context
   shapeTypes: ShapeType[]
+  accurate: boolean
 }
 class Iter implements IDataIter<ItemData> {
   private __it: Shape[];
@@ -282,7 +283,8 @@ function update() {
   height_shpae.value = '50%';
   height_content.value = '50%';
   // 找到所有名称包含关键字的图形result_by_shape、找到所有文本内容包含关键字的图形result_by_content
-  const reg = new RegExp(`${props.keywords}`, 'img');
+  const mode = props.accurate ? 'mg' : 'img'
+  const reg = new RegExp(`${props.keywords}`, mode);
   const shapes = props.context.selection.selectedPage?.shapes;
   if (shapes) {
     shapes.forEach((v) => {
@@ -340,9 +342,11 @@ function close() {
 
 const stop1 = watch(() => props.keywords, update, { immediate: true });
 const stop2 = watch(() => props.shapeTypes, update, { immediate: true, deep: true });
+const stop3 = watch(() => props.accurate, update, { immediate: true })
 onUnmounted(() => {
   stop1();
   stop2();
+  stop3();
 })
 </script>
 <template>

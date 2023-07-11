@@ -9,6 +9,7 @@ export class Menu extends Watchable(Object) {
   private m_menu_mounted: boolean = false;
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
+  private invalid_items: string[] = [];
   get isMenuMount() {
     return this.m_menu_mounted;
   }
@@ -17,6 +18,13 @@ export class Menu extends Watchable(Object) {
   }
   get isColorPickerMount() {
     return this.m_color_picker;
+  }
+  get invalidItems() {
+    return this.invalid_items;
+  }
+  setInvalidItems(val: string[]) {
+    this.invalid_items = [];
+    this.invalid_items = val;
   }
   menuMount(mount: boolean) {
     this.m_menu_mounted = mount;

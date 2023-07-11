@@ -64,6 +64,8 @@ const search_el = ref<HTMLInputElement>();
 const includes_type = ref<ShapeType[]>([]);
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
+const search_wrap = ref<HTMLDivElement>();
+const accurate = ref<boolean>(false);
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
@@ -413,6 +415,7 @@ function leave_search() {
             clearTimeout(timer);
         }, 100)
     }
+    input_blur();
     document.removeEventListener('keydown', esc)
 }
 function navi_watcher(t: number) {
@@ -467,6 +470,19 @@ function onMenuBlur(e: MouseEvent) {
     }
 
 }
+function input_focus() {
+    if (search_wrap.value) {
+        search_wrap.value.classList.add('active-box-shadow');
+    }
+}
+function input_blur() {
+    if (search_wrap.value) {
+        if (!keywords.value.length) {
+            search_wrap.value.classList.remove('active-box-shadow');
+        }
+        // search_wrap.value.classList.remove('active-box-shadow');
+    }
+}
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -479,6 +495,13 @@ function keyboard_watcher(e: KeyboardEvent) {
             search_el.value.select();
             preto_search();
         }
+    }
+}
+function accurate_shift() {
+    accurate.value = !accurate.value;
+    if (search_el.value) {
+        search_el.value.focus();
+        preto_search();
     }
 }
 onMounted(() => {
@@ -504,7 +527,7 @@ onUnmounted(() => {
 
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
-            <div class="search">
+            <div class="search" ref="search_wrap">
                 <div class="tool-container">
                     <svg-icon icon-class="search"></svg-icon>
                 </div>
@@ -512,9 +535,12 @@ onUnmounted(() => {
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
-                    @blur="leave_search" @click="preto_search" @change="search" @input="inputing">
+                    @blur="leave_search" @click="preto_search" @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close" v-if="keywords">
                     <svg-icon icon-class="close"></svg-icon>
+                </div>
+                <div :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
+                    Aa
                 </div>
             </div>
             <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
@@ -530,7 +556,8 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body" ref="listBody" @click="reset_selection">
-            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords" :shape-types="includes_type">
+            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords" :shape-types="includes_type"
+                :accurate="accurate">
             </SearchPanel>
             <ListView v-else ref="shapelist" location="shapelist" :allow-drag="true" draging="shapeList"
                 :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"
@@ -582,8 +609,10 @@ onUnmounted(() => {
             border-radius: 8px;
             box-sizing: border-box;
             overflow: hidden;
+            transition: 0.32s;
 
             >.tool-container {
+                flex-shrink: 0;
                 display: flex;
                 align-items: center;
 
@@ -591,11 +620,10 @@ onUnmounted(() => {
                     width: 12px;
                     height: 12px;
                 }
-
-
             }
 
             .menu-f {
+                flex-shrink: 0;
                 width: 10px;
                 height: 28px;
                 display: flex;
@@ -624,9 +652,11 @@ onUnmounted(() => {
                 font-size: var(--font-default-fontsize);
                 caret-color: var(--active-color);
                 color: var(--active-color);
+                transition: 0.3s;
             }
 
             >.close {
+                flex-shrink: 0;
                 width: 14px;
                 height: 14px;
                 border-radius: 50%;
@@ -640,6 +670,25 @@ onUnmounted(() => {
                     width: 60%;
                     height: 60%;
                 }
+            }
+
+            >.accurate {
+                flex-shrink: 0;
+                cursor: pointer;
+                user-select: none;
+                height: 100%;
+                background-color: var(--grey-dark);
+                border-radius: 4px;
+                width: 22px;
+                text-align: center;
+                color: rgb(111, 111, 111);
+                transition: 0.32s;
+                margin-left: 4px;
+            }
+
+            .accurate-active {
+                background-color: var(--active-color);
+                color: #fff;
             }
         }
 
