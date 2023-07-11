@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
-import { ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { Context } from '@/context';
-import { Shape, ShapeType } from '@kcdesign/data';
+import { fontNameListEn, fontNameListZh, FontAvailable } from './FontNameList'
+import { ShapeType, Shape } from "@kcdesign/data";
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'setFont', font: string): void
@@ -19,9 +20,8 @@ type FontName = {
 const searchFont = ref('')
 const fontList = ref<FontName>({
     used: [],
-    ch: ['宋体', '黑体', '仿宋', '微软雅黑', '新宋体', '楷体', '等线', 'OPPOSans', 'PingFangSC-Regular'],
-    en: ['Arial', 'Adobe Arabic', 'Adobe Gothic Std', 'Candara', 'Courier New',
-        'Comic Sans MS', 'D-DIN', 'Ink Free', 'Impact', 'Mv Boli']
+    ch: ['PingFangSC-Regular'],
+    en: []
 })
 
 const filterFontList = ref<FontName>({
@@ -33,21 +33,6 @@ const filterFontList = ref<FontName>({
 const selectFont = (font: string) => {
     emit('setFont', font)
 }
-
-const getAllTextFontName = () => {
-    const shapes = props.context.selection.selectedPage?.childs
-    if (shapes) {
-        const textShape = shapes.filter((item: Shape) => {
-            if (item.type === ShapeType.Text) {
-                return item
-            }
-        })
-        // textShape.forEach(item => {
-        //     // fontList.value.used.push(item.text.attr.fontName)
-        // })
-    }
-}
-getAllTextFontName()
 
 const escapeRegExp = (text: string) => {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -67,6 +52,55 @@ const onSearchFont = () => {
     filterFontList.value.en = Array.from(new Set(filterFontList.value.en));
     filterFontList.value.used = Array.from(new Set(filterFontList.value.used));
 }
+
+function highlightText(text: string) {
+    if (searchFont.value) {
+    const regex = new RegExp(searchFont.value, 'gi');
+    return text.replace(regex, match => `<span style="color: red;">${match}</span>`);
+    }
+    return text;
+}
+
+function checkFontsAvailability(fontName: string[], fontList: FontName, lang: string) {
+    const promises = fontName.map(name => FontAvailable(name));
+    Promise.all(promises)
+    .then(results => {
+        if(lang === 'ch') {
+            const ch = fontName.filter((name, index) => results[index]);
+            fontList.ch.push(...ch)
+        }else {
+            const en = fontName.filter((name, index) => results[index]);
+            fontList.en.push(...en)
+        }
+    })
+    .catch(error => {
+        console.error('Error checking font availability:', error);
+    });
+}
+
+const getAllTextFontName = () => {
+    const shapes = props.context.selection.selectedPage?.childs
+    if (shapes) {
+        const textShape = shapes.filter((item: Shape) => {
+            if (item.type === ShapeType.Text) {
+                return item
+            }
+        })
+        textShape.forEach(item => {
+            const format = item.text.attr
+            if(format && format.fontName) {
+                fontList.value.used.push(format.fontName)
+                fontList.value.used = Array.from(new Set(fontList.value.used))
+            }
+        })
+    }
+}
+
+onMounted(() => {
+    getAllTextFontName()
+    checkFontsAvailability(fontNameListZh, fontList.value, 'ch')
+    checkFontsAvailability(fontNameListEn, fontList.value, 'en')
+})
 </script>
 
 <template>
@@ -104,22 +138,19 @@ const onSearchFont = () => {
                 <div class="item" v-for="item in filterFontList.used" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
-                    <span style="color: #000;"> {{ item.split(searchFont)[0] }}</span><span style="color: red;"> {{
-                        searchFont }}</span> <span style="color: #000;"> {{ item.split(searchFont)[1] }}</span>
+                    <span v-html="highlightText(item)"></span>
                 </div>
                 <span class="font-title" v-if="filterFontList.ch.length !== 0">中文字体</span>
                 <div class="item" v-for="item in filterFontList.ch" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
-                    <span style="color: #000;"> {{ item.split(searchFont)[0] }}</span><span style="color: red;"> {{
-                        searchFont }}</span> <span style="color: #000;"> {{ item.split(searchFont)[1] }}</span>
+                    <span v-html="highlightText(item)"></span>
                 </div>
                 <span class="font-title" v-if="filterFontList.en.length !== 0">英文字体</span>
                 <div class="item" v-for="item in filterFontList.en" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
-                    <span style="color: #000;"> {{ item.split(searchFont)[0] }}</span><span style="color: red;"> {{
-                        searchFont }}</span> <span style="color: #000;"> {{ item.split(searchFont)[1] }}</span>
+                    <span v-html="highlightText(item)"></span>
                 </div>
                 <div class="item-none" style="height: 40px;" v-if="filterFontList.en.length === 0 && filterFontList.ch.length === 0">
                     <div class="none-font">查找不到相关字体</div>

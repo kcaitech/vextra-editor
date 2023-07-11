@@ -4,8 +4,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape } from "@kcdesign/data";
-import { TextBehaviour, Shape } from "@kcdesign/data";
+import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape  } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
@@ -14,17 +13,17 @@ interface Props {
 }
 const popover = ref();
 const props = defineProps<Props>();
-const selectCase = ref('no-list')
+const selectCase = ref()
 const selectText = ref('autowidth')
-const selectId = ref('no-list')
+const selectId = ref()
 const wordSpace = ref()
 const rowHeight = ref()
 const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref()
 const minimumLineHeightIsMulti = ref(false)
-const maximumLineHeightIsMulti = ref(false)
 const paraSpacingIsMulti = ref(false)
 const kerningIsMulti = ref(false)
+const transformIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
 
 //获取选中字体的长度和下标
@@ -48,8 +47,14 @@ const onSelectText = (icon: TextBehaviour) => {
   const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
   editor.setTextBehaviour(icon)
 }
-const onSelectCase = (icon: string) => {
+const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon
+  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  if(isSelectText()) {
+      editor.setTextTransform(icon)
+  } else {
+      editor.setTextTransform(icon)
+  }
 }
 
 const setRowHeight = () => {
@@ -61,14 +66,12 @@ const setRowHeight = () => {
   }
   if (!isNaN(Number(rowHeight.value))) {
     if(isSelectText()) {
-      editor.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
-      editor.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+      editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
     }else {
       if(selectLength === 0) {
         console.log('selectLength', selectLength);
       }else {
-        editor.setMinLineHeight(Number(rowHeight.value), textIndex, selectLength)
-        editor.setMaxLineHeight(Number(rowHeight.value), textIndex, selectLength)
+        editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
       }
     }
   }else {
@@ -80,20 +83,21 @@ const setWordSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
   const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
   wordSpace.value = wordSpace.value.trim()
-  if (wordSpace.value.slice(-1) === '%') {
-      wordSpace.value = Number(wordSpace.value.slice(0, -1))
+  // if (wordSpace.value.slice(-1) === '%') {
+  //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
+  // }
+  if(wordSpace.value.length < 1) {
+    wordSpace.value = 0
   }
   if (!isNaN(Number(wordSpace.value))) {
     if(isSelectText()) {
       editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
-      wordSpace.value = wordSpace.value + '%'
     }else {
       if(selectLength === 0) {
         console.log('selectLength', selectLength);
       }else {
         editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
       }
-      wordSpace.value = wordSpace.value + '%'
     }
   }else {
       textFormat()
@@ -142,17 +146,18 @@ const textFormat = () => {
         format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     }
     minimumLineHeightIsMulti.value = format.minimumLineHeightIsMulti
-    maximumLineHeightIsMulti.value = format.maximumLineHeightIsMulti
     kerningIsMulti.value = format.kerningIsMulti
     paraSpacingIsMulti.value = format.paraSpacingIsMulti
+    transformIsMulti.value = format.transformIsMulti
     wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'
     rowHeight.value = format.minimumLineHeight || ''
     paragraphSpace.value = format.paraSpacing || 0
+    selectCase.value = format.transform
     if(minimumLineHeightIsMulti.value) rowHeight.value = '多值'
     if(kerningIsMulti.value) wordSpace.value = '多值'
     if(paraSpacingIsMulti.value) paragraphSpace.value = '多值'
-    wordSpace.value = wordSpace.value + '%'
+    if(transformIsMulti.value) selectCase.value = ''
 }
 function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
@@ -162,12 +167,9 @@ function selection_wather(t: any) {
         textFormat()
     }
 }
-const textDefaultFormat = () => {
-    const defaultFormat = (props.textShape[0] as TextShape).text.getDefaultTextFormat()
-}
+
 onMounted(() => {
     textFormat()
-    textDefaultFormat()
     props.context.selection.watch(selection_wather);
 })
 onUnmounted(() => {
@@ -223,22 +225,22 @@ onUnmounted(() => {
             <div>
                 <span>{{t('attr.letter_case')}}</span>
                 <div class="level-aligning jointly-text">
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'no-list'}" @click="onSelectCase('no-list')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'none'}" @click="onSelectCase(TextTransformType.None)">
                       <Tooltip :content="t('attr.as_typed')" :offset="15">
                         <svg-icon icon-class="text-no-list"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'uppercase'}" @click="onSelectCase('uppercase')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'uppercase'}" @click="onSelectCase(TextTransformType.Uppercase)">
                       <Tooltip :content="t('attr.uppercase')" :offset="15">
                         <svg-icon icon-class="text-uppercase"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'lowercase'}" @click="onSelectCase('lowercase')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'lowercase'}" @click="onSelectCase(TextTransformType.Lowercase)">
                       <Tooltip :content="t('attr.lowercase')" :offset="15">
                         <svg-icon icon-class="text-lowercase"></svg-icon>
                       </Tooltip>
                     </i>
-                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'titlecase'}" @click="onSelectCase('titlecase')">
+                    <i class="jointly-text font-posi" :class="{selected_bgc: selectCase === 'uppercase-first'}" @click="onSelectCase(TextTransformType.UppercaseFirst)">
                       <Tooltip :content="t('attr.titlecase')" :offset="15">
                         <svg-icon icon-class="text-titlecase"></svg-icon>
                       </Tooltip>
