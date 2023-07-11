@@ -153,6 +153,7 @@ export function paster(context: Context, t: Function, xy?: PageXY) {
             navigator.clipboard.read()
                 .then(function (data) {
                     if (data && data.length) { // 存在有效内容
+                        console.log('data', data[0]);
                         if (data[0].types[0].indexOf('image') !== -1) { // 内容为一张图片
                             clipboard_image(context, data[0], t, xy)
                         } else if (data[0].types.length === 1) {
