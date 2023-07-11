@@ -11,7 +11,9 @@ export const system = {
     empty: '暂无数据',
     paste: '粘贴',
     'paste_here': '粘贴在这里',
+    'only_text': '只粘贴文本',
     copy: '复制',
+    cut: '剪切',
     replace: '替换',
     failed: '操作失败',
     'null_file_name': '文件名不能为空',
@@ -53,7 +55,8 @@ export const system = {
     'login_out': '退出登录',
     'new_file': '新文件',
     'page1': '页面 1',
-    'dissolution': '取消容器'
+    'dissolution': '取消容器',
+    'content_includes': '文本包含'
 }
 
 export const home = {

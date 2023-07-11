@@ -11,7 +11,9 @@ export const system = {
     empty: 'No data',
     paste: 'Paste',
     'paste_here': 'Paste Here',
+    'only_text': 'Paste text',
     copy: 'Copy',
+    cut: 'Cut',
     replace: 'Replace',
     failed: 'Failed',
     'null_file_name': 'The file name cannot be empty',
@@ -53,7 +55,8 @@ export const system = {
     'login_out': 'Login out',
     'new_file': 'New file',
     'page1': 'Page 1',
-    'dissolution': 'Dissolution'
+    'dissolution': 'Dissolution',
+    'content_includes': 'Content includes'
 }
 
 export const home = {

@@ -1,28 +1,30 @@
 <script setup lang="ts">
 import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch } from 'vue';
+import PageView from './Content/PageView.vue';
+import SelectionView from './Selection/SelectionView.vue';
+import ContextMenu from '../common/ContextMenu.vue';
+import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
+import Selector, { SelectorFrame } from './Selection/Selector.vue';
+import CommentInput from './Content/CommentInput.vue';
+import CommentView from './Content/CommentView.vue';
 import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType } from '@kcdesign/data';
+import { Context } from '@/context'; // 状态顶层 store
+import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
+import { Action, KeyboardKeys, WorkSpace } from '@/context/workspace'; // workspace
+import { Menu } from '@/context/menu'; // menu
 import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
-import { Context } from '@/context';
-import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
-import { Action, KeyboardKeys, WorkSpace } from '@/context/workspace';
-import PageView from './Content/PageView.vue';
-import SelectionView from './Selection/SelectionView.vue';
 import { init as renderinit } from '@/render';
-import ContextMenu from '../common/ContextMenu.vue';
-import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
-import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, get_selected_types, list2Tree } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, get_selected_types, list2Tree, flattenShapes, get_menu_items } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
-import CommentInput from './Content/CommentInput.vue';
-import CommentView from './Content/CommentView.vue';
 import * as comment_api from '@/apis/comment';
+
 interface Props {
     context: Context
     page: Page
@@ -90,6 +92,7 @@ function getMouseOnPageXY(e: MouseEvent): PageXY { // 获取鼠标在页面上�
     return matrix.inverseCoord(clientX - x, clientY - y);
 }
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
+    if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
     const xy = workspace.value.root;
     const { ctrlKey, metaKey, shiftKey, deltaX, deltaY } = e;
@@ -234,7 +237,11 @@ function workspace_watcher(type?: number, name?: string) { // 更新编辑器状
         documentCommentList.value = props.context.workspace.pageCommentList
     }
 }
-
+function menu_watcher(type?: number) {
+    if (type === Menu.SHUTDOWN_MENU) {
+        contextMenuUnmount();
+    }
+}
 async function setClass(name: string) {
     const _n = await styler.value.getClass(name);
     cursorClass.value = _n;
@@ -317,7 +324,8 @@ function pageViewDragEnd() {
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
     const selection = props.context.selection;
-    workspace.menuMount(false);
+    const menu = props.context.menu;
+    menu.menuMount(false);
     selection.unHoverShape();
     site.x = e.clientX
     site.y = e.clientY
@@ -326,48 +334,33 @@ function contextMenuMount(e: MouseEvent) {
     contextMenuPosition.y = e.clientY - y;
     setMousedownXY(e); // 更新鼠标定位
     contextMenuItems = [];
-
-    const area = right_select(e, mousedownOnPageXY, props.context);
-    if (area === 'artboard') { // 点击在容器上
-        contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
-    } else if (area === 'group') { // 点击在编组上
-        contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
-    } else if (area === 'controller') { // 点击在选区上
-        contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
-        const types = get_selected_types(props.context); // 点击在选区上时，需要判定选区内存在图形的类型
-        if (types & 1) { // 存在容器
-            contextMenuItems.push('dissolution');
-        }
-        if (types & 2) { // 存在编组
-            contextMenuItems.push('un_group');
-        }
-        if (props.context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
-            contextMenuItems.push('forward', 'back', 'top', 'bottom');
-        }
-    } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
-        contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
-    } else {
-        contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
-    }
+    const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
+    contextMenuItems = get_menu_items(props.context, area); // 根据点击环境确定菜单选项
     const shapes = selection.getLayers(mousedownOnPageXY);
-    if (shapes.length > 1) {
-        contextMenuItems.push('layers')
+    if (shapes.length > 1 && area !== 'text-selection') {
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
+        contextMenuItems.push('layers');
     }
-
     // 数据准备就绪之后打开菜单
     contextMenu.value = true;
+    menu.menuMount(true);
     document.addEventListener('keydown', esc);
     // 打开菜单之后调整菜单位置
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
             surplusY.value = document.documentElement.clientHeight - site.y;
+            const root_height = props.context.workspace.root.height;
+
             if (el) {
-                const height = el.offsetHeight;
-                if (surplusY.value - 30 < height) {
-                    surplusY.value = document.documentElement.clientHeight - site.y - 30;
+                let height = el.offsetHeight;
+                if (height > root_height * 0.98) {
+                    height = root_height * 0.98;
+                    el.style.height = height + 'px';
+                }
+                if (surplusY.value - 4 < height) {
+                    surplusY.value = document.documentElement.clientHeight - site.y - 4;
                     el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
                 }
             }
@@ -382,8 +375,8 @@ async function stylerForCursorMount() {
     cursorClass.value = await styler.value.getClass('auto-0');
 }
 function contextMenuUnmount() {
-    document.removeEventListener('keydown', esc);
     contextMenu.value = false;
+    document.removeEventListener('keydown', esc);
 }
 function select(e: MouseEvent) {
     if (props.context.workspace.select) {
@@ -511,17 +504,6 @@ const saveShapeCommentXY = () => {
         })
     })
     workspace.value.editShapeComment(false, undefined)
-}
-
-// 递归函数，用于将数组扁平化处理
-function flattenShapes(shapes: any) {
-    return shapes.reduce((result: any, item: Shape) => {
-        if (Array.isArray(item.childs)) {
-            // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-            result = result.concat(flattenShapes(item.childs));
-        }
-        return result.concat(item);
-    }, []);
 }
 
 // mouseleave
@@ -748,7 +730,6 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     initMatrix(cur)
 })
 const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
-    // root.value && _updateRoot(props.context, root.value);
     if (root.value) {
         _updateRoot(props.context, root.value);
     }
@@ -771,6 +752,7 @@ renderinit()
     })
 onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
+    props.context.menu.watch(menu_watcher);
     props.page.watch(watcher);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
@@ -783,6 +765,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.menu.unwatch(menu_watcher);
     props.page.unwatch(watcher);
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);

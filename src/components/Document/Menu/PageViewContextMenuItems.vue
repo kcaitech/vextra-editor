@@ -2,15 +2,16 @@
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
+import Key from '@/components/common/Key.vue';
 import { XY } from '@/context/selection';
-import { Artboard, GroupShape, Shape, ShapeType } from "@kcdesign/data";
+import { Artboard, GroupShape, Shape, ShapeType, TextShape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, replace } from '@/utils/clipaboard';
+import { paster, paster_inner_shape, replace } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 const { t } = useI18n();
 interface Props {
@@ -32,12 +33,60 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuPosition.y = -10;
   layerSubMenuVisiable.value = true;
 }
+function is_inner_textshape() {
+  const selected = props.context.selection.selectedShapes;
+  const isEditing = props.context.workspace.isEditing;
+  return (selected.length === 1 && selected[0].type === ShapeType.Text && isEditing);
+}
 function copy() {
-  props.context.workspace.clipboard.write_html();
+  if (is_inner_textshape()) {
+    const selection = props.context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    const s = Math.min(start, end);
+    const len = Math.abs(start - end);
+    if (s === end) return emit('close');
+    const text = selection.selectedShapes[0].text.getTextWithFormat(s, len);
+    props.context.workspace.clipboard.write_html(text);
+  } else {
+    props.context.workspace.clipboard.write_html();
+  }
   emit('close');
 }
-function paste() { // 粘贴在原位
-  paster(props.context, t);
+async function cut() {
+  if (is_inner_textshape()) {
+    const selection = props.context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    if (start === end) return emit('close');
+    const shape = selection.selectedShapes[0];
+    const text = shape.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
+    const copy_result = await props.context.workspace.clipboard.write_html(text);
+    if (copy_result) {
+      const editor = props.context.editor4TextShape(shape as TextShape);
+      if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+        selection.setCursor(Math.min(start, end), false);
+      }
+    }
+  }
+  emit('close');
+}
+function paste() {
+  if (is_inner_textshape()) {
+    const shape = props.context.selection.selectedShapes[0];
+    const editor = props.context.editor4TextShape(shape as TextShape);
+    paster_inner_shape(props.context, editor);
+  } else {
+    paster(props.context, t);
+  }
+  emit('close');
+}
+function paste_text() {
+  if (is_inner_textshape()) {
+    const shape = props.context.selection.selectedShapes[0];
+    const editor = props.context.editor4TextShape(shape as TextShape);
+    paster_inner_shape(props.context, editor, true);
+  }
   emit('close');
 }
 function paste_here() {
@@ -53,7 +102,13 @@ function _replace() {
   emit('close');
 }
 function selectAll() {
-  props.context.workspace.keydown_a(true, true);
+  if (is_inner_textshape()) {
+    const selection = props.context.selection;
+    const end = selection.selectedShapes[0].text.length;
+    selection.selectText(0, end);
+  } else {
+    props.context.workspace.keydown_a(true, true);
+  }
   emit('close');
 }
 /**
@@ -304,22 +359,42 @@ function closeLayerSubMenu() {
     <!-- 常用功能 -->
     <div class="item" v-if="props.items.includes('all')" @click="selectAll">
       <span>{{ t('system.select_all') }}</span>
-      <span class="shortkey">Ctrl + A</span>
+      <span class="shortkey">
+        <Key code="Ctrl A"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('copy')" @click="copy">
       <span>{{ t('system.copy') }}</span>
-      <span class="shortkey">Ctrl + C</span>
+      <span class="shortkey">
+        <Key code="Ctrl C"></Key>
+      </span>
+    </div>
+    <div class="item" v-if="props.items.includes('cut')" @click="cut">
+      <span>{{ t('system.cut') }}</span>
+      <span class="shortkey">
+        <Key code="Ctrl X"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('paste')" @click="paste">
       <span>{{ t('system.paste') }}</span>
-      <span class="shortkey">Ctrl + V</span>
+      <span class="shortkey">
+        <Key code="Ctrl V"></Key>
+      </span>
+    </div>
+    <div class="item" v-if="props.items.includes('only_text')" @click="paste_text">
+      <span>{{ t('system.only_text') }}</span>
+      <span class="shortkey">
+        <Key code="Ctrl Alt V"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('paste-here')" @click="paste_here">
       <span>{{ t('system.paste_here') }}</span>
     </div>
     <div class="item" v-if="props.items.includes('replace')" @click="_replace">
       <span>{{ t('system.replace') }}</span>
-      <span class="shortkey">Ctrl + Shift + R</span>
+      <span class="shortkey">
+        <Key code="Ctrl Shift R"></Key>
+      </span>
     </div>
 
     <!-- 视图比例 -->
@@ -329,14 +404,18 @@ function closeLayerSubMenu() {
     </div>
     <div class="item" v-if="props.items.includes('hundred')" @click="(e: MouseEvent) => hundred(e)">
       <span>100%</span>
-      <span class="shortkey">Ctrl + 0</span>
+      <span class="shortkey">
+        <Key code="Ctrl 0"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('double')" @click="(e: MouseEvent) => double(e)">
       <span>200%</span>
     </div>
     <div class="item" v-if="props.items.includes('canvas')" @click="canvas">
       <span>{{ t('system.fit_canvas') }}</span>
-      <span class="shortkey">Ctrl + 1</span>
+      <span class="shortkey">
+        <Key code="Ctrl 1"></Key>
+      </span>
     </div>
     <!-- 协作 -->
     <div class="line" v-if="props.items.includes('comment')"></div>
@@ -347,7 +426,9 @@ function closeLayerSubMenu() {
     <div class="item" v-if="props.items.includes('comment')" @click="comment">
       <div class="choose" v-show="isComment"></div>
       <span>{{ t('system.show_comment') }}</span>
-      <span class="shortkey">Shift + C</span>
+      <span class="shortkey">
+        <Key code="Shift C"></Key>
+      </span>
     </div>
     <!-- 界面显示 -->
     <div class="line" v-if="props.items.includes('ruler')"></div>
@@ -362,13 +443,17 @@ function closeLayerSubMenu() {
     </div>
     <div class="item" v-if="props.items.includes('operation')" @click="operation">
       <span>{{ t('system.hide_operation_interface') }}</span>
-      <span class="shortkey">Ctrl(+Shift) + \</span>
+      <span class="shortkey">
+        <Key code="Ctrl(Shift) \"></Key>
+      </span>
     </div>
     <!-- 顺序调整 -->
     <div class="line" v-if="props.items.includes('forward')"></div>
     <div class="item" v-if="props.items.includes('forward')" @click="forward">
       <span>{{ t('system.bring_forward') }}</span>
-      <span class="shortkey">+</span>
+      <span class="shortkey">
+        <Key code="+"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('back')" @click="back">
       <span>{{ t('system.send_backward') }}</span>
@@ -386,19 +471,27 @@ function closeLayerSubMenu() {
     <div class="line" v-if="props.items.includes('groups')"></div>
     <div class="item" v-if="props.items.includes('groups')" @click="groups">
       <span>{{ t('system.creating_groups') }}</span>
-      <span class="shortkey">Ctrl + G</span>
+      <span class="shortkey">
+        <Key code="Ctrl G"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('container')" @click="container">
       <span>{{ t('system.create_container') }}</span>
-      <span class="shortkey">Ctrl + Alt + G</span>
+      <span class="shortkey">
+        <Key code="Ctrl Alt G"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
       <span>{{ t('system.un_group') }}</span>
-      <span class="shortkey">Ctrl + Shift + G</span>
+      <span class="shortkey">
+        <Key code="Ctrl Shift G"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('dissolution')" @click="dissolution_container">
       <span>{{ t('system.dissolution') }}</span>
-      <span class="shortkey">Ctrl + Shift + G</span>
+      <span class="shortkey">
+        <Key code="Ctrl Shift G"></Key>
+      </span>
     </div>
     <!-- 组件操作 -->
     <div class="line" v-if="props.items.includes('component')"></div>
@@ -421,11 +514,15 @@ function closeLayerSubMenu() {
     <div class="line" v-if="props.items.includes('visible')"></div>
     <div class="item" v-if="props.items.includes('visible')" @click="visible">
       <span>{{ t('system.visible') }}</span>
-      <span></span>
+      <span class="shortkey">
+        <Key code="Shift H"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('lock')" @click="lock">
       <span>{{ t('system.Lock') }}</span>
-      <span></span>
+      <span class="shortkey">
+        <Key code="Shift L"></Key>
+      </span>
     </div>
   </div>
 </template>

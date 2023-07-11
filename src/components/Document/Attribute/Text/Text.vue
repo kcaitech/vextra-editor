@@ -8,16 +8,15 @@ const { t } = useI18n();
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24">
             <template #tool>
-                <div class="trigger" >
+                <div class="trigger">
                     <svg-icon icon-class="gear"></svg-icon>
                 </div>
             </template>
         </TypeHeader>
         <div class="text-container">
-            
+
         </div>
     </div>
-
 </template>
 
 <style scoped lang="scss">
@@ -27,21 +26,23 @@ const { t } = useI18n();
     flex-direction: column;
     padding: 12px 10px;
     box-sizing: border-box;
+
     .trigger {
         width: 22px;
         height: 22px;
         display: flex;
         justify-content: center;
         align-items: center;
-        > svg {
+
+        >svg {
             width: 50%;
             height: 50%;
-            transition: 0.5s;
+            transition: 0.3s;
         }
+
         svg:hover {
-        transform: rotate(90deg);
-      }
+            transform: rotate(90deg);
+        }
     }
 }
-
 </style>
