@@ -120,7 +120,7 @@ function onMouseMove(event: MouseEvent) {
         asyncBaseAction.execute(props.point.type, p1OnPage, p2Onpage, deg, aType);
       } else if (len > 1) {
         props.context.workspace.setSelectionViewUpdater(false);
-        const [p1, p2, p3, p4] = props.controllerFrame;
+        // const [p1, p2, p3, p4] = props.controllerFrame;
         if (props.point.type === CtrlElementType.RectLT) {
           // todo
         } else if (props.point.type === CtrlElementType.RectRT) {
