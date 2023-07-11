@@ -41,7 +41,7 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
                     if (isBlankChar(g.char.charCodeAt(0))) return '';
                     const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
-                    path.translate(g.x + offsetX, y + offsetY);
+                    path.translate(g.x + offsetX + line.x, y + offsetY);
                     return path.toString();
                 }))
             }
@@ -67,10 +67,10 @@ function collectDecorateRange(garr: GraphArray, decorateRange: { start: number, 
     decorateRange.push({ start, end, color })
 }
 
-function renderDecorateLines(h: Function, y: number, decorateRange: { start: number, end: number, color: Color }[], childs: any[]) {
+function renderDecorateLines(h: Function, x: number, y: number, decorateRange: { start: number, end: number, color: Color }[], childs: any[]) {
     for (let i = 0, len = decorateRange.length; i < len; i++) {
         const l = decorateRange[i];
-        const d = "M" + l.start + ' ' + y + " L" + l.end + ' ' + y;
+        const d = "M" + (x + l.start) + ' ' + y + " L" + (x + l.end) + ' ' + y;
         const props: any = {};
         props["fill-opacity"] = 1;
         props.d = d;
@@ -81,13 +81,13 @@ function renderDecorateLines(h: Function, y: number, decorateRange: { start: num
     }
 }
 
-function renderDecorateRects(h: Function, y: number, hight: number, decorateRange: { start: number, end: number, color: Color }[], childs: any[]) {
+function renderDecorateRects(h: Function, x: number, y: number, hight: number, decorateRange: { start: number, end: number, color: Color }[], childs: any[]) {
     for (let i = 0, len = decorateRange.length; i < len; i++) {
         const l = decorateRange[i];
-        const d = "M" + l.start + ' ' + y + // lt
-            " L" + l.end + ' ' + y + // rt
-            " L" + l.end + ' ' + (y + hight) + // rb
-            " L" + ' ' + l.start + ' ' + (y + hight) + // lb
+        const d = "M" + (x + l.start) + ' ' + y + // lt
+            " L" + (x + l.end) + ' ' + y + // rt
+            " L" + (x + l.end) + ' ' + (y + hight) + // rb
+            " L" + ' ' + (x + l.start) + ' ' + (y + hight) + // lb
             'Z';
         const props: any = {};
         props["fill-opacity"] = 1;
@@ -132,7 +132,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                         continue;
                     }
                     gText.push(graph.char);
-                    gX.push(graph.x);
+                    gX.push(graph.x + line.x);
                 }
 
                 const span = garr.attr;
@@ -171,15 +171,15 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                 }
             }
             // 高亮
-            renderDecorateRects(h, lineY, line.lineHeight, hightlights, childs);
+            renderDecorateRects(h, line.x, lineY, line.lineHeight, hightlights, childs);
 
             childs.push(...linechilds);
 
             // 下划线、删除线
             const strikethroughY = lineY + (line.lineHeight) / 2;
             const underlineY = lineY + line.lineHeight;
-            renderDecorateLines(h, strikethroughY, strikethrouths, childs);
-            renderDecorateLines(h, underlineY, underlines, childs);
+            renderDecorateLines(h, line.x, strikethroughY, strikethrouths, childs);
+            renderDecorateLines(h, line.x, underlineY, underlines, childs);
         }
     }
 
