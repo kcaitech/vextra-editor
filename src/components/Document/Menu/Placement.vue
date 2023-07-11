@@ -107,10 +107,10 @@ onUnmounted(() => {
 /* 保持大小不变的小圆点 */
 .dot {
     position: absolute;
-    width: 7px;
-    height: 7px;
-    left: -3px;
-    top: -3px;
+    width: 10px;
+    height: 10px;
+    left: -5px;
+    top: -5px;
 
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
@@ -125,10 +125,10 @@ onUnmounted(() => {
 /* 产生动画（向外扩散变大）的圆圈 第一个圆 */
 .pulse {
     position: absolute;
-    width: 35px;
-    height: 35px;
-    left: -17.5px;
-    top: -17.5px;
+    width: 42px;
+    height: 42px;
+    left: -21px;
+    top: -21px;
     border: 1px solid #3399ff;
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
@@ -142,16 +142,15 @@ onUnmounted(() => {
     -moz-animation-iteration-count: infinite;
     animation-iteration-count: infinite;
     box-shadow: 1px 1px 30px #3399ff;
-    /* 阴影效果 */
 }
 
 /* 产生动画（向外扩散变大）的圆圈 第二个圆 */
 .pulse1 {
     position: absolute;
-    width: 35px;
-    height: 35px;
-    left: -17.5px;
-    top: -17.5px;
+    width: 42px;
+    height: 42px;
+    left: -21px;
+    top: -21px;
     border: 1px solid #3399ff;
     -webkit-border-radius: 50%;
     -moz-border-radius: 50%;
@@ -165,6 +164,5 @@ onUnmounted(() => {
     -moz-animation-iteration-count: infinite;
     animation-iteration-count: infinite;
     box-shadow: 1px 1px 30px #3399ff;
-    /* 阴影效果 */
 }
 </style>

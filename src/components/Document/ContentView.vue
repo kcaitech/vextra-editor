@@ -783,14 +783,14 @@ onUnmounted(() => {
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent>
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <SelectionView :context="props.context" :matrix="matrix.toArray()" />
-        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
-        </Placement>
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
+        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
+        </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
