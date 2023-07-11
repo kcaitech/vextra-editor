@@ -66,6 +66,7 @@ const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const search_wrap = ref<HTMLDivElement>();
 const accurate = ref<boolean>(false);
+const show_accrate_btn = ref<boolean>(false);
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
@@ -402,19 +403,13 @@ function esc(e: KeyboardEvent) {
     }
 }
 function preto_search() {
+    popoverVisible.value = false;
     if (search_el.value) {
         search_el.value.select();
     }
-    // props.context.navi.notify(Navi.SEARCH);
     document.addEventListener('keydown', esc);
 }
 function leave_search() {
-    if (!keywords.value.trim().length) {
-        const timer = setTimeout(() => {
-            // props.context.navi.notify(Navi.SEARCH_FINISHED);
-            clearTimeout(timer);
-        }, 100)
-    }
     input_blur();
     document.removeEventListener('keydown', esc)
 }
@@ -445,7 +440,7 @@ function show_types() {
     }
 
 }
-function update_types(st: ShapeType, push: boolean) {
+function update_types(st: ShapeType, push: boolean, shiftKey: boolean) {
     if (push) {
         const index = includes_type.value.findIndex(i => i === st);
         if (index === -1) {
@@ -459,6 +454,12 @@ function update_types(st: ShapeType, push: boolean) {
     }
     props.context.navi.notify(Navi.SEARCH);
     document.addEventListener('keydown', esc);
+    if (!shiftKey) {
+        popoverVisible.value = false;
+    }
+}
+function reset_types() {
+    includes_type.value = [];
 }
 function onMenuBlur(e: MouseEvent) {
     if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu-f')) {
@@ -503,6 +504,13 @@ function accurate_shift() {
         search_el.value.focus();
         preto_search();
     }
+    props.context.menu.setMode(accurate.value);
+}
+function search_el_mouseenter() {
+    show_accrate_btn.value = true;
+}
+function search_el_mouseleave() {
+    show_accrate_btn.value = false;
 }
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
@@ -527,7 +535,7 @@ onUnmounted(() => {
 
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
-            <div class="search" ref="search_wrap">
+            <div class="search" ref="search_wrap" @mouseenter="search_el_mouseenter" @mouseleave="search_el_mouseleave">
                 <div class="tool-container">
                     <svg-icon icon-class="search"></svg-icon>
                 </div>
@@ -539,7 +547,8 @@ onUnmounted(() => {
                 <div @click="clear_text" class="close" v-if="keywords">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
-                <div :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
+                <div v-if="show_accrate_btn && keywords" :class="{ 'accurate': true, 'accurate-active': accurate }"
+                    @click="accurate_shift">
                     Aa
                 </div>
             </div>
@@ -550,7 +559,12 @@ onUnmounted(() => {
                 <div class="block-wrap" v-for="(item, index) in includes_type" :key="index">
                     <div class="block">
                         <div class="content">{{ t(`shape.${item}`) }}</div>
-                        <div class="close" @click="() => update_types(item, false)">x</div>
+                        <div class="close" @click="(e) => update_types(item, false, e.shiftKey)">x</div>
+                    </div>
+                </div>
+                <div class="block-wrap" v-if="includes_type.length > 1" @click="reset_types">
+                    <div class="block reset">
+                        <svg-icon icon-class="delete-type"></svg-icon>
                     </div>
                 </div>
             </div>
@@ -682,8 +696,9 @@ onUnmounted(() => {
                 width: 22px;
                 text-align: center;
                 color: rgb(111, 111, 111);
-                transition: 0.32s;
+                transition: 0.15s;
                 margin-left: 4px;
+                line-height: 18px;
             }
 
             .accurate-active {
@@ -706,6 +721,7 @@ onUnmounted(() => {
                 box-sizing: border-box;
                 margin-right: 4px;
                 margin-bottom: 4px;
+                overflow: hidden;
 
                 .block {
                     height: 100%;
@@ -729,6 +745,22 @@ onUnmounted(() => {
                         text-align: center;
                         cursor: pointer;
                         color: #fff;
+                    }
+
+
+                }
+
+                .reset {
+                    cursor: pointer;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    width: 18px;
+                    color: #fff;
+
+                    >svg {
+                        text-align: center;
+                        height: 18px;
                     }
                 }
             }

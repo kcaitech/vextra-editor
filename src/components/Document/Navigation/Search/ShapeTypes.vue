@@ -8,7 +8,7 @@ interface Props {
   selected: ShapeType[]
 }
 interface Emits {
-  (e: 'update-types', st: ShapeType, push: boolean): void;
+  (e: 'update-types', st: ShapeType, push: boolean, multi: boolean): void;
 }
 export interface SelectedItem {
   selected: boolean
@@ -48,10 +48,10 @@ const template: SelectedItem[] = [
     shapetype: ShapeType.Image
   }
 ]
-function check(index: number) {
+function check(index: number, e: MouseEvent) {
   const is_ed = all_types.value[index].selected
   all_types.value[index].selected = !is_ed;
-  emit('update-types', all_types.value[index].shapetype, !is_ed);
+  emit('update-types', all_types.value[index].shapetype, !is_ed, e.shiftKey);
 }
 function init() {
   for (let i = 0; i < template.length; i++) {
@@ -70,7 +70,7 @@ onMounted(() => {
 </script>
 <template>
   <div class="types-wrap">
-    <div v-for="(item, index) in all_types" :key="index" class="type-block" @click="() => check(index)">
+    <div v-for="(item, index) in all_types" :key="index" class="type-block" @click="(e) => check(index, e)">
       <div :class="item.selected ? 'check' : 'de-check'"> </div>
       <div class="content"> {{ t(`shape.${item.shapetype}`) }}</div>
     </div>

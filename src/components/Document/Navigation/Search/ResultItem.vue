@@ -144,7 +144,8 @@ function update_slice() {
   name_display.value = [];
   const src = props.data.shape.name;
   const word = props.data.keywords;
-  const reg = new RegExp(`${word}`, 'img');
+  const is_acc = props.data.context.menu.accurate ? 'mg' : 'img';
+  const reg = new RegExp(`${word}`, is_acc);
   const index = src.search(reg);
   name_display.value.push({
     isKeywords: false,

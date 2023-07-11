@@ -10,8 +10,12 @@ export class Menu extends Watchable(Object) {
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
   private invalid_items: string[] = [];
+  private m_accurate: boolean = false;
   get isMenuMount() {
     return this.m_menu_mounted;
+  }
+  get accurate() {
+    return this.m_accurate;
   }
   get ispopover() { //xxx
     return this.m_popover;
@@ -21,6 +25,9 @@ export class Menu extends Watchable(Object) {
   }
   get invalidItems() {
     return this.invalid_items;
+  }
+  setMode(isAcc: boolean) {
+    this.m_accurate = isAcc;
   }
   setInvalidItems(val: string[]) {
     this.invalid_items = [];
