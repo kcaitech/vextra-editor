@@ -41,15 +41,11 @@ const template: SelectedItem[] = [
   },
   {
     selected: false,
-    shapetype: ShapeType.Image
-  },
-  {
-    selected: false,
-    shapetype: ShapeType.Group
-  },
-  {
-    selected: false,
     shapetype: ShapeType.Text
+  },
+  {
+    selected: false,
+    shapetype: ShapeType.Image
   }
 ]
 function check(index: number) {

@@ -219,19 +219,19 @@ function menu_watcher(t?: number) {
     }
 }
 function navi_watcher(t?: number) {
-    if (t === Navi.SEARCH) {
-        if (!fold.value) {
-            toggle();
-            props.context.navi.set_page_need_extend(true);
-        }
-    } else if (t === Navi.SEARCH_FINISHED) {
-        if (fold.value) {
-            if (props.context.navi.needExtend) {
-                toggle();
-                props.context.navi.set_page_need_extend(false);
-            }
-        }
-    }
+    // if (t === Navi.SEARCH) {
+    //     if (!fold.value) {
+    //         toggle();
+    //         props.context.navi.set_page_need_extend(true);
+    //     }
+    // } else if (t === Navi.SEARCH_FINISHED) {
+    //     if (fold.value) {
+    //         if (props.context.navi.needExtend) {
+    //             toggle();
+    //             props.context.navi.set_page_need_extend(false);
+    //         }
+    //     }
+    // }
 }
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);

@@ -66,9 +66,7 @@ const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
-
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
-
     length(): number {
         return shapeDirList && shapeDirList.length || 0;
     }
@@ -78,7 +76,6 @@ let listviewSource = new class implements IDataSource<ItemData> {
     onChange(l: (index: number, del: number, insert: number, modify: number) => void): void {
         this.m_onchange = l;
     }
-
     notify(index: number, del: number, insert: number, modify: number) {
         this.m_onchange && this.m_onchange(index, del, insert, modify);
     }
@@ -136,8 +133,7 @@ const stopWatch = watch(() => props.page, () => {
 }, { immediate: true })
 
 
-function search(e: Event) {
-    // console.log((e.target as HTMLInputElement).value);
+function search() {
     props.context.navi.notify(Navi.SEARCHING);
 }
 function inputing() {
@@ -407,7 +403,7 @@ function preto_search() {
     if (search_el.value) {
         search_el.value.select();
     }
-    props.context.navi.notify(Navi.SEARCH);
+    // props.context.navi.notify(Navi.SEARCH);
     document.addEventListener('keydown', esc);
 }
 function leave_search() {
@@ -432,7 +428,7 @@ function clear_text() {
         search_el.value.select();
     }
 }
-function showMenu() {
+function show_types() {
     if (popoverVisible.value) return popoverVisible.value = false;
     if (search_el.value) {
         popoverVisible.value = true;
@@ -463,11 +459,11 @@ function update_types(st: ShapeType, push: boolean) {
 }
 function onMenuBlur(e: MouseEvent) {
     if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu-f')) {
-        var timer = setTimeout(() => {
+        const timer = setTimeout(() => {
             popoverVisible.value = false;
-            clearTimeout(timer)
             document.removeEventListener('click', onMenuBlur);
-        }, 10)
+            clearTimeout(timer);
+        }, 30)
     }
 
 }
@@ -505,23 +501,24 @@ onUnmounted(() => {
 
 <template>
     <div class="shapelist-wrap" ref="shapeList">
-        <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-            <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types"></ShapeTypes>
-        </div>
+
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <div class="tool-container">
                     <svg-icon icon-class="search"></svg-icon>
                 </div>
-                <div class="menu-f" @click="showMenu">
+                <div class="menu-f" @click="show_types">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
-                    @blur="leave_search" @click="preto_search" @change="(e: Event) => search(e)" @input="inputing">
+                    @blur="leave_search" @click="preto_search" @change="search" @input="inputing">
                 <div @click="clear_text" class="close" v-if="keywords">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
+            </div>
+            <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+                <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types"></ShapeTypes>
             </div>
             <div class="blocks">
                 <div class="block-wrap" v-for="(item, index) in includes_type" :key="index">
