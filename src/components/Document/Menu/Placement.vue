@@ -104,7 +104,6 @@ onUnmounted(() => {
     transition: 0.32s;
 }
 
-/* 保持大小不变的小圆点 */
 .dot {
     position: absolute;
     width: 10px;
@@ -117,12 +116,10 @@ onUnmounted(() => {
     border: 1px solid var(--active-color);
     border-radius: 50%;
     background-color: var(--active-color);
-    /* 实心圆 ，如果没有这个就是一个小圆圈 */
     z-index: 2;
     opacity: 0.8;
 }
 
-/* 产生动画（向外扩散变大）的圆圈 第一个圆 */
 .pulse {
     position: absolute;
     width: 42px;
@@ -144,7 +141,6 @@ onUnmounted(() => {
     box-shadow: 1px 1px 30px #3399ff;
 }
 
-/* 产生动画（向外扩散变大）的圆圈 第二个圆 */
 .pulse1 {
     position: absolute;
     width: 42px;
