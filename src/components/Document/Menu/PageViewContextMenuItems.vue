@@ -39,41 +39,40 @@ async function check() {
       invalid_items.value.push('copy', 'paste-here', 'replace', 'copy', 'cut');
       return;
     }
-    const _data = await navigator.clipboard.read();
-    const data = _data[0];
-    const types = data.types;
-
-    if (types.includes('text/html') && !types.includes('text/plain')) {
-      const val = await data.getType('text/html');
-      if (!val) {
-        invalid_items.value.push('replace', 'paste-here', 'paste');
-        return;
-      }
-      
-      const fr = new FileReader();
-      fr.onload = function (event) {
-        const text_html = event.target?.result;
-        if (!(text_html && typeof text_html === 'string')) {
+    navigator.clipboard.read().then(async (_data) => {
+      const data = _data[0];
+      const types = data.types;
+      if (types.includes('text/html') && !types.includes('text/plain')) {
+        const val = await data.getType('text/html');
+        if (!val) {
           invalid_items.value.push('replace', 'paste-here', 'paste');
           return;
         }
-        const is_paras = text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1;
-        const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
-        if (!(is_paras || is_shape)) {
-          invalid_items.value.push('replace', 'paste-here', 'paste');
-        }
-        if (is_shape) {
-          const index = invalid_items.value.indexOf('replace');
-          if (index > -1) {
-            invalid_items.value.splice(index, 1);
+        const fr = new FileReader();
+        fr.onload = function (event) {
+          const text_html = event.target?.result;
+          if (!(text_html && typeof text_html === 'string')) {
+            invalid_items.value.push('replace', 'paste-here', 'paste');
+            return;
+          }
+          const is_paras = text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1;
+          const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
+          if (!(is_paras || is_shape)) {
+            invalid_items.value.push('replace', 'paste-here', 'paste');
+          }
+          if (is_shape) {
+            const index = invalid_items.value.indexOf('replace');
+            if (index > -1) {
+              invalid_items.value.splice(index, 1);
+            }
           }
         }
+        fr.readAsText(val);
       }
-      fr.readAsText(val);
-    }
+    });
   } catch (error) {
-    invalid_items.value.push('replace', 'paste-here', 'paste');
     console.log(error);
+    invalid_items.value.push('replace', 'paste-here', 'paste');
   }
   props.context.menu.setInvalidItems(invalid_items.value);
 }
@@ -402,7 +401,7 @@ function show_placement(val: boolean) {
   props.context.menu.notify(val ? Menu.SHOW_PLACEMENT : Menu.HIDE_PLACEMENT);
 }
 function menu_watcher() {
-  check();
+  // check();
 }
 const stop = watch(() => props.items, menu_watcher, { deep: true, immediate: true })
 onUnmounted(() => {
