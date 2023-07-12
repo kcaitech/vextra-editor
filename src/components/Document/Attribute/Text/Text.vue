@@ -228,10 +228,8 @@ const textFormat = () => {
     if(!(textShape.value[0] as TextShape) || !(textShape.value[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
     let format: AttrGetter
-    if(textIndex !== -1 && textIndex !== 0 && selectLength === 0) {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex - 1, selectLength + 1)
-    }else if (textIndex !== -1 && textIndex === 0 && selectLength === 0) {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength + 1)
+    if(textIndex !== -1 && selectLength === 0) {
+        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     }else if (textIndex === -1) {
         format = (textShape.value[0] as TextShape).text.getTextFormat(0, Infinity)
     }else {
@@ -595,9 +593,7 @@ onUnmounted(() => {
                     <input :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)" @change="(e) => onColorChange(e, 'color')"/>
                     <input ref="alphaFill" style="text-align: center;" :value="(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
                 </div>
-                <div class="perch" @click="deleteColor">
-                    <svg-icon class="svg" icon-class="delete"></svg-icon>
-                </div>
+                <div class="perch"></div>
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">

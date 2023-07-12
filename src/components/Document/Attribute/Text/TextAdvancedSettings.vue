@@ -148,10 +148,8 @@ const textFormat = () => {
     if(!(props.textShape[0] as TextShape) || !(props.textShape[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
     let format: AttrGetter
-    if(textIndex !== -1 && textIndex !== 0 && selectLength === 0) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex - 1, selectLength + 1)
-    }else if (textIndex !== -1 && textIndex === 0 && selectLength === 0) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength + 1)
+    if(textIndex !== -1 && selectLength === 0) {
+        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     }else if (textIndex === -1) {
         format = (props.textShape[0] as TextShape).text.getTextFormat(0, Infinity)
     }else {
