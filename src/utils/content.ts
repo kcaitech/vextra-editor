@@ -219,53 +219,6 @@ function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: n
   const diff = Math.hypot(e.clientX - root.x - start.x, e.clientY - root.y - start.y);
   return Boolean(diff > dragActiveDis);
 }
-function paster(context: Context, t: Function, xy?: PageXY) {
-  try {
-    if (navigator.clipboard && navigator.clipboard.read) {
-      context.workspace.setFreezeStatus(true);
-      navigator.clipboard.read()
-        .then(function (data) {
-          if (data && data.length) { // 存在有效内容
-            if (data[0].types[0].indexOf('image') !== -1) { // 内容为一张图片
-              set_clipboard_image(context, data[0], t, xy)
-            } else if (data[0].types.includes('text/html')) {
-              data[0].getType('text/html').then(val => { // 图形
-                const fr = new FileReader();
-                fr.onload = function (event) {
-                  const text = event.target?.result;
-                  if (text) {
-                    console.log('html', text);
-                  }
-                }
-                fr.readAsText(val);
-              });
-            } else if (data[0].types.includes('text/plain')) { // 白板文本
-              data[0].getType('text/plain').then(val => {
-                const fr = new FileReader();
-                fr.onload = function (event) {
-                  const text = event.target?.result;
-                  if (text) {
-                    console.log('plain', text);
-                  }
-                }
-                fr.readAsText(val);
-              });
-            }
-          } else {
-            // todo 没有有效内容
-          }
-          context.workspace.setFreezeStatus(false);
-        })
-        .catch((e) => {
-          console.log(e);
-          context.workspace.setFreezeStatus(false);
-        })
-    }
-  } catch (error) {
-    context.workspace.setFreezeStatus(false);
-    console.log(error);
-  }
-}
 function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
   const workspace = context.workspace;
@@ -291,37 +244,6 @@ function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, 
   }
   workspace.setAction(Action.AutoV);
   workspace.creating(false);
-}
-// 复制一张图片
-async function set_clipboard_image(context: Context, data: any, t: Function, _xy?: PageXY) {
-  const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
-  item.contentType = data.types[0];
-  const val = await data.getType(item.contentType);
-  const frame: { width: number, height: number } = { width: 100, height: 100 };
-  const img = new Image();
-  img.onload = function () {
-    frame.width = img.width;
-    frame.height = img.height;
-    const fr = new FileReader();
-    fr.onload = function (event) {
-      const base64: any = event.target?.result;
-      if (base64) {
-        fr.onload = function (event) {
-          const buff = event.target?.result;
-          if (base64 && buff) {
-            item.content = { name: t('shape.image'), frame, buff: new Uint8Array(buff as any), base64 };
-            const content = item!.content as Media;
-            const __xy = adjust_content_xy(context, content);
-            const xy: PageXY = _xy || __xy;
-            paster_image(context, xy, t, content);
-          }
-        }
-        fr.readAsArrayBuffer(val);
-      }
-    }
-    fr.readAsDataURL(val);
-  }
-  img.src = URL.createObjectURL(val);
 }
 function adjust_content_xy(context: Context, m: Media) {
   const workspace = context.workspace;
@@ -541,9 +463,11 @@ function flattenShapes(shapes: any) {
     return result.concat(item);
   }, []);
 }
-function set_menu_pos() {
-
-}
+/**
+ * 右键菜单打开之前根据点击的区域整理应该显示的菜单项
+ * @param { "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" } area 点击的区域
+ * @returns 
+ */
 function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal"): string[] {
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
@@ -576,7 +500,7 @@ export {
   getName, get_image_name, get_selected_types,
   isInner, is_drag,
   init_shape, init_insert_shape, init_insert_textshape,
-  paster, insert_imgs, drop, adapt_page, page_scale, right_select,
+  insert_imgs, drop, adapt_page, page_scale, right_select,
   list2Tree, flattenShapes,
-  set_menu_pos, get_menu_items
+  get_menu_items
 };
