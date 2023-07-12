@@ -481,7 +481,6 @@ function input_blur() {
         if (!keywords.value.length) {
             search_wrap.value.classList.remove('active-box-shadow');
         }
-        // search_wrap.value.classList.remove('active-box-shadow');
     }
 }
 function keyboard_watcher(e: KeyboardEvent) {
@@ -502,8 +501,8 @@ function accurate_shift() {
     accurate.value = !accurate.value;
     if (search_el.value) {
         search_el.value.focus();
-        preto_search();
     }
+    popoverVisible.value = false;
     props.context.menu.setMode(accurate.value);
 }
 function search_el_mouseenter() {
@@ -544,7 +543,7 @@ onUnmounted(() => {
                 </div>
                 <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
                     @blur="leave_search" @click="preto_search" @change="search" @input="inputing" @focus="input_focus">
-                <div @click="clear_text" class="close" v-if="keywords">
+                <div @click="clear_text" class="close" v-if="show_accrate_btn && keywords">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
                 <div v-if="show_accrate_btn && keywords" :class="{ 'accurate': true, 'accurate-active': accurate }"
