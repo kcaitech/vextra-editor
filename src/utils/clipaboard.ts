@@ -14,7 +14,7 @@ interface SystemClipboardItem {
     content: Media | string
 }
 export const identity = 'cn.protodesign/clipboard';
-export const paras = 'paras';
+export const paras = 'cn.protodesign/clipboard-paras'; // 文字段落
 export class Clipboard {
     private context: Context;
     constructor(context: Context) {
@@ -33,7 +33,7 @@ export class Clipboard {
             const _text = export_text(text);
             if (!_text) return false;
             if (navigator.clipboard && ClipboardItem) {
-                const blob = new Blob([`${identity}-${paras}${JSON.stringify(_text)}` || ''], { type: 'text/html' });
+                const blob = new Blob([`${paras}${JSON.stringify(_text)}` || ''], { type: 'text/html' });
                 const plain_text = text.getText(0, text.length);
                 const blob_plain = new Blob([plain_text], { type: 'text/plain' });
                 const content = [new ClipboardItem({ "text/plain": blob_plain, 'text/html': blob })];
@@ -109,8 +109,8 @@ export async function paster_inner_shape(context: Context, editor: TextShapeEdit
                 const val = await _d.getType('text/html');
                 const text_html = await val.text();
                 if (!(text_html && typeof text_html === 'string')) throw new Error('invalid text/html');
-                if (!(text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1)) throw new Error('wrong text/html');
-                const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+                if (!(text_html.slice(0, 70).indexOf(`${paras}`) > -1)) throw new Error('wrong text/html');
+                const source = JSON.parse(text_html.split(`${paras}`)[1]);
                 const text = import_text(context.data, source, false) as Text;
                 const selection = context.selection;
                 const start = selection.cursorStart;
@@ -133,8 +133,8 @@ export async function paster_inner_shape(context: Context, editor: TextShapeEdit
                 const val = await _d.getType('text/html');
                 const text_html = await val.text();
                 if (!(text_html && typeof text_html === 'string')) throw new Error('invalid text/html');
-                if (!(text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1)) throw new Error('wrong text/html');
-                const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+                if (!(text_html.slice(0, 70).indexOf(`${paras}`) > -1)) throw new Error('wrong text/html');
+                const source = JSON.parse(text_html.split(`${paras}`)[1]);
                 const text = import_text(context.data, source, false) as Text;
                 const selection = context.selection;
                 const start = selection.cursorStart;
@@ -234,10 +234,10 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
         if (!val) throw new Error('invalid value');
         const text_html = await val.text();
         if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
-        const is_paras = text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1;
+        const is_paras = text_html.slice(0, 70).indexOf(`${paras}`) > -1;
         const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
         if (is_paras) { // 文字段落
-            const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+            const source = JSON.parse(text_html.split(`${paras}`)[1]);
             const t_s = import_text(context.data, source, true);
             if (!t_s) throw new Error('invalid paras');
             const page = context.selection.selectedPage;
