@@ -93,37 +93,64 @@ export async function paster_inner_shape(context: Context, editor: TextShapeEdit
         if (!(data && data.length)) throw new Error('invalid data');
         const _d = data[0];
         const types = _d.types;
-        if (types.includes('text/plain')) {
-            const val = await _d.getType('text/plain');
-            const text = await val.text();
-            if (!(text && typeof text === 'string')) throw new Error('invalid text');
-            const selection = context.selection;
-            const start = selection.cursorStart;
-            const end = selection.cursorEnd;
-            const s = Math.min(start, end);
-            editor.insertText(text, s);
-            selection.setCursor(s + text.length, false);
-        } else if (types.includes('text/html')) {
-            const val = await _d.getType('text/html');
-            const text_html = await val.text();
-            if (!(text_html && typeof text_html === 'string')) throw new Error('invalid text/html');
-            if (!(text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1)) throw new Error('wrong text/html');
-            const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
-            const text = import_text(context.data, source, false) as Text;
-            const selection = context.selection;
-            const start = selection.cursorStart;
-            const end = selection.cursorEnd;
-            const s = Math.min(start, end);
-            if (only_text) {
-                const ot = text.getText(0, text.length);
-                if (start !== end) {
-                    editor.deleteText(s, Math.abs(start - end));
-                }
-                editor.insertText(ot, s);
-                selection.setCursor(s + ot.length, false);
-            } else {
-                editor.insertFormatText(text, s, Math.abs(start - end));
+        if (types.length === 1) {
+            const type = types[0];
+            if (type === 'text/plain') {
+                const val = await _d.getType('text/plain');
+                const text = await val.text();
+                if (!(text && typeof text === 'string')) throw new Error('invalid text');
+                const selection = context.selection;
+                const start = selection.cursorStart;
+                const end = selection.cursorEnd;
+                const s = Math.min(start, end);
+                editor.insertText(text, s);
                 selection.setCursor(s + text.length, false);
+            } else if (type === 'text/html') {
+                const val = await _d.getType('text/html');
+                const text_html = await val.text();
+                if (!(text_html && typeof text_html === 'string')) throw new Error('invalid text/html');
+                if (!(text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1)) throw new Error('wrong text/html');
+                const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+                const text = import_text(context.data, source, false) as Text;
+                const selection = context.selection;
+                const start = selection.cursorStart;
+                const end = selection.cursorEnd;
+                const s = Math.min(start, end);
+                if (only_text) {
+                    const ot = text.getText(0, text.length);
+                    if (start !== end) {
+                        editor.deleteText(s, Math.abs(start - end));
+                    }
+                    editor.insertText(ot, s);
+                    selection.setCursor(s + ot.length, false);
+                } else {
+                    editor.insertFormatText(text, s, Math.abs(start - end));
+                    selection.setCursor(s + text.length, false);
+                }
+            }
+        } else if (types.length === 2) {
+            if (types.includes('text/html')) {
+                const val = await _d.getType('text/html');
+                const text_html = await val.text();
+                if (!(text_html && typeof text_html === 'string')) throw new Error('invalid text/html');
+                if (!(text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1)) throw new Error('wrong text/html');
+                const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+                const text = import_text(context.data, source, false) as Text;
+                const selection = context.selection;
+                const start = selection.cursorStart;
+                const end = selection.cursorEnd;
+                const s = Math.min(start, end);
+                if (only_text) {
+                    const ot = text.getText(0, text.length);
+                    if (start !== end) {
+                        editor.deleteText(s, Math.abs(start - end));
+                    }
+                    editor.insertText(ot, s);
+                    selection.setCursor(s + ot.length, false);
+                } else {
+                    editor.insertFormatText(text, s, Math.abs(start - end));
+                    selection.setCursor(s + text.length, false);
+                }
             }
         }
     } catch (error) {
