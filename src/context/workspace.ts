@@ -124,6 +124,7 @@ export class WorkSpace extends Watchable(Object) {
     static TOGGLE_COMMENT_PAGE = 44;
     static HOVER_SHOW_COMMENT = 45;
     static UPDATE_COMMENT_CHILD = 46;
+    static ONARBOARD__TITLE_MENU = 47;
     static BOLD = 47;
     static UNDER_LINE = 48;
     static ITALIC = 49;
@@ -301,6 +302,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isVisibleComment() {
         return this.m_comment_visible;
+    }
+    downArboardTitle(ev: MouseEvent) {
+        this.notify(WorkSpace.ONARBOARD__TITLE_MENU, ev)
     }
     setDocumentPerm(perm: number) {
         this.m_document_perm = perm;

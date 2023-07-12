@@ -145,12 +145,14 @@ onMounted(() => {
                 <div class="item-none" style="height: 40px;" v-if="fontList.used.success.length === 0 && fontList.used.failurel.length === 0">
                     <div class="none-font">{{t('attr.no_font_is_currently_in_use')}}</div>
                 </div>
+                <div class="line"></div>
                 <span class="font-title">{{t('attr.chinese_font')}}</span>
                 <div class="item" v-for="item in fontList.ch" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
                     <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
                     <span> {{ item }}</span>
                 </div>
+                <div class="line"></div>
                 <span class="font-title">{{t('attr.english_font')}}</span>
                 <div class="item" v-for="item in fontList.en" :key="item" :style="{ fontFamily: item }"
                     @click="selectFont(item)">
@@ -236,9 +238,20 @@ onMounted(() => {
         height: 260px;
 
         .font-title {
+            display: flex;
+            align-items: center;
             padding: 0 10px;
-            margin: 5px 0;
             height: 25px;
+            color: rgb(0, 0, 0, .5);
+        }
+        .line {
+            width: 100%;
+            height: 11px;
+            border-width: 5px 0 5px 0;
+            border-style: solid;
+            border-color: #fff;
+            box-sizing: border-box;
+            background-color:  rgb(0, 0, 0,.05);
         }
 
         .item {

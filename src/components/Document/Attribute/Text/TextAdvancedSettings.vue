@@ -20,11 +20,6 @@ const wordSpace = ref()
 const rowHeight = ref()
 const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref()
-const minimumLineHeightIsMulti = ref(false)
-const paraSpacingIsMulti = ref(false)
-const kerningIsMulti = ref(false)
-const transformIsMulti = ref(false)
-const bulletNumbersIsMulti = ref(false)
 const selection = computed(() => props.context.selection)
 
 //获取选中字体的长度和下标
@@ -153,30 +148,23 @@ const textFormat = () => {
     if(!(props.textShape[0] as TextShape) || !(props.textShape[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
     let format: AttrGetter
-    if(textIndex !== -1 && textIndex !== 0 && selectLength === 0) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex - 1, selectLength + 1)
-    }else if (textIndex !== -1 && textIndex === 0 && selectLength === 0) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength + 1)
+    if(textIndex !== -1 && selectLength === 0) {
+        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     }else if (textIndex === -1) {
         format = (props.textShape[0] as TextShape).text.getTextFormat(0, Infinity)
     }else {
         format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     }
-    minimumLineHeightIsMulti.value = format.minimumLineHeightIsMulti
-    kerningIsMulti.value = format.kerningIsMulti
-    paraSpacingIsMulti.value = format.paraSpacingIsMulti
-    transformIsMulti.value = format.transformIsMulti
-    bulletNumbersIsMulti.value = format.bulletNumbersIsMulti
     wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'
     rowHeight.value = format.minimumLineHeight || ''
     paragraphSpace.value = format.paraSpacing || 0
     selectCase.value = format.transform
     selectId.value = format.bulletNumbers?.type || ''
-    if(minimumLineHeightIsMulti.value) rowHeight.value = `${t('attr.more_value')}`
-    if(kerningIsMulti.value) wordSpace.value = `${t('attr.more_value')}`
-    if(paraSpacingIsMulti.value) paragraphSpace.value = `${t('attr.more_value')}`
-    if(transformIsMulti.value) selectCase.value = ''
+    if(format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
+    if(format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
+    if(format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
+    if(format.transformIsMulti) selectCase.value = ''
 }
 function selection_wather(t: any) {
     if(t === Selection.CHANGE_TEXT) {
@@ -385,7 +373,8 @@ onUnmounted(() => {
     }
   }
     .selected_bgc {
-        background-color: var(--left-navi-button-select-color) !important;
+        background-color: var(--active-color) !important;
+        color: #fff;
     }
    
 }
