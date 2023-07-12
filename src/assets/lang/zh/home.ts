@@ -130,7 +130,8 @@ export const home = {
 
 export const search = {
     search_results: '没有匹配的结果',
-    search_history: '没有搜索记录'
+    search_history: '没有搜索记录',
+    result_count: '共xx条结果'
 }
 
 export const navi = {

@@ -131,6 +131,7 @@ export const home = {
 export const search = {
     search_results: 'No matching results',
     search_history: 'No search history',
+    result_count: 'xx results'
 }
 
 

@@ -49,7 +49,6 @@ const loading_by_content = ref<boolean>(false);
 const show_content = ref<boolean>(false);
 const chartMenu = ref<boolean>(false);
 const height_shpae = ref<string>('50%');
-const height_content = ref<string>('0%');
 let chartMenuItems: string[] = [];
 // 针对图形的搜索结果
 let source_by_shape = new class implements IDataSource<ItemData> {
@@ -281,7 +280,6 @@ function update() {
   result_by_shape = [];
   result_by_content = [];
   height_shpae.value = '50%';
-  height_content.value = '50%';
   // 找到所有名称包含关键字的图形result_by_shape、找到所有文本内容包含关键字的图形result_by_content
   const mode = props.accurate ? 'mg' : 'img'
   const reg = new RegExp(`${props.keywords}`, mode);
@@ -316,15 +314,13 @@ function update() {
     valid_result_by_shape.value = true;
     if (!result_by_content.length) {
       height_shpae.value = '100%';
-      height_content.value = '0%';
     }
   }
   if (result_by_content.length) {
     valid_result_by_content.value = true;
     show_content.value = true;
     if (!result_by_shape.length) {
-      height_shpae.value = '10%';
-      height_content.value = '90%';
+      height_shpae.value = '76px';
     }
   }
   source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
@@ -352,10 +348,17 @@ onUnmounted(() => {
 <template>
   <div class="result-wrap">
     <div class="result-by-name" :style="{ height: height_shpae }">
-      <span class="tips">{{ t('system.title_includes') }} <span>“{{ props.keywords
-      }}”</span></span>
-      <Loading v-if="loading_by_shape" :size="20"></Loading>
-      <div v-else>
+      <div class="tips">
+        <div class="font-wrap">
+          <div class="font">{{ t('system.title_includes') }}</div>
+          <div class="keywords">“{{ props.keywords }}</div>
+          <div class="end">”</div>
+        </div>
+        <div class="result-count" v-if="valid_result_by_shape">
+          {{ t('search.result_count').replace('xx', result_by_shape.length.toString()) }}
+        </div>
+      </div>
+      <div class="list-wrap">
         <ListView v-if="valid_result_by_shape" ref="by_name" :source="source_by_shape" :item-view="ResultItem"
           :item-height="30" :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape"
           @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
@@ -366,11 +369,10 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-    <div class="result-by-context" :style="{ height: height_content }">
-      <span class="tips">{{ t('system.content_includes') }} <span>“{{ props.keywords
+    <div class="result-by-context">
+      <span class="tips">{{ t('system.content_includes') }} <span class="keywords">“{{ props.keywords
       }}”</span></span>
-      <Loading v-if="loading_by_content" :size="20" :width="2"></Loading>
-      <div v-else>
+      <div class="list-wrap">
         <ListView v-if="valid_result_by_content" ref="by_name" :source="source_by_content" :item-view="TextResultItem"
           :item-height="50" :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape"
           @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
@@ -387,19 +389,69 @@ onUnmounted(() => {
 .result-wrap {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 
   >.result-by-name {
-    height: 60%;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
 
-    >div {
-      height: 100%;
+    >.tips {
+      display: block;
+      font-size: var(--font-default-fontsize);
+      width: 100%;
+      box-sizing: border-box;
+      border-top: 1px solid var(--grey-light);
+      flex-shrink: 0;
+
+      .font-wrap {
+        display: flex;
+        padding: 4px 13px 2px;
+        font-weight: 700;
+        white-space: nowrap;
+        width: 100%;
+        box-sizing: border-box;
+
+        >.font {
+          flex-shrink: 0;
+        }
+
+        >.keywords {
+          flex-grow: 1px;
+          color: var(--active-color);
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        >.end {
+          flex-shrink: 0;
+          color: var(--active-color);
+        }
+      }
+
+      .result-count {
+        padding: 0px 13px 4px;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 8px;
+        color: grey;
+      }
+
+    }
+
+    >.list-wrap {
+      flex-grow: 1;
       position: relative;
       overflow: hidden;
 
       .container {
-        height: calc(100% - 30px);
+        height: 100%;
       }
 
       .null-result {
@@ -409,25 +461,10 @@ onUnmounted(() => {
         margin-top: 16px;
       }
     }
-
-    >.tips {
-      display: block;
-      font-size: var(--font-default-fontsize);
-      width: 100%;
-      padding: 8px 13px 0;
-      box-sizing: border-box;
-      border-top: 1px solid var(--grey-light);
-      white-space: nowrap;
-      font-weight: 700;
-
-      >span {
-        color: var(--active-color);
-      }
-    }
   }
 
   >.result-by-context {
-    height: 40%;
+    flex-grow: 1;
     position: relative;
     overflow: hidden;
 

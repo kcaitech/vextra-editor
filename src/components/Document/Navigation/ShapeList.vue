@@ -555,7 +555,7 @@ onUnmounted(() => {
             <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
                 <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types"></ShapeTypes>
             </div>
-            <div class="blocks">
+            <div class="blocks" v-if="includes_type.length">
                 <div class="block-wrap" v-for="(item, index) in includes_type" :key="index">
                     <div class="block">
                         <div class="content">{{ t(`shape.${item}`) }}</div>
