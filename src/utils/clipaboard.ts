@@ -34,7 +34,9 @@ export class Clipboard {
             if (!_text) return false;
             if (navigator.clipboard && ClipboardItem) {
                 const blob = new Blob([`${identity}-${paras}${JSON.stringify(_text)}` || ''], { type: 'text/html' });
-                const content = [new ClipboardItem({ 'text/html': blob })];
+                const plain_text = text.getText(0, text.length);
+                const blob_plain = new Blob([plain_text], { type: 'text/plain' });
+                const content = [new ClipboardItem({ "text/plain": blob_plain, 'text/html': blob })];
                 await navigator.clipboard.write(content);
                 return true;
             } else {
@@ -143,9 +145,12 @@ export async function paster(context: Context, t: Function, xy?: PageXY) {
         if (!data) {
             message('info', t('clipboard.invalid_data'));
             context.workspace.setFreezeStatus(false);
+            return;
         }
         const d = data[0]; // 剪切板内的数据
         const types = data[0].types; // 剪切板内的数据类型
+        console.log('types', types);
+
         if (types.length === 1) {
             const type = types[0];
             if (type === 'text/html') { // 内容为Shape[]
@@ -164,6 +169,7 @@ export async function paster(context: Context, t: Function, xy?: PageXY) {
         }
         context.workspace.setFreezeStatus(false);
     } catch (error) {
+        console.log(error);
         message('info', t('clipboard.invalid_data'));
         context.workspace.setFreezeStatus(false);
     }

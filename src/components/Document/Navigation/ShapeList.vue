@@ -543,11 +543,12 @@ onUnmounted(() => {
                 </div>
                 <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
                     @blur="leave_search" @click="preto_search" @change="search" @input="inputing" @focus="input_focus">
-                <div @click="clear_text" class="close" v-if="show_accrate_btn && keywords">
+                <div @click="clear_text" class="close"
+                    :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
-                <div v-if="show_accrate_btn && keywords" :class="{ 'accurate': true, 'accurate-active': accurate }"
-                    @click="accurate_shift">
+                <div :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }"
+                    :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
                     Aa
                 </div>
             </div>
@@ -677,7 +678,7 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                cursor: pointer;
+                transition: 0.15s;
 
                 >svg {
                     width: 60%;
@@ -687,7 +688,6 @@ onUnmounted(() => {
 
             >.accurate {
                 flex-shrink: 0;
-                cursor: pointer;
                 user-select: none;
                 height: 100%;
                 background-color: var(--grey-dark);
