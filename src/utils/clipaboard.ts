@@ -162,7 +162,7 @@ async function paster_plain_inner_shape(_d: any, context: Context, editor: TextS
         console.log('invalid text/plain`');
         return false;
     }
-    let text_plain = await val.text();
+    const text_plain = await val.text();
     if (start !== end) {
         editor.deleteText(s, Math.abs(start - end));
     }

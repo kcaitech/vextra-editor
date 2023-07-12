@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { watch, onMounted, onUnmounted, ref, reactive } from 'vue';
+import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount } from 'vue';
 import { Selection } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { TextShape } from '@kcdesign/data';
@@ -21,6 +21,10 @@ const props = defineProps<{
 }>();
 
 watch(() => props.shape, (value, old) => {
+    if (old.text.length === 1) {
+        const editor = props.context.editor4Shape(old);
+        editor.delete();
+    }
     old.unwatch(update);
     value.watch(update);
     update();
@@ -163,7 +167,6 @@ function selectionWatcher(...args: any[]) {
         editing = false;
     }
 }
-
 onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
@@ -178,7 +181,12 @@ onUnmounted(() => {
     selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
 })
-
+onBeforeUnmount(() => {
+    if (props.shape.text.length === 1) {
+        const editor = props.context.editor4Shape(props.shape);
+        editor.delete();
+    }
+})
 </script>
 
 <template>
