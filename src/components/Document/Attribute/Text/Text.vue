@@ -37,15 +37,8 @@ const isDeleteline = ref(false)
 const selectLevel = ref('left')
 const selectVertical = ref('top')
 const fontName = ref()
-const fontNameIsMulti = ref(false)
-const fontSizeIsMulti = ref(false)
 const colorIsMulti = ref(false)
-const alignmentIsMulti = ref(false)
-const paraSpacingIsMulti = ref(false)
-const underlineIsMulti = ref(false)
-const strikethroughIsMulti = ref(false)
 const highlightIsMulti = ref(false)
-const kerningIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
 const mixed = ref<boolean>(false);
 const higMixed = ref<boolean>(false);
@@ -244,14 +237,7 @@ const textFormat = () => {
     }else {
         format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
     }
-    fontNameIsMulti.value = format.fontNameIsMulti
-    fontSizeIsMulti.value = format.fontSizeIsMulti
     colorIsMulti.value = format.colorIsMulti
-    alignmentIsMulti.value = format.alignmentIsMulti
-    paraSpacingIsMulti.value = format.paraSpacingIsMulti
-    kerningIsMulti.value = format.kerningIsMulti
-    strikethroughIsMulti.value = format.strikethroughIsMulti
-    underlineIsMulti.value = format.underlineIsMulti
     highlightIsMulti.value = format.highlightIsMulti
     selectLevel.value = format.alignment || 'left'
     selectVertical.value = format.verAlign || 'top'
@@ -261,10 +247,16 @@ const textFormat = () => {
     isDeleteline.value = format.strikethrough !== 'none'
     textColor.value = format.color 
     highlight.value = format.highlight
-    if (colorIsMulti.value) mixed.value = true;
-    if (highlightIsMulti.value) higMixed.value = true;
-    if(fontNameIsMulti.value) fontName.value = `${t('attr.more_value')}`
-    if(fontSizeIsMulti.value) fonstSize.value = `${t('attr.more_value')}`
+    isBold.value = format.bold || false
+    isTilt.value = format.italic || false
+    if(format.italicIsMulti) isTilt.value = false
+    if(format.boldIsMulti) isBold.value= false
+    if(colorIsMulti.value) mixed.value = true;
+    if(highlightIsMulti.value) higMixed.value = true;
+    if(format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
+    if(format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
+    if(format.underlineIsMulti) isUnderline.value = false
+    if(format.strikethroughIsMulti) isDeleteline.value = false
     console.log(format,'format');
 }
 
@@ -596,7 +588,7 @@ onUnmounted(() => {
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
-                <div>{{t('attr.font_color')}}:</div>
+                <div>{{t('attr.font_color')}}</div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
@@ -609,7 +601,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div>{{t('attr.font_color')}}:</div>
+                    <div>{{t('attr.font_color')}}</div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -618,7 +610,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div>{{t('attr.font_color')}}:</div>
+                    <div>{{t('attr.font_color')}}</div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -626,7 +618,7 @@ onUnmounted(() => {
             </div>
             <!-- 高亮颜色 -->
             <div class="text-color" v-if="!highlightIsMulti && highlight">
-                <div>{{t('attr.highlight_color')}}:</div>
+                <div>{{t('attr.highlight_color')}}</div>
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
@@ -639,7 +631,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
-                    <div>{{t('attr.highlight_color')}}:</div>
+                    <div>{{t('attr.highlight_color')}}</div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -648,7 +640,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
                 <div class="color-title">
-                    <div>{{t('attr.highlight_color')}}:</div>
+                    <div>{{t('attr.highlight_color')}}</div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -884,7 +876,8 @@ onUnmounted(() => {
     }
 
     .selected_bgc {
-        background-color: var(--left-navi-button-select-color) !important;
+        background-color: var(--active-color) !important;
+        color: #fff;
     }
 }
 
