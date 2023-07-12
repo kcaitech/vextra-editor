@@ -190,10 +190,10 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
         }
     }
 }
-function workspace_watcher(type?: number, name?: string) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
+function workspace_watcher(type?: number, name?: string | MouseEvent) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (type === WorkSpace.CURSOR_CHANGE) {
         if (name !== undefined) {
-            setClass(name);
+            setClass((name as string));
         }
     } else {
         if (type === WorkSpace.MATRIX_TRANSFORMATION) {
@@ -212,6 +212,10 @@ function workspace_watcher(type?: number, name?: string) { // 更新编辑器状
             props.context.workspace.clipboard.write_html();
         } else if (type === WorkSpace.UPDATE_COMMENT_POS) {
             saveShapeCommentXY();
+        } else if(type === WorkSpace.ONARBOARD__TITLE_MENU) {
+            if(name) {
+                contextMenuMount((name as MouseEvent))
+            }
         }
         const action = props.context.workspace.action;
         if (action.startsWith('add')) {

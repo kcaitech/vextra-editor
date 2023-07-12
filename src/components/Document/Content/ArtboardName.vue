@@ -92,8 +92,12 @@ const unHoverShape = (e: MouseEvent) => {
     hover.value = false
 }
 
-const selectShape = () => {
+const selectShape = (e: MouseEvent) => {
+    props.context.workspace.menuMount(false)
     props.context.selection.selectShape(props.shape);
+    if(e.button === 2) {
+        props.context.workspace.downArboardTitle(e)
+    }
 }
 </script>
 
