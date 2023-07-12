@@ -277,7 +277,7 @@ onUnmounted(() => {
     width: 10px;
     justify-content: center;
     align-items: center;
-    margin-left: 16px;
+    margin-left: 13px;
 
     .svg {
       width: 10px;
@@ -366,11 +366,11 @@ onUnmounted(() => {
 
 .tips-wrap {
   height: 20px;
-  width: calc(100% - 32px);
+  width: calc(100% - 26px);
   font-size: var(--font-default-fontsize);
   line-height: 20px;
   white-space: nowrap;
-  margin-left: 16px;
+  margin-left: 13px;
   border-radius: 4px;
   background-color: rgba($color: #0d99ff, $alpha: 0.1);
   box-sizing: border-box;

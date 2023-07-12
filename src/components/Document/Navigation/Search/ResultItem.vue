@@ -253,7 +253,7 @@ div.container-svg {
   width: 10px;
   justify-content: center;
   align-items: center;
-  margin-left: 16px;
+  margin-left: 13px;
 
   .svg {
     width: 10px;
