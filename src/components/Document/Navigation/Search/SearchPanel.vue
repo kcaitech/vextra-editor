@@ -9,6 +9,7 @@ import { Context } from '@/context';
 import { Shape, ShapeType, TextShape } from '@kcdesign/data';
 import { isInner } from '@/utils/content';
 import { is_shape_in_selection, selection_types } from '@/utils/shapelist';
+import e from 'express';
 interface Props {
   keywords: string
   context: Context
@@ -50,6 +51,8 @@ const show_content = ref<boolean>(false);
 const chartMenu = ref<boolean>(false);
 const height_shpae = ref<string>('50%');
 let chartMenuItems: string[] = [];
+const fold1 = ref<boolean>(false);
+const fold2 = ref<boolean>(false);
 // 针对图形的搜索结果
 let source_by_shape = new class implements IDataSource<ItemData> {
 
@@ -339,6 +342,44 @@ function close() {
   chartMenu.value = false;
 }
 
+function toggle1() {
+  fold1.value = !fold1.value;
+  if (fold1.value) {
+    height_shpae.value = '44px';
+    if (valid_result_by_content.value) {
+      if (fold2.value) {
+        fold2.value = false;
+      }
+    }
+  } else {
+    if (valid_result_by_content.value) {
+      if (fold2.value) {
+        height_shpae.value = 'calc(100% - 44px)';
+      } else {
+        height_shpae.value = '50%';
+      }
+    } else {
+      height_shpae.value = '100%';
+    }
+  }
+}
+function toggle2() {
+  if (!valid_result_by_shape) return;
+  fold2.value = !fold2.value;
+  if (fold2.value) {
+    height_shpae.value = 'calc(100% - 44px)';
+    if (fold1) {
+      fold1.value = false;
+    }
+  } else {
+    if (fold1.value) {
+      height_shpae.value = '44px';
+    } else {
+      height_shpae.value = '50%';
+    }
+  }
+}
+
 const stop1 = watch(() => props.keywords, update, { immediate: true });
 const stop2 = watch(() => props.shapeTypes, update, { immediate: true, deep: true });
 const stop3 = watch(() => props.accurate, update, { immediate: true })
@@ -356,6 +397,9 @@ onUnmounted(() => {
           <div class="font">{{ t('system.title_includes') }}</div>
           <div class="keywords">“{{ props.keywords }}</div>
           <div class="end">”</div>
+          <div class="shrink" @click="toggle1" v-if="valid_result_by_shape">
+            <svg-icon icon-class="down" :style="{ transform: fold1 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+          </div>
         </div>
         <div class="result-count" v-if="valid_result_by_shape">
           {{ t('search.result_count').replace('xx', result_by_shape.length.toString()) }}
@@ -378,6 +422,9 @@ onUnmounted(() => {
           <div class="font">{{ t('system.content_includes') }}</div>
           <div class="keywords">“{{ props.keywords }}</div>
           <div class="end">”</div>
+          <div class="shrink" @click="toggle2" v-if="valid_result_by_shape">
+            <svg-icon icon-class="down" :style="{ transform: fold2 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+          </div>
         </div>
         <div class="result-count" v-if="valid_result_by_content">
           {{ t('search.result_count').replace('xx', result_by_content.length.toString()) }}
@@ -409,6 +456,7 @@ onUnmounted(() => {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    transition: 0.3s;
 
     >.tips {
       display: block;
@@ -425,6 +473,7 @@ onUnmounted(() => {
         white-space: nowrap;
         width: 100%;
         box-sizing: border-box;
+        align-items: center;
 
         >.font {
           flex-shrink: 0;
@@ -442,6 +491,19 @@ onUnmounted(() => {
           flex-shrink: 0;
           color: var(--active-color);
         }
+
+        >.shrink {
+          margin-left: auto;
+          width: 14px;
+          height: 14px;
+          flex-shrink: 0;
+
+          >svg {
+            transition: 0.5s;
+            width: 80%;
+            height: 80%;
+          }
+        }
       }
 
       .result-count {
@@ -452,6 +514,7 @@ onUnmounted(() => {
         text-overflow: ellipsis;
         font-size: 8px;
         color: grey;
+        box-sizing: border-box;
       }
 
     }
@@ -481,6 +544,7 @@ onUnmounted(() => {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    transition: 0.3s;
 
     >.tips {
       display: block;
@@ -497,6 +561,7 @@ onUnmounted(() => {
         white-space: nowrap;
         width: 100%;
         box-sizing: border-box;
+        align-items: center;
 
         >.font {
           flex-shrink: 0;
@@ -514,6 +579,19 @@ onUnmounted(() => {
           flex-shrink: 0;
           color: var(--active-color);
         }
+
+        >.shrink {
+          margin-left: auto;
+          width: 14px;
+          height: 14px;
+          flex-shrink: 0;
+
+          >svg {
+            transition: 0.5s;
+            width: 80%;
+            height: 80%;
+          }
+        }
       }
 
       .result-count {
@@ -524,6 +602,7 @@ onUnmounted(() => {
         text-overflow: ellipsis;
         font-size: 8px;
         color: grey;
+        box-sizing: border-box;
       }
 
     }
