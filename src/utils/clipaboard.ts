@@ -33,8 +33,9 @@ export class Clipboard {
             const _text = export_text(text);
             if (!_text) return false;
             if (navigator.clipboard && ClipboardItem) {
-                const blob = new Blob([`${paras}${JSON.stringify(_text)}` || ''], { type: 'text/html' });
                 const plain_text = text.getText(0, text.length);
+                const h = encode_html(paras, _text, plain_text);
+                const blob = new Blob([h || ''], { type: 'text/html' });
                 const blob_plain = new Blob([plain_text], { type: 'text/plain' });
                 const content = [new ClipboardItem({ "text/plain": blob_plain, 'text/html': blob })];
                 await navigator.clipboard.write(content);
@@ -58,8 +59,9 @@ export class Clipboard {
                 const root_frame = position_map.get(shape.id);
                 if (root_frame) shape.frame = root_frame;
             }
+            const h = encode_html(identity, content);
             if (navigator.clipboard && ClipboardItem) {
-                const blob = new Blob([`${identity}${JSON.stringify(content)}` || ''], { type: 'text/html' });
+                const blob = new Blob([h || ''], { type: 'text/html' });
                 await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
                 return true;
             } else {
@@ -106,56 +108,61 @@ export async function paster_inner_shape(context: Context, editor: TextShapeEdit
                 editor.insertText(text, s);
                 selection.setCursor(s + text.length, false);
             } else if (type === 'text/html') {
-                const val = await _d.getType('text/html');
-                const text_html = await val.text();
-                if (!(text_html && typeof text_html === 'string')) throw new Error('invalid text/html');
-                if (!(text_html.slice(0, 70).indexOf(`${paras}`) > -1)) throw new Error('wrong text/html');
-                const source = JSON.parse(text_html.split(`${paras}`)[1]);
-                const text = import_text(context.data, source, false) as Text;
-                const selection = context.selection;
-                const start = selection.cursorStart;
-                const end = selection.cursorEnd;
-                const s = Math.min(start, end);
-                if (only_text) {
-                    const ot = text.getText(0, text.length);
-                    if (start !== end) {
-                        editor.deleteText(s, Math.abs(start - end));
-                    }
-                    editor.insertText(ot, s);
-                    selection.setCursor(s + ot.length, false);
-                } else {
-                    editor.insertFormatText(text, s, Math.abs(start - end));
-                    selection.setCursor(s + text.length, false);
-                }
+                paster_html_or_plain_inner_shape(_d, context, editor, only_text);
             }
         } else if (types.length === 2) {
-            if (types.includes('text/html')) {
-                const val = await _d.getType('text/html');
-                const text_html = await val.text();
-                if (!(text_html && typeof text_html === 'string')) throw new Error('invalid text/html');
-                if (!(text_html.slice(0, 70).indexOf(`${paras}`) > -1)) throw new Error('wrong text/html');
-                const source = JSON.parse(text_html.split(`${paras}`)[1]);
-                const text = import_text(context.data, source, false) as Text;
-                const selection = context.selection;
-                const start = selection.cursorStart;
-                const end = selection.cursorEnd;
-                const s = Math.min(start, end);
-                if (only_text) {
-                    const ot = text.getText(0, text.length);
-                    if (start !== end) {
-                        editor.deleteText(s, Math.abs(start - end));
-                    }
-                    editor.insertText(ot, s);
-                    selection.setCursor(s + ot.length, false);
-                } else {
-                    editor.insertFormatText(text, s, Math.abs(start - end));
-                    selection.setCursor(s + text.length, false);
-                }
+            if (types.includes('text/html') && types.includes('text/plain')) {
+                paster_html_or_plain_inner_shape(_d, context, editor, only_text);
             }
         }
     } catch (error) {
         console.log(error);
     }
+}
+async function paster_html_or_plain_inner_shape(_d: any, context: Context, editor: TextShapeEditor, only_text?: boolean) {
+    if (only_text) {
+        paster_plain_inner_shape(_d, context, editor, only_text);
+    } else {
+        const val = await _d.getType('text/html');
+        let text_html = await val.text();
+        text_html = decode_html(text_html);
+        if (!(text_html && typeof text_html === 'string')) {
+            console.log('invalid text/html');
+            paster_plain_inner_shape(_d, context, editor, only_text);
+            return false;
+        }
+        if (!(text_html.slice(0, 70).indexOf(`${paras}`) > -1)) {
+            console.log('wrong text/html');
+            paster_plain_inner_shape(_d, context, editor, only_text);
+            return false;
+        }
+        const selection = context.selection;
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+        const s = Math.min(start, end);
+        const source = JSON.parse(text_html.split(`${paras}`)[1]);
+        const text = import_text(context.data, source, false) as Text;
+        editor.insertFormatText(text, s, Math.abs(start - end));
+        selection.setCursor(s + text.length, false);
+    }
+    return true;
+}
+async function paster_plain_inner_shape(_d: any, context: Context, editor: TextShapeEditor, only_text?: boolean) {
+    const selection = context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    const s = Math.min(start, end);
+    const val = await _d.getType('text/plain');
+    if (!val) {
+        console.log('invalid text/plain`');
+        return false;
+    }
+    let text_plain = await val.text();
+    if (start !== end) {
+        editor.deleteText(s, Math.abs(start - end));
+    }
+    editor.insertText(text_plain, s);
+    selection.setCursor(s + text_plain.length, false);
 }
 /**
  * @description 粘贴
@@ -224,6 +231,31 @@ export async function replace(context: Context, t: Function, src: Shape[]) {
     }
 }
 /**
+ * 封装html数据
+ */
+function encode_html(identity: string, data: any, text?: string): string {
+    const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
+    const h = `<meta charset='utf-8'><div id='carrier' data-buffer='${buffer}'>${text || ''}</div>`;
+    return h;
+}
+/**
+ * @description 读取html内部数据
+ * @param html 
+ * @returns 
+ */
+function decode_html(html: string): string {
+    let result: any = '';
+    const d = document.createElement('div');
+    document.body.appendChild(d);
+    html = decodeURIComponent(html);
+    d.innerHTML = html;
+    const carrier = d.querySelector('#carrier');
+    result = (carrier as HTMLDivElement)?.dataset?.buffer;
+    result = decodeURIComponent(atob(result || ''));
+    document.body.removeChild(d);
+    return result;
+}
+/**
  * @description 从剪切板拿出图形数据并插入文档
  * @param data 剪切板拿出的数据
  * @param xy 插入位置
@@ -232,7 +264,8 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     try {
         const val = await data.getType('text/html');
         if (!val) throw new Error('invalid value');
-        const text_html = await val.text();
+        let text_html = await val.text();
+        text_html = decode_html(text_html);
         if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
         const is_paras = text_html.slice(0, 70).indexOf(`${paras}`) > -1;
         const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
@@ -309,7 +342,8 @@ async function clipboard_text_html_replace(context: Context, data: any, src: Sha
     try {
         const val = await data.getType('text/html');
         if (!val) throw new Error('invalid value');
-        const text_html = await val.text();
+        let text_html = await val.text();
+        text_html = decode_html(text_html);
         if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
         const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
         if (!is_shape) throw new Error('no shapes');

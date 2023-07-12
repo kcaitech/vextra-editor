@@ -121,6 +121,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 function onMouseMove(e: MouseEvent) {
+    e.stopPropagation();
     if (!editing) return;
     const workspace = props.context.workspace;
     const selection = props.context.selection;
@@ -146,11 +147,6 @@ function mouseleave() {
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
-}
-function selected_all() {
-    const selection = props.context.selection;
-    const end = props.shape.text.length;
-    selection.selectText(0, end);
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) {
