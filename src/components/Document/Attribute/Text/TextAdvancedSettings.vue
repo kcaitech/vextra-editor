@@ -20,6 +20,9 @@ const wordSpace = ref()
 const rowHeight = ref()
 const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref()
+const charSpacing = ref<HTMLInputElement>()
+const lineHeight = ref<HTMLInputElement>()
+const paraSpacing = ref<HTMLInputElement>()
 const selection = computed(() => props.context.selection)
 
 //获取选中字体的长度和下标
@@ -144,6 +147,16 @@ const isSelectText = () => {
     }
 }
 
+const selectCharSpacing = () => {
+  charSpacing.value && charSpacing.value.select()
+}
+const selectLineHeight = () => {
+  lineHeight.value && lineHeight.value.select()
+}
+const selectParaSpacing = () => {
+  paraSpacing.value && paraSpacing.value.select()
+}
+
 const textFormat = () => {
     if(!(props.textShape[0] as TextShape) || !(props.textShape[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
@@ -199,15 +212,15 @@ onUnmounted(() => {
           <div class="options-container">
             <div>
                 <span>{{t('attr.word_space')}}</span>
-                <div><input type="text" v-model="wordSpace" class="input" @change="setWordSpace"></div>
+                <div><input type="text" ref="charSpacing" @focus="selectCharSpacing" v-model="wordSpace" class="input" @change="setWordSpace"></div>
             </div>
             <div>
                 <span>{{t('attr.row_height')}}</span>
-                <div><input type="text" v-model="rowHeight" :placeholder="row_height" class="input" @change="setRowHeight"></div>
+                <div><input type="text" ref="lineHeight" @focus="selectLineHeight" v-model="rowHeight" :placeholder="row_height" class="input" @change="setRowHeight"></div>
             </div>
             <div>
                 <span>{{t('attr.paragraph_space')}}</span>
-                <div><input type="text" v-model="paragraphSpace" class="input" @change="setParagraphSpace"></div>
+                <div><input type="text" ref="paraSpacing" @focus="selectParaSpacing" v-model="paragraphSpace" class="input" @change="setParagraphSpace"></div>
             </div>
             <div>
                 <span>{{t('attr.id_style')}}</span>

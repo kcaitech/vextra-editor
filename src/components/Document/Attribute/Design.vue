@@ -15,7 +15,7 @@ const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
-const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard, ShapeType.Text];
+const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard];
 const shapeType = ref();
