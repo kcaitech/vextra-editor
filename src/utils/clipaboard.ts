@@ -59,10 +59,16 @@ export class Clipboard {
                 const root_frame = position_map.get(shape.id);
                 if (root_frame) shape.frame = root_frame;
             }
-            const h = encode_html(identity, content);
             if (navigator.clipboard && ClipboardItem) {
+                const h = encode_html(identity, content);
                 const blob = new Blob([h || ''], { type: 'text/html' });
-                await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+                const item: any = {
+                    'text/html': blob
+                }
+                if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
+                    // todo 直接复制图层里面的文本
+                }
+                await navigator.clipboard.write([new ClipboardItem(item)]);
                 return true;
             } else {
                 // todo plan2
@@ -82,7 +88,6 @@ export class Clipboard {
         }
         return delete_res;
     }
-
 }
 /**
  * 文本编辑状态下的粘贴
@@ -169,6 +174,7 @@ async function paster_plain_inner_shape(_d: any, context: Context, editor: TextS
  * @param xy 以xy为锚点，不存在xy时，粘贴在原来的位置
  */
 export async function paster(context: Context, t: Function, xy?: PageXY) {
+    get_content_from_beta();
     try {
         if (!navigator.clipboard || !navigator.clipboard.read) {
             // todo plan2 兼容方案二
@@ -183,8 +189,6 @@ export async function paster(context: Context, t: Function, xy?: PageXY) {
         }
         const d = data[0]; // 剪切板内的数据
         const types = data[0].types; // 剪切板内的数据类型
-        console.log('types', types);
-
         if (types.length === 1) {
             const type = types[0];
             if (type === 'text/html') { // 内容为Shape[]
@@ -231,12 +235,30 @@ export async function replace(context: Context, t: Function, src: Shape[]) {
     }
 }
 /**
- * 封装html数据
+ * @description 封装html数据
+ * @param { string } identity 封装类型，分为段落、图层
+ * @param { text } 如果为段落，会另存一份纯文本
  */
 function encode_html(identity: string, data: any, text?: string): string {
+    // encodeURIComponent 确保转义正确
+    // btoa 作为html标签的属性，不可以有一些干扰字符，采用base64封装干扰字符
     const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
-    const h = `<meta charset='utf-8'><div id='carrier' data-buffer='${buffer}'>${text || ''}</div>`;
-    return h;
+    const html = `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
+    return html;
+}
+function encode_html_beta(identity: string, data: any, text?: string): string {
+    const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
+    const html = `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
+    const t = document.createElement("input");
+    t.style.position = "fixed", t.style.top = "-1000px";
+    // t.value = html;
+    t.value = '哈哈哈哈';
+    document.body.appendChild(t);
+    t.select();
+    console.log(t.value);
+    document.execCommand("copy");
+    t.parentNode?.removeChild(t);
+    return html;
 }
 /**
  * @description 读取html内部数据
@@ -247,7 +269,6 @@ function decode_html(html: string): string {
     let result: any = '';
     const d = document.createElement('div');
     document.body.appendChild(d);
-    html = decodeURIComponent(html);
     d.innerHTML = html;
     const carrier = d.querySelector('#carrier');
     result = (carrier as HTMLDivElement)?.dataset?.buffer;
@@ -255,6 +276,7 @@ function decode_html(html: string): string {
     document.body.removeChild(d);
     return result;
 }
+function get_content_from_beta() { }
 /**
  * @description 从剪切板拿出图形数据并插入文档
  * @param data 剪切板拿出的数据
@@ -311,9 +333,6 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                 if (xy) {
                     shape.frame.x = xy.x + deltas[i].x;
                     shape.frame.y = xy.y + deltas[i].y;
-                }
-                if (shape.type === ShapeType.Text) {
-                    parse_text(shape as TextShape);
                 }
                 const page = context.selection.selectedPage;
                 if (page) {
@@ -509,20 +528,4 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
         context.selection.rangeSelectShape(result);
     }
     return result;
-}
-/**
- * 解析文字字符串，转义特殊字符
- * @param shape 
- */
-function parse_text(shape: TextShape) {
-    const paras = shape.text.paras;
-    const textarea = document.createElement('textarea');
-    document.body.appendChild(textarea);
-    for (let i = 0; i < paras.length; i++) {
-        const para = paras[i];
-        textarea.innerText = para.text;
-        const n_v = textarea.value;
-        para.text = n_v;
-    }
-    document.body.removeChild(textarea);
 }
