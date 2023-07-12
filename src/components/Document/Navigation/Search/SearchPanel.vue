@@ -323,6 +323,9 @@ function update() {
       height_shpae.value = '76px';
     }
   }
+  if (!valid_result_by_shape.value && !valid_result_by_content.value) {
+    height_shpae.value = '76px';
+  }
   source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
   source_by_content.notify(0, 0, 0, Number.MAX_VALUE);
 }
@@ -359,10 +362,10 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="list-wrap">
-        <ListView v-if="valid_result_by_shape" ref="by_name" :source="source_by_shape" :item-view="ResultItem"
-          :item-height="30" :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape"
-          @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
-          @isRead="isRead" draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
+        <ListView v-if="valid_result_by_shape" :source="source_by_shape" :item-view="ResultItem" :item-height="30"
+          :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
+          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
+          draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
         <div v-else class="null-result">
           {{ t('search.search_results') }}
@@ -370,13 +373,21 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="result-by-context">
-      <span class="tips">{{ t('system.content_includes') }} <span class="keywords">“{{ props.keywords
-      }}”</span></span>
+      <div class="tips">
+        <div class="font-wrap">
+          <div class="font">{{ t('system.content_includes') }}</div>
+          <div class="keywords">“{{ props.keywords }}</div>
+          <div class="end">”</div>
+        </div>
+        <div class="result-count" v-if="valid_result_by_content">
+          {{ t('search.result_count').replace('xx', result_by_content.length.toString()) }}
+        </div>
+      </div>
       <div class="list-wrap">
-        <ListView v-if="valid_result_by_content" ref="by_name" :source="source_by_content" :item-view="TextResultItem"
-          :item-height="50" :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape"
-          @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
-          @isRead="isRead" draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
+        <ListView v-if="valid_result_by_content" :source="source_by_content" :item-view="TextResultItem" :item-height="50"
+          :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
+          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
+          draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
         <div v-else class="null-result">
           {{ t('search.search_results') }}
@@ -393,9 +404,9 @@ onUnmounted(() => {
   flex-direction: column;
 
   >.result-by-name {
+    flex-shrink: 0;
     position: relative;
     overflow: hidden;
-    flex-shrink: 0;
     display: flex;
     flex-direction: column;
 
@@ -455,10 +466,11 @@ onUnmounted(() => {
       }
 
       .null-result {
-        font-size: var(--font-default-fontsize);
         width: 100%;
         text-align: center;
         margin-top: 16px;
+        font-size: 8px;
+        color: grey;
       }
     }
   }
@@ -467,36 +479,71 @@ onUnmounted(() => {
     flex-grow: 1;
     position: relative;
     overflow: hidden;
-
-    >div {
-      height: 100%;
-      position: relative;
-      overflow: hidden;
-
-      .container {
-        height: calc(100% - 30px);
-      }
-
-      >.null-result {
-        font-size: var(--font-default-fontsize);
-        width: 100%;
-        text-align: center;
-        margin-top: 16px;
-      }
-    }
+    display: flex;
+    flex-direction: column;
 
     >.tips {
       display: block;
       font-size: var(--font-default-fontsize);
       width: 100%;
-      padding: 8px 13px 0;
       box-sizing: border-box;
       border-top: 1px solid var(--grey-light);
-      white-space: nowrap;
-      font-weight: 700;
+      flex-shrink: 0;
 
-      >span {
-        color: var(--active-color);
+      .font-wrap {
+        display: flex;
+        padding: 4px 13px 2px;
+        font-weight: 700;
+        white-space: nowrap;
+        width: 100%;
+        box-sizing: border-box;
+
+        >.font {
+          flex-shrink: 0;
+        }
+
+        >.keywords {
+          flex-grow: 1px;
+          color: var(--active-color);
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        >.end {
+          flex-shrink: 0;
+          color: var(--active-color);
+        }
+      }
+
+      .result-count {
+        padding: 0px 13px 4px;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 8px;
+        color: grey;
+      }
+
+    }
+
+
+    >.list-wrap {
+      flex-grow: 1;
+      position: relative;
+      overflow: hidden;
+
+      .container {
+        height: 100%;
+      }
+
+      .null-result {
+        width: 100%;
+        text-align: center;
+        margin-top: 16px;
+        font-size: 8px;
+        color: grey;
       }
     }
   }

@@ -602,6 +602,7 @@ onUnmounted(() => {
         font-size: 10px;
         box-sizing: border-box;
         position: relative;
+        padding-bottom: 4px;
 
         .title {
             height: 36px;
