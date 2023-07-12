@@ -23,9 +23,10 @@ const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextS
         index = end;
         end = t;
     }
-    const text = '\n';
-    if (editor.insertText2(text, index, end - index)) {
-        selection.setCursor(index + text.length, false);
+
+    const count = editor.insertTextForNewLine(index, end - index);
+    if (count !== 0) {
+        selection.setCursor(index + count, false);
     }
 }, keydelays);
 

@@ -104,8 +104,9 @@ function committext() {
             index = end;
             end = t;
         }
-        if (editor.insertText2(text, index, end - index)) {
-            selection.setCursor(index + text.length, true);
+        const count = editor.insertText2(text, index, end - index);
+        if (count > 0) {
+            selection.setCursor(index + count, true);
         }
     }
 
