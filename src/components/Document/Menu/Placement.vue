@@ -102,63 +102,63 @@ onUnmounted(() => {
     height: 10px;
     background-color: transparent;
     transition: 0.32s;
-}
 
-.dot {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    left: -5px;
-    top: -5px;
+    .dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        left: -5px;
+        top: -5px;
 
-    -webkit-border-radius: 50%;
-    -moz-border-radius: 50%;
-    border: 1px solid var(--active-color);
-    border-radius: 50%;
-    background-color: var(--active-color);
-    z-index: 2;
-    opacity: 0.8;
-}
+        -webkit-border-radius: 50%;
+        -moz-border-radius: 50%;
+        border: 1px solid var(--active-color);
+        border-radius: 50%;
+        background-color: var(--active-color);
+        z-index: 2;
+        opacity: 0.8;
+    }
 
-.pulse {
-    position: absolute;
-    width: 42px;
-    height: 42px;
-    left: -21px;
-    top: -21px;
-    border: 1px solid #3399ff;
-    -webkit-border-radius: 50%;
-    -moz-border-radius: 50%;
-    border-radius: 50%;
-    z-index: 1;
-    opacity: 0;
-    -webkit-animation: warn 0.95s ease-out;
-    -moz-animation: warn 0.95s ease-out;
-    animation: warn 0.95s ease-out;
-    -webkit-animation-iteration-count: infinite;
-    -moz-animation-iteration-count: infinite;
-    animation-iteration-count: infinite;
-    box-shadow: 1px 1px 30px #3399ff;
-}
+    .pulse {
+        position: absolute;
+        width: 42px;
+        height: 42px;
+        left: -21px;
+        top: -21px;
+        border: 1px solid #3399ff;
+        -webkit-border-radius: 50%;
+        -moz-border-radius: 50%;
+        border-radius: 50%;
+        z-index: 1;
+        opacity: 0;
+        -webkit-animation: warn 0.95s ease-out;
+        -moz-animation: warn 0.95s ease-out;
+        animation: warn 0.95s ease-out;
+        -webkit-animation-iteration-count: infinite;
+        -moz-animation-iteration-count: infinite;
+        animation-iteration-count: infinite;
+        box-shadow: 1px 1px 30px #3399ff;
+    }
 
-.pulse1 {
-    position: absolute;
-    width: 42px;
-    height: 42px;
-    left: -21px;
-    top: -21px;
-    border: 1px solid #3399ff;
-    -webkit-border-radius: 50%;
-    -moz-border-radius: 50%;
-    border-radius: 50%;
-    z-index: 1;
-    opacity: 0;
-    -webkit-animation: warn1 0.95s ease-out;
-    -moz-animation: warn1 0.95s ease-out;
-    animation: warn1 0.95s ease-out;
-    -webkit-animation-iteration-count: infinite;
-    -moz-animation-iteration-count: infinite;
-    animation-iteration-count: infinite;
-    box-shadow: 1px 1px 30px #3399ff;
+    .pulse1 {
+        position: absolute;
+        width: 42px;
+        height: 42px;
+        left: -21px;
+        top: -21px;
+        border: 1px solid #3399ff;
+        -webkit-border-radius: 50%;
+        -moz-border-radius: 50%;
+        border-radius: 50%;
+        z-index: 1;
+        opacity: 0;
+        -webkit-animation: warn1 0.95s ease-out;
+        -moz-animation: warn1 0.95s ease-out;
+        animation: warn1 0.95s ease-out;
+        -webkit-animation-iteration-count: infinite;
+        -moz-animation-iteration-count: infinite;
+        animation-iteration-count: infinite;
+        box-shadow: 1px 1px 30px #3399ff;
+    }
 }
 </style>
