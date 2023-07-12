@@ -49,6 +49,7 @@ async function check() {
         invalid_items.value.push('replace', 'paste-here', 'paste');
         return;
       }
+      
       const fr = new FileReader();
       fr.onload = function (event) {
         const text_html = event.target?.result;

@@ -84,64 +84,48 @@ export class Clipboard {
  * 文本编辑状态下的粘贴
  * @param only_text 只粘贴文本
  */
-export function paster_inner_shape(context: Context, editor: TextShapeEditor, only_text?: boolean) {
+export async function paster_inner_shape(context: Context, editor: TextShapeEditor, only_text?: boolean) {
     try {
-        if (navigator.clipboard) {
-            navigator.clipboard.read().then(function (data) {
-                if (data && data.length) {
-                    const _d = data[0];
-                    const types = _d.types;
-                    if (types.includes('text/plain')) {
-                        _d.getType('text/plain').then((val: any) => {
-                            const fr = new FileReader();
-                            fr.onload = function (event) {
-                                const text = event.target?.result;
-                                if (text && typeof text === 'string') {
-                                    const selection = context.selection;
-                                    const start = selection.cursorStart;
-                                    const end = selection.cursorEnd;
-                                    const s = Math.min(start, end);
-                                    editor.insertText(text, s);
-                                    selection.setCursor(s + text.length, false);
-                                }
-                            }
-                            fr.readAsText(val);
-                        })
-                    } else if (types.includes('text/html')) {
-                        _d.getType('text/html').then((val: any) => {
-                            const fr = new FileReader();
-                            fr.onload = function (event) {
-                                const text_html = event.target?.result;
-                                if (text_html && typeof text_html === 'string') {
-                                    if (text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1) {
-                                        const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
-                                        const text = import_text(context.data, source, false) as Text;
-                                        const selection = context.selection;
-                                        const start = selection.cursorStart;
-                                        const end = selection.cursorEnd;
-                                        const s = Math.min(start, end);
-                                        if (only_text) {
-                                            const ot = text.getText(0, text.length);
-                                            if (start !== end) {
-                                                editor.deleteText(s, Math.abs(start - end));
-                                            }
-                                            editor.insertText(ot, s);
-                                            selection.setCursor(s + ot.length, false);
-                                        } else {
-                                            editor.insertFormatText(text, s, Math.abs(start - end));
-                                            selection.setCursor(s + text.length, false);
-                                        }
-                                    }
-                                }
-                            }
-                            fr.readAsText(val);
-                        })
-                    }
+        if (!navigator.clipboard) throw new Error('not supported');
+        const data = await navigator.clipboard.read();
+        if (!(data && data.length)) throw new Error('invalid data');
+        const _d = data[0];
+        const types = _d.types;
+        if (types.includes('text/plain')) {
+            const val = await _d.getType('text/plain');
+            const text = await val.text();
+            if (!(text && typeof text === 'string')) throw new Error('invalid text');
+            const selection = context.selection;
+            const start = selection.cursorStart;
+            const end = selection.cursorEnd;
+            const s = Math.min(start, end);
+            editor.insertText(text, s);
+            selection.setCursor(s + text.length, false);
+        } else if (types.includes('text/html')) {
+            const val = await _d.getType('text/html');
+            const text_html = await val.text();
+            if (!(text_html && typeof text_html === 'string')) throw new Error('invalid text/html');
+            if (!(text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1)) throw new Error('wrong text/html');
+            const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+            const text = import_text(context.data, source, false) as Text;
+            const selection = context.selection;
+            const start = selection.cursorStart;
+            const end = selection.cursorEnd;
+            const s = Math.min(start, end);
+            if (only_text) {
+                const ot = text.getText(0, text.length);
+                if (start !== end) {
+                    editor.deleteText(s, Math.abs(start - end));
                 }
-            })
+                editor.insertText(ot, s);
+                selection.setCursor(s + ot.length, false);
+            } else {
+                editor.insertFormatText(text, s, Math.abs(start - end));
+                selection.setCursor(s + text.length, false);
+            }
         }
     } catch (error) {
-
+        console.log(error);
     }
 }
 /**
@@ -215,73 +199,69 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     try {
         const val = await data.getType('text/html');
         if (!val) throw new Error('invalid value');
-        const fr = new FileReader();
-        fr.onload = function (event) {
-            const text_html = event.target?.result;
-            if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
-            const is_paras = text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1;
-            const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
-            if (is_paras) { // 文字段落
-                const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
-                const t_s = import_text(context.data, source, true);
-                if (!t_s) throw new Error('invalid paras');
-                const page = context.selection.selectedPage;
-                if (!page) throw new Error('outside page');
-                const shape: TextShape = (t_s as TextShape);
-                const layout = shape.getLayout();
-                shape.frame.width = layout.contentWidth;
-                shape.frame.height = layout.contentHeight;
-                const _f = shape.frame;
-                const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
-                shape.frame.x = xy?.x || _xy.x;
-                shape.frame.y = xy?.y || _xy.y;
-                const editor = context.editor.editor4Page(page);
-                const r = editor.insert(page, page.childs.length, shape);
-                if (r) context.selection.selectShape(r);
-            } else if (is_shape) { // 内部图层
-                const source = JSON.parse(text_html.split(identity)[1]);
-                const shapes = import_shape(context.data, source);
-                const result: Shape[] = [];
-                if (!shapes.length) throw new Error('invalid source');
-                const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
-                if (xy) {
-                    for (let i = 0; i < shapes.length; i++) {
-                        const frame = shapes[i].frame;
-                        if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
-                        if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
-                    }
-                }
-                const deltas = [];
-                if (xy) {
-                    for (let i = 0; i < shapes.length; i++) {
-                        const frame = shapes[i].frame;
-                        deltas.push({ x: frame.x - lt_shape_xy.x, y: frame.y - lt_shape_xy.y });
-                    }
-                }
+        const text_html = await val.text();
+        if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
+        const is_paras = text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1;
+        const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
+        if (is_paras) { // 文字段落
+            const source = JSON.parse(text_html.split(`${identity}-${paras}`)[1]);
+            const t_s = import_text(context.data, source, true);
+            if (!t_s) throw new Error('invalid paras');
+            const page = context.selection.selectedPage;
+            if (!page) throw new Error('outside page');
+            const shape: TextShape = (t_s as TextShape);
+            const layout = shape.getLayout();
+            shape.frame.width = layout.contentWidth;
+            shape.frame.height = layout.contentHeight;
+            const _f = shape.frame;
+            const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
+            shape.frame.x = xy?.x || _xy.x;
+            shape.frame.y = xy?.y || _xy.y;
+            const editor = context.editor.editor4Page(page);
+            const r = editor.insert(page, page.childs.length, shape);
+            if (r) context.selection.selectShape(r);
+        } else if (is_shape) { // 内部图层
+            const source = JSON.parse(text_html.split(identity)[1]);
+            const shapes = import_shape(context.data, source);
+            const result: Shape[] = [];
+            if (!shapes.length) throw new Error('invalid source');
+            const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
+            if (xy) {
                 for (let i = 0; i < shapes.length; i++) {
-                    const shape = shapes[i];
-                    if (xy) {
-                        shape.frame.x = xy.x + deltas[i].x;
-                        shape.frame.y = xy.y + deltas[i].y;
-                    }
-                    if (shape.type === ShapeType.Text) {
-                        parse_text(shape as TextShape);
-                    }
-                    const page = context.selection.selectedPage;
-                    if (page) {
-                        const editor = context.editor.editor4Page(page);
-                        const r = editor.insert(page, page.childs.length, shape);
-                        if (r) result.push(r);
-                    }
+                    const frame = shapes[i].frame;
+                    if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
+                    if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
                 }
-                if (result.length) {
-                    context.selection.rangeSelectShape(result);
-                }
-            } else {
-                message('info', context.workspace.t('clipboard.invalid_data'));
             }
+            const deltas = [];
+            if (xy) {
+                for (let i = 0; i < shapes.length; i++) {
+                    const frame = shapes[i].frame;
+                    deltas.push({ x: frame.x - lt_shape_xy.x, y: frame.y - lt_shape_xy.y });
+                }
+            }
+            for (let i = 0; i < shapes.length; i++) {
+                const shape = shapes[i];
+                if (xy) {
+                    shape.frame.x = xy.x + deltas[i].x;
+                    shape.frame.y = xy.y + deltas[i].y;
+                }
+                if (shape.type === ShapeType.Text) {
+                    parse_text(shape as TextShape);
+                }
+                const page = context.selection.selectedPage;
+                if (page) {
+                    const editor = context.editor.editor4Page(page);
+                    const r = editor.insert(page, page.childs.length, shape);
+                    if (r) result.push(r);
+                }
+            }
+            if (result.length) {
+                context.selection.rangeSelectShape(result);
+            }
+        } else {
+            message('info', context.workspace.t('clipboard.invalid_data'));
         }
-        fr.readAsText(val);
     } catch (error) {
         console.log(error);
         message('info', context.workspace.t('clipboard.invalid_data'));
@@ -296,23 +276,19 @@ async function clipboard_text_html_replace(context: Context, data: any, src: Sha
     try {
         const val = await data.getType('text/html');
         if (!val) throw new Error('invalid value');
-        const fr = new FileReader();
-        fr.onload = function (event) {
-            const text_html = event.target?.result;
-            if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
-            const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
-            if (!is_shape) throw new Error('no shapes');
-            const source = JSON.parse(text_html.split(identity)[1]);
-            const shapes = import_shape(context.data, source);
-            if (!shapes.length) throw new Error('invalid source');
-            const page = context.selection.selectedPage;
-            if (page) {
-                const editor = context.editor.editor4Page(page);
-                const r = editor.replace(context.data, shapes, src);
-                if (r) context.selection.rangeSelectShape(r);
-            }
+        const text_html = await val.text();
+        if (!(text_html && typeof text_html === 'string')) throw new Error('read failure');
+        const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
+        if (!is_shape) throw new Error('no shapes');
+        const source = JSON.parse(text_html.split(identity)[1]);
+        const shapes = import_shape(context.data, source);
+        if (!shapes.length) throw new Error('invalid source');
+        const page = context.selection.selectedPage;
+        if (page) {
+            const editor = context.editor.editor4Page(page);
+            const r = editor.replace(context.data, shapes, src);
+            if (r) context.selection.rangeSelectShape(r);
         }
-        fr.readAsText(val);
     } catch (error) {
         console.log(error);
         message('info', context.workspace.t('system.replace_failed'));
@@ -363,16 +339,12 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
         const frame: { width: number, height: number } = { width: 400, height: 100 };
         const val = await data.getType('text/plain');
         if (!val) throw new Error('invalid value');
-        const fr = new FileReader();
-        fr.onload = function (event) {
-            const text = event.target?.result;
-            const is_plain = text && typeof text === 'string';
-            if (!is_plain) throw new Error('read failure');
-            const __xy = adjust_content_xy(context, frame);
-            const xy: PageXY = _xy || __xy;
-            paster_text(context, xy, text);
-        }
-        fr.readAsText(val);
+        const text = await val.text();
+        const is_plain = text && typeof text === 'string';
+        if (!is_plain) throw new Error('read failure');
+        const __xy = adjust_content_xy(context, frame);
+        const xy: PageXY = _xy || __xy;
+        paster_text(context, xy, text);
     } catch (error) {
         console.log(error);
         message('info', context.workspace.t('clipboard.invalid_data'));
