@@ -13,8 +13,8 @@ interface SystemClipboardItem {
     contentType: string
     content: Media | string
 }
-export const identity = 'cn.protodesign/clipboard';
-export const paras = 'cn.protodesign/clipboard-paras'; // 文字段落
+export const identity = 'cn.protodesign';
+export const paras = 'cn.protodesign/paras'; // 文字段落
 export class Clipboard {
     private context: Context;
     constructor(context: Context) {
@@ -174,7 +174,6 @@ async function paster_plain_inner_shape(_d: any, context: Context, editor: TextS
  * @param xy 以xy为锚点，不存在xy时，粘贴在原来的位置
  */
 export async function paster(context: Context, t: Function, xy?: PageXY) {
-    get_content_from_beta();
     try {
         if (!navigator.clipboard || !navigator.clipboard.read) {
             // todo plan2 兼容方案二
