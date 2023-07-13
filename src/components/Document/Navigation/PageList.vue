@@ -49,12 +49,10 @@ function document_watcher() {
 }
 class Iter implements IDataIter<ItemData> {
     private __document: Document;
-    private __pagesMgr: ResourceMgr<Page>;
     private __selection: Selection;
     private __index: number;
     constructor(context: Context, index: number) {
         this.__document = context.data;
-        this.__pagesMgr = context.data.pagesMgr;
         this.__selection = context.selection;
         this.__index = index;
     }
@@ -63,7 +61,6 @@ class Iter implements IDataIter<ItemData> {
     }
     next(): ItemData {
         const id: PageListItem = this.__document.pagesList[this.__index];
-        // const name = this.__pagesMgr.getPageNameById(id);
         this.__index++;
         const slectedPage = this.__selection.selectedPage;
         return {
