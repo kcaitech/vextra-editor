@@ -345,7 +345,7 @@ function close() {
 function toggle1() {
   fold1.value = !fold1.value;
   if (fold1.value) {
-    height_shpae.value = '42px';
+    height_shpae.value = '43px';
     if (valid_result_by_content.value) {
       if (fold2.value) {
         fold2.value = false;
@@ -354,7 +354,7 @@ function toggle1() {
   } else {
     if (valid_result_by_content.value) {
       if (fold2.value) {
-        height_shpae.value = 'calc(100% - 42px)';
+        height_shpae.value = 'calc(100% - 43px)';
       } else {
         height_shpae.value = '50%';
       }
@@ -367,13 +367,13 @@ function toggle2() {
   if (!valid_result_by_shape.value) return;
   fold2.value = !fold2.value;
   if (fold2.value) {
-    height_shpae.value = 'calc(100% - 42px)';
+    height_shpae.value = 'calc(100% - 43px)';
     if (fold1.value) {
       fold1.value = false;
     }
   } else {
     if (fold1.value) {
-      height_shpae.value = '42px';
+      height_shpae.value = '43px';
     } else {
       height_shpae.value = '50%';
     }
