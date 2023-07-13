@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { ShapeType, Color, Shape } from "@kcdesign/data"
-import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, computed, watchEffect } from 'vue';
 import ColorPicker from '../../common/ColorPicker/index.vue';
 import { useI18n } from 'vue-i18n';
 import Arrange from './Arrange.vue';
@@ -19,6 +19,8 @@ const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeTyp
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard];
 const shapeType = ref();
+const bgcInput = ref<HTMLInputElement>()
+const bgcOpacity = ref<HTMLInputElement>()
 
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
@@ -38,7 +40,34 @@ const change = throttle(_change, 200);
 function selectionChange(t: number) {
     change(t);
 }
-const backgroundColor = new Color(1, 239, 239, 239);
+const selecValueBgc = () => {
+    if(bgcInput.value) {
+        bgcInput.value?.select()
+    }
+}
+const selecValue = () => {
+    if(bgcOpacity.value) {
+        bgcOpacity.value?.select()
+    }
+}
+const backgroundColor = ref<Color>()
+watchEffect(() => {
+    if (props.context.selection.selectedShapes.length === 1) {
+        shapes.value = [props.context.selection.selectedShapes[0]];
+        shapeType.value = shapes.value[0].type;
+    } else if (props.context.selection.selectedShapes.length > 1) {
+        shapes.value = [...props.context.selection.selectedShapes];
+    } else {
+        shapes.value = [];
+    }
+})
+
+const getBackgroundColor = (color: Color) => {
+    backgroundColor.value = color
+}
+watchEffect(() => {
+    backgroundColor.value = new Color(1, 239, 239, 239)
+})
 onMounted(() => {
     props.context.selection.watch(selectionChange);
 })
@@ -52,9 +81,9 @@ onUnmounted(() => {
         <div v-if="len === 0" class="back-setting-container">
             <span>{{ t('attr.background') }}</span>
             <div class="setting">
-                <ColorPicker class="color" :color="backgroundColor" :context="props.context"></ColorPicker>
-                <input type="text" :value="'#EFEFEF'" :spellcheck="false">
-                <input type="text" :value="1">
+                <ColorPicker class="color" :color="backgroundColor!" :context="props.context" @change="c => getBackgroundColor(c)"></ColorPicker>
+                <input ref="bgcInput" type="text" @focus="selecValueBgc" :value="'#EFEFEF'" :spellcheck="false">
+                <input ref="bgcOpacity" type="text" @focus="selecValue" :value="1">
             </div>
         </div>
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>

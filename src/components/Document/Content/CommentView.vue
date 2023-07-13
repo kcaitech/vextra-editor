@@ -270,23 +270,27 @@ const aboutMe = () => {
 const deleteComment = (index: number) => {
     workspace.value.sendComment()
     documentCommentList.value.splice(index, 1)
+    props.context.workspace.setCommentList(documentCommentList.value)
 }
 
 //解决评论
 const resolve = (status: number, index: number) => {
     workspace.value.sendComment()
     documentCommentList.value[index].status = status
+    props.context.workspace.setCommentList(documentCommentList.value)
 }
 
 //回复评论
 const recover = () => {
     workspace.value.sendComment()
+    props.context.workspace.setCommentList(documentCommentList.value)
 }
 
 //修改评论内容
 const editComment = (index: number, text: string) => {
     workspace.value.sendComment()
     documentCommentList.value[index].content = text
+    props.context.workspace.setCommentList(documentCommentList.value)
 }
 
 //移动shape时保存shape身上的评论坐标

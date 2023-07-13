@@ -10,6 +10,7 @@ import { WorkSpace, Action } from "@/context/workspace";
 import { ElScrollbar } from 'element-plus'
 import { Selection } from "@/context/selection";
 import ShowHiddenLeft from "../ShowHiddenLeft.vue";
+import { watchEffect } from "vue";
 const { t } = useI18n();
 const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
@@ -168,7 +169,9 @@ const update = (t: number) => {
     }
     action.value = props.context.workspace.action;
 }
-
+watchEffect(() => {
+    getDocumentComment(docID)
+})
 onMounted(() => {
     props.context.workspace.watch(update);
     props.context.selection.watch(update);

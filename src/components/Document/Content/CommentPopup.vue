@@ -170,7 +170,7 @@ function handleClickOutside(event: MouseEvent) {
     event.stopPropagation()
     const action = workspace.value.action === Action.AddComment
     const length = textarea.value.trim().length < 4
-    if (event.target instanceof Element && !event.target.closest('.container-popup') && action && length) {
+    if (event.target instanceof Element && !event.target.closest('.container-popup') && length) {
         emit('close', event);
     } else if (event.target instanceof Element && !event.target.closest('.container-popup') && action && !length) {
         startShake()
@@ -491,7 +491,7 @@ onUnmounted(() => {
                 <el-input ref="inputPopup" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }"
                     type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
                     :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
-                    @input="handleInput" />
+                    @input="handleInput"/>
                 <div class="send" :style="{ opacity: sendBright ? '1' : '0.5' }" @click="addComment"><svg-icon
                         icon-class="send"></svg-icon></div>
             </div>

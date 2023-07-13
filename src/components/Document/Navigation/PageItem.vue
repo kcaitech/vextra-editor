@@ -14,6 +14,7 @@ const emit = defineEmits<{
     (e: "rename", name: string, id: string): void;
     (e: "onMouseDown", id: string, event: MouseEvent): void;
 }>();
+const rightClick = ref(false)
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
 const esc = ref<boolean>(false)
@@ -26,9 +27,10 @@ function onMouseDown(e: MouseEvent) {
             emit("switchpage", props.data.id);
             document.removeEventListener('mouseup', onMouseUp)
         });
-    } 
+    } else if(e.button === 2) {
+        rightClick.value = true
+    }
     emit('onMouseDown', props.data.id, e)
-    
 }
 
 const onRename = () => {    
@@ -116,7 +118,6 @@ onUnmounted(() => {
         align-items: center;
         width: 100%;
         position: relative;
-
         >.title {
             width: 100%;
             height: 100%;

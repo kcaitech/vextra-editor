@@ -28,7 +28,8 @@ const { t } = useI18n();
 const props = defineProps<Props>();
 const data: { borders: BorderItem[] } = reactive({ borders: [] });
 const { borders } = data;
-const alphaBorder = ref<HTMLInputElement>();
+const alphaBorder = ref<any>();
+const colorBorder = ref<any>()
 const mixed = ref<boolean>(false);
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const watchedShapes = new Map();
@@ -242,6 +243,27 @@ function selection_wather(t: any) {
         updateData();
     }
 }
+
+const selectColor = (i: number) => {
+    if(colorBorder.value) {
+        colorBorder.value[i].select()
+    }
+}
+const selectAlpha = (i: number) => {
+    if(alphaBorder.value) {
+        alphaBorder.value[i].select();
+    }
+}
+const filterAlpha = (a: number) => {
+    let alpha = Math.round(a * 100) / 100;
+    if (Number.isInteger(alpha)) {
+        return alpha.toFixed(0); // 返回整数形式
+    }else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+        return alpha.toFixed(1); // 保留一位小数
+    } else {
+        return alpha.toFixed(2); // 保留两位小数
+    }
+}
 // hooks
 onMounted(() => {
     props.context.selection.watch(selection_wather);
@@ -274,10 +296,10 @@ watchEffect(updateData);
                 <div class="color">
                     <ColorPicker :color="b.border.color" :context="props.context"
                         @change="(c: Color) => getColorFromPicker(c, idx)" />
-                    <input :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
-                        @change="e => onColorChange(e, idx)" />
-                    <input ref="alphaBorder" style="text-align: center;" :value="(b.border.color.alpha * 100) + '%'"
-                        @change="e => onAlphaChange(e, idx)" />
+                    <input ref="colorBorder" :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
+                        @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" />
+                    <input ref="alphaBorder" style="text-align: center;" :value="filterAlpha(b.border.color.alpha * 100) + '%'"
+                        @change="e => onAlphaChange(e, idx)" @focus="selectAlpha(idx)" />
                 </div>
                 <div class="extra-action">
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
