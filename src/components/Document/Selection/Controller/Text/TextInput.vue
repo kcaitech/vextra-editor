@@ -106,7 +106,7 @@ function committext() {
             end = t;
         }
         const count = editor.insertText2(text, index, end - index);
-        if (count > 0) {
+        if (count !== 0) {
             selection.setCursor(index + count, true);
         }
     }
