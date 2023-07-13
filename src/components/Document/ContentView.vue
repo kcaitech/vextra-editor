@@ -11,7 +11,7 @@ import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType } from '@kcdes
 import { Context } from '@/context'; // 状态顶层 store
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
 import { Action, KeyboardKeys, WorkSpace } from '@/context/workspace'; // workspace
-import { Menu } from '@/context/menu'; // menu
+import { Menu } from '@/context/menu'; // menu 菜单相关
 import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
@@ -157,20 +157,21 @@ function endDragPage() { // 编辑器完成拖动页面
     workspace.value.pageDragging(false);
 }
 function pageEditorOnMoveEnd(e: MouseEvent) {
-    const isDrag = is_drag(props.context, e, mousedownOnClientXY);
+    const isDrag = is_drag(props.context, e, mousedownOnClientXY, 2 * dragActiveDis);
     if (isDrag) {// 抬起之前存在拖动
         if (newShape) {
             shapeCreateEnd();
-        } else {
-            selectEnd();
         }
     } else { // 抬起之前未存在拖动
-        const action = workspace.value.action;
-        if (action === Action.AddText) {
-            init_insert_textshape(props.context, mousedownOnPageXY, t, t('shape.input_text'));
-        }
-        else if (action.startsWith('add')) { // 存在action
-            init_insert_shape(props.context, mousedownOnPageXY, t);
+        if (newShape) { // 拖动了之后把鼠标移动到原点再抬起
+            shapeCreateEnd();
+        } else {
+            const action = workspace.value.action;
+            if (action === Action.AddText) {
+                init_insert_textshape(props.context, mousedownOnPageXY, t, t('shape.input_text'));
+            } else if (action.startsWith('add')) { // 存在action
+                init_insert_shape(props.context, mousedownOnPageXY, t);
+            }
         }
     }
     setClass('auto-0');
@@ -185,7 +186,7 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
             }
         }
     } else {
-        const isDrag = is_drag(props.context, e, mousedownOnPageXY, 2 * dragActiveDis);
+        const isDrag = is_drag(props.context, e, mousedownOnClientXY, 2 * dragActiveDis);
         if (isDrag) {
             const shapeFrame = new ShapeFrame(x, y, 1, 1);
             const result = init_shape(props.context, shapeFrame, mousedownOnPageXY, t);
