@@ -122,6 +122,7 @@ export class WorkSpace extends Watchable(Object) {
     static HIDDEN_UI = 47;
     static INIT_DOC_NAME = 48;
     static COMPS = 49;
+    static INIT_EDITOR = 50;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();

@@ -168,7 +168,6 @@ function onKeyUp(e: KeyboardEvent) {
 function onKeyPress(e: KeyboardEvent) {
     handleKeyEvent(e, props.context, props.shape, editor);
 }
-
 </script>
 <template>
     <input type="text" class="input" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"

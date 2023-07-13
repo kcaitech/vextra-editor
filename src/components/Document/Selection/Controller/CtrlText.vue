@@ -76,16 +76,16 @@ function _update() {
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
-        props.context.menu.menuMount(false);
         const workspace = props.context.workspace;
+        props.context.menu.menuMount(false);
         if (!editing && isDblClick()) {
             editing = true;
             workspace.contentEdit(editing);
             workspace.setCursorStyle('text', 0);
         }
         if (!editing) return;
-        workspace.setCtrl('controller');
         const selection = props.context.selection;
+        workspace.setCtrl('controller');
         const root = workspace.root
         matrix.reset(props.matrix);
         const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
@@ -93,16 +93,23 @@ function onMouseDown(e: MouseEvent) {
         e.stopPropagation();
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
-        if (workspace.isMenuMount) {
-            workspace.menuMount(false);
-        }
     } else if (e.button === 2) {
         if (!(e.target as Element).closest('#text-selection')) {
             e.stopPropagation();
         }
     }
 }
-
+function be_editor(index?: number) {
+    const workspace = props.context.workspace;
+    const selection = props.context.selection;
+    editing = true;
+    workspace.contentEdit(editing);
+    workspace.setCursorStyle('text', 0);
+    if (index !== undefined) {
+        downIndex = { index, before: true };
+        selection.setCursor(index, true);
+    }
+}
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation();
     if (!editing) return;
@@ -159,6 +166,8 @@ function workspace_watcher(t?: number) {
         } else {
             visible.value = true;
         }
+    } else if (t === WorkSpace.INIT_EDITOR) {
+        be_editor(0);
     }
 }
 function selectionWatcher(...args: any[]) {

@@ -158,7 +158,7 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: F
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
     selection.selectShape(page!.getShape(new_shape.id));
-    selection.selectText(0, (new_shape as TextShape).text.length)
+    selection.selectText(0, (new_shape as TextShape).text.length);
   }
   workspace.setAction(Action.AutoV);
   workspace.creating(false);

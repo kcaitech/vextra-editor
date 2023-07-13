@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, TextShape } from '@kcdesign/data';
 import { Context } from '@/context'; // 状态顶层 store
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
 import { Action, KeyboardKeys, WorkSpace } from '@/context/workspace'; // workspace
@@ -525,6 +525,10 @@ function removeWheel() {
 }
 function shapeCreateEnd() { // 造图结束
     if (newShape) {
+        if (newShape.type === ShapeType.Text) { // 文本框新建则进入编辑状态
+            const workspace = props.context.workspace;
+            workspace.notify(WorkSpace.INIT_EDITOR);
+        }
         removeCreator();
         newShape = undefined;
     }
