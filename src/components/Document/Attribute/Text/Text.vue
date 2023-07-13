@@ -40,10 +40,14 @@ const fontName = ref()
 const colorIsMulti = ref(false)
 const highlightIsMulti = ref(false)
 const alphaFill = ref<HTMLInputElement>();
+const sizeColor = ref<HTMLInputElement>()
 const mixed = ref<boolean>(false);
 const higMixed = ref<boolean>(false);
 const textColor = ref<Color>()
 const highlight = ref<Color>()
+const textSize = ref<HTMLInputElement>()
+const higlightColor = ref<HTMLInputElement>()
+const higlighAlpha = ref<HTMLInputElement>()
 const len = computed<number>(() => props.context.selection.selectedShapes.length);
 const selection = computed(() => props.context.selection)
 const textShape = computed(() => props.context.selection.selectedShapes)
@@ -92,11 +96,8 @@ const onBold = () => {
     if(isSelectText()) {
         editor.setTextBold(isBold.value, 0, Infinity)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextBold(isBold.value, textIndex,selectLength)
-        }
+        editor.setTextBold(isBold.value, textIndex,selectLength)
+        textFormat()
     }
 }
 // 设置文本倾斜
@@ -107,11 +108,8 @@ const onTilt = () => {
     if(isSelectText()) {
         editor.setTextItalic(isTilt.value, 0, Infinity)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextItalic(isTilt.value, textIndex,selectLength)
-        }
+        editor.setTextItalic(isTilt.value, textIndex,selectLength)
+        textFormat()
     }
 }
 //设置下划线
@@ -122,11 +120,8 @@ const onUnderlint = () => {
     if(isSelectText()) {
         editor.setTextUnderline(isUnderline.value, 0, Infinity)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
-        }
+        editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
+        textFormat()
     }
 }
 // 设置删除线
@@ -137,11 +132,8 @@ const onDeleteline = () => {
     if(isSelectText()) {
         editor.setTextStrikethrough(isDeleteline.value, 0,Infinity)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextStrikethrough(isDeleteline.value, textIndex,selectLength)
-        }
+        editor.setTextStrikethrough(isDeleteline.value, textIndex,selectLength)
+        textFormat()
     }
 }
 // 设置水平对齐
@@ -153,6 +145,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
         editor.setTextHorAlign(icon, 0, Infinity)
     } else {
         editor.setTextHorAlign(icon, textIndex, selectLength)
+        textFormat()
     }
 }
 //设置垂直对齐
@@ -160,6 +153,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
     selectVertical.value = icon
     const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     editor.setTextVerAlign(icon)
+    textFormat()
 }
 //设置字体大小
 const changeTextSize = (size: number) => {
@@ -170,11 +164,8 @@ const changeTextSize = (size: number) => {
     if(isSelectText()) {
         editor.setTextFontSize(0, Infinity, size)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextFontSize(textIndex, selectLength, size)
-        }
+        editor.setTextFontSize(textIndex, selectLength, size)
+        textFormat()
     }
 }
 //设置字体
@@ -186,11 +177,8 @@ const setFont = (font: string) => {
     if(isSelectText()) {
         editor.setTextFontName(0, Infinity, font)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextFontName(textIndex, selectLength, font)
-        }
+        editor.setTextFontName(textIndex, selectLength, font)
+        textFormat()
     }
 }
 
@@ -217,6 +205,7 @@ const setTextSize = () => {
     }
     if (!isNaN(Number(fonstSize.value))) {
         changeTextSize(fonstSize.value)
+        textFormat()
     }else {
         textFormat()
     }
@@ -227,13 +216,12 @@ const setTextSize = () => {
 const textFormat = () => {
     if(!(textShape.value[0] as TextShape) || !(textShape.value[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     let format: AttrGetter
-    if(textIndex !== -1 && selectLength === 0) {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
-    }else if (textIndex === -1) {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(0, Infinity)
+    if (textIndex === -1) {
+        format = (textShape.value[0] as TextShape).text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
     }else {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
     colorIsMulti.value = format.colorIsMulti
     highlightIsMulti.value = format.highlightIsMulti
@@ -275,66 +263,32 @@ function workspace_wather(t: number) {
         onDeleteline()
     }else if(t === WorkSpace.ITALIC) {
         onTilt()
+    }else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        textFormat()
     }
 }
 function onAlphaChange(e: Event, type: string) {
     let value = (e.currentTarget as any)['value'];
-    if (alphaFill.value) {
-        if (value?.slice(-1) === '%') {
-            value = Number(value?.slice(0, -1))
-            if (value >= 0) {
-                if (value > 100) {
-                    value = 100
-                }
-                value = value.toFixed(2) / 100
-                let color
-                if(type === 'color') {
-                    color = textColor.value
-                }else {
-                    color = highlight.value
-                }
-                if(!color) return
-                let clr = toHex(color.red, color.green, color.blue);
-                if (clr.slice(0, 1) !== '#') {
-                    clr = "#" + clr
-                }
-                setColor(0, clr, value, type);
-                return
-            } else {
-                message('danger', t('system.illegal_input'));
-                if(type === 'color') {
-                    return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-                }else {
-                    return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
-                }
+    if (value?.slice(-1) === '%') {
+        value = Number(value?.slice(0, -1))
+        if (value >= 0) {
+            if (value > 100) {
+                value = 100
             }
-        } else if (!isNaN(Number(value))) {
-            if (value >= 0) {
-                if (value > 100) {
-                    value = 100
-                }
-                value = Number((Number(value)).toFixed(2)) / 100
-                let color
-                if(type === 'color') {
-                    color = textColor.value
-                }else {
-                    color = highlight.value
-                }
-                if(!color) return
-                let clr = toHex(color.red, color.green, color.blue);
-                if (clr.slice(0, 1) !== '#') {
-                    clr = "#" + clr
-                }
-                setColor(0, clr, value, type);
-                return
-            } else {
-                message('danger', t('system.illegal_input'));
-                if(type === 'color') {
-                    return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-                }else {
-                    return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
-                }
+            value = value.toFixed(2) / 100
+            let color
+            if(type === 'color') {
+                color = textColor.value
+            }else {
+                color = highlight.value
             }
+            if(!color) return
+            let clr = toHex(color.red, color.green, color.blue);
+            if (clr.slice(0, 1) !== '#') {
+                clr = "#" + clr
+            }
+            setColor(0, clr, value, type);
+            return
         } else {
             message('danger', t('system.illegal_input'));
             if(type === 'color') {
@@ -342,6 +296,40 @@ function onAlphaChange(e: Event, type: string) {
             }else {
                 return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
             }
+        }
+    } else if (!isNaN(Number(value))) {
+        if (value >= 0) {
+            if (value > 100) {
+                value = 100
+            }
+            value = Number((Number(value)).toFixed(2)) / 100
+            let color
+            if(type === 'color') {
+                color = textColor.value
+            }else {
+                color = highlight.value
+            }
+            if(!color) return
+            let clr = toHex(color.red, color.green, color.blue);
+            if (clr.slice(0, 1) !== '#') {
+                clr = "#" + clr
+            }
+            setColor(0, clr, value, type);
+            return
+        } else {
+            message('danger', t('system.illegal_input'));
+            if(type === 'color') {
+                return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
+            }else {
+                return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
+            }
+        }
+    } else {
+        message('danger', t('system.illegal_input'));
+        if(type === 'color') {
+            return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
+        }else {
+            return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
         }
     }
 }
@@ -435,17 +423,6 @@ const deleteHighlight = () => {
     textFormat()
 }
 
-const deleteColor = () => {
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
-    if(isSelectText()) {
-        editor.setTextColor(0, Infinity, undefined)
-    }else {
-        editor.setTextColor(textIndex, selectLength, undefined)
-    }
-    textFormat()
-}
-
 const addHighlight = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
@@ -466,7 +443,24 @@ const addTextColor = () => {
     }
     textFormat()
 }
-watchEffect(textFormat)
+const selectSizeValue = () => {
+    textSize.value && textSize.value.select()
+}
+const selectColorValue = () => {
+    sizeColor.value && sizeColor.value.select()
+}
+const selectAlphaValue = () => {
+    alphaFill.value && alphaFill.value.select()
+}
+const selectHiglightColor = () => {
+    higlightColor.value && higlightColor.value.select()
+}
+const selectHiglighAlpha = () => {
+    higlighAlpha.value && higlighAlpha.value.select()
+}
+watchEffect(() => {
+    textFormat()
+})
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
@@ -496,7 +490,7 @@ onUnmounted(() => {
             <div class="text-middle">
                 <div class="text-middle-size">
                     <div class="text-size jointly-text">
-                        <input type="text" v-model="fonstSize" class="input" @change="setTextSize">
+                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize" @focus="selectSizeValue">
                         <svg-icon icon-class="down" @click="onShowSize"></svg-icon>
                         <div class="font-size-list" ref="sizeList" v-if="showSize">
                             <div @click="changeTextSize(10)">10</div>
@@ -554,8 +548,8 @@ onUnmounted(() => {
                                 <svg-icon icon-class="text-right"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'justified' }"
-                            @click="onSelectLevel(TextHorAlign.Justified)">
+                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'natural' }"
+                            @click="onSelectLevel(TextHorAlign.Natural)">
                             <Tooltip :content="t('attr.align_the_sides')" :offset="15">
                                 <svg-icon icon-class="text-justify"></svg-icon>
                             </Tooltip>
@@ -590,8 +584,8 @@ onUnmounted(() => {
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
-                    <input :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)" @change="(e) => onColorChange(e, 'color')"/>
-                    <input ref="alphaFill" style="text-align: center;" :value="(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
+                    <input ref="sizeColor" @focus="selectColorValue" :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)" @change="(e) => onColorChange(e, 'color')"/>
+                    <input ref="alphaFill" @focus="selectAlphaValue" style="text-align: center;" :value="(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
                 </div>
                 <div class="perch"></div>
             </div>
@@ -618,8 +612,8 @@ onUnmounted(() => {
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
-                    <input :spellcheck="false" :value="toHex(highlight!.red, highlight!.green, highlight!.blue)" @change="(e) => onColorChange(e, 'highlight')"/>
-                    <input ref="alphaFill" style="text-align: center;" :value="(highlight!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')"/>
+                    <input ref="higlightColor" @focus="selectHiglightColor" :spellcheck="false" :value="toHex(highlight!.red, highlight!.green, highlight!.blue)" @change="(e) => onColorChange(e, 'highlight')"/>
+                    <input ref="higlighAlpha" @focus="selectHiglighAlpha" style="text-align: center;" :value="(highlight!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')"/>
                 </div>
                 <div class="perch" @click="deleteHighlight">
                     <svg-icon class="svg" icon-class="delete"></svg-icon>

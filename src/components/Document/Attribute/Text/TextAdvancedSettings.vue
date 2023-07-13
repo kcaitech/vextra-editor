@@ -20,6 +20,9 @@ const wordSpace = ref()
 const rowHeight = ref()
 const row_height = ref(`${t('attr.auto')}`)
 const paragraphSpace = ref()
+const charSpacing = ref<HTMLInputElement>()
+const lineHeight = ref<HTMLInputElement>()
+const paraSpacing = ref<HTMLInputElement>()
 const selection = computed(() => props.context.selection)
 
 //获取选中字体的长度和下标
@@ -41,11 +44,7 @@ const onSelectId = (icon: BulletNumbersType) => {
   if(isSelectText()) {
       editor.setTextBulletNumbers(icon, 0, Infinity)
   } else {
-    if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setTextBulletNumbers(icon, textIndex, selectLength)
-      }
+      editor.setTextBulletNumbers(icon, textIndex, selectLength)
   }
 }
 
@@ -61,11 +60,7 @@ const onSelectCase = (icon: TextTransformType) => {
   if(isSelectText()) {
       editor.setTextTransform(icon, 0, Infinity)
   } else {
-    if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setTextTransform(icon, textIndex, selectLength)
-      }
+      editor.setTextTransform(icon, textIndex, selectLength)
   }
 }
 
@@ -80,11 +75,7 @@ const setRowHeight = () => {
     if(isSelectText()) {
       editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
     }else {
-      if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
-      }
+      editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
     }
   }else {
       textFormat()
@@ -105,11 +96,7 @@ const setWordSpace = () => {
     if(isSelectText()) {
       editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
     }else {
-      if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
-      }
+      editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
     }
   }else {
       textFormat()
@@ -124,11 +111,7 @@ const setParagraphSpace = () => {
     if(isSelectText()) {
       editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
     }else {
-      if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
-      }
+      editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
     }
   }else {
       textFormat()
@@ -144,16 +127,25 @@ const isSelectText = () => {
     }
 }
 
+const selectCharSpacing = () => {
+  charSpacing.value && charSpacing.value.select()
+}
+const selectLineHeight = () => {
+  lineHeight.value && lineHeight.value.select()
+}
+const selectParaSpacing = () => {
+  paraSpacing.value && paraSpacing.value.select()
+}
+
 const textFormat = () => {
     if(!(props.textShape[0] as TextShape) || !(props.textShape[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
     let format: AttrGetter
-    if(textIndex !== -1 && selectLength === 0) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
-    }else if (textIndex === -1) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(0, Infinity)
+    if (textIndex === -1) {
+        format = (props.textShape[0] as TextShape).text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
     }else {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
     wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'
@@ -199,15 +191,15 @@ onUnmounted(() => {
           <div class="options-container">
             <div>
                 <span>{{t('attr.word_space')}}</span>
-                <div><input type="text" v-model="wordSpace" class="input" @change="setWordSpace"></div>
+                <div><input type="text" ref="charSpacing" @focus="selectCharSpacing" v-model="wordSpace" class="input" @change="setWordSpace"></div>
             </div>
             <div>
                 <span>{{t('attr.row_height')}}</span>
-                <div><input type="text" v-model="rowHeight" :placeholder="row_height" class="input" @change="setRowHeight"></div>
+                <div><input type="text" ref="lineHeight" @focus="selectLineHeight" v-model="rowHeight" :placeholder="row_height" class="input" @change="setRowHeight"></div>
             </div>
             <div>
                 <span>{{t('attr.paragraph_space')}}</span>
-                <div><input type="text" v-model="paragraphSpace" class="input" @change="setParagraphSpace"></div>
+                <div><input type="text" ref="paraSpacing" @focus="selectParaSpacing" v-model="paragraphSpace" class="input" @change="setParagraphSpace"></div>
             </div>
             <div>
                 <span>{{t('attr.id_style')}}</span>
