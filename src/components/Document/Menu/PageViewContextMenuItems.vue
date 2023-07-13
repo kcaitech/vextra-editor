@@ -370,11 +370,11 @@ function edit() {
  * 隐藏图层
  */
 function visible() {
-  const shpaes = props.context.selection.selectedShapes;
-  for (let i = 0; i < shpaes.length; i++) {
-    const editor = props.context.editor4Shape(shpaes[i]);
-    editor.toggleVisible();
-  }
+  const shapes = props.context.selection.selectedShapes;
+  const page = props.context.selection.selectedPage;
+  if (!page) return emit('close');
+  const editor = props.context.editor4Page(page);
+  editor.toggleShapesVisible(shapes);
   props.context.selection.resetSelectShapes();
   emit('close');
 }
@@ -382,11 +382,11 @@ function visible() {
  * 解锁
  */
 function lock() {
-  const shpaes = props.context.selection.selectedShapes;
-  for (let i = 0; i < shpaes.length; i++) {
-    const editor = props.context.editor4Shape(shpaes[i]);
-    editor.toggleLock();
-  }
+  const shapes = props.context.selection.selectedShapes;
+  const page = props.context.selection.selectedPage;
+  if (!page) return emit('close');
+  const editor = props.context.editor4Page(page);
+  editor.toggleShapesLock(shapes);
   props.context.selection.resetSelectShapes();
   emit('close');
 }

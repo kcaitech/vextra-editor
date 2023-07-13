@@ -247,27 +247,22 @@ function unHovershape() {
     props.context.selection.unHoverShape();
 }
 const rename = (value: string, shape: Shape) => {
-    const editor = computed(() => {
-        return props.context.editor4Shape(shape);
-    });
-    editor.value.setName(value)
+    const editor = props.context.editor4Shape(shape);
+    editor.setName(value)
 }
 
-const isLock = (lock: boolean, shape: Shape) => {
-    const editor = computed(() => {
-        return props.context.editor4Shape(shape);
-    });
-    editor.value.toggleLock();
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
+const isLock = (shape: Shape) => {
+    const editor = props.context.editor4Shape(shape);
+    editor.toggleLock();
 }
 
 const isRead = (read: boolean, shape: Shape) => {
     let timer: any;
-    timer && clearTimeout(timer);
-    const editor = computed(() => {
-        return props.context.editor4Shape(shape);
-    });
-    editor.value.toggleVisible();
+    if (timer) {
+        clearTimeout(timer)
+    }
+    const editor = props.context.editor4Shape(shape);
+    editor.toggleVisible();
     if (!read) {
         props.context.selection.unSelectShape(shape);
         props.context.selection.unHoverShape();
@@ -278,7 +273,6 @@ const isRead = (read: boolean, shape: Shape) => {
             timer = null;
         }, 350)
     }
-    listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 function shapeScrollToContentView(shape: Shape) {
     if (isInner(props.context, shape)) {
@@ -531,7 +525,6 @@ onUnmounted(() => {
 
 <template>
     <div class="shapelist-wrap" ref="shapeList">
-
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search" ref="search_wrap" @mouseenter="search_el_mouseenter" @mouseleave="search_el_mouseleave">
@@ -577,7 +570,7 @@ onUnmounted(() => {
                 :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"
                 :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
                 @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
-                @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"
+                @scrolltoview="shapeScrollToContentView" @rename="rename" @set-visible="isRead" @set-lock="isLock"
                 @item-mousedown="list_mousedown" orientation="vertical" @after-drag="after_drag">
             </ListView>
             <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"

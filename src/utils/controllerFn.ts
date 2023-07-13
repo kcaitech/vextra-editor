@@ -1,6 +1,8 @@
 import { Context } from "@/context";
 import { message } from "./message";
 import { replace } from "./clipaboard";
+import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     const { target, shiftKey, ctrlKey, metaKey } = e;
@@ -94,20 +96,22 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
 
     } else if (e.code === 'KeyH') {
         if (shiftKey) {
-            const shpaes = context.selection.selectedShapes;
-            for (let i = 0; i < shpaes.length; i++) {
-                const editor = context.editor4Shape(shpaes[i]);
-                editor.toggleVisible();
-            }
+            let shapes = context.selection.selectedShapes;
+            const page = context.selection.selectedPage;
+            shapes = shapes.filter(s => !is_parent_unvisible(s));
+            if (!page) return;
+            const editor = context.editor4Page(page);
+            editor.toggleShapesVisible(shapes);
             context.selection.resetSelectShapes();
         }
     } else if (e.code === 'KeyL') {
         if (shiftKey) {
-            const shpaes = context.selection.selectedShapes;
-            for (let i = 0; i < shpaes.length; i++) {
-                const editor = context.editor4Shape(shpaes[i]);
-                editor.toggleLock();
-            }
+            let shapes = context.selection.selectedShapes;
+            const page = context.selection.selectedPage;
+            shapes = shapes.filter(s => !is_parent_locked(s));
+            if (!page) return;
+            const editor = context.editor4Page(page);
+            editor.toggleShapesLock(shapes);
             context.selection.resetSelectShapes();
         }
     }

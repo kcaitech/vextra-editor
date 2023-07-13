@@ -29,3 +29,27 @@ export function selection_types(shapes: Shape[]): number {
     }
     return types;
 }
+export function is_parent_unvisible(shape: Shape): boolean {
+    let is_pu = false;
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        if (!p.isVisible) {
+            is_pu = true;
+            break;
+        }
+        p = p.parent;
+    }
+    return is_pu;
+}
+export function is_parent_locked(shape: Shape): boolean {
+    let is_pu = false;
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        if (p.isLocked) {
+            is_pu = true;
+            break;
+        }
+        p = p.parent;
+    }
+    return is_pu;
+}
