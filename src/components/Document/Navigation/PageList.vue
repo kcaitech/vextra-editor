@@ -6,7 +6,6 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
-import { ResourceMgr } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
