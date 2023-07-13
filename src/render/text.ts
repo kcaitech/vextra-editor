@@ -151,7 +151,7 @@ export function render(h: Function, shape: TextShape, reflush?: number) {
                     if (span.italic) style['font-style'] = "italic";
                 }
 
-                linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join('')));
+                if (gText.length > 0) linechilds.push(h('text', { x: gX.join(' '), y, style }, gText.join('')));
 
                 // 下划线、删除线、高亮
                 if (span) {
