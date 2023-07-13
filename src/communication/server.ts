@@ -1,13 +1,14 @@
-import { ServerCmdType, ServerCmdStatus } from "@/communication/types"
+import { ServerCmdType, CmdStatus } from "@/communication/types"
+import { COMMUNICATION_URL } from "@/utils/setting"
 
-
-const Host = "protodesign.cn"
-const basePath = `${Host}/api_test/v1`
-const apiUrl = `wss://${basePath}/communication`
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 export class Server {
     token: string
     ws: WebSocket | undefined = undefined
+    isConnected: boolean = false
     isConnecting: boolean = false
     connectPromise: Promise<boolean> | undefined = undefined
     onmessage: (event: MessageEvent) => any
@@ -19,13 +20,13 @@ export class Server {
     }
 
     async connect(): Promise<boolean> {
-        if (this.ws !== undefined) return true;
+        if (this.isConnected) return true;
         if (this.isConnecting && this.connectPromise) return await this.connectPromise;
         this.isConnecting = true
         let resolve: (value: boolean) => void = () => {}
         this.connectPromise = new Promise<boolean>(r => resolve = r)
         try {
-            this.ws = new WebSocket(apiUrl)
+            this.ws = new WebSocket(COMMUNICATION_URL)
             this.ws.binaryType = 'arraybuffer'
         } catch (e) {
             console.log(e)
@@ -44,7 +45,7 @@ export class Server {
                     const data = JSON.parse(event.data)
                     if (data.cmd_type !== ServerCmdType.InitResult
                         || typeof data.cmd_id !== "string" || data.cmd_id === ""
-                        || data.status !== ServerCmdStatus.Success || !data.data?.communication_id
+                        || data.status !== CmdStatus.Success || !data.data?.communication_id
                     ) {
                         resolve(false)
                         return
@@ -65,13 +66,17 @@ export class Server {
         this.ws.onmessage = this.onmessage.bind(this)
         resolve(true)
         this.isConnecting = false
+        this.isConnected = true
+        this.ws.onclose = event => {
+            this.isConnected = false
+        }
         return true
     }
 
     async send(data: any) {
-        if (this.ws === undefined) {
-            while (!await this.connect()) {}
+        if (!this.isConnected) {
+            while (!await this.connect()) await sleep(1000);
         }
-        this.ws?.send(data)
+        this.ws!.send(data)
     }
 }

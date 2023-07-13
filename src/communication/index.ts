@@ -1,24 +1,38 @@
 import { v4 as uuid } from "uuid"
-import { ClientPostData, CommunicationInfo, DataType, TunnelType } from "./types"
+import {
+    ClientPostData,
+    CmdResult,
+    CommunicationInfo,
+    DataType,
+    CmdStatus,
+    TunnelType,
+    WorkerPostData
+} from "./types"
 
-class Communication {
-    private info: CommunicationInfo
-    private worker: SharedWorker | undefined = undefined
-    private onmessage: (data: any) => void
-    private pendingCmdList = new Map<string, {
+export class Communication {
+    protected info: CommunicationInfo
+    protected worker: SharedWorker | undefined = undefined
+    protected _onmessage: (data: any) => void = () => {}
+    protected pendingCmdList = new Map<string, {
         cmd: any,
         promise: Promise<any>,
         resolve: (value: any) => void,
     }>()
+    protected receivingData: WorkerPostData | undefined = undefined
 
-    constructor(tunnelType: TunnelType, onmessage: (data: any) => void) {
+    constructor(tunnelType: TunnelType, firstData?: any) {
         this.info = {
             name: "",
             id: "",
             token: "",
             tunnelType: tunnelType,
+            data: firstData,
         }
-        this.onmessage = onmessage
+    }
+
+    protected setOnMessage(onmessage: (data: any) => void) {
+        this._onmessage = onmessage
+        return this
     }
 
     public async start(token: string): Promise<boolean> {
@@ -28,8 +42,6 @@ class Communication {
         this.info.name = uuid()
         this.info.id = ""
         this.info.token = token
-        port.postMessage(this.info)
-        port.start()
         return await new Promise<boolean>(resolve => {
             port.onmessage = (event) => {
                 const data = event.data as CommunicationInfo
@@ -39,18 +51,59 @@ class Communication {
                     return
                 }
                 if (!data.id) {
-                    console.log("worker：id参数错误", data.id)
+                    console.log("worker：返回id为空")
                     resolve(false)
                     return
                 }
                 this.info.name = data.name
                 this.info.id = data.id
-                port.onmessage = (event: MessageEvent) => {
-                    this.onmessage(event.data)
-                }
+                port.onmessage = this.receiveFromWorker.bind(this)
                 resolve(true)
             }
+            port.start()
+            port.postMessage(this.info)
         })
+    }
+
+    protected receiveFromWorker(event: MessageEvent) {
+        const data = event.data as WorkerPostData
+        const isBinary = (data as any) instanceof ArrayBuffer
+        if (isBinary && this.receivingData === undefined) {
+            console.log("数据传输错误：缺少数据头")
+            return
+        }
+        if (!isBinary && this.receivingData !== undefined) {
+            console.log("数据传输错误：缺少数据段")
+            this.receivingData = undefined
+        }
+        if (isBinary) {
+            this._onmessage(data)
+            this.receivingData = undefined
+            return
+        }
+        if (data.isListened) {
+            const cmdId = data.cmdId
+            if (cmdId === undefined) {
+                console.log("isListened为true时，cmdId不能为空")
+                return
+            }
+            if (!this.pendingCmdList.has(cmdId)) return;
+            const dataData = data.data as CmdResult
+            const cmd = this.pendingCmdList.get(cmdId)
+            cmd!.resolve({
+                status: dataData.status ?? CmdStatus.Fail,
+                message: dataData.message,
+                data: dataData.data,
+            })
+            return
+        }
+        if (data.dataType === DataType.Text) {
+            this._onmessage(data.data)
+        } else if (data.dataType === DataType.Binary) {
+            this.receivingData = data
+        } else {
+            console.log("数据类型错误", data.dataType)
+        }
     }
 
     public async send(data: any, isListened?: boolean) {
@@ -68,23 +121,30 @@ class Communication {
         this.worker.port.postMessage(postData)
         if (data instanceof ArrayBuffer) this.worker.port.postMessage(data, [data]);
         if (isListened) {
-
+            let resolve: (value: CmdResult) => void = () => {}
+            const promise: Promise<CmdResult> = new Promise(r => resolve = r)
+            this.pendingCmdList.set(postData.cmdId!, {
+                cmd: postData,
+                promise: promise,
+                resolve: resolve,
+            })
         }
     }
 
-    async getCmdResult(cmdId: string): Promise<any> {
+    protected async getCmdResult(cmdId: string): Promise<any> {
         if (!this.pendingCmdList.has(cmdId)) return;
         const cmd = this.pendingCmdList.get(cmdId)
+        const result = await cmd!.promise
         this.pendingCmdList.delete(cmdId)
-        return await cmd!.promise
+        return result
     }
 
     public close() {
-        // todo
+        console.log("通道关闭", this.info.id)
+        this.worker?.port.postMessage({
+            dataType: DataType.Text,
+            close: true,
+        } as ClientPostData)
+        this.worker?.port.close()
     }
 }
-
-const communication = new Communication(TunnelType.DocOp, data => {
-    console.log(data)
-})
-communication.start(localStorage.getItem("token") ?? "")

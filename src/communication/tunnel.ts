@@ -5,26 +5,20 @@ import {
     CommunicationInfo,
     DataType,
     ServerCmd,
-    ServerCmdStatus,
+    CmdStatus,
     ServerCmdType,
-    WorkerPostData
+    WorkerPostData,
+    CmdResult,
+    TunnelType, SendToServerCmd,
 } from "@/communication/types"
 import { Server } from "@/communication/server"
 
-type CmdResult = {
-    status: ServerCmdStatus,
-    message?: string,
-    data?: any,
-}
-
-export class Tunnel implements CommunicationInfo {
+export class Tunnel {
     port: MessagePort
     server: Server
-    name: string
-    id: string
-    token: string
+    info: CommunicationInfo
     tunnelId: string = ""
-    tunnelType: number
+    tunnelType: TunnelType
     pendingCmdList = new Map<string, {
         cmd: any,
         promise: Promise<CmdResult>,
@@ -36,23 +30,26 @@ export class Tunnel implements CommunicationInfo {
     constructor(port: MessagePort, server: Server, info: CommunicationInfo) {
         this.port = port
         this.server = server
-        this.name = info.name
-        this.id = info.id
-        this.token = info.token
+        this.info = info
         this.tunnelType = info.tunnelType
     }
 
     async start(): Promise<boolean> {
-        const cmdId = await this._sendToServer(ClientCmdType.TunnelData, true)
+        const cmdId = await this.sendToServer(ClientCmdType.OpenTunnel, { data: this.info.data }, true)
         const cmdResult = await this.getCmdResult(cmdId)
         if (!cmdResult || typeof cmdResult.data.tunnel_id !== "string" || cmdResult.data.tunnel_id === "") return false;
         this.tunnelId = cmdResult.data.tunnel_id
         return true
     }
 
-    receiveFromClient(event: MessageEvent) {
-        const data = event.data
-        const isBinary = data instanceof ArrayBuffer
+    async receiveFromClient(event: MessageEvent) {
+        const data = event.data as ClientPostData
+        console.log("receiveFromClient", this.tunnelId, data)
+        if (data.close) {
+            this.close(true)
+            return
+        }
+        const isBinary = (data as any) instanceof ArrayBuffer
         if (isBinary && this.receivingData === undefined) {
             console.log("数据传输错误：缺少数据头")
             return
@@ -62,14 +59,24 @@ export class Tunnel implements CommunicationInfo {
             this.receivingData = undefined
         }
         if (isBinary) {
-            this._sendToServer(ClientCmdType.TunnelData, data, this.receivingData?.isListened, this.receivingData?.cmdId)
+            this.server.send(data)
             this.receivingData = undefined
             return
         }
-        console.log(this.id, data)
-        this.server.send(JSON.stringify({
-            cmd_type: ServerCmdType.TunnelData,
-        }))
+        const cmdId = await this.sendToServer(ClientCmdType.TunnelData, data, data.isListened, data.cmdId)
+        if (data.isListened) {
+            if (!data.cmdId) {
+                console.log("数据传输错误：data.isListened=true时cmdId不能为空")
+                return
+            }
+            const cmdResult = await this.getCmdResult(cmdId)
+            if (!cmdResult) return;
+            this.sendToClient({
+                cmdId: data.cmdId,
+                isListened: true,
+                data: cmdResult,
+            })
+        }
     }
 
     sendToClient(data: WorkerPostData) {
@@ -86,14 +93,14 @@ export class Tunnel implements CommunicationInfo {
     }
 
     receiveFromServer(cmdData: ServerCmd) {
-        const cmdId = cmdData.data?.cmd_id
-        if (typeof cmdId !== "string" || cmdId === "") return;
         switch (cmdData.cmd_type) {
             case ServerCmdType.CmdReturn:
+                const cmdId = cmdData.data?.cmd_id
+                if (typeof cmdId !== "string" || cmdId === "") return;
                 if (!this.pendingCmdList.has(cmdId)) return;
                 const cmd = this.pendingCmdList.get(cmdId)
                 cmd!.resolve({
-                    status: cmdData.status ?? ServerCmdStatus.Fail,
+                    status: cmdData.status ?? CmdStatus.Fail,
                     message: cmdData.message,
                     data: cmdData.data,
                 })
@@ -103,7 +110,7 @@ export class Tunnel implements CommunicationInfo {
                 break
             case ServerCmdType.TunnelData:
                 const dataType = cmdData.data?.data_type
-                if (dataType !== DataType.Text || dataType !== DataType.Binary) {
+                if (dataType !== DataType.Text && dataType !== DataType.Binary) {
                     console.log("不支持的数据类型", dataType)
                     break
                 }
@@ -120,16 +127,23 @@ export class Tunnel implements CommunicationInfo {
         }
     }
 
-    async _sendToServer(cmdType: ClientCmdType, data?: any, isListened: boolean = false, cmdId?: string) {
+    async sendToServer(cmdType: ClientCmdType, data?: any, isListened: boolean = false, cmdId?: string) {
         if (typeof cmdId !== "string" || cmdId === "") cmdId = uuid();
+        const cmdData: SendToServerCmd = {
+            cmd_id: data?.cmdId,
+            tunnel_id: this.tunnelId ? this.tunnelId : undefined,
+            data_type: data?.dataType,
+            data: data?.data,
+        }
         const cmd = {
             cmd_type: cmdType,
             cmd_id: cmdId,
             tunnel_type: this.tunnelType,
-            data: data,
+            data: cmdData,
         }
         if (isListened) {
-            let resolve: (value: CmdResult) => void = () => {}
+            let resolve: (value: CmdResult) => void = () => {
+            }
             const promise: Promise<CmdResult> = new Promise(r => resolve = r)
             this.pendingCmdList.set(cmdId, {
                 cmd: cmd,
@@ -142,28 +156,12 @@ export class Tunnel implements CommunicationInfo {
         return cmdId
     }
 
-    async sendToServer(data: any, isListened: boolean = false) {
-        return await this._sendToServer(ClientCmdType.TunnelData, {
-            tunnel_id: this.id,
-            data_type: DataType.Text,
-            data: data,
-        }, isListened)
-    }
-
-    async sendToServerBlock(data: any) {
-        const cmdId = await this._sendToServer(ClientCmdType.TunnelData, {
-            tunnel_id: this.id,
-            data_type: DataType.Text,
-            data: data,
-        }, true)
-        return await this.getCmdResult(cmdId)
-    }
-
     async getCmdResult(cmdId: string): Promise<undefined | CmdResult> {
         if (!this.pendingCmdList.has(cmdId)) return;
         const cmd = this.pendingCmdList.get(cmdId)
+        const result = await cmd!.promise
         this.pendingCmdList.delete(cmdId)
-        return await cmd!.promise
+        return result
     }
 
     setSendToServerHandler(handler: (cmdId: string, cmd: any) => void) {
@@ -172,8 +170,8 @@ export class Tunnel implements CommunicationInfo {
 
     close(closeServerPeer: boolean = false) {
         if (closeServerPeer) {
-            this._sendToServer(ClientCmdType.CloseTunnel, {
-                tunnel_id: this.id,
+            this.sendToServer(ClientCmdType.CloseTunnel, {
+                tunnel_id: this.tunnelId,
             })
         }
         this.port.close()

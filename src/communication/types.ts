@@ -6,11 +6,13 @@ export type CommunicationInfo = {
     name: string,
     id: string,
     token: string,
-    tunnelType: number,
+    tunnelType: TunnelType,
+    data?: any,
 }
 
 export enum ClientCmdType {
-    OpenTunnel = 0, // 打开一条虚拟通道
+    Return = 0, // 返回cmd执行结果
+    OpenTunnel, // 打开一条虚拟通道
     CloseTunnel, // 关闭一条虚拟通道
     TunnelData, // 虚拟通道数据
 }
@@ -22,7 +24,7 @@ export enum ServerCmdType {
     TunnelData, // 虚拟通道数据
 }
 
-export enum ServerCmdStatus {
+export enum CmdStatus {
     Success = "success",
     Fail = "fail",
 }
@@ -32,10 +34,20 @@ export enum DataType {
     Binary = 2,
 }
 
+export type TunnelCmd = {
+    tunnel_id?: string,
+    data_type?: DataType,
+    data?: any,
+}
+
+export type SendToServerCmd = {
+    cmd_id: string,
+} & TunnelCmd
+
 export type ServerCmd = {
     cmd_type: ServerCmdType,
     cmd_id: string,
-    status?: ServerCmdStatus,
+    status?: CmdStatus,
     message?: string,
     data?: any,
 }
@@ -45,6 +57,7 @@ export type ClientPostData = {
     isListened?: boolean,
     dataType: DataType,
     data?: any,
+    close?: boolean,
 }
 
 export type WorkerPostData = {
@@ -52,4 +65,10 @@ export type WorkerPostData = {
     isListened?: boolean,
     dataType?: DataType,
     data: any,
+}
+
+export type CmdResult = {
+    status: CmdStatus,
+    message?: string,
+    data?: any,
 }

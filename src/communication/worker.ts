@@ -1,13 +1,13 @@
 import { v4 as uuid } from "uuid"
-import { CommunicationInfo, ServerCmdType, ServerCmdStatus, DataType, ServerCmd } from "@/communication/types"
+import { CommunicationInfo, ServerCmdType, DataType, ServerCmd } from "@/communication/types"
 import { Tunnel } from "@/communication/tunnel"
 import { Server } from "@/communication/server"
 
+const ctx: SharedWorkerGlobalScope = self as any
 let server: Server | undefined = undefined
 const tunnelMap = new Map<string, Tunnel>()
 const cmdIdToTunnel = new Map<string, Tunnel>()
 let token: string = ""
-const ctx: SharedWorkerGlobalScope = self as any
 let receivingTunnel: Tunnel | undefined = undefined
 let receivingTunnelCmd: ServerCmd | undefined = undefined
 
@@ -39,10 +39,7 @@ function receiveFromServer(event: MessageEvent) {
     const tunnelId = data.data?.tunnel_id
     const isTunnelDataCmd = data.cmd_type === ServerCmdType.TunnelData
     const tunnel = isTunnelDataCmd ? tunnelMap.get(tunnelId): cmdIdToTunnel.get(originCmdId)
-    if (!tunnel) {
-        console.log("tunnel不存在", tunnelId)
-        return
-    }
+    if (!tunnel) return;
     if (isTunnelDataCmd && data.data?.data_type === DataType.Binary) {
         receivingTunnel = tunnel
         receivingTunnelCmd = data
@@ -76,8 +73,9 @@ ctx.onconnect = (event) => {
         const tunnel = new Tunnel(port, server, data)
         tunnel.setSendToServerHandler((cmdId, cmd) => cmdIdToTunnel.set(cmdId, tunnel))
         if (await tunnel.start()) {
-            sendData.id = data.id
-            tunnelMap.set(data.id, tunnel)
+            console.log("tunnel创建成功", tunnel.tunnelId)
+            sendData.id = tunnel.tunnelId
+            tunnelMap.set(tunnel.tunnelId, tunnel)
             port.onmessage = tunnel.receiveFromClient.bind(tunnel)
         }
         port.postMessage(sendData)

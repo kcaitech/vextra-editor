@@ -9,6 +9,7 @@ import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal, CoopRepository } from '@kcdesign/data';
+import { Ot } from "@/communication/modules/ot";
 import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
@@ -258,7 +259,7 @@ const getUserInfo = async () => {
 }
 
 //获取文档信息
-let coopLocal: ICoopLocal | null = null;
+let ot: Ot | undefined;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -303,8 +304,8 @@ const getDocumentInfo = async () => {
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
-            coopLocal.start()
+            ot = Ot.Make(route.query.id as string, localStorage.getItem('token') || "", document, context.coopRepo, "0");
+            ot.start()
                 .catch((e) => {
                     if (!context) {
                         router.push('/');
@@ -339,15 +340,8 @@ function upload() {
                 path: '/document',
                 query: { id: doc_id }
             });
-            coopLocal = new CoopLocal(
-                context!.data,
-                context!.coopRepo,
-                `${FILE_UPLOAD}/documents/ws`,
-                localStorage.getItem('token') || "",
-                doc_id,
-                "0",
-            );
-            coopLocal.start();
+            ot = Ot.Make(doc_id, localStorage.getItem('token') || "", context!.data, context!.coopRepo, "0");
+            ot.start();
             context?.workspace.notify(WorkSpace.INIT_DOC_NAME)
         }
     })
@@ -393,7 +387,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     try {
-        coopLocal?.close();
+        ot?.close();
     } catch (err) { }
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
