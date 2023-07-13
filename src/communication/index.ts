@@ -113,7 +113,7 @@ export class Communication {
             console.log("worker未开启")
             return
         }
-        let postData: ClientPostData = {
+        const postData: ClientPostData = {
             cmdId: uuid(),
             isListened: isListened ?? false,
             dataType: data instanceof ArrayBuffer ? DataType.Binary : DataType.Text,
