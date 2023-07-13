@@ -427,7 +427,7 @@ function show_types() {
         nextTick(() => {
             if (popover.value && search_el.value) {
                 popover.value.style.left = search_el.value.offsetLeft - 16 + 'px';
-                popover.value.style.top = search_el.value.offsetHeight + 50 + 'px';
+                popover.value.style.top = search_el.value.offsetHeight + 54 + 'px';
             }
         })
         document.addEventListener('click', onMenuBlur);
@@ -446,14 +446,15 @@ function update_types(st: ShapeType, push: boolean, shiftKey: boolean) {
             includes_type.value.splice(index, 1);
         }
     }
-    document.addEventListener('keydown', esc);
     if (!shiftKey) {
         popoverVisible.value = false;
     }
+    document.addEventListener('keydown', esc);
     props.context.navi.notify(Navi.CHANGE_TYPE);
 }
 function reset_types() {
-    includes_type.value = [];
+    includes_type.value.length = 0;
+    props.context.navi.notify(Navi.CHANGE_TYPE);
 }
 function onMenuBlur(e: MouseEvent) {
     if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu-f')) {
@@ -528,7 +529,7 @@ onUnmounted(() => {
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search" ref="search_wrap" @mouseenter="search_el_mouseenter" @mouseleave="search_el_mouseleave">
-                <div class="tool-container">
+                <div class="tool-container" @click="preto_search">
                     <svg-icon icon-class="search"></svg-icon>
                 </div>
                 <div class="menu-f" @click="show_types">
@@ -538,7 +539,7 @@ onUnmounted(() => {
                     @blur="leave_search" @click="preto_search" @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close"
                     :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }">
-                    <svg-icon icon-class="close"></svg-icon>
+                    <svg-icon icon-class="close-x"></svg-icon>
                 </div>
                 <div :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }"
                     :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
@@ -549,10 +550,13 @@ onUnmounted(() => {
                 <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types"></ShapeTypes>
             </div>
             <div class="blocks" v-if="includes_type.length">
-                <div class="block-wrap" v-for="(item, index) in includes_type" :key="index">
+                <div class="block-wrap" v-for="(item, index) in includes_type" :key="index"
+                    @click="(e) => update_types(item, false, e.shiftKey)">
                     <div class="block">
                         <div class="content">{{ t(`shape.${item}`) }}</div>
-                        <div class="close" @click="(e) => update_types(item, false, e.shiftKey)">x</div>
+                        <div class="close" @click.stop="(e) => update_types(item, false, e.shiftKey)">
+                            <svg-icon icon-class="close-x"></svg-icon>
+                        </div>
                     </div>
                 </div>
                 <div class="block-wrap" v-if="includes_type.length > 1" @click="reset_types">
@@ -675,8 +679,9 @@ onUnmounted(() => {
                 transition: 0.15s;
 
                 >svg {
-                    width: 60%;
-                    height: 60%;
+                    color: rgb(111, 111, 111);
+                    width: 10px;
+                    height: 10px;
                 }
             }
 
@@ -720,7 +725,6 @@ onUnmounted(() => {
                     height: 100%;
                     width: 100%;
                     display: flex;
-                    flex-direction: row;
                     align-items: center;
 
                     .content {
@@ -738,6 +742,15 @@ onUnmounted(() => {
                         text-align: center;
                         cursor: pointer;
                         color: #fff;
+                        display: flex;
+                        align-items: center;
+                        justify-content: flex-end;
+                        margin-left: auto;
+
+                        >svg {
+                            width: 12px;
+                            height: 14px;
+                        }
                     }
 
 

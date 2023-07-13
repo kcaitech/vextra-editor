@@ -284,19 +284,22 @@ function update() {
   result_by_shape = [];
   result_by_content = [];
   height_shpae.value = '50%';
-  // 找到所有名称包含关键字的图形result_by_shape、找到所有文本内容包含关键字的图形result_by_content
   const mode = props.accurate ? 'mg' : 'img'
-  const reg = new RegExp(`${props.keywords}`, mode);
+  const words = props.keywords;
+  const types = props.shapeTypes;
+  const reg = new RegExp(`${words}`, mode);
   const shapes = props.context.selection.selectedPage?.shapes;
+  console.log('update', types);
+
   if (shapes) {
     shapes.forEach((v) => {
-      if (props.shapeTypes.length) {
-        if (!props.shapeTypes.includes(v.type)) {
+      if (types.length) {
+        if (!types.includes(v.type)) {
           return;
         }
       }
-      if (!props.keywords.length) {
-        if (props.shapeTypes.includes(v.type)) {
+      if (!words.length) {
+        if (types.includes(v.type)) {
           result_by_shape.push(v);
           return;
         }
