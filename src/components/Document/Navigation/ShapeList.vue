@@ -446,11 +446,11 @@ function update_types(st: ShapeType, push: boolean, shiftKey: boolean) {
             includes_type.value.splice(index, 1);
         }
     }
-    props.context.navi.notify(Navi.SEARCH);
     document.addEventListener('keydown', esc);
     if (!shiftKey) {
         popoverVisible.value = false;
     }
+    props.context.navi.notify(Navi.CHANGE_TYPE);
 }
 function reset_types() {
     includes_type.value = [];
@@ -563,8 +563,8 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body" ref="listBody" @click="reset_selection">
-            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords" :shape-types="includes_type"
-                :accurate="accurate">
+            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
+                :shape-types="includes_type" :accurate="accurate">
             </SearchPanel>
             <ListView v-else ref="shapelist" location="shapelist" :allow-drag="true" draging="shapeList"
                 :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"

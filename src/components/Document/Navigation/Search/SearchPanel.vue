@@ -10,6 +10,7 @@ import { Selection } from '@/context/selection';
 import { Shape, ShapeType, TextShape } from '@kcdesign/data';
 import { isInner } from '@/utils/content';
 import { is_shape_in_selection, selection_types } from '@/utils/shapelist';
+import { Navi } from '@/context/navigate';
 interface Props {
   keywords: string
   context: Context
@@ -384,17 +385,21 @@ function selection_watcher(t?: number) {
     update();
   }
 }
-
+function navi_watcher(t?: number) {
+  if (t === Navi.CHANGE_TYPE) {
+    update();
+  }
+}
 const stop1 = watch(() => props.keywords, update, { immediate: true });
-const stop2 = watch(() => props.shapeTypes, update, { immediate: true, deep: true });
 const stop3 = watch(() => props.accurate, update, { immediate: true });
 onMounted(() => {
   props.context.selection.watch(selection_watcher);
+  props.context.navi.watch(navi_watcher);
 })
 onUnmounted(() => {
   props.context.selection.unwatch(selection_watcher);
+  props.context.navi.unwatch(navi_watcher);
   stop1();
-  stop2();
   stop3();
 })
 </script>
@@ -402,7 +407,7 @@ onUnmounted(() => {
   <div class="result-wrap">
     <div class="result-by-name" :style="{ height: height_shpae }">
       <div class="tips">
-        <div class="font-wrap">
+        <div class="font-wrap" v-if="props.keywords">
           <div class="font">{{ t('system.title_includes') }}</div>
           <div class="keywords">“{{ props.keywords }}</div>
           <div class="end">”</div>
@@ -516,7 +521,7 @@ onUnmounted(() => {
       }
 
       .result-count {
-        padding: 0px 13px 4px;
+        padding: 4px 13px 4px;
         width: 100%;
         overflow: hidden;
         white-space: nowrap;
@@ -604,7 +609,7 @@ onUnmounted(() => {
       }
 
       .result-count {
-        padding: 0px 13px 4px;
+        padding: 4px 13px 4px;
         width: 100%;
         overflow: hidden;
         white-space: nowrap;

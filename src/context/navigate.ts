@@ -5,6 +5,7 @@ export class Navi extends Watchable(Object) {
   static SEARCH_FINISHED = 2;
   static SEARCH_PRE = 3;
   static SEARCHING = 4;
+  static CHANGE_TYPE = 6;
   private m_page_need_extend: boolean = false;
   constructor() {
     super();
