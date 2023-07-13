@@ -25,7 +25,6 @@ function _update() {
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
     matrix.reset(props.matrix);
-
     const frame = props.shape.frame;
     const points = [
         { x: 0, y: 0 }, // left top

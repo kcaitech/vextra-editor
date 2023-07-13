@@ -12,6 +12,8 @@ import { Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape, ShapeFrame } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
+import PointsContainer from "./Points/PointsContainer.SVG.vue";
 interface Props {
   context: Context,
   controllerFrame: Point[],
@@ -26,6 +28,10 @@ const visible = ref<boolean>(true);
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
+const { t } = useI18n();
+const matrix = new Matrix();
+const submatrix = reactive(new Matrix());
+
 let viewBox = '';
 let groupTrans = '';
 let frame: ShapeFrame;
@@ -34,6 +40,11 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
   return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
 function updateControllerView() {
+  const m2p = props.shape.matrix2Root();
+  matrix.reset(m2p);
+  matrix.multiAtLeft(props.matrix);
+
+  if (!submatrix.equals(matrix)) submatrix.reset(matrix)
   const framePoint = props.controllerFrame;
   boundrectPath.value = genRectPath(framePoint);
   const p0 = framePoint[0];
@@ -95,7 +106,7 @@ function mouseup(e: MouseEvent) {
 }
 
 function keyboardHandle(e: KeyboardEvent) {
-  handle(e, props.context);
+  handle(e, props.context, t);
 }
 
 function windowBlur() {
@@ -126,7 +137,8 @@ watchEffect(() => { updater() });
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
     :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
     <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
-    <g :style="{ transform: groupTrans }">
+    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></PointsContainer>
+    <!-- <g :style="{ transform: groupTrans }">
       <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" rx="2" ry="2" :x="-4" :y="-4"></rect>
       <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" :x="frame.width - 4" :y="-4" rx="2"
         ry="2"></rect>
@@ -136,7 +148,7 @@ watchEffect(() => { updater() });
       <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" :y="frame.height - 4" :x="-4" rx="2"
         ry="2">
       </rect>
-    </g>
+    </g> -->
   </svg>
 </template>
 <style lang='scss' scoped>
