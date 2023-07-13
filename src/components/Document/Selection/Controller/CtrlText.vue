@@ -22,8 +22,7 @@ const props = defineProps<{
 
 watch(() => props.shape, (value, old) => {
     if (old.text.length === 1) {
-        const editor = props.context.editor4Shape(old);
-        editor.delete();
+        clear_null_shape(old);
     }
     old.unwatch(update);
     value.watch(update);
@@ -72,7 +71,10 @@ function _update() {
         return bounds;
     }, bounds)
 }
-
+function clear_null_shape(shape: Shape) {
+    const editor = props.context.editor4Shape(shape);
+    editor.delete();
+}
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
@@ -192,8 +194,7 @@ onUnmounted(() => {
 })
 onBeforeUnmount(() => {
     if (props.shape.text.length === 1) {
-        const editor = props.context.editor4Shape(props.shape);
-        editor.delete();
+        clear_null_shape(props.shape);
     }
 })
 </script>
