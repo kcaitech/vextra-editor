@@ -45,6 +45,7 @@ function update() {
 function get_dot_path() {
   paths.value.length = 0;
   const frame = props.shape.frame;
+  const bit_v = 4 / props.context.workspace.matrix.m00;
   // lt
   let lt = { x: 0, y: 0 };
   lt = matrix.computeCoord(lt.x, lt.y)
@@ -100,14 +101,15 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <path :d="paths[0]" fill="#fff" stroke='#2561D9' stroke-width="1px"
-    :transform="`rotate(${props.shape.rotation || 0}deg)`">
-  </path>
-  <path :d="paths[1]" fill="#fff" stroke='#2561D9' stroke-width="1px">
-  </path>
-  <path :d="paths[2]" fill="#fff" stroke='#2561D9' stroke-width="1px">
-  </path>
-  <path :d="paths[3]" fill="#fff" stroke='#2561D9' stroke-width="1px">
-  </path>
+  <g>
+    <path :d="paths[0]" fill="#fff" stroke='#2561D9' stroke-width="1px">
+    </path>
+    <path :d="paths[1]" fill="#fff" stroke='#2561D9' stroke-width="1px">
+    </path>
+    <path :d="paths[2]" fill="#fff" stroke='#2561D9' stroke-width="1px">
+    </path>
+    <path :d="paths[3]" fill="#fff" stroke='#2561D9' stroke-width="1px">
+    </path>
+  </g>
 </template>
 <style lang='scss' scoped></style>
