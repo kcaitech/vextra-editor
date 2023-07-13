@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
-import { Navi } from "@/context/navigate";
-import { onMounted, onUnmounted, ref, nextTick, computed } from "vue";
+import { onMounted, onUnmounted, ref, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
@@ -44,6 +43,7 @@ const selectionWatcher = (type: number) => {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
+const rightTarget = ref<string>('');
 function document_watcher() {
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
@@ -70,7 +70,8 @@ class Iter implements IDataIter<ItemData> {
             name: id.name,
             id: id.id,
             selected: slectedPage !== undefined && slectedPage.id == id.id,
-            context: props.context
+            context: props.context,
+            rightTarget: rightTarget.value === id.id
         }
     }
 }
@@ -144,6 +145,8 @@ const mousedown = (id: string, e: MouseEvent) => {
         e.stopPropagation()
         if (e.target instanceof Element && e.target.closest(`.Menu`)) return
         pageMenuMount(id, e)
+        rightTarget.value = id;
+        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
 const pageMenuMount = (id: string, e: MouseEvent) => {
@@ -211,6 +214,8 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
             props.context.selection.deletePage(id, index)
         }
     }
+    rightTarget.value = '';
+    pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     pageMenu.value = false;
 }
 function menu_watcher(t?: number) {
@@ -218,21 +223,7 @@ function menu_watcher(t?: number) {
         pageMenu.value = false;
     }
 }
-function navi_watcher(t?: number) {
-    // if (t === Navi.SEARCH) {
-    //     if (!fold.value) {
-    //         toggle();
-    //         props.context.navi.set_page_need_extend(true);
-    //     }
-    // } else if (t === Navi.SEARCH_FINISHED) {
-    //     if (fold.value) {
-    //         if (props.context.navi.needExtend) {
-    //             toggle();
-    //             props.context.navi.set_page_need_extend(false);
-    //         }
-    //     }
-    // }
-}
+function navi_watcher(t?: number) { }
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.data.watch(document_watcher);
