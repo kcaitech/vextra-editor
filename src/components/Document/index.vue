@@ -264,12 +264,19 @@ const getDocumentInfo = async () => {
         loading.value = true;
         const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
         docInfo.value = dataInfo.data;
-        permType.value = dataInfo.data.document_permission.perm_type;
         if (dataInfo.code === 400) {
             //无效链接
-            ElMessage({ message: `${t('apply.link_not')}` });
-            router.push('/');
+            // ElMessage({ message: `${t('apply.link_not')}` });
+            // return router.push('/');
+            router.push({
+                name: 'apply',
+                query: {
+                    id: route.query.id
+                }
+            })
+            return
         }
+        permType.value = dataInfo.data.document_permission.perm_type;
         //获取文档类型是否为私有文档且有无权限   
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
