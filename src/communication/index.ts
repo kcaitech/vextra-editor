@@ -46,7 +46,7 @@ export class Communication {
             port.onmessage = (event) => {
                 const data = event.data as CommunicationInfo
                 if (data.name !== this.info.name) {
-                    console.log("worker：name参数错误 - ", this.info.name, data.name)
+                    console.log("worker：name参数错误", this.info.name, data.name)
                     resolve(false)
                     return
                 }
@@ -59,6 +59,7 @@ export class Communication {
                 this.info.id = data.id
                 port.onmessage = this.receiveFromWorker.bind(this)
                 resolve(true)
+                console.log("通道建立", this.info.id)
             }
             port.start()
             port.postMessage(this.info)
