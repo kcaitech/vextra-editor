@@ -424,7 +424,7 @@ onUnmounted(() => {
   }
 }
 
->.tips-wrap:hover {
+.tips-wrap:hover {
   background-color: rgba($color: #0d99ff, $alpha: 0.3);
 }
 </style>
