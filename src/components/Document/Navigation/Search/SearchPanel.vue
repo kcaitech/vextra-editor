@@ -6,10 +6,10 @@ import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.v
 import ResultItem, { ItemData } from "./ResultItem.vue";
 import TextResultItem from "./TextResultItem.vue";
 import { Context } from '@/context';
+import { Selection } from '@/context/selection';
 import { Shape, ShapeType, TextShape } from '@kcdesign/data';
 import { isInner } from '@/utils/content';
 import { is_shape_in_selection, selection_types } from '@/utils/shapelist';
-import e from 'express';
 interface Props {
   keywords: string
   context: Context
@@ -345,7 +345,7 @@ function close() {
 function toggle1() {
   fold1.value = !fold1.value;
   if (fold1.value) {
-    height_shpae.value = '44px';
+    height_shpae.value = '42px';
     if (valid_result_by_content.value) {
       if (fold2.value) {
         fold2.value = false;
@@ -354,7 +354,7 @@ function toggle1() {
   } else {
     if (valid_result_by_content.value) {
       if (fold2.value) {
-        height_shpae.value = 'calc(100% - 44px)';
+        height_shpae.value = 'calc(100% - 42px)';
       } else {
         height_shpae.value = '50%';
       }
@@ -364,26 +364,35 @@ function toggle1() {
   }
 }
 function toggle2() {
-  if (!valid_result_by_shape) return;
+  if (!valid_result_by_shape.value) return;
   fold2.value = !fold2.value;
   if (fold2.value) {
-    height_shpae.value = 'calc(100% - 44px)';
-    if (fold1) {
+    height_shpae.value = 'calc(100% - 42px)';
+    if (fold1.value) {
       fold1.value = false;
     }
   } else {
     if (fold1.value) {
-      height_shpae.value = '44px';
+      height_shpae.value = '42px';
     } else {
       height_shpae.value = '50%';
     }
   }
 }
+function selection_watcher(t?: number) {
+  if (t === Selection.CHANGE_PAGE) {
+    update();
+  }
+}
 
 const stop1 = watch(() => props.keywords, update, { immediate: true });
 const stop2 = watch(() => props.shapeTypes, update, { immediate: true, deep: true });
-const stop3 = watch(() => props.accurate, update, { immediate: true })
+const stop3 = watch(() => props.accurate, update, { immediate: true });
+onMounted(() => {
+  props.context.selection.watch(selection_watcher);
+})
 onUnmounted(() => {
+  props.context.selection.unwatch(selection_watcher);
   stop1();
   stop2();
   stop3();
