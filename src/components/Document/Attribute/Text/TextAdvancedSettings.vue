@@ -44,11 +44,7 @@ const onSelectId = (icon: BulletNumbersType) => {
   if(isSelectText()) {
       editor.setTextBulletNumbers(icon, 0, Infinity)
   } else {
-    if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setTextBulletNumbers(icon, textIndex, selectLength)
-      }
+      editor.setTextBulletNumbers(icon, textIndex, selectLength)
   }
 }
 
@@ -64,11 +60,7 @@ const onSelectCase = (icon: TextTransformType) => {
   if(isSelectText()) {
       editor.setTextTransform(icon, 0, Infinity)
   } else {
-    if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setTextTransform(icon, textIndex, selectLength)
-      }
+      editor.setTextTransform(icon, textIndex, selectLength)
   }
 }
 
@@ -83,11 +75,7 @@ const setRowHeight = () => {
     if(isSelectText()) {
       editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
     }else {
-      if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
-      }
+      editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
     }
   }else {
       textFormat()
@@ -108,11 +96,7 @@ const setWordSpace = () => {
     if(isSelectText()) {
       editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
     }else {
-      if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
-      }
+      editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
     }
   }else {
       textFormat()
@@ -127,11 +111,7 @@ const setParagraphSpace = () => {
     if(isSelectText()) {
       editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
     }else {
-      if(selectLength === 0) {
-        console.log('selectLength', selectLength);
-      }else {
-        editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
-      }
+      editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
     }
   }else {
       textFormat()
@@ -160,13 +140,12 @@ const selectParaSpacing = () => {
 const textFormat = () => {
     if(!(props.textShape[0] as TextShape) || !(props.textShape[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
     let format: AttrGetter
-    if(textIndex !== -1 && selectLength === 0) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
-    }else if (textIndex === -1) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(0, Infinity)
+    if (textIndex === -1) {
+        format = (props.textShape[0] as TextShape).text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
     }else {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
     wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'

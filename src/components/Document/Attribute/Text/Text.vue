@@ -96,11 +96,8 @@ const onBold = () => {
     if(isSelectText()) {
         editor.setTextBold(isBold.value, 0, Infinity)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextBold(isBold.value, textIndex,selectLength)
-        }
+        editor.setTextBold(isBold.value, textIndex,selectLength)
+        textFormat()
     }
 }
 // 设置文本倾斜
@@ -111,11 +108,8 @@ const onTilt = () => {
     if(isSelectText()) {
         editor.setTextItalic(isTilt.value, 0, Infinity)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextItalic(isTilt.value, textIndex,selectLength)
-        }
+        editor.setTextItalic(isTilt.value, textIndex,selectLength)
+        textFormat()
     }
 }
 //设置下划线
@@ -126,11 +120,8 @@ const onUnderlint = () => {
     if(isSelectText()) {
         editor.setTextUnderline(isUnderline.value, 0, Infinity)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
-        }
+        editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
+        textFormat()
     }
 }
 // 设置删除线
@@ -141,11 +132,8 @@ const onDeleteline = () => {
     if(isSelectText()) {
         editor.setTextStrikethrough(isDeleteline.value, 0,Infinity)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextStrikethrough(isDeleteline.value, textIndex,selectLength)
-        }
+        editor.setTextStrikethrough(isDeleteline.value, textIndex,selectLength)
+        textFormat()
     }
 }
 // 设置水平对齐
@@ -157,6 +145,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
         editor.setTextHorAlign(icon, 0, Infinity)
     } else {
         editor.setTextHorAlign(icon, textIndex, selectLength)
+        textFormat()
     }
 }
 //设置垂直对齐
@@ -164,6 +153,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
     selectVertical.value = icon
     const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     editor.setTextVerAlign(icon)
+    textFormat()
 }
 //设置字体大小
 const changeTextSize = (size: number) => {
@@ -174,11 +164,8 @@ const changeTextSize = (size: number) => {
     if(isSelectText()) {
         editor.setTextFontSize(0, Infinity, size)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextFontSize(textIndex, selectLength, size)
-        }
+        editor.setTextFontSize(textIndex, selectLength, size)
+        textFormat()
     }
 }
 //设置字体
@@ -190,11 +177,8 @@ const setFont = (font: string) => {
     if(isSelectText()) {
         editor.setTextFontName(0, Infinity, font)
     }else {
-        if(selectLength === 0) {
-            console.log('selectLength', selectLength);
-        }else {
-            editor.setTextFontName(textIndex, selectLength, font)
-        }
+        editor.setTextFontName(textIndex, selectLength, font)
+        textFormat()
     }
 }
 
@@ -221,6 +205,7 @@ const setTextSize = () => {
     }
     if (!isNaN(Number(fonstSize.value))) {
         changeTextSize(fonstSize.value)
+        textFormat()
     }else {
         textFormat()
     }
@@ -231,13 +216,12 @@ const setTextSize = () => {
 const textFormat = () => {
     if(!(textShape.value[0] as TextShape) || !(textShape.value[0] as TextShape).text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
     let format: AttrGetter
-    if(textIndex !== -1 && selectLength === 0) {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
-    }else if (textIndex === -1) {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(0, Infinity)
+    if (textIndex === -1) {
+        format = (textShape.value[0] as TextShape).text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
     }else {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength)
+        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
     colorIsMulti.value = format.colorIsMulti
     highlightIsMulti.value = format.highlightIsMulti
