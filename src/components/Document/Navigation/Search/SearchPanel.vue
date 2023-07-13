@@ -299,19 +299,19 @@ function update() {
       }
       if (!words.length) {
         if (types.includes(v.type)) {
-          result_by_shape.push(v);
+          result_by_shape.unshift(v);
           return;
         }
         return;
       }
       if (v.name.search(reg) > -1) {
-        result_by_shape.push(v);
+        result_by_shape.unshift(v);
       }
       if (v.type === ShapeType.Text) {
         const length = (v as TextShape).text.length;
         const text = (v as TextShape).text.getText(0, length);
         if (text.search(reg) > -1) {
-          result_by_content.push(v);
+          result_by_content.unshift(v);
         }
       }
     })
@@ -388,7 +388,7 @@ function selection_watcher(t?: number) {
   }
 }
 function navi_watcher(t?: number) {
-  if (t === Navi.CHANGE_TYPE) {
+  if (t === Navi.CHANGE_TYPE || t === Navi.SEARCHING) {
     update();
   }
 }
@@ -432,7 +432,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-    <div class="result-by-context">
+    <div class="result-by-context" v-if="props.keywords">
       <div class="tips">
         <div class="font-wrap">
           <div class="font">{{ t('system.content_includes') }}</div>

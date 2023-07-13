@@ -1,3 +1,5 @@
+import { Context } from "@/context";
+import { Navi } from "@/context/navigate";
 import { Shape, ShapeType } from "@kcdesign/data";
 export type Area = number | 'artboard' | 'group' | 'normal'; // number 说明在选区内
 export function is_shape_in_selection(shapes: Shape[], shape: Shape): boolean {
@@ -52,4 +54,13 @@ export function is_parent_locked(shape: Shape): boolean {
         p = p.parent;
     }
     return is_pu;
+}
+export function is_valid_data(context: Context, shape: Shape) {
+    const page = context.selection.selectedPage;
+    if (!page) return false;
+    if (!page.shapes.get(shape.id)) {
+        context.navi.notify(Navi.SEARCHING);
+        return false;
+    }
+    return true;
 }

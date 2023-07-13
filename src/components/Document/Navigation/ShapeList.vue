@@ -428,6 +428,7 @@ function show_types() {
             if (popover.value && search_el.value) {
                 popover.value.style.left = search_el.value.offsetLeft - 16 + 'px';
                 popover.value.style.top = search_el.value.offsetHeight + 54 + 'px';
+                popover.value.style.height = 'auto';
             }
         })
         document.addEventListener('click', onMenuBlur);
@@ -499,6 +500,7 @@ function accurate_shift() {
     }
     popoverVisible.value = false;
     props.context.menu.setMode(accurate.value);
+    props.context.navi.notify(Navi.SEARCHING);
 }
 function search_el_mouseenter() {
     show_accrate_btn.value = true;
@@ -785,6 +787,10 @@ onUnmounted(() => {
 
     .popover {
         position: absolute;
+        top: 0px;
+        left: 36px;
+        top: 50px;
+        height: 20px;
         color: #ffffff;
         z-index: 999;
         width: 202px;
@@ -793,6 +799,7 @@ onUnmounted(() => {
         border-radius: 4px;
         outline: none;
         padding: var(--default-padding-half) 0;
+        transition: 0.3s;
     }
 }
 </style>
