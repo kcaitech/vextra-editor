@@ -289,7 +289,6 @@ function update() {
   const types = props.shapeTypes;
   const reg = new RegExp(`${words}`, mode);
   const shapes = props.context.selection.selectedPage?.shapes;
-  console.log('update', types);
 
   if (shapes) {
     shapes.forEach((v) => {
@@ -394,7 +393,7 @@ function navi_watcher(t?: number) {
   }
 }
 const stop1 = watch(() => props.keywords, update, { immediate: true });
-const stop3 = watch(() => props.accurate, update, { immediate: true });
+const stop2 = watch(() => props.accurate, update, { immediate: true });
 onMounted(() => {
   props.context.selection.watch(selection_watcher);
   props.context.navi.watch(navi_watcher);
@@ -403,7 +402,7 @@ onUnmounted(() => {
   props.context.selection.unwatch(selection_watcher);
   props.context.navi.unwatch(navi_watcher);
   stop1();
-  stop3();
+  stop2();
 })
 </script>
 <template>
