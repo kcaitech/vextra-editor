@@ -108,13 +108,25 @@ onUnmounted(() => {
         <path :d="paths[0]" fill="none" stroke='#865dff' stroke-width="1.5px"
             @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectTop)">
         </path>
+        <path :d="paths[0]" fill="none" stroke='transparent' style="cursor: ns-resize;" stroke-width="14px"
+            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectTop)">
+        </path>
         <path :d="paths[1]" fill="none" stroke='#865dff' stroke-width="1.5px"
+            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectRight)">
+        </path>
+        <path :d="paths[1]" fill="none" stroke='transparent' style="cursor: ew-resize;" stroke-width="14px"
             @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectRight)">
         </path>
         <path :d="paths[2]" fill="none" stroke='#865dff' stroke-width="1.5px"
             @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectBottom)">
         </path>
+        <path :d="paths[2]" fill="none" stroke='transparent' style="cursor: ns-resize;" stroke-width="14px"
+            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectBottom)">
+        </path>
         <path :d="paths[3]" fill="none" stroke='#865dff' stroke-width="1.5px"
+            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectLeft)">
+        </path>
+        <path :d="paths[3]" fill="none" stroke='transparent' style="cursor: ew-resize;" stroke-width="14px"
             @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectLeft)">
         </path>
     </g>
