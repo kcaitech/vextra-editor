@@ -90,6 +90,29 @@ onUnmounted(() => {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    max-width: 50%;
+    overflow: auto;
+
+    &::-webkit-scrollbar {
+        width: 0px;
+        height: 0px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: none;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: none;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background-color: none;
+    }
+
+    &::-webkit-scrollbar-thumb:active {
+        background-color: none;
+    }
 
     .temp {
         width: 28px;
