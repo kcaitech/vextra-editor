@@ -7,7 +7,7 @@ import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import { TextShape, Shape, AttrGetter } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, Color, Fill, UnderlineType, StrikethroughType } from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';
@@ -17,10 +17,7 @@ interface Props {
     context: Context
     shape: Shape
 }
-interface FillItem {
-    id: number,
-    fill: Fill
-}
+
 const props = defineProps<Props>();
 const { t } = useI18n();
 const fonstSize = ref<any>(14)

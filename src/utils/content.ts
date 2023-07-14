@@ -31,7 +31,6 @@ function _updateRoot(context: Context, element: HTMLElement) {
     center: { x: (right - x) / 2, y: (bottom - y) / 2 }
   }
   context.workspace.updateRoot(root);
-  console.log('update', context.workspace.root);
 }
 const updateRoot = debounce(_updateRoot, updateRootTime);
 
