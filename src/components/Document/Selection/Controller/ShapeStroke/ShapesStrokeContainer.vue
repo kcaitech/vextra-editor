@@ -67,6 +67,7 @@ onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
     update();
+    watchShapes();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
