@@ -35,7 +35,8 @@ watch(() => props.matrix, () => {
     update();
 })
 const { isDblClick } = useController(props.context);
-const update = throttle(_update, 5);
+// const update = throttle(_update, 5);
+const update = _update;
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
