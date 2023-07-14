@@ -10,7 +10,7 @@ import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal, CoopRepository } from '@kcdesign/data';
 import { Ot } from "@/communication/modules/ot";
-import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
+import { STORAGE_URL, DOC_UPLOAD_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
@@ -286,7 +286,7 @@ const getDocumentInfo = async () => {
 
         const repo = new Repository();
         const importDocumentParams = {
-            endPoint: FILE_DOWNLOAD,
+            endPoint: STORAGE_URL,
             region: "zhuhai-1",
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
@@ -334,7 +334,7 @@ function upload() {
     if (!token || !context || !context.data) {
         return
     }
-    uploadExForm(context.data, FILE_UPLOAD, token, '', (isSuccess, doc_id) => {
+    uploadExForm(context.data, DOC_UPLOAD_URL, token, '', (isSuccess, doc_id) => {
         if (isSuccess) {
             router.replace({
                 path: '/document',
