@@ -24,6 +24,8 @@ function update() {
     update_dot_path();
 }
 function update_dot_path() {
+    const valve = props.context.workspace.shouldSelectionViewUpdate;
+    if (!valve) return;
     paths.value.length = 0;
     let apex = props.frame.map(p => { return { x: p.x, y: p.y } });
     apex.push(apex[0]);
