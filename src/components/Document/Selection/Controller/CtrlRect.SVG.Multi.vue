@@ -11,8 +11,8 @@ import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
-import BarsContainer from "./Bars/BarsContainer.SVG.vue";
-import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import BarsContainer from "./Bars/BarsContainer.SVG.Multi.vue";
+import PointsContainer from "./Points/PointsContainer.SVG.Multi.vue";
 interface Props {
     context: Context
     controllerFrame: Point[]
