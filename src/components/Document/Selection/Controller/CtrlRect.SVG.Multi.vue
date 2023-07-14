@@ -115,7 +115,8 @@ watchEffect(() => { updater() });
         <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
         </ShapesStrokeContainer>
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></PointsContainer>
+        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :frame="props.controllerFrame"></PointsContainer>
     </svg>
 </template>
 <style lang='scss' scoped>

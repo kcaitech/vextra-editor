@@ -3,10 +3,12 @@ import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
+import { Point } from '../../SelectionView.vue';
 interface Props {
     matrix: number[]
     context: Context
     shape: Shape
+    frame: Point[]
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
@@ -22,12 +24,14 @@ function update() {
 }
 function update_dot_path() {
     paths.value.length = 0;
+    // const [lt, rt, rb, lb] = props.frame;
     const frame = props.shape.frame;
     // const bit_v = 4 / props.context.workspace.matrix.m00;
     const bit_v = 4;
     // lt
     let lt = { x: 0, y: 0 };
-    lt = matrix.computeCoord(lt.x, lt.y)
+    lt = matrix.computeCoord(lt.x, lt.y);
+
     let point1_dot = [{ x: lt.x - bit_v, y: lt.y - bit_v }, { x: lt.x + bit_v, y: lt.y - bit_v }, { x: lt.x + bit_v, y: lt.y + bit_v }, { x: lt.x - bit_v, y: lt.y + bit_v }];
     const path1 = get_path_by_dot(point1_dot);
     //rt

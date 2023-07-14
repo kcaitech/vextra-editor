@@ -177,7 +177,7 @@ function createController() { // 计算控件点位以及类型判定
                 }
             });
             rotate.value = 0; // 多选时，rect只为水平状态
-            controllerType.value = ControllerType.Rect; // 且控件类型都为矩形控件
+            controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
         }
         controller.value = true;
     }
