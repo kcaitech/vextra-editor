@@ -98,10 +98,11 @@ function onMouseUp(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        selection.setCursor(locate.index, locate.before)
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     }
     else {
-        selection.selectText(downIndex.index, locate.index);
+        selection.selectText(downIndex.index, locate.index, locate.before);
     }
     props.context.workspace.setCtrl('page');
 }
@@ -116,10 +117,11 @@ function onMouseMove(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        selection.setCursor(locate.index, locate.before)
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     }
     else {
-        selection.selectText(downIndex.index, locate.index);
+        selection.selectText(downIndex.index, locate.index, locate.before);
     }
 }
 function mouseenter() {

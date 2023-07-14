@@ -36,15 +36,18 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     let end = selection.cursorEnd;
     if (e.shiftKey) {
         if (start === end - 1) {
+            const span = shape.text.spanAt(start);
+            if (span?.placeholder && span.length === 1) start--;
             selection.setCursor(start, false);
         } else {
-            // 不只选择'\n'
-            if (start === end && shape.text.charAt(end - 1) === '\n') {
-                start = end = end - 1;
-            }
             selection.selectText(start, end - 1);
         }
     } else {
+        const span = shape.text.spanAt(end - 1);
+        if (span?.placeholder && span.length === 1) {
+            if (end - 1 <= 0) end = 2;
+            else end--;
+        }
         selection.setCursor(end - 1, false);
     }
 }, keydelays);
@@ -54,15 +57,15 @@ const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: Te
     let end = selection.cursorEnd;
     if (e.shiftKey) {
         if (start === end + 1) {
+            const span = shape.text.spanAt(start);
+            if (span?.placeholder && span.length === 1) start++;
             selection.setCursor(start, false);
         } else {
-            // 不只选择'\n'
-            if (start === end && shape.text.charAt(end) === '\n') {
-                start = end = end + 1;
-            }
             selection.selectText(start, end + 1);
         }
     } else {
+        const span = shape.text.spanAt(end + 1);
+        if (span?.placeholder && span.length === 1) end++;
         selection.setCursor(end + 1, false);
     }
 }, keydelays);
@@ -78,17 +81,11 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
     const y = cursor.preLineY + (cursor.preLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
-        const _end = locate.index;
-        // 不只选择'\n'
-        if (Math.abs(start - _end) === 1 && shape.text.charAt(Math.min(start, _end)) === '\n') {
-            selection.setCursor(locate.index, locate.before)
-        }
-        else {
-            selection.selectText(start, _end);
-        }
+        selection.selectText(start, locate.index, locate.before);
     }
     else {
-        selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     }
 }, keydelays);
 const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
@@ -103,17 +100,11 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const y = cursor.nextLineY + (cursor.nextLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
-        const _end = locate.index;
-        // 不只选择'\n'
-        if (Math.abs(start - _end) === 1 && shape.text.charAt(Math.min(start, _end)) === '\n') {
-            selection.setCursor(locate.index, locate.before)
-        }
-        else {
-            selection.selectText(start, _end);
-        }
+        selection.selectText(start, locate.index, locate.before);
     }
     else {
-        selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     }
 }, keydelays);
 
