@@ -191,10 +191,11 @@ export function isIncluded(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY
 }
 
 // 两个形状既不🍌也没有包含关系，返回false
-export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]) {
+export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[], includes?: boolean) {
   if (isIncluded(selectorPoints, shapePoints)) {
     return true
   }
+  if (includes) return false;
   let s = 0;
   while (s < selectorPoints.length - 1) {
     const p1 = selectorPoints[s], q1 = selectorPoints[s + 1];
@@ -215,4 +216,17 @@ export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]
   }
   return false;
 }
-
+export function is_mac() {
+  return /macintosh|mac os x/i.test(navigator.userAgent);
+}
+export function string_by_sys(str: string): string {
+  if (is_mac()) {
+    let src = str;
+    src = src.replace(/ctrl|Ctrl/g, "⌘");
+    src = src.replace(/shift|Shift/g, "⇧");
+    src = src.replace(/alt|Alt/g, "⌥");
+    return src;
+  } else {
+    return str;
+  }
+}

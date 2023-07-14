@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { WorkSpace } from '@/context/workspace';
+import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 interface Props {
@@ -18,36 +18,37 @@ const menu = ref<HTMLDivElement>();
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
-defineExpose({
-  menu
-})
+defineExpose({ menu });
 
 function handleClickOutside(event: MouseEvent) {
   event.stopPropagation()
-  event.target instanceof Element && !event.target.closest('.__context-menu') && emit('close');
+  if (event.target instanceof Element && !event.target.closest('.__context-menu')) {
+    props.context.menu.menuMount(false);
+  }
 }
-function workspaceUpdate(t?: number) {
-  if (t === WorkSpace.SHUTDOWN_MENU) {
+function menu_watcher(type: number) {
+  if (type === Menu.SHUTDOWN_MENU) {
     emit('close');
   }
 }
 //二级菜单距离右侧的距离
-if (props.site)
+if (props.site) {
   surplusX.value = document.documentElement.clientWidth - props.site.x
+}
 
 onMounted(() => {
-  props.context.workspace.menuMount(true);
-  props.context.workspace.watch(workspaceUpdate);
+  props.context.menu.menuMount(true);
+  props.context.menu.watch(menu_watcher)
   document.addEventListener('mousedown', handleClickOutside);
 })
 onUnmounted(() => {
-  props.context.workspace.unwatch(workspaceUpdate);
+  props.context.menu.unwatch(menu_watcher);
   document.removeEventListener('mousedown', handleClickOutside);
 })
 </script>
 <template>
-  <div ref="menu" class="__context-menu Menu"
-    :style="{ top: `${props.y}px`, left: `${props.width && surplusX < 216 + props.width ? -props.width : props.x}px`, width: `${props.width || 216}px` }">
+  <div ref="menu" class="__context-menu" @mousemove.stop
+    :style="{ top: `${props.y}px`, left: `${props.width && surplusX < 198 + props.width ? -props.width : props.x}px`, width: `${props.width || 198}px` }">
     <div class="header"></div>
     <slot></slot>
     <div class="bottom"></div>
@@ -63,15 +64,16 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   border-radius: 2px;
+  box-shadow: 4px 4px 10px rgba($color: #000000, $alpha: 0.2);
 
   >.header {
     width: 100%;
-    height: 10px;
+    height: 4px;
   }
 
   >.bottom {
     width: 100%;
-    height: 10px;
+    height: 4px;
     align-self: flex-end;
   }
 }

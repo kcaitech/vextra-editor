@@ -100,6 +100,7 @@ function renderDecorateRects(h: Function, x: number, y: number, hight: number, d
 }
 
 export function render(h: Function, shape: TextShape, reflush?: number) {
+    if (!shape.isVisible) return null;
     const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
 

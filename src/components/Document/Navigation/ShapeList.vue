@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Context } from "@/context";
+import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
@@ -11,8 +12,11 @@ import { ShapeType } from '@kcdesign/data';
 import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
+import SearchPanel from "./Search/SearchPanel.vue";
 import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
+import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
+import { Navi } from "@/context/navigate";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -53,7 +57,9 @@ const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠�
 let chartMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const shapeList = ref<HTMLDivElement>()
-const shapeH = ref(0)
+const shapeH = ref(0);
+const keywords = ref<string>('');
+const search_el = ref<HTMLInputElement>();
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
 
@@ -74,8 +80,8 @@ let listviewSource = new class implements IDataSource<ItemData> {
     }
 }
 const shapelist = ref<List>();
-const ListBody = ref<HTMLDivElement>()
-const ListH = ref<number>(0)
+const listBody = ref<HTMLDivElement>()
+const list_h = ref<number>(0)
 function _notifySourceChange(t?: number | string, shape?: Shape) {
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
@@ -90,14 +96,14 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
                 p.type !== ShapeType.Page && !shapeDirList.isExpand(p) && toggleExpand(p);
             })
             const indexItem = shapeDirList.indexOf(item)
-            if (ListBody.value) {
-                ListH.value = ListBody.value.clientHeight //list可视高度
+            if (listBody.value) {
+                list_h.value = listBody.value.clientHeight //list可视高度
             }
             if (shapelist.value && indexItem >= 0) {
                 const itemScrollH = indexItem * 30
-                if (itemScrollH + 29 >= ListH.value - shapelist.value.scroll.y) {
-                    if ((itemScrollH) + shapelist.value.scroll.y < ListH.value - 30) return
-                    shapelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
+                if (itemScrollH + 29 >= list_h.value - shapelist.value.scroll.y) {
+                    if ((itemScrollH) + shapelist.value.scroll.y < list_h.value - 30) return
+                    shapelist.value.clampScroll(0, -(itemScrollH + 30 - list_h.value))
                 } else if (itemScrollH < -(shapelist.value.scroll.y)) {
                     shapelist.value.clampScroll(0, -itemScrollH)
                 }
@@ -111,7 +117,7 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 
-const notifySourceChange = debounce(_notifySourceChange, 20);
+const notifySourceChange = debounce(_notifySourceChange, 48);
 const stopWatch = watch(() => props.page, () => {
     let source = shapeListMap.get(props.page.id)
     if (!source) {
@@ -128,26 +134,70 @@ const stopWatch = watch(() => props.page, () => {
 
 function search(e: Event) {
     // console.log((e.target as HTMLInputElement).value);
+    props.context.navi.notify(Navi.SEARCHING);
 }
+function inputing() {
+    props.context.navi.notify(Navi.SEARCHING);
+}
+
 function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)
 }
-function selectShape(data: ItemData, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
+function selectShape(shape: Shape, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
     if (shiftKey) {
-        selectShapeWhenShiftIsPressed(data);
+        selectShapeWhenShiftIsPressed(shape);
     } else {
-        props.context.selection.selectShape(data.shape, ctrlKey, metaKey);
+        if (ctrlKey || metaKey) {
+            const selected_map: Map<string, Shape> = new Map();
+            const selected = props.context.selection.selectedShapes;
+            for (let i = 0; i < selected.length; i++) {
+                if (selected[i].id === shape.id) {
+                    props.context.selection.unSelectShape(shape); // 元素本身被选中的话就取消选中
+                    return;
+                }
+                selected_map.set(selected[i].id, selected[i]);
+            }
+            let p = shape.parent;
+            while (p && p.type !== ShapeType.Page) { // 元素有父级被选中就不需要在选中了
+                if (selected_map.get(p.id)) {
+                    return;
+                }
+                p = p.parent;
+            }
+            selected.push(shape);
+            selected_map.set(shape.id, shape);
+            for (let i = 0; i < selected.length; i++) {
+                const s = selected[i];
+                let need_remove = false;
+                let p = s.parent;
+                while (p && p.type !== ShapeType.Page) {
+                    if (selected_map.get(p.id)) {
+                        need_remove = true;
+                        break;
+                    }
+                    p = p.parent;
+                }
+                if (need_remove) selected_map.delete(s.id);
+            }
+            props.context.selection.rangeSelectShape(Array.from(selected_map.values()));
+        } else {
+            props.context.selection.selectShape(shape);
+        }
     }
 }
-function selectShapeWhenShiftIsPressed(curData: ItemData) {
-    const to = shapeDirList.indexOf(curData.shape);
+function selectShapeWhenShiftIsPressed(shape: Shape) {
+    const to = shapeDirList.indexOf(shape);
     const selectedShapes = props.context.selection.selectedShapes;
-    const selectShapesIndex = getSelectShapesIndex(selectedShapes);
-    const from = selectShapesIndex.reduce((pre, cur) => {
-        return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
-    }, selectShapesIndex[0]);
-    const shapes = getShapeRange(from, to);
-    props.context.selection.rangeSelectShape(shapes);
+    if (selectedShapes.length) {
+        const selectShapesIndex = getSelectShapesIndex(selectedShapes);
+        const from = selectShapesIndex.reduce((pre, cur) => {
+            return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
+        }, selectShapesIndex[0]);
+        const shapes = getShapeRange(from, to);
+        props.context.selection.rangeSelectShape(shapes);
+    } else {
+        props.context.selection.selectShape(shape);
+    }
 }
 function getSelectShapesIndex(shapes: Shape[]): number[] {
     return shapes.map(s => shapeDirList.indexOf(s));
@@ -156,20 +206,38 @@ function getSelectShapesIndex(shapes: Shape[]): number[] {
 function getShapeRange(start: number, end: number): Shape[] {
     const from = Math.min(start, end);
     const to = Math.max(start, end);
-    const dataRange: Shape[] = [];
+    const range: Map<string, Shape> = new Map();
     const it = listviewSource.iterAt(from);
     for (let i = from; i <= to && it.hasNext(); i++) {
-        dataRange.push(it.next().shape);
+        const shape = it.next().shape;
+        const childs = shape.childs;
+        if (childs && childs.length) {
+            for (let c_i = 0; c_i < childs.length; c_i++) {
+                range.delete(childs[c_i].id);
+            }
+        }
+        let need_set = true;
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) {
+            if (range.get(p.id)) {
+                need_set = false;
+                break;
+            }
+            p = p.parent;
+        }
+        if (need_set) {
+            range.set(shape.id, shape);
+        }
     }
-    return dataRange;
+    return Array.from(range.values());
 }
 
 function hoverShape(shape: Shape) {
     if (props.context.workspace.transforming) return;
     props.context.selection.hoverShape(shape);
-    if (shapeList.value)
+    if (shapeList.value) {
         shapeH.value = shapeList.value.offsetHeight
-
+    }
 }
 
 function unHovershape() {
@@ -241,28 +309,43 @@ function shapeScrollToContentView(shape: Shape) {
     }
 
 }
-
-const MouseDown = (e: MouseEvent) => {
-    const workspace = props.context.workspace
-    workspace.menuMount(false);
+function selectshape_right(shape: Shape, shiftKey: boolean) {
+    const selection = props.context.selection;
+    if (is_shape_in_selection(selection.selectedShapes, shape)) return;
+    if (shiftKey) {
+        selectShapeWhenShiftIsPressed(shape);
+    } else {
+        selection.selectShape(shape);
+    }
+}
+const list_mousedown = (e: MouseEvent, shape: Shape) => {
+    const menu = props.context.menu;
+    menu.menuMount(false);
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
-        const workspace = props.context.workspace
-        workspace.menuMount(false);
-        e.stopPropagation();
-        if (e.target instanceof Element && e.target.closest(`.Menu`)) return;
+        e.stopPropagation(); // 右键事件到这就不上去了
+        menu.menuMount(false);
+        if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
+        selectshape_right(shape, e.shiftKey);
+        const selected = props.context.selection.selectedShapes;
+        chartMenuItems = ['all', 'replace', 'visible', 'lock', 'copy', 'groups', 'container'];
+        if (selected.length === 1) {
+            chartMenuItems.push('forward', 'back', 'top', 'bottom');
+        }
+        const types = selection_types(selected);
+        if (types & 1) chartMenuItems.push('un_group');
+        if (types & 2) chartMenuItems.push('dissolution');
         chartMenuMount(e);
-        e.stopPropagation()
     }
 }
 
 const chartMenuMount = (e: MouseEvent) => {
-    chartMenuPosition.value.x = e.clientX
-    chartMenuPosition.value.y = e.clientY - props.pageHeight - ListBody.value!.offsetTop - 12
-    chartMenuItems = ['paste', 'copy', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group', 'component', 'instance', 'reset', 'edit']
-    chartMenu.value = true
     e.stopPropagation()
-    document.addEventListener('keydown', Menuesc);
+    chartMenuPosition.value.x = e.clientX
+    chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
+    chartMenu.value = true;
+    props.context.menu.menuMount(true);
+    document.addEventListener('keydown', menu_unmount);
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
@@ -279,7 +362,7 @@ const chartMenuMount = (e: MouseEvent) => {
         }
     })
 }
-function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
+function after_drag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
     const selection = props.context.selection;
     const page = selection.selectedPage;
     if (page) {
@@ -291,45 +374,117 @@ function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) 
         }
     }
 }
-function Menuesc(e: KeyboardEvent) {
-    if (e.code === 'Escape') chartMenuUnmount();
+function menu_watcher(t: number) {
+    if (t === Menu.SHUTDOWN_MENU) {
+        close();
+    }
 }
-function chartMenuUnmount() {
-    document.removeEventListener('keydown', Menuesc);
+function menu_unmount(e: KeyboardEvent) {
+    if (e.code === 'Escape') {
+        close();
+    }
+}
+function close() {
+    document.removeEventListener('keydown', menu_unmount);
     chartMenu.value = false;
 }
-
+function reset_selection() {
+    props.context.selection.resetSelectShapes();
+}
+function esc(e: KeyboardEvent) {
+    if (e.code === 'Escape') {
+        keywords.value = '';
+        if (search_el.value) {
+            search_el.value.blur()
+        }
+    }
+}
+function preto_search() {
+    if (search_el.value) {
+        search_el.value.select();
+    }
+    props.context.navi.notify(Navi.SEARCH);
+    document.addEventListener('keydown', esc);
+}
+function leave_search() {
+    if (!keywords.value.trim().length) {
+        const timer = setTimeout(() => {
+            props.context.navi.notify(Navi.SEARCH_FINISHED);
+            clearTimeout(timer);
+        }, 100)
+    }
+    document.removeEventListener('keydown', esc)
+}
+function navi_watcher(t: number) {
+    if (t === Navi.SEARCH_PRE) {
+        if (search_el.value) {
+            search_el.value.select();
+        }
+    }
+}
+function clear_text() {
+    keywords.value = '';
+    if (search_el.value) {
+        search_el.value.select();
+    }
+}
+function keyboard_watcher(e: KeyboardEvent) {
+    if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+    }
+    if (e.target instanceof HTMLInputElement) return;
+    if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        if (search_el.value) {
+            search_el.value.focus();
+            search_el.value.select();
+            preto_search();
+        }
+    }
+}
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
+    props.context.menu.watch(menu_watcher);
+    props.context.navi.watch(navi_watcher);
+    document.addEventListener('keydown', keyboard_watcher);
 });
 
 onUnmounted(() => {
     props.context.selection.unwatch(notifySourceChange)
+    props.context.menu.unwatch(menu_watcher);
+    props.context.navi.unwatch(navi_watcher);
     stopWatch();
-    if (shapeDirList) shapeDirList.unwatch(notifySourceChange)
+    if (shapeDirList) { shapeDirList.unwatch(notifySourceChange) }
+    document.removeEventListener('keydown', keyboard_watcher);
 });
 
 </script>
 
 <template>
     <div class="shapelist-wrap" ref="shapeList">
-        <div class="header">
+        <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
             <div class="search">
                 <svg-icon icon-class="search"></svg-icon>
-                <input type="text" :placeholder="t('home.search_layer') + '…'" @change="(e: Event) => search(e)">
+                <input ref="search_el" type="text" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
+                    @blur="leave_search" @click="preto_search" @change="(e: Event) => search(e)" @input="inputing">
+                <div @click="clear_text" class="close" v-if="keywords">
+                    <svg-icon icon-class="close"></svg-icon>
+                </div>
             </div>
         </div>
-        <div class="body" ref="ListBody">
-            <ListView ref="shapelist" location="shapelist" :allowDrag="true" draging="shapeList" :shapeHeight="shapeH"
-                :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
-                :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
-                @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
-                @isLock="isLock" @onMouseDown="MouseDown" orientation="vertical" @after-drag="afterDrag">
+        <div class="body" ref="listBody" @click="reset_selection">
+            <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords"></SearchPanel>
+            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="true" draging="shapeList"
+                :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"
+                :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
+                @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
+                @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead" @isLock="isLock"
+                @item-mousedown="list_mousedown" orientation="vertical" @after-drag="after_drag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="chartMenuUnmount"
-                :context="props.context" ref="contextMenuEl">
-                <PageViewContextMenuItems :items="chartMenuItems" :context="props.context">
+            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
+                :context="props.context" ref="contextMenuEl" @click.stop>
+                <PageViewContextMenuItems :items="chartMenuItems" :context="props.context" @close="close">
                 </PageViewContextMenuItems>
             </ContextMenu>
         </div>
@@ -383,6 +538,22 @@ onUnmounted(() => {
                 margin-left: 4px;
                 background-color: transparent;
                 font-size: var(--font-default-fontsize);
+            }
+
+            >.close {
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background-color: var(--grey-dark);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+
+                >svg {
+                    width: 60%;
+                    height: 60%;
+                }
             }
         }
     }

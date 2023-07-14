@@ -1,5 +1,13 @@
+<script lang="ts" setup>
+interface Props {
+  size?: number
+  width?: number
+}
+defineProps<Props>();
+</script>
 <template>
-  <div class="container">
+  <div class="container"
+    :style="{ width: size ? `${size}px` : '60px', height: size ? `${size}px` : '60px', 'border-width': width ? `${width}px` : '4px' }">
     <div class="loader"></div>
   </div>
 </template>
@@ -16,9 +24,9 @@
   >.loader {
     width: 100%;
     height: 100%;
-    border: 4px solid transparent;
-    border-top: 4px solid grey;
-    border-left: 4px solid grey;
+    border: solid transparent;
+    border-top: solid grey;
+    border-left: solid grey;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     box-sizing: border-box;

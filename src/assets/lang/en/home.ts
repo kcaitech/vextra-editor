@@ -10,13 +10,21 @@ export const system = {
     space: '...',
     empty: 'No data',
     paste: 'Paste',
+    'paste_here': 'Paste Here',
+    'only_text': 'Paste text',
     copy: 'Copy',
+    cut: 'Cut',
+    replace: 'Replace',
+    failed: 'Failed',
+    'null_file_name': 'The file name cannot be empty',
+    'replace_failed': 'Replacement failed, please try pasting',
     'select_layer': 'Select layer',
     'bring_forward': 'Bring forward',
     'send_backward': 'Send backward',
     'bring_to_top': 'Bring to top',
     'send_to_bottom': 'Send to bottom',
     'visible': 'Visible/Hidden',
+    'hidden': 'Hidden',
     'Lock': 'Lock/Unlock',
     'select_all': 'Select all',
     'fit_canvas': 'Adapt to artboard',
@@ -46,7 +54,9 @@ export const system = {
     'personal_center': 'Personal center',
     'login_out': 'Login out',
     'new_file': 'New file',
-    'page1': 'Page 1'
+    'page1': 'Page 1',
+    'dissolution': 'Dissolution',
+    'content_includes': 'Content includes'
 }
 
 export const home = {
@@ -130,7 +140,7 @@ export const navi = {
     page: 'Page',
     add_page: 'Add new page',
     copy: 'copy',
-    development: 'Functional development……'
+    development: 'Functional development…'
 }
 
 export const frame = {

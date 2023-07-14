@@ -2,11 +2,14 @@ import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority } from "@kcdesig
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, TextShape } from "@kcdesign/data";
-import { Repository } from "@kcdesign/data";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
 import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
 import { WorkSpace } from "./workspace";
+import { Comment } from "./comment";
+import { Menu } from "./menu";
+import { Tool } from "./tool";
+import { Navi } from "./navigate";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -36,23 +39,31 @@ export class RepoWraper {
 
 export class Context extends Watchable(Object) {
     private m_data: Document;
-    private m_selection: Selection;
     private m_editor: Editor;
     private m_repo: RepoWraper;
     private m_coopRepo: CoopRepository;
-    private m_workspace: WorkSpace;
     private m_taskMgr: TaskMgr;
     private m_textEditor?: TextShapeEditor;
+    private m_selection: Selection;
+    private m_workspace: WorkSpace;
+    private m_comment: Comment;
+    private m_menu: Menu;
+    private m_tool: Tool;
+    private m_navi: Navi;
 
     constructor(data: Document, repo: CoopRepository) {
         super();
         this.m_data = data;
-        this.m_selection = new Selection(data);
         this.m_coopRepo = repo;
         this.m_repo = new RepoWraper(this.m_coopRepo);
-        this.m_workspace = new WorkSpace(this);
-        this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
         this.m_taskMgr = new TaskMgr();
+        this.m_selection = new Selection(data);
+        this.m_workspace = new WorkSpace(this);
+        this.m_comment = new Comment();
+        this.m_menu = new Menu();
+        this.m_tool = new Tool();
+        this.m_navi = new Navi();
+        this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
 
         const pagelist = data.pagesList.slice(0);
         this.m_taskMgr.add(new class implements Task { // page auto loader
@@ -126,5 +137,21 @@ export class Context extends Watchable(Object) {
 
     get workspace() {
         return this.m_workspace;
+    }
+
+    get comment() {
+        return this.m_comment;
+    }
+
+    get menu() {
+        return this.m_menu;
+    }
+
+    get tool() {
+        return this.m_tool;
+    }
+
+    get navi() {
+        return this.m_tool;
     }
 }

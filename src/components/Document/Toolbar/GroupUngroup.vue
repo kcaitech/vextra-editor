@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { Shape, ShapeType, GroupShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, Artboard } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { getName } from '@/utils/content';
 import { debounce } from 'lodash';
 import { sort_by_layer } from '@/utils/group_ungroup';
+import { string_by_sys } from '@/utils/common';
 const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const NOGROUP = 0;
@@ -42,9 +43,9 @@ function _updater(t?: number) {
     }
 }
 const updater = debounce(_updater, 50);
-function workspaceUpdate(t?: number) {
+function workspaceUpdate(t?: number, alt?: boolean) {
     if (t === WorkSpace.GROUP) {
-        groupClick();
+        groupClick(alt);
     } else if (t === WorkSpace.UNGROUP) {
         ungroupClick();
     }
@@ -59,7 +60,7 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate)
 })
 
-const groupClick = () => {
+const groupClick = (alt?: boolean) => {
     if (state.value & GROUP) {
         props.context.workspace.setSelectionViewUpdater(false);
         const selection = props.selection;
@@ -68,16 +69,29 @@ const groupClick = () => {
         if (page) {
             if (shapes.length) {
                 const bro = Array.from(page.shapes.values());
-                const name = getName(ShapeType.Group, bro || [], t);
+
                 const editor = props.context.editor4Page(page);
                 const shapes = sort_by_layer(props.context, props.context.selection.selectedShapes);
-                const group = editor.group(shapes, name);
-                if (group) {
-                    props.selection.selectShape(group);
-                    props.selection.notify(Selection.EXTEND, group);
-                    state.value = 0;
-                    state.value = state.value ^ UNGROUP;
-                    state.value = state.value ^ GROUP;
+                if (alt) {
+                    const name = getName(ShapeType.Artboard, bro || [], t);
+                    const artboard = editor.create_artboard(shapes, name);
+                    if (artboard) {
+                        props.selection.selectShape(artboard);
+                        props.selection.notify(Selection.EXTEND, artboard);
+                        state.value = 0;
+                        state.value = state.value ^ UNGROUP;
+                        state.value = state.value ^ GROUP;
+                    }
+                } else {
+                    const name = getName(ShapeType.Group, bro || [], t);
+                    const group = editor.group(shapes, name);
+                    if (group) {
+                        props.selection.selectShape(group);
+                        props.selection.notify(Selection.EXTEND, group);
+                        state.value = 0;
+                        state.value = state.value ^ UNGROUP;
+                        state.value = state.value ^ GROUP;
+                    }
                 }
             }
         }
@@ -91,7 +105,7 @@ const ungroupClick = () => {
         const selection = props.selection;
         const shapes = selection.selectedShapes;
         if (shapes.length) {
-            const groups = shapes.filter(i => i.type === ShapeType.Group);
+            const groups = shapes.filter(i => i.type === ShapeType.Group || i.type === ShapeType.Artboard);
             const others: Shape[] = shapes.filter(i => i.type !== ShapeType.Group);
             if (groups.length) {
                 const page = selection.selectedPage;
@@ -99,12 +113,23 @@ const ungroupClick = () => {
                     const editor = props.context.editor4Page(page);
                     for (let i = 0, len = groups.length; i < len; i++) {
                         const g = groups[i];
-                        const c = editor.ungroup(g as GroupShape);
-                        if (c) {
-                            others.push(...c);
+                        if (g.type === ShapeType.Group) {
+                            const c = editor.ungroup(g as GroupShape);
+                            if (c) {
+                                others.push(...c);
+                            }
+                        } else if (g.type === ShapeType.Artboard) {
+                            const c = editor.dissolution_artboard(g as Artboard);
+                            if (c) {
+                                others.push(...c);
+                            }
                         }
                     }
-                    selection.rangeSelectShape(others);
+                    if (others.length) {
+                        selection.rangeSelectShape(others);
+                    } else {
+                        selection.resetSelectShapes();
+                    }
                 }
             }
         }
@@ -115,16 +140,18 @@ const ungroupClick = () => {
 <template>
     <div class="container">
         <div class="vertical-line"></div>
-        <el-tooltip class="box-item" effect="dark" :content="`${t('home.groups')} &nbsp;&nbsp; Ctrl+G`" placement="bottom"
-            :show-after="500" :offset="5" :hide-after="0">
+        <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)"
+            placement="bottom" :show-after="500" :offset="5" :hide-after="0">
             <div class="group">
-                <ToolButton :onclick="groupClick" :valid="true" :selected="false" :class="{ active: state & GROUP }">
+                <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
+                    :class="{ active: state & GROUP }">
                     <svg-icon icon-class="group"></svg-icon>
                 </ToolButton>
             </div>
         </el-tooltip>
-        <el-tooltip class="box-item" effect="dark" :content="`${t('home.ungroup')} &nbsp;&nbsp; Ctrl+Shift+G`"
-            placement="bottom" :show-after="500" :offset="5" :hide-after="0">
+        <el-tooltip class="box-item" effect="dark"
+            :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" placement="bottom" :show-after="500"
+            :offset="5" :hide-after="0">
             <div class="group">
                 <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
                     <svg-icon icon-class="ungroup"></svg-icon>

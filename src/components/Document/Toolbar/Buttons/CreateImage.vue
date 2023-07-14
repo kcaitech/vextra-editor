@@ -4,6 +4,7 @@ import { Media } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
+import { string_by_sys } from '@/utils/common';
 const { t } = useI18n();
 interface Porps {
     active: boolean
@@ -14,8 +15,8 @@ const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 const picker = ref<HTMLInputElement>();
 function key(e: KeyboardEvent) {
     if (props.context.workspace.isFreeze) return;
-    const { shiftKey, ctrlKey, code } = e;
-    if (shiftKey && ctrlKey && code === 'KeyK') {
+    const { shiftKey, ctrlKey, metaKey, code } = e;
+    if (shiftKey && (ctrlKey || metaKey) && code === 'KeyK') {
         const filepicker = document.getElementById('filepicker');
         if (filepicker) {
             filepicker.click();
@@ -141,7 +142,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <el-tooltip class="box-item" effect="dark" :content="`${t('home.picture')} &nbsp;&nbsp; Shift+Ctrl+K`"
+    <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)"
         placement="bottom" :show-after="500" :offset="10" :hide-after="0">
         <ToolButton ref="button" @click="select" :selected="props.active">
             <div class="svg-container">

@@ -10,6 +10,7 @@ import SelectView from "./Text/SelectView.vue";
 import { genRectPath, throttle } from '../common';
 import { useController } from '../Controller/controller';
 import { Point } from "../SelectionView.vue";
+import { WorkSpace } from '@/context/workspace';
 
 const props = defineProps<{
     context: Context,
@@ -35,6 +36,7 @@ const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let editing: boolean = false;
+const visible = ref<boolean>(true);
 function _update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
@@ -69,20 +71,31 @@ function _update() {
 
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
-    if (!editing && isDblClick()) {
-        editing = true;
-        props.context.workspace.contentEdit(editing);
-        props.context.workspace.setCursorStyle('text', 0);
+    if (e.button === 0) {
+        props.context.menu.menuMount(false);
+        const workspace = props.context.workspace;
+        if (!editing && isDblClick()) {
+            editing = true;
+            workspace.contentEdit(editing);
+            workspace.setCursorStyle('text', 0);
+        }
+        if (!editing) return;
+        workspace.setCtrl('controller');
+        const selection = props.context.selection;
+        matrix.reset(props.matrix);
+        const xy = matrix.inverseCoord(e.offsetX + bounds.left, e.offsetY + bounds.top);
+        downIndex = selection.locateText(xy.x, xy.y);
+        e.stopPropagation();
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+        if (props.context.menu.isMenuMount) {
+            props.context.menu.menuMount(false);
+        }
+    } else if (e.button === 2) {
+        if (!(e.target as Element).closest('#text-selection')) {
+            e.stopPropagation();
+        }
     }
-    if (!editing) return;
-    props.context.workspace.setCtrl('controller');
-    const selection = props.context.selection;
-    matrix.reset(props.matrix);
-    const xy = matrix.inverseCoord(e.offsetX + bounds.left, e.offsetY + bounds.top);
-    downIndex = selection.locateText(xy.x, xy.y);
-    e.stopPropagation();
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
 }
 
 function onMouseUp(e: MouseEvent) {
@@ -133,7 +146,20 @@ function mouseleave() {
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
 }
-
+function selected_all() {
+    const selection = props.context.selection;
+    const end = props.shape.text.length;
+    selection.selectText(0, end);
+}
+function workspace_watcher(t?: number) {
+    if (t === WorkSpace.TRANSLATING) {
+        if (props.context.workspace.isTranslating) {
+            visible.value = false;
+        } else {
+            visible.value = true;
+        }
+    }
+}
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
     if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
@@ -145,6 +171,7 @@ onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
     selection.watch(selectionWatcher);
+    props.context.workspace.watch(workspace_watcher);
     update();
 })
 
@@ -152,21 +179,26 @@ onUnmounted(() => {
     const selection = props.context.selection;
     props.shape.unwatch(update);
     selection.unwatch(selectionWatcher);
+    props.context.workspace.unwatch(workspace_watcher);
 })
 
 </script>
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
-        :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
+        id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+        :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
-        @mouseenter="mouseenter" @mouseleave="mouseleave">
+        @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
-        <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
+        <path :d="boundrectPath" fill="none" stroke='#2561D9' stroke-width="1px"></path>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>
 
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.un-visible {
+    opacity: 0;
+}
+</style>

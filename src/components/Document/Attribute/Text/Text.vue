@@ -658,7 +658,7 @@ onUnmounted(() => {
         >svg {
             width: 50%;
             height: 50%;
-            transition: 0.5s;
+            transition: 0.3s;
         }
 
         svg:hover {

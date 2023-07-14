@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watchEffect, computed } from 'vue'
-import { Shape, ShapeType, RectShape } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref, computed, shallowRef } from 'vue'
+import { Shape, ShapeType, RectShape, RectRadius } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
-import { Context } from '@/context';
-import { RectRadius } from '@kcdesign/data'
-import { cloneDeep, debounce, throttle } from 'lodash';
+import { cloneDeep, debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
 import {
+    get_rotation,
     is_mixed,
     get_actions_constrainer_proportions,
     get_actions_frame_x, get_actions_frame_y,
@@ -18,7 +19,6 @@ import {
     get_actions_flip_h,
     get_actions_flip_v
 } from '@/utils/attri_setting';
-import { WorkSpace } from '@/context/workspace';
 interface Props {
     shapes: Shape[]
     context: Context
@@ -30,10 +30,6 @@ const editor = computed(() => {
 const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 const reflush = ref(0);
-function shapesWatcher() {
-    reflush.value++;
-    _calcFrame();
-}
 const shapeType = ref<ShapeType>();
 const x = ref<number | string>(0);
 const y = ref<number | string>(0);
@@ -53,29 +49,27 @@ const shwoAdapt = ref<boolean>(false)
 const multipleValues = ref<boolean>(false)
 const mixed = t('attr.mixed');
 const watchedShapes = new Map();
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
-    if (selection.selectedShapes.length > 0) {
-        selection.selectedShapes.forEach((v) => {
-            needWatchShapes.set(v.id, v);
-        })
-    }
+function update() {
+    reflush.value++;
+    calc_attri();
+}
+// 得到需要监听的shape，事实上永远最多只监听一个元素
+function watch_shapes() {
     watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(shapesWatcher);
+        v.unwatch(update);
         watchedShapes.delete(k);
     })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(shapesWatcher);
-        watchedShapes.set(k, v);
-    })
+    const selectedShapes = props.context.selection.selectedShapes;
+    if (selectedShapes.length > 0) {
+        // 多选时只监听一个元素就好了，因为一个元素的变化与其他所选元素的变化是相关的
+        const first = selectedShapes[0];
+        watchedShapes.set(first.id, first);
+        watchedShapes.forEach((v) => {
+            v.watch(update);
+        })
+    }
 }
-function _calcFrame() {
+function calc_attri() {
     if (len.value === 1) {
         const shape = props.shapes[0];
         const xy = shape.frame2Root();
@@ -84,7 +78,7 @@ function _calcFrame() {
         y.value = xy.y;
         w.value = Math.max(frame.width, 1);
         h.value = Math.max(frame.height, 1);
-        rotate.value = Number(shape.rotation?.toFixed(2)) || 0;
+        rotate.value = get_rotation(shape);
         isFlippedHorizontal.value = Boolean(shape.isFlippedHorizontal);
         isFlippedVertical.value = Boolean(shape.isFlippedVertical);
         isLock.value = Boolean(shape.constrainerProportions);
@@ -106,9 +100,8 @@ function _calcFrame() {
         }
     }
 }
-const calcFrame = throttle(_calcFrame, 100);
 function _update_view() {
-    watchShapes();
+    watch_shapes();
     layout();
     check_mixed();
 }
@@ -118,6 +111,7 @@ function selection_wather(t: any) {
         update_view();
     }
 }
+// 检查是否多值
 function check_mixed() {
     const isMixed = is_mixed(props.shapes);
     isMixed.x === 'mixed' ? x.value = mixed : x.value = isMixed.x;
@@ -336,10 +330,9 @@ function workspace_watcher(t?: any) {
 }
 // hooks
 onMounted(() => {
-    calcFrame();
-    layout();
-    watchShapes();
-    check_mixed();
+    watch_shapes(); // 组件挂载之后，第一次整理需要监听的shape（得到watchedShapes）
+    check_mixed(); // 检查是否多值
+    layout(); // 属性栏布局
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_watcher);
 })
@@ -347,7 +340,6 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_watcher);
 })
-watchEffect(shapesWatcher);
 </script>
 
 <template>

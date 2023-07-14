@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { Shape } from '@kcdesign/data';
+import { Shape, ShapeType } from '@kcdesign/data';
 import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget } from '@/utils/common';
@@ -9,14 +9,15 @@ export interface SelectorFrame {
     top: number,
     left: number,
     width: number,
-    height: number
+    height: number,
+    includes: boolean
 }
 interface Props {
     selectorFrame: SelectorFrame,
     context: Context
 }
 const props = defineProps<Props>();
-const selectedShapes: Shape[] = [];
+const selectedShapes: Map<string, Shape> = new Map();
 
 function select() {
     const pageMatirx = props.context.workspace.matrix;
@@ -29,10 +30,10 @@ function select() {
         const p3: XY = pageMatirx.inverseCoord(left + width, top + height); // rb
         const p4: XY = pageMatirx.inverseCoord(left, top + height); //lb
         const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
-        if (selectedShapes.length) remove(selectedShapes, ps); // 先剔除已经不再框选区的图形
+        if (selectedShapes.size) remove(selectedShapes, ps); // 先剔除已经不再框选区的图形
         finder(page.childs, ps); // 再寻找框选区外的图形
-        if (selectedShapes.length !== selection.selectedShapes.length) {
-            selection.rangeSelectShape(selectedShapes);
+        if (selectedShapes.size !== selection.selectedShapes.length) {
+            selection.rangeSelectShape(Array.from(selectedShapes.values()));
         }
     }
 
@@ -41,16 +42,17 @@ function select() {
 function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
     let ids = 0;
     while (ids < childs.length) {
-        if (selectedShapes.find(i => i.id === childs[ids].id)) {
+        const shape = childs[ids];
+        if (selectedShapes.get(shape.id)) {
             ids++;
             continue;
         }
-        if (childs[ids].isLocked || !childs[ids].isVisible) {
+        if (shape.isLocked || !shape.isVisible) {
             ids++;
             continue;
         }
         const m = childs[ids].matrix2Root();
-        const { width: w, height: h } = childs[ids].frame;
+        const { width: w, height: h } = shape.frame;
         const ps: XY[] = [
             { x: 0, y: 0 },
             { x: w, y: 0 },
@@ -58,18 +60,29 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             { x: 0, y: h },
             { x: 0, y: 0 },
         ].map(p => m.computeCoord(p.x, p.y));
-        if (isTarget(Points, ps)) {
-            selectedShapes.push(childs[ids]);
+        if (shape.type === ShapeType.Artboard) { // 容器的判定为真条件是完全被选区覆盖
+            if (isTarget(Points, ps, true)) {
+                selectedShapes.set(shape.id, shape);
+                for (let i = 0; i < shape.childs.length; i++) {
+                    selectedShapes.delete(shape.childs[i].id);
+                }
+            } else {
+                finder(shape.childs, Points);
+            }
+            ids++;
+            continue;
+        }
+        if (isTarget(Points, ps, props.selectorFrame.includes)) {
+            selectedShapes.set(shape.id, shape);
         }
         ids++;
     }
 }
 // 剔除
-function remove(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
-    let ids = 0;
-    while (ids < childs.length) {
-        const m = childs[ids].matrix2Root();
-        const { width: w, height: h } = childs[ids].frame;
+function remove(childs: Map<string, Shape>, Points: [XY, XY, XY, XY, XY]) {
+    childs.forEach((value, key) => {
+        const m = value.matrix2Root();
+        const { width: w, height: h } = value.frame;
         const ps: XY[] = [
             { x: 0, y: 0 },
             { x: w, y: 0 },
@@ -77,22 +90,27 @@ function remove(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             { x: 0, y: h },
             { x: 0, y: 0 },
         ].map(p => m.computeCoord(p.x, p.y));
-        if (!isTarget(Points, ps)) {
-            selectedShapes.splice(ids, 1);
+        if (value.type === ShapeType.Artboard) {
+            if (!isTarget(Points, ps, true)) {
+                selectedShapes.delete(key);
+            }
+        } else {
+            if (!isTarget(Points, ps, props.selectorFrame.includes)) {
+                selectedShapes.delete(key);
+            }
         }
-        ids++;
-    }
+    })
 }
 
 function reset(t?: number) {
     if (t === WorkSpace.SELECTING) {
-        selectedShapes.length = 0;
+        selectedShapes.clear();
     }
 }
 // hooks
 onMounted(() => {
     props.context.workspace.watch(reset);
-    selectedShapes.length = 0;
+    selectedShapes.clear();
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(reset);

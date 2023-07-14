@@ -1,6 +1,7 @@
 import { Context } from "@/context";
 import { TextShape } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
+import { paster_inner_shape } from "@/utils/clipaboard";
 
 const keydelays = 150;
 function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): T {
@@ -175,7 +176,48 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
     }
 
 }, keydelays);
-
+function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const selection = context.selection;
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+        const s = Math.min(start, end);
+        const len = Math.abs(start - end)
+        const text = shape.text.getTextWithFormat(s, len);
+        context.workspace.clipboard.write_html(text);
+    }
+}
+async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const selection = context.selection;
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+        if (start === end) return;
+        const text = shape.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
+        const copy_result = await context.workspace.clipboard.write_html(text);
+        if (copy_result) {
+            if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+                selection.setCursor(Math.min(start, end), false);
+            }
+        }
+    }
+}
+function paster(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault(); // 阻止input的粘贴事件
+        paster_inner_shape(context, editor, e.altKey);
+    }
+}
+function select_all(e: KeyboardEvent, context: Context, shape: TextShape) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const selection = context.selection;
+        const end = shape.text.length;
+        selection.selectText(0, end);
+    }
+}
 const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
 handler['arrowleft'] = enterArrowLeft;
@@ -185,6 +227,11 @@ handler['arrowdown'] = enterArrowDown;
 handler['backspace'] = enterBackspace;
 handler['delete'] = enterDelete;
 handler['escape'] = escape;
+handler['c'] = copy;
+handler['x'] = cut;
+handler['v'] = paster;
+handler['√'] = paster;
+handler['a'] = select_all;
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
     if (editor.isInComposingInput()) {
