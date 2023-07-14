@@ -74,18 +74,19 @@ var configureWebpack = (config) => {
     )
 
     config.plugins = [
-        AutoImport({ resolvers: [ElementPlusResolver()] }),
-        Components({ resolvers: [ElementPlusResolver()] }),
-        new CopyWebpackPlugin({
-            patterns: [
-                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
-            ]
-        }),
+        AutoImport({resolvers: [ElementPlusResolver()]}),
+        Components({resolvers: [ElementPlusResolver()]}),
+        new CopyWebpackPlugin({patterns: [
+            { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
+        ]}),
         ...config.plugins
     ]
 
     config.watchOptions = {
-        ignored: ["node_modules\\/(?!(@kcdesign)\\/)"],
+        ignored: [
+            "node_modules\\/(?!(@kcdesign)\\/)",
+            "communication\\/node_modules\\/)",
+        ],
         poll: 1500,
     }
 }
