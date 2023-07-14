@@ -260,8 +260,6 @@ div.container {
   background-color: var(--left-navi-bg-color);
 }
 
-
-
 .contain:hover {
   cursor: default;
   background-color: var(--left-navi-button-hover-color);
