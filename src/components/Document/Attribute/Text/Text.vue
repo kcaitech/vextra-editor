@@ -55,6 +55,7 @@ function toHex(r: number, g: number, b: number) {
 }
 
 const onShowFont = () => {
+    props.context.workspace.focusText()
     if (showFont.value) return showFont.value = false
     showFont.value = true
     document.addEventListener('click', onShowFontBlur);
@@ -64,6 +65,7 @@ const onShowFontBlur = (e: Event) => {
     if (e.target instanceof Element && !e.target.closest('.font-container') && !e.target.closest('.select-font')) {
         var timer = setTimeout(() => {
             showFont.value = false;
+            props.context.workspace.focusText()
             clearTimeout(timer)
             document.removeEventListener('click', onShowFontBlur);
         }, 10)
@@ -71,6 +73,7 @@ const onShowFontBlur = (e: Event) => {
 }
 
 const onShowSize = () => {
+    props.context.workspace.focusText()
     if (showSize.value) return showSize.value = false
     showSize.value = true
     document.addEventListener('click', onShowSizeBlur);
@@ -240,6 +243,7 @@ const textFormat = () => {
     if(format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
     if(format.underlineIsMulti) isUnderline.value = false
     if(format.strikethroughIsMulti) isDeleteline.value = false
+    props.context.workspace.focusText()
 }
 
 function selection_wather(t: number) {

@@ -35,6 +35,7 @@ const getTextIndexAndLen = () => {
 function showMenu() {
   props.context.workspace.popoverVisible(false);
   popover.value.show();
+  props.context.workspace.focusText()
 }
 
 const onSelectId = (icon: BulletNumbersType) => {
@@ -62,6 +63,7 @@ const onSelectCase = (icon: TextTransformType) => {
   } else {
       editor.setTextTransform(icon, textIndex, selectLength)
   }
+  props.context.workspace.focusText()
 }
 
 const setRowHeight = () => {

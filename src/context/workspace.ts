@@ -130,6 +130,7 @@ export class WorkSpace extends Watchable(Object) {
     static HIDDEN_UI = 52;
     static INIT_DOC_NAME = 53;
     static COMPS = 54;
+    static TEXT_FORMAT = 55;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -298,6 +299,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isVisibleComment() {
         return this.m_comment_visible;
+    }
+    focusText() {
+        this.notify(WorkSpace.TEXT_FORMAT)
     }
     downArboardTitle(ev: MouseEvent) {
         this.notify(WorkSpace.ONARBOARD__TITLE_MENU, ev)
