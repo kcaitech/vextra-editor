@@ -2,20 +2,17 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, computed, onUnmounted, reactive, watchEffect } from 'vue';
+import { onMounted, ref, computed, onUnmounted, watchEffect } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import { TextShape, Shape, AttrGetter } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, Color, Fill, ShapeType, FillType, BlendMode, ContextSettings } from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, Color, Fill, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Reg_HEX } from "@/utils/RegExp";
-import { get_fills, get_actions_fill_color, get_actions_add_fill, get_actions_fill_unify, get_actions_fill_enabled, get_actions_fill_delete } from '@/utils/shape_style';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
-import { v4 } from 'uuid';
-import { text } from 'express';
 interface Props {
     context: Context
     shape: Shape
@@ -229,8 +226,8 @@ const textFormat = () => {
     selectVertical.value = format.verAlign || 'top'
     fontName.value = format.fontName || 'PingFangSC-Regular'
     fonstSize.value = format.fontSize || 14
-    isUnderline.value = format.underline !== 'none'
-    isDeleteline.value = format.strikethrough !== 'none'
+    isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+    isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
     textColor.value = format.color 
     highlight.value = format.highlight
     isBold.value = format.bold || false
