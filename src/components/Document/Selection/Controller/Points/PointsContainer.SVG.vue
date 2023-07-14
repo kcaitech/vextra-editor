@@ -21,10 +21,13 @@ function update() {
   update_dot_path();
 }
 function update_dot_path() {
+  const valve = props.context.workspace.shouldSelectionViewUpdate;
+  if (!valve) return;
   paths.value.length = 0;
   const frame = props.shape.frame;
   // const bit_v = 4 / props.context.workspace.matrix.m00;
   const bit_v = 4;
+  const bit_v_d = 8;
   // lt
   let lt = { x: 0, y: 0 };
   lt = matrix.computeCoord(lt.x, lt.y)
@@ -138,13 +141,25 @@ onUnmounted(() => {
     <path :d="paths[0]" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
       @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectLT)">
     </path>
+    <path :d="paths[0]" fill="transparent" stroke='transparent' stroke-width="3px"
+      @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectLT)">
+    </path>
     <path :d="paths[1]" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
+      @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectRT)">
+    </path>
+    <path :d="paths[1]" fill="transparent" stroke='transparent' stroke-width="3px"
       @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectRT)">
     </path>
     <path :d="paths[2]" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
       @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectRB)">
     </path>
+    <path :d="paths[2]" fill="transparent" stroke='transparent' stroke-width="3px"
+      @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectRB)">
+    </path>
     <path :d="paths[3]" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
+      @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectLB)">
+    </path>
+    <path :d="paths[3]" fill="transparent" stroke='transparent' stroke-width="3px"
       @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectLB)">
     </path>
   </g>

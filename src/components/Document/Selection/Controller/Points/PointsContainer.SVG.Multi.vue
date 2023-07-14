@@ -23,6 +23,8 @@ function update() {
     update_dot_path();
 }
 function update_dot_path() {
+    const valve = props.context.workspace.shouldSelectionViewUpdate;
+    if (!valve) return;
     paths.value.length = 0;
     const [lt, rt, rb, lb] = props.frame;
     const bit_v = 4;
