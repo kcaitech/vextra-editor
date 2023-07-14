@@ -11,9 +11,10 @@ import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
-import { Shape, ShapeFrame } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 interface Props {
   context: Context,
   controllerFrame: Point[],
@@ -33,8 +34,6 @@ const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 
 let viewBox = '';
-let groupTrans = '';
-let frame: ShapeFrame;
 // #region 绘制控件
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
   return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
@@ -43,7 +42,6 @@ function updateControllerView() {
   const m2p = props.shape.matrix2Root();
   matrix.reset(m2p);
   matrix.multiAtLeft(props.matrix);
-
   if (!submatrix.equals(matrix)) submatrix.reset(matrix)
   const framePoint = props.controllerFrame;
   boundrectPath.value = genRectPath(framePoint);
@@ -60,21 +58,6 @@ function updateControllerView() {
     return bounds;
   }, bounds);
   viewBox = genViewBox(bounds);
-  const shape = props.shape;
-  frame = props.shape.frame;
-  if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
-    const cx = frame.x + frame.width / 2;
-    const cy = frame.y + frame.height / 2;
-    groupTrans = "translate(" + bounds.left + "px," + bounds.top + "px) "
-    groupTrans += "translate(" + cx + "px," + cy + "px) "
-    if (shape.isFlippedHorizontal) groupTrans += "rotateY(180deg) "
-    if (shape.isFlippedVertical) groupTrans += "rotateX(180deg) "
-    if (shape.rotation) groupTrans += "rotate(" + shape.rotation + "deg) "
-    groupTrans += "translate(" + (-cx + frame.x) + "px," + (-cy + frame.y) + "px)"
-  }
-  else {
-    groupTrans = `translate(${bounds.left}px,${bounds.top}px)`;
-  }
 }
 // #endregion
 
@@ -136,19 +119,10 @@ watchEffect(() => { updater() });
     :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
     :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-    <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
+    <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
+    <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
+    </ShapesStrokeContainer>
     <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></PointsContainer>
-    <!-- <g :style="{ transform: groupTrans }">
-      <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" rx="2" ry="2" :x="-4" :y="-4"></rect>
-      <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" :x="frame.width - 4" :y="-4" rx="2"
-        ry="2"></rect>
-      <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" :x="frame.width - 4"
-        :y="frame.height - 4" rx="2" ry="2">
-      </rect>
-      <rect stroke='blue' stroke-width="1px" fill="#ffffff" width="8" height="8" :y="frame.height - 4" :x="-4" rx="2"
-        ry="2">
-      </rect>
-    </g> -->
   </svg>
 </template>
 <style lang='scss' scoped>
