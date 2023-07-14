@@ -13,8 +13,9 @@ import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
-import PointsContainer from "./Points/PointsContainer.SVG.vue";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
+import BarsContainer from "./Bars/BarsContainer.SVG.vue";
+import PointsContainer from "./Points/PointsContainer.SVG.vue";
 interface Props {
   context: Context,
   controllerFrame: Point[],
@@ -122,6 +123,7 @@ watchEffect(() => { updater() });
     <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
     <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
     </ShapesStrokeContainer>
+    <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></BarsContainer>
     <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></PointsContainer>
   </svg>
 </template>

@@ -18,6 +18,7 @@ declare module '@vue/runtime-core' {
     ArtboardView: typeof import('./src/components/Document/Content/ArtboardView.vue')['default']
     Aside: typeof import('./src/components/AppHome/Aside.vue')['default']
     BackToHome: typeof import('./src/components/Document/Toolbar/BackToHome.vue')['default']
+    'BarsContainer.SVG': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.vue')['default']
     BaseAttr: typeof import('./src/components/Document/Attribute/BaseAttr.vue')['default']
     Border: typeof import('./src/components/Document/Attribute/Border/Border.vue')['default']
     BorderApexStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderApexStyleItem.vue')['default']
