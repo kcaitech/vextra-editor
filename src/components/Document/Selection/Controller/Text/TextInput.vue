@@ -70,7 +70,7 @@ function _updateInputPos() {
 }
 
 function selectionWatcher(...args: any[]) {
-    if (editor) editor.resetCachedSpanAttr(); // TODO 应该过滤掉协作变换的选区变化
+    if (editor && !editor.isInComposingInput()) editor.resetCachedSpanAttr(); // TODO 应该过滤掉协作变换的选区变化
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) updateInputPos();
 }
 
