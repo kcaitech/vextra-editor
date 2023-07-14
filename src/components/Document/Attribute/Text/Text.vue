@@ -2,10 +2,10 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, computed, onUnmounted, watchEffect } from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { TextShape, Shape, AttrGetter } from "@kcdesign/data";
+import { TextShape, AttrGetter } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -15,7 +15,7 @@ import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
 interface Props {
     context: Context
-    shape: Shape
+    shape: TextShape
 }
 
 const props = defineProps<Props>();
@@ -42,9 +42,7 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const len = computed<number>(() => props.context.selection.selectedShapes.length);
-const selection = computed(() => props.context.selection)
-const textShape = computed(() => props.context.selection.selectedShapes)
+const selection = ref(props.context.selection) 
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -89,7 +87,7 @@ const onShowSizeBlur = (e: Event) => {
 const onBold = () => {
     isBold.value = !isBold.value
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     if(isSelectText()) {
         editor.setTextBold(isBold.value, 0, Infinity)
     }else {
@@ -101,7 +99,7 @@ const onBold = () => {
 const onTilt = () => {
     isTilt.value = !isTilt.value
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     if(isSelectText()) {
         editor.setTextItalic(isTilt.value, 0, Infinity)
     }else {
@@ -113,7 +111,7 @@ const onTilt = () => {
 const onUnderlint = () => {
     isUnderline.value = !isUnderline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     if(isSelectText()) {
         editor.setTextUnderline(isUnderline.value, 0, Infinity)
     }else {
@@ -125,7 +123,7 @@ const onUnderlint = () => {
 const onDeleteline = () => {
     isDeleteline.value = !isDeleteline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     if(isSelectText()) {
         editor.setTextStrikethrough(isDeleteline.value, 0,Infinity)
     }else {
@@ -137,7 +135,7 @@ const onDeleteline = () => {
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
     const { textIndex, selectLength } = getTextIndexAndLen()
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     if(isSelectText()) {
         editor.setTextHorAlign(icon, 0, Infinity)
     } else {
@@ -148,7 +146,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
 //设置垂直对齐
 const onSelectVertical = (icon: TextVerAlign) => {
     selectVertical.value = icon
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     editor.setTextVerAlign(icon)
     textFormat()
 }
@@ -156,7 +154,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
 const changeTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     const { textIndex, selectLength } = getTextIndexAndLen()
     if(isSelectText()) {
         editor.setTextFontSize(0, Infinity, size)
@@ -169,7 +167,7 @@ const changeTextSize = (size: number) => {
 const setFont = (font: string) => {
     fontName.value = font
     showFont.value = false;
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     const { textIndex, selectLength } = getTextIndexAndLen()
     if(isSelectText()) {
         editor.setTextFontName(0, Infinity, font)
@@ -209,16 +207,21 @@ const setTextSize = () => {
 
 }
 
+const shapeWatch = watch(() => props.shape, (value, old) => {
+    old.unwatch(textFormat);
+    value.watch(textFormat);
+})
+
 // 获取当前文字格式
 const textFormat = () => {
-    if(!(textShape.value[0] as TextShape) || !(textShape.value[0] as TextShape).text) return
+    if(!props.shape || !props.shape.text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     let format: AttrGetter
     if (textIndex === -1) {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+        format = props.shape.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
     }else {
-        format = (textShape.value[0] as TextShape).text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+        format = props.shape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
     colorIsMulti.value = format.colorIsMulti
     highlightIsMulti.value = format.highlightIsMulti
@@ -241,13 +244,13 @@ const textFormat = () => {
     if(format.underlineIsMulti) isUnderline.value = false
     if(format.strikethroughIsMulti) isDeleteline.value = false
     props.context.workspace.focusText()
+    
 }
 
 function selection_wather(t: number) {
     if(t === Selection.CHANGE_TEXT) {
         textFormat()
-    }
-    if(t === Selection.CHANGE_SHAPE) {
+    }else if(t === Selection.CHANGE_SHAPE) {
         textFormat()
     }
 }
@@ -356,26 +359,23 @@ function onColorChange(e: Event, type: string) {
     }
 }
 function getColorFromPicker(color: Color, type: string) {
-    if (len.value === 1) {
-        const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
-        const { textIndex, selectLength } = getTextIndexAndLen();
-        if(isSelectText()) {
-            if(type === 'color') {
-                editor.setTextColor(0, Infinity, color)
-            }else {
-                editor.setTextHighlightColor(0, Infinity, color)
-            }
+    const editor = props.context.editor4TextShape(props.shape)
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    if(isSelectText()) {
+        if(type === 'color') {
+            editor.setTextColor(0, Infinity, color)
         }else {
-            if(type === 'color') {
-                editor.setTextColor(textIndex, selectLength, color)
-            }else {
-                editor.setTextHighlightColor(textIndex, selectLength, color)
-            }
+            editor.setTextHighlightColor(0, Infinity, color)
         }
-        textFormat()
-    } else if (len.value > 1) {
-        console.log(len);
+    }else {
+        if(type === 'color') {
+            editor.setTextColor(textIndex, selectLength, color)
+        }else {
+            editor.setTextHighlightColor(textIndex, selectLength, color)
+        }
     }
+    textFormat()
+
 }
 
 function setColor(idx: number, clr: string, alpha: number, type: string) {
@@ -387,31 +387,28 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
-    if (len.value === 1) {
-        const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
-        if(isSelectText()) {
-            if(type === 'color') {
-                editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
-            }else {
-                editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b))
-            }
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(props.shape)
+    if(isSelectText()) {
+        if(type === 'color') {
+            editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
         }else {
-            if(type === 'color') {
-                editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
-            }else {
-                editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
-            }
+            editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b))
         }
-        textFormat()
-    } else if (len.value > 1) {
-        console.log(len);
+    }else {
+        if(type === 'color') {
+            editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
+        }else {
+            editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
+        }
     }
+    textFormat()
+
 }
 
 const deleteHighlight = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     if(isSelectText()) {
         editor.setTextHighlightColor(0, Infinity, undefined)
     }else {
@@ -422,7 +419,7 @@ const deleteHighlight = () => {
 
 const addHighlight = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     if(isSelectText()) {
         editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216))
     }else {
@@ -432,7 +429,7 @@ const addHighlight = () => {
 }
 const addTextColor = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape((textShape.value[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.shape)
     if(isSelectText()) {
         editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6))
     }else {
@@ -459,12 +456,15 @@ watchEffect(() => {
     textFormat()
 })
 onMounted(() => {
+    props.shape.watch(textFormat)
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_wather);
+    props.shape.unwatch(textFormat)
+    shapeWatch()
 })
 </script>
 
@@ -472,7 +472,7 @@ onUnmounted(() => {
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24">
             <template #tool>
-                <TextAdvancedSettings :context="props.context" :textShape="textShape"></TextAdvancedSettings>
+                <TextAdvancedSettings :context="props.context" :textShape="shape"></TextAdvancedSettings>
             </template>
         </TypeHeader>
         <div class="text-container">

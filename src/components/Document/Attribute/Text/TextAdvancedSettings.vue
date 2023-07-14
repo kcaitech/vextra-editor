@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Popover from '@/components/common/Popover.vue';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -9,7 +9,7 @@ import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
   context: Context,
-  textShape: Shape[]
+  textShape: TextShape
 }
 const popover = ref();
 const props = defineProps<Props>();
@@ -23,7 +23,7 @@ const paragraphSpace = ref()
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
-const selection = computed(() => props.context.selection)
+const selection = ref(props.context.selection)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -41,7 +41,7 @@ function showMenu() {
 const onSelectId = (icon: BulletNumbersType) => {
   selectId.value = icon
   const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  const editor = props.context.editor4TextShape(props.textShape)
   if(isSelectText()) {
       editor.setTextBulletNumbers(icon, 0, Infinity)
   } else {
@@ -51,13 +51,13 @@ const onSelectId = (icon: BulletNumbersType) => {
 
 const onSelectText = (icon: TextBehaviour) => {
   selectText.value = icon
-  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  const editor = props.context.editor4TextShape(props.textShape)
   editor.setTextBehaviour(icon)
 }
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon
   const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  const editor = props.context.editor4TextShape(props.textShape)
   if(isSelectText()) {
       editor.setTextTransform(icon, 0, Infinity)
   } else {
@@ -68,7 +68,7 @@ const onSelectCase = (icon: TextTransformType) => {
 
 const setRowHeight = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  const editor = props.context.editor4TextShape(props.textShape)
   rowHeight.value = rowHeight.value.trim()
   if (rowHeight.value.length < 1) {
     rowHeight.value = 1
@@ -86,7 +86,7 @@ const setRowHeight = () => {
 
 const setWordSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  const editor = props.context.editor4TextShape(props.textShape)
   wordSpace.value = wordSpace.value.trim()
   // if (wordSpace.value.slice(-1) === '%') {
   //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
@@ -107,7 +107,7 @@ const setWordSpace = () => {
 
 const setParagraphSpace = () => {
   const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+  const editor = props.context.editor4TextShape(props.textShape)
   paragraphSpace.value = paragraphSpace.value.trim()
   if (!isNaN(Number(paragraphSpace.value))) {
     if(isSelectText()) {
@@ -139,15 +139,20 @@ const selectParaSpacing = () => {
   paraSpacing.value && paraSpacing.value.select()
 }
 
+const shapeWatch = watch(() => props.textShape, (value, old) => {
+    old.unwatch(textFormat);
+    value.watch(textFormat);
+})
+
 const textFormat = () => {
-    if(!(props.textShape[0] as TextShape) || !(props.textShape[0] as TextShape).text) return
+    if(!props.textShape || !props.textShape.text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape((props.textShape[0] as TextShape))
+    const editor = props.context.editor4TextShape(props.textShape)
     let format: AttrGetter
     if (textIndex === -1) {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+        format = props.textShape.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
     }else {
-        format = (props.textShape[0] as TextShape).text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+        format = props.textShape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
     wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'
@@ -171,10 +176,13 @@ function selection_wather(t: any) {
 
 onMounted(() => {
     textFormat()
+    props.textShape.watch(textFormat)
     props.context.selection.watch(selection_wather);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
+    props.textShape.unwatch(textFormat)
+    shapeWatch()
 })
 </script>
 

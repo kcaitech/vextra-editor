@@ -186,9 +186,6 @@ function onChangeW(value: string) {
             check_mixed();
         }
     }
-    if(props.shapes[0].type === ShapeType.Text) {
-        props.context.selection.notify(Selection.CHANGE_TEXT)
-    }
 }
 function onChangeH(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
@@ -209,9 +206,6 @@ function onChangeH(value: string) {
             editor.setShapesFrame(actions);
             check_mixed();
         }
-    }
-    if(props.shapes[0].type === ShapeType.Text) {
-        props.context.selection.notify(Selection.CHANGE_TEXT)
     }
 }
 function lockToggle() {
