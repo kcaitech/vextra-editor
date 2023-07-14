@@ -70,7 +70,7 @@ function _updateInputPos() {
 }
 
 function selectionWatcher(...args: any[]) {
-    if (editor) editor.resetCachedSpanAttr(); // TODO 应该过滤掉协作变换的选区变化
+    if (editor && !editor.isInComposingInput()) editor.resetCachedSpanAttr(); // TODO 应该过滤掉协作变换的选区变化
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) updateInputPos();
 }
 
@@ -106,7 +106,7 @@ function committext() {
             end = t;
         }
         const count = editor.insertText2(text, index, end - index);
-        if (count > 0) {
+        if (count !== 0) {
             selection.setCursor(index + count, true);
         }
     }
@@ -161,7 +161,6 @@ function onfocusout() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    // console.log(e.key)
     handleKeyEvent(e, props.context, props.shape, editor);
 }
 
@@ -171,10 +170,13 @@ function onKeyUp(e: KeyboardEvent) {
 function onKeyPress(e: KeyboardEvent) {
     handleKeyEvent(e, props.context, props.shape, editor);
 }
-
+const fff = () => {
+    console.log(111111111111111);
+    
+}
 </script>
 <template>
-    <input type="text" class="input" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
+    <input type="text" class="input" @blur="fff" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
         @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
         @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }"
         ref="inputel" />

@@ -243,7 +243,6 @@ const textFormat = () => {
     if(format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
     if(format.underlineIsMulti) isUnderline.value = false
     if(format.strikethroughIsMulti) isDeleteline.value = false
-    console.log(format,'format');
 }
 
 function selection_wather(t: number) {

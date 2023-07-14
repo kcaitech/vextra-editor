@@ -37,15 +37,18 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     let end = selection.cursorEnd;
     if (e.shiftKey) {
         if (start === end - 1) {
+            const span = shape.text.spanAt(start);
+            if (span?.placeholder && span.length === 1) start--;
             selection.setCursor(start, false);
         } else {
-            // 不只选择'\n'
-            if (start === end && shape.text.charAt(end - 1) === '\n') {
-                start = end = end - 1;
-            }
             selection.selectText(start, end - 1);
         }
     } else {
+        const span = shape.text.spanAt(end - 1);
+        if (span?.placeholder && span.length === 1) {
+            if (end - 1 <= 0) end = 2;
+            else end--;
+        }
         selection.setCursor(end - 1, false);
     }
 }, keydelays);
@@ -55,15 +58,15 @@ const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: Te
     let end = selection.cursorEnd;
     if (e.shiftKey) {
         if (start === end + 1) {
+            const span = shape.text.spanAt(start);
+            if (span?.placeholder && span.length === 1) start++;
             selection.setCursor(start, false);
         } else {
-            // 不只选择'\n'
-            if (start === end && shape.text.charAt(end) === '\n') {
-                start = end = end + 1;
-            }
             selection.selectText(start, end + 1);
         }
     } else {
+        const span = shape.text.spanAt(end + 1);
+        if (span?.placeholder && span.length === 1) end++;
         selection.setCursor(end + 1, false);
     }
 }, keydelays);
@@ -79,17 +82,11 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
     const y = cursor.preLineY + (cursor.preLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
-        const _end = locate.index;
-        // 不只选择'\n'
-        if (Math.abs(start - _end) === 1 && shape.text.charAt(Math.min(start, _end)) === '\n') {
-            selection.setCursor(locate.index, locate.before)
-        }
-        else {
-            selection.selectText(start, _end);
-        }
+        selection.selectText(start, locate.index, locate.before);
     }
     else {
-        selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     }
 }, keydelays);
 const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
@@ -104,17 +101,11 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const y = cursor.nextLineY + (cursor.nextLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
-        const _end = locate.index;
-        // 不只选择'\n'
-        if (Math.abs(start - _end) === 1 && shape.text.charAt(Math.min(start, _end)) === '\n') {
-            selection.setCursor(locate.index, locate.before)
-        }
-        else {
-            selection.selectText(start, _end);
-        }
+        selection.selectText(start, locate.index, locate.before);
     }
     else {
-        selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     }
 }, keydelays);
 
@@ -218,6 +209,16 @@ function select_all(e: KeyboardEvent, context: Context, shape: TextShape) {
         selection.selectText(0, end);
     }
 }
+
+const enterTab = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    const selection = context.selection;
+    const start = Math.min(selection.cursorStart, selection.cursorEnd);
+    const end = Math.max(selection.cursorStart, selection.cursorEnd);
+    const offset = e.shiftKey ? -1 : 1;
+    editor.offsetParaIndent(offset, start, end - start);
+
+}, keydelays);
+
 const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
 handler['arrowleft'] = enterArrowLeft;
@@ -232,6 +233,8 @@ handler['x'] = cut;
 handler['v'] = paster;
 handler['√'] = paster;
 handler['a'] = select_all;
+handler['tab'] = enterTab;
+
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
     if (editor.isInComposingInput()) {
@@ -239,5 +242,8 @@ export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextSh
     }
     const key = e.key.toLowerCase();
     const h = handler[key];
-    if (h) h(e, context, shape, editor);
+    if (h) {
+        h(e, context, shape, editor);
+        e.preventDefault();
+    }
 }

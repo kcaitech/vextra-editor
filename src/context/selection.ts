@@ -1,4 +1,4 @@
-import { ISave4Restore, Watchable } from "@kcdesign/data";
+import { ISave4Restore, SpanAttr, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, TextShape } from "@kcdesign/data";
@@ -35,6 +35,13 @@ export interface ParentXY { // 父级元素坐标系的xy
 export interface ShapeXY { // 图形自身坐标系的xy
     x: number,
     y: number
+}
+
+interface TextLocate {
+    index: number
+    before: boolean
+    placeholder: boolean
+    attr: SpanAttr | undefined
 }
 
 export type ActionType = 'translate' | 'scale' | 'rotate';
@@ -324,9 +331,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @param x page坐标系
      * @param y
      */
-    locateText(x: number, y: number): { index: number, before: boolean } {
+    locateText(x: number, y: number): TextLocate {
         if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
-            return { index: -1, before: false };
+            return { index: -1, before: false, placeholder: false, attr: undefined };
         }
         const shape = this.m_selectShapes[0] as TextShape;
         // translate x,y
@@ -344,6 +351,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         if (index < 0) index = 0;
         const shape = this.m_selectShapes[0];
+
+        const span = shape.text.spanAt(index);
+        if (span?.placeholder && span.length === 1) index++;
+
         const length = shape.text.length;
         if (index >= length) {
             index = length - 1;
@@ -357,11 +368,25 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
     }
 
-    selectText(start: number, end: number) {
+    selectText(start: number, end: number, before?: boolean) {
         if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
             return;
         }
+        // 不只选择'\n'
         const shape = this.m_selectShapes[0];
+        if (Math.abs(start - end) === 1 && shape.text.charAt(Math.min(start, end)) === '\n') {
+            // this.setCursor(end, !!before);
+            // return;
+            if (end > start) {
+                start++;
+                end++;
+            }
+            else {
+                start--;
+                end--;
+            }
+        }
+
         const length = shape.text.length;
         if (start < 0) start = 0;
         else if (start >= length) {
@@ -375,7 +400,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             this.m_cursorStart = start;
             this.m_cursorEnd = end;
             this.m_cursorAtBefore = false;
-            this.notify(Selection.CHANGE_TEXT);            
+            this.notify(Selection.CHANGE_TEXT);
         }
     }
 
