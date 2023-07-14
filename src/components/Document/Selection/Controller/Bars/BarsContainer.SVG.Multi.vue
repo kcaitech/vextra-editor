@@ -25,9 +25,7 @@ function update() {
 }
 function update_dot_path() {
     paths.value.length = 0;
-    const frame = props.shape.frame;
-    let apex = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }];
-    apex = apex.map(p => matrix.computeCoord(p.x, p.y));
+    let apex = props.frame.map(p => { return { x: p.x, y: p.y } });
     apex.push(apex[0]);
     for (let i = 0; i < apex.length - 1; i++) {
         paths.value.push(get_bar_path(apex[i], apex[i + 1]));
