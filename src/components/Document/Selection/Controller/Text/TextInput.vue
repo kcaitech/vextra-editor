@@ -170,13 +170,14 @@ function onKeyUp(e: KeyboardEvent) {
 function onKeyPress(e: KeyboardEvent) {
     handleKeyEvent(e, props.context, props.shape, editor);
 }
-const fff = () => {
-    console.log(111111111111111);
-    
+
+const dddd = () => {
+    console.log(1111111111111111);
 }
+
 </script>
 <template>
-    <input type="text" class="input" @blur="fff" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
+    <input type="text" class="input" @focus="dddd" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
         @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
         @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }"
         ref="inputel" />
