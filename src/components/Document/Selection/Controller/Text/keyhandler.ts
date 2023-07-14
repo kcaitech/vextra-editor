@@ -167,6 +167,15 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
 
 }, keydelays);
 
+const enterTab = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    const selection = context.selection;
+    const start = Math.min(selection.cursorStart, selection.cursorEnd);
+    const end = Math.max(selection.cursorStart, selection.cursorEnd);
+    const offset = e.shiftKey ? -1 : 1;
+    editor.offsetParaIndent(offset, start, end - start);
+
+}, keydelays);
+
 const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
 handler['arrowleft'] = enterArrowLeft;
@@ -176,6 +185,8 @@ handler['arrowdown'] = enterArrowDown;
 handler['backspace'] = enterBackspace;
 handler['delete'] = enterDelete;
 handler['escape'] = escape;
+handler['tab'] = enterTab;
+
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
     if (editor.isInComposingInput()) {
@@ -183,5 +194,8 @@ export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextSh
     }
     const key = e.key.toLowerCase();
     const h = handler[key];
-    if (h) h(e, context, shape, editor);
+    if (h) {
+        h(e, context, shape, editor);
+        e.preventDefault();
+    }
 }
