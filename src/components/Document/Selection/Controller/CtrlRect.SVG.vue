@@ -15,10 +15,10 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
 interface Props {
-  context: Context,
-  controllerFrame: Point[],
-  rotate: number,
-  matrix: number[],
+  context: Context
+  controllerFrame: Point[]
+  rotate: number
+  matrix: number[]
   shape: Shape
 }
 const props = defineProps<Props>();

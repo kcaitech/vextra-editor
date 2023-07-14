@@ -3,12 +3,12 @@ import { Context } from '@/context';
 import { Matrix, Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
-const props = defineProps<{
-  matrix: number[],
-  context: Context,
+interface Props {
+  matrix: number[]
+  context: Context
   shape: Shape
-}>();
-
+}
+const props = defineProps<Props>();
 const matrix = new Matrix();
 const paths = ref<string[]>([]);
 function update() {

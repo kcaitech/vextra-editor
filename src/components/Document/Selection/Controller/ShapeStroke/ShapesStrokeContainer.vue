@@ -5,10 +5,11 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 const watchedShapes = new Map();
-const props = defineProps<{
+interface Props {
     matrix: number[]
     context: Context
-}>();
+}
+const props = defineProps<Props>();
 const matrix = new Matrix();
 const paths = ref<string[]>([]);
 function watchShapes() { // 监听选区相关shape的变化
