@@ -2,8 +2,7 @@
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
-import { CtrlElementType, WorkSpace } from "@/context/workspace";
-import { ClientXY } from "@/context/selection";
+import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
@@ -31,7 +30,6 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const { t } = useI18n();
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
-
 let viewBox = '';
 // #region 绘制控件
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
@@ -66,7 +64,7 @@ function updater(t?: number) {
     editing.value = false;
   }
 }
-function workspaceUpdate(t?: number) {
+function workspace_watcher(t?: number) {
   if (t === WorkSpace.TRANSLATING) {
     visible.value = !workspace.value.isTranslating;
   }
@@ -81,16 +79,13 @@ function mousemove(e: MouseEvent) {
     visible.value = false; // 控件在移动过程中不可视
   }
 }
-
 function mouseup(e: MouseEvent) {
   document.removeEventListener('mousemove', mousemove);
   document.removeEventListener('mouseup', mouseup);
 }
-
 function keyboardHandle(e: KeyboardEvent) {
   handle(e, props.context, t);
 }
-
 function windowBlur() {
   // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
   document.removeEventListener('mousemove', mousemove);
@@ -98,18 +93,16 @@ function windowBlur() {
 }
 onMounted(() => {
   props.context.selection.watch(updater);
-  props.context.workspace.watch(workspaceUpdate);
+  props.context.workspace.watch(workspace_watcher);
   window.addEventListener('blur', windowBlur);
   document.addEventListener('keydown', keyboardHandle);
 })
-
 onUnmounted(() => {
   props.context.selection.unwatch(updater);
-  props.context.workspace.unwatch(workspaceUpdate);
+  props.context.workspace.unwatch(workspace_watcher);
   window.removeEventListener('blur', windowBlur);
   document.removeEventListener('keydown', keyboardHandle);
 })
-
 watchEffect(() => { updater() });
 </script>
 <template>
