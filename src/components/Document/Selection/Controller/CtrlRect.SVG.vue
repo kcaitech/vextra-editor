@@ -124,6 +124,6 @@ watchEffect(() => { updater() });
 }
 
 .editing {
-  background-color: rgba($color: #2561D9, $alpha: 0.15);
+  background-color: rgba($color: #865dff, $alpha: 0.15);
 }
 </style>

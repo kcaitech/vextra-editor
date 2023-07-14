@@ -11,6 +11,8 @@ import { genRectPath, throttle } from '../common';
 import { useController } from '../Controller/controller';
 import { Point } from "../SelectionView.vue";
 import { WorkSpace } from '@/context/workspace';
+import BarsContainer from "./Bars/BarsContainer.SVG.vue";
+import PointsContainer from "./Points/PointsContainer.SVG.vue";
 
 const props = defineProps<{
     context: Context,
@@ -44,9 +46,7 @@ function _update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
-
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
-
     const frame = props.shape.frame;
     const points = [
         { x: 0, y: 0 }, // left top
@@ -56,8 +56,9 @@ function _update() {
     ];
 
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
-    boundrectPath.value = genRectPath(boundrect);
-
+    if (editing) {
+        boundrectPath.value = genRectPath(boundrect);
+    }
     const p0 = boundrect[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -207,7 +208,11 @@ onBeforeUnmount(() => {
         :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
         @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
-        <path :d="boundrectPath" fill="none" stroke='#2561D9' stroke-width="1px"></path>
+        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
+        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape">
+        </BarsContainer>
+        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape">
+        </PointsContainer>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>
