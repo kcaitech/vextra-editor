@@ -4,12 +4,35 @@ import { Matrix, Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
+const watchedShapes = new Map();
 const props = defineProps<{
     matrix: number[]
     context: Context
 }>();
 const matrix = new Matrix();
 const paths = ref<string[]>([]);
+function watchShapes() { // 监听选区相关shape的变化
+    const needWatchShapes = new Map();
+    const selection = props.context.selection;
+    if (selection.hoveredShape) {
+        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
+    }
+    if (selection.selectedShapes.length > 0) {
+        selection.selectedShapes.forEach((v) => {
+            needWatchShapes.set(v.id, v);
+        })
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(update);
+        watchedShapes.delete(k);
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        v.watch(update);
+        watchedShapes.set(k, v);
+    })
+}
 function update() {
     matrix.reset(props.matrix);
     update_paths(props.context.selection.selectedShapes);
@@ -17,6 +40,7 @@ function update() {
 function selection_watcher(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
         update();
+        watchShapes();
     }
 }
 function update_paths(shapes: Shape[]) {
