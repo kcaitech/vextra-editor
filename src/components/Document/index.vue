@@ -98,9 +98,9 @@ function switchPage(id?: string) {
         const pagesMgr = ctx.data.pagesMgr;
         pagesMgr.get(id).then((page: Page | undefined) => {
             if (page) {
-                ctx.workspace.toggleCommentPage()
+                ctx.comment.toggleCommentPage()
                 curPage.value = undefined;
-                ctx.workspace.commentMount(false)
+                ctx.comment.commentMount(false)
                 ctx.selection.selectPage(page);
                 (window as any).__context = ctx;
                 curPage.value = page;
@@ -250,7 +250,7 @@ const showNotification = (type?: number) => {
 const getUserInfo = async () => {
     const { data } = await user_api.GetInfo()
     if (context) {
-        context.workspace.setUserInfo(data)
+        context.comment.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
         localStorage.setItem('nickname', data.nickname)
         localStorage.setItem('userId', data.id)
@@ -306,7 +306,7 @@ const getDocumentInfo = async () => {
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
-            context.workspace.setDocumentInfo(dataInfo.data)
+            context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);

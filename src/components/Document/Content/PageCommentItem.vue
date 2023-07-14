@@ -7,6 +7,7 @@ import CommentPopup from './CommentPopup.vue'
 import { Matrix, Shape, ShapeType } from "@kcdesign/data";
 import * as comment_api from '@/apis/comment';
 import { Selection } from '@/context/selection';
+import { Comment } from '@/context/comment';
 type CommentViewEl = InstanceType<typeof CommentPopup>;
 const props = defineProps<{
     context: Context
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 }>()
 const commentPopupEl = ref<CommentViewEl>()
 const workspace = computed(() => props.context.workspace);
+const _comment = computed(() => props.context.comment);
 const ShowComment = ref(false)
 const commentScale = ref(0)
 const markScale = ref(1)
@@ -34,12 +36,12 @@ const rootHeight = ref(0)
 const rootWidth = ref(0)
 const comment = ref<HTMLDivElement>()
 const matrix = new Matrix();
-const documentCommentList = ref<any[]>(workspace.value.pageCommentList[props.index].children || [])
-const commentOpacity = ref(workspace.value.isCommentOpacity)
+const documentCommentList = ref<any[]>(_comment.value.pageCommentList[props.index].children || [])
+const commentOpacity = ref(_comment.value.isCommentOpacity)
 const reply = ref(props.context.selection.commentStatus)
-const commentLength = ref(props.context.workspace.pageCommentList.length)
+const commentLength = ref(props.context.comment.pageCommentList.length)
 const myComment = ref(props.context.selection.commentAboutMe)
-const visibleComment = ref(props.context.workspace.isVisibleComment)
+const visibleComment = ref(props.context.comment.isVisibleComment)
 const action = ref()
 const aboutMe = ref(false)
 const status = computed(() => {
@@ -88,9 +90,9 @@ const showAboutMe = () => {
 
 const hoverComment = () => {
     if (!showScale.value) {
-        props.context.workspace.hoverComment(false);
+        props.context.comment.hoverComment(false);
         commentScale.value = 1
-        props.context.workspace.hoverComment(true);
+        props.context.comment.hoverComment(true);
     }
     markScale.value = 1.1
 }
@@ -100,12 +102,12 @@ const replyStatus = () => {
 }
 
 const unHoverComment = () => {
-    if (props.context.workspace.isCommentMove) return
+    if (props.context.comment.isCommentMove) return
     commentScale.value = 0
     markScale.value = 1
 }
 const showComment = (e: MouseEvent) => {
-    if (props.context.workspace.isCommentMove) return
+    if (props.context.comment.isCommentMove) return
     const commentX = props.commentInfo.shape_frame.x1
     const commentY = props.commentInfo.shape_frame.y1
     const workspace = props.context.workspace;
@@ -118,7 +120,7 @@ const showComment = (e: MouseEvent) => {
         props.context.workspace.matrix.trans(-80, 0);
         props.context.workspace.matrixTransformation();
     }
-    props.context.workspace.commentMount(false)
+    props.context.comment.commentMount(false)
     const { x, y } = props.context.workspace.root
     commentScale.value = 0
     rootHeight.value = comment.value!.parentElement!.clientHeight
@@ -130,10 +132,10 @@ const showComment = (e: MouseEvent) => {
 
 const unHover = (e: MouseEvent) => {
     var timeout = setTimeout(() => {
-        if (props.context.workspace.isHoverCommentId === props.commentInfo.id) {
+        if (props.context.comment.isHoverCommentId === props.commentInfo.id) {
             return
         } else {
-            props.context.workspace.hoverComment(false);
+            props.context.comment.hoverComment(false);
         }
         clearTimeout(timeout)
     }, 100)
@@ -150,8 +152,8 @@ const closeComment = (e?: MouseEvent) => {
     if (target && e.target.closest('.comment-mark') || target && e.target.closest('.container-hover')) return
     ShowComment.value = false
     showScale.value = false
-    props.context.workspace.commentOpacity(false)
-    props.context.workspace.saveCommentId('')
+    props.context.comment.commentOpacity(false)
+    props.context.comment.saveCommentId('')
 }
 
 const deleteComment = () => {
@@ -165,7 +167,7 @@ const resolve = (status: number, index: number) => {
 }
 
 const recover = (index?: number) => {
-    props.context.workspace.editTabComment()
+    props.context.comment.editTabComment()
     emit('recover')
     if (index) {
         documentCommentList.value.splice(index, 1)
@@ -173,7 +175,7 @@ const recover = (index?: number) => {
         const timer = setTimeout(() => {
             getDocumentComment()
             nextTick(() => {
-                workspace.value.notify(WorkSpace.UPDATE_COMMENT_CHILD)
+                props.context.comment.notify(Comment.UPDATE_COMMENT_CHILD)
             })
             clearTimeout(timer)
         }, 100);
@@ -203,7 +205,7 @@ const nextArticle = (i: number, xy?: { x: number, y: number }, id?: string) => {
 
 const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) => {
     const workspace = props.context.workspace;
-    const commentItem = props.context.workspace.pageCommentList[index]
+    const commentItem = props.context.comment.pageCommentList[index]
     const cx = reply.value ? commentItem.shape_frame.x1 : xy?.x
     const cy = reply.value ? commentItem.shape_frame.y1 : xy?.y
     if (isInner(cx, cy)) {
@@ -254,21 +256,25 @@ const getDocumentComment = async () => {
     }
 }
 const workspaceUpdate = (t: number, index?: number, me?: MouseEvent) => {
-    if (t === WorkSpace.HOVER_COMMENT) {
-        unHoverComment()
-    }
-    if (t === WorkSpace.OPACITY_COMMENT) {
-        commentOpacity.value = workspace.value.isCommentOpacity
-    }
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin()
+    }
+    action.value = workspace.value.action;
+}
+
+const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
+    if (t === Comment.HOVER_COMMENT) {
+        unHoverComment()
+    }
+    if (t === Comment.OPACITY_COMMENT) {
+        commentOpacity.value = _comment.value.isCommentOpacity
     }
     if (index === props.index) {
         // 打开
         showComment(me!)
     }
-    if (t === WorkSpace.VISIBLE_COMMENT) {
-        visibleComment.value = workspace.value.isVisibleComment
+    if (t === Comment.VISIBLE_COMMENT) {
+        visibleComment.value = props.context.comment.isVisibleComment
     }
     action.value = workspace.value.action;
 }
@@ -276,8 +282,8 @@ const workspaceUpdate = (t: number, index?: number, me?: MouseEvent) => {
 const pageSkipComment = () => {
     const workspace = props.context.workspace;
     const commentId = props.context.selection.commentId
-    const index = props.context.workspace.pageCommentList.findIndex(item => item.id === commentId)
-    const commentItem = props.context.workspace.pageCommentList[index]
+    const index = props.context.comment.pageCommentList.findIndex(item => item.id === commentId)
+    const commentItem = props.context.comment.pageCommentList[index]
     const cx = commentItem.shape_frame.x1
     const cy = commentItem.shape_frame.y1
     const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
@@ -293,7 +299,7 @@ const pageSkipComment = () => {
 
 const unfold = () => {
     if (props.context.selection.commentId === props.commentInfo.id) {
-        props.context.workspace.commentMount(false)
+        props.context.comment.commentMount(false)
         if (comment.value) {
             rootHeight.value = comment.value.parentElement!.clientHeight
             rootWidth.value = comment.value.parentElement!.clientWidth
@@ -302,7 +308,7 @@ const unfold = () => {
         getDocumentComment()
         ShowComment.value = true
         showScale.value = true
-        props.context.workspace.saveCommentId(props.commentInfo.id);
+        props.context.comment.saveCommentId(props.commentInfo.id);
     }
 }
 
@@ -358,7 +364,7 @@ const update = (shape?: Shape) => {
     watcher()
     if(!shape) return
     emit('updateShapeComment', props.index)
-    workspace.value.editShapeComment(true, [shape])
+    props.context.comment.editShapeComment(true, [shape])
 }
 
 function watcher() {
@@ -372,10 +378,12 @@ defineExpose({
 
 onMounted(() => {
     props.context.workspace.watch(workspaceUpdate);
+    props.context.comment.watch(commentUpdate);
     props.context.selection.watch(selectedUpdate);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
+    props.context.comment.unwatch(commentUpdate);
     props.context.selection.unwatch(selectedUpdate);
 })
 watchEffect(setOrigin)

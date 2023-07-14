@@ -10,6 +10,7 @@ import * as comment_api from '@/apis/comment';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
+import { Comment } from "@/context/comment";
 const { t } = useI18n()
 const props = defineProps<{
     commentItem: any,
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 const hoverIcon = ref(false)
 const hoverComment = ref(false)
 const workspace = computed(() => props.context.workspace);
+const comment = computed(() => props.context.comment);
 const reply = ref(props.context.selection.commentStatus)
 const myComment = ref(props.context.selection.commentAboutMe)
 const aboutMe = ref(false)
@@ -77,12 +79,12 @@ const showAboutMe = () => {
     }
 }
 const isControls = computed(() => {
-    if(workspace.value.isUserInfo?.id === props.commentItem.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    if(comment.value.isUserInfo?.id === props.commentItem.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
     else return false
 })
 
 const isControlsDel = computed(() => {
-    if(workspace.value.isUserInfo?.id === props.commentItem.user.id) return true
+    if(comment.value.isUserInfo?.id === props.commentItem.user.id) return true
     else return false
 })
 
@@ -127,7 +129,7 @@ const onReply = () => {
             workspace.matrixTransformation();
         }
     }else {
-        props.context.workspace.commentMount(false)
+        props.context.comment.commentMount(false)
         props.context.selection.selectCommentPage(props.pageId) 
         props.context.selection.setCommentSelect(true)
         props.context.selection.selectComment(props.commentItem.id)
@@ -152,7 +154,7 @@ function isInner() {
 const onResolve = (e: Event) => {
     e.stopPropagation()
     if(!isControls.value) return
-    props.context.workspace.editTabComment()
+    props.context.comment.editTabComment()
     const state = props.commentItem.status === 0 ? 1 : 0
     setCommentStatus(state)
     emit('resolve', state, props.index)
@@ -161,8 +163,8 @@ const onResolve = (e: Event) => {
 const onDelete = (e: Event) => {
     e.stopPropagation()
     if(!isControlsDel.value) return
-    props.context.workspace.editTabComment()
-    props.context.workspace.commentInput(false);
+    props.context.comment.editTabComment()
+    props.context.comment.commentInput(false);
     deleteComment()
     emit('delete', props.index)
 }
@@ -206,33 +208,36 @@ const getPage = () => {
     })
 }
 
-const update = (t: number) => {
+const selectionUpdate = (t: number) => {
     if(t === Selection.SOLVE_MENU_STATUS) {
         replyStatus()
     }
     if(t === Selection.ABOUT_ME) {
         showAboutMe()
     }
-    if(t === WorkSpace.CURRENT_COMMENT) {
-        const curId = props.context.workspace.isHoverCommentId
+}
+
+const commentUpdate = (t: number) => {
+    if(t === Comment.CURRENT_COMMENT) {
+        const curId = props.context.comment.isHoverCommentId
         if(curId === props.commentItem.id) {
-            hoverComment.value = props.context.workspace.isHoverComment
+            hoverComment.value = props.context.comment.isHoverComment
         }
     }
-    if(t === WorkSpace.SELECTE_COMMENT) {
-        const curId = props.context.workspace.isSelectCommentId
+    if(t === Comment.SELECTE_COMMENT) {
+        const curId = props.context.comment.isSelectCommentId
             selectComment.value = curId === props.commentItem.id ? true : false
     }
 }
 
 getPage()
 onMounted(() => {
-    props.context.selection.watch(update);
-    props.context.workspace.watch(update);
+    props.context.selection.watch(selectionUpdate);
+    props.context.comment.watch(commentUpdate);
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(update);
-    props.context.workspace.unwatch(update);
+    props.context.selection.unwatch(selectionUpdate);
+    props.context.comment.unwatch(commentUpdate);
 })
 </script>
 <template>

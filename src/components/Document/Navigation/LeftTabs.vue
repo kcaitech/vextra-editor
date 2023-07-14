@@ -8,6 +8,7 @@ import CommentTab from "./Comment/CommentTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
 import { Action, WorkSpace } from '@/context/workspace';
+import { Comment } from "@/context/comment";
 const { t } = useI18n();
 
 const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
@@ -37,7 +38,7 @@ const tabs: { title: string, id: Tab }[] = [
 ]
 
 function update(t: number) {
-    if(t === WorkSpace.SELECT_LIST_TAB) {
+    if(t === Comment.SELECT_LIST_TAB) {
         selected.value = workspace.value.action;
         selectComment()
     }
@@ -56,10 +57,10 @@ const showHiddenLeft = () => {
     emit('showNavigation')
 }
 onMounted(() => {
-    props.context.workspace.watch(update);
+    props.context.comment.watch(update);
 });
 onUnmounted(() => {
-    props.context.workspace.unwatch(update);
+    props.context.comment.unwatch(update);
 })
 </script>
 

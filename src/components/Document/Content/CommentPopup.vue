@@ -11,6 +11,7 @@ import * as comment_api from '@/apis/comment';
 import { v4 } from 'uuid';
 import { ElScrollbar } from 'element-plus'
 import { Selection } from '@/context/selection';
+import { Comment } from '@/context/comment';
 import { text } from 'express';
 const { t } = useI18n()
 const props = defineProps<{
@@ -34,7 +35,7 @@ const emit = defineEmits<{
     (e: 'nextArticle', index: number, xy?: { x: number, y: number }, id?: string): void
     (e: 'moveCommentPopup', event: MouseEvent, index: number): void
 }>()
-interface Comment {
+interface CommentData {
     parent_id: string
     root_id: string
     doc_id: string
@@ -47,6 +48,7 @@ interface Comment {
 }
 const matrix = new Matrix(props.context.workspace.matrix);
 const workspace = computed(() => props.context.workspace);
+const comment = computed(() => props.context.comment);
 const textarea = ref('')
 const offside = ref(false)
 const commentPopup = ref<HTMLDivElement>()
@@ -64,7 +66,7 @@ const reply = ref<boolean>(props.context.selection.commentStatus)
 const close = (e: MouseEvent) => {
     emit('close', e)
     nextTick(() => {
-        props.context.workspace.commentInput(false);
+        props.context.comment.commentInput(false);
     })
 }
 const prenvetOpacity = computed(() => {
@@ -90,7 +92,7 @@ const disableNext = computed(() => {
         return nextOpacity.value === commentShowList.value.length - 1
     }
 })
-const commentData = ref<Comment>({
+const commentData = ref<CommentData>({
     parent_id: '',
     root_id: '',
     doc_id: props.commentInfo.doc_id,
@@ -107,12 +109,12 @@ const resolve = computed(() => {
 })
 
 const isControls = computed(() => {
-    if (workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    if (comment.value.isUserInfo?.id === props.commentInfo.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
     else return false
 })
 
 const isControlsDel = computed(() => {
-    if (workspace.value.isUserInfo?.id === props.commentInfo.user.id) return true
+    if (comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
@@ -193,7 +195,7 @@ const carriageReturn = (event: KeyboardEvent) => {
     } else if (code === 'Escape' && textarea.value.trim().length < 4) {
         emit('close')
         nextTick(() => {
-            props.context.workspace.commentInput(false);
+            props.context.comment.commentInput(false);
         })
     } else if (code === 'Escape' && textarea.value.trim().length >= 4) {
         startShake()
@@ -211,7 +213,7 @@ const onResolve = (e: Event) => {
 const onDelete = (e: Event) => {
     e.stopPropagation()
     if (!isControlsDel.value) return
-    props.context.workspace.commentInput(false);
+    props.context.comment.commentInput(false);
     deleteComment(props.commentInfo.id)
     emit('delete', props.index)
 }
@@ -243,17 +245,17 @@ const deleteComment = async (id: string) => {
     }
 }
 
-function workspaceUpdate(t?: number, p?: number) {
+function commentUpdate(t?: number, p?: number) {
     const length = textarea.value.trim().length < 4
-    props.context.workspace.commentInput(true);
-    props.context.workspace.commentMount(true);
-    if (t === WorkSpace.SHUTDOWN_COMMENT && length) {
+    props.context.comment.commentInput(true);
+    props.context.comment.commentMount(true);
+    if (t === Comment.SHUTDOWN_COMMENT && length) {
         emit('close');
     }
-    if (t === WorkSpace.COMMENT_POPUP) {
+    if (t === Comment.COMMENT_POPUP) {
         emit('close');
     }
-    if (t === WorkSpace.COMMENT_HANDLE_INPUT) {
+    if (t === Comment.COMMENT_HANDLE_INPUT) {
         let timeout = setTimeout(() => {
             if (scrollbarRef.value) {
                 if (itemHeight.value) {
@@ -265,7 +267,7 @@ function workspaceUpdate(t?: number, p?: number) {
             clearTimeout(timeout)
         }, 10)
     }
-    if (t === WorkSpace.UPDATE_COMMENT_CHILD) {
+    if (t === Comment.UPDATE_COMMENT_CHILD) {
         const timeout = setTimeout(() => {
             if (scrollbarRef.value) {
                 scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
@@ -306,7 +308,7 @@ const nextArticle = () => {
 }
 
 const commentShow = () => {
-    const commentList = props.context.workspace.pageCommentList
+    const commentList = props.context.comment.pageCommentList
     commentList.forEach(item => {
         if (item.status === 0) {
             commentShowList.value && commentShowList.value.push(item)
@@ -427,17 +429,17 @@ defineExpose({
 })
 onMounted(() => {
     commentShow()
-    props.context.workspace.saveCommentId(props.commentInfo.id);
-    props.context.workspace.commentOpacity(true);
-    props.context.workspace.commentInput(true);
-    props.context.workspace.watch(workspaceUpdate);
+    props.context.comment.saveCommentId(props.commentInfo.id);
+    props.context.comment.commentOpacity(true);
+    props.context.comment.commentInput(true);
+    props.context.comment.watch(commentUpdate)
     props.context.selection.watch(update)
     document.addEventListener('mouseup', handleClickOutside);
     document.addEventListener('mouseup', scrollup)
     document.addEventListener('keydown', closeComment);
 })
 onUnmounted(() => {
-    props.context.workspace.unwatch(workspaceUpdate);
+    props.context.comment.unwatch(commentUpdate)
     props.context.selection.unwatch(update);
     document.removeEventListener('mouseup', handleClickOutside);
     document.removeEventListener('mouseup', scrollup);

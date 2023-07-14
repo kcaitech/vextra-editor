@@ -26,7 +26,7 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
-const isComment = ref<boolean>(props.context.workspace.isVisibleComment)
+const isComment = ref<boolean>(props.context.comment.isVisibleComment)
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
@@ -159,9 +159,9 @@ function canvas() {
 }
 function cursor() { }
 function comment() {
-  const status = props.context.workspace.isVisibleComment;
+  const status = props.context.comment.isVisibleComment;
   isComment.value = !status;
-  props.context.workspace.setVisibleComment(isComment.value);
+  props.context.comment.setVisibleComment(isComment.value);
   emit('close');
 }
 function ruler() { }

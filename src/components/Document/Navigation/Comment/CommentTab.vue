@@ -11,6 +11,7 @@ import { ElScrollbar } from 'element-plus'
 import { Selection } from "@/context/selection";
 import ShowHiddenLeft from "../ShowHiddenLeft.vue";
 import { watchEffect } from "vue";
+import { Comment } from "@/context/comment";
 const { t } = useI18n();
 const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
@@ -27,11 +28,11 @@ const commentMenuItems = ref<commentListMenu[]>([
     { text: `${t('comment.show_about_me')}`, status_p: props.context.selection.commentAboutMe},
     { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
 ])
-const documentCommentList = ref<any[]>(props.context.workspace.commentList)
+const documentCommentList = ref<any[]>(props.context.comment.commentList)
 const commentAll = ref<any[]>() //没有转树的评论列表
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 const isPageSort = ref(props.context.selection.commentPageSort)
-const visibleComment = ref(props.context.workspace.isVisibleComment)
+const visibleComment = ref(props.context.comment.isVisibleComment)
 const action = ref()
 const showMenu = () => {
     if(commentMenu.value) {
@@ -62,8 +63,8 @@ const getPage = (status: boolean) => {
 //关于我的评论
 const aboutMe = () => {
     const aboutMeArr: any = []
-    const userId = props.context.workspace.isUserInfo?.id
-    const commnetList = props.context.workspace.not2treeComment
+    const userId = props.context.comment.isUserInfo?.id
+    const commnetList = props.context.comment.not2treeComment
     commnetList.forEach((item: any) => {
         if(item.user.id === userId) {
             const rootId = item.root_id
@@ -104,9 +105,9 @@ const getDocumentComment = async(id :string) => {
         obj.children = []
        })
        const list  = list2Tree(data, '') 
-       props.context.workspace.setNot2TreeComment(data)
-       props.context.workspace.setCommentList(list)
-       documentCommentList.value = props.context.workspace.commentList
+       props.context.comment.setNot2TreeComment(data)
+       props.context.comment.setCommentList(list)
+       documentCommentList.value = props.context.comment.commentList
     }catch(err) {
         console.log(err);
     }
@@ -129,30 +130,38 @@ const list2Tree = (list: any, rootValue: string) => {
 
 const onResolve = (status: number, index: number) => {
     documentCommentList.value[index].status = status
-    props.context.workspace.setCommentList(documentCommentList.value)
+    props.context.comment.setCommentList(documentCommentList.value)
 }
 
 const onDelete = (index:number) => {
     documentCommentList.value.splice(index, 1)
-    props.context.workspace.setCommentList(documentCommentList.value)
+    props.context.comment.setCommentList(documentCommentList.value)
 }
 
 const onVisibleComment = () => {
-    props.context.workspace.setVisibleComment(true)
+    props.context.comment.setVisibleComment(true)
 }
 
 const update = (t: number) => {
-    if(t === WorkSpace.SEND_COMMENT) {
+    action.value = props.context.workspace.action;
+}
+const selectedUpdate = (t: number) => {
+    if(t === Selection.PAGE_SORT) {
+        isPageSort.value = props.context.selection.commentPageSort
+    }
+}
+const commentUpdate = (t: number) => {
+    if(t === Comment.SEND_COMMENT) {
         const timer = setTimeout(() => {
             getDocumentComment(docID)
             clearTimeout(timer)
         }, 150);
     }
-    if(t === WorkSpace.UPDATE_COMMENT) {
-        documentCommentList.value = props.context.workspace.commentList
+    if(t === Comment.UPDATE_COMMENT) {
+        documentCommentList.value = props.context.comment.commentList
     }
-    if(t === WorkSpace.SELECTE_COMMENT) {
-        const curId = props.context.workspace.isSelectCommentId
+    if(t === Comment.SELECTE_COMMENT) {
+        const curId = props.context.comment.isSelectCommentId
         const comment = document.querySelector(`[data-comment="${curId}"]`)
         if(comment) {
             scrollbarRef.value?.scrollTo({
@@ -161,24 +170,22 @@ const update = (t: number) => {
             })
         }
     }
-    if(t === Selection.PAGE_SORT) {
-        isPageSort.value = props.context.selection.commentPageSort
+    if (t === Comment.VISIBLE_COMMENT) {
+        visibleComment.value = props.context.comment.isVisibleComment
     }
-    if (t === WorkSpace.VISIBLE_COMMENT) {
-        visibleComment.value = props.context.workspace.isVisibleComment
-    }
-    action.value = props.context.workspace.action;
 }
 watchEffect(() => {
     getDocumentComment(docID)
 })
 onMounted(() => {
     props.context.workspace.watch(update);
-    props.context.selection.watch(update);
+    props.context.comment.watch(commentUpdate);
+    props.context.selection.watch(selectedUpdate);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(update);
-    props.context.selection.unwatch(update);
+    props.context.comment.unwatch(commentUpdate);
+    props.context.selection.unwatch(selectedUpdate);
 })
 const showHiddenLeft = () => {
     emit('showNavigation')

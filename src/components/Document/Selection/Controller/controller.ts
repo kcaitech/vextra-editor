@@ -12,6 +12,7 @@ import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
 import { paster_short } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
+import { Comment } from '@/context/comment';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -181,7 +182,7 @@ export function useController(context: Context) {
             document.removeEventListener('mouseup', mouseup);
         }
         if (need_update_comment) {
-            workspace.value.notify(WorkSpace.UPDATE_COMMENT_POS);
+            context.comment.notify(Comment.UPDATE_COMMENT_POS);
             need_update_comment = false;
         }
         workspace.value.setCtrl('page');
