@@ -3,10 +3,12 @@ import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { ClientXY, PageXY, Selection } from '@/context/selection';
+import { Point } from '../../SelectionView.vue';
 interface Props {
     matrix: number[]
     context: Context
     shape: Shape
+    frame: Point[]
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
