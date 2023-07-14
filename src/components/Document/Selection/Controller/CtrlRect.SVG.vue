@@ -7,7 +7,6 @@ import { Point } from "../SelectionView.vue";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { useController } from "./controller";
-import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
@@ -25,7 +24,6 @@ const { isDrag } = useController(props.context);
 const workspace = computed(() => props.context.workspace);
 const visible = ref<boolean>(true);
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
-const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const { t } = useI18n();
 const matrix = new Matrix();
@@ -41,7 +39,6 @@ function updateControllerView() {
   matrix.multiAtLeft(props.matrix);
   if (!submatrix.equals(matrix)) submatrix.reset(matrix)
   const framePoint = props.controllerFrame;
-  boundrectPath.value = genRectPath(framePoint);
   const p0 = framePoint[0];
   bounds.left = p0.x;
   bounds.top = p0.y;
@@ -111,7 +108,6 @@ watchEffect(() => { updater() });
     :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
     :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-    <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
     <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
     </ShapesStrokeContainer>
     <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></BarsContainer>

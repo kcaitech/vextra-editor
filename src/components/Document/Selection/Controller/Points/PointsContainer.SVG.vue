@@ -114,8 +114,7 @@ function point_mouseup(event: MouseEvent) {
   }
 }
 
-function selection_watcher(t?: number) {
-}
+function selection_watcher(t?: number) { }
 watch(() => props.matrix, () => {
   update();
 })
