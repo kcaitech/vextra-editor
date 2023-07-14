@@ -45,6 +45,8 @@ function selection_watcher(t?: number) {
     }
 }
 function update_paths(shapes: Shape[]) {
+    const valve = props.context.workspace.shouldSelectionViewUpdate;
+    if (!valve) return;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
