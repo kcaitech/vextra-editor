@@ -121,7 +121,6 @@ function selectionWatcher(t: number) {
             const pageId = context.selection.commentPageId
             switchPage(pageId)
         }
-
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
@@ -496,6 +495,7 @@ onUnmounted(() => {
     }
 
     #content {
+        position: fixed;
         width: 100%;
         height: 100%;
         overflow: hidden;

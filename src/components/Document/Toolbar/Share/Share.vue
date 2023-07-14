@@ -28,8 +28,6 @@ const onShare = () => {
   documentInfo(route.query.id).then((data) => {
     docInfo.value = data
     if(docInfo.value) {
-      console.log(props.context.workspace.isUserInfo);
-      
       userInfo.value = props.context.workspace.isUserInfo
       showFileShare.value = true
     }
@@ -53,7 +51,6 @@ async function documentInfo(id: any) {
     } else {
       console.log('没有该文档');
     }
-
   } catch (err) {
     return console.log(err);
   }

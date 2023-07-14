@@ -341,13 +341,17 @@ function workspaceWatcher(type?: number) { // 更新编辑器状态，包括光�
         documentCommentList.value = props.context.workspace.pageCommentList
     }
 }
-
+let timeComment: any = null
 onMounted(() => {
     getDocumentComment()
+    timeComment = setInterval(() => {
+        getDocumentComment()
+    }, 20000)
     props.context.workspace.watch(workspaceWatcher);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);
+    clearInterval(timeComment)
 })
 </script>
 

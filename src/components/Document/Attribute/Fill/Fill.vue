@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, ContextSettings, Shape, BlendMode, FillType } from "@kcdesign/data";
+import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, TextShape, ShapeType, AttrGetter } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -72,7 +72,6 @@ function updateData() {
             fills.unshift(..._fs);
         }
     }
-
 }
 function watcher(...args: any[]) {
     if (args.length > 0 && args.includes('style')) updateData();
@@ -226,6 +225,7 @@ function getColorFromPicker(idx: number, color: Color) {
         }
     }
 }
+
 function selection_wather(t: any) {
     if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
         watchShapes();

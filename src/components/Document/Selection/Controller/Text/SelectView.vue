@@ -60,8 +60,9 @@ function _update() {
         // cursor
         const cursorAtBefore = selection.cursorAtBefore;
         const index = selection.cursorStart;
-        const cursor = props.shape.text.locateCursor(index, cursorAtBefore).map((point) => matrix.computeCoord(point.x, point.y));
-        cursorPath.value = genCursorPath(cursor);
+        const cursor = props.shape.text.locateCursor(index, cursorAtBefore);
+        if (!cursor) cursorPath.value = "";
+        else cursorPath.value = genCursorPath(cursor.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y)));
     }
 }
 
