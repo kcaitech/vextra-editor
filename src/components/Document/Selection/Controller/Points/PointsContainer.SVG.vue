@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix, Shape } from '@kcdesign/data';
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 const props = defineProps<{
   matrix: number[],
