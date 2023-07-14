@@ -317,7 +317,7 @@ div.text {
     padding-left: 2px;
 
     .active {
-      color: var(--active-color);
+      color: var(--active-color-beta);
     }
   }
 }

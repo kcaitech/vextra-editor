@@ -497,7 +497,7 @@ onUnmounted(() => {
 
         >.keywords {
           flex-grow: 1px;
-          color: var(--active-color);
+          color: var(--active-color-beta);
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -505,7 +505,7 @@ onUnmounted(() => {
 
         >.end {
           flex-shrink: 0;
-          color: var(--active-color);
+          color: var(--active-color-beta);
         }
 
         >.shrink {
@@ -585,7 +585,7 @@ onUnmounted(() => {
 
         >.keywords {
           flex-grow: 1px;
-          color: var(--active-color);
+          color: var(--active-color-beta);
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -593,7 +593,7 @@ onUnmounted(() => {
 
         >.end {
           flex-shrink: 0;
-          color: var(--active-color);
+          color: var(--active-color-beta);
         }
 
         >.shrink {

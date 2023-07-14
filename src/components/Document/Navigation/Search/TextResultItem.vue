@@ -414,17 +414,17 @@ onUnmounted(() => {
   white-space: nowrap;
   margin-left: 13px;
   border-radius: 4px;
-  background-color: rgba($color: #0d99ff, $alpha: 0.1);
+  background-color: rgba($color: #865dff, $alpha: 0.1);
   box-sizing: border-box;
   overflow: hidden;
   transition: 0.1s;
 
   .active {
-    color: var(--active-color);
+    color: var(--active-color-beta);
   }
 }
 
 .tips-wrap:hover {
-  background-color: rgba($color: #0d99ff, $alpha: 0.3);
+  background-color: rgba($color: #865dff, $alpha: 0.3);
 }
 </style>

@@ -617,7 +617,6 @@ onUnmounted(() => {
             margin: 3px 13px;
             display: flex;
             align-items: center;
-            box-sizing: border-box;
             background-color: var(--grey-light);
             padding: 4px var(--default-padding-half);
             border-radius: 8px;
@@ -664,8 +663,8 @@ onUnmounted(() => {
                 margin-left: 4px;
                 background-color: transparent;
                 font-size: var(--font-default-fontsize);
-                caret-color: var(--active-color);
-                color: var(--active-color);
+                caret-color: var(--active-color-beta);
+                color: var(--active-color-beta);
                 transition: 0.3s;
             }
 
@@ -702,7 +701,7 @@ onUnmounted(() => {
             }
 
             .accurate-active {
-                background-color: var(--active-color);
+                background-color: var(--active-color-beta);
                 color: #fff;
             }
         }
@@ -713,7 +712,7 @@ onUnmounted(() => {
             .block-wrap {
                 display: inline-block;
                 border-radius: 4px;
-                background-color: rgba($color: #0d99ff, $alpha: 1);
+                background-color: rgba($color: #865dff, $alpha: 1);
                 max-width: 96px;
                 padding: 2px 4px;
                 height: 20px;
