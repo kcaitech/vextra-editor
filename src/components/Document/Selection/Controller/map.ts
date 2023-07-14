@@ -1,7 +1,7 @@
-// import CtrlRect from "./CtrlRect.vue";
+import CtrlRect from "./CtrlRect.vue";
 import CtrlLine from "./CtrlLine.vue";
-import CtrlRect from "./CtrlRect.SVG.vue";
-import CtrlRectMulti from "./CtrlRect.SVG.Multi.vue";
+// import CtrlRect from "./CtrlRect.SVG.vue";
+// import CtrlRectMulti from "./CtrlRect.SVG.Multi.vue";
 import CtrlText from "./CtrlText.vue"
 export enum ControllerType { // 控件类型
     Rect = 'rect',
@@ -11,7 +11,8 @@ export enum ControllerType { // 控件类型
 }
 export const ctrlMap: Map<ControllerType, any> = new Map([
     [ControllerType.Rect, CtrlRect],
-    [ControllerType.RectMulti, CtrlRectMulti],
+    // [ControllerType.RectMulti, CtrlRectMulti],
+    [ControllerType.RectMulti, CtrlRect],
     [ControllerType.Line, CtrlLine],
     [ControllerType.Text, CtrlText]
 ]);

@@ -11,6 +11,7 @@ import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
 import { Shape } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 interface Props {
     context: Context,
     controllerFrame: Point[],
@@ -24,7 +25,7 @@ const workspace = computed(() => props.context.workspace);
 const visible = ref<boolean>(true);
 let lineStyle: string;
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
-
+const { t } = useI18n();
 // #region 绘制控件
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -64,7 +65,7 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mouseup', mouseup);
 }
 function keyboardHandle(e: KeyboardEvent) {
-    handle(e, props.context);
+    handle(e, props.context, t);
 }
 
 function windowBlur() {
