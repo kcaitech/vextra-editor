@@ -125,7 +125,7 @@ onUnmounted(() => {
         height: 42px;
         left: -21px;
         top: -21px;
-        border: 1px solid #3399ff;
+        border: 1px solid var(--active-color);
         -webkit-border-radius: 50%;
         -moz-border-radius: 50%;
         border-radius: 50%;
@@ -137,7 +137,7 @@ onUnmounted(() => {
         -webkit-animation-iteration-count: infinite;
         -moz-animation-iteration-count: infinite;
         animation-iteration-count: infinite;
-        box-shadow: 1px 1px 30px #3399ff;
+        box-shadow: 1px 1px 30px var(--active-color);
     }
 
     .pulse1 {
@@ -146,7 +146,7 @@ onUnmounted(() => {
         height: 42px;
         left: -21px;
         top: -21px;
-        border: 1px solid #3399ff;
+        border: 1px solid var(--active-color);
         -webkit-border-radius: 50%;
         -moz-border-radius: 50%;
         border-radius: 50%;
@@ -158,7 +158,7 @@ onUnmounted(() => {
         -webkit-animation-iteration-count: infinite;
         -moz-animation-iteration-count: infinite;
         animation-iteration-count: infinite;
-        box-shadow: 1px 1px 30px #3399ff;
+        box-shadow: 1px 1px 30px var(--active-color);
     }
 }
 </style>
