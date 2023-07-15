@@ -343,7 +343,7 @@ watchEffect(updateData);
                 flex: 0 0 18px;
                 height: 18px;
                 width: 18px;
-                background-color: #2561D9;
+                background-color: var(--active-color);
                 border-radius: 3px;
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;
