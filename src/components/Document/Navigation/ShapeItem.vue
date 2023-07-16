@@ -229,7 +229,7 @@ onUnmounted(() => {
     width: calc(100% - 12px);
     height: 30px;
     box-sizing: border-box;
-    transition: 0.1s;
+    transition: 0.08s;
 
     >.ph {
         margin-left: 6px;
