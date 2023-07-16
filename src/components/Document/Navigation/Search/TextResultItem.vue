@@ -79,7 +79,6 @@ const toggleContainer = (e: MouseEvent) => {
   e.stopPropagation()
   if (!is_valid_data(props.data.context, props.data.shape)) return;
   emit('scrolltoview', props.data.shape);
-  focus();
 }
 
 function selectShape(e: MouseEvent) {
@@ -185,7 +184,7 @@ const mousedown = (e: MouseEvent) => {
 function update_slice() {
   tips.value = [];
   const len = (props.data.shape as TextShape).text.length;
-  const src = (props.data.shape as TextShape).text.getText(0, len);
+  const src = (props.data.shape as TextShape).text.getText(0, len).replaceAll('\n', '');
   const word = props.data.keywords;
   const is_acc = props.data.context.menu.accurate ? 'mg' : 'img';
   const reg = new RegExp(`${word}`, is_acc);
@@ -216,9 +215,6 @@ function update_slice() {
     )
   }
   title.value = src;
-}
-function focus() {
-  props.data.context.navi.set_focus_text(props.data.shape);
 }
 function navi_watcher(t: number) {
   if (t === Navi.SEARCHING) update_slice();

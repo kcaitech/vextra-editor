@@ -9,6 +9,7 @@ export class Navi extends Watchable(Object) {
   static TEXT_SELECTION_CHANGE = 7;
   private m_page_need_extend: boolean = false;
   private m_focus_text: Shape | undefined;
+  private m_keywords: string = '';
   constructor() {
     super();
   }
@@ -22,7 +23,13 @@ export class Navi extends Watchable(Object) {
     this.m_focus_text = v;
     this.notify(Navi.TEXT_SELECTION_CHANGE);
   }
+  set_keywords(v?: string) {
+    this.m_keywords = v || '';
+  }
   get focusText() {
     return this.m_focus_text;
+  }
+  get keywords() {
+    return this.m_keywords;
   }
 }

@@ -95,7 +95,7 @@ const unHoverShape = (e: MouseEvent) => {
 const selectShape = (e: MouseEvent) => {
     props.context.menu.menuMount(false)
     props.context.selection.selectShape(props.shape);
-    if(e.button === 2) {
+    if (e.button === 2) {
         props.context.workspace.downArboardTitle(e)
     }
 }
@@ -113,9 +113,9 @@ const selectShape = (e: MouseEvent) => {
 </template>
 
 <style scoped lang="scss">
-      
 .container-name {
     z-index: 2;
+
     .name {
         width: 100%;
         text-overflow: ellipsis;
@@ -136,11 +136,11 @@ const selectShape = (e: MouseEvent) => {
     }
 
     .selected {
-        color: #2561D9;
+        color: var(--active-color);
     }
 
     .active {
-        color: #2561D9;
+        color: var(--active-color);
     }
 }
 </style>

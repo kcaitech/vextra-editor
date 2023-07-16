@@ -214,6 +214,7 @@ function unHovershape() {
 function shapeScrollToContentView(shape: Shape) {
   if (isInner(props.context, shape)) {
     props.context.selection.selectShape(shape);
+    props.context.navi.set_focus_text(shape);
     return;
   }
   const workspace = props.context.workspace;
@@ -234,6 +235,7 @@ function shapeScrollToContentView(shape: Shape) {
         props.context.selection.selectShape(shape);
         pageViewEl.classList.remove('transition-400');
         props.context.workspace.translating(false);
+        props.context.navi.set_focus_text(shape);
         clearTimeout(timer);
       }, 400);
     } else {
@@ -334,7 +336,7 @@ function update() {
       }
       if (v.type === ShapeType.Text) {
         const length = (v as TextShape).text.length;
-        const text = (v as TextShape).text.getText(0, length);
+        const text = (v as TextShape).text.getText(0, length).replaceAll('\n', '');
         if (text.search(reg) > -1) {
           result_by_content.unshift(v);
         }
@@ -512,7 +514,7 @@ onUnmounted(() => {
 
       .font-wrap {
         display: flex;
-        padding: 4px 13px 2px;
+        padding: 4px 6px 2px;
         font-weight: 700;
         white-space: nowrap;
         width: 100%;
@@ -551,7 +553,7 @@ onUnmounted(() => {
       }
 
       .result-count {
-        padding: 4px 13px 4px;
+        padding: 4px 6px 4px;
         width: 100%;
         overflow: hidden;
         white-space: nowrap;
@@ -600,7 +602,7 @@ onUnmounted(() => {
 
       .font-wrap {
         display: flex;
-        padding: 4px 13px 2px;
+        padding: 4px 6px 2px;
         font-weight: 700;
         white-space: nowrap;
         width: 100%;
@@ -639,7 +641,7 @@ onUnmounted(() => {
       }
 
       .result-count {
-        padding: 4px 13px 4px;
+        padding: 4px 6px 4px;
         width: 100%;
         overflow: hidden;
         white-space: nowrap;

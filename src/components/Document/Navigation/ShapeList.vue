@@ -138,6 +138,7 @@ const stopWatch = watch(() => props.page, () => {
 
 function search() {
     props.context.navi.notify(Navi.SEARCHING);
+    props.context.navi.set_keywords(keywords.value);
 }
 function inputing() {
     props.context.navi.notify(Navi.SEARCHING);
@@ -476,6 +477,7 @@ function input_blur() {
     if (search_wrap.value) {
         if (!keywords.value.length) {
             search_wrap.value.classList.remove('active-box-shadow');
+            props.context.navi.set_focus_text();
         }
     }
 }

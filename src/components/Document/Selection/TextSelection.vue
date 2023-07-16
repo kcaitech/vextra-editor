@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onMounted, onUnmounted, ref, reactive } from 'vue';
+import { onMounted, onUnmounted, ref, reactive, watch } from 'vue';
 import { Matrix, TextShape, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -18,11 +18,19 @@ const focus_shape = ref<Shape>();
 const visible = ref<boolean>(true);
 function update() {
   const shape = props.context.navi.focusText;
+  if (shape) {
+    shape.watch(update);
+  } else {
+    focus_shape.value && focus_shape.value.unwatch(update);
+  }
+  focus_shape.value = shape;
   if (!shape) return;
   const m2p = shape.matrix2Root();
   matrix.reset(m2p);
   matrix.multiAtLeft(props.matrix);
-  if (!submatrix.equals(matrix)) submatrix.reset(matrix)
+  if (!submatrix.equals(matrix)) {
+    submatrix.reset(matrix);
+  }
   const frame = shape.frame;
   const points = [
     { x: 0, y: 0 }, // left top
@@ -59,15 +67,17 @@ function workspace_watcher(t?: number) {
 }
 function navi_watcher(t?: number) {
   if (t === Navi.TEXT_SELECTION_CHANGE) {
-    console.log('change');
+    update();
   }
 }
+watch(() => props.matrix, () => {
+  update();
+})
 onMounted(() => {
   props.context.workspace.watch(workspace_watcher);
   props.context.navi.watch(navi_watcher);
   update();
 })
-
 onUnmounted(() => {
   props.context.workspace.unwatch(workspace_watcher);
   props.context.navi.unwatch(navi_watcher);

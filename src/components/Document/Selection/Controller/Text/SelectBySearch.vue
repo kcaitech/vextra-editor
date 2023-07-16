@@ -2,8 +2,7 @@
 import { Context } from '@/context';
 import { TextShape } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
-import { Selection } from '@/context/selection';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { genRectPath } from '../../common';
 const props = defineProps<{
   shape: TextShape
@@ -12,43 +11,18 @@ const props = defineProps<{
 }>();
 
 const matrix = new Matrix();
-const selectPath = ref("");
-const boundrectPath = ref("");
-const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-
+const selectPath = ref<string[]>([]);
 function update() {
-  const selection = props.context.selection;
+  selectPath.value.length = 0;
   matrix.reset(props.matrix);
-  const frame = props.shape.frame;
-  const points = [
-    { x: 0, y: 0 }, // left top
-    { x: frame.width, y: 0 }, //right top
-    { x: frame.width, y: frame.height }, // right bottom
-    { x: 0, y: frame.height }, // left bottom
-  ];
-
-  const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
-  boundrectPath.value = genRectPath(boundrect);
-
-  const p0 = boundrect[0];
-  bounds.left = p0.x;
-  bounds.top = p0.y;
-  bounds.right = p0.x;
-  bounds.bottom = p0.y;
-  boundrect.reduce((bounds, point) => {
-    if (point.x < bounds.left) bounds.left = point.x;
-    else if (point.x > bounds.right) bounds.right = point.x;
-    if (point.y < bounds.top) bounds.top = point.y;
-    else if (point.y > bounds.bottom) bounds.bottom = point.y;
-    return bounds;
-  }, bounds)
-  const start = selection.cursorStart;
-  const end = selection.cursorEnd;
-  selectPath.value = genRectPath(props.shape.text.locateRange(start, end).map((point) => matrix.computeCoord(point.x, point.y)));
+  const words = props.context.navi.keywords;
+  const len = (props.shape as TextShape).text.length;
+  const text = (props.shape as TextShape).text.getText(0, len).replaceAll('\n', '');
+  const _b = text.indexOf(words);
+  selectPath.value.push(genRectPath(props.shape.text.locateRange(_b, _b + words.length).map((point) => matrix.computeCoord(point.x, point.y))));
 }
 
-function selection_watcher(...args: any[]) {
-  if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
+function selection_watcher(t?: any[]) {
 }
 
 watch(() => props.matrix, () => {
@@ -74,6 +48,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <path :d="selectPath" fill="#865dff" fill-opacity="0.35" stroke='none'></path>
+  <path v-for="(p, i) in selectPath" :key="i" :d="p" fill="orange" fill-opacity="0.5  " stroke='none'></path>
 </template>
 <style lang='scss' scoped></style>
