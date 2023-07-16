@@ -186,18 +186,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="contain" :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }"
-        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+    <div :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }" @click="selectShape"
+        @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
         <div class="ph" :style="{ width: `${ph_width}px`, height: '100%', minWidth: `${ph_width}px` }"></div>
-        <div :class="{ triangle: showTriangle, slot: !showTriangle }" v-on:click="toggleExpand">
+        <div :class="{ triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
             <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
             </div>
         </div>
         <div class="container-svg" @dblclick="toggleContainer">
             <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
         </div>
-        <div class="text" :class="{ container: true, selected: props.data.selected }"
-            :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
+        <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
             <div class="tool_icon"
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
@@ -221,183 +220,183 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
-div.container {
+.container {
     display: flex;
     flex-flow: row;
     align-items: center;
     width: 100%;
     height: 30px;
-    color: var(--left-navi-font-color);
-    background-color: var(--left-navi-bg-color);
-}
 
-
-
-.contain:hover {
-    cursor: default;
-    background-color: var(--left-navi-button-hover-color);
-}
-
-div.container.selectedChild {
-    z-index: 2;
-    background-color: rgba($color: #865dff, $alpha: 0.18);
-}
-
-div.container.selected {
-    z-index: 1;
-    background-color: rgba($color: #865dff, $alpha: 0.4);
-}
-
-div.ph {
-    margin-left: 6px;
-}
-
-div.triangle {
-    width: 12px;
-    min-width: 12px;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-div.slot {
-    width: 15px;
-    min-width: 15px;
-    height: 100%;
-}
-
-div.triangle:hover {
-    cursor: default;
-    background-color: var(--grey-dark);
-}
-
-div.triangle-right {
-    width: 0;
-    height: 0;
-    border-left: 5px solid gray;
-    border-top: 3px solid transparent;
-    border-bottom: 3px solid transparent;
-    position: relative;
-    left: 2px;
-    top: 12px;
-}
-
-div.triangle-down {
-    width: 0;
-    height: 0;
-    border-top: 6px solid gray;
-    border-left: 3px solid transparent;
-    border-right: 3px solid transparent;
-    position: relative;
-    left: 1px;
-    top: 13px;
-}
-
-div.container-svg {
-    display: flex;
-    width: 10px;
-    justify-content: center;
-    align-items: center;
-    margin-left: 2px;
-
-    .svg {
-        width: 10px;
-        height: 10px;
+    >.ph {
+        margin-left: 6px;
     }
-}
 
-div.text {
-    flex: 1;
-    line-height: 30px;
-    font-size: 10px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    padding-left: 2px;
-    background-color: transparent;
+    >.triangle {
+        width: 12px;
+        min-width: 12px;
+        height: 100%;
+        display: flex;
+        justify-content: center;
 
-    .txt {
-        width: 100%;
-        height: 30px;
+        >.triangle-right {
+            width: 0;
+            height: 0;
+            border-left: 5px solid gray;
+            border-top: 3px solid transparent;
+            border-bottom: 3px solid transparent;
+            position: relative;
+            left: 2px;
+            top: 12px;
+        }
+
+        >.triangle-down {
+            width: 0;
+            height: 0;
+            border-top: 6px solid gray;
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+            position: relative;
+            left: 1px;
+            top: 13px;
+        }
+    }
+
+    >.triangle:hover {
+        cursor: default;
+        background-color: var(--grey-dark);
+    }
+
+    >.slot {
+        width: 15px;
+        min-width: 15px;
+        height: 100%;
+    }
+
+    >.container-svg {
+        display: flex;
+        width: 10px;
+        justify-content: center;
+        align-items: center;
+        margin-left: 2px;
+
+        .svg {
+            width: 10px;
+            height: 10px;
+        }
+    }
+
+    >.text {
+        flex: 1;
         line-height: 30px;
         font-size: 10px;
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
         padding-left: 2px;
-    }
-}
-
-div .rename {
-    flex: 1;
-    height: 20px;
-    width: 100%;
-    font-size: 10px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    padding-left: 6px;
-    margin-right: 6px;
-    outline-style: none;
-    border: 1px solid var(--left-navi-bg-color);
-}
-
-.tool {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    margin-right: 2px;
-}
-
-.tool_icon {
-    display: flex;
-    align-items: center;
-    width: 66px;
-    height: 100%;
-
-
-    .tool_lock {
         display: flex;
+        flex-flow: row;
         align-items: center;
+        width: 100%;
+        height: 30px;
+        color: var(--left-navi-font-color);
+        background-color: transparent;
 
-        .svg {
-            width: 8px;
-            height: 10px;
+        >.txt {
+            width: 100%;
+            height: 30px;
+            line-height: 30px;
+            font-size: 10px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            padding-left: 2px;
         }
 
-        .svg-open {
-            width: 14px;
-            height: 14px;
-        }
+        >.tool_icon {
+            display: flex;
+            align-items: center;
+            width: 66px;
+            height: 100%;
 
-        .dot {
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background-color: var(--theme-color);
+            >.tool {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 20px;
+                height: 20px;
+                margin-right: 2px;
+            }
+
+            >.tool_lock {
+                display: flex;
+                align-items: center;
+
+                .svg {
+                    width: 8px;
+                    height: 10px;
+                }
+
+                .svg-open {
+                    width: 14px;
+                    height: 14px;
+                }
+
+                .dot {
+                    width: 4px;
+                    height: 4px;
+                    border-radius: 50%;
+                    background-color: var(--theme-color);
+                }
+            }
+
+            >.tool_eye {
+                margin-right: 10px;
+
+                .svg {
+                    width: 14px;
+                    height: 14px;
+                }
+
+                .dot {
+                    width: 4px;
+                    height: 4px;
+                    border-radius: 50%;
+                    background-color: var(--theme-color);
+                }
+            }
+
+            .visible {
+                visibility: visible;
+            }
         }
     }
 
-    .tool_eye {
-        margin-right: 10px;
-
-        .svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .dot {
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background-color: var(--theme-color);
-        }
+    >.rename {
+        flex: 1;
+        height: 20px;
+        width: 100%;
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        padding-left: 6px;
+        margin-right: 6px;
+        outline-style: none;
+        border: 1px solid var(--left-navi-bg-color);
     }
+}
 
-    .visible {
-        visibility: visible;
-    }
+.container:hover {
+    background-color: var(--left-navi-button-hover-color);
+}
+
+.selectedChild {
+    z-index: 2;
+    background-color: rgba($color: #865dff, $alpha: 0.18) !important;
+}
+
+.selected {
+    z-index: 1;
+    background-color: rgba($color: #865dff, $alpha: 0.4) !important;
 }
 </style>
