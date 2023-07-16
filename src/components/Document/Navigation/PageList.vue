@@ -270,6 +270,8 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .pagelist-wrap {
     height: 100%;
+    padding: 0 6px;
+    box-sizing: border-box;
 
     .header {
         width: 100%;
@@ -286,7 +288,6 @@ onUnmounted(() => {
         overflow: hidden;
 
         .title {
-            margin-left: 13px;
             height: 36px;
             font-weight: var(--font-default-bold);
             line-height: 36px;

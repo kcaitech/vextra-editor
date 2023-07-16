@@ -102,7 +102,7 @@ onUnmounted(() => {
             text-align: left;
             line-height: 24px;
             color: var(--grey-dark);
-            margin-left: 13px;
+            margin-left: 6px;
         }
 
         >.tab:hover {

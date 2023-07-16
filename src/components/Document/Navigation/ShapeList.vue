@@ -595,6 +595,8 @@ onUnmounted(() => {
     width: 100%;
     flex-direction: column;
     background-color: #fff;
+    padding: 0 6px;
+    box-sizing: border-box;
 
     .header {
         width: 100%;
@@ -605,7 +607,6 @@ onUnmounted(() => {
 
         .title {
             height: 36px;
-            margin-left: 13px;
             font-weight: var(--font-default-bold);
             line-height: 36px;
             box-sizing: border-box;
@@ -614,12 +615,12 @@ onUnmounted(() => {
 
         .search {
             height: 26px;
-            margin: 3px 13px;
+            margin: 3px 0px;
             display: flex;
             align-items: center;
             background-color: var(--grey-light);
             padding: 4px var(--default-padding-half);
-            border-radius: 8px;
+            border-radius: 4px;
             box-sizing: border-box;
             overflow: hidden;
             transition: 0.32s;

@@ -252,18 +252,13 @@ onUnmounted(() => {
         >.triangle-down {
             width: 0;
             height: 0;
-            border-top: 6px solid gray;
+            border-top: 5px solid gray;
             border-left: 3px solid transparent;
             border-right: 3px solid transparent;
             position: relative;
             left: 1px;
             top: 13px;
         }
-    }
-
-    >.triangle:hover {
-        cursor: default;
-        background-color: var(--grey-dark);
     }
 
     >.slot {
@@ -387,16 +382,19 @@ onUnmounted(() => {
 }
 
 .container:hover {
+    border-radius: 4px;
     background-color: var(--left-navi-button-hover-color);
 }
 
 .selectedChild {
     z-index: 2;
+    border-radius: 0px !important;
     background-color: rgba($color: #865dff, $alpha: 0.18) !important;
 }
 
 .selected {
     z-index: 1;
+    border-radius: 0px !important;
     background-color: rgba($color: #865dff, $alpha: 0.4) !important;
 }
 </style>
