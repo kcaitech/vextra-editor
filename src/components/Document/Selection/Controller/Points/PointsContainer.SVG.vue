@@ -10,8 +10,8 @@ interface Props {
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const data: { paths: { path_dot: string, path_dot_range: string, path_rot: string, type: CtrlElementType }[] } = reactive({ paths: [] });
-const { paths } = data;
+const data: { dots: { point: { x: number, y: number }, extra: { x: number, y: number }, type: CtrlElementType }[] } = reactive({ dots: [] });
+const { dots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
@@ -24,55 +24,32 @@ function update() {
 function update_dot_path() {
   const valve = props.context.workspace.shouldSelectionViewUpdate;
   if (!valve) return;
-  paths.length = 0;
+  dots.length = 0;
   const frame = props.shape.frame;
   // const bit_v = 4 / props.context.workspace.matrix.m00;
   const bit_v = 4;
-  const bit_v_d = 8;
+  const bit_v_d = 7;
   const bit_v_r = 12;
   // lt
   let lt = { x: 0, y: 0 };
-  lt = matrix.computeCoord(lt.x, lt.y)
-  let point1_dot = [{ x: lt.x - bit_v, y: lt.y - bit_v }, { x: lt.x + bit_v, y: lt.y - bit_v }, { x: lt.x + bit_v, y: lt.y + bit_v }, { x: lt.x - bit_v, y: lt.y + bit_v }];
-  const path1 = get_path_by_dot(point1_dot);
-  let path1_dot_range = [{ x: lt.x - bit_v_d, y: lt.y - bit_v_d }, { x: lt.x + bit_v_d, y: lt.y - bit_v_d }, { x: lt.x + bit_v_d, y: lt.y + bit_v_d }, { x: lt.x - bit_v_d, y: lt.y + bit_v_d }];
-  const pdr1 = get_path_by_dot(path1_dot_range);
-  const path_obj_1 = { path_dot: path1, path_dot_range: pdr1, path_rot: '', type: CtrlElementType.RectLT };
+  lt = matrix.computeCoord(lt.x, lt.y);
+  const path_obj_1 = { point: { x: lt.x - bit_v, y: lt.y - bit_v }, extra: { x: lt.x - bit_v_d, y: lt.y - bit_v_d }, type: CtrlElementType.RectLT };
   //rt
   let rt = { x: frame.width, y: 0 };
   rt = matrix.computeCoord(rt.x, rt.y);
-  let point2_dot = [{ x: rt.x - bit_v, y: rt.y - bit_v }, { x: rt.x + bit_v, y: rt.y - bit_v }, { x: rt.x + bit_v, y: rt.y + bit_v }, { x: rt.x - bit_v, y: rt.y + bit_v }];
-  const path2 = get_path_by_dot(point2_dot);
-  let path2_dot_range = [{ x: rt.x - bit_v_d, y: rt.y - bit_v_d }, { x: rt.x + bit_v_d, y: rt.y - bit_v_d }, { x: rt.x + bit_v_d, y: rt.y + bit_v_d }, { x: rt.x - bit_v_d, y: rt.y + bit_v_d }];
-  const pdr2 = get_path_by_dot(path2_dot_range);
-
-  const path_obj_2 = { path_dot: path2, path_dot_range: pdr2, path_rot: '', type: CtrlElementType.RectRT };
+  const path_obj_2 = { point: { x: rt.x - bit_v, y: rt.y - bit_v }, extra: { x: rt.x - bit_v_d, y: rt.y - bit_v_d }, type: CtrlElementType.RectRT };
 
   //rb
   let rb = { x: frame.width, y: frame.height };
   rb = matrix.computeCoord(rb.x, rb.y);
-  let point3_dot = [{ x: rb.x - bit_v, y: rb.y - bit_v }, { x: rb.x + bit_v, y: rb.y - bit_v }, { x: rb.x + bit_v, y: rb.y + bit_v }, { x: rb.x - bit_v, y: rb.y + bit_v }];
-  const path3 = get_path_by_dot(point3_dot);
-  let path3_dot_range = [{ x: rb.x - bit_v_d, y: rb.y - bit_v_d }, { x: rb.x + bit_v_d, y: rb.y - bit_v_d }, { x: rb.x + bit_v_d, y: rb.y + bit_v_d }, { x: rb.x - bit_v_d, y: rb.y + bit_v_d }];
-  const pdr3 = get_path_by_dot(path3_dot_range);
-  const path_obj_3 = { path_dot: path3, path_dot_range: pdr3, path_rot: '', type: CtrlElementType.RectRB };
+  const path_obj_3 = { point: { x: rb.x - bit_v, y: rb.y - bit_v }, extra: { x: rb.x - bit_v_d, y: rb.y - bit_v_d }, type: CtrlElementType.RectRB };
   //lb
   let lb = { x: 0, y: frame.height };
   lb = matrix.computeCoord(lb.x, lb.y)
-  let point4_dot = [{ x: lb.x - bit_v, y: lb.y - bit_v }, { x: lb.x + bit_v, y: lb.y - bit_v }, { x: lb.x + bit_v, y: lb.y + bit_v }, { x: lb.x - bit_v, y: lb.y + bit_v }];
-  const path4 = get_path_by_dot(point4_dot);
-  let path4_dot_range = [{ x: lb.x - bit_v_d, y: lb.y - bit_v_d }, { x: lb.x + bit_v_d, y: lb.y - bit_v_d }, { x: lb.x + bit_v_d, y: lb.y + bit_v_d }, { x: lb.x - bit_v_d, y: lb.y + bit_v_d }];
-  const pdr4 = get_path_by_dot(path4_dot_range);
-  const path_obj_4 = { path_dot: path4, path_dot_range: pdr4, path_rot: '', type: CtrlElementType.RectLB };
-  paths.push(path_obj_1, path_obj_2, path_obj_3, path_obj_4);
+  const path_obj_4 = { point: { x: lb.x - bit_v, y: lb.y - bit_v }, extra: { x: lb.x - bit_v_d, y: lb.y - bit_v_d }, type: CtrlElementType.RectLB };
+  dots.push(path_obj_1, path_obj_2, path_obj_3, path_obj_4);
 }
-function get_path_by_dot(ps: { x: number, y: number }[]): string {
-  const [p0, p1, p2, p3] = ps;
-  return `M ${p0.x} ${p0.y} L ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} z`;
-}
-function get_r_path(ps: { x: number, y: number }[]) {
-
-}
+function get_r_path(ps: { x: number, y: number }[]) { }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType, is_r: boolean) {
   if (event.button === 0) {
@@ -156,13 +133,11 @@ onUnmounted(() => {
 </script>
 <template>
   <g>
-    <g v-for="(p, i) in paths" :key="i">
-      <path :d="p.path_dot_range" fill="yellow" stroke='transparent'
-        @mousedown.stop="(e) => point_mousedown(e, p.type, false)">
-      </path>
-      <path :d="p.path_dot" fill="orange" stroke='#865dff' stroke-width="1.5px"
-        @mousedown.stop="(e) => point_mousedown(e, p.type, false)">
-      </path>
+    <g v-for="(p, i) in dots" :key="i">
+      <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'
+        @mousedown.stop="(e) => point_mousedown(e, p.type, false)"></rect>
+      <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
+        @mousedown.stop="(e) => point_mousedown(e, p.type, false)"></rect>
     </g>
   </g>
 </template>
