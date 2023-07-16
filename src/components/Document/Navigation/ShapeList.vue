@@ -426,7 +426,7 @@ function show_types() {
         popoverVisible.value = true;
         nextTick(() => {
             if (popover.value && search_el.value) {
-                popover.value.style.left = search_el.value.offsetLeft - 16 + 'px';
+                popover.value.style.left = search_el.value.offsetLeft - 8 + 'px';
                 popover.value.style.top = search_el.value.offsetHeight + 54 + 'px';
                 popover.value.style.height = 'auto';
             }
@@ -795,7 +795,8 @@ onUnmounted(() => {
         z-index: 999;
         width: 202px;
         font-size: var(--font-default-fontsize);
-        background-color: var(--theme-color);
+        background-color: var(--theme-color-anti);
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
         border-radius: 4px;
         outline: none;
         padding: var(--default-padding-half) 0;

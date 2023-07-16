@@ -84,7 +84,7 @@ onMounted(() => {
   .type-block {
     width: 100%;
     height: 28px;
-    color: var(--theme-color-anti);
+    color: var(--theme-color);
     padding: 2px 13px;
     display: flex;
     box-sizing: border-box;
@@ -96,7 +96,7 @@ onMounted(() => {
       height: 6px;
       border-width: 0 0 2px 2px;
       border-style: solid;
-      border-color: var(--theme-color-anti);
+      border-color: var(--theme-color);
       left: 6px;
       transform: rotate(-45deg) translateY(-20%);
     }
@@ -120,6 +120,7 @@ onMounted(() => {
 
   .type-block:hover {
     background-color: var(--active-color-beta);
+    color: var(--theme-color-anti);
   }
 }
 </style>

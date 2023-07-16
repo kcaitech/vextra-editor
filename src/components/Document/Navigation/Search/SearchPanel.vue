@@ -410,6 +410,9 @@ function toggle2() {
 function selection_watcher(t?: number) {
   if (t === Selection.CHANGE_PAGE) {
     update();
+  } else if (t === Selection.CHANGE_SHAPE) {
+    props.context.navi.set_focus_text();
+    source_by_content.notify(0, 0, 0, Number.MAX_VALUE);
   }
 }
 function navi_watcher(t?: number) {
