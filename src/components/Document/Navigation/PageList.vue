@@ -270,7 +270,6 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .pagelist-wrap {
     height: 100%;
-    padding: 0 6px;
     box-sizing: border-box;
 
     .header {
@@ -280,6 +279,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         position: relative;
         align-items: center;
+
 
         >div:not(.space) {
             flex-shrink: 0;
@@ -295,6 +295,7 @@ onUnmounted(() => {
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
+            margin-left: 6px;
         }
 
         .btn {

@@ -224,8 +224,12 @@ onUnmounted(() => {
     display: flex;
     flex-flow: row;
     align-items: center;
-    width: 100%;
+    margin-left: 6px;
     height: 30px;
+    width: calc(100% - 12px);
+    height: 30px;
+    box-sizing: border-box;
+    transition: 0.1s;
 
     >.ph {
         margin-left: 6px;

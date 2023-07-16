@@ -595,7 +595,6 @@ onUnmounted(() => {
     width: 100%;
     flex-direction: column;
     background-color: #fff;
-    padding: 0 6px;
     box-sizing: border-box;
 
     .header {
@@ -611,11 +610,12 @@ onUnmounted(() => {
             line-height: 36px;
             box-sizing: border-box;
             overflow: hidden;
+            margin-left: 6px;
         }
 
         .search {
             height: 26px;
-            margin: 3px 0px;
+            margin: 3px 6px;
             display: flex;
             align-items: center;
             background-color: var(--grey-light);

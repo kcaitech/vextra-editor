@@ -100,8 +100,9 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .container {
-    width: 100%;
+    margin-left: 6px;
     height: 30px;
+    width: calc(100% - 12px);
     line-height: 30px;
     color: var(--left-navi-font-color);
     background-color: var(--left-navi-bg-color);
@@ -112,6 +113,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: row;
     position: relative;
+    transition: 0.1s;
 
     .item {
         display: flex;
