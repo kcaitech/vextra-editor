@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ResultItem, { ItemData } from "./ResultItem.vue";
-import TextResultItem from "./TextResultItem.vue";
+import TextResultItem, { TItemData } from "./TextResultItem.vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape, ShapeType, TextShape } from '@kcdesign/data';
@@ -36,6 +36,31 @@ class Iter implements IDataIter<ItemData> {
       selected: props.context.selection.isSelectedShape(shape),
       context: props.context,
       keywords: props.keywords
+    }
+    return item;
+  }
+}
+
+class TIter implements IDataIter<TItemData> {
+  private __it: Shape[];
+  private __index: number;
+  constructor(it: Shape[], index: number) {
+    this.__it = it;
+    this.__index = index;
+  }
+  hasNext(): boolean {
+    return this.__index < this.__it.length;
+  }
+  next(): TItemData {
+    const shape: Shape = this.__it[this.__index];
+    const focus = props.context.navi.focusText;
+    this.__index++;
+    const item = {
+      id: shape.id,
+      shape,
+      context: props.context,
+      keywords: props.keywords,
+      focus: Boolean(focus && (focus.id === shape.id))
     }
     return item;
   }
@@ -74,15 +99,15 @@ let source_by_shape = new class implements IDataSource<ItemData> {
   }
 }
 // 针对文本的搜索结果
-let source_by_content = new class implements IDataSource<ItemData> {
+let source_by_content = new class implements IDataSource<TItemData> {
 
   private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
 
   length(): number {
     return result_by_content.length;
   }
-  iterAt(index: number): IDataIter<ItemData> {
-    return new Iter(result_by_content, index);
+  iterAt(index: number): IDataIter<TItemData> {
+    return new TIter(result_by_content, index);
   }
   onChange(l: (index: number, del: number, insert: number, modify: number) => void): void {
     this.m_onchange = l;
@@ -388,7 +413,7 @@ function selection_watcher(t?: number) {
   }
 }
 function navi_watcher(t?: number) {
-  if (t === Navi.CHANGE_TYPE || t === Navi.SEARCHING) {
+  if (t === Navi.CHANGE_TYPE || t === Navi.SEARCHING || Navi.TEXT_SELECTION_CHANGE) {
     update();
   }
 }

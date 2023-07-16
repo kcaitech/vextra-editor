@@ -7,7 +7,7 @@ import { is_parent_locked, is_parent_unvisible, is_valid_data } from "@/utils/sh
 export interface TItemData {
   id: string
   shape: Shape
-  selected: boolean
+  focus: boolean
   context: Context
   keywords: string
 }
@@ -79,6 +79,7 @@ const toggleContainer = (e: MouseEvent) => {
   e.stopPropagation()
   if (!is_valid_data(props.data.context, props.data.shape)) return;
   emit('scrolltoview', props.data.shape);
+  focus();
 }
 
 function selectShape(e: MouseEvent) {
@@ -216,6 +217,9 @@ function update_slice() {
   }
   title.value = src;
 }
+function focus() {
+  props.data.context.navi.set_focus_text(props.data.shape);
+}
 function navi_watcher(t: number) {
   if (t === Navi.SEARCHING) update_slice();
 }
@@ -236,7 +240,7 @@ onUnmounted(() => {
       <div class="container-svg" @dblclick="toggleContainer">
         <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
       </div>
-      <div class="text" :class="{ container: true, selected: props.data.selected }"
+      <div class="text" :class="{ container: true, selected: false }"
         :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
         <div class="txt" @dblclick="onRename">
           {{ props.data.shape.name }}
@@ -260,7 +264,7 @@ onUnmounted(() => {
       </div>
       <input v-if="isInput" @change="onChangeName" @click.stop class="rename" type="text" ref="nameInput">
     </div>
-    <div class="tips-wrap" :title="title" @click="toggleContainer">
+    <div class="tips-wrap" :title="title" @click="toggleContainer" :class="{ 'tips-focus': props.data.focus }">
       <span v-for="(item, index) in tips" :key="index" :class="{ active: item.isKeywords }">{{ item.content }}</span>
     </div>
   </div>
@@ -425,6 +429,10 @@ onUnmounted(() => {
 }
 
 .tips-wrap:hover {
-  background-color: rgba($color: #865dff, $alpha: 0.3);
+  background-color: rgba($color: #865dff, $alpha: 0.18);
+}
+
+.tips-focus {
+  background-color: rgba($color: #865dff, $alpha: 0.4) !important;
 }
 </style>

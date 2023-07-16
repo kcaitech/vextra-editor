@@ -25,6 +25,7 @@ import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
 import Placement from './Menu/Placement.vue';
+import TextSelection from './Selection/TextSelection.vue';
 
 interface Props {
     context: Context
@@ -219,8 +220,8 @@ function workspace_watcher(type?: number, name?: string | MouseEvent) { // æ›´æ–
             props.context.workspace.clipboard.write_html();
         } else if (type === WorkSpace.UPDATE_COMMENT_POS) {
             saveShapeCommentXY();
-        } else if(type === WorkSpace.ONARBOARD__TITLE_MENU) {
-            if(name) {
+        } else if (type === WorkSpace.ONARBOARD__TITLE_MENU) {
+            if (name) {
                 contextMenuMount((name as MouseEvent))
             }
         }
@@ -791,6 +792,7 @@ onUnmounted(() => {
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent>
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
+        <TextSelection :context="props.context" :matrix="matrix.toArray()"> </TextSelection>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">

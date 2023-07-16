@@ -240,12 +240,12 @@ div.container {
 
 div.container.selectedChild {
     z-index: 2;
-    background-color: var(--left-navi-button-hover-color);
+    background-color: rgba($color: #865dff, $alpha: 0.18);
 }
 
 div.container.selected {
     z-index: 1;
-    background-color: var(--left-navi-button-select-color);
+    background-color: rgba($color: #865dff, $alpha: 0.4);
 }
 
 div.ph {
