@@ -1,5 +1,6 @@
 export enum TunnelType {
     DocOp = 0,
+    DocResourceUpload
 }
 
 export type CommunicationInfo = {
