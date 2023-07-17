@@ -361,6 +361,7 @@ const textHighLight = (text: string) => {
             max-width: 480px;
             min-width: 160px;
             font-size: 12px;
+            --el-input-height:32px;
             --el-input-border-color: #f3f0ff;
             --el-input-hover-border-color: #e5dbff;
             --el-input-focus-border-color: #9775fa;
