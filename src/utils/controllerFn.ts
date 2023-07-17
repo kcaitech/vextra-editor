@@ -1,8 +1,10 @@
 import { Context } from "@/context";
 import { message } from "./message";
 import { replace } from "./clipaboard";
+import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 
-export function keyboardHandle(e: KeyboardEvent, context: Context) {
+
+export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     const { target, shiftKey, ctrlKey, metaKey } = e;
     if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;
@@ -25,7 +27,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
             const editor = context.editor4Page(page);
             const result = editor.uppper_layer(selction.selectedShapes[0]);
             if (!result) {
-                message('info', context.workspace.t('homerightmenu.unable_upper'));
+                message('info', t('homerightmenu.unable_upper'));
             }
         }
     } else if (e.code === 'BracketLeft') {
@@ -36,7 +38,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
             const editor = context.editor4Page(page);
             const result = editor.lower_layer(selction.selectedShapes[0]);
             if (!result) {
-                message('info', context.workspace.t('homerightmenu.unable_lower'));
+                message('info', t('homerightmenu.unable_lower'));
             }
         }
     } else if (e.code === 'Minus') {
@@ -47,7 +49,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
             const editor = context.editor4Page(page);
             const result = editor.lower_layer(selction.selectedShapes[0], 1);
             if (!result) {
-                message('info', context.workspace.t('homerightmenu.unable_lower'));
+                message('info', t('homerightmenu.unable_lower'));
             }
         }
     } else if (e.code === 'Equal') {
@@ -59,7 +61,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
             const editor = context.editor4Page(page);
             const result = editor.uppper_layer(selction.selectedShapes[0], 1);
             if (!result) {
-                message('info', context.workspace.t('homerightmenu.unable_upper'));
+                message('info', t('homerightmenu.unable_upper'));
             }
         }
     } else if (e.code === 'Backspace' || e.code === 'Delete') { // 删除图层
@@ -82,7 +84,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
             e.preventDefault();
             const selected = context.selection.selectedShapes;
             if (selected.length) {
-                replace(context, context.workspace.t, selected);
+                replace(context, t, selected);
             }
         }
     } else if (e.code === 'KeyX') {
@@ -94,20 +96,22 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
 
     } else if (e.code === 'KeyH') {
         if (shiftKey) {
-            const shpaes = context.selection.selectedShapes;
-            for (let i = 0; i < shpaes.length; i++) {
-                const editor = context.editor4Shape(shpaes[i]);
-                editor.toggleVisible();
-            }
+            let shapes = context.selection.selectedShapes;
+            const page = context.selection.selectedPage;
+            shapes = shapes.filter(s => !is_parent_unvisible(s));
+            if (!page) return;
+            const editor = context.editor4Page(page);
+            editor.toggleShapesVisible(shapes);
             context.selection.resetSelectShapes();
         }
     } else if (e.code === 'KeyL') {
         if (shiftKey) {
-            const shpaes = context.selection.selectedShapes;
-            for (let i = 0; i < shpaes.length; i++) {
-                const editor = context.editor4Shape(shpaes[i]);
-                editor.toggleLock();
-            }
+            let shapes = context.selection.selectedShapes;
+            const page = context.selection.selectedPage;
+            shapes = shapes.filter(s => !is_parent_locked(s));
+            if (!page) return;
+            const editor = context.editor4Page(page);
+            editor.toggleShapesLock(shapes);
             context.selection.resetSelectShapes();
         }
     }

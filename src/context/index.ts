@@ -155,7 +155,7 @@ export class Context extends Watchable(Object) {
     }
 
     get navi() {
-        return this.m_tool;
+        return this.m_navi;
     }
 
     get upload() {

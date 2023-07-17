@@ -7,11 +7,11 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, TextShape } from '@kcdesign/data';
 import { Context } from '@/context'; // 状态顶层 store
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
 import { Action, KeyboardKeys, WorkSpace } from '@/context/workspace'; // workspace
-import { Menu } from '@/context/menu'; // menu
+import { Menu } from '@/context/menu'; // menu 菜单相关
 import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
@@ -19,11 +19,13 @@ import { v4 as uuid } from "uuid";
 import { init as renderinit } from '@/render';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, get_selected_types, list2Tree, flattenShapes, get_menu_items } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
+import Placement from './Menu/Placement.vue';
+import TextSelection from './Selection/TextSelection.vue';
 
 interface Props {
     context: Context
@@ -69,6 +71,7 @@ let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
 const commentInput = ref(false);
+const resizeObserver = new ResizeObserver(frame_watcher);
 
 function rootRegister(mount: boolean) {
     if (mount) {
@@ -155,20 +158,21 @@ function endDragPage() { // 编辑器完成拖动页面
     workspace.value.pageDragging(false);
 }
 function pageEditorOnMoveEnd(e: MouseEvent) {
-    const isDrag = is_drag(props.context, e, mousedownOnClientXY);
+    const isDrag = is_drag(props.context, e, mousedownOnClientXY, 2 * dragActiveDis);
     if (isDrag) {// 抬起之前存在拖动
         if (newShape) {
             shapeCreateEnd();
-        } else {
-            selectEnd();
         }
     } else { // 抬起之前未存在拖动
-        const action = workspace.value.action;
-        if (action === Action.AddText) {
-            init_insert_textshape(props.context, mousedownOnPageXY, t, t('shape.input_text'));
-        }
-        else if (action.startsWith('add')) { // 存在action
-            init_insert_shape(props.context, mousedownOnPageXY, t);
+        if (newShape) { // 拖动了之后把鼠标移动到原点再抬起
+            shapeCreateEnd();
+        } else {
+            const action = workspace.value.action;
+            if (action === Action.AddText) {
+                init_insert_textshape(props.context, mousedownOnPageXY, t, t('shape.input_text'));
+            } else if (action.startsWith('add')) { // 存在action
+                init_insert_shape(props.context, mousedownOnPageXY, t);
+            }
         }
     }
     setClass('auto-0');
@@ -183,7 +187,7 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
             }
         }
     } else {
-        const isDrag = is_drag(props.context, e, mousedownOnPageXY, 2 * dragActiveDis);
+        const isDrag = is_drag(props.context, e, mousedownOnClientXY, 2 * dragActiveDis);
         if (isDrag) {
             const shapeFrame = new ShapeFrame(x, y, 1, 1);
             const result = init_shape(props.context, shapeFrame, mousedownOnPageXY, t);
@@ -216,8 +220,8 @@ function workspace_watcher(type?: number, name?: string | MouseEvent) { // 更�
             props.context.workspace.clipboard.write_html();
         } else if (type === WorkSpace.UPDATE_COMMENT_POS) {
             saveShapeCommentXY();
-        } else if(type === WorkSpace.ONARBOARD__TITLE_MENU) {
-            if(name) {
+        } else if (type === WorkSpace.ONARBOARD__TITLE_MENU) {
+            if (name) {
                 contextMenuMount((name as MouseEvent))
             }
         }
@@ -329,7 +333,7 @@ function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
     const selection = props.context.selection;
     const menu = props.context.menu;
-    menu.menuMount(false);
+    menu.menuMount();
     selection.unHoverShape();
     site.x = e.clientX
     site.y = e.clientY
@@ -348,7 +352,7 @@ function contextMenuMount(e: MouseEvent) {
     }
     // 数据准备就绪之后打开菜单
     contextMenu.value = true;
-    menu.menuMount(true);
+    menu.menuMount('content');
     document.addEventListener('keydown', esc);
     // 打开菜单之后调整菜单位置
     nextTick(() => {
@@ -526,6 +530,10 @@ function removeWheel() {
 }
 function shapeCreateEnd() { // 造图结束
     if (newShape) {
+        if (newShape.type === ShapeType.Text) { // 文本框新建则进入编辑状态
+            const workspace = props.context.workspace;
+            workspace.notify(WorkSpace.INIT_EDITOR);
+        }
         removeCreator();
         newShape = undefined;
     }
@@ -733,12 +741,10 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     info!.m.reset(matrix.toArray())
     initMatrix(cur)
 })
-const resizeObserver = new ResizeObserver(() => { // 监听contentView的Dom frame变化
-    if (root.value) {
-        _updateRoot(props.context, root.value);
-    }
-})
-
+function frame_watcher() {
+    if (!root.value) return;
+    _updateRoot(props.context, root.value);
+}
 renderinit()
     .then(() => {
         inited.value = true;
@@ -765,7 +771,7 @@ onMounted(() => {
     rootRegister(true); // 在workspace注册contentview dom节点
     props.context.selection.scoutMount(props.context); // 安装图形检索器
     props.context.workspace.setFreezeStatus(true); // 开始加载静态资源
-    props.context.workspace.init(t); // 在workspace存储多语言
+    props.context.workspace.init(t); // 在workspace存储多语言工具
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
@@ -786,6 +792,7 @@ onUnmounted(() => {
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent>
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
+        <TextSelection :context="props.context" :matrix="matrix.toArray()"> </TextSelection>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
@@ -793,6 +800,8 @@ onUnmounted(() => {
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
+        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
+        </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"

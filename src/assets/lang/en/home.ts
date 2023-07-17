@@ -56,7 +56,8 @@ export const system = {
     'new_file': 'New file',
     'page1': 'Page 1',
     'dissolution': 'Dissolution',
-    'content_includes': 'Content includes'
+    'content_includes': 'Content includes',
+    'title_includes': 'Title includes'
 }
 
 export const home = {
@@ -130,6 +131,7 @@ export const home = {
 export const search = {
     search_results: 'No matching results',
     search_history: 'No search history',
+    result_count: 'xx results'
 }
 
 

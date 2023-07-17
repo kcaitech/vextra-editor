@@ -37,7 +37,7 @@ const tabs: { title: string, id: Tab }[] = [
 ]
 
 function update(t: number) {
-    if(t === WorkSpace.SELECT_LIST_TAB) {
+    if (t === WorkSpace.SELECT_LIST_TAB) {
         selected.value = workspace.value.action;
         selectComment()
     }
@@ -71,12 +71,12 @@ onUnmounted(() => {
         </div>
         <div class="body">
             <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"
-            :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
-            <CompsTab :context="props.context" v-if="currentTab === 'Comps'" 
-            :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
+                :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
+            <CompsTab :context="props.context" v-if="currentTab === 'Comps'" :showLeft="showLeft"
+                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
             <!-- <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab> -->
-            <CommentTab :context="props.context" v-if="currentTab === 'Comment'" 
-            :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
+            <CommentTab :context="props.context" v-if="currentTab === 'Comment'" :showLeft="showLeft"
+                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
         </div>
     </div>
 </template>
@@ -102,7 +102,7 @@ onUnmounted(() => {
             text-align: left;
             line-height: 24px;
             color: var(--grey-dark);
-            margin-left: 13px;
+            margin-left: 6px;
         }
 
         >.tab:hover {
@@ -118,7 +118,7 @@ onUnmounted(() => {
     .body {
         border-top: 1px solid var(--theme-color);
         width: 100%;
-        height: calc(100% - 36px);
+        height: calc(100% - 32px);
         position: relative;
         flex: 1 1 auto;
         box-sizing: border-box;

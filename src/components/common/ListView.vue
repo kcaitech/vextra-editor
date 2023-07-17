@@ -713,7 +713,7 @@ onUnmounted(() => {
     }
 
     .vertical+.scroll-track {
-        width: 8px;
+        width: 6px;
         height: 100%;
         position: absolute;
         top: 0;
@@ -724,7 +724,7 @@ onUnmounted(() => {
             width: 100%;
             position: relative;
             background-color: #dddddd;
-            border-radius: 8px;
+            border-radius: 6px;
         }
 
         >.scroll-bar:hover {
