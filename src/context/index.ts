@@ -10,6 +10,7 @@ import { Comment } from "./comment";
 import { Menu } from "./menu";
 import { Tool } from "./tool";
 import { Navi } from "./navigate";
+import { Upload } from "./upload";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -50,6 +51,7 @@ export class Context extends Watchable(Object) {
     private m_menu: Menu;
     private m_tool: Tool;
     private m_navi: Navi;
+    private m_upload: Upload;
 
     constructor(data: Document, repo: CoopRepository) {
         super();
@@ -64,6 +66,7 @@ export class Context extends Watchable(Object) {
         this.m_tool = new Tool();
         this.m_navi = new Navi();
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
+        this.m_upload = new Upload();
 
         const pagelist = data.pagesList.slice(0);
         this.m_taskMgr.add(new class implements Task { // page auto loader
@@ -153,5 +156,9 @@ export class Context extends Watchable(Object) {
 
     get navi() {
         return this.m_tool;
+    }
+
+    get upload() {
+        return this.m_upload;
     }
 }

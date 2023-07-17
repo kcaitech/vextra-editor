@@ -194,7 +194,7 @@ function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Funct
     return new_shape;
   }
 }
-function insert_imgs(context: Context, t: Function) {
+async function insert_imgs(context: Context, t: Function) {
   const selection = context.selection;
   const media = context.workspace.getImageFromDoc();
   const new_shapes: Shape[] = [];
@@ -203,9 +203,7 @@ function insert_imgs(context: Context, t: Function) {
     for (let i = 0; i < media.length; i++) {
       if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
       const img = init_insert_image(context, xy, t, media[i]);
-      if (img) {
-        new_shapes.push(img);
-      }
+      if (img && await context.upload.uploadResource(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
     }
   }
   if (new_shapes.length) {
