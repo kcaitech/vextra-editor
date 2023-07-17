@@ -136,7 +136,7 @@ const rename = (value: string, id: string) => {
 
 const mousedown = (id: string, e: MouseEvent) => {
     const menu = props.context.menu
-    menu.menuMount(false);
+    menu.menuMount();
     if (e.button === MOUSE_RIGHT) {
         e.stopPropagation()
         if (e.target instanceof Element && e.target.closest(`.Menu`)) return
@@ -147,7 +147,7 @@ const mousedown = (id: string, e: MouseEvent) => {
 }
 const pageMenuMount = (id: string, e: MouseEvent) => {
     const menu = props.context.menu
-    menu.menuMount(false);
+    menu.menuMount();
     pageMenuPosition.value.x = e.clientX
     pageMenuPosition.value.y = e.clientY - 75
     pageMenuItems = [
