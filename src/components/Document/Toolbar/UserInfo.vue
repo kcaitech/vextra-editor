@@ -2,16 +2,16 @@
 import UserAvatar from './UserAvatar.vue';
 import Share from './Share/Share.vue';
 import Scale from './Scale.vue';
-import {} from 'vue';
+import { } from 'vue';
 import { Context } from '@/context';
 interface Props {
     context: Context
 }
 const props = defineProps<Props>();
-</script>
 
+</script>
 <template>
-    <div class="user-info">
+    <div class="user-info" @dblclick.stop>
         <Share :context="props.context"></Share>
         <UserAvatar :context="props.context"></UserAvatar>
         <Scale :context="props.context"></Scale>

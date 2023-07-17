@@ -4,6 +4,7 @@ import FileShare from './FileShare.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import { UserInfo, DocInfo } from '@/context/user';
 import * as share_api from '@/apis/share';
 
 const { t } = useI18n()
@@ -17,12 +18,20 @@ const showFileShare = ref<boolean>(false);
 const pageHeight = ref(0)
 const shareSwitch = ref(true)
 const selectValue = ref(1)
+const userInfo = ref<UserInfo | undefined>()
+const docInfo = ref<DocInfo>()
 const onShare = () => {
   if (showFileShare.value) {
     showFileShare.value = false
     return
   }
-  showFileShare.value = true
+  documentInfo(route.query.id).then((data) => {
+    docInfo.value = data
+    if(docInfo.value) {
+      userInfo.value = props.context.workspace.isUserInfo
+      showFileShare.value = true
+    }
+  })
 }
 const closeShare = () => {
   showFileShare.value = false
@@ -34,7 +43,7 @@ const onSwitch = (state: boolean) => {
 const onSelectType = (type: number) => {
   selectValue.value = type
 }
-async function documentInfo(id: string) {
+async function documentInfo(id: any) {
   try {
     if (id) {
       const { data } = await share_api.getDocumentInfoAPI({ doc_id: id })
@@ -42,7 +51,6 @@ async function documentInfo(id: string) {
     } else {
       console.log('没有该文档');
     }
-
   } catch (err) {
     return console.log(err);
   }
@@ -78,8 +86,8 @@ onUnmounted(() => {
     <div class="share" @click.stop="onShare">
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
-    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue"
-      @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight"></FileShare>
+    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue" :docInfo="docInfo"
+      @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
   </div>
 </template>
 

@@ -1,3 +1,4 @@
+import { Context } from "@/context";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
@@ -7,8 +8,8 @@ interface Scout {
     isPointInShape: (shape: Shape, point: PageXY) => boolean
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
-// 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条闭合路径(d)上
-function scout(): Scout {
+// 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
+function scout(context: Context): Scout {
     const scoutId = (uuid().split('-').at(-1)) || 'scout';
     const pathId = (uuid().split('-').at(-1)) || 'path';
     const ele: SVGElement = createSVGGeometryElement(scoutId);
@@ -16,18 +17,21 @@ function scout(): Scout {
     ele.appendChild(path);
     document.body.appendChild(ele);
 
+    // 任意初始化一个point
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
     function isPointInShape(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
-        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         let result: boolean = false;
         if (shape.type === ShapeType.Line) {
-            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14);
+            // 线条元素(不管是否闭合，都当不闭合)额外处理point是否在边框上
+            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14 / context.workspace.matrix.m00);
             path.setAttributeNS(null, 'stroke-width', `${thickness}`);
             result = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
         } else {
+            // 判断point是否在闭合路径的填充中
             result = (path as SVGGeometryElement).isPointInFill(SVGPoint);
         }
         return result;
@@ -35,9 +39,7 @@ function scout(): Scout {
 
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
-        if (s) {
-            document.body.removeChild(s)
-        }
+        if (s) document.body.removeChild(s);
     }
     return { path, isPointInShape, remove }
 }
@@ -58,7 +60,7 @@ function createPath(path: string, id: string): SVGPathElement {
 }
 function getPathOnPageString(shape: Shape): string { // path坐标系：页面
     const path = shape.getPath(true);
-    const m2page = shape.matrix2Page();
+    const m2page = shape.matrix2Root();
     path.transform(m2page);
     const d = path.toString();
     return d;
@@ -106,44 +108,88 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     }
     return shape;
 }
-
-function finder(scout: Scout, g: Shape[], position: PageXY, force: boolean, selected: Shape, isCtrl: boolean, init?: Shape[]): Shape[] {
-    // force：找到点上的所有图形，否则找到一个就不再寻找
+/**
+ * 图形检索规则以及实现
+ * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
+ * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
+ * @param { PageXY } position 一个点，在页面坐标系上的点
+ * @param { boolean } isCtrl 是否把容器、编组元素当作普通图形判定，不为真的时候会有特殊判定，比如编组子元素会冒泡的编组、存在子元素容器无法被判定为目标...
+ * @param { Shape[] } init 在下次一递归开始时需要继承的结果
+ * @returns { Shape[] } 返回符合检索条件的图形
+ */
+function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean, init?: Shape[]): Shape[] {
+    // 找到点上的所有图形，否则找到一个就不再寻找
     // O(n + dk)
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
             const item = g[i];
+            // 特殊处理的三类图形：容器、编组、flatten
             if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
                 const isItemIsTarget = isTarget(scout, item, position);
                 if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
                 const c = item.childs as Shape[];
                 if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
                     if (c.length) {
-                        result.push(...finder(scout, c, position, false, selected, isCtrl, result));
-                        if (!force && result.length) return result;
+                        result.push(...finder(scout, c, position, selected, isCtrl, result));
+                        if (result.length) {
+                            return result;
+                        } else { // 在一个容器拥有子元素的情况下，需要isCtrl才可以被hover
+                            if (isCtrl) {
+                                result.push(item);
+                                return result;
+                            }
+                        }
                     } else {
                         result.push(item);
-                        if (!force && result.length) return result;
+                        return result;
                     }
                 } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
                     const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
                     if (g) {
                         result.push(g);
-                        if (!force) return result;
+                        return result;
                     }
                 }
             } else {
                 if (isTarget(scout, item, position)) {
                     result.push(item);
-                    if (!force && result.length) return result;
+                    return result;
                 }
             }
         }
     }
     return result;
 }
-
+/**
+ * 与finder相比，finder结果通常不会大于1，而这里通常可以大于1，代码上减少了逻辑判断，增大了遍历更多条目的概率
+ * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
+ * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
+ * @param { PageXY } position 一个点，在页面坐标系上的点
+ */
+function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
+    const result = [];
+    for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
+        if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
+            const item = g[i];
+            // 特殊处理的三类图形：容器、编组、flatten
+            if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) {
+                const isItemIsTarget = isTarget(scout, item, position);
+                if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
+                const c = item.childs as Shape[];
+                if (c.length) {
+                    result.push(...finder_layers(scout, c, position));
+                }
+                result.push(item);
+            } else {
+                if (isTarget(scout, item, position)) {
+                    result.push(item);
+                }
+            }
+        }
+    }
+    return result;
+}
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
 // 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
 function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
@@ -196,6 +242,7 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
     }
     return result;
 }
+// 寻找到最近的层级较高的那个容器
 function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Shape): Shape | undefined {
     let result: Shape | undefined = undefined;
     for (let i = g.length - 1; i > -1; i--) {
@@ -223,11 +270,11 @@ function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Sha
     return result
 }
 
-function canBeTarget(shape: Shape): boolean { // 可以被选择的前提是没有被锁定和isVisible可视
+function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
     if (shape.isVisible != undefined && shape.isLocked != undefined) {
         return shape.isVisible && !shape.isLocked;
     } else {
         return false;
     }
 }
-export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, artboardFinder }
+export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, finder_layers, artboardFinder, canBeTarget }

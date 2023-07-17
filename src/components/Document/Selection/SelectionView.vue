@@ -95,7 +95,7 @@ function createShapeTracing() { // 描边
             tracing.value = false;
         } else {
             const path = hoveredShape.getPath(true);
-            const m2page = hoveredShape.matrix2Page();
+            const m2page = hoveredShape.matrix2Root();
             path.transform(m2page);
             path.transform(matrix);
             const { x, y, right, bottom } = props.context.workspace.root;
@@ -123,7 +123,7 @@ function createController() { // 计算控件点位以及类型判定
     } else {
         if (selection.length === 1) { // 单选
             const shape = selection[0];
-            const m = shape.matrix2Page();
+            const m = shape.matrix2Root();
             const frame = shape.frame;
             // p1 p2
             // p4 p3
@@ -152,7 +152,7 @@ function createController() { // 计算控件点位以及类型判定
         } else { // 多选
             const __points: [number, number][] = [];
             selection.forEach(p => {
-                const m = p.matrix2Page();
+                const m = p.matrix2Root();
                 const frame = p.frame;
                 let _ps: [number, number][] = [
                     [0, 0],
@@ -177,7 +177,7 @@ function createController() { // 计算控件点位以及类型判定
                 }
             });
             rotate.value = 0; // 多选时，rect只为水平状态
-            controllerType.value = ControllerType.Rect; // 且控件类型都为矩形控件
+            controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
         }
         controller.value = true;
     }
@@ -187,6 +187,9 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     if (props.context.workspace.action === Action.AutoV) {
         if (e.button === 0) {
             e.stopPropagation();
+            if (props.context.menu.isMenuMount) {
+                props.context.menu.menuMount();
+            }
             props.context.workspace.preToTranslating(e);
             const hoveredShape = props.context.selection.hoveredShape;
             if (e.shiftKey) { // 多选
@@ -216,12 +219,19 @@ function keyboard_up_watcher(e: KeyboardEvent) {
         }
     }
 }
+function window_blur() {
+    if (traceEle.value) {
+        traceEle.value.classList.remove('cursor-copy');
+        altKey.value = false;
+    }
+}
 // hooks
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspaceWatcher);
     document.addEventListener('keydown', keyboard_down_watcher);
     document.addEventListener('keyup', keyboard_up_watcher);
+    window.addEventListener('blur', window_blur)
 
 })
 onUnmounted(() => {
@@ -229,6 +239,7 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspaceWatcher);
     document.removeEventListener('keydown', keyboard_down_watcher);
     document.removeEventListener('keyup', keyboard_up_watcher);
+    window.removeEventListener('blur', window_blur);
 })
 watchEffect(updater);
 </script>
@@ -239,7 +250,7 @@ watchEffect(updater);
         preserveAspectRatio="xMinYMin meet" overflow="visible" :width="tracingFrame.width" :height="tracingFrame.height"
         :viewBox="tracingFrame.viewBox" @mousedown="(e: MouseEvent) => pathMousedown(e)"
         style="transform: translate(0px, 0px)" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingFrame.path" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;">
+        <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
         </path>
     </svg>
     <!-- 控制 -->

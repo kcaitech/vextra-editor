@@ -26,8 +26,8 @@
             </span>
         </template>
     </el-dialog>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue"
-        @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo"
+        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
 </template>
@@ -39,6 +39,7 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
+import { UserInfo } from '@/context/user';
 const { t } = useI18n()
 
 const isLoading = ref(false);
@@ -52,6 +53,7 @@ const dialogVisible = ref(false)
 const newname = ref()
 const renameinput = ref()
 const showrenname = ref<boolean>(true)
+const userInfo = ref<UserInfo | undefined>()
 let lists = ref<any[]>([])
 const docId = ref('')
 const mydata = ref()
@@ -126,12 +128,19 @@ const Starfile = async (data: data) => {
     }
 }
 
+const userData = ref({
+    avatar: localStorage.getItem('avatar') || '',
+    id: localStorage.getItem('userId') || '',
+    nickname: localStorage.getItem('nickname') || ''
+})
+
 //分享入口
 const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
         return
     }
+    userInfo.value = userData.value
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     showFileShare.value = true
@@ -208,10 +217,6 @@ const rStarfile = () => {
 const rSharefile = () => {
     if (menu.value) {
         menu.value.style.display = 'none'
-    }
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
     }
     Sharefile(mydata.value)
 }

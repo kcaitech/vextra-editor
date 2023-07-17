@@ -8,9 +8,11 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal, CoopRepository } from '@kcdesign/data';
-import { FILE_DOWNLOAD, FILE_UPLOAD, SCREEN_SIZE } from '@/utils/setting';
+import { Document, importDocument, uploadExForm, Repository, Page, CoopRepository } from '@kcdesign/data';
+import { Ot } from "@/communication/modules/ot";
+import { STORAGE_URL, DOC_UPLOAD_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
+import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
@@ -20,6 +22,8 @@ import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
 import { measure } from '@/layout/text/measure';
+import Home from "@/components/Document/Toolbar/BackToHome.vue";
+
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
@@ -41,7 +45,6 @@ const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
 let timeForRight: any;
-let loading_timer: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
@@ -96,7 +99,9 @@ function switchPage(id?: string) {
         const pagesMgr = ctx.data.pagesMgr;
         pagesMgr.get(id).then((page: Page | undefined) => {
             if (page) {
+                ctx.workspace.toggleCommentPage()
                 curPage.value = undefined;
+                ctx.workspace.commentMount(false)
                 ctx.selection.selectPage(page);
                 (window as any).__context = ctx;
                 curPage.value = page;
@@ -111,6 +116,12 @@ function selectionWatcher(t: number) {
             curPage.value = ctx.selection.selectedPage;
         }
     }
+    if (t === Selection.COMMENT_CHANGE_PAGE) {
+        if (context) {
+            const pageId = context.selection.commentPageId
+            switchPage(pageId)
+        }
+    }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {
     const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
@@ -120,11 +131,6 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
         if (code === 'Backslash') {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
-            }
-        } else if (code === 'KeyS') {
-            if (ctrlKey || metaKey) {
-                evevt.preventDefault();
-                context.workspace.documentSave();
             }
         }
     }
@@ -159,6 +165,7 @@ const showHiddenLeft = () => {
         showLeft.value = true
     }
 }
+
 function keyToggleLR() {
     if (showRight.value !== showLeft.value) {
         showHiddenLeft();
@@ -210,7 +217,7 @@ const getDocumentAuthority = async () => {
             }
         }
         permType.value = data.data.perm_type
-
+        context && context.workspace.setDocumentPerm(data.data.perm_type)
     } catch (err) {
         console.log(err);
     }
@@ -240,8 +247,18 @@ const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
+const getUserInfo = async () => {
+    const { data } = await user_api.GetInfo()
+    if (context) {
+        context.workspace.setUserInfo(data)
+        localStorage.setItem('avatar', data.avatar)
+        localStorage.setItem('nickname', data.nickname)
+        localStorage.setItem('userId', data.id)
+    }
+}
+
 //获取文档信息
-let coopLocal: ICoopLocal | null = null;
+let ot: Ot | undefined;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -253,6 +270,7 @@ const getDocumentInfo = async () => {
             ElMessage({ message: `${t('apply.link_not')}` });
             router.push('/');
         }
+        //获取文档类型是否为私有文档且有无权限   
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -264,11 +282,10 @@ const getDocumentInfo = async () => {
         }
         const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
-        //获取文档类型是否为私有文档且有无权限
 
         const repo = new Repository();
         const importDocumentParams = {
-            endPoint: FILE_DOWNLOAD,
+            endPoint: STORAGE_URL,
             region: "zhuhai-1",
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
@@ -279,53 +296,64 @@ const getDocumentInfo = async () => {
         const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
-            window.document.title = document.name;
+            const file_name = docInfo.value.document?.name || document.name;
+            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
+            context.workspace.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            switchPage(context.data.pagesList[0]?.id);
-            coopLocal = new CoopLocal(document, context.coopRepo, `${FILE_UPLOAD}/documents/ws`, localStorage.getItem('token') || "", (route.query.id as string), "0");
-            coopLocal.start().finally(() => loading.value = false);
+
+            const docId = route.query.id as string;
+            const token = localStorage.getItem("token") || "";
+            ot = Ot.Make(docId, token, document, context.coopRepo, "0");
+            ot.start()
+                .catch((e) => {
+                    if (!context) {
+                        router.push('/');
+                        throw new Error(e);
+                    }
+                }).finally(() => {
+                    if (!context) {
+                        router.push('/');
+                        return;
+                    }
+                    switchPage(context.data.pagesList[0]?.id);
+                    loading.value = false;
+                });
+            await context.upload.start(docId, token);
         }
+        getUserInfo()
     } catch (err) {
         loading.value = false;
         console.log(err)
         throw err;
     }
 }
+
 function upload() {
     const token = localStorage.getItem('token');
     if (!token || !context || !context.data) {
         return
     }
-    context.workspace.startSave();
-    uploadExForm(context.data, FILE_UPLOAD, token, '', (isSuccess, doc_id) => {
+    uploadExForm(context.data, DOC_UPLOAD_URL, token, '', (isSuccess, doc_id) => {
         if (isSuccess) {
             router.replace({
                 path: '/document',
                 query: { id: doc_id }
             });
-            coopLocal = new CoopLocal(
-                context!.data,
-                context!.coopRepo,
-                `${FILE_UPLOAD}/documents/ws`,
-                localStorage.getItem('token') || "",
-                doc_id,
-                "0",
-            );
-            coopLocal.start();
+            ot = Ot.Make(doc_id, localStorage.getItem('token') || "", context!.data, context!.coopRepo, "0");
+            ot.start();
+            context!.upload.start(doc_id, token);
+            context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
         }
-        context?.workspace.endSave();
     })
 }
 let timer: any = null;
-function setScreenSize() {
-    if (localStorage.getItem(SCREEN_SIZE.KEY) === SCREEN_SIZE.FULL) {
-        document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-    }
+function init_screen_size() {
+    localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
 }
-function init() {
+function init_doc() {
     if (route.query.id) { // 从远端读取文件
         getDocumentInfo();
         document.addEventListener('keydown', keyboardEventHandler);
@@ -336,6 +364,7 @@ function init() {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
+            getUserInfo()
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             upload();
@@ -351,15 +380,17 @@ function workspaceWatcher(t: number) {
         sub_loading.value = true;
     } else if (t === WorkSpace.THAW) {
         sub_loading.value = false;
+    } else if (t === WorkSpace.HIDDEN_UI) {
+        keyToggleTB();
     }
 }
 onMounted(() => {
-    setScreenSize();
-    init();
+    init_screen_size();
+    init_doc();
 })
 onUnmounted(() => {
     try {
-        coopLocal?.close();
+        ot?.close();
     } catch (err) { }
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
@@ -390,7 +421,8 @@ onUnmounted(() => {
         <template #slot1>
             <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
                 @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-                @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
+                @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
+                :leftTriggleVisible="leftTriggleVisible">
             </Navigation>
         </template>
         <template #slot2>
@@ -463,21 +495,21 @@ onUnmounted(() => {
     #navigation {
         height: 100%;
         background-color: var(--left-navi-bg-color);
-        z-index: 2;
+        z-index: 9;
     }
 
     #content {
         width: 100%;
         height: 100%;
         overflow: hidden;
+        position: relative;
     }
 
     #attributes {
         height: 100%;
         background-color: var(--right-attr-bg-color);
-        z-index: 2;
+        z-index: 9;
     }
-
 }
 
 .notification {

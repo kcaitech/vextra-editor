@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { Matrix } from '@kcdesign/data';
+import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { Page, ShapeType, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch, watchEffect, nextTick } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
@@ -64,7 +63,7 @@ watchEffect(() => {
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
-    pageViewRegister(true);
+    pageViewRegister(true);    
     renderItems = props.data.childs;
 })
 onMounted(() => {

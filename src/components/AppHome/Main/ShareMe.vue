@@ -12,8 +12,8 @@
             <li @click="rStarfile" ref="isshow">{{ t('homerightmenu.target_star') }}</li>
         </ul>
     </div>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue"
-        @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
+    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :docUserId="docUserId" :userInfo="userInfo"
+        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
 </template>
@@ -25,12 +25,14 @@ import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { useI18n } from 'vue-i18n'
+import { UserInfo } from '@/context/user';
 
 interface data {
     document: {
         id: string
         name: string
         doc_type: number
+        user_id: string
     }
     document_favorites: {
         is_favorite: boolean
@@ -47,9 +49,11 @@ const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
+const docUserId = ref('')
 const selectValue = ref(1)
 const menu = ref<HTMLElement>()
 const isshow = ref<HTMLElement>()
+const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
 const mydata = ref()
 let lists = ref<any[]>([])
@@ -114,12 +118,20 @@ const Starfile = async (data: data) => {
     }
 }
 
+const userData = ref({
+    avatar: localStorage.getItem('avatar') || '',
+    id: localStorage.getItem('userId') || '',
+    nickname: localStorage.getItem('nickname') || ''
+})
+
 //分享入口
 const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
         return
     }
+    docUserId.value = data.document.user_id
+    userInfo.value = userData.value
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     showFileShare.value = true
@@ -212,11 +224,8 @@ const rSharefile = () => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
-    }
     Sharefile(mydata.value)
+
 }
 
 const handleClickOutside = (event: MouseEvent) => {

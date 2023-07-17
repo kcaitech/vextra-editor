@@ -21,11 +21,10 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const update = throttle(_update, 5);
 function _update() {
     const selection = props.context.selection;
-    // const m2p = props.shape.matrix2Page();
+    // const m2p = props.shape.matrix2Root();
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
     matrix.reset(props.matrix);
-
     const frame = props.shape.frame;
     const points = [
         { x: 0, y: 0 }, // left top
@@ -61,8 +60,9 @@ function _update() {
         // cursor
         const cursorAtBefore = selection.cursorAtBefore;
         const index = selection.cursorStart;
-        const cursor = props.shape.text.locateCursor(index, cursorAtBefore).map((point) => matrix.computeCoord(point.x, point.y));
-        cursorPath.value = genCursorPath(cursor);
+        const cursor = props.shape.text.locateCursor(index, cursorAtBefore);
+        if (!cursor) cursorPath.value = "";
+        else cursorPath.value = genCursorPath(cursor.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y)));
     }
 }
 
@@ -102,9 +102,9 @@ function genCursorPath(cursor: { x: number, y: number }[]): string {
 
 </script>
 <template>
-    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='blue' stroke-width="2px" class="scan">
+    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#865dff' stroke-width="2px" class="scan">
     </path>
-    <path v-if="!isCursor" :d="selectPath" fill="blue" fill-opacity="0.5" stroke='none'></path>
+    <path v-if="!isCursor" :d="selectPath" fill="#865dff" fill-opacity="0.35" stroke='none'></path>
 </template>
 <style lang='scss' scoped>
 .scan {

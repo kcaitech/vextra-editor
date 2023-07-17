@@ -10,13 +10,21 @@ export const system = {
     space: '...',
     empty: '暂无数据',
     paste: '粘贴',
+    'paste_here': '粘贴在这里',
+    'only_text': '只粘贴文本',
     copy: '复制',
+    cut: '剪切',
+    replace: '替换',
+    failed: '操作失败',
+    'null_file_name': '文件名不能为空',
+    'replace_failed': '替换失败，请使用粘贴功能',
     'select_layer': '图层选择',
     'bring_forward': '上移一层',
     'send_backward': '下移一层',
     'bring_to_top': '置于顶层',
     'send_to_bottom': '置于底层',
     'visible': '显示/隐藏',
+    'hidden': '隐藏',
     'Lock': '锁定/解锁',
     'select_all': '选择全部',
     'fit_canvas': '适应画布',
@@ -46,7 +54,10 @@ export const system = {
     'personal_center': '个人中心',
     'login_out': '退出登录',
     'new_file': '新文件',
-    'page1': '页面 1'
+    'page1': '页面 1',
+    'dissolution': '取消容器',
+    'content_includes': '文本包含',
+    'title_includes': '标题包含'
 }
 
 export const home = {
@@ -124,7 +135,8 @@ export const search = {
     search_results: '没有匹配的结果',
     search_history: '没有搜索记录',
     search_history_title:'历史记录',
-    search_history_clear:'清除'
+    search_history_clear:'清除',
+    result_count: '共xx条结果'
 }
 
 export const navi = {
@@ -134,7 +146,7 @@ export const navi = {
     page: '页面',
     add_page: '添加新页面',
     copy: '副本',
-    development: '功能开发中……'
+    development: '功能开发中…'
 
 }
 
@@ -194,7 +206,47 @@ export const attr: any = {
     'fixed_top_bottom': '上下固定',
     'adapt': '适应容器大小',
     'mixed': '多值',
-    'mixed_lang': '存在对象设置不同，可点击 + 号统一设置'
+    'mixed_lang': '存在对象设置不同，可点击 + 号统一设置',
+    text_advanced_settings: "文本高级设置",
+    word_space: '字间距',
+    row_height: '行高',
+    paragraph_space: '段落间距',
+    id_style: '编号样式',
+    letter_case: '字母大小写',
+    text_style: '文本样式',
+    auto: '自动',
+    search_for_fonts: '搜索字体…',
+    bold: '加粗',
+    tilt: '倾斜',
+    underline: '下划线',
+    deleteline: '删除线',
+    align_left: '左对齐',
+    align_center: '居中对齐',
+    align_right: '右对齐',
+    align_the_sides: '两边对齐',
+    align_top: '顶对齐',
+    align_middle: '居中对齐',
+    align_bottom: '底对齐',
+    none_list: '无',
+    unordered_list: '无序列表',
+    ordered_list: '有序列表',
+    as_typed: '无',
+    uppercase: '全大写',
+    lowercase: '全小写',
+    titlecase: '首字母大写',
+    autowidth: '单行模式',
+    autoheight: '自动高度',
+    fixedsize: '固定宽高',
+    more_value: '多值',
+    used_font: '已使用字体',
+    no_font_is_currently_in_use: '当前无已使用字体',
+    chinese_font: '中文字体',
+    english_font: '英文字体',
+    find_the_fonts: '查找不到相关字体',
+    font_is_not: '本地不存在该字体，使用默认字体效果替代显示',
+    font_color: '字体颜色',
+    highlight_color: '高亮颜色',
+    multiple_colors: '存在多种颜色值，点击+可统一设置',
 }
 
 export const login = {
@@ -212,7 +264,16 @@ export const comment = {
     sort: '按页面排序',
     show_about_me: '仅显示关于我的',
     show_resolved_comments: '显示已解决评论',
-    comment_area: '评论区'
+    comment_area: '评论区',
+    input_comments: '输入评论',
+    check: '查看',
+    a_few_reply: '条回复',
+    month: '月',
+    day: '日',
+    no_comment: '当前无评论',
+    leave_a_comment: '点击任意位置留下你的评论',
+    comments_hide: '评论已设置隐藏',
+    show_comments: '显示评论'
 }
 export const clipboard = {
     'invalid_data': '该内容无法解析'

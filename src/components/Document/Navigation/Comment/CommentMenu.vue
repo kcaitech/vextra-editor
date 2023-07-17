@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 type commentListMenu = {
     text: string
-    status: boolean
+    status_p: boolean
 }
 const props = defineProps<{
     Items: commentListMenu[]
@@ -43,8 +43,8 @@ onUnmounted(() => {
 <template>
     <div class="menu-container">
         <template v-for="(item, index) in props.Items" :key="index">
-            <div class="menu-item" :class="{active: i === index}" @mouseenter="e => hoverShape(e, index)" @mouseleave="e => unHoverShape(e, index)" @click="onClick(index,item.status)">
-                <div class="choose" :style="{visibility: item.status ? 'visible' : 'hidden'}" :class="{choose_active: i === index}"></div>
+            <div class="menu-item" :class="{active: i === index}" @mouseenter="(e: MouseEvent) => hoverShape(e, index)" @mouseleave="(e: MouseEvent) => unHoverShape(e, index)" @click="onClick(index,item.status_p)">
+                <div class="choose" :style="{visibility: item.status_p ? 'visible' : 'hidden'}" :class="{choose_active: i === index}"></div>
                 <div>{{ item.text }}</div>
             </div>
             <div class="line" v-if="index === 0"></div>

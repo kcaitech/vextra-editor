@@ -1,24 +1,37 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, reactive, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";
 import { useI18n } from 'vue-i18n';
+import * as comment_api from '@/apis/comment';
+import { useRoute } from 'vue-router';
+import { WorkSpace, Action } from "@/context/workspace";
+import { ElScrollbar } from 'element-plus'
+import { Selection } from "@/context/selection";
 import ShowHiddenLeft from "../ShowHiddenLeft.vue";
 const { t } = useI18n();
 const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
     text: string
-    status: boolean
+    status_p: boolean
 }
+const route = useRoute()
+const docID = (route.query.id as string)
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
 const commentMenu = ref<boolean>(false)
 const commentMenuItems = ref<commentListMenu[]>([
-    { text: `${t('comment.sort')}`, status: false},
-    { text: `${t('comment.show_about_me')}`, status: false},
-    { text: `${t('comment.show_resolved_comments')}`, status: false}
+    { text: `${t('comment.sort')}`, status_p: props.context.selection.commentPageSort},
+    { text: `${t('comment.show_about_me')}`, status_p: props.context.selection.commentAboutMe},
+    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
 ])
+const documentCommentList = ref<any[]>(props.context.workspace.commentList)
+const commentAll = ref<any[]>() //没有转树的评论列表
+const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
+const isPageSort = ref(props.context.selection.commentPageSort)
+const visibleComment = ref(props.context.workspace.isVisibleComment)
+const action = ref()
 const showMenu = () => {
     if(commentMenu.value) {
         commentMenu.value = false
@@ -30,10 +43,140 @@ const closeMenu = () => {
     commentMenu.value = false
 }
 
-const handleMenuStatus = (status: boolean, index: number) => {
-    commentMenuItems.value[index].status = status
+const getPage = (status: boolean) => {
+    const pages = props.context.data.pagesList
+    if(status) {
+        const sortArr: any = []
+        pages.forEach(item => {
+            documentCommentList.value.forEach(comment => {
+                if(item.id === comment.page_id) {
+                    sortArr.push(comment)                    
+                }
+            })
+        })
+        return sortArr
+    }
 }
 
+//关于我的评论
+const aboutMe = () => {
+    const aboutMeArr: any = []
+    const userId = props.context.workspace.isUserInfo?.id
+    const commnetList = props.context.workspace.not2treeComment
+    commnetList.forEach((item: any) => {
+        if(item.user.id === userId) {
+            const rootId = item.root_id
+            if(rootId) {
+                commnetList.forEach((i: any) => {
+                    if(i.id === rootId) {
+                        aboutMeArr.push(i)
+                    }
+                })
+            }else {
+                aboutMeArr.push(item)
+            }
+        }
+    })
+    const myComment = Array.from(new Set(aboutMeArr))
+    return myComment
+}
+
+const handleMenuStatus = (status: boolean, index: number) => {
+    if(index === 2) {
+        props.context.selection.commentSolveMenuStatus(status)
+    }
+    if(index === 0) {
+        getPage(status)
+        props.context.selection.setPageSort(status)
+    }
+    if(index === 1) {
+        props.context.selection.setCommentAboutMe(status)
+    }
+    commentMenuItems.value[index].status_p = status
+}
+
+const getDocumentComment = async(id :string) => {
+    try {
+       const {data} = await comment_api.getDocumentCommentAPI({doc_id: id})
+       data.forEach((obj: {children: any[]; commentMenu: any; }) => {
+        obj.commentMenu = commentMenuItems.value
+        obj.children = []
+       })
+       const list  = list2Tree(data, '') 
+       props.context.workspace.setNot2TreeComment(data)
+       props.context.workspace.setCommentList(list)
+       documentCommentList.value = props.context.workspace.commentList
+    }catch(err) {
+        console.log(err);
+    }
+}
+
+// 列表转树
+const list2Tree = (list: any, rootValue: string) => {
+  const arr: any = []
+  list.forEach((item: any) => {
+    if (item.parent_id === rootValue) {
+      const children = list2Tree(list, item.id)
+      if (children.length) {
+        item.children = children
+      }
+      arr.push(item)
+    }
+  })
+  return arr
+}
+
+const onResolve = (status: number, index: number) => {
+    documentCommentList.value[index].status = status
+    props.context.workspace.setCommentList(documentCommentList.value)
+}
+
+const onDelete = (index:number) => {
+    documentCommentList.value.splice(index, 1)
+    props.context.workspace.setCommentList(documentCommentList.value)
+}
+
+const onVisibleComment = () => {
+    props.context.workspace.setVisibleComment(true)
+}
+
+const update = (t: number) => {
+    if(t === WorkSpace.SEND_COMMENT) {
+        const timer = setTimeout(() => {
+            getDocumentComment(docID)
+            clearTimeout(timer)
+        }, 150);
+    }
+    if(t === WorkSpace.UPDATE_COMMENT) {
+        documentCommentList.value = props.context.workspace.commentList
+    }
+    if(t === WorkSpace.SELECTE_COMMENT) {
+        const curId = props.context.workspace.isSelectCommentId
+        const comment = document.querySelector(`[data-comment="${curId}"]`)
+        if(comment) {
+            scrollbarRef.value?.scrollTo({
+                top: (comment as HTMLDivElement).offsetTop,
+                behavior: "smooth"
+            })
+        }
+    }
+    if(t === Selection.PAGE_SORT) {
+        isPageSort.value = props.context.selection.commentPageSort
+    }
+    if (t === WorkSpace.VISIBLE_COMMENT) {
+        visibleComment.value = props.context.workspace.isVisibleComment
+    }
+    action.value = props.context.workspace.action;
+}
+
+onMounted(() => {
+    props.context.workspace.watch(update);
+    props.context.selection.watch(update);
+})
+onUnmounted(() => {
+    props.context.workspace.unwatch(update);
+    props.context.selection.unwatch(update);
+})
 const showHiddenLeft = () => {
     emit('showNavigation')
 }
@@ -48,9 +191,18 @@ const showHiddenLeft = () => {
             </div>
             <CommentMenu v-if="commentMenu" :Items="commentMenuItems" @close="closeMenu" @comment-menu-status="handleMenuStatus"></CommentMenu>
         </div>
-        <div class="comment-list">
-            <el-scrollbar>
-                <CommentItem v-for="item in 20" :key="item"></CommentItem>
+        <div class="no_comment" v-if="documentCommentList.length <= 0">
+            <div>{{t('comment.no_comment')}}</div>
+            <div>{{t('comment.leave_a_comment')}}</div>
+        </div>
+        <div class="visible-comment" v-else-if="!visibleComment && action !== Action.AddComment">
+            <div>{{t('comment.comments_hide')}}</div>
+            <button @click="onVisibleComment">{{t('comment.show_comments')}}</button>
+        </div>
+        <div class="comment-list" v-else>
+            <el-scrollbar ref="scrollbarRef">
+                <CommentItem v-for="(item, index) in isPageSort ? getPage(true) : documentCommentList" :key="item.id" :commentItem="item" :index="index"
+                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete" :data-comment="item.id" :myComment="aboutMe()"></CommentItem>
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>
@@ -87,7 +239,34 @@ const showHiddenLeft = () => {
         }
     }
     .comment-list {
+        position: relative;
         height: 100%;
+    }
+    .no_comment {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: #999;
+    }
+    .visible-comment {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        >button {
+            margin-top: 10px;
+            font-size: 10px;
+            border: none;
+            height: 30px;
+            color: #fff;
+            width: 70px;
+            border-radius: 4px;
+            background-color: var(--active-color);
+        }
     }
 }
 .el-scrollbar {

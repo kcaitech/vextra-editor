@@ -12,6 +12,7 @@ const emit = defineEmits<{
   (e: "select", action: Action): void;
 }>();
 function select(action: Action) {
+  if(props.workspace.documentPerm === 1) return
   props.workspace.keydown_c()
   emit('select', action);
 }

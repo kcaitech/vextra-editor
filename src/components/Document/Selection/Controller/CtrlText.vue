@@ -1,15 +1,19 @@
 <script setup lang='ts'>
-import { watch, onMounted, onUnmounted, ref, reactive } from 'vue';
-import { Selection } from '@/context/selection';
+import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed } from 'vue';
+import { ClientXY, Selection } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { TextShape } from '@kcdesign/data';
 import { Shape } from "@kcdesign/data";
 import { Context } from '@/context';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
-import { genRectPath, throttle } from '../common';
+import { genRectPath } from '../common';
 import { useController } from '../Controller/controller';
 import { Point } from "../SelectionView.vue";
+import { WorkSpace } from '@/context/workspace';
+import BarsContainer from "./Bars/BarsContainer.SVG.vue";
+import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import { getAxle } from '@/utils/common';
 
 const props = defineProps<{
     context: Context,
@@ -20,6 +24,9 @@ const props = defineProps<{
 }>();
 
 watch(() => props.shape, (value, old) => {
+    if (old.text.length === 1) {
+        clear_null_shape(old);
+    }
     old.unwatch(update);
     value.watch(update);
     update();
@@ -29,19 +36,19 @@ watch(() => props.matrix, () => {
     update();
 })
 const { isDblClick } = useController(props.context);
-const update = throttle(_update, 5);
+// const update = throttle(_update, 5);
+const update = _update;
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let editing: boolean = false;
+const visible = ref<boolean>(true);
 function _update() {
-    const m2p = props.shape.matrix2Page();
+    const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
-
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
-
     const frame = props.shape.frame;
     const points = [
         { x: 0, y: 0 }, // left top
@@ -51,8 +58,9 @@ function _update() {
     ];
 
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
-    boundrectPath.value = genRectPath(boundrect);
-
+    if (editing) {
+        boundrectPath.value = genRectPath(boundrect);
+    }
     const p0 = boundrect[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -66,25 +74,51 @@ function _update() {
         return bounds;
     }, bounds)
 }
-
+function clear_null_shape(shape: Shape) {
+    const editor = props.context.editor4Shape(shape);
+    editor.delete();
+}
+const axle = computed<ClientXY>(() => {
+    const [lt, rt, rb, lb] = props.controllerFrame;
+    return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+});
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
-    if (!editing && isDblClick()) {
-        editing = true;
-        props.context.workspace.contentEdit(editing);
-        props.context.workspace.setCursorStyle('text', 0);
+    if (e.button === 0) {
+        const workspace = props.context.workspace;
+        props.context.menu.menuMount();
+        if (!editing && isDblClick()) {
+            editing = true;
+            workspace.contentEdit(editing);
+            workspace.setCursorStyle('text', 0);
+        }
+        if (!editing) return;
+        const selection = props.context.selection;
+        workspace.setCtrl('controller');
+        const root = workspace.root
+        matrix.reset(props.matrix);
+        const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
+        downIndex = selection.locateText(xy.x, xy.y);
+        e.stopPropagation();
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+    } else if (e.button === 2) {
+        if (!(e.target as Element).closest('#text-selection')) {
+            e.stopPropagation();
+        }
     }
-    if (!editing) return;
-    props.context.workspace.setCtrl('controller');
-    const selection = props.context.selection;
-    matrix.reset(props.matrix);
-    const xy = matrix.inverseCoord(e.offsetX + bounds.left, e.offsetY + bounds.top);
-    downIndex = selection.locateText(xy.x, xy.y);
-    e.stopPropagation();
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
 }
-
+function be_editor(index?: number) {
+    const workspace = props.context.workspace;
+    const selection = props.context.selection;
+    editing = true;
+    workspace.contentEdit(editing);
+    workspace.setCursorStyle('text', 0);
+    if (index !== undefined) {
+        downIndex = { index, before: true };
+        selection.setCursor(index, true);
+    }
+}
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation();
     if (!editing) return;
@@ -98,15 +132,17 @@ function onMouseUp(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        selection.setCursor(locate.index, locate.before)
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     }
     else {
-        selection.selectText(downIndex.index, locate.index);
+        selection.selectText(downIndex.index, locate.index, locate.before);
     }
     props.context.workspace.setCtrl('page');
 }
 
 function onMouseMove(e: MouseEvent) {
+    e.stopPropagation();
     if (!editing) return;
     const workspace = props.context.workspace;
     const selection = props.context.selection;
@@ -116,10 +152,11 @@ function onMouseMove(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        selection.setCursor(locate.index, locate.before)
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     }
     else {
-        selection.selectText(downIndex.index, locate.index);
+        selection.selectText(downIndex.index, locate.index, locate.before);
     }
 }
 function mouseenter() {
@@ -133,18 +170,28 @@ function mouseleave() {
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
 }
-
+function workspace_watcher(t?: number) {
+    if (t === WorkSpace.TRANSLATING) {
+        if (props.context.workspace.isTranslating) {
+            visible.value = false;
+        } else {
+            visible.value = true;
+        }
+    } else if (t === WorkSpace.INIT_EDITOR) {
+        be_editor(0);
+    }
+}
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
     if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
         editing = false;
     }
 }
-
 onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
     selection.watch(selectionWatcher);
+    props.context.workspace.watch(workspace_watcher);
     update();
 })
 
@@ -152,21 +199,35 @@ onUnmounted(() => {
     const selection = props.context.selection;
     props.shape.unwatch(update);
     selection.unwatch(selectionWatcher);
+    props.context.workspace.unwatch(workspace_watcher);
 })
-
+onBeforeUnmount(() => {
+    if (props.shape.text.length === 1) {
+        clear_null_shape(props.shape);
+    }
+})
 </script>
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
-        :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
+        id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+        :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
-        @mouseenter="mouseenter" @mouseleave="mouseleave">
+        @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
-        <path :d="boundrectPath" fill="none" stroke='blue' stroke-width="1px"></path>
+        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
+        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape">
+        </BarsContainer>
+        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :axle="axle">
+        </PointsContainer>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>
 
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.un-visible {
+    opacity: 0;
+}
+</style>

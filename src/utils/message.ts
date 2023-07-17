@@ -4,7 +4,7 @@ const toStyle = (obj: any) => {
         return pre += `${cur}:${obj[cur]};`
     }, '')
 }
-type MessageType = "success" | "info" | "danger";
+type MessageType = "success" | "info" | "danger" | "feature";
 const C = {
     success: {
         backgroundColor: '#F0F9EB',
@@ -14,18 +14,23 @@ const C = {
     info: {
         backgroundColor: '#F4F4F5',
         color: '#909399',
-        border: '#EAEAEC',
+        border: '#AAAAAA',
     },
     danger: {
         backgroundColor: '#FEF0F0',
         color: '#F56C6C',
         border: '#FDE3E3',
+    },
+    feature: {
+        backgroundColor: '#000',
+        color: '#fff',
+        border: 'none',
     }
 }
 export const message = (type: MessageType, context: string) => {
-    const top = 100;
+    const top = 120;
     const duration: number = 2.5;
-    const fadeDur: number = 0.5;
+    const fadeDur: number = 0.8;
     const style = toStyle({
         position: 'absolute',
         top: '0px',
@@ -41,7 +46,8 @@ export const message = (type: MessageType, context: string) => {
         'font-size': '10px',
         padding: '0 8px',
         border: `1px solid ${C[type].border}`,
-        opacity: '0'
+        opacity: '0',
+        'text-align': 'center'
     });
 
     const el = document.createElement('div');

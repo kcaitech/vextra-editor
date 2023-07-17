@@ -1,11 +1,12 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix } from '@kcdesign/data';
-import { TextShape } from '@kcdesign/data';
+import { TextShape, AttrGetter } from '@kcdesign/data';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
 import { throttle } from '../../common';
 import { handleKeyEvent } from './keyhandler';
+import { WorkSpace } from '@/context/workspace';
 
 const props = defineProps<{
     shape: TextShape,
@@ -35,7 +36,7 @@ function _updateInputPos() {
     if (!inputel.value) return;
     // inputel.value.hidden = false;
     const selection = props.context.selection;
-    // const m2p = props.shape.matrix2Page();
+    // const m2p = props.shape.matrix2Root();
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
     matrix.reset(props.matrix);
@@ -52,7 +53,8 @@ function _updateInputPos() {
 
     const text = props.shape.text;
     const locatepoints = text.locateCursor(index, cursorAtBefore);
-    const cursor = locatepoints.map((point) => matrix.computeCoord(point.x, point.y));
+    if (!locatepoints) return;
+    const cursor = locatepoints.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y));
 
     if (cursor.length !== 2) return;
 
@@ -64,23 +66,31 @@ function _updateInputPos() {
 
     inputpos.value.left = x;
     inputpos.value.top = y;
-
     inputel.value.focus();
 }
 
 function selectionWatcher(...args: any[]) {
+    if (editor && !editor.isInComposingInput()) editor.resetCachedSpanAttr(); // TODO 应该过滤掉协作变换的选区变化
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) updateInputPos();
+}
+
+function workspaceWatcher(t: number) {
+    if (t === WorkSpace.TEXT_FORMAT) {
+        updateInputPos()
+    }
 }
 
 onMounted(() => {
     props.shape.watch(updateInputPos)
     props.context.selection.watch(selectionWatcher);
+    props.context.workspace.watch(workspaceWatcher);
     updateInputPos();
 })
 
 onUnmounted(() => {
     props.shape.unwatch(updateInputPos)
     props.context.selection.unwatch(selectionWatcher);
+    props.context.workspace.unwatch(workspaceWatcher);
 })
 
 function committext() {
@@ -103,11 +113,11 @@ function committext() {
             index = end;
             end = t;
         }
-        if (editor.insertText2(text, index, end - index)) {
-            selection.setCursor(index + text.length, true);
+        const count = editor.insertText2(text, index, end - index);
+        if (count !== 0) {
+            selection.setCursor(index + count, true);
         }
     }
-
     inputel.value.value = ''
 }
 
@@ -158,7 +168,6 @@ function onfocusout() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    // console.log(e.key)
     handleKeyEvent(e, props.context, props.shape, editor);
 }
 
@@ -168,22 +177,23 @@ function onKeyUp(e: KeyboardEvent) {
 function onKeyPress(e: KeyboardEvent) {
     handleKeyEvent(e, props.context, props.shape, editor);
 }
-
 </script>
 <template>
     <input type="text" class="input" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
         @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
-        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }"
-        ref="inputel" />
+        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel" />
 </template>
 <style lang='scss' scoped>
 .input {
     z-index: -999;
     background-color: transparent;
+    position: absolute;
+    color: transparent;
     border: none;
     box-shadow: none;
     outline: none;
     caret-color: transparent;
     height: 10px;
+    width: 1px;
 }
 </style>

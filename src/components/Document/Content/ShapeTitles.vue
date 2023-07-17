@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, ref, nextTick, computed, reactive } from "vue";
+import { watchEffect, onMounted, onUnmounted, computed, reactive } from "vue";
 import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
@@ -22,6 +22,7 @@ interface Title {
     maxWidth: number
     selected: boolean
 }
+
 const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
@@ -47,19 +48,19 @@ const setPosition = () => {
         titles.length = 0;
         for (let i = 0; i < len; i++) {
             const artboard = artboards[i];
-            if (artboard.parent?.type === ShapeType.Page) { // 只给页面的直接子元素上标题
+            if (artboard.parent?.type === ShapeType.Page && artboard.isVisible) { // 只给页面的直接子元素上标题
                 const selecte = props.context.selection.selectedShapes;
                 const hovered = props.context.selection.hoveredShape;
                 let selected = false
-                if(selecte[0] && artboard.id === selecte[0].id) {
+                if (selecte[0] && artboard.id === selecte[0].id) {
                     selected = true
-                }else if(hovered && artboard.id === hovered.id) {
+                } else if (hovered && artboard.id === hovered.id) {
                     selected = true
-                }else{
-                    selected = false   
-                }            
-                const m = artboard.matrix2Page(); // 图形到页面的转换矩阵
-                const f2p = artboard.frame2Page(); // 
+                } else {
+                    selected = false
+                }
+                const m = artboard.matrix2Root(); // 图形到页面的转换矩阵
+                const f2p = artboard.frame2Root(); // 
                 const frame = artboard.frame;
                 const matrix = props.context.workspace.matrix; // 页面坐标系转换矩阵
                 let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系
@@ -155,7 +156,7 @@ watchEffect(() => updater());
         <div v-for="(t, index) in titles" class="title-container" :key="index"
             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth" @rename="rename"
-            @hover="hover" @leave="leave" :shape="t.shape" :selected="t.selected"></ArtboardName>
+                @hover="hover" @leave="leave" :shape="t.shape" :selected="t.selected"></ArtboardName>
         </div>
     </div>
 </template>

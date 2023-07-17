@@ -25,5 +25,6 @@ const selection = shallowRef(props.context.selection);
     flex-flow: row nowrap;
     align-items: center;
     padding: 0px 8px;
+    box-shadow: 3px 3px 4px rgb(0, 0, 0, 0.3);
 }
 </style>

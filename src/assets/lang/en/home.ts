@@ -10,13 +10,21 @@ export const system = {
     space: '...',
     empty: 'No data',
     paste: 'Paste',
+    'paste_here': 'Paste Here',
+    'only_text': 'Paste text',
     copy: 'Copy',
+    cut: 'Cut',
+    replace: 'Replace',
+    failed: 'Failed',
+    'null_file_name': 'The file name cannot be empty',
+    'replace_failed': 'Replacement failed, please try pasting',
     'select_layer': 'Select layer',
     'bring_forward': 'Bring forward',
     'send_backward': 'Send backward',
     'bring_to_top': 'Bring to top',
     'send_to_bottom': 'Send to bottom',
     'visible': 'Visible/Hidden',
+    'hidden': 'Hidden',
     'Lock': 'Lock/Unlock',
     'select_all': 'Select all',
     'fit_canvas': 'Adapt to artboard',
@@ -46,7 +54,10 @@ export const system = {
     'personal_center': 'Personal center',
     'login_out': 'Login out',
     'new_file': 'New file',
-    'page1': 'Page 1'
+    'page1': 'Page 1',
+    'dissolution': 'Dissolution',
+    'content_includes': 'Content includes',
+    'title_includes': 'Title includes'
 }
 
 export const home = {
@@ -124,7 +135,8 @@ export const search = {
     search_results: 'No matching results',
     search_history: 'No search history',
     search_history_title:'Historical record',
-    search_history_clear:'Clear'
+    search_history_clear:'Clear',
+    result_count: 'xx results'
 }
 
 
@@ -135,7 +147,7 @@ export const navi = {
     page: 'Page',
     add_page: 'Add new page',
     copy: 'copy',
-    development: 'Functional development……'
+    development: 'Functional development…'
 }
 
 export const frame = {
@@ -194,7 +206,47 @@ export const attr: any = {
     'fixed_top_bottom': 'Fixed top and bottom',
     'adapt': 'Resize to fit',
     'mixed': 'Mixed',
-    'mixed_lang': 'Click + to replace mixed content.'
+    'mixed_lang': 'Click + to replace mixed content.',
+    text_advanced_settings: "Text Advanced Settings",
+    word_space: 'Word space',
+    row_height: 'Line height',
+    paragraph_space: 'Paragraph spacing',
+    id_style: 'Numbering style',
+    letter_case: 'Letter case',
+    text_style: 'Text style',
+    auto: 'Auto',
+    search_for_fonts: 'Search for fonts…',
+    bold: 'Bold',
+    tilt: 'Tilt',
+    underline: 'Underline',
+    deleteline: 'Delete line',
+    align_left: 'Text align left',
+    align_center: 'Text align center',
+    align_right: 'Text align right',
+    align_the_sides: 'Text align justified',
+    align_top: 'Align top',
+    align_middle: 'Align middle',
+    align_bottom: 'Align bottom',
+    none_list: 'No list',
+    unordered_list: 'Bulleted list',
+    ordered_list: 'Unmbered list',
+    as_typed: 'As typed',
+    uppercase: 'Uppercase',
+    lowercase: 'Lowercase',
+    titlecase: 'Title case',
+    autowidth: 'Auto width',
+    autoheight: 'Auto height',
+    fixedsize: 'Fixed size',
+    more_value: 'More value',
+    used_font: 'Used font',
+    no_font_is_currently_in_use: 'No font is currently in use',
+    chinese_font: 'Chinese font',
+    english_font: 'English font',
+    find_the_fonts: "Can't find the fonts",
+    font_is_not: 'The font is not present locally. Use the default font effect instead',
+    font_color: 'Font color',
+    highlight_color: 'Highlight color',
+    multiple_colors: 'There are many color values, click + can be unified set',
 }
 
 export const login = {
@@ -212,7 +264,16 @@ export const comment = {
     sort: 'Sort by page',
     show_about_me: 'Show about me',
     show_resolved_comments: 'Show resolved comments',
-    comment_area: 'Comment section'
+    comment_area: 'Comment section',
+    input_comments: 'Input comments',
+    check: 'check',
+    a_few_reply: 'reply',
+    month: 'month',
+    day: 'day',
+    no_comment: 'No current comments',
+    leave_a_comment: 'Click anywhere to leave a comment',
+    comments_hide: 'Comments are set to hide',
+    show_comments: 'Show comments'
 }
 export const clipboard = {
     'invalid_data': 'invalid data'

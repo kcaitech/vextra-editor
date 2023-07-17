@@ -15,7 +15,6 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
 import { v4 } from 'uuid';
-import { cloneDeep } from 'lodash';
 interface BorderItem {
     id: number,
     border: Border
@@ -114,11 +113,12 @@ function first() {
     }
 }
 function deleteBorder(idx: number) {
+    const _idx = borders.length - idx - 1;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     if (len.value === 1) {
-        editor.value.deleteBorder(idx);
+        editor.value.deleteBorder(_idx);
     } else if (len.value > 1) {
-        const actions = get_actions_border_delete(props.shapes, idx);
+        const actions = get_actions_border_delete(props.shapes, _idx);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -342,7 +342,7 @@ watchEffect(updateData);
                 flex: 0 0 18px;
                 height: 18px;
                 width: 18px;
-                background-color: #2561D9;
+                background-color: var(--active-color);
                 border-radius: 3px;
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;

@@ -15,6 +15,7 @@ type RgbMeta = number[];
 interface Props {
   context: Context
   color: Color
+  late?: number
 }
 interface Data {
   rgba: RGBA
@@ -168,7 +169,11 @@ function colorPickerMount() {
       let el = popoverEl.value
       let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
       el.style.top = top + 'px';
-      el.style.left = -(36 + el.offsetWidth) + 'px';
+      if(props.late) {
+        el.style.left = -(36 + el.offsetWidth + props.late) + 'px';
+      }else {
+        el.style.left = -(36 + el.offsetWidth) + 'px';
+      }
       init();
     }
   })
@@ -703,6 +708,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .color-block {
   position: relative;
+  z-index: 99;
   width: 16px;
   height: 16px;
   border-radius: 2px;

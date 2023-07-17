@@ -52,6 +52,7 @@ function esc(e: KeyboardEvent) {
 }
 function popoverClose() {
   popoverVisible.value = false;
+  props.context.workspace.focusText()
   container.value?.removeEventListener('keyup', esc);
   document.removeEventListener('click', handleClickOutside);
 }
@@ -93,7 +94,7 @@ onUnmounted(() => {
 .__popover-container {
   position: relative;
   outline: none;
-
+  z-index: 99;
   >.popover {
     position: absolute;
     outline: none;
