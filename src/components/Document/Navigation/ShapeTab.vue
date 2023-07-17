@@ -15,8 +15,8 @@ import { Page } from "@kcdesign/data";
 import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
-
-const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: 162, pagelistHeightBackup: 36 });
+const i_height = 162;
+const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: i_height, pagelistHeightBackup: 36 });
 const container = ref<HTMLDivElement>();
 const sash = ref<HTMLDivElement>();
 const containerHeight = ref<number>(0);
@@ -51,9 +51,9 @@ function init_pagelist_height() {
     if (container.value) {
         w_height = container.value.clientHeight;
     }
-    let max_height = Math.max(w_height * 0.5 - 36, 162);
+    let max_height = Math.max(w_height * 0.5 - 36, i_height);
     let init_height = page_list * 30 + 50;
-    init_height = Math.max(init_height, 162);
+    init_height = Math.max(init_height, i_height);
     structure.value.pagelistHeight = Math.min(init_height, max_height);
 }
 onMounted(() => {
