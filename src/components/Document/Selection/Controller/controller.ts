@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TextShape } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -107,9 +107,17 @@ export function useController(context: Context) {
             if (isMouseOnContent(e)) {
                 const selected = context.selection.selectedShapes;
                 if (selected.length === 1 && selected[0].type === ShapeType.Text) {
-                    const save = selected.slice(0, 1);
-                    context.selection.resetSelectShapes();
-                    context.selection.rangeSelectShape(save);
+                    const len = (selected[0] as TextShape).text.length;
+                    const t = (selected[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
+                    if (t.length) {
+                        const save = selected.slice(0, 1);
+                        context.selection.resetSelectShapes();
+                        context.selection.rangeSelectShape(save);
+                    } else {
+                        const editor = context.editor4Shape(selected[0]);
+                        editor.delete();
+                        context.selection.resetSelectShapes();
+                    }
                 }
             }
             return;

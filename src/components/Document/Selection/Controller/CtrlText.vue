@@ -1,18 +1,19 @@
 <script setup lang='ts'>
-import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount } from 'vue';
-import { Selection } from '@/context/selection';
+import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed } from 'vue';
+import { ClientXY, Selection } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { TextShape } from '@kcdesign/data';
 import { Shape } from "@kcdesign/data";
 import { Context } from '@/context';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
-import { genRectPath, throttle } from '../common';
+import { genRectPath } from '../common';
 import { useController } from '../Controller/controller';
 import { Point } from "../SelectionView.vue";
 import { WorkSpace } from '@/context/workspace';
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import { getAxle } from '@/utils/common';
 
 const props = defineProps<{
     context: Context,
@@ -77,6 +78,10 @@ function clear_null_shape(shape: Shape) {
     const editor = props.context.editor4Shape(shape);
     editor.delete();
 }
+const axle = computed<ClientXY>(() => {
+    const [lt, rt, rb, lb] = props.controllerFrame;
+    return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+});
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
@@ -214,7 +219,8 @@ onBeforeUnmount(() => {
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape">
         </BarsContainer>
-        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape">
+        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :axle="axle">
         </PointsContainer>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>

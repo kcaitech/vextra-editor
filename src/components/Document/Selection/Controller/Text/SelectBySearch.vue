@@ -48,6 +48,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <path v-for="(p, i) in selectPath" :key="i" :d="p" fill="orange" fill-opacity="0.5  " stroke='none'></path>
+  <path v-for="(p, i) in selectPath" :key="i" :d="p" fill="orange" fill-opacity="0.5" stroke='none'></path>
 </template>
 <style lang='scss' scoped></style>

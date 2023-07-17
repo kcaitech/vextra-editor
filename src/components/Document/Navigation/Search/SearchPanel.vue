@@ -211,10 +211,9 @@ function hoverShape(shape: Shape) {
 function unHovershape() {
   props.context.selection.unHoverShape();
 }
-function shapeScrollToContentView(shape: Shape) {
+function shapeScrollToContentView_1(shape: Shape) {
   if (isInner(props.context, shape)) {
     props.context.selection.selectShape(shape);
-    props.context.navi.set_focus_text(shape);
     return;
   }
   const workspace = props.context.workspace;
@@ -235,7 +234,46 @@ function shapeScrollToContentView(shape: Shape) {
         props.context.selection.selectShape(shape);
         pageViewEl.classList.remove('transition-400');
         props.context.workspace.translating(false);
-        props.context.navi.set_focus_text(shape);
+        clearTimeout(timer);
+      }, 400);
+    } else {
+      workspace.matrix.trans(transX, transY);
+    }
+    workspace.matrixTransformation();
+  }
+
+}
+function shapeScrollToContentView(shape: Shape) {
+  if (isInner(props.context, shape)) {
+    props.context.selection.selectShape(shape);
+    if (shape.type === ShapeType.Text) {
+      props.context.navi.set_focus_text(shape);
+    }
+    return;
+  }
+  const workspace = props.context.workspace;
+  const { x: sx, y: sy, height, width } = shape.frame2Root();
+  const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
+  const { x, y, bottom, right } = workspace.root;
+  const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
+  const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
+  if (transX || transY) {
+    props.context.selection.unHoverShape();
+    props.context.selection.selectShape();
+    const pageViewEl = props.context.workspace.pageView;
+    if (pageViewEl) {
+      pageViewEl.classList.add('transition-400');
+      props.context.workspace.translating(true);
+      workspace.matrix.trans(transX, transY);
+      const timer = setTimeout(() => {
+        props.context.selection.selectShape(shape);
+        pageViewEl.classList.remove('transition-400');
+        props.context.workspace.translating(false);
+        if (shape.type === ShapeType.Text) {
+          props.context.navi.set_focus_text(shape);
+        } else {
+          props.context.navi.set_focus_text();
+        }
         clearTimeout(timer);
       }, 400);
     } else {
@@ -454,7 +492,7 @@ onUnmounted(() => {
       <div class="list-wrap">
         <ListView v-if="valid_result_by_shape" :source="source_by_shape" :item-view="ResultItem" :item-height="30"
           :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
-          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
+          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView_1" @rename="rename" @isRead="isRead"
           draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
         <div v-else class="null-result">
