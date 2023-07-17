@@ -333,7 +333,16 @@ function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
     const selection = props.context.selection;
     const menu = props.context.menu;
-    menu.menuMount(false);
+    if (menu.isMenuMount) {
+        console.log(menu.isMenuMount);
+
+        if (menu.isMenuMount === 'content') {
+            menu.menuMount();
+            return
+        } else {
+            menu.menuMount();
+        }
+    }
     selection.unHoverShape();
     site.x = e.clientX
     site.y = e.clientY
@@ -352,7 +361,7 @@ function contextMenuMount(e: MouseEvent) {
     }
     // 数据准备就绪之后打开菜单
     contextMenu.value = true;
-    menu.menuMount(true);
+    menu.menuMount('content');
     document.addEventListener('keydown', esc);
     // 打开菜单之后调整菜单位置
     nextTick(() => {

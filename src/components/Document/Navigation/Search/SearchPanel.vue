@@ -303,11 +303,11 @@ function selectshape_right(shape: Shape, shiftKey: boolean) {
 }
 function list_mousedown(e: MouseEvent, shape: Shape) {
   const menu = props.context.menu;
-  menu.menuMount(false);
+  menu.menuMount();
   chartMenu.value = false;
   if (e.button === 2) {
     e.stopPropagation(); // 右键事件到这就不上去了
-    menu.menuMount(false);
+    menu.menuMount();
     if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
     selectshape_right(shape, e.shiftKey);
     const selected = props.context.selection.selectedShapes;

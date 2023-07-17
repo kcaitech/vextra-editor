@@ -24,7 +24,7 @@ defineExpose({ menu });
 function handleClickOutside(event: MouseEvent) {
   event.stopPropagation()
   if (event.target instanceof Element && !event.target.closest('.__context-menu')) {
-    props.context.menu.menuMount(false);
+    props.context.menu.menuMount();
   }
 }
 function menu_watcher(type: number) {
@@ -42,7 +42,6 @@ if (props.site) {
 }
 
 onMounted(() => {
-  props.context.menu.menuMount(true);
   props.context.menu.watch(menu_watcher)
   document.addEventListener('mousedown', handleClickOutside);
 })

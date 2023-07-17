@@ -318,11 +318,11 @@ function selectshape_right(shape: Shape, shiftKey: boolean) {
 }
 const list_mousedown = (e: MouseEvent, shape: Shape) => {
     const menu = props.context.menu;
-    menu.menuMount(false);
+    menu.menuMount();
     chartMenu.value = false
     if (e.button === MOUSE_RIGHT) {
         e.stopPropagation(); // 右键事件到这就不上去了
-        menu.menuMount(false);
+        menu.menuMount();
         if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
         selectshape_right(shape, e.shiftKey);
         const selected = props.context.selection.selectedShapes;
@@ -342,7 +342,7 @@ const chartMenuMount = (e: MouseEvent) => {
     chartMenuPosition.value.x = e.clientX
     chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
     chartMenu.value = true;
-    props.context.menu.menuMount(true);
+    props.context.menu.menuMount('shapelist');
     document.addEventListener('keydown', menu_unmount);
     nextTick(() => {
         if (contextMenuEl.value) {
