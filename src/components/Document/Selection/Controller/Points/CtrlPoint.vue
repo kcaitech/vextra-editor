@@ -77,7 +77,6 @@ function calcOrigin() {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
   if (event.button === 0) {
-    props.context.menu.menuMount()
     const ct = getCtrlElementType(event);
     if (ct) {
       event.stopPropagation();
