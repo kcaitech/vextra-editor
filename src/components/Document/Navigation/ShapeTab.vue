@@ -21,9 +21,11 @@ const container = ref<HTMLDivElement>();
 const sash = ref<HTMLDivElement>();
 const containerHeight = ref<number>(0);
 const isPagelistFold = ref<boolean>(false);
+const transition = ref<string>('0.3s');
 
 function dragStart() {
     structure.value.pagelistHeightBackup = structure.value.pagelistHeight
+    transition.value = '0s'
 }
 function onDragOffset(offset: number) {
     const newheight = Math.min(containerHeight.value - 100, Math.max(70, structure.value.pagelistHeightBackup + Number(offset)));
@@ -31,6 +33,9 @@ function onDragOffset(offset: number) {
 }
 function pageListFold(fold: boolean) {
     isPagelistFold.value = fold;
+}
+function end() {
+    transition.value = '0.3s'
 }
 
 const observer = new ResizeObserver(() => {
@@ -40,9 +45,20 @@ const observer = new ResizeObserver(() => {
 const showHiddenLeft = () => {
     emit('showNavigation')
 }
-
+function init_pagelist_height() {
+    const page_list = props.context.data.pagesList.length;
+    let w_height = document.body.clientHeight;
+    if (container.value) {
+        w_height = container.value.clientHeight;
+    }
+    let max_height = Math.max(w_height * 0.5 - 36, 162);
+    let init_height = page_list * 30 + 50;
+    init_height = Math.max(init_height, 162);
+    structure.value.pagelistHeight = Math.min(init_height, max_height);
+}
 onMounted(() => {
     container.value && observer.observe(container.value);
+    init_pagelist_height();
 });
 onUnmounted(() => {
     observer.disconnect();
@@ -52,9 +68,10 @@ onUnmounted(() => {
 
 <template>
     <div class="shapetab-container" ref="container">
-        <div class="page-navi" :style="{ height: isPagelistFold ? '30px' : `${structure.pagelistHeight}px` }">
+        <div class="page-navi" :style="{ height: isPagelistFold ? '30px' : `${structure.pagelistHeight}px`, transition }">
             <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"></PageList>
-            <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"></Sash>
+            <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"
+                @drag-end="end"></Sash>
         </div>
         <div class="page-navi"
             :style="{ height: isPagelistFold ? 'calc(100% - 30px)' : `calc(100% - ${structure.pagelistHeight}px)` }">

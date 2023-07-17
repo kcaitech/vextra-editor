@@ -544,12 +544,12 @@ onUnmounted(() => {
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <input ref="search_el" type="text" id="xpxp" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
-                    @blur="leave_search" @click="preto_search" @change="search" @input="inputing" @focus="input_focus">
+                    @blur="leave_search" @click.stop="preto_search" @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close"
                     :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }">
                     <svg-icon icon-class="close-x"></svg-icon>
                 </div>
-                <div :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }"
+                <div :style="{ opacity: ((show_accrate_btn && keywords) || (accurate && keywords)) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }"
                     :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
                     Aa
                 </div>

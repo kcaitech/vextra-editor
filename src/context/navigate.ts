@@ -1,5 +1,8 @@
 import { Shape, Watchable } from "@kcdesign/data";
-
+interface TextSelection {
+  shape: Shape
+  slice: [number, number][]
+}
 export class Navi extends Watchable(Object) {
   static SEARCH = 1;
   static SEARCH_FINISHED = 2;
@@ -9,7 +12,7 @@ export class Navi extends Watchable(Object) {
   static TEXT_SELECTION_CHANGE = 7;
   static SHAPELIST_UPDATE = 8;
   private m_page_need_extend: boolean = false;
-  private m_focus_text: Shape | undefined;
+  private m_focus_text: TextSelection | undefined;
   private m_keywords: string = '';
   private m_shapelist_freeze: boolean = false;
   constructor() {
@@ -21,7 +24,7 @@ export class Navi extends Watchable(Object) {
   set_page_need_extend(v: boolean) {
     this.m_page_need_extend = v;
   }
-  set_focus_text(v?: Shape) {
+  set_focus_text(v?: TextSelection) {
     this.m_focus_text = v;
     this.notify(Navi.TEXT_SELECTION_CHANGE);
   }

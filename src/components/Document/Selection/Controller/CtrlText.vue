@@ -88,6 +88,9 @@ function onMouseDown(e: MouseEvent) {
         const workspace = props.context.workspace;
         props.context.menu.menuMount();
         if (!editing && isDblClick()) {
+            if (props.context.navi.focusText) {
+                props.context.navi.set_focus_text();
+            }
             editing = true;
             workspace.contentEdit(editing);
             workspace.setCursorStyle('text', 0);

@@ -11,6 +11,7 @@ import { Shape, ShapeType, TextShape } from '@kcdesign/data';
 import { isInner } from '@/utils/content';
 import { is_shape_in_selection, selection_types } from '@/utils/shapelist';
 import { Navi } from '@/context/navigate';
+import { get_words_index_selection_sequence } from '@/utils/search';
 interface Props {
   keywords: string
   context: Context
@@ -60,7 +61,7 @@ class TIter implements IDataIter<TItemData> {
       shape,
       context: props.context,
       keywords: props.keywords,
-      focus: Boolean(focus && (focus.id === shape.id))
+      focus: Boolean(focus && (focus.shape.id === shape.id))
     }
     return item;
   }
@@ -243,11 +244,17 @@ function shapeScrollToContentView_1(shape: Shape) {
   }
 
 }
+function set_focus(shape: Shape) {
+  const len = (shape as TextShape).text.length;
+  const src = (shape as TextShape).text.getText(0, len);
+  const slice = get_words_index_selection_sequence(src, props.keywords, props.accurate);
+  props.context.navi.set_focus_text({ shape, slice });
+}
 function shapeScrollToContentView(shape: Shape) {
   if (isInner(props.context, shape)) {
     props.context.selection.selectShape(shape);
     if (shape.type === ShapeType.Text) {
-      props.context.navi.set_focus_text(shape);
+      set_focus(shape);
     }
     return;
   }
@@ -270,7 +277,7 @@ function shapeScrollToContentView(shape: Shape) {
         pageViewEl.classList.remove('transition-400');
         props.context.workspace.translating(false);
         if (shape.type === ShapeType.Text) {
-          props.context.navi.set_focus_text(shape);
+          set_focus(shape);
         } else {
           props.context.navi.set_focus_text();
         }
@@ -346,6 +353,8 @@ function update() {
   show_content.value = false;
   valid_result_by_shape.value = false;
   valid_result_by_content.value = false;
+  fold1.value = false;
+  fold2.value = false;
   result_by_shape = [];
   result_by_content = [];
   height_shpae.value = '50%';
@@ -481,7 +490,7 @@ onUnmounted(() => {
           <div class="font">{{ t('system.title_includes') }}</div>
           <div class="keywords">“{{ props.keywords }}</div>
           <div class="end">”</div>
-          <div class="shrink" @click="toggle1" v-if="valid_result_by_shape">
+          <div class="shrink" @click.stop="toggle1" v-if="valid_result_by_shape">
             <svg-icon icon-class="down" :style="{ transform: fold1 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
           </div>
         </div>
@@ -506,7 +515,7 @@ onUnmounted(() => {
           <div class="font">{{ t('system.content_includes') }}</div>
           <div class="keywords">“{{ props.keywords }}</div>
           <div class="end">”</div>
-          <div class="shrink" @click="toggle2" v-if="valid_result_by_shape">
+          <div class="shrink" @click.stop="toggle2" v-if="valid_result_by_shape">
             <svg-icon icon-class="down" :style="{ transform: fold2 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
           </div>
         </div>
