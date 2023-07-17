@@ -70,6 +70,7 @@ function bar_mousemove(event: MouseEvent) {
             isDragging = true;
             const shapes: Shape[] = props.context.selection.selectedShapes;
             asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes, props.context.selection.selectedPage!);
+            console.log('开动');
         }
     }
 }
