@@ -65,9 +65,7 @@ watchEffect(() => {
 const getBackgroundColor = (color: Color) => {
     backgroundColor.value = color
 }
-watchEffect(() => {
-    backgroundColor.value = new Color(1, 239, 239, 239)
-})
+backgroundColor.value = new Color(1, 239, 239, 239)
 onMounted(() => {
     props.context.selection.watch(selectionChange);
 })
