@@ -333,16 +333,7 @@ function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
     const selection = props.context.selection;
     const menu = props.context.menu;
-    if (menu.isMenuMount) {
-        console.log(menu.isMenuMount);
-
-        if (menu.isMenuMount === 'content') {
-            menu.menuMount();
-            return
-        } else {
-            menu.menuMount();
-        }
-    }
+    menu.menuMount();
     selection.unHoverShape();
     site.x = e.clientX
     site.y = e.clientY
