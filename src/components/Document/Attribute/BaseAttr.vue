@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed, shallowRef } from 'vue'
-import { Shape, ShapeType, RectShape, RectRadius } from '@kcdesign/data';
+import { Shape, ShapeType, RectShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
@@ -40,7 +40,7 @@ const isLock = ref<boolean>(false);
 const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
 const points = ref<number>(0);
-const radius = ref<RectRadius>();
+const radius = ref<{lt: number, rt: number, rb: number, lb: number}>();
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
 const isFlippedHorizontal = ref<boolean>()
@@ -123,8 +123,7 @@ function check_mixed() {
 }
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
-    const r = new RectRadius(0, 0, 0, 0);
-    radius.value = (shape as RectShape).fixedRadius || r;
+    radius.value = (shape as RectShape).getRadius();
 }
 function onChangeX(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
@@ -222,8 +221,8 @@ function radiusToggle() {
     isMoreForRadius.value = !isMoreForRadius.value
     if (!isMoreForRadius.value) {
         if (radius.value) {
-            let { rlb, rlt, rrb, rrt } = radius.value
-            if (rlt === rlb && rlt === rrb && rlt === rrt) {
+            let { lt, rt, rb, lb } = radius.value
+            if (lt === rt && rb === lb && rt === rb) {
                 multipleValues.value = false
             } else {
                 multipleValues.value = true
@@ -274,25 +273,20 @@ function onChangeRotate(value: string) {
         }
     }
 }
-const onChangeRadian = (value: string, type: 'rrt' | 'rlt' | 'rrb' | 'rlb') => {
+const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
     if (len.value === 1) {
         if (isMoreForRadius.value) {
             value = Number.parseFloat(value).toFixed(fix);
             const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
             if (!radius.value) return;
-            const newR = cloneDeep(radius.value);
-            newR[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            editor.value.setRadius(newR);
+            radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+            editor.value.setRadius(radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
         } else {
             value = Number.parseFloat(value).toFixed(fix);
             const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
             if (!radius.value) return;
-            const newR = cloneDeep(radius.value);
-            newR['rrt'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            newR['rlt'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            newR['rrb'] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            // newR['rlb'] = newRadian > 0 ? newRadian.toFixed(fix) : 0;
-            editor.value.setRadius(newR);
+            const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+            editor.value.setRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
         }
     } else {
         // todo
@@ -371,20 +365,20 @@ onUnmounted(() => {
             <div style="width: 22px;height: 22px;;"></div>
         </div>
         <div class="tr" v-if="showRadius">
-            <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.rlt || 0"
-                :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'rlt')" />
+            <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.lt || 0"
+                :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
-            <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rrt || 0"
-                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rrt')" />
+            <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
+                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')" />
             <div class="more-for-radius" @click="radiusToggle" v-if="showRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="isMoreForRadius">
-            <IconText class="td frame" svgicon="radius" :text="radius?.rlb || 0"
-                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'rlb')" />
-            <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rrb || 0"
-                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rrb')" />
+            <IconText class="td frame" svgicon="radius" :text="radius?.lb || 0"
+                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')" />
+            <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rb || 0"
+                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')" />
             <RadiusForIos :context="props.context"></RadiusForIos>
         </div>
     </div>
