@@ -43,6 +43,7 @@ export class Context extends Watchable(Object) {
     private m_repo: RepoWraper;
     private m_coopRepo: CoopRepository;
     private m_taskMgr: TaskMgr;
+    private m_textEditor?: TextShapeEditor;
     private m_selection: Selection;
     private m_workspace: WorkSpace;
     private m_comment: Comment;
@@ -111,7 +112,11 @@ export class Context extends Watchable(Object) {
     }
 
     editor4TextShape(shape: TextShape): TextShapeEditor {
-        return this.editor.editor4TextShape(shape);
+        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
+            return this.m_textEditor;
+        }
+        this.m_textEditor = this.editor.editor4TextShape(shape);
+        return this.m_textEditor;
     }
 
     get data() {

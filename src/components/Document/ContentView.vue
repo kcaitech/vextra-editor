@@ -196,10 +196,10 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
         }
     }
 }
-function workspace_watcher(type?: number, name?: string) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
+function workspace_watcher(type?: number, name?: string | MouseEvent) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (type === WorkSpace.CURSOR_CHANGE) {
         if (name !== undefined) {
-            setClass(name);
+            setClass((name as string));
         }
     } else {
         if (type === WorkSpace.MATRIX_TRANSFORMATION) {
@@ -499,7 +499,7 @@ const saveShapeCommentXY = () => {
     const sleectShapes = flattenShapes(shapes)
     const commentList = props.context.comment.pageCommentList
     sleectShapes.forEach((item: any) => {
-        commentList.forEach((comment, i) => {
+        commentList.forEach((comment: any, i: number) => {
             if (comment.target_shape_id === item.id) {
                 editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
             }

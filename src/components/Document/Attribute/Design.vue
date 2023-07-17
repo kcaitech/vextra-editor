@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { ShapeType, Color, Shape } from "@kcdesign/data"
 import { onMounted, onUnmounted, shallowRef, ref, computed, watchEffect } from 'vue';
+import { ShapeType, Color, Shape, TextShape } from "@kcdesign/data"
 import ColorPicker from '../../common/ColorPicker/index.vue';
 import { useI18n } from 'vue-i18n';
 import Arrange from './Arrange.vue';
@@ -89,7 +89,7 @@ onUnmounted(() => {
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len">
             <ShapeBaseAttr :shapes="shapes" :context="props.context"></ShapeBaseAttr>
-            <Text v-if="WITH_TEXT.includes(shapeType)" :shape="shapes[0]" :context="props.context"></Text>
+            <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
         </div>

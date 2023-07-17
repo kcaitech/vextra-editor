@@ -51,7 +51,6 @@ async function documentInfo(id: any) {
     } else {
       console.log('没有该文档');
     }
-
   } catch (err) {
     return console.log(err);
   }

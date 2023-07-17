@@ -38,9 +38,12 @@ export enum KeyboardKeys { // 键盘按键类型
     G = 'KeyG',
     T = 'KeyT',
     C = 'KeyC',
+    B = 'KeyB',
+    I = 'KeyI',
+    X = 'KeyX',
+    U = 'KeyU',
     Digit1 = 'Digit1',
     Backspace = 'Backspace',
-    I = 'KeyI'
 }
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
@@ -104,6 +107,12 @@ export class WorkSpace extends Watchable(Object) {
     static HIDDEN_UI = 47;
     static INIT_DOC_NAME = 48;
     static COMPS = 49;
+    static ONARBOARD__TITLE_MENU = 47;
+    static BOLD = 48;
+    static UNDER_LINE = 49;
+    static ITALIC = 50;
+    static DELETE_LINE = 51;
+    static TEXT_FORMAT = 52;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -212,6 +221,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isFreeze() {
         return this.m_freeze;
+    }
+    focusText() {
+        this.notify(WorkSpace.TEXT_FORMAT)
     }
     setDocumentPerm(perm: number) {
         this.m_document_perm = perm;
@@ -335,15 +347,25 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_t();
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
+            this.keydown_c(ctrlKey, metaKey);
+        }else if (event.code === KeyboardKeys.B) {
+            event.preventDefault();
+            this.keydown_b(ctrlKey, metaKey);
+        }else if (event.code === KeyboardKeys.I) {
+            event.preventDefault();
+            this.keydown_i(ctrlKey, metaKey, shiftKey);
+        }else if (event.code === KeyboardKeys.U) {
+            event.preventDefault();
+            this.keydown_u(ctrlKey, metaKey);
+        }else if (event.code === KeyboardKeys.X) {
+            event.preventDefault();
+            this.keydown_x(ctrlKey, metaKey, shiftKey);
             this.keydown_c(ctrlKey, metaKey, shiftKey);
         } else if (event.code === KeyboardKeys.Digit1) {
             event.preventDefault();
             if (ctrlKey || metaKey) {
                 adapt_page(this.context);
             }
-        } else if (event.code === KeyboardKeys.I) {
-            event.preventDefault();
-            this.keydown_i(shiftKey);
         }
     }
     matrixTransformation() { // 页面坐标系发生变化
@@ -436,9 +458,11 @@ export class WorkSpace extends Watchable(Object) {
         this.m_current_action = shiftKey ? Action.AddArrow : Action.AddLine;
         this.notify();
     }
-    keydown_i(shiftKey: boolean) {
+    keydown_i(ctrl: boolean, meta: boolean, shiftKey: boolean) {
         if (shiftKey) {
             this.notify(WorkSpace.COMPS);
+        }else if (ctrl || meta) {
+            this.notify(WorkSpace.ITALIC);
         }
     }
     keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
@@ -499,13 +523,14 @@ export class WorkSpace extends Watchable(Object) {
         } else if (shift) {
             this.context.comment.setVisibleComment(!this.context.comment.isVisibleComment);
         }
-        // else {
-        //     if (this.documentPerm === 1) return
-        //     this.escSetup();
-        //     this.m_current_action = Action.AddComment;
-        //     this.context.comment.commentInput(false);
-        //     this.context.comment.notify(Comment.SELECT_LIST_TAB);
-        // }
+        else {
+            if (this.documentPerm === 1) return
+            this.escSetup();
+            this.m_current_action = Action.AddComment;
+            this.context.comment.commentInput(false);
+            this.context.comment.notify(Comment.SELECT_LIST_TAB);
+            this.notify();
+        }
     }
     keydown_0(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) {
@@ -517,6 +542,16 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }
+    keydown_b(ctrl: boolean, meta: boolean) {
+        if (ctrl || meta) {
+            this.notify(WorkSpace.BOLD);
+        }
+    }
+    keydown_u(ctrl: boolean, meta: boolean) {
+        if (ctrl || meta) {
+            this.notify(WorkSpace.UNDER_LINE);
+        }
+    }
     keydown_g(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
         if ((ctrl || meta) && !shift) { // 编组
             if (alt) {
@@ -526,6 +561,11 @@ export class WorkSpace extends Watchable(Object) {
             }
         } else if ((ctrl || meta) && shift) {
             this.notify(WorkSpace.UNGROUP);
+        }
+    }
+    keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
+        if ((ctrl || meta) && shift) {
+            this.notify(WorkSpace.DELETE_LINE)
         }
     }
 

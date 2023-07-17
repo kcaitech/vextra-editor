@@ -206,7 +206,6 @@ function onChangeH(value: string) {
             editor.setShapesFrame(actions);
             check_mixed();
         }
-
     }
 }
 function lockToggle() {

@@ -52,6 +52,7 @@ function esc(e: KeyboardEvent) {
 }
 function popoverClose() {
   popoverVisible.value = false;
+  props.context.workspace.focusText()
   container.value?.removeEventListener('keyup', esc);
   document.removeEventListener('click', handleClickOutside);
 }

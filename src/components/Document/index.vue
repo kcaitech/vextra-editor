@@ -121,7 +121,6 @@ function selectionWatcher(t: number) {
             const pageId = context.selection.commentPageId
             switchPage(pageId)
         }
-
     }
 }
 function keyboardEventHandler(evevt: KeyboardEvent) {

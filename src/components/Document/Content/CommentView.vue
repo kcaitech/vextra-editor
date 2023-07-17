@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, watchEffect, nextTick } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick } from 'vue';
 import { Context } from '@/context';
 import PageCommentItem from '@/components/Document/Content/PageCommentItem.vue'
 import * as comment_api from '@/apis/comment';
@@ -345,13 +345,17 @@ function commentWatcher(type?: number) { // 更新编辑器状态，包括光标
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
-
+let timeComment: any = null
 onMounted(() => {
     getDocumentComment()
+    timeComment = setInterval(() => {
+        getDocumentComment()
+    }, 20000)
     props.context.comment.watch(commentWatcher);
 })
 onUnmounted(() => {
     props.context.comment.unwatch(commentWatcher);
+    clearInterval(timeComment)
 })
 </script>
 
