@@ -1,9 +1,11 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, GroupShape, Matrix, Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
+import { Navi } from '@/context/navigate';
+import { sort_by_layer } from '@/utils/group_ungroup';
 interface Props {
     matrix: number[]
     context: Context
@@ -18,6 +20,7 @@ let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
+let tool_group: Shape | false = false;
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
@@ -69,27 +72,27 @@ function point_mousemove(event: MouseEvent) {
     const mouseOnClient: ClientXY = { x: clientX - root.x, y: clientY - root.y };
     if (isDragging) {
         if (asyncBaseAction) {
-            const selection = props.context.selection;
             workspace.scaling(true);
             matrix.reset(workspace.matrix);
-            const shapes = selection.selectedShapes;
-            const len = shapes.length;
-            if (len === 1) {
-                const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y);
-                const p2Onpage: PageXY = matrix.inverseCoord(mouseOnClient.x, mouseOnClient.y);
-                asyncBaseAction.execute(cur_ctrl_type, p1OnPage, p2Onpage, 0, 'scale');
-            } else if (len > 1) {
-                props.context.workspace.setSelectionViewUpdater(false);
-            }
+            const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y);
+            const p2Onpage: PageXY = matrix.inverseCoord(mouseOnClient.x, mouseOnClient.y);
+            asyncBaseAction.execute(cur_ctrl_type, p1OnPage, p2Onpage, 0, 'scale');
         }
         props.context.workspace.setSelectionViewUpdater(true);
         props.context.workspace.selectionViewUpdate();
         startPosition = { ...mouseOnClient };
     } else {
         if (Math.hypot(mouseOnClient.x - startPosition.x, mouseOnClient.y - startPosition.y) > dragActiveDis) {
-            isDragging = true;
-            const shapes: Shape[] = props.context.selection.selectedShapes;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes, props.context.selection.selectedPage!);
+            const shapes: Shape[] = sort_by_layer(props.context, props.context.selection.selectedShapes);
+            props.context.navi.set_sl_freeze(true);
+            const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+            tool_group = editor.group(shapes, 'tool');
+            if (tool_group) {
+                isDragging = true;
+                asyncBaseAction = props.context.editor.controller().asyncRectEditor([tool_group], props.context.selection.selectedPage!);
+            } else {
+                props.context.navi.set_sl_freeze(false);
+            }
         }
     }
 }
@@ -99,6 +102,15 @@ function point_mouseup(event: MouseEvent) {
         if (isDragging) {
             if (asyncBaseAction) {
                 asyncBaseAction = asyncBaseAction.close();
+                if (tool_group) {
+                    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
+                    const shapes = editor.ungroup(tool_group as GroupShape);
+                    if (shapes) {
+                        props.context.selection.rangeSelectShape(shapes);
+                    }
+                }
+                props.context.navi.set_sl_freeze(false);
+                props.context.navi.notify(Navi.SHAPELIST_UPDATE);
             }
             isDragging = false;
         }

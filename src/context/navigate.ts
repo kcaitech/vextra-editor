@@ -7,9 +7,11 @@ export class Navi extends Watchable(Object) {
   static SEARCHING = 4;
   static CHANGE_TYPE = 6;
   static TEXT_SELECTION_CHANGE = 7;
+  static SHAPELIST_UPDATE = 8;
   private m_page_need_extend: boolean = false;
   private m_focus_text: Shape | undefined;
   private m_keywords: string = '';
+  private m_shapelist_freeze: boolean = false;
   constructor() {
     super();
   }
@@ -25,6 +27,12 @@ export class Navi extends Watchable(Object) {
   }
   set_keywords(v?: string) {
     this.m_keywords = v || '';
+  }
+  set_sl_freeze(v?: boolean) {
+    this.m_shapelist_freeze = v || false;
+  }
+  get is_shapelist_freeze() {
+    return this.m_shapelist_freeze;
   }
   get focusText() {
     return this.m_focus_text;
