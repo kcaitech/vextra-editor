@@ -1,19 +1,21 @@
 <script lang="ts" setup>
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Loading from '@/components/common/Loading.vue';
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ResultItem, { ItemData } from "./ResultItem.vue";
 import TextResultItem, { TItemData } from "./TextResultItem.vue";
-import { Navi } from '@/context/navigate';
 import { Context } from '@/context';
+import { Selection } from '@/context/selection';
 import { Shape, ShapeType, TextShape } from '@kcdesign/data';
 import { isInner } from '@/utils/content';
 import { is_shape_in_selection, selection_types } from '@/utils/shapelist';
-import { debounce } from 'lodash';
+import { Navi } from '@/context/navigate';
 interface Props {
   keywords: string
   context: Context
+  shapeTypes: ShapeType[]
+  accurate: boolean
 }
 class Iter implements IDataIter<ItemData> {
   private __it: Shape[];
@@ -38,6 +40,31 @@ class Iter implements IDataIter<ItemData> {
     return item;
   }
 }
+
+class TIter implements IDataIter<TItemData> {
+  private __it: Shape[];
+  private __index: number;
+  constructor(it: Shape[], index: number) {
+    this.__it = it;
+    this.__index = index;
+  }
+  hasNext(): boolean {
+    return this.__index < this.__it.length;
+  }
+  next(): TItemData {
+    const shape: Shape = this.__it[this.__index];
+    const focus = props.context.navi.focusText;
+    this.__index++;
+    const item = {
+      id: shape.id,
+      shape,
+      context: props.context,
+      keywords: props.keywords,
+      focus: Boolean(focus && (focus.id === shape.id))
+    }
+    return item;
+  }
+}
 const props = defineProps<Props>();
 const { t } = useI18n();
 let result_by_shape: Shape[] = [];
@@ -49,9 +76,10 @@ const loading_by_content = ref<boolean>(false);
 const show_content = ref<boolean>(false);
 const chartMenu = ref<boolean>(false);
 const height_shpae = ref<string>('50%');
-const height_content = ref<string>('0%');
 let chartMenuItems: string[] = [];
-
+const fold1 = ref<boolean>(false);
+const fold2 = ref<boolean>(false);
+// 针对图形的搜索结果
 let source_by_shape = new class implements IDataSource<ItemData> {
 
   private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
@@ -70,15 +98,16 @@ let source_by_shape = new class implements IDataSource<ItemData> {
     this.m_onchange && this.m_onchange(index, del, insert, modify);
   }
 }
-let source_by_content = new class implements IDataSource<ItemData> {
+// 针对文本的搜索结果
+let source_by_content = new class implements IDataSource<TItemData> {
 
   private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
 
   length(): number {
     return result_by_content.length;
   }
-  iterAt(index: number): IDataIter<ItemData> {
-    return new Iter(result_by_content, index);
+  iterAt(index: number): IDataIter<TItemData> {
+    return new TIter(result_by_content, index);
   }
   onChange(l: (index: number, del: number, insert: number, modify: number) => void): void {
     this.m_onchange = l;
@@ -130,7 +159,6 @@ function getShapeRange(start: number, end: number): Shape[] {
   }
   return Array.from(range.values());
 }
-
 function getSelectShapesIndex(shapes: Shape[]): number[] {
   return shapes.map(s => result_by_shape.findIndex(i => i.id === s.id));
 }
@@ -183,7 +211,7 @@ function hoverShape(shape: Shape) {
 function unHovershape() {
   props.context.selection.unHoverShape();
 }
-function shapeScrollToContentView(shape: Shape) {
+function shapeScrollToContentView_1(shape: Shape) {
   if (isInner(props.context, shape)) {
     props.context.selection.selectShape(shape);
     return;
@@ -215,6 +243,46 @@ function shapeScrollToContentView(shape: Shape) {
   }
 
 }
+function shapeScrollToContentView(shape: Shape) {
+  if (isInner(props.context, shape)) {
+    props.context.selection.selectShape(shape);
+    if (shape.type === ShapeType.Text) {
+      props.context.navi.set_focus_text(shape);
+    }
+    return;
+  }
+  const workspace = props.context.workspace;
+  const { x: sx, y: sy, height, width } = shape.frame2Root();
+  const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
+  const { x, y, bottom, right } = workspace.root;
+  const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
+  const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
+  if (transX || transY) {
+    props.context.selection.unHoverShape();
+    props.context.selection.selectShape();
+    const pageViewEl = props.context.workspace.pageView;
+    if (pageViewEl) {
+      pageViewEl.classList.add('transition-400');
+      props.context.workspace.translating(true);
+      workspace.matrix.trans(transX, transY);
+      const timer = setTimeout(() => {
+        props.context.selection.selectShape(shape);
+        pageViewEl.classList.remove('transition-400');
+        props.context.workspace.translating(false);
+        if (shape.type === ShapeType.Text) {
+          props.context.navi.set_focus_text(shape);
+        } else {
+          props.context.navi.set_focus_text();
+        }
+        clearTimeout(timer);
+      }, 400);
+    } else {
+      workspace.matrix.trans(transX, transY);
+    }
+    workspace.matrixTransformation();
+  }
+
+}
 function rename(value: string, shape: Shape) {
   const editor = props.context.editor4Shape(shape);
   editor.setName(value)
@@ -235,11 +303,11 @@ function selectshape_right(shape: Shape, shiftKey: boolean) {
 }
 function list_mousedown(e: MouseEvent, shape: Shape) {
   const menu = props.context.menu;
-  menu.menuMount(false);
+  menu.menuMount();
   chartMenu.value = false;
   if (e.button === 2) {
     e.stopPropagation(); // 右键事件到这就不上去了
-    menu.menuMount(false);
+    menu.menuMount();
     if (e.target instanceof Element && e.target.closest('.__context-menu')) return;
     selectshape_right(shape, e.shiftKey);
     const selected = props.context.selection.selectedShapes;
@@ -274,34 +342,45 @@ function isRead(read: boolean, shape: Shape) {
   }
   source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
 }
-function _update() {
-  loading_by_shape.value = true;
-  loading_by_content.value = true;
+function update() {
   show_content.value = false;
   valid_result_by_shape.value = false;
   valid_result_by_content.value = false;
   result_by_shape = [];
   result_by_content = [];
   height_shpae.value = '50%';
-  height_content.value = '50%';
-  // 找到所有名称包含关键字的图形result_by_shape、找到所有文本内容包含关键字的图形result_by_content
-  const reg = new RegExp(`${props.keywords}`, 'img');
+  const mode = props.accurate ? 'mg' : 'img'
+  const words = props.keywords;
+  const types = props.shapeTypes;
+  const reg = new RegExp(`${words}`, mode);
   const shapes = props.context.selection.selectedPage?.shapes;
+
   if (shapes) {
     shapes.forEach((v) => {
+      if (types.length) {
+        if (!types.includes(v.type)) {
+          return;
+        }
+      }
+      if (!words.length) {
+        if (types.includes(v.type)) {
+          result_by_shape.unshift(v);
+          return;
+        }
+        return;
+      }
       if (v.name.search(reg) > -1) {
-        result_by_shape.push(v);
+        result_by_shape.unshift(v);
       }
       if (v.type === ShapeType.Text) {
         const length = (v as TextShape).text.length;
-        const text = (v as TextShape).text.getText(0, length);
+        const text = (v as TextShape).text.getText(0, length).replaceAll('\n', '');
         if (text.search(reg) > -1) {
-          result_by_content.push(v);
+          result_by_content.unshift(v);
         }
       }
     })
   }
-
   if (result_by_shape.length) {
     valid_result_by_shape.value = true;
     if (!result_by_content.length) {
@@ -312,16 +391,15 @@ function _update() {
     valid_result_by_content.value = true;
     show_content.value = true;
     if (!result_by_shape.length) {
-      height_shpae.value = '10%';
-      height_content.value = '90%';
+      height_shpae.value = '76px';
     }
+  }
+  if (!valid_result_by_shape.value && !valid_result_by_content.value) {
+    height_shpae.value = '76px';
   }
   source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
   source_by_content.notify(0, 0, 0, Number.MAX_VALUE);
-  loading_by_shape.value = false;
-  loading_by_content.value = false;
 }
-const update = debounce(_update, 300, { leading: true })
 function menu_unmount(e: KeyboardEvent) {
   if (e.code === 'Escape') {
     close();
@@ -332,35 +410,115 @@ function close() {
   chartMenu.value = false;
 }
 
-const stop = watch(() => props.keywords, _update, { immediate: true });
+function toggle1() {
+  fold1.value = !fold1.value;
+  if (fold1.value) {
+    height_shpae.value = '43px';
+    if (valid_result_by_content.value) {
+      if (fold2.value) {
+        fold2.value = false;
+      }
+    }
+  } else {
+    if (valid_result_by_content.value) {
+      if (fold2.value) {
+        height_shpae.value = 'calc(100% - 43px)';
+      } else {
+        height_shpae.value = '50%';
+      }
+    } else {
+      height_shpae.value = '100%';
+    }
+  }
+}
+function toggle2() {
+  if (!valid_result_by_shape.value) return;
+  fold2.value = !fold2.value;
+  if (fold2.value) {
+    height_shpae.value = 'calc(100% - 43px)';
+    if (fold1.value) {
+      fold1.value = false;
+    }
+  } else {
+    if (fold1.value) {
+      height_shpae.value = '43px';
+    } else {
+      height_shpae.value = '50%';
+    }
+  }
+}
+function selection_watcher(t?: number) {
+  if (t === Selection.CHANGE_PAGE) {
+    update();
+  } else if (t === Selection.CHANGE_SHAPE) {
+    props.context.navi.set_focus_text();
+    source_by_content.notify(0, 0, 0, Number.MAX_VALUE);
+  }
+}
+function navi_watcher(t?: number) {
+  if (t === Navi.CHANGE_TYPE || t === Navi.SEARCHING || Navi.TEXT_SELECTION_CHANGE) {
+    update();
+  }
+}
+const stop1 = watch(() => props.keywords, update, { immediate: true });
+const stop2 = watch(() => props.accurate, update, { immediate: true });
+onMounted(() => {
+  props.context.selection.watch(selection_watcher);
+  props.context.navi.watch(navi_watcher);
+})
 onUnmounted(() => {
-  stop();
+  props.context.selection.unwatch(selection_watcher);
+  props.context.navi.unwatch(navi_watcher);
+  stop1();
+  stop2();
 })
 </script>
 <template>
   <div class="result-wrap">
     <div class="result-by-name" :style="{ height: height_shpae }">
-      <Loading v-if="loading_by_shape" :size="20"></Loading>
-      <div v-else>
-        <ListView v-if="valid_result_by_shape" ref="by_name" :source="source_by_shape" :item-view="ResultItem"
-          :item-height="30" :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape"
-          @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
-          @isRead="isRead" draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
+      <div class="tips">
+        <div class="font-wrap" v-if="props.keywords">
+          <div class="font">{{ t('system.title_includes') }}</div>
+          <div class="keywords">“{{ props.keywords }}</div>
+          <div class="end">”</div>
+          <div class="shrink" @click="toggle1" v-if="valid_result_by_shape">
+            <svg-icon icon-class="down" :style="{ transform: fold1 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+          </div>
+        </div>
+        <div class="result-count" v-if="valid_result_by_shape">
+          {{ t('search.result_count').replace('xx', result_by_shape.length.toString()) }}
+        </div>
+      </div>
+      <div class="list-wrap">
+        <ListView v-if="valid_result_by_shape" :source="source_by_shape" :item-view="ResultItem" :item-height="30"
+          :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
+          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView_1" @rename="rename" @isRead="isRead"
+          draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
         <div v-else class="null-result">
           {{ t('search.search_results') }}
         </div>
       </div>
     </div>
-    <div class="result-by-context" :style="{ height: height_content }">
-      <span class="tips">{{ t('system.content_includes') }} <span style="font-weight: 700;">“{{ props.keywords
-      }}”</span></span>
-      <Loading v-if="loading_by_content" :size="20" :width="2"></Loading>
-      <div v-else>
-        <ListView v-if="valid_result_by_content" ref="by_name" :source="source_by_content" :item-view="TextResultItem"
-          :item-height="50" :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape"
-          @hovershape="hoverShape" @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
-          @isRead="isRead" draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
+    <div class="result-by-context" v-if="props.keywords">
+      <div class="tips">
+        <div class="font-wrap">
+          <div class="font">{{ t('system.content_includes') }}</div>
+          <div class="keywords">“{{ props.keywords }}</div>
+          <div class="end">”</div>
+          <div class="shrink" @click="toggle2" v-if="valid_result_by_shape">
+            <svg-icon icon-class="down" :style="{ transform: fold2 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+          </div>
+        </div>
+        <div class="result-count" v-if="valid_result_by_content">
+          {{ t('search.result_count').replace('xx', result_by_content.length.toString()) }}
+        </div>
+      </div>
+      <div class="list-wrap">
+        <ListView v-if="valid_result_by_content" :source="source_by_content" :item-view="TextResultItem" :item-height="50"
+          :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
+          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
+          draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
         <div v-else class="null-result">
           {{ t('search.search_results') }}
@@ -373,14 +531,80 @@ onUnmounted(() => {
 .result-wrap {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 
   >.result-by-name {
-    height: 60%;
+    flex-shrink: 0;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: 0.3s;
 
-    >div {
-      height: 100%;
+    >.tips {
+      display: block;
+      font-size: var(--font-default-fontsize);
+      width: 100%;
+      box-sizing: border-box;
+      border-top: 1px solid var(--grey-light);
+      flex-shrink: 0;
+
+      .font-wrap {
+        display: flex;
+        padding: 4px 6px 2px;
+        font-weight: 700;
+        white-space: nowrap;
+        width: 100%;
+        box-sizing: border-box;
+        align-items: center;
+
+        >.font {
+          flex-shrink: 0;
+        }
+
+        >.keywords {
+          flex-grow: 1px;
+          color: var(--active-color-beta);
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        >.end {
+          flex-shrink: 0;
+          color: var(--active-color-beta);
+        }
+
+        >.shrink {
+          margin-left: auto;
+          width: 14px;
+          height: 14px;
+          flex-shrink: 0;
+
+          >svg {
+            transition: 0.5s;
+            width: 80%;
+            height: 80%;
+          }
+        }
+      }
+
+      .result-count {
+        padding: 4px 6px 4px;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 8px;
+        color: grey;
+        box-sizing: border-box;
+      }
+
+    }
+
+    >.list-wrap {
+      flex-grow: 1;
       position: relative;
       overflow: hidden;
 
@@ -389,44 +613,101 @@ onUnmounted(() => {
       }
 
       .null-result {
-        font-size: var(--font-default-fontsize);
         width: 100%;
         text-align: center;
         margin-top: 16px;
+        font-size: 8px;
+        color: grey;
       }
     }
   }
 
   >.result-by-context {
-    height: 40%;
+    flex-grow: 1;
     position: relative;
     overflow: hidden;
-
-    >div {
-      height: 100%;
-      position: relative;
-      overflow: hidden;
-
-      .container {
-        height: calc(100% - 30px);
-      }
-
-      >.null-result {
-        font-size: var(--font-default-fontsize);
-        width: 100%;
-        text-align: center;
-        margin-top: 16px;
-      }
-    }
+    display: flex;
+    flex-direction: column;
+    transition: 0.3s;
 
     >.tips {
       display: block;
       font-size: var(--font-default-fontsize);
       width: 100%;
-      text-align: center;
-      padding: 8px 16px 0;
       box-sizing: border-box;
       border-top: 1px solid var(--grey-light);
+      flex-shrink: 0;
+
+      .font-wrap {
+        display: flex;
+        padding: 4px 6px 2px;
+        font-weight: 700;
+        white-space: nowrap;
+        width: 100%;
+        box-sizing: border-box;
+        align-items: center;
+
+        >.font {
+          flex-shrink: 0;
+        }
+
+        >.keywords {
+          flex-grow: 1px;
+          color: var(--active-color-beta);
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        >.end {
+          flex-shrink: 0;
+          color: var(--active-color-beta);
+        }
+
+        >.shrink {
+          margin-left: auto;
+          width: 14px;
+          height: 14px;
+          flex-shrink: 0;
+
+          >svg {
+            transition: 0.5s;
+            width: 80%;
+            height: 80%;
+          }
+        }
+      }
+
+      .result-count {
+        padding: 4px 6px 4px;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 8px;
+        color: grey;
+        box-sizing: border-box;
+      }
+
+    }
+
+
+    >.list-wrap {
+      flex-grow: 1;
+      position: relative;
+      overflow: hidden;
+
+      .container {
+        height: 100%;
+      }
+
+      .null-result {
+        width: 100%;
+        text-align: center;
+        margin-top: 16px;
+        font-size: 8px;
+        color: grey;
+      }
     }
   }
 }

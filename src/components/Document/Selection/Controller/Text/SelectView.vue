@@ -25,7 +25,6 @@ function _update() {
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
     matrix.reset(props.matrix);
-
     const frame = props.shape.frame;
     const points = [
         { x: 0, y: 0 }, // left top
@@ -103,9 +102,9 @@ function genCursorPath(cursor: { x: number, y: number }[]): string {
 
 </script>
 <template>
-    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#2561D9' stroke-width="2px" class="scan">
+    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#865dff' stroke-width="2px" class="scan">
     </path>
-    <path v-if="!isCursor" :d="selectPath" fill="#2561D9" fill-opacity="0.35" stroke='none'></path>
+    <path v-if="!isCursor" :d="selectPath" fill="#865dff" fill-opacity="0.35" stroke='none'></path>
 </template>
 <style lang='scss' scoped>
 .scan {

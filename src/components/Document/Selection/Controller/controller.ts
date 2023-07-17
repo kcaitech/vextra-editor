@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TextShape } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -13,6 +13,7 @@ import { debounce } from "lodash";
 import { paster_short } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
+import { useI18n } from 'vue-i18n';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -29,6 +30,7 @@ export function useController(context: Context) {
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let need_update_comment: boolean = false;
     const trans = { x: 0, y: 0 };
+    const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
             const ps: PageXY = matrix.inverseCoord(start.x, start.y);
@@ -69,7 +71,7 @@ export function useController(context: Context) {
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
-            context.menu.menuMount(false); // 取消右键事件
+            context.menu.menuMount(); // 取消右键事件
             root = context.workspace.root;
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
@@ -106,9 +108,17 @@ export function useController(context: Context) {
             if (isMouseOnContent(e)) {
                 const selected = context.selection.selectedShapes;
                 if (selected.length === 1 && selected[0].type === ShapeType.Text) {
-                    const save = selected.slice(0, 1);
-                    context.selection.resetSelectShapes();
-                    context.selection.rangeSelectShape(save);
+                    const len = (selected[0] as TextShape).text.length;
+                    const t = (selected[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
+                    if (t.length) {
+                        const save = selected.slice(0, 1);
+                        context.selection.resetSelectShapes();
+                        context.selection.rangeSelectShape(save);
+                    } else {
+                        const editor = context.editor4Shape(selected[0]);
+                        editor.delete();
+                        context.selection.resetSelectShapes();
+                    }
                 }
             }
             return;
@@ -234,7 +244,7 @@ export function useController(context: Context) {
         startPositionOnPage = matrix.inverseCoord(startPosition.x, startPosition.y);
     }
     function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context);
+        handle(e, context, t);
     }
     /**
     * @description 选区监听器 

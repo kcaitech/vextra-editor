@@ -74,11 +74,13 @@ var configureWebpack = (config) => {
     )
 
     config.plugins = [
-        AutoImport({resolvers: [ElementPlusResolver()]}),
-        Components({resolvers: [ElementPlusResolver()]}),
-        new CopyWebpackPlugin({patterns: [
-            { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
-        ]}),
+        AutoImport({ resolvers: [ElementPlusResolver()] }),
+        Components({ resolvers: [ElementPlusResolver()] }),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
+            ]
+        }),
         ...config.plugins
     ]
 

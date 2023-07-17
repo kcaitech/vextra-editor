@@ -56,7 +56,8 @@ export const system = {
     'new_file': '新文件',
     'page1': '页面 1',
     'dissolution': '取消容器',
-    'content_includes': '文本包含'
+    'content_includes': '文本包含',
+    'title_includes': '标题包含'
 }
 
 export const home = {
@@ -129,7 +130,8 @@ export const home = {
 
 export const search = {
     search_results: '没有匹配的结果',
-    search_history: '没有搜索记录'
+    search_history: '没有搜索记录',
+    result_count: '共xx条结果'
 }
 
 export const navi = {

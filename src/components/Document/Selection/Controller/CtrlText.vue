@@ -1,16 +1,19 @@
 <script setup lang='ts'>
-import { watch, onMounted, onUnmounted, ref, reactive } from 'vue';
-import { Selection } from '@/context/selection';
+import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed } from 'vue';
+import { ClientXY, Selection } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { TextShape } from '@kcdesign/data';
 import { Shape } from "@kcdesign/data";
 import { Context } from '@/context';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
-import { genRectPath, throttle } from '../common';
+import { genRectPath } from '../common';
 import { useController } from '../Controller/controller';
 import { Point } from "../SelectionView.vue";
 import { WorkSpace } from '@/context/workspace';
+import BarsContainer from "./Bars/BarsContainer.SVG.vue";
+import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import { getAxle } from '@/utils/common';
 
 const props = defineProps<{
     context: Context,
@@ -21,6 +24,9 @@ const props = defineProps<{
 }>();
 
 watch(() => props.shape, (value, old) => {
+    if (old.text.length === 1) {
+        clear_null_shape(old);
+    }
     old.unwatch(update);
     value.watch(update);
     update();
@@ -30,7 +36,8 @@ watch(() => props.matrix, () => {
     update();
 })
 const { isDblClick } = useController(props.context);
-const update = throttle(_update, 5);
+// const update = throttle(_update, 5);
+const update = _update;
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
@@ -41,9 +48,7 @@ function _update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
-
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
-
     const frame = props.shape.frame;
     const points = [
         { x: 0, y: 0 }, // left top
@@ -53,8 +58,9 @@ function _update() {
     ];
 
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
-    boundrectPath.value = genRectPath(boundrect);
-
+    if (editing) {
+        boundrectPath.value = genRectPath(boundrect);
+    }
     const p0 = boundrect[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -68,36 +74,51 @@ function _update() {
         return bounds;
     }, bounds)
 }
-
+function clear_null_shape(shape: Shape) {
+    const editor = props.context.editor4Shape(shape);
+    editor.delete();
+}
+const axle = computed<ClientXY>(() => {
+    const [lt, rt, rb, lb] = props.controllerFrame;
+    return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+});
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
-        props.context.menu.menuMount(false);
         const workspace = props.context.workspace;
+        props.context.menu.menuMount();
         if (!editing && isDblClick()) {
             editing = true;
             workspace.contentEdit(editing);
             workspace.setCursorStyle('text', 0);
         }
         if (!editing) return;
-        workspace.setCtrl('controller');
         const selection = props.context.selection;
+        workspace.setCtrl('controller');
+        const root = workspace.root
         matrix.reset(props.matrix);
-        const xy = matrix.inverseCoord(e.offsetX + bounds.left, e.offsetY + bounds.top);
+        const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
         downIndex = selection.locateText(xy.x, xy.y);
         e.stopPropagation();
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
-        if (props.context.menu.isMenuMount) {
-            props.context.menu.menuMount(false);
-        }
     } else if (e.button === 2) {
         if (!(e.target as Element).closest('#text-selection')) {
             e.stopPropagation();
         }
     }
 }
-
+function be_editor(index?: number) {
+    const workspace = props.context.workspace;
+    const selection = props.context.selection;
+    editing = true;
+    workspace.contentEdit(editing);
+    workspace.setCursorStyle('text', 0);
+    if (index !== undefined) {
+        downIndex = { index, before: true };
+        selection.setCursor(index, true);
+    }
+}
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation();
     if (!editing) return;
@@ -121,6 +142,7 @@ function onMouseUp(e: MouseEvent) {
 }
 
 function onMouseMove(e: MouseEvent) {
+    e.stopPropagation();
     if (!editing) return;
     const workspace = props.context.workspace;
     const selection = props.context.selection;
@@ -148,11 +170,6 @@ function mouseleave() {
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
 }
-function selected_all() {
-    const selection = props.context.selection;
-    const end = props.shape.text.length;
-    selection.selectText(0, end);
-}
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) {
         if (props.context.workspace.isTranslating) {
@@ -160,6 +177,8 @@ function workspace_watcher(t?: number) {
         } else {
             visible.value = true;
         }
+    } else if (t === WorkSpace.INIT_EDITOR) {
+        be_editor(0);
     }
 }
 function selectionWatcher(...args: any[]) {
@@ -168,7 +187,6 @@ function selectionWatcher(...args: any[]) {
         editing = false;
     }
 }
-
 onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
@@ -183,7 +201,11 @@ onUnmounted(() => {
     selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
 })
-
+onBeforeUnmount(() => {
+    if (props.shape.text.length === 1) {
+        clear_null_shape(props.shape);
+    }
+})
 </script>
 
 <template>
@@ -194,7 +216,12 @@ onUnmounted(() => {
         :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
         @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
-        <path :d="boundrectPath" fill="none" stroke='#2561D9' stroke-width="1px"></path>
+        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
+        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape">
+        </BarsContainer>
+        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :axle="axle">
+        </PointsContainer>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>

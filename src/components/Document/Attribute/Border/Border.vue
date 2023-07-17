@@ -15,7 +15,6 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
 import { v4 } from 'uuid';
-import { cloneDeep } from 'lodash';
 interface BorderItem {
     id: number,
     border: Border
@@ -365,7 +364,7 @@ watchEffect(updateData);
                 flex: 0 0 18px;
                 height: 18px;
                 width: 18px;
-                background-color: #2561D9;
+                background-color: var(--active-color);
                 border-radius: 3px;
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;

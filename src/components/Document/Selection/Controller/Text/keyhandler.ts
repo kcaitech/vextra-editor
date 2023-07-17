@@ -177,6 +177,7 @@ function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
         const len = Math.abs(start - end)
         const text = shape.text.getTextWithFormat(s, len);
         context.workspace.clipboard.write_html(text);
+        context.menu.menuMount(false);
     }
 }
 async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
@@ -193,12 +194,14 @@ async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor:
                 selection.setCursor(Math.min(start, end), false);
             }
         }
+        context.menu.menuMount(false);
     }
 }
 function paster(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault(); // 阻止input的粘贴事件
         paster_inner_shape(context, editor, e.altKey);
+        context.menu.menuMount(false);
     }
 }
 function select_all(e: KeyboardEvent, context: Context, shape: TextShape) {
@@ -207,6 +210,24 @@ function select_all(e: KeyboardEvent, context: Context, shape: TextShape) {
         const selection = context.selection;
         const end = shape.text.length;
         selection.selectText(0, end);
+        context.menu.menuMount(false);
+    }
+}
+function undo_redo(e: KeyboardEvent, context: Context, shape: TextShape) {
+    const { ctrlKey, metaKey, shiftKey } = e;
+    if (ctrlKey || metaKey) {
+        e.preventDefault();
+        const repo = context.repo;
+        if (shiftKey) {
+            repo.canRedo() && repo.redo();
+        } else {
+            repo.canUndo() && repo.undo();
+        }
+        const selection = context.selection;
+        const len = shape.text.length;
+        if (selection.cursorEnd >= len) {
+            selection.setCursor(len - 1, false);
+        }
     }
 }
 
@@ -233,6 +254,7 @@ handler['x'] = cut;
 handler['v'] = paster;
 handler['√'] = paster;
 handler['a'] = select_all;
+handler['z'] = undo_redo;
 handler['tab'] = enterTab;
 
 

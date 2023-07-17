@@ -17,18 +17,23 @@ const surplusX = ref<number>(0);
 const menu = ref<HTMLDivElement>();
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+const weak_focus = ref<boolean>(false);
 
 defineExpose({ menu });
 
 function handleClickOutside(event: MouseEvent) {
   event.stopPropagation()
   if (event.target instanceof Element && !event.target.closest('.__context-menu')) {
-    props.context.menu.menuMount(false);
+    props.context.menu.menuMount();
   }
 }
 function menu_watcher(type: number) {
   if (type === Menu.SHUTDOWN_MENU) {
     emit('close');
+  } else if (type === Menu.SHOW_PLACEMENT) {
+    weak_focus.value = true;
+  } else if (type === Menu.HIDE_PLACEMENT) {
+    weak_focus.value = false;
   }
 }
 //二级菜单距离右侧的距离
@@ -37,7 +42,6 @@ if (props.site) {
 }
 
 onMounted(() => {
-  props.context.menu.menuMount(true);
   props.context.menu.watch(menu_watcher)
   document.addEventListener('mousedown', handleClickOutside);
 })

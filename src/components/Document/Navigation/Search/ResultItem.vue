@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onBeforeMount, onBeforeUpdate, ref, computed, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
-import { Shape, GroupShape } from '@kcdesign/data';
+import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted, watch } from "vue";
+import { Shape, ShapeType } from '@kcdesign/data';
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
+import { is_parent_locked, is_parent_unvisible, is_valid_data } from "@/utils/shapelist";
 export interface ItemData {
   id: string
   shape: Shape
@@ -17,15 +18,15 @@ interface Slice {
   content: string
   isKeywords: boolean
 }
-const isLock = ref<boolean>()
-const isRead = ref<boolean>()
-const isVisible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<Props>();
 const esc = ref<boolean>(false);
 const name_display = ref<Slice[]>([{ content: props.data.shape.name, isKeywords: false }]);
 const reflush = ref<number>(0);
+const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
+const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
+const is_tool_visible = ref<boolean>()
 const emit = defineEmits<{
   (e: "toggleexpand", shape: Shape): void;
   (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
@@ -37,48 +38,70 @@ const emit = defineEmits<{
   (e: "scrolltoview", shape: Shape): void;
   (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
 }>();
-let showTriangle = ref<boolean>(false);
-function updater() {
-  const shape = props.data.shape;
-  showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0;
-  isLock.value = props.data.shape.isLocked;
-  isRead.value = props.data.shape.isVisible;
+const watchedShapes = new Map();
+function watchShapes() {
+  const needWatchShapes = new Map();
+  let shape = props.data.shape;
+  let p = shape.parent;
+  while (p && p.type !== ShapeType.Page) {
+    needWatchShapes.set(p.id, p);
+    p = p.parent;
+  }
+  watchedShapes.forEach((v, k) => {
+    if (needWatchShapes.has(k)) return;
+    v.unwatch(updater);
+    watchedShapes.delete(k);
+  })
+  needWatchShapes.forEach((v, k) => {
+    if (watchedShapes.has(k)) return;
+    v.watch(updater);
+    watchedShapes.set(k, v);
+  })
 }
+const stop = watch(() => props.data.shape, (value, old) => {
+  old && old.unwatch(updater);
+  value.watch(updater);
+  watchShapes();
+}, { immediate: true })
 
+function updater(t?: any) {
+  if (t === 'shape-frame') return;
+  lock_status.value = props.data.shape.isLocked ? 1 : 0;
+  visible_status.value = props.data.shape.isVisible ? 0 : 1;
+  if (is_parent_locked(props.data.shape)) {
+    lock_status.value = 2;
+  }
+  if (is_parent_unvisible(props.data.shape)) {
+    visible_status.value = 2;
+  }
+}
 const toggleContainer = (e: MouseEvent) => {
   e.stopPropagation()
+  if (!is_valid_data(props.data.context, props.data.shape)) return;
   emit('scrolltoview', props.data.shape);
 }
 
 function selectShape(e: MouseEvent) {
   e.stopPropagation();
   const { ctrlKey, metaKey, shiftKey } = e;
+  if (!is_valid_data(props.data.context, props.data.shape)) return;
   emit("selectshape", props.data.shape, ctrlKey, metaKey, shiftKey);
 }
 
 function hoverShape(e: MouseEvent) {
+  if (!is_valid_data(props.data.context, props.data.shape)) return;
   const working = !props.data.context.workspace.isTranslating;
   if (working) {
-    emit("hovershape", props.data.shape);
-    isVisible.value = true;
+    is_tool_visible.value = true;
   }
 }
 function unHoverShape(e: MouseEvent) {
+  if (!is_valid_data(props.data.context, props.data.shape)) return;
   e.stopPropagation();
-  emit("unhovershape");
-  isVisible.value = false
-}
-const onLock = (e: MouseEvent) => {
-  e.stopPropagation();
-  isLock.value = !isLock.value
-  emit('isLock', isLock.value, props.data.shape)
-}
-const onRead = (e: MouseEvent) => {
-  e.stopPropagation();
-  isRead.value = !isRead.value
-  emit('isRead', isRead.value, props.data.shape)
+  is_tool_visible.value = false
 }
 const onRename = () => {
+  if (!is_valid_data(props.data.context, props.data.shape)) return;
   isInput.value = true
   nextTick(() => {
     if (nameInput.value) {
@@ -89,9 +112,10 @@ const onRename = () => {
       nameInput.value?.addEventListener('keydown', keySaveInput);
     }
   })
-  document.addEventListener('click', onInputBlur)
+  document.addEventListener('click', onInputBlur);
 }
 const onChangeName = (e: Event) => {
+  if (!is_valid_data(props.data.context, props.data.shape)) return;
   const value = (e.target as InputHTMLAttributes).value
   if (esc.value) return
   if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
@@ -119,7 +143,7 @@ const onInputBlur = (e: MouseEvent) => {
       }
       clearTimeout(timer)
       document.removeEventListener('click', onInputBlur);
-    }, 10)
+    }, 30)
   }
 }
 const selectedChild = () => {
@@ -136,6 +160,7 @@ const selectedChild = () => {
   return child
 }
 const mousedown = (e: MouseEvent) => {
+  if (!is_valid_data(props.data.context, props.data.shape)) return;
   e.stopPropagation();
   emit('item-mousedown', e, props.data.shape)
   selectedChild();
@@ -144,7 +169,8 @@ function update_slice() {
   name_display.value = [];
   const src = props.data.shape.name;
   const word = props.data.keywords;
-  const reg = new RegExp(`${word}`, 'img');
+  const is_acc = props.data.context.menu.accurate ? 'mg' : 'img';
+  const reg = new RegExp(`${word}`, is_acc);
   const index = src.search(reg);
   name_display.value.push({
     isKeywords: false,
@@ -160,34 +186,42 @@ function update_slice() {
   reflush.value++;
 }
 function navi_watcher(t: number) {
-  if (t === Navi.SEARCHING) {
-    update_slice();
-  }
+  if (t === Navi.SEARCHING) update_slice();
 }
-onBeforeMount(() => {
-  updater();
-})
-onBeforeUpdate(() => {
-  updater();
-})
+const setLock = (e: MouseEvent) => {
+  e.stopPropagation();
+  if (lock_status.value === 2) return; // 继承锁
+  const shape = props.data.shape;
+  const editor = props.data.context.editor4Shape(shape);
+  editor.toggleLock();
+}
+const setVisible = (e: MouseEvent) => {
+  e.stopPropagation();
+  if (visible_status.value === 2) return; // 继承隐藏
+  const shape = props.data.shape;
+  const editor = props.data.context.editor4Shape(shape);
+  editor.toggleVisible();
+}
+
 onMounted(() => {
+  updater();
   update_slice();
   props.data.context.navi.watch(navi_watcher);
 })
 onUnmounted(() => {
   props.data.context.navi.unwatch(navi_watcher);
+  stop()
 })
-
 </script>
 
 <template>
-  <div class="contain" :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }"
-    @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+  <div class="contain" :class="{ container: true, selected: false, selectedChild: selectedChild() }" @click="selectShape"
+    @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
     <div class="container-svg" @dblclick="toggleContainer">
       <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
     </div>
-    <div class="text" :class="{ container: true, selected: props.data.selected }"
-      :style="{ opacity: isRead ? '' : .3, display: isInput ? 'none' : '' }">
+    <div class="text" :class="{ container: true, selected: false }"
+      :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
       <div class="txt" @dblclick="onRename">
         <span v-for="(item, index) in name_display" :key="index" :class="{ active: item.isKeywords }"
           :reflush="reflush">{{
@@ -195,17 +229,19 @@ onUnmounted(() => {
           }}</span>
       </div>
       <div class="tool_icon"
-        :style="{ visibility: `${isVisible ? 'visible' : 'hidden'}`, width: `${isVisible ? 66 + 'px' : isLock || !isRead ? 66 + 'px' : 0}` }">
-        <div class="tool_lock tool" :class="{ 'visible': isLock }" @click="(e: MouseEvent) => onLock(e)">
-          <svg-icon v-if="!isLock" class="svg-open" icon-class="lock-open"></svg-icon>
-          <svg-icon v-else class="svg" icon-class="lock-lock"></svg-icon>
+        :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
+        <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)">
+          <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
+          <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
+          <div class="dot" v-else-if="lock_status === 2"></div>
         </div>
         <div class="tool_lock tool" @click="toggleContainer">
           <svg-icon class="svg-open" icon-class="locate"></svg-icon>
         </div>
-        <div class="tool_eye tool" :class="{ 'visible': !isRead }" @click="(e: MouseEvent) => onRead(e)">
-          <svg-icon v-if="isRead" class="svg" icon-class="eye-open"></svg-icon>
-          <svg-icon v-else class="svg" icon-class="eye-closed"></svg-icon>
+        <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)">
+          <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
+          <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
+          <div class="dot" v-else-if="visible_status === 2"></div>
         </div>
       </div>
     </div>
@@ -223,8 +259,6 @@ div.container {
   color: var(--left-navi-font-color);
   background-color: var(--left-navi-bg-color);
 }
-
-
 
 .contain:hover {
   cursor: default;
@@ -252,7 +286,7 @@ div.container-svg {
   width: 10px;
   justify-content: center;
   align-items: center;
-  margin-left: 16px;
+  margin-left: 13px;
 
   .svg {
     width: 10px;
@@ -281,7 +315,7 @@ div.text {
     padding-left: 2px;
 
     .active {
-      color: var(--active-color);
+      color: var(--active-color-beta);
     }
   }
 }
@@ -325,6 +359,13 @@ div .rename {
       width: 14px;
       height: 14px;
     }
+
+    .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background-color: var(--theme-color);
+    }
   }
 
   .tool_eye {
@@ -333,6 +374,13 @@ div .rename {
     .svg {
       width: 14px;
       height: 14px;
+    }
+
+    .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background-color: var(--theme-color);
     }
   }
 

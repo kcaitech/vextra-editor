@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
-import { Navi } from "@/context/navigate";
 import { onMounted, onUnmounted, ref, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import PageItem, { ItemData } from "./PageItem.vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
-import { ResourceMgr } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
@@ -37,23 +35,23 @@ const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
-
-const selectionWatcher = (t: number) => {
-    if (t === Selection.CHANGE_PAGE) {
+const cur_page_name = ref<string>(props.context.selection.selectedPage?.name || t('navi.page'));
+const selectionWatcher = (type: number) => {
+    if (type === Selection.CHANGE_PAGE) {
+        cur_page_name.value = props.context.selection.selectedPage?.name || t('navi.page');
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
+const rightTarget = ref<string>('');
 function document_watcher() {
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
 class Iter implements IDataIter<ItemData> {
     private __document: Document;
-    private __pagesMgr: ResourceMgr<Page>;
     private __selection: Selection;
     private __index: number;
     constructor(context: Context, index: number) {
         this.__document = context.data;
-        this.__pagesMgr = context.data.pagesMgr;
         this.__selection = context.selection;
         this.__index = index;
     }
@@ -62,14 +60,14 @@ class Iter implements IDataIter<ItemData> {
     }
     next(): ItemData {
         const id: PageListItem = this.__document.pagesList[this.__index];
-        // const name = this.__pagesMgr.getPageNameById(id);
         this.__index++;
         const slectedPage = this.__selection.selectedPage;
         return {
             name: id.name,
             id: id.id,
             selected: slectedPage !== undefined && slectedPage.id == id.id,
-            context: props.context
+            context: props.context,
+            rightTarget: rightTarget.value === id.id
         }
     }
 }
@@ -143,6 +141,8 @@ const mousedown = (id: string, e: MouseEvent) => {
         e.stopPropagation()
         if (e.target instanceof Element && e.target.closest(`.Menu`)) return
         pageMenuMount(id, e)
+        rightTarget.value = id;
+        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
 const pageMenuMount = (id: string, e: MouseEvent) => {
@@ -210,6 +210,8 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
             props.context.selection.deletePage(id, index)
         }
     }
+    rightTarget.value = '';
+    pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     pageMenu.value = false;
 }
 function menu_watcher(t?: number) {
@@ -217,17 +219,7 @@ function menu_watcher(t?: number) {
         pageMenu.value = false;
     }
 }
-function navi_watcher(t?: number) {
-    if (t === Navi.SEARCH) {
-        if (!fold.value) {
-            toggle();
-        }
-    } else if (t === Navi.SEARCH_FINISHED) {
-        if (fold.value) {
-            toggle();
-        }
-    }
-}
+function navi_watcher(t?: number) { }
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.data.watch(document_watcher);
@@ -248,7 +240,7 @@ onUnmounted(() => {
 <template>
     <div class="pagelist-wrap" ref="pageList">
         <div class="header">
-            <div class="title">{{ t('navi.page') }}</div>
+            <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
                 <div class="add" @click.stop="addPage" :title="t('navi.add_page')">
@@ -278,6 +270,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .pagelist-wrap {
     height: 100%;
+    box-sizing: border-box;
 
     .header {
         width: 100%;
@@ -287,6 +280,7 @@ onUnmounted(() => {
         position: relative;
         align-items: center;
 
+
         >div:not(.space) {
             flex-shrink: 0;
         }
@@ -294,10 +288,14 @@ onUnmounted(() => {
         overflow: hidden;
 
         .title {
-            margin-left: 13px;
             height: 36px;
             font-weight: var(--font-default-bold);
             line-height: 36px;
+            max-width: 150px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            margin-left: 6px;
         }
 
         .btn {

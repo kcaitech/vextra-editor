@@ -7,6 +7,7 @@ export interface ItemData {
     id: string
     selected: boolean
     context: Context
+    rightTarget: boolean
 }
 const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
@@ -14,7 +15,6 @@ const emit = defineEmits<{
     (e: "rename", name: string, id: string): void;
     (e: "onMouseDown", id: string, event: MouseEvent): void;
 }>();
-const rightClick = ref(false)
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement>()
 const esc = ref<boolean>(false)
@@ -27,16 +27,14 @@ function onMouseDown(e: MouseEvent) {
             emit("switchpage", props.data.id);
             document.removeEventListener('mouseup', onMouseUp)
         });
-    } else if(e.button === 2) {
-        rightClick.value = true
     }
     emit('onMouseDown', props.data.id, e)
 }
 
-const onRename = () => {    
+const onRename = () => {
     isInput.value = true
     nextTick(() => {
-        if (nameInput.value) {            
+        if (nameInput.value) {
             (nameInput.value as HTMLInputElement).value = props.data.name.trim();
             nameInput.value.focus();
             nameInput.value.select();
@@ -49,7 +47,7 @@ const onRename = () => {
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
     if (esc.value) return
-    if(value.length === 0 || value.length > 40 || value.trim().length === 0) return  
+    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
     emit('rename', value, props.data.id);
 }
 const saveInput = () => {
@@ -67,7 +65,7 @@ const keySaveInput = (e: KeyboardEvent) => {
 }
 const onInputBlur = (e: MouseEvent) => {
     if (e.target instanceof Element && !e.target.closest('.rename')) {
-        if (nameInput.value) {            
+        if (nameInput.value) {
             nameInput.value.blur();
         }
         document.removeEventListener('click', onInputBlur);
@@ -89,7 +87,9 @@ onUnmounted(() => {
 
 <template>
     <!-- pageItem匹配listview拖拽线条 -->
-    <div class="pageItem" :class="{ container: true, selected: props.data.selected }" @mousedown="onMouseDown">
+    <div class="pageItem"
+        :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected, selected: props.data.selected }"
+        @mousedown="onMouseDown">
         <div class="ph"></div>
         <div class="item">
             <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : '' }">{{ props.data.name }}</div>
@@ -100,8 +100,9 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .container {
-    width: 100%;
+    margin-left: 6px;
     height: 30px;
+    width: calc(100% - 12px);
     line-height: 30px;
     color: var(--left-navi-font-color);
     background-color: var(--left-navi-bg-color);
@@ -112,6 +113,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: row;
     position: relative;
+    transition: 0.08s;
 
     .item {
         display: flex;
@@ -136,6 +138,10 @@ div.container:hover {
 
 div.container.selected {
     background-color: var(--left-navi-button-select-color);
+}
+
+div.container.right-target {
+    background-color: var(--left-navi-button-hover-color);
 }
 
 .ph {

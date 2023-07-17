@@ -177,7 +177,7 @@ function createController() { // 计算控件点位以及类型判定
                 }
             });
             rotate.value = 0; // 多选时，rect只为水平状态
-            controllerType.value = ControllerType.Rect; // 且控件类型都为矩形控件
+            controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
         }
         controller.value = true;
     }
@@ -250,7 +250,7 @@ watchEffect(updater);
         preserveAspectRatio="xMinYMin meet" overflow="visible" :width="tracingFrame.width" :height="tracingFrame.height"
         :viewBox="tracingFrame.viewBox" @mousedown="(e: MouseEvent) => pathMousedown(e)"
         style="transform: translate(0px, 0px)" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingFrame.path" style="fill: transparent; stroke: #2561D9; stroke-width: 1.5;">
+        <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
         </path>
     </svg>
     <!-- 控制 -->

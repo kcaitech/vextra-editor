@@ -75,7 +75,7 @@ function selectionWatcher(...args: any[]) {
 }
 
 function workspaceWatcher(t: number) {
-    if(t === WorkSpace.TEXT_FORMAT) {
+    if (t === WorkSpace.TEXT_FORMAT) {
         updateInputPos()
     }
 }
@@ -177,23 +177,23 @@ function onKeyUp(e: KeyboardEvent) {
 function onKeyPress(e: KeyboardEvent) {
     handleKeyEvent(e, props.context, props.shape, editor);
 }
-
 </script>
 <template>
     <input type="text" class="input" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
         @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
-        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px`, position: 'absolute' }"
-        ref="inputel" />
+        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel" />
 </template>
 <style lang='scss' scoped>
 .input {
     z-index: -999;
     background-color: transparent;
+    position: absolute;
     color: transparent;
     border: none;
     box-shadow: none;
     outline: none;
     caret-color: transparent;
     height: 10px;
+    width: 1px;
 }
 </style>
