@@ -391,6 +391,7 @@ onMounted(() => {
 onUnmounted(() => {
     try {
         ot?.close();
+        context?.upload.close();
     } catch (err) { }
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
