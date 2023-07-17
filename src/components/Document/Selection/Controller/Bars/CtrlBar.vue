@@ -35,7 +35,7 @@ function setStatus(s: boolean) {
 // mouse event flow: down -> move -> up
 function onMouseDown(event: MouseEvent) {
     if (event.button === 0) {
-        props.context.menu.menuMount(false)
+        props.context.menu.menuMount()
         event.stopPropagation();
         workspace.value.setCtrl('controller');
         const { clientX, clientY } = event;

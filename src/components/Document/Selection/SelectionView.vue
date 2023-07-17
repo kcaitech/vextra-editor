@@ -188,7 +188,7 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
         if (e.button === 0) {
             e.stopPropagation();
             if (props.context.menu.isMenuMount) {
-                props.context.menu.menuMount(false);
+                props.context.menu.menuMount();
             }
             props.context.workspace.preToTranslating(e);
             const hoveredShape = props.context.selection.hoveredShape;
