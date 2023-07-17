@@ -18,8 +18,9 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-import avatar from '@/assets/pd-logo-svg.svg';
+
 import { measure } from '@/layout/text/measure';
+import { onUnmounted } from 'vue';
 
 interface Emits {
     (e: 'settitle', title: string): void;
@@ -59,63 +60,60 @@ function Setindex(a: any, b: any) {
 }
 const x = sessionStorage.getItem('index')
 
+onUnmounted(() => {
+    picker.unmount();
+})
+
 </script>
 <template>
-    <Transition>
-        <el-row class="tac">
-            <el-col :span="12">
-                <div class="logo">
-                    <div><img :src="avatar" alt="ProtoDesign" /></div>
-                    <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
-                </div>
-                <div class="new">
-                    <button class="newfile" @click="newFile"> <el-icon :size="22">
-                            <Plus />
-                        </el-icon><span>{{ t('home.New_file') }}</span></button>
-                    <button class="openfile" @click="picker.invoke()"><el-icon :size="22">
-                            <FolderOpened />
-                        </el-icon><span>{{ t('home.open_local_file') }}</span></button>
-                </div>
-                <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
-                    text-color="#000000">
-                    <router-link to="/apphome/recently"><el-menu-item index="1"
-                            @click="Setindex(1, t('home.recently_opened'))">
-                            <el-icon>
-                                <Clock />
-                            </el-icon>
-                            <span>{{ t('home.recently_opened') }}</span>
-                        </el-menu-item></router-link>
-                    <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2, t('home.star_file'))">
-                            <el-icon>
-                                <Star />
-                            </el-icon>
-                            <span>{{ t('home.star_file') }}</span>
-                        </el-menu-item></router-link>
-                    <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3, t('home.file_shared'))">
-                            <el-icon>
-                                <Folder />
-                            </el-icon>
-                            <span>{{ t('home.file_shared') }}</span>
-                        </el-menu-item></router-link>
-                    <router-link to="/apphome/shareme"><el-menu-item index="4"
-                            @click="Setindex(4, t('home.shared_file_received'))">
-                            <el-icon>
-                                <BottomLeft />
-                            </el-icon>
-                            <span>{{ t('home.shared_file_received') }}</span>
-                        </el-menu-item></router-link>
-                    <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5"
-                            @click="Setindex(5, t('home.recycling_station'))">
-                            <el-icon>
-                                <Delete />
-                            </el-icon>
-                            <span>{{ t('home.recycling_station') }}</span>
-                        </el-menu-item></router-link>
+    <el-row class="tac">
+        <el-col>
+            <div class="new">
+                <button class="newfile" @click="newFile"> <el-icon>
+                        <Plus />
+                    </el-icon><span>{{ t('home.New_file') }}</span></button>
+                <button class="openfile" @click="picker.invoke()"><el-icon>
+                        <FolderOpened />
+                    </el-icon><span>{{ t('home.open_local_file') }}</span></button>
+            </div>
+            <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
+                text-color="#000000">
+                <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1, t('home.recently_opened'))">
+                        <el-icon>
+                            <Clock />
+                        </el-icon>
+                        <span>{{ t('home.recently_opened') }}</span>
+                    </el-menu-item></router-link>
+                <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2, t('home.star_file'))">
+                        <el-icon>
+                            <Star />
+                        </el-icon>
+                        <span>{{ t('home.star_file') }}</span>
+                    </el-menu-item></router-link>
+                <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3, t('home.file_shared'))">
+                        <el-icon>
+                            <Folder />
+                        </el-icon>
+                        <span>{{ t('home.file_shared') }}</span>
+                    </el-menu-item></router-link>
+                <router-link to="/apphome/shareme"><el-menu-item index="4"
+                        @click="Setindex(4, t('home.shared_file_received'))">
+                        <el-icon>
+                            <BottomLeft />
+                        </el-icon>
+                        <span>{{ t('home.shared_file_received') }}</span>
+                    </el-menu-item></router-link>
+                <router-link to="/apphome/recyclebin"><el-menu-item index="5"
+                        @click="Setindex(5, t('home.recycling_station'))">
+                        <el-icon>
+                            <Delete />
+                        </el-icon>
+                        <span>{{ t('home.recycling_station') }}</span>
+                    </el-menu-item></router-link>
 
-                </el-menu>
-            </el-col>
-        </el-row>
-    </Transition>
+            </el-menu>
+        </el-col>
+    </el-row>
 </template>
 
 <style lang="scss" scoped>
@@ -123,14 +121,7 @@ a {
     text-decoration: none;
 }
 
-.logo {
-    position: sticky;
-    top: 0px;
-    left: 0px;
-    margin: auto;
-    background-color: white;
-    z-index: 2;
-}
+
 
 .el-row {
     height: 100vh;
@@ -142,62 +133,60 @@ a {
         max-width: 100%;
         flex: 1;
 
-        .logo {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-        }
-
-
         .new {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: block;
+            text-align: center;
             margin: 20px 10px auto;
 
             button {
                 width: 100%;
-                height: 56px;
+                height: 36px;
                 margin: 0px 0 20px 0;
                 border: none;
-                font-size: 16px;
-                letter-spacing: 2px;
-                font-weight: bold;
-                border-radius: 5px;
+                font-size: 14px;
+                letter-spacing: 1px;
+                font-weight: 500;
+                border-radius: 6px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                cursor: pointer;
+
+                span {
+                    overflow: hidden;
+                    white-space: nowrap;
+                }
 
                 .el-icon {
+                    font-size: 20px;
                     margin-right: 6px;
                 }
             }
 
 
             .newfile {
-                background: rgb(69, 69, 248);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: #9775fa;
                 color: #ffffff;
 
                 &:hover {
-                    background-color: rgba(69, 69, 248, 0.5);
+                    background-color: #9675fadc;
                 }
 
                 &:active {
-                    background-color: rgb(48, 48, 255);
+                    background-color: #9775fa;
                 }
             }
 
             .openfile {
+                background-color: #f3f0ff;
+                color: #9775fa;
+
                 &:hover {
-                    background-color: rgba(192, 192, 192, 0.6);
+                    border: 1px #9775fa solid;
                 }
-
-                &:active {
-                    background-color: rgba(170, 170, 255, 0.6)
-                }
-
             }
 
 
@@ -206,19 +195,21 @@ a {
         .el-menu {
             border: none;
             background: none;
+            
 
             .el-menu-item {
-                border-radius: 5px;
+                border-radius: 4px;
                 margin: 10px;
-
+                height: 32px;
                 &:hover {
-                    background: rgb(70, 76, 248);
-                    color: white
+                    background-color: #f3f0ff;
+                    color: #9775fa;
                 }
 
                 &.is-active {
-                    color: #ffffff;
-                    background: blue;
+                    font-weight: 600;
+                    color: #9775fa;
+                    background-color: #e5dbff;
                 }
             }
         }
@@ -227,21 +218,26 @@ a {
 
 
 @media screen and (max-width:1000px) {
-    span,h3 {
+
+    span,
+    h3 {
         display: none;
-        opacity: 0;
-    }
-    .el-menu-item {
-        justify-content: center;
-        margin: 0;
     }
 
     .el-row .el-col .new button .el-icon {
-        margin-right: 0;
+        padding: 0;
+        margin: 0;
+        font-size:24px;
     }
-    .el-icon{
-        margin-right: 0;
-        font-size: 36px;
+    .el-menu-item{
+        justify-content: center;
+    }
+
+
+    .el-icon {
+        margin: 0;
+        padding: 0;
+        font-size: 32px;
     }
 
 }

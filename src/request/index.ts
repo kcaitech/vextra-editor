@@ -8,6 +8,7 @@ declare module "axios" {
     interface AxiosResponse<T = any> {
         errorinfo: null
         code: number
+        message:string
     }
     export function create(config?: AxiosRequestConfig): AxiosInstance;
 }
@@ -51,6 +52,8 @@ service.interceptors.response.use(function (response) {
     if (dataAxios.code === 0) {
         return Promise.resolve(dataAxios)
     } else if (dataAxios && dataAxios.code && dataAxios.code === 400) {
+        return Promise.resolve(dataAxios)
+    }else if (dataAxios && dataAxios.code && dataAxios.code === -1) {
         return Promise.resolve(dataAxios)
     } else {
         if (dataAxios && dataAxios.code && dataAxios.code === 401) {

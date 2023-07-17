@@ -1,17 +1,6 @@
 <template>
-    <!-- 数据展示 -->
-    <div class="main">
-        <div class="title">
-            <span class="name">{{ t('home.file_name') }}</span>
-            <span class="time">{{ t('home.modification_time') }}</span>
-            <span class="size">{{ t('home.size') }}</span>
-            <div><span class="other">{{ t('home.operation') }}</span></div>
-        </div>
-        <div class="item">
-            <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile"
-                @exit_share="Exitshar" @dbclickopen="openDocument" :iconlist="iconlists" />
-        </div>
-    </div>
+    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar" @dbclickopen="openDocument"
+        @updatestar="Starfile" @rightMeun="rightmenu" />
 
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
@@ -31,10 +20,10 @@
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
-import listsitem from '@/components/AppHome/listsitem.vue'
+import tablelist from '@/components/AppHome/tablelist.vue'
 import { useI18n } from 'vue-i18n'
 
 interface data {
@@ -65,6 +54,8 @@ const docId = ref('')
 const mydata = ref()
 let lists = ref<any[]>([])
 const iconlists = ref(['star', 'share', 'EXshare'])
+
+const emits = defineEmits(['data-update'])
 
 async function ShareLists() {
     // loading
@@ -169,7 +160,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
         rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
     })
 
-    if ((e.target as HTMLElement).closest('.user')) {
+    if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
 
@@ -249,6 +240,9 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
+watch(lists, (Nlist) => {
+    emits('data-update', Nlist, t('home.modification_time'))
+}, { deep: true })
 
 onMounted(() => {
     ShareLists()
@@ -256,6 +250,7 @@ onMounted(() => {
     window.addEventListener('resize', getPageHeight)
     document.addEventListener('mousedown', handleClickOutside)
 })
+
 onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
     document.removeEventListener('mousedown', handleClickOutside)
@@ -266,6 +261,12 @@ onUnmounted(() => {
     height: calc(100vh - 194px);
 }
 
+@media screen and (max-width: 1000px) {
+    .item {
+        height: calc(100vh - 154px);
+    }
+}
+
 .title {
     display: flex;
     justify-content: space-between;
@@ -274,6 +275,13 @@ onUnmounted(() => {
     font-size: 14px;
     font-weight: 600;
     overflow: hidden;
+
+    span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        margin-right: 10px;
+    }
 
     span:nth-child(1) {
         flex: 2;
@@ -296,12 +304,12 @@ onUnmounted(() => {
     display: none;
     min-width: 200px;
     min-height: 100px;
-    z-index: 9999;
+    z-index: 999;
     position: absolute;
     background-color: white;
     padding: 10px 0;
     border-radius: 5px;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 
     ul {
         margin: 0;
@@ -317,15 +325,16 @@ onUnmounted(() => {
             cursor: pointer;
 
             &:hover {
-                background-color: rgba(192, 192, 192, 0.3);
+                background-color: #f3f0ff;
             }
         }
 
         div {
             height: 1px;
             width: auto;
-            background: rgba(192, 192, 192, 0.3);
+            background: #f3f0ff;
         }
+
 
     }
 }

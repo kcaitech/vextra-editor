@@ -107,6 +107,9 @@ const close = () => {
   margin-left: 0;
 }
 
+.el-button.is-text:not(.is-disabled):hover {
+    background-color: #f3f0ff;
+}
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -218,6 +221,6 @@ const close = () => {
   width: 300px;
   z-index: 9;
   position: absolute;
-  top: 50px;
+  top: 56px;
   right: 130px;
 }</style>

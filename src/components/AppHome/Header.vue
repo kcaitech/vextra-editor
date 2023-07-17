@@ -1,25 +1,40 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted } from 'vue'
-import { Search, User, SwitchButton, Close, InfoFilled, Bell } from '@element-plus/icons-vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch } from 'vue'
+import { Search, User, SwitchButton, Close, InfoFilled, Bell, Loading } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
-import * as user_api from '@/apis/users'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
-import { ElMessage, useTimeout } from 'element-plus'
+import avatar from '@/assets/pd-logo-svg.svg';
+interface Props {
+    items: Array<object>
+    title: string
+}
+const props = defineProps<Props>()
 
 const { t } = useI18n()
 const state = reactive({
-    circleUrl: localStorage.getItem('avatar')
+    circleUrl: localStorage.getItem('avatar'),
+    userName: localStorage.getItem('nickname')
 })
-const { circleUrl } = toRefs(state)
-const showabout = ref(false)
+const { circleUrl, userName } = toRefs(state)
 const num = ref(0)
 const showInForm = ref(false)
 const applyList = ref<any[]>([])
+const search = ref('')
+const SearchList = ref<any[]>([])
+const showSearchHistory = ref(false)
+const historyList = ref<any[]>([])
+const menuAbout = ref(false)
+const menuUser = ref(false)
+const isLoading = ref(false)
+const inputRef = ref<HTMLElement>()
+
+const errorHandler = () => true
 const closeInForm = () => {
     showInForm.value = false
 }
+
 const getApplyList = async () => {
     try {
         const { data } = await share_api.getApplyListAPI()
@@ -33,103 +48,37 @@ const getApplyList = async () => {
 }
 
 
-let timer: any = null
-getApplyList()
-onMounted(() => {
-    timer = setInterval(() => {
-        getApplyList()
-    }, 60000)
-})
-
-onUnmounted(() => {
-    clearInterval(timer)
-})
-
-const errorHandler = () => true
-
-const search = ref('')
-const SearchList = ref<any[]>([])
-const lists = ref<any[]>([])
-const isShow = ref(false)
-
-document.addEventListener('click', function (e: any) {
-    const historylist: HTMLElement = document.querySelector('.searchhistory')!
-    if (document.querySelector('.searchhistory')!) {
-        const isClickedInsidehistorylist = historylist.contains(e.target as HTMLElement)
-        if (!isClickedInsidehistorylist && e.target.tagName != 'INPUT') {
-            closeclick()
-        }
+const handleClickOutside = (event: MouseEvent) => {
+    const e = event.target as HTMLElement
+    if (e.closest('.el-input') === null && e.closest('.searchhistory') === null) {
+        closeclick();
     }
-})
-
-function searchhistoryshow() {
-    getUserdata()
-    isShow.value = true
+    if (e.closest('.menu') === null) {
+        menuAbout.value = false;
+    }
+    if (e.closest('.inform') === null && e.closest('.bell') === null) {
+        showInForm.value = false;
+    }
+    if (e.closest('.avatar-area') === null) {
+        menuUser.value = false;
+    }
 }
-
 
 function closeclick() {
-    const close: any = document.querySelector('.CloseIcon')
     search.value = ''
-    close.style.display = "none"
-    isShow.value = false
+    inputRef.value?.blur()
+    showSearchHistory.value = false
 }
 
-
-const getUserdata = async () => {
-    if (location.hash.toLowerCase() == "#/apphome/recently") {
-        const { data } = await user_api.GetDocumentsList()
-        lists.value = data
-    }
-    if (location.hash.toLowerCase() == "#/apphome/starfile") {
-        const { data } = await await user_api.GetfavoritesList()
-        lists.value = data
-    }
-    if (location.hash.toLowerCase() == "#/apphome/meshare") {
-        const { data } = await share_api.getDoucmentListAPI()
-        lists.value = data
-    }
-    if (location.hash.toLowerCase() == "#/apphome/shareme") {
-        const { data } = await user_api.ShareLists()
-        lists.value = data
-    }
-    if (location.hash.toLowerCase() == "#/apphome/recyclebin") {
-        const { data } = await user_api.GetrecycleList()
-        lists.value = data
-    }
-    if (lists.value == null) {
-        ElMessage.error(t('home.failed_list_tips'))
-    } else {
-        for (let i = 0; i < lists.value.length; i++) {
-            let { document: { size }, document_access_record: { last_access_time } } = lists.value[i]
-            lists.value[i].document.size = sizeTostr(size)
-            lists.value[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
-        }
-
-    }
-}
-
-function screenout() {
-    const close: any = document.querySelector('.CloseIcon')
-    if (search.value != '') {
-        close.style.display = "block"
-    } else {
-        close.style.display = "none"
-    }
-    SearchList.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(search.value.toLowerCase()))
-}
-
-function sizeTostr(size: any) {
-    if ((size / 1024 / 1024 / 1024) > 1) {
-        size = (size / 1024 / 1024 / 1024).toFixed(2) + "GB"
-    } else if ((size / 1024 / 1024) > 1) {
-        size = (size / 1024 / 1024).toFixed(2) + "MB"
-    } else if ((size / 1024) > 1) {
-        size = (size / 1024).toFixed(2) + "KB"
-    } else {
-        size = Math.round(size * 100) / 100 + "B"
-    }
-    return size
+let timer2: any
+const screenout = async () => {
+    clearTimeout(timer2)
+    if (!search.value) return
+    isLoading.value = true
+    SearchList.value = []
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    SearchList.value = props.items.filter((el: any) => el.document.name.toLowerCase().includes(search.value.toLowerCase()))
+    isLoading.value = false;
 }
 
 function userinfo() {
@@ -146,62 +95,196 @@ const reviewed = () => {
     getApplyList()
 }
 
-const toDocument = (row: any) => {
-    const docId = row.document.id
-    const Name = 'document'
-    const query = { id: docId }
-    const url = router.resolve({ name: Name, query: query }).href
-    window.open(url, '_blank')
+const toDocument = (row: any, column: any) => {
+    if (column.label === t('home.file_name')) {
+        const x = { keyword: search.value }
+        const maxLength = 15
+        historyList.value = historyList.value.filter(item => item.keyword !== x.keyword)
+        if (historyList.value.length >= maxLength) {
+            historyList.value.pop()
+        }
+        historyList.value.unshift(x);
+        localStorage.setItem('searchlist', JSON.stringify(historyList.value));
+        const docId = row.document.id
+        const Name = 'document'
+        const query = { id: docId }
+        const url = router.resolve({ name: Name, query: query }).href
+        window.open(url, '_blank')
+    }
+
 }
+
+const prpotitle = computed(() => {
+    return props.title === t('home.delete_file_time')
+        ? "document.deleted_at"
+        : "document_access_record.last_access_time"
+})
+
+const clearSearchlist = () => {
+    localStorage.removeItem('searchlist')
+    historyList.value = []
+    inputRef.value!.focus()
+}
+
+const itemClick = (e: MouseEvent) => {
+    search.value = (e.target as HTMLElement).textContent!
+    screenout()
+    inputRef.value!.focus()
+}
+
+let timer: any = null
+getApplyList()
+onMounted(() => {
+    timer = setInterval(() => {
+        getApplyList()
+    }, 60000)
+    document.addEventListener('mousedown', handleClickOutside)
+    const searchList = localStorage.getItem('searchlist')
+    historyList.value = searchList != null ? JSON.parse(searchList) : []
+})
+
+onUnmounted(() => {
+    document.removeEventListener('mousedown', handleClickOutside)
+    clearInterval(timer)
+
+})
+
+const cellStyle = (row: any) => {
+    if (row.column.label === t('home.file_name')) {
+        return {
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            cursor: 'Pointer'
+        }
+    }
+}
+
+const mouseEnter = (row: any, column: any, cell: any) => {
+    if (column.label === t('home.file_name')) {
+        cell.style.color = '#b197fc'
+    }
+
+}
+
+const mouseleave = (row: any, column: any, cell: any) => {
+    if (column.label === t('home.file_name')) {
+        cell.style.color = ''
+    }
+
+}
+
+const textHighLight = (text: string) => {
+    const regex = new RegExp(search.value, "ig");
+    return text.replace(regex, `<span class="highlight">${search.value}</span>`)
+}
+
 
 </script>
 <template>
     <div class="header">
-        <div class="search">
-            <el-icon size="20" class="SearchIcon" style="margin: 10px;">
-                <Search />
-            </el-icon>
-            <input v-model="search" class="input" :placeholder="`${t('system.placeholder')}`"
-                @focus="searchhistoryshow" @input="screenout" />
-            <el-icon size="20" class="CloseIcon" style="margin: 10px;" @click="closeclick">
-                <Close />
-            </el-icon>
-            <div class="searchhistory" v-if="isShow">
-                <div class="content" v-if="search != ''">
-                    <el-table :data="SearchList" style="width: 100%;" height="300" size="small"
-                        :empty-text="t('search.search_results')" @row-click="toDocument">
-                        <el-table-column prop="document.name" :label="t('home.file_name')" header-align="center"
-                            align="center" />
-                        <el-table-column prop="document_access_record.last_access_time" :label="t('home.modification_time')"
-                            header-align="center" align="center" />
-                    </el-table>
-                </div>
-                <div class="nullcontent" v-else style="line-height: 300px; font-size: 12px;">{{ t('search.search_history')
-                }}</div>
-            </div>
+        <div class="logo">
+            <img class="logo-image" :src="avatar" alt="ProtoDesign" />
+            <div class="logo-text">ProtoDesign</div>
         </div>
-        <div class="right">
-            <div class="notice" @click="showInForm = true">
-                <el-icon size="24">
-                    <Bell />
-                </el-icon>
-                <div class="num" v-if="num > 0" :class="{ after: num > 99 }"
-                    :style="{ paddingRight: num > 99 ? 9 + 'px' : 4 + 'px' }">{{ num > 99 ? 99 : num }}</div>
-            </div>
-            <div class="about">
-                <el-icon size="24">
-                    <InfoFilled />
-                </el-icon>
-                <div class="about-items">
-                    <div>{{ t('system.help_manual') }}</div>
-                    <div>{{ t('system.about_software') }}</div>
+        <div class="search">
+            <el-input ref="inputRef" v-model="search" size="large" :placeholder="`${t('system.placeholder')}`"
+                @focus="showSearchHistory = true" @input="screenout">
+                <template #prefix>
+                    <el-icon v-if="isLoading" class="is-loading" size="18">
+                        <Loading />
+                    </el-icon>
+                    <el-icon v-else size="18">
+                        <Search />
+                    </el-icon>
+                </template>
+                <template #suffix>
+                    <el-icon v-if="search != ''" class="close" @click.stop="closeclick" size="18">
+                        <Close />
+                    </el-icon>
+                </template>
+            </el-input>
+            <transition name="el-zoom-in-top">
+                <div v-if="showSearchHistory" class="searchhistory" @click="inputRef?.focus()">
+                    <div class="tabledata" v-if="search != ''">
+                        <el-table :data="SearchList" max-height="600" :cell-style=cellStyle @row-click="toDocument"
+                            @cell-mouse-enter="mouseEnter" @cell-mouse-leave="mouseleave">
+                            <el-table-column :label="t('home.file_name')" header-align="left" align="left"
+                                show-overflow-tooltip>
+                                <template #default="{ row: { document: { name } } }">
+                                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        <span v-html="`${textHighLight(name)}`"></span>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            <el-table-column :prop=prpotitle :label=props.title header-align="center" align="center"
+                                width="140" />
+                            <template #empty>
+                                <el-skeleton v-if="isLoading" style="width: 100%" :count="6" animated>
+                                    <template #template>
+                                        <div style="display: flex; align-items: center;justify-items: space-between;">
+                                            <el-skeleton-item variant="text"
+                                                style="margin:0px 16px 8px 10px;height: 39px;" />
+                                            <el-skeleton-item variant="text"
+                                                style="width: 50% ;height: 39px;margin:0px 16px 8px 10px;" />
+                                        </div>
+                                    </template>
+                                </el-skeleton>
+                                <span v-else class="results">{{ t('search.search_results') }}</span>
+                            </template>
+
+                        </el-table>
+                    </div>
+                    <div class="historyList" v-else-if="historyList.length != 0">
+                        <div class="listTitle">
+                            <div class="text">{{ t('search.search_history_title') }}</div>
+                            <a href="" @click.stop.prevent="clearSearchlist">{{ t('search.search_history_clear') }}</a>
+
+                        </div>
+                        <ul class="historyListItem">
+                            <li class="listItem" v-for="item in historyList" :key="item.keyword" @click.stop="itemClick">
+                                <span>{{ item.keyword }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="nullcontent" v-else style="line-height: 300px; font-size: 12px;">
+                        {{ t('search.search_history') }}
+                    </div>
+                </div>
+            </transition>
+        </div>
+        <div class="content">
+            <div class="bell">
+                <div class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
+                    @click="showInForm = !showInForm">
+                    <el-icon size="24">
+                        <Bell />
+                    </el-icon>
+                    <div class="num" v-if="num > 0" :class="{ after: num > 99 }"
+                        :style="{ paddingRight: num > 99 ? 9 + 'px' : 4 + 'px' }">{{ num > 99 ? 99 : num }}</div>
                 </div>
             </div>
-            <div class="user">
-                <el-avatar :src="circleUrl" @error="errorHandler" fill>
+            <div class="menu" :class="{ 'menu-select': menuAbout, 'menu-hover': !menuAbout }"
+                @click="menuAbout = !menuAbout">
+                <el-icon size="24">
+                    <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke-width="1.5">
+                        <g id="group-0" stroke="currentColor" fill="currentColor">
+                            <path d="M2.5 3H13.5M2.5 8H13.5M2.5 13H13.5" stroke-linecap="round" stroke-linejoin="miter"
+                                fill="none" vector-effect="non-scaling-stroke"></path>
+                        </g>
+                    </svg>
+                </el-icon>
+                <div v-if="menuAbout" class="about-items">
+                    <div class="item">{{ t('system.help_manual') }}</div>
+                    <div class="item">{{ t('system.about_software') }}</div>
+                </div>
+            </div>
+            <div class="avatar-area" @click="menuUser = !menuUser">
+                <el-avatar v-if="circleUrl" :src="circleUrl" @error="errorHandler" fit="cover" :size="30">
                     <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
                 </el-avatar>
-                <div class="userinfo">
+                <el-avatar v-else fit="cover" :size="30"> {{ userName?.slice(0, 1) }} </el-avatar>
+                <div v-if="menuUser" class="userinfo">
                     <div @click="userinfo"><el-icon size="20">
                             <User />
                         </el-icon>{{ t('system.personal_center') }}</div>
@@ -210,88 +293,198 @@ const toDocument = (row: any) => {
                         </el-icon>{{ t('system.login_out') }}</div>
                 </div>
             </div>
-            <Inform @close="closeInForm" v-if="showInForm" :applyList="applyList" @reviewed="reviewed"></Inform>
         </div>
+        <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" @reviewed="reviewed"></Inform>
     </div>
 </template>
 <style lang="scss" scoped>
-.el-avater{
-    overflow: hidden;
+:deep(.el-table__empty-text) {
+    line-height: 0;
+    width: 100%;
 }
-.el-icon:hover {
-    color: #6395f9;
-    background: rgba(185, 185, 185, 0.5);
-    border-radius: 2px;
-    cursor: pointer;
+
+:deep(.highlight) {
+    background-color: #e5dbff !important;
 }
+
+.menu-select {
+    background-color: #e5dbff;
+}
+
+.menu-hover:hover {
+    background-color: #f3f0ff;
+}
+
+.results {
+    line-height: 300px;
+}
+
+.el-icon {
+    padding: 2px;
+    color: #9775fa;
+}
+
+
 
 .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    .search {
+    .logo {
         display: flex;
         align-items: center;
-        background: rgba(217, 217, 217, 0.67);
-        width: 50%;
-        max-width: 550px;
-        height: 45px;
-        border-radius: 20px;
-        position: relative;
-        box-sizing: border-box;
+        justify-content: center;
+        margin-right: 40px;
 
-        .input {
-            width: 85%;
-            height: 45px;
-            margin: 0;
-            outline: none;
-            border: none;
-            background: none;
+        .logo-image {
+            width: 48px;
+            height: 48px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            letter-spacing: 1px;
+            font-weight: 700;
 
         }
 
-        .CloseIcon {
-            display: none;
+    }
 
-            :hover {
-                color: blue
+
+    .search {
+        flex: 1;
+        position: relative;
+        margin-left: 20px;
+
+        .el-input {
+            max-width: 480px;
+            min-width: 160px;
+            font-size: 12px;
+            --el-input-border-color: #f3f0ff;
+            --el-input-hover-border-color: #e5dbff;
+            --el-input-focus-border-color: #9775fa;
+
+            .close:hover {
+                border-radius: 2px;
+                cursor: pointer;
+                background-color: #f3f0ff;
             }
         }
 
         .searchhistory {
-            box-sizing: border-box;
-            position: absolute;
-            top: 50px;
+            font-size: 12px;
+            max-width: 480px;
             width: 100%;
+            position: absolute;
+            top: 38px;
+            left: 0;
             min-height: 300px;
-            max-height: 600px;
             background: rgb(255, 255, 255);
-            z-index: 9;
             box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
             border-radius: 5px;
             text-align: center;
+            z-index: 9;
+            // animation: searchhistory 0.3s alternate forwards ease-in-out;
 
-            content {
-                text-align: center;
+            .tabledata {
+                padding: 0 10px;
+
+                .el-table {
+                    font-size: 12px;
+                    --el-table-border-radius: 4px;
+                    --el-table-border-color: none;
+                }
+            }
+
+            .historyList {
+                padding: 0 0 10px 0;
+
+                .listTitle {
+                    width: 100%;
+                    display: flex;
+                    justify-content: space-between;
+                    height: 44px;
+                    line-height: 44px;
+
+                    .text {
+                        font-weight: 600;
+                        padding: 0 10px;
+                    }
+
+                    a {
+                        padding: 0 10px;
+                        text-decoration: none;
+                        color: var(--el-text-color-regular);
+                    }
+                }
+
+                .historyListItem {
+                    width: 100%;
+                    max-height: 556px;
+                    list-style-type: none;
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden;
+                    overflow-y: auto;
+
+                    &::-webkit-scrollbar {
+                        width: 5px;
+                        height: auto;
+                    }
+
+                    &:hover::-webkit-scrollbar-thumb {
+                        border-radius: 3px;
+                        background-color: #b5b5b5be;
+                    }
+
+                    .listItem {
+                        color: var(--el-text-color-regular);
+                        display: flex;
+                        height: 40px;
+                        line-height: 40px;
+                        padding: 0 10px;
+                        margin: 0 10px;
+
+                        &:hover {
+                            background-color: #f3f0ff;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        }
+                    }
+
+                }
+
+            }
+
+            .nullcontent {
+                color: var(--el-text-color-regular);
+
             }
         }
+
     }
 
-    .right {
-        height: 40px;
+    .content {
         display: flex;
         align-items: center;
+        justify-content: center;
+        font-size: 12px;
 
         .notice {
+            flex: 1;
             position: relative;
             display: flex;
+            padding: 4px;
+            margin-left: 20px;
+            border-radius: 4px;
+            cursor: pointer;
 
             >.num {
                 position: absolute;
                 font-size: var(--font-default-fontsize);
-                top: -10px;
-                left: 10px;
+                top: 0px;
+                left: 16px;
                 min-width: 8px;
                 padding: 0 4px 0 4px;
                 height: 14px;
@@ -301,7 +494,6 @@ const toDocument = (row: any) => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-
             }
 
             .after::after {
@@ -314,108 +506,82 @@ const toDocument = (row: any) => {
             }
         }
 
-        .about {
-            margin: 0 20px;
-            position: relative;
-            display: flex;
+        .menu {
+            padding: 4px;
+            margin-left: 20px;
+            border-radius: 4px;
+            cursor: pointer;
 
             .about-items {
-                display: none;
+                width: 100px;
                 position: absolute;
-                background-color: #f9f9f9;
-                min-width: 80px;
+                top: 56px;
+                right: 30px;
+                background-color: white;
                 box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-                top: 25px;
-                right: -35px;
-                z-index: 1;
-                padding: 0 10px;
-                border-radius: 2px;
+                z-index: 9;
+                padding: 6px;
+                border-radius: 4px;
 
+                .item {
+                    padding: 4px 8px;
+                    text-align: center;
+                    pointer-events: auto;
+
+                    &:hover {
+                        background-color: #f3f0ff;
+                        border-radius: 3px;
+                    }
+                }
+
+            }
+        }
+
+        .avatar-area {
+            margin-left: 20px;
+            cursor: pointer;
+
+            .el-avatar {
+                background: #9775fa !important;
+                overflow: hidden
+            }
+
+            .userinfo {
+                padding: 6px;
+                background-color: white;
+                position: absolute;
+                top: 56px;
+                right: 6px;
+                box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+                border-radius: 4px;
+                z-index: 9;
 
                 div {
-                    font-size: 14px;
+                    padding: 4px 8px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border-radius: 2px;
-                    margin: 10px 0;
-                }
 
-                div:hover {
-                    background: rgba(217, 217, 217, 0.67);
-
-                    &:active {
-                        background: rgb(113, 110, 110);
-                    }
-                }
-
-                &:hover {
-                    .about-items {
-                        display: block;
+                    &:hover {
+                        background-color: #f3f0ff;
+                        border-radius: 3px;
                     }
                 }
             }
-
-            &:hover {
-                .about-items {
-                    display: block;
-                }
-            }
         }
+    }
+}
 
-        span {
-            width: 40px;
-            text-align: center;
+@keyframes searchhistory {
+    from {
+        opacity: 48px;
+        transform: scale(0.9);
 
-            &:hover {
-                background: rgba(217, 217, 217, 0.67);
-            }
-        }
+    }
 
-        .userinfo {
-            display: none;
-            position: absolute;
-            background-color: #f9f9f9;
-            min-width: 80px;
-            right: 0;
-            z-index: 99;
-            padding: 0 10px;
-            border-radius: 2px;
-            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-
-            div {
-                border-radius: 2px;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 10px 0;
-            }
-
-            div:hover {
-                background: rgba(217, 217, 217, 0.67);
-
-                &:active {
-                    background: rgb(113, 110, 110);
-                }
-            }
-
-        }
-
-        .user:hover .userinfo {
-            display: block;
-        }
-
-        .user {
-            .username {
-                display: block;
-                white-space: nowrap;
-                width: 50px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                font-size: 10px;
-            }
-        }
+    to {
+        opacity: 38px;
+        transform: scale(1)
     }
 }
 </style>

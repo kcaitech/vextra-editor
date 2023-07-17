@@ -1,0 +1,162 @@
+html.dark {
+    background-color: #000;
+    color: white;
+}
+
+html.light {
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+}
+
+
+.el-avatar {
+    --el-avatar-text-color: var(--el-color-white);
+    --el-avatar-bg-color: #e30606;
+    --el-avatar-text-size: 14px;
+    --el-avatar-icon-size: 18px;
+    --el-avatar-border-radius: var(--el-border-radius-base);
+    --el-avatar-size-large: 56px;
+    --el-avatar-size: 40px;
+    --el-avatar-size-small: 24px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    text-align: center;
+    overflow: hidden;
+    color: var(--el-avatar-text-color);
+    background: var(--el-avatar-bg-color);
+    width: var(--el-avatar-size);
+    height: var(--el-avatar-size);
+    font-size: var(--el-avatar-text-size);
+}
+
+.el-icon {
+    --color: inherit;
+    height: 1em;
+    width: 1em;
+    line-height: 1em;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    fill: currentColor;
+    color: var(--color);
+    font-size: inherit;
+}
+
+.el-dialog {
+    --el-dialog-width: 50%;
+    --el-dialog-margin-top: 15vh;
+    --el-dialog-bg-color:red;
+    --el-dialog-box-shadow: var(--el-box-shadow);
+    --el-dialog-title-font-size: var(--el-font-size-large);
+    --el-dialog-content-font-size: 14px;
+    --el-dialog-font-line-height: var(--el-font-line-height-primary);
+    --el-dialog-padding-primary: 20px;
+    --el-dialog-border-radius: var(--el-border-radius-small);
+    position: relative;
+    margin: var(--el-dialog-margin-top, 15vh) auto 50px;
+    background: var(--el-dialog-bg-color);
+    border-radius: var(--el-dialog-border-radius);
+    box-shadow: var(--el-dialog-box-shadow);
+    box-sizing: border-box;
+    width: var(--el-dialog-width, 50%);
+
+    .el-dialog__header {
+        padding: var(--el-dialog-padding-primary);
+        padding-bottom: 10px;
+        margin-right: 16px;
+
+        .el-dialog__title {
+            line-height: var(--el-dialog-font-line-height);
+            font-size: var(--el-dialog-title-font-size);
+            color: var(--el-text-color-primary);
+        }
+
+        .el-dialog__headerbtn {
+            position: absolute;
+            top: 6px;
+            right: 0;
+            padding: 0;
+            width: 54px;
+            height: 54px;
+            background: 0 0;
+            border: none;
+            outline: 0;
+            cursor: pointer;
+            font-size: var(--el-message-close-size, 16px);
+
+            .el-dialog__close {
+                color: var(--el-color-info);
+                font-size: inherit;
+            }
+        }
+    }
+
+    .el-dialog__body {
+        padding: calc(var(--el-dialog-padding-primary) + 10px) var(--el-dialog-padding-primary);
+        color: var(--el-text-color-regular);
+        font-size: var(--el-dialog-content-font-size);
+    }
+
+    .el-dialog__footer {
+        padding: var(--el-dialog-padding-primary);
+        padding-top: 10px;
+        text-align: right;
+        box-sizing: border-box;
+    }
+}
+
+.el-menu {
+    border-right: solid 1px var(--el-menu-border-color);
+    list-style: none;
+    position: relative;
+    margin: 0;
+    padding-left: 0;
+    background-color: var(--el-menu-bg-color);
+    box-sizing: border-box;
+
+    .el-menu-item {
+        display: flex;
+        align-items: center;
+        height: var(--el-menu-item-height);
+        line-height: var(--el-menu-item-height);
+        font-size: var(--el-menu-item-font-size);
+        color: var(--el-menu-text-color);
+        padding: 0 var(--el-menu-base-level-padding);
+        list-style: none;
+        cursor: pointer;
+        position: relative;
+        transition: border-color var(--el-transition-duration), background-color var(--el-transition-duration), color var(--el-transition-duration);
+        box-sizing: border-box;
+        white-space: nowrap;
+    }
+}
+
+.el-table-v2 {
+    --el-table-border-color: var(--el-border-color-lighter);
+    --el-table-border: 1px solid var(--el-table-border-color);
+    --el-table-text-color: var(--el-text-color-regular);
+    --el-table-header-text-color: var(--el-text-color-secondary);
+    --el-table-row-hover-bg-color: var(--el-fill-color-light);
+    --el-table-current-row-bg-color: var(--el-color-primary-light-9);
+    --el-table-header-bg-color: var(--el-bg-color);
+    --el-table-fixed-box-shadow: var(--el-box-shadow-light);
+    --el-table-bg-color: var(--el-fill-color-blank);
+    --el-table-tr-bg-color: var(--el-fill-color-blank);
+    --el-table-expanded-cell-bg-color: var(--el-fill-color-blank);
+    --el-table-fixed-left-column: inset 10px 0 10px -10px rgba(0, 0, 0, 0.15);
+    --el-table-fixed-right-column: inset -10px 0 10px -10px rgba(0, 0, 0, 0.15);
+
+    .el-table-v2__main {
+        display: flex;
+        flex-direction: column-reverse;
+        position: absolute;
+        overflow: hidden;
+        top: 0;
+        background-color: var(--el-bg-color);
+        left: 0;
+    }
+
+}
