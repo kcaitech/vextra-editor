@@ -5,7 +5,7 @@ import { Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
-import { Selection } from "@/context/selection";
+import { ClientXY, Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
@@ -13,6 +13,7 @@ import { useI18n } from "vue-i18n";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import { getAxle } from "@/utils/common";
 interface Props {
   context: Context
   controllerFrame: Point[]
@@ -31,6 +32,10 @@ const { t } = useI18n();
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 let viewBox = '';
+const axle = computed<ClientXY>(() => {
+  const [lt, rt, rb, lb] = props.controllerFrame;
+  return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+});
 // #region 绘制控件
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
   return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
@@ -115,7 +120,8 @@ watchEffect(() => { updater() });
     <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
     </ShapesStrokeContainer>
     <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></BarsContainer>
-    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></PointsContainer>
+    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle">
+    </PointsContainer>
   </svg>
 </template>
 <style lang='scss' scoped>
