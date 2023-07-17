@@ -544,7 +544,8 @@ const textHighLight = (text: string) => {
 
             .el-avatar {
                 background: #9775fa !important;
-                overflow: hidden
+                overflow: hidden;
+                font-weight: 700;
             }
 
             .userinfo {
