@@ -87,6 +87,7 @@ export class WorkSpace extends Watchable(Object) {
     static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
+    static TEXT_FORMAT = 6;
     static SHUTDOWN_POPOVER = 7;
     static TRANSLATING = 8;
     static CHECKSTATUS = 9;
@@ -94,25 +95,24 @@ export class WorkSpace extends Watchable(Object) {
     static UNGROUP = 11;
     static SELECTION_VIEW_UPDATE = 12;
     static REMOVE_COLOR_PICKER = 13;
-    static CTRL_DISAPPEAR = 27;
-    static CTRL_APPEAR_IMMEDIATELY = 28;
-    static CTRL_APPEAR = 29;
-    static PASTE = 30;
-    static PASTE_RIGHT = 31;
-    static INSERT_IMGS = 32;
-    static FREEZE = 33;
-    static THAW = 34;
-    static CLAC_ATTRI = 37;
-    static COPY = 38;
-    static HIDDEN_UI = 47;
-    static INIT_DOC_NAME = 48;
-    static COMPS = 49;
-    static ONARBOARD__TITLE_MENU = 47;
-    static BOLD = 48;
-    static UNDER_LINE = 49;
-    static ITALIC = 50;
-    static DELETE_LINE = 51;
-    static TEXT_FORMAT = 52;
+    static CTRL_DISAPPEAR = 14;
+    static CTRL_APPEAR_IMMEDIATELY = 15;
+    static CTRL_APPEAR = 16;
+    static PASTE = 17;
+    static PASTE_RIGHT = 18;
+    static INSERT_IMGS = 19;
+    static FREEZE = 20;
+    static THAW = 21;
+    static CLAC_ATTRI = 22;
+    static COPY = 23;
+    static HIDDEN_UI = 24;
+    static INIT_DOC_NAME = 25;
+    static COMPS = 26;
+    static ONARBOARD__TITLE_MENU = 27;
+    static BOLD = 28;
+    static UNDER_LINE = 29;
+    static ITALIC = 30;
+    static DELETE_LINE = 31;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -224,6 +224,9 @@ export class WorkSpace extends Watchable(Object) {
     }
     focusText() {
         this.notify(WorkSpace.TEXT_FORMAT)
+    }
+    downArboardTitle(ev: MouseEvent) {
+        this.notify(WorkSpace.ONARBOARD__TITLE_MENU, ev)
     }
     setDocumentPerm(perm: number) {
         this.m_document_perm = perm;

@@ -216,6 +216,10 @@ function workspace_watcher(type?: number, name?: string | MouseEvent) { // æ›´æ–
             paster(props.context, t, mousedownOnPageXY);
         } else if (type === WorkSpace.COPY) {
             props.context.workspace.clipboard.write_html();
+        } else if (type === WorkSpace.ONARBOARD__TITLE_MENU) {
+            if(name) {
+                contextMenuMount((name as MouseEvent))
+            }
         }
         const action = props.context.workspace.action;
         if (action.startsWith('add')) {
