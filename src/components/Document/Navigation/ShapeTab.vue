@@ -13,6 +13,7 @@ import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
 import { Page } from "@kcdesign/data";
 import ShowHiddenLeft from "./ShowHiddenLeft.vue";
+import { Navi } from "@/context/navigate";
 const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 const i_height = 162;
@@ -52,18 +53,24 @@ function init_pagelist_height() {
         w_height = container.value.clientHeight;
     }
     let max_height = Math.max(w_height * 0.5 - 36, i_height);
-    let init_height = page_list * 30 + 50;
+    let init_height = page_list * 30 + 64;
     init_height = Math.max(init_height, i_height);
     structure.value.pagelistHeight = Math.min(init_height, max_height);
+}
+function navi_watcher(t?: number) {
+    if (t === Navi.ADD_PAGE) {
+        init_pagelist_height();
+    }
 }
 onMounted(() => {
     container.value && observer.observe(container.value);
     init_pagelist_height();
+    props.context.navi.watch(navi_watcher);
 });
 onUnmounted(() => {
     observer.disconnect();
+    props.context.navi.unwatch(navi_watcher);
 })
-
 </script>
 
 <template>

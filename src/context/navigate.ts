@@ -11,6 +11,7 @@ export class Navi extends Watchable(Object) {
   static CHANGE_TYPE = 6;
   static TEXT_SELECTION_CHANGE = 7;
   static SHAPELIST_UPDATE = 8;
+  static ADD_PAGE = 9;
   private m_page_need_extend: boolean = false;
   private m_focus_text: TextSelection | undefined;
   private m_keywords: string = '';
