@@ -129,28 +129,32 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
         }
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("mouseup", handleMouseUp);
-
     };
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
 };
 const commentReflush = ref(0)
+const isControls = (index: number) => {
+    if(userId === documentCommentList.value[index].user.id  || userId === comment.value.isDocumentInfo?.user.id) return true
+    else return false
+}
 const moveCommentPopup = (e: MouseEvent, index: number) => {
-    if (documentCommentList.value[index].user.id !== userId) return
-    commentReflush.value++
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const deltaX = Math.abs(xy.x - downOnPageXY.x);
     const deltaY = Math.abs(xy.y - downOnPageXY.y);
     const diff = Math.hypot(deltaX, deltaY);
-    if (diff > 3) {
-        props.context.comment.commentMove(true)
+    if (isControls(index)) {
+        commentReflush.value++
+        if (diff > 3) {
+            props.context.comment.commentMove(true)
+        }
+        const shape_frame = documentCommentList.value[index].shape_frame
+        shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
+        shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
+        setMousedownXY(e);
     }
-    const shape_frame = documentCommentList.value[index].shape_frame
-    shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
-    shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
-    setMousedownXY(e);
 };
 
 const updateShapeComment = (index: number) => {

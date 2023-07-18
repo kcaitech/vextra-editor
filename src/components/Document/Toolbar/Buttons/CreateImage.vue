@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { string_by_sys } from '@/utils/common';
+import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n();
 interface Porps {
     active: boolean
@@ -142,14 +143,13 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)"
-        placement="bottom" :show-after="500" :offset="10" :hide-after="0">
+    <Tooltip :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)">
         <ToolButton ref="button" @click="select" :selected="props.active">
             <div class="svg-container">
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
         </ToolButton>
-    </el-tooltip>
+    </Tooltip>
     <input type="file" ref="picker" :accept="accept" :multiple="true" id="filepicker" @change="(e: Event) => { change(e) }">
 </template>
 <style scoped lang="scss">
