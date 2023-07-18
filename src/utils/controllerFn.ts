@@ -6,7 +6,6 @@ import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     const { target, shiftKey, ctrlKey, metaKey } = e;
     if (target instanceof HTMLInputElement) return;
-    console.log('emit');
     const shapes = context.selection.selectedShapes;
     if (!shapes.length) return;
     const step = shiftKey ? 10 : 1;
