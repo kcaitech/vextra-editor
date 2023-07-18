@@ -6,7 +6,8 @@ import {
     DataType,
     CmdStatus,
     TunnelType,
-    WorkerPostData
+    WorkerPostData,
+    TunnelTypeStr
 } from "./types"
 
 export class Communication {
@@ -59,7 +60,7 @@ export class Communication {
                 this.info.id = data.id
                 port.onmessage = this.receiveFromWorker.bind(this)
                 resolve(true)
-                console.log("通道建立", this.info.id)
+                console.log("通道建立", TunnelTypeStr[this.info.tunnelType], this.info.id)
             }
             port.start()
             port.postMessage(this.info)
@@ -141,7 +142,7 @@ export class Communication {
     }
 
     public close() {
-        console.log("通道关闭", this.info.id)
+        console.log("通道关闭", TunnelTypeStr[this.info.tunnelType], this.info.id)
         this.worker?.port.postMessage({
             dataType: DataType.Text,
             close: true,

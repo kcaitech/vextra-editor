@@ -41,4 +41,10 @@ export class Upload extends Watchable(Object) {
         return true
     }
 
+    public close() {
+        if (!this.docResourceUpload) return
+        this.docResourceUpload.close()
+        this.docResourceUpload = undefined
+        this.startPromise = undefined
+    }
 }
