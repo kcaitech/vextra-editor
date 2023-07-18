@@ -1,21 +1,7 @@
 
 <template>
-    <!-- 数据展示 -->
-    <div class="main">
-        <div class="title">
-            <span class="name">{{ t('home.file_name') }}</span>
-            <span class="time">{{ t('home.modification_time') }}</span>
-            <span class="size">{{ t('home.size') }}</span>
-            <div><span class="other">{{ t('home.operation') }}</span></div>
-        </div>
-        <div v-if="noNetwork" class="network">
-            <NetworkError @refresh-doc="refreshDoc"></NetworkError>
-        </div>
-        <div class="item" v-else>
-            <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile"
-                @deletefile="Deletefile" @dbclickopen="openDocument" :iconlist="iconlists" />
-        </div>
-    </div>
+    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument"
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
 
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
@@ -55,13 +41,14 @@
 import * as share_api from "@/apis/share"
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, computed } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, computed, watch } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listsitem from '@/components/AppHome/listsitem.vue'
-import NetworkError from '@/components/NetworkError.vue'
+
 
 interface data {
     document: {
@@ -74,6 +61,7 @@ interface data {
     }
 }
 
+const emits = defineEmits(['data-update'])
 const { t } = useI18n()
 const isLoading = ref(false)
 const dialogVisible = ref(false)
@@ -87,17 +75,11 @@ const pageHeight = ref(0)
 const docId = ref('')
 const mydata = ref()
 const selectValue = ref(1)
-const getDoucmentList = ref<any[]>([])
-const documentId = ref()
 const noNetwork = ref(false)
+const lists = ref<any[]>([])
 const userInfo = ref<UserInfo | undefined>()
-let lists = ref<any[]>([])
 const iconlists = ref(['star', 'share', 'delete'])
 
-const teset=(id:any)=>{
-console.log(id);
-
-}
 //获取服务器我的文件列表
 async function getDoucment() {
     isLoading.value = true
@@ -184,7 +166,6 @@ const rightmenu = (e: MouseEvent, data: data) => {
     const rightmenu: any = document.querySelector('.rightmenu')
     const top = e.pageY
     const left = e.pageX
-
     nextTick(() => {
         const width = rightmenu.clientWidth
         const height = rightmenu.clientHeight
@@ -192,7 +173,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
         rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
     })
 
-    if ((e.target as HTMLElement).closest('.user')) {
+    if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
 
@@ -210,7 +191,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
 }
 
 //右键打开
-const openDocument = (id:string) => {
+const openDocument = (id: string) => {
     router.push({
         name: 'document',
         query: {
@@ -355,12 +336,16 @@ const handleClickOutside = (event: MouseEvent) => {
     }
 }
 
+
+watch(lists, (Nlist) => {
+    emits('data-update', Nlist, t('home.modification_time'))
+}, { deep: true })
+
 onMounted(() => {
     getDoucment()
     getPageHeight()
     window.addEventListener('resize', getPageHeight)
     document.addEventListener('mousedown', handleClickOutside)
-
 })
 
 onUnmounted(() => {
@@ -376,40 +361,6 @@ function emit(arg0: string) {
 <style lang="scss" scoped>
 main {
     height: auto;
-    .network {
-        height: calc(100vh - 194px);
-        margin: auto;
-    }
-}
-
-.item {
-    height: calc(100vh - 194px);
-}
-
-.title {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 10px 6px 10px;
-    color: #606266;
-    font-size: 14px;
-    font-weight: 600;
-    overflow: hidden;
-
-    span:nth-child(1) {
-        flex: 2;
-    }
-
-    span:not(:nth-child(1)) {
-        flex: 1;
-
-    }
-
-    div {
-        flex: 1;
-        padding: 0 10px 6px 0;
-        display: flex;
-
-    }
 }
 
 .newname {
@@ -420,53 +371,59 @@ main {
 
     &:hover {
         border-radius: 2px;
-        border: 2px rgb(69, 69, 255) solid;
-        border-color: rgb(69, 69, 255);
+        border: 2px #f3f0ff solid;
 
     }
 
     &:focus {
         border-radius: 2px;
-        border: 2px rgb(69, 69, 255) solid;
-        border-color: rgb(69, 69, 255);
+        border: 2px #9775fa solid;
     }
 
 }
 
-.el-button--primary {
-    background: rgb(69, 69, 255);
+
+.dialog-footer>.el-button {
+    &:hover {
+        background-color: rgba(208, 208, 208, 0.167);
+    }
+
+    &:active {
+        background-color: white;
+    }
+}
+
+.dialog-footer>.el-button--primary {
+    background-color: #9775fa;
     color: white;
-    border-color: rgb(69, 69, 255);
+    border-color: #9775fa;
 
     &:hover {
-        background: rgba(80, 80, 255, 0.884);
+        background: #9675fa91;
+        border-color: #9675fa91;
+    }
+
+    &:active {
+        background-color: #9775fa;
     }
 
     &[disabled] {
-        background: rgba(195, 195, 246, 0.884);
-        border: 1px rgba(195, 195, 246, 0.884) solid;
+        background: #e5dbff;
+        border: 1px #e5dbff solid;
     }
 }
 
-.el-button+.el-button {
-    background: rgb(255, 255, 255);
-    color: black;
-
-    &:hover {
-        background: rgba(208, 208, 208, 0.167);
-    }
-}
 
 .rightmenu {
     display: none;
     min-width: 200px;
     min-height: 100px;
-    z-index: 9999;
+    z-index: 999;
     position: absolute;
     background-color: white;
     padding: 10px 0;
     border-radius: 5px;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 
     ul {
         margin: 0;
@@ -482,14 +439,14 @@ main {
             cursor: pointer;
 
             &:hover {
-                background-color: rgba(192, 192, 192, 0.3);
+                background-color: #f3f0ff;
             }
         }
 
         div {
             height: 1px;
             width: auto;
-            background: rgba(192, 192, 192, 0.3);
+            background: #f3f0ff;
         }
 
 

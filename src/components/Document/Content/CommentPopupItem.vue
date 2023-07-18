@@ -4,10 +4,10 @@ import { Context } from '@/context';
 import { Delete, Edit, Back } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
-import { WorkSpace } from '@/context/workspace';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
+import { Comment } from '@/context/comment';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -22,7 +22,7 @@ const emit = defineEmits<{
     (e: 'quickReply', name: string): void
 }>()
 const hover = ref(false)
-const workspace = computed(() => props.context.workspace);
+const comment = computed(() => props.context.comment);
 const textarea = ref(props.commentInfo.content)
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const showEditComment = ref(false)
@@ -35,12 +35,12 @@ const hoverShape = (e: MouseEvent) => {
 }
 
 const isControls = computed(() => {
-    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    if(comment.value.isUserInfo?.id === props.commentInfo.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
     else return false
 })
 
 const isControlsDel = computed(() => {
-    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id) return true
+    if(comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
@@ -57,7 +57,7 @@ const onEditContext = (e: Event) => {
     textarea.value = props.commentInfo.content.replaceAll("<br/>", "\n").replaceAll("&nbsp;", " ")
     showEditComment.value = true
     const p =  popupItem.value!.offsetTop - 10
-    workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT, p)
+    comment.value.notify(Comment.COMMENT_HANDLE_INPUT, p)
     nextTick(() => {
         input.value && input.value.focus()
         scrollVisible.value = true
@@ -68,7 +68,7 @@ const onEditContext = (e: Event) => {
 const closeEdit = (e: Event) => {
     if(e.target instanceof Element && e.target.closest('.textarea')) return
     document.removeEventListener('click', closeEdit)
-    workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT)
+    comment.value.notify(Comment.COMMENT_HANDLE_INPUT)
     updateComment()
 }
 
@@ -86,7 +86,7 @@ const onDelete = (e: Event) => {
 const carriageReturn = (event: KeyboardEvent) => {
     event.stopPropagation()
     const { code, ctrlKey, metaKey } = event;
-    workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT)
+    comment.value.notify(Comment.COMMENT_HANDLE_INPUT)
     if(event.key === 'Enter') {
         if(ctrlKey || metaKey) {
             textarea.value = textarea.value + '\n'
@@ -101,7 +101,7 @@ const carriageReturn = (event: KeyboardEvent) => {
 
 const updateComment = () => {
     const text = textarea.value.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
-    workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT)
+    comment.value.notify(Comment.COMMENT_HANDLE_INPUT)
     emit('editComment', props.index, text)
     editComment(text)
     showEditComment.value = false
@@ -109,7 +109,6 @@ const updateComment = () => {
 
 
 const handleInput = () => {
-    // workspace.value.notify(WorkSpace.COMMENT_HANDLE_INPUT)
     nextTick(() => {
         input.value?.focus()
     })

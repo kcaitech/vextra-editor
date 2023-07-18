@@ -18,8 +18,9 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-import avatar from '@/assets/pd-logo-svg.svg';
+
 import { measure } from '@/layout/text/measure';
+import { onUnmounted } from 'vue';
 
 interface Emits {
     (e: 'settitle', title: string): void;
@@ -59,49 +60,21 @@ function Setindex(a: any, b: any) {
 }
 const x = sessionStorage.getItem('index')
 
-// window.addEventListener('popstate', function () {
-//     if (location.hash.toLowerCase() == '#/apphome/starfile') {
-//         sessionStorage.setItem('index', '2')
-//         sessionStorage.setItem('title', t('home.star_file'))
-//         location.reload()
-//     }
-//     if (location.hash.toLowerCase() == '#/apphome/recently') {
-//         sessionStorage.setItem('index', '1')
-//         sessionStorage.setItem('title', t('home.recently_opened'))
-//         location.reload()
-//     }
-//     if (location.hash.toLowerCase() == '#/apphome/meshare') {
-//         sessionStorage.setItem('index', '3')
-//         sessionStorage.setItem('title', t('home.file_shared'))
-//         location.reload()
-//     }
-//     if (location.hash.toLowerCase() == '#/apphome/shareme') {
-//         sessionStorage.setItem('index', '4')
-//         sessionStorage.setItem('title', t('home.shared_file_received'))
-//         location.reload()
-//     }
-//     if (location.hash.toLowerCase() == '#/apphome/recyclebin') {
-//         sessionStorage.setItem('index', '5')
-//         sessionStorage.setItem('title', t('home.recycling_station'))
-//         location.reload()
-//     }
-// });
+onUnmounted(() => {
+    picker.unmount();
+})
 
 </script>
 <template>
     <el-row class="tac">
-        <el-col :span="12">
-            <div class="logo">
-                <div style="width: 108px;height: 108px;"><img :src="avatar" alt="ProtoDesign" /></div>
-                <h3 class="mb-2" style="font-size:24px">ProtoDesign</h3>
-            </div>
+        <el-col>
             <div class="new">
-                <button class="newfile" @click="newFile"> <el-icon :size="22">
+                <button class="newfile" @click="newFile"> <el-icon>
                         <Plus />
-                    </el-icon>{{ t('home.New_file') }}</button>
-                <button class="openfile" @click="picker.invoke()"><el-icon :size="22">
+                    </el-icon><span>{{ t('home.New_file') }}</span></button>
+                <button class="openfile" @click="picker.invoke()"><el-icon>
                         <FolderOpened />
-                    </el-icon>{{ t('home.open_local_file') }}</button>
+                    </el-icon><span>{{ t('home.open_local_file') }}</span></button>
             </div>
             <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                 text-color="#000000">
@@ -130,7 +103,7 @@ const x = sessionStorage.getItem('index')
                         </el-icon>
                         <span>{{ t('home.shared_file_received') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/recyclebin" props=""><el-menu-item index="5"
+                <router-link to="/apphome/recyclebin"><el-menu-item index="5"
                         @click="Setindex(5, t('home.recycling_station'))">
                         <el-icon>
                             <Delete />
@@ -148,14 +121,7 @@ a {
     text-decoration: none;
 }
 
-.logo {
-    position: sticky;
-    top: 0px;
-    left: 0px;
-    margin: auto;
-    background-color: white;
-    z-index: 2;
-}
+
 
 .el-row {
     height: 100vh;
@@ -167,59 +133,60 @@ a {
         max-width: 100%;
         flex: 1;
 
-        .logo {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-
-            .el-icon {
-                margin-right: 10px;
-            }
-        }
-
         .new {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 20px 20px auto;
+            display: block;
+            text-align: center;
+            margin: 20px 10px auto;
 
             button {
-                width: 280px;
-                height: 56px;
+                width: 100%;
+                height: 36px;
                 margin: 0px 0 20px 0;
                 border: none;
-                font-size: 16px;
-                letter-spacing: 2px;
-                font-weight: bold;
-                border-radius: 5px;
+                font-size: 14px;
+                letter-spacing: 1px;
+                font-weight: 500;
+                border-radius: 6px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                cursor: pointer;
+
+                span {
+                    overflow: hidden;
+                    white-space: nowrap;
+                }
+
+                .el-icon {
+                    font-size: 20px;
+                    margin-right: 6px;
+                }
             }
 
+
             .newfile {
-                background: rgb(69, 69, 248);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: #9775fa;
                 color: #ffffff;
+
                 &:hover {
-                    background-color:  rgba(69, 69, 248, 0.5);
+                    background-color: #9675fadc;
                 }
 
                 &:active {
-                    background-color:  rgb(48, 48, 255);
+                    background-color: #9775fa;
                 }
             }
 
             .openfile {
+                background-color: #f3f0ff;
+                color: #9775fa;
+
                 &:hover {
-                    background-color: rgba(192, 192, 192, 0.6);
+                    border: 1px #9775fa solid;
                 }
-
-                &:active {
-                    background-color: rgba(170, 170, 255, 0.6)
-                }
-
             }
 
 
@@ -228,22 +195,50 @@ a {
         .el-menu {
             border: none;
             background: none;
+            
 
             .el-menu-item {
-                border-radius: 5px;
+                border-radius: 4px;
                 margin: 10px;
-
+                height: 32px;
                 &:hover {
-                    background: rgb(70, 76, 248);
-                    color: white
+                    background-color: #f3f0ff;
+                    color: #9775fa;
                 }
 
                 &.is-active {
-                    color: #ffffff;
-                    background: blue;
+                    font-weight: 600;
+                    color: #9775fa;
+                    background-color: #e5dbff;
                 }
             }
         }
     }
+}
+
+
+@media screen and (max-width:1000px) {
+
+    span,
+    h3 {
+        display: none;
+    }
+
+    .el-row .el-col .new button .el-icon {
+        padding: 0;
+        margin: 0;
+        font-size:24px;
+    }
+    .el-menu-item{
+        justify-content: center;
+    }
+
+
+    .el-icon {
+        margin: 0;
+        padding: 0;
+        font-size: 32px;
+    }
+
 }
 </style>

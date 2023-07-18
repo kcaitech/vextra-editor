@@ -38,6 +38,7 @@ function selection_watcher(t?: number) { }
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button === 0) {
+        props.context.menu.menuMount()
         event.stopPropagation();
         props.context.menu.menuMount()
         cur_ctrl_type = ele;

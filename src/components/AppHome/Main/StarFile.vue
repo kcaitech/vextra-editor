@@ -1,21 +1,7 @@
 <template>
-    <!-- 数据展示 -->
-    <div class="main">
-        <div class="title">
-            <span class="name">{{ t('home.file_name') }}</span>
-            <span class="time">{{ t('home.modification_time') }}</span>
-            <span class="size">{{ t('home.size') }}</span>
-            <div><span class="other">{{ t('home.operation') }}</span></div>
-        </div>
-        <div v-if="noNetwork" class="network">
-            <NetworkError @refresh-doc="refreshDoc"></NetworkError>
-        </div>
-        <div class="item" v-else>
-            <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile"
-                @dbclickopen="openDocument" :iconlist="iconlists" />
-        </div>
-    </div>
-    <!-- 右键菜单 -->
+    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile"
+        @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+        
     <div class="rightmenu" ref="menu">
         <ul>
             <li @click="openDocument(docId)">{{ t('homerightmenu.open') }}</li>
@@ -48,13 +34,13 @@
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listsitem from '@/components/AppHome/listsitem.vue'
-import NetworkError from '@/components/NetworkError.vue'
 const { t } = useI18n()
 
 const isLoading = ref(false);
@@ -74,6 +60,8 @@ const docId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
+
+const emits = defineEmits(['data-update'])
 
 interface data {
     document: {
@@ -183,7 +171,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
         rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
     })
 
-    if ((e.target as HTMLElement).closest('.user')) {
+    if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
 
@@ -305,24 +293,31 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
+watch(lists, (Nlist) => {
+    emits('data-update', Nlist, t('home.modification_time'))
+}, { deep: true })
+
 onMounted(() => {
     getUserdata()
     getPageHeight()
     window.addEventListener('resize', getPageHeight)
     document.addEventListener('mousedown', handleClickOutside)
 })
+
 onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
     document.removeEventListener('mousedown', handleClickOutside)
 })
 </script>
 <style lang="scss" scoped>
-.network {
-    height: calc(100vh - 194px);
-    margin: auto;
-}
 .item {
     height: calc(100vh - 194px);
+}
+
+@media screen and (max-width: 1000px) {
+    .item {
+        height: calc(100vh - 154px);
+    }
 }
 
 .title {
@@ -333,6 +328,13 @@ onUnmounted(() => {
     font-size: 14px;
     font-weight: 600;
     overflow: hidden;
+
+    span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        margin-right: 10px;
+    }
 
     span:nth-child(1) {
         flex: 2;
@@ -359,38 +361,45 @@ onUnmounted(() => {
 
     &:hover {
         border-radius: 2px;
-        border: 2px rgb(69, 69, 255) solid;
-        border-color: rgb(69, 69, 255);
+        border: 2px #f3f0ff solid;
+
     }
 
     &:focus {
         border-radius: 2px;
-        border: 2px rgb(69, 69, 255) solid;
-        border-color: rgb(69, 69, 255);
+        border: 2px #9775fa solid;
+    }
+
+}
+
+
+.dialog-footer>.el-button {
+    &:hover {
+        background-color: rgba(208, 208, 208, 0.167);
+    }
+
+    &:active {
+        background-color: white;
     }
 }
 
-.el-button--primary {
-    background: rgb(69, 69, 255);
+.dialog-footer>.el-button--primary {
+    background-color: #9775fa;
     color: white;
-    border-color: rgb(69, 69, 255);
+    border-color: #9775fa;
 
     &:hover {
-        background: rgba(80, 80, 255, 0.884);
+        background: #9675fa91;
+        border-color: #9675fa91;
+    }
+
+    &:active {
+        background-color: #9775fa;
     }
 
     &[disabled] {
-        background: rgba(195, 195, 246, 0.884);
-        border: 1px rgba(195, 195, 246, 0.884) solid;
-    }
-}
-
-.el-button+.el-button {
-    background: rgb(255, 255, 255);
-    color: black;
-
-    &:hover {
-        background: rgba(208, 208, 208, 0.167);
+        background: #e5dbff;
+        border: 1px #e5dbff solid;
     }
 }
 
@@ -398,12 +407,12 @@ onUnmounted(() => {
     display: none;
     min-width: 200px;
     min-height: 100px;
-    z-index: 9999;
+    z-index: 999;
     position: absolute;
     background-color: white;
-    border-radius: 5px;
     padding: 10px 0;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    border-radius: 5px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 
     ul {
         margin: 0;
@@ -419,15 +428,16 @@ onUnmounted(() => {
             cursor: pointer;
 
             &:hover {
-                background-color: rgba(192, 192, 192, 0.3);
+                background-color: #f3f0ff;
             }
         }
 
         div {
             height: 1px;
             width: auto;
-            background: rgba(192, 192, 192, 0.3);
+            background: #f3f0ff;
         }
+
 
     }
 }

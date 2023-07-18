@@ -1,21 +1,6 @@
 <template>
-    <!-- 数据展示 -->
-    <div class="main">
-        <div class="title">
-            <span class="name">{{ t('home.file_name') }}</span>
-            <span class="time">{{ t('home.modification_time') }}</span>
-            <span class="size">{{ t('home.size') }}</span>
-            <div><span class="other">{{ t('home.operation') }}</span></div>
-        </div>
-        <div v-if="noNetwork" class="network">
-            <NetworkError @refresh-doc="refreshDoc"></NetworkError>
-        </div>
-        <div class="item" v-else>
-            <listsitem :items="lists" @rightMeun="rightmenu" @restore="Restorefile" @ndelete="Deletefile"
-                :iconlist="iconlists" />
-        </div>
-    </div>
-
+    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+    
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
@@ -41,10 +26,10 @@
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import listsitem from '@/components/AppHome/listsitem.vue'
-import NetworkError from '@/components/NetworkError.vue'
+import tablelist from '@/components/AppHome/tablelist.vue'
 const { t } = useI18n()
 
 const isLoading = ref(false)
@@ -55,6 +40,8 @@ const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
+
+const emits = defineEmits(['data-update'])
 
 interface data {
     document: {
@@ -79,9 +66,9 @@ async function GetrecycleLists() {
         } else {
             noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
-                let { document: { size }, document_access_record: { last_access_time } } = data[i]
+                let { document: { size, deleted_at } } = data[i]
                 data[i].document.size = sizeTostr(size)
-                data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+                data[i].document.deleted_at = deleted_at.slice(0, 19).split('T')[0] + ' ' + deleted_at.slice(0, 19).split('T')[1]
             }
         }
         lists.value = Object.values(data)
@@ -118,11 +105,11 @@ const Restorefile = async (data: data) => {
     const { code } = await user_api.RecoverFile({ doc_id: id })
     if (code === 0) {
         ElMessage.closeAll('success')
-        ElMessage.success( {duration:1500,message:t('home.restore_ok')})
+        ElMessage.success({ duration: 1500, message: t('home.restore_ok') })
         lists.value = lists.value.filter(item => item.document.id != id)
     } else {
         ElMessage.closeAll('error')
-        ElMessage.error({duration:1500,message: t('home.restore_no')})
+        ElMessage.error({ duration: 1500, message: t('home.restore_no') })
     }
 }
 
@@ -140,17 +127,17 @@ const Qdeletefile = async (id: string) => {
         if (code === 0) {
             lists.value = lists.value.filter(item => item.document.id != id)
             ElMessage.closeAll('success')
-            ElMessage.success({duration:1500,message:t('home.delete_file_ok')})
-            dialogVisible.value = false  
+            ElMessage.success({ duration: 1500, message: t('home.delete_file_ok') })
+            dialogVisible.value = false
         } else {
             dialogVisible.value = false
             ElMessage.closeAll('error')
-            ElMessage.error({duration:1500,message:t('home.delete_file_no')})
+            ElMessage.error({ duration: 1500, message: t('home.delete_file_no') })
         }
     } catch (error) {
         dialogVisible.value = false
         ElMessage.closeAll('error')
-        ElMessage.error({duration:1500,message:t('other_tips')})
+        ElMessage.error({ duration: 1500, message: t('other_tips') })
     }
 }
 
@@ -169,8 +156,8 @@ const rightmenu = (e: MouseEvent, data: data) => {
         rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
         rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
     })
-    
-    if ((e.target as HTMLElement).closest('.user')) {
+
+    if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
     docId.value = id
@@ -203,10 +190,13 @@ const handleClickOutside = (event: MouseEvent) => {
     }
 }
 
+watch(lists, (Nlist) => {
+    emits('data-update', Nlist, t('home.delete_file_time'))
+}, { deep: true })
+
 onMounted(() => {
     GetrecycleLists()
     document.addEventListener('mousedown', handleClickOutside)
-
 })
 
 onUnmounted(() => {
@@ -217,14 +207,16 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 main {
     height: auto;
-    .network {
-        height: calc(100vh - 194px);
-        margin: auto;
-    }
 }
 
 .item {
     height: calc(100vh - 194px);
+}
+
+@media screen and (max-width: 1000px) {
+    .item {
+        height: calc(100vh - 154px);
+    }
 }
 
 .title {
@@ -235,6 +227,13 @@ main {
     font-size: 14px;
     font-weight: 600;
     overflow: hidden;
+
+    span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        margin-right: 10px;
+    }
 
     span:nth-child(1) {
         flex: 2;
@@ -256,13 +255,12 @@ main {
 .rightmenu {
     display: none;
     min-width: 200px;
-    height: auto;
-    z-index: 9999;
+    z-index: 999;
     position: absolute;
     background-color: white;
     padding: 10px 0;
     border-radius: 5px;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 
     ul {
         margin: 0;
@@ -278,19 +276,15 @@ main {
             cursor: pointer;
 
             &:hover {
-                background-color: rgba(192, 192, 192, 0.3);
+                background-color: #f3f0ff;
             }
         }
-
     }
 }
 
-:deep(.el-button) {
-    background: none;
-
+.dialog-footer>.el-button {
     &:hover {
-        background-color: #e0e0e049;
-        border-color: #dcdfe6;
+        background-color: rgba(208, 208, 208, 0.167);
     }
 
     &:active {
@@ -298,19 +292,24 @@ main {
     }
 }
 
-:deep(.el-button--primary) {
-    background-color: none;
-    background: #145ff6;
-    border: #145ff6;
+.dialog-footer>.el-button--primary {
+    background-color: #9775fa;
+    color: white;
+    border-color: #9775fa;
 
     &:hover {
-        background-color: #145ff6cd;
+        background: #9675fa91;
+        border-color: #9675fa91;
     }
 
     &:active {
-        background-color: #145ff6;
+        background-color: #9775fa;
     }
 
+    &[disabled] {
+        background: #e5dbff;
+        border: 1px #e5dbff solid;
+    }
 }
 
 

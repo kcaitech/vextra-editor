@@ -260,7 +260,6 @@ watch(() => props.pageHeight, () => {
 watchEffect(() => {
   getDocumentInfo()
   getShareList()
-
   nextTick(() => {
     handleTop.value = props.pageHeight / 2
     if (card.value) {
@@ -271,6 +270,8 @@ watchEffect(() => {
 })
 
 onMounted(() => {
+  console.log(docInfo.value.document);
+  
   if (!value1.value) {
     setShateType(docType.Private)
   } else {
@@ -385,7 +386,7 @@ onUnmounted(() => {
         <!-- 文档权限 -->
         <div class="unfounder">
           <span>{{ t('share.document_permission') }}:</span>
-          <p class="name">{{DocType[props.selectValue]}}</p>
+          <p class="name">{{DocType[docInfo.document.doc_type]}}</p>
         </div>
         <!-- 链接按钮 -->
         <div class="button bottom">
