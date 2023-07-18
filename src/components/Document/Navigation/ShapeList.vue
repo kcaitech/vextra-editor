@@ -421,6 +421,7 @@ function navi_watcher(t: number) {
 }
 function clear_text() {
     keywords.value = '';
+    props.context.navi.set_focus_text();
     if (search_el.value) {
         search_el.value.select();
     }
@@ -508,12 +509,6 @@ function accurate_shift() {
     props.context.menu.setMode(accurate.value);
     props.context.navi.notify(Navi.SEARCHING);
 }
-function search_el_mouseenter() {
-    show_accrate_btn.value = true;
-}
-function search_el_mouseleave() {
-    show_accrate_btn.value = false;
-}
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
     props.context.menu.watch(menu_watcher);
@@ -536,7 +531,7 @@ onUnmounted(() => {
     <div class="shapelist-wrap" ref="shapeList">
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
-            <div class="search" ref="search_wrap" @mouseenter="search_el_mouseenter" @mouseleave="search_el_mouseleave">
+            <div class="search" ref="search_wrap">
                 <div class="tool-container" @click="preto_search">
                     <svg-icon icon-class="search"></svg-icon>
                 </div>
@@ -546,10 +541,10 @@ onUnmounted(() => {
                 <input ref="search_el" type="text" id="xpxp" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
                     @blur="leave_search" @click.stop="preto_search" @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close"
-                    :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }">
+                    :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
                     <svg-icon icon-class="close-x"></svg-icon>
                 </div>
-                <div :style="{ opacity: ((show_accrate_btn && keywords) || (accurate && keywords)) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }"
+                <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
                     :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
                     Aa
                 </div>
