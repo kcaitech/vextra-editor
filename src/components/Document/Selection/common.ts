@@ -15,7 +15,7 @@ export function genRectPath(points: { x: number, y: number }[]): string {
     return path;
 }
 
-export function throttle<T extends (...args: any[]) => void> (func: T, delay: number): T {
+export function throttle<T extends (...args: any[]) => void>(func: T, delay: number): T {
     let timerId: any = null;
     return function (...args: any[]) {
         if (!timerId) {

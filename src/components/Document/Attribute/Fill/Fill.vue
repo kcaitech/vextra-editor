@@ -320,7 +320,7 @@ watchEffect(updateData);
                 flex: 0 0 18px;
                 width: 18px;
                 height: 18px;
-                background-color: #2561D9;
+                background-color: var(--active-color);
                 border-radius: 3px;
                 border: 1px solid #d8d8d8;
                 box-sizing: border-box;

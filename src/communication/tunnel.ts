@@ -63,6 +63,9 @@ export class Tunnel {
             this.receivingData = undefined
             return
         }
+        if (data.dataType === DataType.Binary) {
+            this.receivingData = data
+        }
         const cmdId = await this.sendToServer(ClientCmdType.TunnelData, data, data.isListened, data.cmdId)
         if (data.isListened) {
             if (!data.cmdId) {

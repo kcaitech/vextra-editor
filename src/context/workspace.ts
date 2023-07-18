@@ -122,15 +122,16 @@ export class WorkSpace extends Watchable(Object) {
     static TOGGLE_COMMENT_PAGE = 44;
     static HOVER_SHOW_COMMENT = 45;
     static UPDATE_COMMENT_CHILD = 46;
-    static ONARBOARD__TITLE_MENU = 47;
-    static BOLD = 48;
-    static UNDER_LINE = 49;
-    static ITALIC = 50;
-    static DELETE_LINE = 51;
-    static HIDDEN_UI = 52;
-    static INIT_DOC_NAME = 53;
-    static COMPS = 54;
-    static TEXT_FORMAT = 55;
+    static COMPS = 47;
+    static INIT_EDITOR = 48;
+    static ONARBOARD__TITLE_MENU = 49;
+    static BOLD = 50;
+    static UNDER_LINE = 51;
+    static ITALIC = 52;
+    static DELETE_LINE = 53;
+    static HIDDEN_UI = 54;
+    static INIT_DOC_NAME = 55;
+    static TEXT_FORMAT = 56;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -182,7 +183,7 @@ export class WorkSpace extends Watchable(Object) {
         return this.m_matrix;
     }
     get root(): Root { //return contentView HTMLElement info
-        const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构0.6s后会进行root数据更新)；
+        const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构后会进行root数据更新)；
         if (root.init) {
             return root;
         } else { // 如果未初始化，则查找一次，在contentView的一个生命周期内，只查找一次或零次Dom；
@@ -490,16 +491,16 @@ export class WorkSpace extends Watchable(Object) {
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
             this.keydown_c(ctrlKey, metaKey);
-        }else if (event.code === KeyboardKeys.B) {
+        } else if (event.code === KeyboardKeys.B) {
             event.preventDefault();
             this.keydown_b(ctrlKey, metaKey);
-        }else if (event.code === KeyboardKeys.I) {
+        } else if (event.code === KeyboardKeys.I) {
             event.preventDefault();
             this.keydown_i(ctrlKey, metaKey, shiftKey);
-        }else if (event.code === KeyboardKeys.U) {
+        } else if (event.code === KeyboardKeys.U) {
             event.preventDefault();
             this.keydown_u(ctrlKey, metaKey);
-        }else if (event.code === KeyboardKeys.X) {
+        } else if (event.code === KeyboardKeys.X) {
             event.preventDefault();
             this.keydown_x(ctrlKey, metaKey, shiftKey);
             this.keydown_c(ctrlKey, metaKey, shiftKey);
@@ -603,7 +604,7 @@ export class WorkSpace extends Watchable(Object) {
     keydown_i(ctrl: boolean, meta: boolean, shiftKey: boolean) {
         if (shiftKey) {
             this.notify(WorkSpace.COMPS);
-        }else if (ctrl || meta) {
+        } else if (ctrl || meta) {
             this.notify(WorkSpace.ITALIC);
         }
     }

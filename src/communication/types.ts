@@ -1,5 +1,11 @@
 export enum TunnelType {
     DocOp = 0,
+    DocResourceUpload
+}
+
+export const TunnelTypeStr: Record<TunnelType, string> = {
+    [TunnelType.DocOp]: "文档操作",
+    [TunnelType.DocResourceUpload]: "文档资源上传",
 }
 
 export type CommunicationInfo = {

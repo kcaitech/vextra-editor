@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page, ICoopLocal, CoopLocal, CoopRepository } from '@kcdesign/data';
+import { Document, importDocument, uploadExForm, Repository, Page, CoopRepository } from '@kcdesign/data';
 import { Ot } from "@/communication/modules/ot";
 import { STORAGE_URL, DOC_UPLOAD_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
@@ -303,7 +303,10 @@ const getDocumentInfo = async () => {
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            ot = Ot.Make(route.query.id as string, localStorage.getItem('token') || "", document, context.coopRepo, "0");
+
+            const docId = route.query.id as string;
+            const token = localStorage.getItem("token") || "";
+            ot = Ot.Make(docId, token, document, context.coopRepo, "0");
             ot.start()
                 .catch((e) => {
                     if (!context) {
@@ -316,9 +319,9 @@ const getDocumentInfo = async () => {
                         return;
                     }
                     switchPage(context.data.pagesList[0]?.id);
-                    loading.value = false
+                    loading.value = false;
                 });
-
+            await context.upload.start(docId, token);
         }
         getUserInfo()
     } catch (err) {
@@ -341,7 +344,8 @@ function upload() {
             });
             ot = Ot.Make(doc_id, localStorage.getItem('token') || "", context!.data, context!.coopRepo, "0");
             ot.start();
-            context?.workspace.notify(WorkSpace.INIT_DOC_NAME)
+            context!.upload.start(doc_id, token);
+            context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
         }
     })
 }
@@ -387,6 +391,7 @@ onMounted(() => {
 onUnmounted(() => {
     try {
         ot?.close();
+        context?.upload.close();
     } catch (err) { }
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
@@ -498,7 +503,7 @@ onUnmounted(() => {
         width: 100%;
         height: 100%;
         overflow: hidden;
-        position: absolute;
+        position: relative;
     }
 
     #attributes {
