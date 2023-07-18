@@ -67,6 +67,7 @@ function get_r_path(ps: { x: number, y: number }, type: CtrlElementType) {
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
   if (event.button === 0) {
+    props.context.menu.menuMount()
     const workspace = props.context.workspace;
     event.stopPropagation();
     workspace.setCtrl('controller');

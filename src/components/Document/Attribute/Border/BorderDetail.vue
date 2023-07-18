@@ -237,6 +237,9 @@ function selection_wather(t?: any) {
     layout();
   }
 }
+const selectBorderThicknes = () => {
+  borderThickness.value?.select()
+}
 onMounted(() => {
   props.context.selection.watch(selection_wather);
   layout();
@@ -268,7 +271,7 @@ onUnmounted(() => {
             <label>{{ t('attr.thickness') }}</label>
             <div class="thickness-container">
               <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
-              <input ref="borderThickness" type="text" :value="border.thickness" @change="e => setThickness(e)">
+              <input ref="borderThickness" type="text" :value="border.thickness" @change="e => setThickness(e)" @focus="selectBorderThicknes">
             </div>
           </div>
           <!-- 边框样式 -->

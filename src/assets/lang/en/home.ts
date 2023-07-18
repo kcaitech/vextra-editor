@@ -247,6 +247,8 @@ export const attr: any = {
     font_color: 'Font color',
     highlight_color: 'Highlight color',
     multiple_colors: 'There are many color values, click + can be unified set',
+    unfold: 'Unfold',
+    packup: 'Pack up'
 }
 
 export const login = {

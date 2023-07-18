@@ -28,7 +28,7 @@ const onShare = () => {
   documentInfo(route.query.id).then((data) => {
     docInfo.value = data
     if(docInfo.value) {
-      userInfo.value = props.context.workspace.isUserInfo
+      userInfo.value = props.context.comment.isUserInfo
       showFileShare.value = true
     }
   })

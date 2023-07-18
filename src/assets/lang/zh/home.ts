@@ -247,6 +247,8 @@ export const attr: any = {
     font_color: '字体颜色',
     highlight_color: '高亮颜色',
     multiple_colors: '存在多种颜色值，点击+可统一设置',
+    unfold: '展开',
+    packup: '收起'
 }
 
 export const login = {
