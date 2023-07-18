@@ -222,10 +222,7 @@ export function is_mac() {
 export function string_by_sys(str: string): string {
   if (is_mac()) {
     let src = str;
-    src = src.replace(/ctrl|Ctrl/g, "⌘");
-    src = src.replace(/shift|Shift/g, "⇧");
-    src = src.replace(/alt|Alt/g, "⌥");
-    return src;
+    return src.replace(/ctrl|Ctrl/g, "⌘").replace(/shift|Shift/g, "⇧").replace(/alt|Alt/g, "⌥");
   } else {
     return str;
   }
