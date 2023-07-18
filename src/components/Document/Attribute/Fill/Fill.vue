@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
 import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, TextShape, ShapeType, AttrGetter } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
@@ -25,7 +25,8 @@ const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
-const alphaFill = ref<HTMLInputElement>();
+const alphaFill = ref<any>();
+const colorFill = ref<any>();
 const mixed = ref<boolean>(false);
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -232,6 +233,27 @@ function selection_wather(t: any) {
         updateData();
     }
 }
+
+const selectColor = (id: number) => {
+    if(colorFill.value) {
+        colorFill.value[id].select()
+    }
+}
+const selectAlpha = (id: number) => {
+    if(alphaFill.value) {
+        alphaFill.value[id].select()
+    }
+}
+const filterAlpha = (a: number) => {
+    let alpha = Math.round(a * 100) / 100;
+    if (Number.isInteger(alpha)) {
+        return alpha.toFixed(0); // 返回整数形式
+    }else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+        return alpha.toFixed(1); // 保留一位小数
+    } else {
+        return alpha.toFixed(2); // 保留两位小数
+    }
+}
 // hooks
 onMounted(() => {
     props.context.selection.watch(selection_wather); // 有问题，等会再收拾你
@@ -264,10 +286,12 @@ watchEffect(updateData);
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" @change="c => getColorFromPicker(idx, c)">
                     </ColorPicker>
-                    <input :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange(idx, e)" />
-                    <input ref="alphaFill" style="text-align: center;" :value="(f.fill.color.alpha * 100) + '%'"
-                        @change="(e) => onAlphaChange(idx, e)" />
+                    <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
+                        @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"/>
+                    <!-- <input ref="alphaFill" style="text-align: center;" :value="(f.fill.color.alpha * 100).toFixed(0) + '%'"
+                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" /> -->
+                        <input ref="alphaFill" style="text-align: center;" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
+                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" />
                 </div>
                 <div style="width: 22px;"></div>
                 <div class="delete" @click="deleteFill(idx)">

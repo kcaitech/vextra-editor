@@ -1,6 +1,5 @@
 import { Shape, Watchable } from "@kcdesign/data";
 import { DocInfo, UserInfo } from "./user";
-
 export class Comment extends Watchable(Object) {
   static SHUTDOWN_COMMENT = 1;
   static SELECT_LIST_TAB = 2;
@@ -22,7 +21,7 @@ export class Comment extends Watchable(Object) {
   static HOVER_SHOW_COMMENT = 18;
   static UPDATE_COMMENT_CHILD = 19;
 
-  private m_document_perm: number = 3;
+  private m_user_info: UserInfo | undefined;
   private m_comment_input: boolean = false;
   private m_document_info: DocInfo | undefined;
   private m_comment_list: any[] = []; // 当前文档评论
@@ -39,9 +38,6 @@ export class Comment extends Watchable(Object) {
   private m_comment_visible: boolean = true; //是否显示评论
   constructor() {
     super();
-  }
-  get documentPerm() {
-    return this.m_document_perm;
   }
   get isUserInfo() {
     return this.m_user_info;
@@ -87,9 +83,6 @@ export class Comment extends Watchable(Object) {
   }
   get isVisibleComment() {
     return this.m_comment_visible;
-  }
-  setDocumentPerm(perm: number) {
-    this.m_document_perm = perm;
   }
   showCommentPopup(index: number, e: MouseEvent) {
     this.notify(Comment.SHOW_COMMENT_POPUP, index, e);

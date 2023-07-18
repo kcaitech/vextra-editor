@@ -98,7 +98,7 @@ const addPage = () => {
     const id = props.context.selection.selectedPage?.id;
     const index = props.context.data.pagesList.findIndex((item) => item.id === id);
     const new_page = editor.insertPage(`${t('navi.page')} ${_tail}`, index + 1);
-    props.context.workspace.toggleCommentPage()
+    props.context.comment.toggleCommentPage()
     if (new_page) {
         props.context.selection.selectPage(new_page);
         if (list_body.value) {
@@ -203,7 +203,7 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         e?.stopPropagation();
     } else if (item === 'delete') {
         e?.stopPropagation();
-        props.context.workspace.toggleCommentPage()
+        props.context.comment.toggleCommentPage()
         const pagesList = props.context.data.pagesList;
         if (pagesList.length === 1) return;
         if (id) {

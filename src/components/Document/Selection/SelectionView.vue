@@ -95,9 +95,9 @@ function createShapeTracing() { // 描边
             tracing.value = false;
         } else {
             const path = hoveredShape.getPath(true);
-            const m2page = hoveredShape.matrix2Root();
-            path.transform(m2page);
-            path.transform(matrix);
+            let m = hoveredShape.matrix2Root();
+            m.multiAtLeft(matrix);
+            path.transform(m);
             const { x, y, right, bottom } = props.context.workspace.root;
             const w = right - x;
             const h = bottom - y;

@@ -132,6 +132,12 @@ const onMouseUp = (e: MouseEvent) => {
 
 }
 
+const selectValue = () => {
+    if(input.value) {
+        input.value.select()
+    }
+}
+
 watch(scale, () => {
     //input的值加上鼠标移动后的大小等于最终改变的值
     if (props.ticon) {
@@ -157,6 +163,7 @@ watch(scale, () => {
         emit("onchange", Number(input.value!.value).toFixed(2))
     }
 }, { deep: true });
+
 watch(screenWidth, () => {
     screenWidth.value = window.innerWidth;
 })
@@ -181,7 +188,7 @@ onMounted(() => {
         }"></svg-icon>
         <img class="icon" v-if="props.icon" :src="props.icon" />
         <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon">{{ props.ticon }}</span>
-        <input ref="input" @click="onBlur" :value="props.text" @keydown="onKeyBlur" v-on:change="onChange" />
+        <input ref="input" @click="onBlur" @focus="selectValue" :value="props.text" @keydown="onKeyBlur" v-on:change="onChange" />
     </label>
 </template>
 

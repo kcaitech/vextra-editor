@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+const emits = defineEmits(['Privacypolicy','Serviceagreement'])
 
 
 </script>
@@ -12,10 +13,10 @@ const { t } = useI18n();
             {{ t('system.login_footer') }}
         </span>
         <span>
-            <a href="">{{ t('system.read_TOS') }}</a>
+            <a href="" @click.prevent="emits('Privacypolicy','privacypolicy')">{{ t('system.read_TOS') }}</a>
         </span>
         <span>
-            <a href="">{{ t('system.read_Privacy') }}</a>
+            <a href="" @click.prevent="emits('Privacypolicy','privacypolicy')">{{ t('system.read_Privacy') }}</a>
         </span>
 
     </div>

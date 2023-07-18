@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, watchEffect, nextTick } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick } from 'vue';
 import { Context } from '@/context';
 import PageCommentItem from '@/components/Document/Content/PageCommentItem.vue'
 import * as comment_api from '@/apis/comment';
@@ -9,6 +9,7 @@ import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
 import { Page, Shape, ShapeType } from "@kcdesign/data";
+import { Comment } from '@/context/comment';
 
 type CommentView = InstanceType<typeof PageCommentItem>;
 
@@ -23,7 +24,8 @@ const props = defineProps<{
 const commentItem = ref<CommentView>();
 const commentInput = ref(false);
 const workspace = computed(() => props.context.workspace);
-const documentCommentList = ref<any[]>(workspace.value.pageCommentList)
+const comment = computed(() => props.context.comment);
+const documentCommentList = ref<any[]>(comment.value.pageCommentList)
 const route = useRoute()
 const userId = localStorage.getItem('userId') || ''
 const matrix = reactive(props.context.workspace.matrix); // 一切图形可视变换的根源！！！
@@ -73,7 +75,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
     const { x, y } = getMouseOnPageXY(e)
     downOnPageXY.x = x
     downOnPageXY.y = y
-    workspace.value.commentMove(false)
+    comment.value.commentMove(false)
     editCommentId.value = documentCommentList.value[index].id
     commentIndex.value = index
     const handleMouseMove = (e: MouseEvent) => {
@@ -86,7 +88,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
         const dy = e.screenY - prePt.y;
         const diff = Math.hypot(dx, dy);
         if (diff < 4) {
-            props.context.workspace.showCommentPopup(commentIndex.value, e)
+            props.context.comment.showCommentPopup(commentIndex.value, e)
         } else {
             if (documentCommentList.value[index].user.id !== userId) return
             const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
@@ -95,7 +97,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
             const shapes = searchCommentShape(props.context, commentxy);
             shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
             shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
-            workspace.value.commentMove(false)
+            comment.value.commentMove(false)
             if (shapes.length === 0) {
                 const data = {
                     id: editCommentId.value,
@@ -143,7 +145,7 @@ const moveCommentPopup = (e: MouseEvent, index: number) => {
     const deltaY = Math.abs(xy.y - downOnPageXY.y);
     const diff = Math.hypot(deltaX, deltaY);
     if (diff > 3) {
-        props.context.workspace.commentMove(true)
+        props.context.comment.commentMove(true)
     }
     const shape_frame = documentCommentList.value[index].shape_frame
     shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
@@ -211,13 +213,13 @@ const getDocumentComment = async () => {
                 return item
             })
             const list = list2Tree(manageData, '')
-            workspace.value.setNot2TreeComment(manageData)
-            workspace.value.setPageCommentList(list, props.pageId)
-            workspace.value.setCommentList(list)
-            documentCommentList.value = workspace.value.pageCommentList
+            comment.value.setNot2TreeComment(manageData)
+            comment.value.setPageCommentList(list, props.pageId)
+            props.context.comment.setCommentList(list)
+            documentCommentList.value = comment.value.pageCommentList
             if (props.context.selection.isSelectComment) {
                 props.context.selection.selectComment(props.context.selection.commentId)
-                documentCommentList.value = workspace.value.pageCommentList
+                documentCommentList.value = comment.value.pageCommentList
                 nextTick(() => {
                     props.context.selection.setCommentSelect(false)
                 })
@@ -247,7 +249,7 @@ const list2Tree = (list: any, rootValue: string) => {
 const aboutMe = () => {
     const aboutMeArr: any = []
     const userId = localStorage.getItem('userId')
-    const commnetList = props.context.workspace.not2treeComment
+    const commnetList = props.context.comment.not2treeComment
     commnetList.forEach((item: any) => {
         if (item.user.id === userId) {
             const rootId = item.root_id
@@ -268,30 +270,34 @@ const aboutMe = () => {
 
 // 删除评论
 const deleteComment = (index: number) => {
-    workspace.value.sendComment()
+    comment.value.sendComment()
     documentCommentList.value.splice(index, 1)
+    props.context.comment.setCommentList(documentCommentList.value)
 }
 
 //解决评论
 const resolve = (status: number, index: number) => {
-    workspace.value.sendComment()
+    comment.value.sendComment()
     documentCommentList.value[index].status = status
+    props.context.comment.setCommentList(documentCommentList.value)
 }
 
 //回复评论
 const recover = () => {
-    workspace.value.sendComment()
+    comment.value.sendComment()
+    props.context.comment.setCommentList(documentCommentList.value)
 }
 
 //修改评论内容
 const editComment = (index: number, text: string) => {
-    workspace.value.sendComment()
+    comment.value.sendComment()
     documentCommentList.value[index].content = text
+    props.context.comment.setCommentList(documentCommentList.value)
 }
 
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = workspace.value.commentShape
+    const shapes = comment.value.commentShape
     const sleectShapes = flattenShapes(shapes)
     sleectShapes.forEach((item: any) => {
         documentCommentList.value.forEach((comment, i) => {
@@ -300,7 +306,7 @@ const saveShapeCommentXY = () => {
             }
         })
     })
-    workspace.value.editShapeComment(false, undefined)
+    comment.value.editShapeComment(false, undefined)
 }
 
 // 递归函数，用于将数组扁平化处理
@@ -314,31 +320,29 @@ function flattenShapes(shapes: any) {
     }, []);
 }
 
-function workspaceWatcher(type?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
-    if (type === WorkSpace.CURSOR_CHANGE) {
-        if (type === WorkSpace.UPDATE_COMMENT_POS) {
-            saveShapeCommentXY();
-        }
+function commentWatcher(type?: number) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
+    if (type === Comment.UPDATE_COMMENT_POS) {
+        saveShapeCommentXY();
     }
     //更新评论
-    if (type === WorkSpace.EDIT_COMMENT) {
+    if (type === Comment.EDIT_COMMENT) {
         const timer = setTimeout(() => {
             getDocumentComment()
             clearTimeout(timer)
         }, 100);
-    } else if (type === WorkSpace.TOGGLE_COMMENT_PAGE) {
+    } else if (type === Comment.TOGGLE_COMMENT_PAGE) {
         documentCommentList.value = []
         const timer = setTimeout(() => {
             getDocumentComment()
             clearTimeout(timer)
         }, 100);
     }
-    if (type === WorkSpace.UPDATE_PAGE_COMMENT) {
-        documentCommentList.value = props.context.workspace.pageCommentList
+    if (type === Comment.UPDATE_PAGE_COMMENT) {
+        documentCommentList.value = props.context.comment.pageCommentList
     }
-    if (type === WorkSpace.UPDATE_COMMENT) {
-        props.context.workspace.updateCommentList(props.pageId)
-        documentCommentList.value = props.context.workspace.pageCommentList
+    if (type === Comment.UPDATE_COMMENT) {
+        props.context.comment.updateCommentList(props.pageId)
+        documentCommentList.value = props.context.comment.pageCommentList
     }
 }
 let timeComment: any = null
@@ -347,10 +351,10 @@ onMounted(() => {
     timeComment = setInterval(() => {
         getDocumentComment()
     }, 20000)
-    props.context.workspace.watch(workspaceWatcher);
+    props.context.comment.watch(commentWatcher);
 })
 onUnmounted(() => {
-    props.context.workspace.unwatch(workspaceWatcher);
+    props.context.comment.unwatch(commentWatcher);
     clearInterval(timeComment)
 })
 </script>

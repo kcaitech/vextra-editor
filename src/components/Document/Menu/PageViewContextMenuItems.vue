@@ -27,7 +27,7 @@ const emit = defineEmits<{
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
-const isComment = ref<boolean>(props.context.workspace.isVisibleComment);
+const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const invalid_items = ref<string[]>([]);
 /** 
  * @description 右键菜单开启，检查剪切板内容，禁用一些无法执行的项
@@ -212,9 +212,9 @@ function canvas() {
 }
 function cursor() { }
 function comment() {
-  const status = props.context.workspace.isVisibleComment;
+  const status = props.context.comment.isVisibleComment;
   isComment.value = !status;
-  props.context.workspace.setVisibleComment(isComment.value);
+  props.context.comment.setVisibleComment(isComment.value);
   emit('close');
 }
 function ruler() { }

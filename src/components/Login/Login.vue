@@ -9,6 +9,7 @@ import { ElMessage } from 'element-plus'
 import avatar from '@/assets/pd-logo-svg.svg';
 import { User } from '@/context/user'
 
+
 const { t } = useI18n()
 const isLoading = ref(false)
 const codeinput = ref()
@@ -140,6 +141,17 @@ function wxcode() {
     })
 }
 
+const handleOpenNewWindow = (routeName:string) => {
+    console.log('1111');
+    
+  const routeLocation = router.resolve({
+    name: routeName
+  })
+
+  window.open(routeLocation.href, '_blank');
+}
+
+
 onMounted(() => {
     setTimeout(() => {
         isLoading.value = true
@@ -167,11 +179,11 @@ onUnmounted(() => {
                 <span>{{ t('system.wx_login') }}</span>
                 <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
                 <p>{{ t('system.login_read') }}
-                    <a href="">{{ t('system.read_TOS') }}</a>&nbsp;
-                    <a href="">{{ t('system.read_Privacy') }}</a>
+                    <a href="" @click.prevent="handleOpenNewWindow('serviceagreement')">{{ t('system.read_TOS') }}</a>&nbsp;
+                    <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy') }}</a>
                 </p>
             </div>
-            <Footer />
+            <Footer @Privacypolicy="handleOpenNewWindow" @Serviceagreement="handleOpenNewWindow"/>
         </div>
         <div class="code_input" v-else>
             <div class="top">
