@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, GroupShape, Matrix, Shape } from '@kcdesign/data';
+import { AsyncMultiAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
@@ -17,10 +17,9 @@ const matrix = new Matrix();
 const paths = ref<string[]>([]);
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
-let asyncBaseAction: AsyncBaseAction | undefined = undefined;
+let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
-let tool_group: Shape | false = false;
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
@@ -71,12 +70,12 @@ function point_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const mouseOnClient: ClientXY = { x: clientX - root.x, y: clientY - root.y };
     if (isDragging) {
-        if (asyncBaseAction) {
+        if (asyncMultiAction) {
             workspace.scaling(true);
             matrix.reset(workspace.matrix);
             const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y);
             const p2Onpage: PageXY = matrix.inverseCoord(mouseOnClient.x, mouseOnClient.y);
-            asyncBaseAction.execute(cur_ctrl_type, p1OnPage, p2Onpage, 0, 'scale');
+            asyncMultiAction.execute(cur_ctrl_type, p1OnPage, p2Onpage, 0, 'scale');
         }
         props.context.workspace.setSelectionViewUpdater(true);
         props.context.workspace.selectionViewUpdate();
@@ -85,14 +84,8 @@ function point_mousemove(event: MouseEvent) {
         if (Math.hypot(mouseOnClient.x - startPosition.x, mouseOnClient.y - startPosition.y) > dragActiveDis) {
             const shapes: Shape[] = sort_by_layer(props.context, props.context.selection.selectedShapes);
             props.context.navi.set_sl_freeze(true);
-            const editor = props.context.editor4Page(props.context.selection.selectedPage!);
-            tool_group = editor.group(shapes, 'tool');
-            if (tool_group) {
-                isDragging = true;
-                asyncBaseAction = props.context.editor.controller().asyncRectEditor([tool_group], props.context.selection.selectedPage!);
-            } else {
-                props.context.navi.set_sl_freeze(false);
-            }
+            isDragging = true;
+            asyncMultiAction = props.context.editor.controller().asyncMultiEditor(shapes, props.context.selection.selectedPage!);
         }
     }
 }
@@ -100,14 +93,11 @@ function point_mouseup(event: MouseEvent) {
     if (event.button === 0) {
         const workspace = props.context.workspace;
         if (isDragging) {
-            if (asyncBaseAction) {
-                asyncBaseAction = asyncBaseAction.close();
-                if (tool_group) {
-                    const editor = props.context.editor4Page(props.context.selection.selectedPage!);
-                    const shapes = editor.ungroup(tool_group as GroupShape);
-                    if (shapes) {
-                        props.context.selection.rangeSelectShape(shapes);
-                    }
+            if (asyncMultiAction) {
+                const shapes = asyncMultiAction.close();
+                asyncMultiAction = undefined;
+                if (shapes) {
+                    props.context.selection.rangeSelectShape(shapes);
                 }
                 props.context.navi.set_sl_freeze(false);
                 props.context.navi.notify(Navi.SHAPELIST_UPDATE);
