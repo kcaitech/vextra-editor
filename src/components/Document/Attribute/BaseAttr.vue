@@ -62,7 +62,8 @@ function watch_shapes() {
     }
 }
 function calc_attri() {
-    if (len.value === 1) {
+    const len = props.context.selection.selectedShapes.length;
+    if (len === 1) {
         const shape = props.context.selection.selectedShapes[0];
         const xy = shape.frame2Root();
         const frame = shape.frame;
@@ -74,7 +75,7 @@ function calc_attri() {
         isFlippedHorizontal.value = Boolean(shape.isFlippedHorizontal);
         isFlippedVertical.value = Boolean(shape.isFlippedVertical);
         isLock.value = Boolean(shape.constrainerProportions);
-    } else if (len.value > 1) {
+    } else if (len > 1) {
         const shape = props.context.selection.selectedShapes[0];
         const xy = shape.frame2Root();
         const frame = shape.frame;
@@ -86,7 +87,7 @@ function calc_attri() {
 }
 function _update_view() {
     layout();
-    if (len.value > 1) check_mixed();
+    if (props.context.selection.selectedShapes.length > 1) check_mixed();
 }
 const update_view = debounce(_update_view, 200);
 // 检查是否多值
@@ -277,7 +278,8 @@ function adapt() {
 const RADIUS_SETTING = [ShapeType.Rectangle, ShapeType.Artboard];
 const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
 function layout() {
-    if (len.value === 1) {
+    const len = props.context.selection.selectedShapes.length;
+    if (len === 1) {
         const shape = props.context.selection.selectedShapes[0];
         shapeType.value = shape.type;
         showRadius.value = RADIUS_SETTING.includes(shape.type);
