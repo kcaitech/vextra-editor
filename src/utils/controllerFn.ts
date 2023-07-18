@@ -3,10 +3,10 @@ import { message } from "./message";
 import { replace } from "./clipaboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 
-
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     const { target, shiftKey, ctrlKey, metaKey } = e;
     if (target instanceof HTMLInputElement) return;
+    console.log('emit');
     const shapes = context.selection.selectedShapes;
     if (!shapes.length) return;
     const step = shiftKey ? 10 : 1;
@@ -83,9 +83,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         if (shiftKey && (ctrlKey || metaKey)) {
             e.preventDefault();
             const selected = context.selection.selectedShapes;
-            if (selected.length) {
-                replace(context, t, selected);
-            }
+            if (selected.length) replace(context, t, selected);
         }
     } else if (e.code === 'KeyX') {
         context.workspace.clipboard.cut().then((res) => {
