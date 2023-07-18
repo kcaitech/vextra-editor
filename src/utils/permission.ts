@@ -1,7 +1,7 @@
 import {router} from "@/router";
 
 //守卫白名单
-const whiteList = ['/login', '/404']
+const whiteList = ['/login', '/404','/privacypolicy','/serviceagreement']
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token')
     if (token) {

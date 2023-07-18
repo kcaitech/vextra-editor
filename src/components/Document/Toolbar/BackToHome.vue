@@ -23,6 +23,7 @@ function home() {
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     router.push({ name: 'recently' });
+    sessionStorage.setItem('index','1')
 }
 function rename() {
     ele.value = 2;
