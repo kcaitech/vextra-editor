@@ -7,7 +7,10 @@
             <span class="size">{{ t('home.size') }}</span>
             <div><span class="other">{{ t('home.operation') }}</span></div>
         </div>
-        <div class="item">
+        <div v-if="noNetwork" class="network">
+            <NetworkError @refresh-doc="refreshDoc"></NetworkError>
+        </div>
+        <div class="item" v-else>
             <listsitem :items="lists" @rightMeun="rightmenu" @restore="Restorefile" @ndelete="Deletefile"
                 :iconlist="iconlists" />
         </div>
@@ -41,6 +44,7 @@ import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import listsitem from '@/components/AppHome/listsitem.vue'
+import NetworkError from '@/components/NetworkError.vue'
 const { t } = useI18n()
 
 const isLoading = ref(false)
@@ -48,6 +52,7 @@ const dialogVisible = ref(false)
 const menu = ref<HTMLElement>()
 const docId = ref('')
 const mydata = ref()
+const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
 
@@ -69,8 +74,10 @@ async function GetrecycleLists() {
     try {
         const { data } = await user_api.GetrecycleList()
         if (data == null) {
+            noNetwork.value = true
             ElMessage.error(t('home.failed_list_tips'))
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -79,11 +86,16 @@ async function GetrecycleLists() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.error(t('home.failed_list_tips'))
     }
 
     // unloading  
     isLoading.value = false;
+}
+
+const refreshDoc = () => {
+    GetrecycleLists()
 }
 
 //转换文件大小
@@ -205,6 +217,10 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 main {
     height: auto;
+    .network {
+        height: calc(100vh - 194px);
+        margin: auto;
+    }
 }
 
 .item {

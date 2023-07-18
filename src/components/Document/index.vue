@@ -22,6 +22,7 @@ import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { WorkSpace } from '@/context/workspace';
 import { measure } from '@/layout/text/measure';
+import NetWorkError from '@/components/NetworkError.vue'
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
 
 const { t } = useI18n();
@@ -41,6 +42,9 @@ const permType = ref<number>();
 const docInfo: any = ref({});
 const showHint = ref(false);
 const countdown = ref(10);
+const networkError = ref(false)
+const saveSuccess = ref(false)
+const noNetwork = ref(false)
 const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
@@ -262,6 +266,7 @@ let ot: Ot | undefined;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
+        noNetwork.value = false
         const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
         docInfo.value = dataInfo.data;
         permType.value = dataInfo.data.document_permission.perm_type;
@@ -326,6 +331,7 @@ const getDocumentInfo = async () => {
         getUserInfo()
     } catch (err) {
         loading.value = false;
+        noNetwork.value = true
         console.log(err)
         throw err;
     }
@@ -384,7 +390,30 @@ function workspaceWatcher(t: number) {
         keyToggleTB();
     }
 }
+// 保存文档成功message信息
+const autoSaveSuccess = () => {
+    saveSuccess.value = true
+    const timer = setTimeout(() => {
+        saveSuccess.value = false
+        clearTimeout(timer)
+    }, 3000)
+}
+//重试刷新页面
+const refreshDoc = () => {
+    location.reload();
+}
+// 断网时触发
+const connectionless = () => {
+    networkError.value = true
+}
+// 连网成功后触发
+const connected = () => {
+    networkError.value = false
+    autoSaveSuccess()
+}
 onMounted(() => {
+    window.addEventListener('offline', connectionless);
+    window.addEventListener('online',connected);
     init_screen_size();
     init_doc();
 })
@@ -402,6 +431,8 @@ onUnmounted(() => {
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
+    window.removeEventListener('online', connectionless);
+    window.removeEventListener('offline', connected);
 })
 </script>
 
@@ -438,6 +469,9 @@ onUnmounted(() => {
         </template>
     </ColSplitView>
     <SubLoading v-if="sub_loading"></SubLoading>
+    <div class="network" v-if="noNetwork">
+        <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
+    </div>
     <div v-if="showHint" class="notification">
         <el-icon :size="13">
             <Warning />
@@ -446,6 +480,13 @@ onUnmounted(() => {
         <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
         <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
         <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
+    </div>
+    <div class="network_error" v-if="!loading && !null_context && networkError">
+        <span style="margin-right: 10px;">网络异常，请勿刷新页面或关闭文档，以免内容丢失，文档尝试保存中…</span>
+        <div class="loading-spinner"><svg-icon icon-class="network-loading"></svg-icon></div>
+    </div>
+    <div class="network_error" v-if="saveSuccess">
+        <span>文档自动保存成功</span>
     </div>
 </template>
 <style>
@@ -474,6 +515,13 @@ onUnmounted(() => {
     background-color: var(--top-toolbar-bg-color);
     z-index: 2;
     min-height: 40px;
+}
+
+.network {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
 }
 
 #visit {
@@ -517,7 +565,7 @@ onUnmounted(() => {
     font-size: var(--font-default-fontsize);
     display: flex;
     align-items: center;
-    top: 50px;
+    top: 60px;
     left: 50%;
     transform: translateX(-50%);
     color: red;
@@ -528,6 +576,36 @@ onUnmounted(() => {
 
     .text {
         margin: 0 15px 0 10px;
+    }
+}
+.network_error {
+    position: fixed;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f1f1f1;
+    background-color: var(--active-color-beta);
+    padding: 7px 30px;
+    border: 1px solid var(--active-color-beta);
+    border-radius: 4px;
+    .loading-spinner {
+        >svg {
+            width: 15px;
+            height: 15px;
+            color: #000;
+        }
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
     }
 }
 </style>

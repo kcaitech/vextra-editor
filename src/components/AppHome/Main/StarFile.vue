@@ -7,7 +7,10 @@
             <span class="size">{{ t('home.size') }}</span>
             <div><span class="other">{{ t('home.operation') }}</span></div>
         </div>
-        <div class="item">
+        <div v-if="noNetwork" class="network">
+            <NetworkError @refresh-doc="refreshDoc"></NetworkError>
+        </div>
+        <div class="item" v-else>
             <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile"
                 @dbclickopen="openDocument" :iconlist="iconlists" />
         </div>
@@ -51,6 +54,7 @@ import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import { UserInfo } from '@/context/user';
 import listsitem from '@/components/AppHome/listsitem.vue'
+import NetworkError from '@/components/NetworkError.vue'
 const { t } = useI18n()
 
 const isLoading = ref(false);
@@ -68,6 +72,7 @@ const userInfo = ref<UserInfo | undefined>()
 let lists = ref<any[]>([])
 const docId = ref('')
 const mydata = ref()
+const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
 
 interface data {
@@ -88,8 +93,10 @@ async function getUserdata() {
     try {
         const { data } = await user_api.GetfavoritesList()
         if (data == null) {
+            noNetwork.value = true
             ElMessage.error(t('home.failed_list_tips'))
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -98,10 +105,15 @@ async function getUserdata() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.error(t('home.failed_list_tips'))
     }
     // unloading  
     isLoading.value = false;
+}
+
+const refreshDoc = () => {
+    getUserdata()
 }
 
 function sizeTostr(size: any) {
@@ -305,6 +317,10 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
+.network {
+    height: calc(100vh - 194px);
+    margin: auto;
+}
 .item {
     height: calc(100vh - 194px);
 }

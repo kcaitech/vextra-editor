@@ -7,7 +7,10 @@
             <span class="size">{{ t('home.size') }}</span>
             <div><span class="other">{{ t('home.operation') }}</span></div>
         </div>
-        <div class="item">
+        <div v-if="noNetwork" class="network">
+            <NetworkError @refresh-doc="refreshDoc"></NetworkError>
+        </div>
+        <div class="item" v-else>
             <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile"
                 @exit_share="Exitshar" @dbclickopen="openDocument" :iconlist="iconlists" />
         </div>
@@ -37,6 +40,7 @@ import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import listsitem from '@/components/AppHome/listsitem.vue'
 import { useI18n } from 'vue-i18n'
 import { UserInfo } from '@/context/user';
+import NetworkError from '@/components/NetworkError.vue'
 
 interface data {
     document: {
@@ -67,6 +71,7 @@ const isshow = ref<HTMLElement>()
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
 const mydata = ref()
+const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['star', 'share', 'EXshare'])
 
@@ -76,9 +81,11 @@ async function ShareLists() {
     try {
         const { data } = await user_api.ShareLists()
         if (data == null) {
+            noNetwork.value = true
             ElMessage.closeAll('error')
             ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -87,12 +94,17 @@ async function ShareLists() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
 
     // // unloading  
     isLoading.value = false;
+}
+
+const refreshDoc = () => {
+    ShareLists()
 }
 
 function sizeTostr(size: any) {
@@ -271,6 +283,10 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
+.network {
+    height: calc(100vh - 194px);
+    margin: auto;
+}
 .item {
     height: calc(100vh - 194px);
 }

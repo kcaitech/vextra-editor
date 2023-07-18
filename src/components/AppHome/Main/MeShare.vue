@@ -8,7 +8,10 @@
             <span class="size">{{ t('home.size') }}</span>
             <div><span class="other">{{ t('home.operation') }}</span></div>
         </div>
-        <div class="item">
+        <div v-if="noNetwork" class="network">
+            <NetworkError @refresh-doc="refreshDoc"></NetworkError>
+        </div>
+        <div class="item" v-else>
             <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile"
                 @deletefile="Deletefile" @dbclickopen="openDocument" :iconlist="iconlists" />
         </div>
@@ -58,6 +61,7 @@ import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import { UserInfo } from '@/context/user';
 import listsitem from '@/components/AppHome/listsitem.vue'
+import NetworkError from '@/components/NetworkError.vue'
 
 interface data {
     document: {
@@ -85,6 +89,7 @@ const mydata = ref()
 const selectValue = ref(1)
 const getDoucmentList = ref<any[]>([])
 const documentId = ref()
+const noNetwork = ref(false)
 const userInfo = ref<UserInfo | undefined>()
 let lists = ref<any[]>([])
 const iconlists = ref(['star', 'share', 'delete'])
@@ -99,9 +104,11 @@ async function getDoucment() {
     try {
         const { data } = await share_api.getDoucmentListAPI() as any
         if (data == null) {
+            noNetwork.value = true
             ElMessage.closeAll('error')
             ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -110,10 +117,15 @@ async function getDoucment() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
     isLoading.value = false
+}
+
+const refreshDoc = () => {
+    getDoucment()
 }
 
 //转换文件大小格式
@@ -364,6 +376,10 @@ function emit(arg0: string) {
 <style lang="scss" scoped>
 main {
     height: auto;
+    .network {
+        height: calc(100vh - 194px);
+        margin: auto;
+    }
 }
 
 .item {

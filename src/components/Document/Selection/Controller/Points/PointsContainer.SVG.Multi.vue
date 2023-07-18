@@ -50,6 +50,7 @@ function get_path_by_dot(ps: { x: number, y: number }[]): string {
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button === 0) {
+        props.context.menu.menuMount()
         const workspace = props.context.workspace;
         event.stopPropagation();
         workspace.setCtrl('controller');

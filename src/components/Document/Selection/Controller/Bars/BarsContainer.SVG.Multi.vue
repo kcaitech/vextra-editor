@@ -41,6 +41,7 @@ function selection_watcher(t?: number) { }
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button === 0) {
         event.stopPropagation();
+        props.context.menu.menuMount()
         cur_ctrl_type = ele;
         const workspace = props.context.workspace;
         workspace.setCtrl('controller');

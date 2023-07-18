@@ -87,6 +87,7 @@ declare module '@vue/runtime-core' {
     Main: typeof import('./src/components/AppHome/Main.vue')['default']
     MeShare: typeof import('./src/components/AppHome/Main/MeShare.vue')['default']
     Navigation: typeof import('./src/components/Document/Navigation/index.vue')['default']
+    NetworkError: typeof import('./src/components/NetworkError.vue')['default']
     PageAttr: typeof import('./src/components/Document/Attribute/PageAttr.vue')['default']
     PageCommentItem: typeof import('./src/components/Document/Content/PageCommentItem.vue')['default']
     PageItem: typeof import('./src/components/Document/Navigation/PageItem.vue')['default']
