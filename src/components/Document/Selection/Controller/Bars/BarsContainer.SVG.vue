@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { ClientXY, PageXY, Selection } from '@/context/selection';
+import { ClientXY, PageXY } from '@/context/selection';
 interface Props {
     matrix: number[]
     context: Context

@@ -4,6 +4,7 @@ import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data'
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { getAngle } from '@/utils/common';
+import { update_dot } from './common';
 interface Props {
   matrix: number[]
   context: Context
@@ -28,41 +29,12 @@ function update_dot_path() {
   if (!valve) return;
   dots.length = 0;
   const frame = props.shape.frame;
-  // const bit_v = 4 / props.context.workspace.matrix.m00;
-  const bit_v = 4;
-  const bit_v_d = 7;
   const s_r = props.shape.rotation || 0;
-
-  // lt
-  let lt = { x: 0, y: 0 };
-  lt = matrix.computeCoord(lt.x, lt.y);
-  const r1 = get_r_path(lt, CtrlElementType.RectLT);
-  const transform1 = `translate(${lt.x}px, ${lt.y}px) rotate(${-180 + s_r}deg) translate(-${lt.x}px, -${lt.y}px)`;
-  const path_obj_1 = { point: { x: lt.x - bit_v, y: lt.y - bit_v }, extra: { x: lt.x - bit_v_d, y: lt.y - bit_v_d }, r: { p: r1, transform: transform1 }, type: CtrlElementType.RectLT, type2: CtrlElementType.RectLTR };
-  //rt
-  let rt = { x: frame.width, y: 0 };
-  rt = matrix.computeCoord(rt.x, rt.y);
-  const r2 = get_r_path(rt, CtrlElementType.RectRT);
-  const transform2 = `translate(${rt.x}px, ${rt.y}px) rotate(${-90 + s_r}deg) translate(-${rt.x}px, -${rt.y}px)`;
-  const path_obj_2 = { point: { x: rt.x - bit_v, y: rt.y - bit_v }, extra: { x: rt.x - bit_v_d, y: rt.y - bit_v_d }, r: { p: r2, transform: transform2 }, type: CtrlElementType.RectRT, type2: CtrlElementType.RectRTR };
-
-  //rb
-  let rb = { x: frame.width, y: frame.height };
-  rb = matrix.computeCoord(rb.x, rb.y);
-  const r3 = get_r_path(rb, CtrlElementType.RectRB);
-  const transform3 = `translate(${rb.x}px, ${rb.y}px) rotate(${0 + s_r}deg) translate(-${rb.x}px, -${rb.y}px)`;
-  const path_obj_3 = { point: { x: rb.x - bit_v, y: rb.y - bit_v }, extra: { x: rb.x - bit_v_d, y: rb.y - bit_v_d }, r: { p: r3, transform: transform3 }, type: CtrlElementType.RectRB, type2: CtrlElementType.RectRBR };
-  //lb
-  let lb = { x: 0, y: frame.height };
-  lb = matrix.computeCoord(lb.x, lb.y)
-  const r4 = get_r_path(lb, CtrlElementType.RectLB);
-  const transform4 = `translate(${lb.x}px, ${lb.y}px) rotate(${90 + s_r}deg) translate(-${lb.x}px, -${lb.y}px)`;
-  const path_obj_4 = { point: { x: lb.x - bit_v, y: lb.y - bit_v }, extra: { x: lb.x - bit_v_d, y: lb.y - bit_v_d }, r: { p: r4, transform: transform4 }, type: CtrlElementType.RectLB, type2: CtrlElementType.RectLBR };
-  dots.push(path_obj_1, path_obj_2, path_obj_3, path_obj_4);
-}
-function get_r_path(ps: { x: number, y: number }, type: CtrlElementType) {
-  const bit_v_r = 14;
-  return `M${ps.x} ${ps.y} h${bit_v_r} a${bit_v_r} ${bit_v_r} 0 0 1 ${-bit_v_r} ${bit_v_r} z`;
+  let lt = matrix.computeCoord(0, 0);
+  let rt = matrix.computeCoord(frame.width, 0);
+  let rb = matrix.computeCoord(frame.width, frame.height);
+  let lb = matrix.computeCoord(0, frame.height);
+  dots.push(...update_dot([lt, rt, rb, lb], s_r, matrix));
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {

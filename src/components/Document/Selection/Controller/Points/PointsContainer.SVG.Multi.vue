@@ -1,20 +1,23 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncMultiAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { Navi } from '@/context/navigate';
 import { sort_by_layer } from '@/utils/group_ungroup';
+import { update_dot } from './common';
 interface Props {
     matrix: number[]
     context: Context
     shape: Shape
     frame: Point[]
+    axle: { x: number, y: number }
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const paths = ref<string[]>([]);
+const data: { dots: { point: { x: number, y: number }, extra: { x: number, y: number }, r: { p: string, transform: string }, type: CtrlElementType, type2: CtrlElementType }[] } = reactive({ dots: [] });
+const { dots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncMultiAction: AsyncMultiAction | undefined = undefined;
@@ -27,29 +30,9 @@ function update() {
 function update_dot_path() {
     const valve = props.context.workspace.shouldSelectionViewUpdate;
     if (!valve) return;
-    paths.value.length = 0;
-    const [lt, rt, rb, lb] = props.frame;
-    const bit_v = 4;
-    // lt
-    let point1_dot = [{ x: lt.x - bit_v, y: lt.y - bit_v }, { x: lt.x + bit_v, y: lt.y - bit_v }, { x: lt.x + bit_v, y: lt.y + bit_v }, { x: lt.x - bit_v, y: lt.y + bit_v }];
-    const path1 = get_path_by_dot(point1_dot);
-    //rt
-    let point2_dot = [{ x: rt.x - bit_v, y: rt.y - bit_v }, { x: rt.x + bit_v, y: rt.y - bit_v }, { x: rt.x + bit_v, y: rt.y + bit_v }, { x: rt.x - bit_v, y: rt.y + bit_v }];
-    const path2 = get_path_by_dot(point2_dot);
-    //rb
-    let point3_dot = [{ x: rb.x - bit_v, y: rb.y - bit_v }, { x: rb.x + bit_v, y: rb.y - bit_v }, { x: rb.x + bit_v, y: rb.y + bit_v }, { x: rb.x - bit_v, y: rb.y + bit_v }];
-    const path3 = get_path_by_dot(point3_dot);
-    //lb
-    let point4_dot = [{ x: lb.x - bit_v, y: lb.y - bit_v }, { x: lb.x + bit_v, y: lb.y - bit_v }, { x: lb.x + bit_v, y: lb.y + bit_v }, { x: lb.x - bit_v, y: lb.y + bit_v }];
-    const path4 = get_path_by_dot(point4_dot);
-
-    paths.value.push(path1, path2, path3, path4);
+    dots.length = 0;
+    dots.push(...update_dot(props.frame, 0, matrix));
 }
-function get_path_by_dot(ps: { x: number, y: number }[]): string {
-    const [p0, p1, p2, p3] = ps;
-    return `M ${p0.x} ${p0.y} L ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} z`;
-}
-
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button === 0) {
         const workspace = props.context.workspace;
@@ -132,18 +115,15 @@ onUnmounted(() => {
 </script>
 <template>
     <g>
-        <path :d="paths[0]" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
-            @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectLT)">
-        </path>
-        <path :d="paths[1]" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
-            @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectRT)">
-        </path>
-        <path :d="paths[2]" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
-            @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectRB)">
-        </path>
-        <path :d="paths[3]" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
-            @mousedown.stop="(e) => point_mousedown(e, CtrlElementType.RectLB)">
-        </path>
+        <g v-for="(p, i) in dots" :key="i">
+            <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+                :style="`transform: ${p.r.transform}; cursor: pointer`">
+            </path>
+            <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'
+                @mousedown.stop="(e) => point_mousedown(e, p.type)"></rect>
+            <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#865dff'
+                stroke-width="1.5px" @mousedown.stop="(e) => point_mousedown(e, p.type)"></rect>
+        </g>
     </g>
 </template>
 <style lang='scss' scoped></style>

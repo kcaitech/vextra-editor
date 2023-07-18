@@ -1,9 +1,11 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncMultiAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { ClientXY, PageXY, Selection } from '@/context/selection';
+import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
+import { sort_by_layer } from '@/utils/group_ungroup';
+import { Navi } from '@/context/navigate';
 interface Props {
     matrix: number[]
     context: Context
@@ -15,7 +17,7 @@ const matrix = new Matrix();
 const paths = ref<string[]>([]);
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
-let asyncBaseAction: AsyncBaseAction | undefined = undefined;
+let asyncBaseAction: AsyncMultiAction | undefined = undefined;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 const dragActiveDis = 3;
 
@@ -68,9 +70,9 @@ function bar_mousemove(event: MouseEvent) {
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            const shapes: Shape[] = props.context.selection.selectedShapes;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes, props.context.selection.selectedPage!);
-            console.log('开动');
+            const shapes: Shape[] = sort_by_layer(props.context, props.context.selection.selectedShapes);
+            props.context.navi.set_sl_freeze(true);
+            asyncBaseAction = props.context.editor.controller().asyncMultiEditor(shapes, props.context.selection.selectedPage!);
         }
     }
 }
@@ -80,7 +82,13 @@ function bar_mouseup(event: MouseEvent) {
         workspace.setCtrl('page');
         if (isDragging) {
             if (asyncBaseAction) {
-                asyncBaseAction = asyncBaseAction.close();
+                const s = asyncBaseAction.close();
+                asyncBaseAction = undefined;
+                if (s) {
+                    props.context.selection.rangeSelectShape(s);
+                }
+                props.context.navi.set_sl_freeze(false);
+                props.context.navi.notify(Navi.SHAPELIST_UPDATE);
             }
             isDragging = false;
         }
@@ -111,13 +119,25 @@ onUnmounted(() => {
         <path :d="paths[0]" fill="none" stroke='#865dff' stroke-width="1.5px"
             @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectTop)">
         </path>
+        <path :d="paths[0]" fill="none" stroke='transparent' style="cursor: ns-resize;" stroke-width="14px"
+            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectTop)">
+        </path>
         <path :d="paths[1]" fill="none" stroke='#865dff' stroke-width="1.5px"
+            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectRight)">
+        </path>
+        <path :d="paths[1]" fill="none" stroke='transparent' style="cursor: ew-resize;" stroke-width="14px"
             @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectRight)">
         </path>
         <path :d="paths[2]" fill="none" stroke='#865dff' stroke-width="1.5px"
             @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectBottom)">
         </path>
+        <path :d="paths[2]" fill="none" stroke='transparent' style="cursor: ns-resize;" stroke-width="14px"
+            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectBottom)">
+        </path>
         <path :d="paths[3]" fill="none" stroke='#865dff' stroke-width="1.5px"
+            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectLeft)">
+        </path>
+        <path :d="paths[3]" fill="none" stroke='transparent' style="cursor: ew-resize;" stroke-width="14px"
             @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectLeft)">
         </path>
     </g>
