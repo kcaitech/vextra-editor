@@ -17,7 +17,7 @@ export function is_mixed(shapes: Shape[]) {
     y: frame0.y,
     w: frame.width,
     h: frame.height,
-    rotate: shapes[0].rotation || 0,
+    rotate: Number(shapes[0].rotation?.toFixed(2)) || 0,
     constrainerProportions: Boolean(shapes[0].constrainerProportions)
   }
   for (let i = 1; i < shapes.length; i++) {

@@ -41,12 +41,12 @@ function selectionChange(t: number) {
     change(t);
 }
 const selecValueBgc = () => {
-    if(bgcInput.value) {
+    if (bgcInput.value) {
         bgcInput.value?.select()
     }
 }
 const selecValue = () => {
-    if(bgcOpacity.value) {
+    if (bgcOpacity.value) {
         bgcOpacity.value?.select()
     }
 }
@@ -79,14 +79,15 @@ onUnmounted(() => {
         <div v-if="len === 0" class="back-setting-container">
             <span>{{ t('attr.background') }}</span>
             <div class="setting">
-                <ColorPicker class="color" :color="backgroundColor!" :context="props.context" @change="c => getBackgroundColor(c)"></ColorPicker>
+                <ColorPicker class="color" :color="backgroundColor!" :context="props.context"
+                    @change="c => getBackgroundColor(c)"></ColorPicker>
                 <input ref="bgcInput" type="text" @focus="selecValueBgc" :value="'#EFEFEF'" :spellcheck="false">
                 <input ref="bgcOpacity" type="text" @focus="selecValue" :value="1">
             </div>
         </div>
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len">
-            <ShapeBaseAttr :shapes="shapes" :context="props.context"></ShapeBaseAttr>
+            <ShapeBaseAttr :context="props.context"></ShapeBaseAttr>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>

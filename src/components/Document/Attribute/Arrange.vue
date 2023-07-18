@@ -5,12 +5,15 @@ import { PositonAdjust } from "@kcdesign/data";
 import { computed, onMounted, onUnmounted } from 'vue';
 import { align_left, align_cneter_x, align_right, align_top, align_cneter_y, align_bottom, distribute_horizontally, vertical_uniform_distribution } from '@/utils/arrange';
 import { WorkSpace } from '@/context/workspace';
+import { useI18n } from 'vue-i18n';
+import Tooltip from '@/components/common/Tooltip.vue';
 interface Props {
     context: Context
     shapes: Shape[]
 }
 const props = defineProps<Props>();
 const len = computed<number>(() => props.shapes.length);
+const { t } = useI18n()
 // 靠左对齐
 function flex_start() {
     const actions: PositonAdjust[] = align_left(props.shapes);
@@ -151,30 +154,46 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="container">
-        <div class="item" @click="flex_start">
-            <svg-icon icon-class="flex-start"></svg-icon>
-        </div>
-        <div class="item" @click="justify_midle_h">
-            <svg-icon icon-class="justify-midle-h"></svg-icon>
-        </div>
-        <div class="item" @click="flex_end">
-            <svg-icon icon-class="flex-end"></svg-icon>
-        </div>
-        <div class="item" @click="flex_start_col">
-            <svg-icon icon-class="flex-start-col"></svg-icon>
-        </div>
-        <div class="item" @click="justify_midle_v">
-            <svg-icon icon-class="justify-midle-v"></svg-icon>
-        </div>
-        <div class="item" @click="flex_end_col">
-            <svg-icon icon-class="flex-end-col"></svg-icon>
-        </div>
-        <div :class="len > 2 ? 'item' : 'disable'" @click="space_around_h">
-            <svg-icon icon-class="space-around-h"></svg-icon>
-        </div>
-        <div :class="len > 2 ? 'item' : 'disable'" @click="space_around_v">
-            <svg-icon icon-class="space-around-v"></svg-icon>
-        </div>
+        <Tooltip :content="t('home.align_left')" :offset="15">
+            <div class="item" @click="flex_start">
+                <svg-icon icon-class="flex-start"></svg-icon>
+            </div>
+        </Tooltip>
+        <Tooltip :content="t('home.align_h_c')" :offset="15">
+            <div class="item" @click="justify_midle_h">
+                <svg-icon icon-class="justify-midle-h"></svg-icon>
+            </div>
+        </Tooltip>
+        <Tooltip :content="t('home.align_right')" :offset="15">
+            <div class="item" @click="flex_end">
+                <svg-icon icon-class="flex-end"></svg-icon>
+            </div>
+        </Tooltip>
+        <Tooltip :content="t('home.align_top')" :offset="15">
+            <div class="item" @click="flex_start_col">
+                <svg-icon icon-class="flex-start-col"></svg-icon>
+            </div>
+        </Tooltip>
+        <Tooltip :content="t('home.align_v_c')" :offset="15">
+            <div class="item" @click="justify_midle_v">
+                <svg-icon icon-class="justify-midle-v"></svg-icon>
+            </div>
+        </Tooltip>
+        <Tooltip :content="t('home.align_bottom')" :offset="15">
+            <div class="item" @click="flex_end_col">
+                <svg-icon icon-class="flex-end-col"></svg-icon>
+            </div>
+        </Tooltip>
+        <Tooltip :content="t('home.distribute_h')" :offset="15">
+            <div :class="len > 2 ? 'item' : 'disable'" @click="space_around_h">
+                <svg-icon icon-class="space-around-h"></svg-icon>
+            </div>
+        </Tooltip>
+        <Tooltip :content="t('home.distribute_v')" :offset="15">
+            <div :class="len > 2 ? 'item' : 'disable'" @click="space_around_v">
+                <svg-icon icon-class="space-around-v"></svg-icon>
+            </div>
+        </Tooltip>
     </div>
 </template>
 <style scoped lang="scss">
