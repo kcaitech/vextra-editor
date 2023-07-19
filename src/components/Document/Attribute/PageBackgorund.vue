@@ -43,7 +43,7 @@ function change_c(e: Event) {
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     if (Reg_HEX.test(value)) {
-        setColor(value, alpha_v.value);
+        setColor(value, alpha_v.value / 100);
     } else {
         message('danger', t('system.illegal_input'));
     }
