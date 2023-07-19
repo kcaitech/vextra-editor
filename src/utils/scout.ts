@@ -195,28 +195,25 @@ function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
 function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
     let result: Shape | undefined;
     for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
+        const shape = g[j];
         if (g[j].isVisible) {
             const childIsTarget = isTarget(scout, g[j], position);
             if (childIsTarget) {
                 if ([ShapeType.Group, ShapeType.FlattenShape].includes(g[j].type)) {
                     const c: Shape[] = (g[j] as GroupShape).childs;
-                    return forGroupHover(scout, c, position, selected, isCtrl);
+                    const res = forGroupHover(scout, c, position, selected, isCtrl);
+                    if (res) return res;
                 } else {
                     let target = g[j];
                     if (isCtrl) { //如果shift键被按下，不冒泡
                         return g[j];
                     }
-                    let max = 0;
-                    while (target?.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target?.parent?.type) && max <= 10000) {
+                    while (target.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target.parent?.type)) {
                         if (selected) {
-                            const isBroSelected: boolean = isPartSelect(target?.parent, selected);
+                            const isBroSelected: boolean = isPartSelect(target.parent, selected);
                             if (isBroSelected) break;
                         }
                         target = target.parent;
-                        max++;
-                    }
-                    if (max == 10000) {
-                        throw new Error('overflow');
                     }
                     result = target!;
                     break;
