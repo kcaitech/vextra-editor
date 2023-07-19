@@ -56,9 +56,9 @@ function point_mousemove(event: MouseEvent) {
     if (isDragging) {
         if (asyncMultiAction) {
             workspace.scaling(true);
-            matrix.reset(workspace.matrix);
-            const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y);
-            const p2Onpage: PageXY = matrix.inverseCoord(mouseOnClient.x, mouseOnClient.y);
+            const m = new Matrix(workspace.matrix);
+            const p1OnPage: PageXY = m.inverseCoord(startPosition.x, startPosition.y);
+            const p2Onpage: PageXY = m.inverseCoord(mouseOnClient.x, mouseOnClient.y);
             asyncMultiAction.execute(cur_ctrl_type, p1OnPage, p2Onpage, 0, 'scale');
         }
         props.context.workspace.setSelectionViewUpdater(true);
@@ -76,6 +76,7 @@ function point_mousemove(event: MouseEvent) {
 function point_mouseup(event: MouseEvent) {
     if (event.button === 0) {
         const workspace = props.context.workspace;
+        const navi = props.context.navi;
         if (isDragging) {
             if (asyncMultiAction) {
                 const shapes = asyncMultiAction.close();
@@ -83,8 +84,8 @@ function point_mouseup(event: MouseEvent) {
                 if (shapes) {
                     props.context.selection.rangeSelectShape(shapes);
                 }
-                props.context.navi.set_sl_freeze(false);
-                props.context.navi.notify(Navi.SHAPELIST_UPDATE);
+                navi.set_sl_freeze(false);
+                navi.notify(Navi.SHAPELIST_UPDATE);
             }
             isDragging = false;
         }
