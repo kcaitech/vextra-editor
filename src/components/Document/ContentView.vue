@@ -24,6 +24,7 @@ import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
+import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
 
@@ -38,6 +39,7 @@ const STATE_NONE = 0;
 const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
 const workspace = computed(() => props.context.workspace);
+const comment = computed(() => props.context.comment);
 let scale_delta = 1.06;
 let scale_delta_ = 1 / scale_delta;
 const wheel_step = 50;
@@ -218,10 +220,8 @@ function workspace_watcher(type?: number, name?: string | MouseEvent) { // 更�
             paster(props.context, t, mousedownOnPageXY);
         } else if (type === WorkSpace.COPY) {
             props.context.workspace.clipboard.write_html();
-        } else if (type === WorkSpace.UPDATE_COMMENT_POS) {
-            saveShapeCommentXY();
         } else if (type === WorkSpace.ONARBOARD__TITLE_MENU) {
-            if (name) {
+            if(name) {
                 contextMenuMount((name as MouseEvent))
             }
         }
@@ -236,13 +236,15 @@ function workspace_watcher(type?: number, name?: string | MouseEvent) { // 更�
             setClass('auto-0');
         }
     }
-    //更新评论
-    if (type === WorkSpace.UPDATE_PAGE_COMMENT) {
-        documentCommentList.value = props.context.workspace.pageCommentList
-    }
-    if (type === WorkSpace.UPDATE_COMMENT) {
-        props.context.workspace.updateCommentList(props.page.id)
-        documentCommentList.value = props.context.workspace.pageCommentList
+}
+function comment_watcher(type?: number) {
+    if (type === Comment.UPDATE_COMMENT_POS) {
+        saveShapeCommentXY();
+    } else if (type === Comment.UPDATE_PAGE_COMMENT) {
+        documentCommentList.value = props.context.comment.pageCommentList
+    } else if (type === Comment.UPDATE_COMMENT) {
+        props.context.comment.updateCommentList(props.page.id)
+        documentCommentList.value = props.context.comment.pageCommentList
     }
 }
 function menu_watcher(type?: number) {
@@ -501,9 +503,9 @@ function onMouseUp(e: MouseEvent) {
 }
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = workspace.value.commentShape
+    const shapes = comment.value.commentShape
     const sleectShapes = flattenShapes(shapes)
-    const commentList = props.context.workspace.pageCommentList
+    const commentList = props.context.comment.pageCommentList
     sleectShapes.forEach((item: any) => {
         commentList.forEach((comment: any, i: number) => {
             if (comment.target_shape_id === item.id) {
@@ -511,7 +513,7 @@ const saveShapeCommentXY = () => {
             }
         })
     })
-    workspace.value.editShapeComment(false, undefined)
+    comment.value.editShapeComment(false, undefined)
 }
 
 // mouseleave
@@ -561,7 +563,7 @@ const commentEl = ref<CommentInputEl>();
 const rootWidth = ref(root.value && root.value.clientWidth)
 const shapeID = ref('')
 const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
-const documentCommentList = ref<any[]>(workspace.value.pageCommentList)
+const documentCommentList = ref<any[]>(comment.value.pageCommentList)
 const route = useRoute()
 const posi = ref({ x: 0, y: 0 });
 type commentListMenu = {
@@ -597,9 +599,9 @@ const detectionShape = (e: MouseEvent) => {
 //添加评论
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
-    if (workspace.value.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {
-        workspace.value.commentOpacity(false)
-        workspace.value.commentInput(false)
+    if (comment.value.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {
+        comment.value.commentOpacity(false)
+        comment.value.commentInput(false)
         return
     } else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
         return
@@ -684,7 +686,7 @@ const closeComment = (e?: MouseEvent) => {
 
 // 调用评论API，并通知listTab组件更新评论列表
 const completed = () => {
-    workspace.value.sendComment()
+    comment.value.sendComment()
     const timer = setTimeout(() => {
         getDocumentComment()
         clearTimeout(timer)
@@ -706,13 +708,13 @@ const getDocumentComment = async () => {
                 return item
             })
             const list = list2Tree(manageData, '')
-            workspace.value.setNot2TreeComment(manageData)
-            workspace.value.setPageCommentList(list, props.page.id)
-            workspace.value.setCommentList(list)
-            documentCommentList.value = workspace.value.pageCommentList
+            comment.value.setNot2TreeComment(manageData)
+            comment.value.setPageCommentList(list, props.page.id)
+            comment.value.setCommentList(list)
+            documentCommentList.value = comment.value.pageCommentList
             if (props.context.selection.isSelectComment) {
                 props.context.selection.selectComment(props.context.selection.commentId)
-                documentCommentList.value = workspace.value.pageCommentList
+                documentCommentList.value = comment.value.pageCommentList
                 props.context.selection.setCommentSelect(false)
             }
         }
@@ -762,6 +764,7 @@ renderinit()
     })
 onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
+    props.context.comment.watch(comment_watcher);
     props.context.menu.watch(menu_watcher);
     props.page.watch(watcher);
     document.addEventListener('keydown', onKeyDown);
@@ -775,6 +778,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.comment.unwatch(comment_watcher);
     props.context.menu.unwatch(menu_watcher);
     props.page.unwatch(watcher);
     document.removeEventListener('keydown', onKeyDown);

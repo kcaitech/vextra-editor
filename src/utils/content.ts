@@ -203,7 +203,7 @@ async function insert_imgs(context: Context, t: Function) {
     for (let i = 0; i < media.length; i++) {
       if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
       const img = init_insert_image(context, xy, t, media[i]);
-      if (img && await context.upload.uploadResource(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
+      if (img && await context.communication.upload.uploadResource(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
     }
   }
   if (new_shapes.length) {

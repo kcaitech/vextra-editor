@@ -1,12 +1,12 @@
-import { Watchable } from "@kcdesign/data"
-import { DocResourceUpload } from "@/communication/modules/doc_resource_upload"
+import { Watchable } from "@kcdesign/data";
+import { DocResourceUpload } from "@/communication/modules/doc_resource_upload";
 
 export class Upload extends Watchable(Object) {
     private docResourceUpload?: DocResourceUpload
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
 
-    public async start(documentId: string, token: string) : Promise<boolean> {
+    public async start(documentId: string, token: string): Promise<boolean> {
         if (this.docResourceUpload) return true;
         if (this.startPromise) return await this.startPromise;
         const docResourceUpload = DocResourceUpload.Make(documentId, token)

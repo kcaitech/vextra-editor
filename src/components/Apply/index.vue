@@ -76,6 +76,9 @@ const getDocumentInfo = async () => {
         const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
         if(data) {
             docInfo.value = data.data
+            if(data.code === 400) {
+                return linkValid.value = false
+            }
             if(docInfo.value.document.doc_type === 0) {
                 linkValid.value = false
             }else {

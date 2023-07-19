@@ -1,63 +1,68 @@
 <template>
     <div class="main">
-    <div class="nav">
-        <div class="close" @click="closePersonalCenter"><el-icon size="25">
-                <Close />
-            </el-icon></div>
-            <h1>{{ t('percenter.personal_center') }}</h1>
-    </div>
-    <div class="icon">
-        <span class="jbxx">{{ t('percenter.essential_information') }}</span>
-        <div class="one">
-            <div class="two">
-                <div class="three">
-                    <div class="tx"><el-avatar :src=circleUrl @error="errorHandler">
-                            <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
-                        </el-avatar></div>
-                    <div class="text">
-                        <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.head_portrait') }}</span>
-                        <span style="font-size: 12px;color: #b3b3b3;">{{ t('percenter.avatar_restriction') }}</span>
-                    </div>
-                </div>
-                <a href="" class="btn" @click.prevent="openDialog">{{ t('percenter.modify_profile_picture') }}</a>
+        <div class="nav">
+            <div class="close" @click="closePersonalCenter">
+                <el-icon size="25">
+                    <Close />
+                </el-icon>
             </div>
+            <h1>{{ t('percenter.personal_center') }}</h1>
         </div>
-        <div class="one">
-            <div class="two">
-                <div class="three">
-                    <div class="text">
-                        <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.username') }}</span>
-                        <span style="font-size: 12px;color: #b3b3b3; line-height: 22px; margin-top: 2px;"
-                            v-if="!shownicknameinput">{{
-                                uname }}</span>
-                        <div v-else>
-                            <input class="newname" type="text" :value=uname @input="tips" @keyup.enter="changename">
-                            <span></span>
+        <div class="icon">
+            <span class="jbxx">{{ t('percenter.essential_information') }}</span>
+            <div class="one">
+                <div class="two">
+                    <div class="three">
+                        <div class="tx">
+                            <el-avatar v-if="circleUrl" :src="circleUrl" @error="errorHandler">
+                                <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
+                            </el-avatar>
+                            <el-avatar v-else> {{ uname?.slice(0, 1) }} </el-avatar>
+                        </div>
+                        <div class="text">
+                            <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.head_portrait') }}</span>
+                            <span style="font-size: 12px;color: #b3b3b3;">{{ t('percenter.avatar_restriction') }}</span>
+                        </div>
+                    </div>
+                    <a href="" class="btn" @click.prevent="openDialog">{{ t('percenter.modify_profile_picture') }}</a>
+                </div>
+            </div>
+            <div class="one">
+                <div class="two">
+                    <div class="three">
+                        <div class="text">
+                            <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.username') }}</span>
+                            <span style="font-size: 12px;color: #b3b3b3; line-height: 22px; margin-top: 2px;"
+                                v-if="!shownicknameinput">{{
+                                    uname }}</span>
+                            <div v-else>
+                                <input class="newname" type="text" :value=uname @input="tips" @keyup.enter="changename">
+                                <span></span>
+                            </div>
+
                         </div>
 
                     </div>
-
-                </div>
-                <a href="" class="btn" @click.prevent="updatename" v-if="!shownicknameinput">{{
-                    t('percenter.edit_user_name') }}</a>
-                <div v-if="shownicknameinput">
-                    <button class="affirm" @click="changename">{{ t('percenter.affirm') }}</button>
-                    <button class="cancel" @click="shownicknameinput = false">{{ t('percenter.cancel') }}</button>
+                    <a href="" class="btn" @click.prevent="updatename" v-if="!shownicknameinput">{{
+                        t('percenter.edit_user_name') }}</a>
+                    <div v-if="shownicknameinput">
+                        <button class="affirm" @click="changename">{{ t('percenter.affirm') }}</button>
+                        <button class="cancel" @click="shownicknameinput = false">{{ t('percenter.cancel') }}</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="one">
-            <div class="two">
-                <div class="three">
-                    <div class="text">
-                        <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.userID') }}</span>
-                        <span style="font-size: 12px;color: #b3b3b3;">{{ id }}</span>
+            <div class="one">
+                <div class="two">
+                    <div class="three">
+                        <div class="text">
+                            <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.userID') }}</span>
+                            <span style="font-size: 12px;color: #b3b3b3;">{{ id }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 </template>
 <script setup lang="ts">
 import { reactive, toRefs, ref } from 'vue'
@@ -82,6 +87,7 @@ function openDialog() {
     input.accept = 'image/png, image/jpeg, image/jpg'
     input.addEventListener('change', handleFileSelected)
     input.click()
+
 }
 
 async function handleFileSelected(event: any,) {
@@ -109,6 +115,7 @@ async function handleFileSelected(event: any,) {
     } catch (error) {
         ElMessage.error(t('home.other_tips'))
     }
+
 }
 
 function updatename() {
@@ -158,13 +165,20 @@ function closePersonalCenter() {
     history.back()
 }
 
+
 </script>
 <style lang="scss" scoped>
-.main{
+.el-avatar{
+    --el-avatar-bg-color:#9775fa;
+    font-weight: 700;
+}
+
+.main {
     width: 100vw;
     height: 100vh;
     background: rgba(213, 213, 213, 0.2);
 }
+
 .newname {
     outline: none;
     height: 22px;
@@ -227,12 +241,14 @@ button {
     border-radius: 5px;
     background: rgb(255, 255, 255);
     box-shadow: rgba(255, 255, 255, 0.9) 0px 1px 3px, rgba(0, 0, 0, 0.5) 0px 1px 2px;
+
     .close {
-       margin: 0 20px;
+        margin: 0 20px;
     }
 
     .close:hover {
         color: rgb(69, 69, 255);
+        cursor: pointer;
     }
 }
 
@@ -243,8 +259,9 @@ h1 {
 }
 
 .icon {
+    width: 800px;
     position: absolute;
-    top: 10%;
+    top: 100px;
     left: 50%;
     padding: 20px;
     transform: translate(-50%);
@@ -261,7 +278,7 @@ h1 {
     }
 
     .one {
-        width: 800px;
+        width: auto;
         height: auto;
         padding: 0px 20px;
         margin-bottom: 20px;
@@ -300,5 +317,12 @@ h1 {
             text-decoration: none
         }
     }
+}
+
+@media screen and (max-width: 800px) {
+    .icon {
+        width: 100%;
+    }
+
 }
 </style>

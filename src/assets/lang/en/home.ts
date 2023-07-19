@@ -42,8 +42,8 @@ export const system = {
     'edit_component': 'Edit component',
     'wx_login': 'Wechat scan code login',
     'login_read': 'Scanning code indicates that you have read and agreed',
-    'read_TOS': 'Protocol of usage',
-    'read_Privacy': 'Privacy policy',
+    'read_TOS': 'Service Agreement',
+    'read_Privacy': 'Privacy Agreement',
     'product_name': 'ProtoDesign',
     'product_description': 'An efficient RPD writing tool that supports prototyping, document presentation, and approval management.',
     'login_footer': '© 2023 Kc.Design Inc.All rights reserved.',
@@ -79,7 +79,9 @@ export const home = {
     file_shared_with_me: 'File shared with me',
     recycling_station: 'Recycling station',
     file_name: 'File name',
-    modification_time: 'Modification time',
+    modification_time: 'Recently visited',
+    Creation_time:'Creation time',
+    delete_file_time:'Deletion time',
     size: 'Size',
     operation: 'Operation',
     star_marking: 'Star marking',
@@ -125,12 +127,15 @@ export const home = {
     page_sort: 'Sort by page',
     login_failed: 'Login failure',
     login_refresh: 'Click refresh QR code',
-    invitation_code_tips: 'Please enter the trial invitation code'
+    invitation_code_tips: 'Please enter the trial invitation code',
+    table_empty_tips:'No content'
 }
 
 export const search = {
     search_results: 'No matching results',
     search_history: 'No search history',
+    search_history_title:'Historical record',
+    search_history_clear:'Clear',
     result_count: 'xx results'
 }
 
@@ -242,6 +247,8 @@ export const attr: any = {
     font_color: 'Font color',
     highlight_color: 'Highlight color',
     multiple_colors: 'There are many color values, click + can be unified set',
+    unfold: 'Unfold',
+    packup: 'Pack up'
 }
 
 export const login = {

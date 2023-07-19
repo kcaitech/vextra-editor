@@ -6,6 +6,7 @@ import { Root } from "@/utils/content";
 import { UserInfo, DocInfo } from '@/context/user'
 import { Clipboard } from "@/utils/clipaboard";
 import { adapt_page } from "@/utils/content";
+import { Comment } from "./comment";
 export enum Action {
     Auto = 'auto',
     AutoV = 'cursor',
@@ -86,6 +87,7 @@ export class WorkSpace extends Watchable(Object) {
     static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
+    static TEXT_FORMAT = 6;
     static SHUTDOWN_POPOVER = 7;
     static TRANSLATING = 8;
     static CHECKSTATUS = 9;
@@ -93,45 +95,25 @@ export class WorkSpace extends Watchable(Object) {
     static UNGROUP = 11;
     static SELECTION_VIEW_UPDATE = 12;
     static REMOVE_COLOR_PICKER = 13;
-    static SHUTDOWN_COMMENT = 17;
-    static SELECT_LIST_TAB = 18;
-    static SEND_COMMENT = 19;
-    static EDIT_COMMENT = 20;
-    static HOVER_COMMENT = 21;
-    static COMMENT_POPUP = 22;
-    static UPDATE_COMMENT = 23;
-    static OPACITY_COMMENT = 24;
-    static CURRENT_COMMENT = 25;
-    static SELECTE_COMMENT = 26;
-    static CTRL_DISAPPEAR = 27;
-    static CTRL_APPEAR_IMMEDIATELY = 28;
-    static CTRL_APPEAR = 29;
-    static PASTE = 30;
-    static PASTE_RIGHT = 31;
-    static INSERT_IMGS = 32;
-    static FREEZE = 33;
-    static THAW = 34;
-    static UPDATE_PAGE_COMMENT = 35;
-    static CLAC_ATTRI = 37;
-    static COPY = 38;
-    static COMMENT_ALL = 39;
-    static UPDATE_COMMENT_POS = 40;
-    static SHOW_COMMENT_POPUP = 41;
-    static COMMENT_HANDLE_INPUT = 42;
-    static VISIBLE_COMMENT = 43;
-    static TOGGLE_COMMENT_PAGE = 44;
-    static HOVER_SHOW_COMMENT = 45;
-    static UPDATE_COMMENT_CHILD = 46;
-    static COMPS = 47;
-    static INIT_EDITOR = 48;
-    static ONARBOARD__TITLE_MENU = 49;
-    static BOLD = 50;
-    static UNDER_LINE = 51;
-    static ITALIC = 52;
-    static DELETE_LINE = 53;
-    static HIDDEN_UI = 54;
-    static INIT_DOC_NAME = 55;
-    static TEXT_FORMAT = 56;
+    static CTRL_DISAPPEAR = 14;
+    static CTRL_APPEAR_IMMEDIATELY = 15;
+    static CTRL_APPEAR = 16;
+    static PASTE = 17;
+    static PASTE_RIGHT = 18;
+    static INSERT_IMGS = 19;
+    static FREEZE = 20;
+    static THAW = 21;
+    static CLAC_ATTRI = 22;
+    static COPY = 23;
+    static HIDDEN_UI = 24;
+    static INIT_DOC_NAME = 25;
+    static COMPS = 26;
+    static ONARBOARD__TITLE_MENU = 27;
+    static BOLD = 28;
+    static UNDER_LINE = 29;
+    static ITALIC = 30;
+    static DELETE_LINE = 31;
+    static INIT_EDITOR = 32;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -151,28 +133,13 @@ export class WorkSpace extends Watchable(Object) {
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
-    private m_user_info: UserInfo | undefined;
     private m_document_perm: number = 3;
-    private m_comment_input: boolean = false;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
-    private m_document_info: DocInfo | undefined;
-    private m_comment_list: any[] = []; // 当前文档评论
-    private m_page_comment_list: any[] = []; // 当前页面评论
-    private m_comment_move: boolean = false; //是否拖动评论，解决hove评论拖动时的闪烁问题
-    private m_hove_commetn: boolean = false; //是否hover评论
-    private m_comment_mount: boolean = false;//评论弹层的显示
-    private m_comment_opacity: boolean = false;//评论弹层显示时其他评论置灰
-    private m_hover_comment_id: string | undefined; //hover中的评论id
-    private m_select_comment_id: string | undefined; //选中的评论id
     private m_image: Media[] | undefined = undefined;
     private m_freeze: boolean = false;
-    private m_shape_comment: boolean = false; //是否在编辑shape上的评论（移动shape修改评论位置）
-    private m_comment_shape: Shape[] = [] //保存移动shape上有评论的shape
-    private m_not2tree_comment: any = [] //没有转树的评论列表
     private m_clipboard: Clipboard;
-    private m_comment_visible: boolean = true; //是否显示评论
     private m_t: Function = () => { };
     constructor(context: Context) {
         super();
@@ -244,14 +211,8 @@ export class WorkSpace extends Watchable(Object) {
     get isPageDragging() {
         return this.m_page_dragging;
     }
-    get isUserInfo() {
-        return this.m_user_info;
-    }
     get isEditing() {
         return this.m_content_editing;
-    }
-    get isCommentInput() {
-        return this.m_comment_input;
     }
     get toolGroup() {
         return this.m_tool_group;
@@ -259,47 +220,8 @@ export class WorkSpace extends Watchable(Object) {
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
-    get commentList() {
-        return this.m_comment_list;
-    }
-    get isCommentMove() {
-        return this.m_comment_move;
-    }
-    get isHoverComment() {
-        return this.m_hove_commetn;
-    }
-    get isCommentMount() {
-        return this.m_comment_mount;
-    }
-    get pageCommentList() {
-        return this.m_page_comment_list;
-    }
-    get isCommentOpacity() {
-        return this.m_comment_opacity;
-    }
-    get isHoverCommentId() {
-        return this.m_hover_comment_id;
-    }
-    get isSelectCommentId() {
-        return this.m_select_comment_id;
-    }
     get isFreeze() {
         return this.m_freeze;
-    }
-    get isEditShapeComment() {
-        return this.m_shape_comment;
-    }
-    get commentShape() {
-        return this.m_comment_shape;
-    }
-    get not2treeComment() {
-        return this.m_not2tree_comment;
-    }
-    get isDocumentInfo() {
-        return this.m_document_info;
-    }
-    get isVisibleComment() {
-        return this.m_comment_visible;
     }
     focusText() {
         this.notify(WorkSpace.TEXT_FORMAT)
@@ -309,9 +231,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     setDocumentPerm(perm: number) {
         this.m_document_perm = perm;
-    }
-    showCommentPopup(index: number, e: MouseEvent) {
-        this.notify(WorkSpace.SHOW_COMMENT_POPUP, index, e);
     }
     get clipboard() {
         return this.m_clipboard;
@@ -332,12 +251,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     getImageFromDoc() {
         return this.m_image;
-    }
-    setDocumentInfo(info: DocInfo) {
-        this.m_document_info = info
-    }
-    setUserInfo(info: UserInfo) {
-        this.m_user_info = info
     }
     colorPickerSetup(id: string) { //xxx
         this.m_color_picker = id;
@@ -369,9 +282,6 @@ export class WorkSpace extends Watchable(Object) {
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
     }
-    commentMove(v: boolean) {
-        this.m_comment_move = v
-    }
     setCtrl(v: 'page' | 'controller') {
         this.m_controller = v;
     }
@@ -384,55 +294,6 @@ export class WorkSpace extends Watchable(Object) {
             this.m_pre_to_translating = false;
             this.m_mousedown_on_page = undefined;
         }
-    }
-    setVisibleComment(visible: boolean) {
-        this.m_comment_visible = visible;
-        this.notify(WorkSpace.VISIBLE_COMMENT)
-    }
-    setCommentList(list: any[]) {
-        this.m_comment_list = list;
-        this.notify(WorkSpace.UPDATE_COMMENT);
-    }
-    updateCommentList(pageId: string) {
-        const list = this.m_comment_list;
-        this.m_page_comment_list = list.filter(item => item.page_id === pageId)
-    }
-    setPageCommentList(list: any[], pageId: string) {
-        this.m_page_comment_list = list.filter(item => item.page_id === pageId)
-        this.notify(WorkSpace.UPDATE_PAGE_COMMENT);
-    }
-    commentInput(visible: boolean) {
-        this.m_comment_input = visible;
-        if (!visible) {
-            this.notify(WorkSpace.SHUTDOWN_COMMENT)
-        }
-    }
-    commentMount(visible: boolean) {
-        this.m_comment_mount = visible;
-        if (!visible) {
-            this.notify(WorkSpace.COMMENT_POPUP)
-        }
-    }
-    commentOpacity(status: boolean) { //点击后改变其他评论的透明度
-        this.m_comment_opacity = status
-        this.notify(WorkSpace.OPACITY_COMMENT)
-    }
-    saveCommentId(id: string) { //保存点击的评论id
-        this.m_select_comment_id = id
-        this.notify(WorkSpace.SELECTE_COMMENT)
-    }
-    editShapeComment(state: boolean, shapes?: Shape[]) {
-        this.m_shape_comment = state
-        if (state) {
-            this.m_comment_shape.push(...shapes!)
-            this.m_comment_shape = Array.from(new Set(this.m_comment_shape));
-        } else {
-            this.m_comment_shape = []
-        }
-    }
-    setNot2TreeComment(list: any[]) {
-        this.m_not2tree_comment = list
-        this.notify(WorkSpace.COMMENT_ALL)
     }
     popoverVisible(visible: boolean) {
         this.m_popover = visible;
@@ -664,13 +525,15 @@ export class WorkSpace extends Watchable(Object) {
         if (ctrlKey || metaKey) {
             this.notify(WorkSpace.COPY)
         } else if (shift) {
-            this.setVisibleComment(!this.m_comment_visible);
-        } else {
+            this.context.comment.setVisibleComment(!this.context.comment.isVisibleComment);
+        }
+        else {
             if (this.documentPerm === 1) return
             this.escSetup();
             this.m_current_action = Action.AddComment;
-            this.commentInput(false);
-            this.notify(WorkSpace.SELECT_LIST_TAB);
+            this.context.comment.commentInput(false);
+            this.context.comment.notify(Comment.SELECT_LIST_TAB);
+            this.notify();
         }
     }
     keydown_0(ctrl: boolean, meta: boolean) {
@@ -759,28 +622,5 @@ export class WorkSpace extends Watchable(Object) {
     }
     resetCursor() {
         !this.transforming && this.notify(WorkSpace.RESET_CURSOR);
-    }
-    sendComment() {
-        this.notify(WorkSpace.SEND_COMMENT);// listTab栏和content组件之间的通信
-    }
-    editTabComment() {
-        this.notify(WorkSpace.EDIT_COMMENT); // listTab栏和content组件之间的通信
-    }
-    hoverComment(v: boolean, id?: string) {
-        this.m_hove_commetn = v
-        this.m_hover_comment_id = id
-        if (!v) {
-            this.notify(WorkSpace.HOVER_COMMENT);
-        } else {
-            this.notify(WorkSpace.HOVER_SHOW_COMMENT)
-        }
-        if (id) {
-            this.notify(WorkSpace.CURRENT_COMMENT);
-        }
-    }
-    toggleCommentPage() {
-        this.m_comment_list = [];
-        this.m_page_comment_list = [];
-        this.notify(WorkSpace.TOGGLE_COMMENT_PAGE);//点击评论跳转页面
     }
 }

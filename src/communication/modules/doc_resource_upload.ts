@@ -1,6 +1,5 @@
 import { Communication } from "../index"
 import { TunnelType } from "@/communication/types"
-import { Document, CoopLocal, CoopRepository } from "@kcdesign/data"
 
 type ResourceHeader = {
     name: string,

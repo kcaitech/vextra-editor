@@ -1,18 +1,8 @@
 
 <template>
-    <!-- 数据展示 -->
-    <div class="main">
-        <div class="title">
-            <span class="name">{{ t('home.file_name') }}</span>
-            <span class="time">{{ t('home.modification_time') }}</span>
-            <span class="size">{{ t('home.size') }}</span>
-            <div><span class="other">{{ t('home.operation') }}</span></div>
-        </div>
-        <div class="item">
-            <listsitem :items="lists" @rightMeun="rightmenu" @updatestar="Starfile" @share="Sharefile" @remove="Removefile"
-                :iconlist="iconlists" @dbclickopen="openDocument" />
-        </div>
-    </div>
+    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
+        @updatestar="Starfile" @rightMeun="rightmenu" />
+        
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
         <ul>
@@ -49,13 +39,13 @@
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
+import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
-import listsitem from '@/components/AppHome/listsitem.vue'
 
 const isLoading = ref(false)
 const showFileShare = ref<boolean>(false);
@@ -73,7 +63,11 @@ const showcopyfile = ref<boolean>(true)
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
 const mydata = ref()
+const listId = ref(0)
 const iconlists = ref(['star', 'share', 'remove'])
+
+const emits = defineEmits(['data-update'])
+
 
 interface data {
     document: {
@@ -100,9 +94,8 @@ async function getUserdata() {
             ElMessage.error(t('home.failed_list_tips'))
         } else {
             for (let i = 0; i < data.length; i++) {
-                let { document: { size, name }, document_access_record: { last_access_time } } = data[i]
+                let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
-                data[i].document.name = getchineselength(name) > 30 ? name.slice(0, 29) + "..." : name
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
             }
         }
@@ -128,19 +121,6 @@ function sizeTostr(size: any) {
     return size
 }
 
-function getchineselength(str: string) {
-    let length = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charAt(i);
-        // 判断字符的Unicode编码是否处于中文字符的范围（[\u4E00-\u9FFF]）
-        if (/[\u4E00-\u9FFF]/.test(char)) {
-            length += 2; // 中文字符占两个字节
-        } else {
-            length += 1; // 非中文字符占一个字节
-        }
-    }
-    return length;
-}
 
 //标星入口
 const Starfile = async (data: data) => {
@@ -195,7 +175,7 @@ const Removefile = async (data: data) => {
 }
 
 //右键菜单入口
-const rightmenu = (e: MouseEvent, data: data) => {
+const rightmenu = (e: MouseEvent, data: data, index: number) => {
     const { document: { id, user_id }, document_favorites: { is_favorite } } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
@@ -208,8 +188,8 @@ const rightmenu = (e: MouseEvent, data: data) => {
         rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
         rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
     })
-    
-    if ((e.target as HTMLElement).closest('.user')) {
+
+    if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
 
@@ -231,10 +211,11 @@ const rightmenu = (e: MouseEvent, data: data) => {
     })
     docId.value = id
     mydata.value = data
+    listId.value = index
 }
 
 //右键打开
-const openDocument = (id:string) => {
+const openDocument = (id: string) => {
     router.push({
         name: 'document',
         query: {
@@ -286,7 +267,6 @@ const rrename = () => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-
 }
 
 //重命名
@@ -296,14 +276,15 @@ const rename1 = async () => {
     if (newname.value == '') return
     if (newname.value != name)
         try {
-            const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
+            const { code, message } = await user_api.Setfilename({ doc_id: id, name: newname.value })
             if (code === 0) {
                 ElMessage.closeAll('success')
                 ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
-                lists.value.find((item: any) => item.document.id === id).document.name = newname.value;
-            } else {
+                lists.value.find((item: any) => item.document.id === id).document.name = newname.value
+            }
+            if (code === -1) {
                 ElMessage.closeAll('error')
-                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
+                ElMessage.error({ duration: 1500, message: message })
             }
         } catch (error) {
             ElMessage.closeAll('error')
@@ -359,6 +340,15 @@ const handleClickOutside = (event: MouseEvent) => {
     }
 }
 
+// watch(lists, (Nlist) => {
+//         emits('data-update', Nlist)
+//     }, { deep: true })
+
+//===>Main组件接收
+watchEffect(() => {
+    emits('data-update', lists.value, t('home.modification_time'))
+})
+
 onMounted(() => {
     getUserdata()
     getPageHeight()
@@ -376,10 +366,6 @@ main {
     height: auto;
 }
 
-.item {
-    height: calc(100vh - 194px);
-}
-
 .title {
     display: flex;
     justify-content: space-between;
@@ -388,6 +374,13 @@ main {
     font-size: 14px;
     font-weight: 600;
     overflow: hidden;
+
+    span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        margin-right: 10px;
+    }
 
     span:nth-child(1) {
         flex: 2;
@@ -414,38 +407,44 @@ main {
 
     &:hover {
         border-radius: 2px;
-        border: 2px rgb(69, 69, 255) solid;
-        border-color: rgb(69, 69, 255);
+        border: 2px #f3f0ff solid;
+
     }
 
     &:focus {
         border-radius: 2px;
-        border: 2px rgb(69, 69, 255) solid;
-        border-color: rgb(69, 69, 255);
+        border: 2px #9775fa solid;
+    }
+
+}
+
+.dialog-footer>.el-button {
+    &:hover {
+        background-color: rgba(208, 208, 208, 0.167);
+    }
+
+    &:active {
+        background-color: white;
     }
 }
 
-.el-button--primary {
-    background: rgb(69, 69, 255);
+.dialog-footer>.el-button--primary {
+    background-color: #9775fa;
     color: white;
-    border-color: rgb(69, 69, 255);
+    border-color: #9775fa;
 
     &:hover {
-        background: rgba(80, 80, 255, 0.884);
+        background: #9675fa91;
+        border-color: #9675fa91;
+    }
+
+    &:active {
+        background-color: #9775fa;
     }
 
     &[disabled] {
-        background: rgba(195, 195, 246, 0.884);
-        border: 1px rgba(195, 195, 246, 0.884) solid;
-    }
-}
-
-.el-button+.el-button {
-    background: rgb(255, 255, 255);
-    color: black;
-
-    &:hover {
-        background: rgba(208, 208, 208, 0.167);
+        background: #e5dbff;
+        border: 1px #e5dbff solid;
     }
 }
 
@@ -453,12 +452,12 @@ main {
     display: none;
     min-width: 200px;
     min-height: 100px;
-    z-index: 9999;
+    z-index: 999;
     position: absolute;
     background-color: white;
     padding: 10px 0;
     border-radius: 5px;
-    box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
 
     ul {
         margin: 0;
@@ -474,15 +473,16 @@ main {
             cursor: pointer;
 
             &:hover {
-                background-color: rgba(192, 192, 192, 0.3);
+                background-color: #f3f0ff;
             }
         }
 
         div {
             height: 1px;
             width: auto;
-            background: rgba(192, 192, 192, 0.3);
+            background: #f3f0ff;
         }
+
 
     }
 }

@@ -42,8 +42,8 @@ export const system = {
     'edit_component': '编辑组件',
     'wx_login': '微信扫码登录',
     'login_read': '扫码表示已阅读并同意',
-    'read_TOS': '使用协议',
-    'read_Privacy': '隐私政策',
+    'read_TOS': '服务协议',
+    'read_Privacy': '隐私协议',
     'product_name': 'ProtoDesign',
     'product_description': '一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
     'login_footer': '© 2023 Kc.Design Inc.All rights reserved.',
@@ -79,7 +79,9 @@ export const home = {
     file_shared_with_me: '共享给我的文件',
     recycling_station: '回收站',
     file_name: '文件名称',
-    modification_time: '修改时间',
+    modification_time: '最近访问',
+    Creation_time:'创建时间',
+    delete_file_time:'删除时间',
     size: '大小',
     operation: '操作',
     star_marking: '标星',
@@ -125,12 +127,15 @@ export const home = {
     page_sort: '按页面排序',
     login_failed: '登录失败',
     login_refresh: '点击刷新二维码',
-    invitation_code_tips: '请输入试用邀请码'
+    invitation_code_tips: '请输入试用邀请码',
+    table_empty_tips:'没有内容'
 }
 
 export const search = {
     search_results: '没有匹配的结果',
     search_history: '没有搜索记录',
+    search_history_title:'历史记录',
+    search_history_clear:'清除',
     result_count: '共xx条结果'
 }
 
@@ -242,6 +247,8 @@ export const attr: any = {
     font_color: '字体颜色',
     highlight_color: '高亮颜色',
     multiple_colors: '存在多种颜色值，点击+可统一设置',
+    unfold: '展开',
+    packup: '收起'
 }
 
 export const login = {

@@ -28,7 +28,7 @@ function onMouseDown(e: MouseEvent) {
             document.removeEventListener('mouseup', onMouseUp)
         });
     }
-    emit('onMouseDown', props.data.id, e);
+    emit('onMouseDown', props.data.id, e)
 }
 
 const onRename = () => {
@@ -120,7 +120,6 @@ onUnmounted(() => {
         align-items: center;
         width: 100%;
         position: relative;
-
         >.title {
             width: 100%;
             height: 100%;
