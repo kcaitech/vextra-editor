@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, TextShape } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, TextShape, Color } from '@kcdesign/data';
 import { Context } from '@/context'; // 状态顶层 store
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
 import { Action, KeyboardKeys, WorkSpace } from '@/context/workspace'; // workspace
@@ -19,7 +19,7 @@ import { v4 as uuid } from "uuid";
 import { init as renderinit } from '@/render';
 import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items } from '@/utils/content';
+import { _updateRoot, getName, init_shape, color2string, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -74,6 +74,7 @@ let asyncCreator: AsyncCreator | undefined;
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
 const commentInput = ref(false);
 const resizeObserver = new ResizeObserver(frame_watcher);
+const background_color = ref<string>('rgba(239,239,239,1)');
 
 function rootRegister(mount: boolean) {
     if (mount) {
@@ -200,10 +201,10 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
         }
     }
 }
-function workspace_watcher(type?: number, name?: string | MouseEvent) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
+function workspace_watcher(type?: number, param?: string | MouseEvent | Color) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
     if (type === WorkSpace.CURSOR_CHANGE) {
-        if (name !== undefined) {
-            setClass((name as string));
+        if (param !== undefined) {
+            setClass((param as string));
         }
     } else {
         if (type === WorkSpace.MATRIX_TRANSFORMATION) {
@@ -221,8 +222,12 @@ function workspace_watcher(type?: number, name?: string | MouseEvent) { // 更�
         } else if (type === WorkSpace.COPY) {
             props.context.workspace.clipboard.write_html();
         } else if (type === WorkSpace.ONARBOARD__TITLE_MENU) {
-            if(name) {
-                contextMenuMount((name as MouseEvent))
+            if (param) {
+                contextMenuMount((param as MouseEvent))
+            }
+        } else if (type === WorkSpace.CHANGE_BACKGROUND) {
+            if (param) {
+                background_color.value = color2string(param as Color);
             }
         }
         const action = props.context.workspace.action;
@@ -794,7 +799,8 @@ onUnmounted(() => {
 <template>
     <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent>
+        @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
+        :style="{ 'background-color': background_color }">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix.toArray()"> </TextSelection>
         <SelectionView :context="props.context" :matrix="matrix.toArray()" />
@@ -815,8 +821,3 @@ onUnmounted(() => {
         </CommentView>
     </div>
 </template>
-<style scoped lang="scss">
-div {
-    background-color: var(--center-content-bg-color);
-}
-</style>

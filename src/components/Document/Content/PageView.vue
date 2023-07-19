@@ -34,25 +34,6 @@ function updateRenderItems(t?: number) {
     }
 }
 function updateItems() {
-    // const selection = props.context.selection;
-    // const workspace = props.context.workspace;
-    // const shapes = selection.selectedShapes;
-    // const len = shapes.length;
-    // if (len > 1) {
-    //     const editor = props.context.editor.editor4Page(props.data);
-    //     const toolGroup = editor.createGroup();
-    //     toolGroup.childs.push(...shapes);
-    //     toolGroup.id = 'tool-group';
-    //     renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
-    //     nextTick(() => { setToolGroup(props.context) });
-    // } else {
-    //     if (renderItems.length) {
-    //         if (renderItems[0].id === 'tool-group') {
-    //             workspace.toolGroupUnmount();
-    //         }
-    //     }
-    //     renderItems = props.data.childs;
-    // }
     renderItems = props.data.childs;
     reflush.value++;
 }
@@ -63,7 +44,7 @@ watchEffect(() => {
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
-    pageViewRegister(true);    
+    pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onMounted(() => {
@@ -97,6 +78,5 @@ onUnmounted(() => {
 svg {
     position: absolute;
     transform-origin: top left;
-    background-color: var(--center-content-bg-color);
 }
 </style>

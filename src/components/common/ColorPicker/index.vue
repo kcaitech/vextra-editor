@@ -182,6 +182,7 @@ function removeCurColorPicker() {
     need_update_recent.value = false;
   }
   popoverVisible.value = false;
+  props.context.menu.clearColorPickerId();
 }
 // 16进制色彩转10进制
 function hexToX(hex: string): RgbMeta {

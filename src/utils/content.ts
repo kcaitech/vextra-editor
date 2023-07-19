@@ -1,7 +1,7 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color } from "@kcdesign/data";
 import { Action, Media, ResultByAction } from '@/context/workspace';
 import { createHorizontalBox } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
@@ -493,6 +493,10 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
   }
   return contextMenuItems;
 }
+function color2string(color: Color, t?: number) {
+  const { red, green, blue, alpha } = color;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,
@@ -500,5 +504,5 @@ export {
   init_shape, init_insert_shape, init_insert_textshape,
   insert_imgs, drop, adapt_page, page_scale, right_select,
   list2Tree, flattenShapes,
-  get_menu_items
+  get_menu_items, color2string
 };

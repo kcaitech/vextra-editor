@@ -1,4 +1,4 @@
-import { Watchable } from "@kcdesign/data";
+import { Color, Watchable } from "@kcdesign/data";
 import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
@@ -113,6 +113,7 @@ export class WorkSpace extends Watchable(Object) {
     static ITALIC = 30;
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
+    static CHANGE_BACKGROUND = 33;
     private context: Context;
     private m_current_action: Action = Action.AutoV; // 当前编辑器状态，将影响新增图形的类型、编辑器光标的类型
     private m_matrix: Matrix = new Matrix();
@@ -139,6 +140,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_freeze: boolean = false;
     private m_clipboard: Clipboard;
     private m_t: Function = () => { };
+    private m_bgc: Color = new Color(1, 239, 239, 239);
     constructor(context: Context) {
         super();
         this.context = context;
@@ -217,6 +219,13 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isFreeze() {
         return this.m_freeze;
+    }
+    get background() {
+        return this.m_bgc;
+    }
+    setBackground(color: Color) {
+        this.m_bgc = color;
+        this.notify(WorkSpace.CHANGE_BACKGROUND, color);
     }
     focusText() {
         this.notify(WorkSpace.TEXT_FORMAT)
