@@ -1,9 +1,8 @@
-import { Shape, Watchable } from "@kcdesign/data";
+import { Watchable } from "@kcdesign/data";
 import { ShapeType } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
-import { UserInfo, DocInfo } from '@/context/user'
 import { Clipboard } from "@/utils/clipaboard";
 import { adapt_page } from "@/utils/content";
 import { Comment } from "./comment";
@@ -136,7 +135,6 @@ export class WorkSpace extends Watchable(Object) {
     private m_document_perm: number = 3;
     private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
-    private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
     private m_image: Media[] | undefined = undefined;
     private m_freeze: boolean = false;
     private m_clipboard: Clipboard;
@@ -199,9 +197,6 @@ export class WorkSpace extends Watchable(Object) {
     get ispopover() { //xxx
         return this.m_popover;
     }
-    get isColorPickerMount() { //xxx
-        return this.m_color_picker;
-    }
     get isTranslating() {
         return this.m_translating;
     }
@@ -251,15 +246,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     getImageFromDoc() {
         return this.m_image;
-    }
-    colorPickerSetup(id: string) { //xxx
-        this.m_color_picker = id;
-    }
-    removeColorPicker() {
-        if (this.m_color_picker) {
-            this.notify(WorkSpace.REMOVE_COLOR_PICKER);
-            this.m_color_picker = undefined;
-        }
     }
     selectionViewUpdate() {
         this.notify(WorkSpace.SELECTION_VIEW_UPDATE);

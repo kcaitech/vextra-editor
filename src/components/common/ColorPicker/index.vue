@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
+import { ref, nextTick, reactive, onMounted, onUnmounted, computed, watch } from 'vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -11,6 +11,7 @@ import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
+import { Menu } from "@/context/menu";
 type RgbMeta = number[];
 interface Props {
   context: Context
@@ -99,7 +100,7 @@ const data = reactive<Data>({
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
 const h_rgb = computed<HRGB>(() => {
   const color = new Color(1, rgba.R, rgba.G, rgba.B);
-  return getHRGB(RGB2H(color));
+  return getHRGB(RGB2H(color, hueIndicatorAttr.x / (lineAttribute.length - INDICATOR_WIDTH)));
 })
 const hsba = computed<HSBA>(() => {
   const { R, G, B, alpha } = rgba;
@@ -146,43 +147,42 @@ const hueIndicator = ref<HTMLDivElement>();
 const alphaIndicator = ref<HTMLDivElement>();
 const popoverVisible = ref<boolean>(false);
 const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
+const need_update_recent = ref<boolean>(false);
 
 function triggle() {
-  const workspace = props.context.workspace;
-  const exsit = workspace.isColorPickerMount;
+  const menu = props.context.menu;
+  const exsit = menu.isColorPickerMount;
   if (exsit) {
-    if (exsit === blockId) {
-      workspace.removeColorPicker();
-    } else {
-      workspace.removeColorPicker();
-      colorPickerMount();
-    }
+    menu.removeColorPicker();
+    if (exsit !== blockId) colorPickerMount();
   } else {
     colorPickerMount();
   }
 }
 function colorPickerMount() {
   popoverVisible.value = true;
-  props.context.workspace.colorPickerSetup(blockId);
+  props.context.menu.setupColorPicker(blockId);
   nextTick(() => {
     if (popoverEl.value && block.value) {
       let el = popoverEl.value
       let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
       el.style.top = top + 'px';
-      if(props.late) {
+      if (props.late) {
         el.style.left = -(36 + el.offsetWidth + props.late) + 'px';
-      }else {
+      } else {
         el.style.left = -(36 + el.offsetWidth) + 'px';
       }
       init();
     }
   })
 }
-function removeColorPicker() {
+function removeCurColorPicker() {
+  if (need_update_recent.value) {
+    update_recent_color();
+    need_update_recent.value = false;
+  }
   popoverVisible.value = false;
-  update_recent_color()
 }
-
 // 16进制色彩转10进制
 function hexToX(hex: string): RgbMeta {
   hex = hex.slice(1);
@@ -199,14 +199,6 @@ function hexToX(hex: string): RgbMeta {
     }
   }
   return result
-}
-//  10进制色彩转16进制
-function xTohex(rgb: [number, number, number]): string {
-  let str: string = '#';
-  rgb.forEach(i => {
-    str = str + (rgb[i].toString(16).length === 1 ? `0${rgb[i].toString(16).length === 1}` : rgb[i].toString(16).length === 1)
-  })
-  return str
 }
 function setMousedownPosition(e: MouseEvent) {
   mousedownPositon.x = e.clientX;
@@ -232,6 +224,7 @@ function setHueIndicatorPosition(e: MouseEvent) {
     setRGB(hueIndicatorAttr.x);
     document.addEventListener('mousemove', mousemove4Hue);
     document.addEventListener('mouseup', mouseup);
+    need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   }
 }
@@ -250,19 +243,20 @@ function mousemove4Hue(e: MouseEvent) {
   }
 }
 function wheel(e: WheelEvent) {
-  const wheel_step = 3;
+  const wheel_step = 2;
   e.preventDefault();
-  const { shiftKey, deltaX, deltaY } = e;
+  const { deltaX, deltaY } = e;
   if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
     // todo
   } else {
     const delta = deltaY > 0 ? wheel_step : -wheel_step;
-    if (shiftKey) {
-      // const val = (alphaIndicatorAttr.x + delta) > (lineAttribute.length - INDICATOR_WIDTH) ? alphaIndicatorAttr.x + delta - (lineAttribute.length - INDICATOR_WIDTH) : alphaIndicatorAttr.x + delta;
-      // alphaIndicatorAttr.x = alphaIndicatorAttr.x + val;
-      // setAlpha(alphaIndicatorAttr.x);
+    const critical_len = lineAttribute.length - INDICATOR_WIDTH
+    if (delta > 0) {
+      const val = (hueIndicatorAttr.x + delta) > critical_len ? hueIndicatorAttr.x + delta - critical_len : hueIndicatorAttr.x + delta;
+      hueIndicatorAttr.x = val;
+      setRGB(hueIndicatorAttr.x);
     } else {
-      const val = (hueIndicatorAttr.x + delta) > (lineAttribute.length - INDICATOR_WIDTH) ? hueIndicatorAttr.x + delta - (lineAttribute.length - INDICATOR_WIDTH) : hueIndicatorAttr.x + delta;
+      const val = (hueIndicatorAttr.x + delta) < 0 ? hueIndicatorAttr.x + delta + critical_len : hueIndicatorAttr.x + delta;
       hueIndicatorAttr.x = val;
       setRGB(hueIndicatorAttr.x);
     }
@@ -285,6 +279,7 @@ function setAlphaIndicatorPosition(e: MouseEvent) {
     setAlpha(alphaIndicatorAttr.x);
     document.addEventListener('mousemove', mousemove4Alpha);
     document.addEventListener('mouseup', mouseup);
+    need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   }
 }
@@ -358,11 +353,13 @@ function setRGB(indicator: number) {
   const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
   emit('change', color);
   update(R, G, B);
+  need_update_recent.value = true;
 }
 function setAlpha(indicator: number) {
   rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
   const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
   emit('change', color);
+  need_update_recent.value = true;
 }
 function setColor(color: Color) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
@@ -372,6 +369,7 @@ function setColor(color: Color) {
   rgba.alpha = color.alpha;
   emit('change', color);
   update_dot_indicator_position(color);
+  need_update_recent.value = true;
   props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 // 鼠标抬起
@@ -380,6 +378,7 @@ function mouseup() {
   document.removeEventListener('mousemove', mousemove4Alpha)
   document.removeEventListener('mousemove', mousemove4Hue)
   document.removeEventListener('mouseup', mouseup)
+  need_update_recent.value = true;
   props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
   isDrag = false;
 }
@@ -392,12 +391,11 @@ function eyedropper() {
     systemEyeDropper();
   }
 }
-
 function blockUnmount() {
-  const workspace = props.context.workspace;
-  const exsit = workspace.isColorPickerMount;
+  const menu = props.context.menu;
+  const exsit = menu.isColorPickerMount;
   if (exsit === blockId) {
-    workspace.removeColorPicker();
+    menu.clearColorPickerId();
   }
 }
 // 系统自带的取色器
@@ -437,11 +435,6 @@ function eyeDropperInit(): Eyedropper {
     }
   });
 }
-function workspaceWatcher(t: any) {
-  if (t === WorkSpace.REMOVE_COLOR_PICKER) {
-    removeColorPicker();
-  }
-}
 function switchModel(item: SelectItem) {
   model.value = item;
 }
@@ -472,6 +465,7 @@ function keyboardWatcher(e: KeyboardEvent) {
       const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
       emit('change', color);
       update_dot_indicator_position(color);
+      need_update_recent.value = true;
       props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     }
   } else if (e.code === 'ArrowDown') {
@@ -491,6 +485,7 @@ function keyboardWatcher(e: KeyboardEvent) {
       const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
       emit('change', color);
       update_dot_indicator_position(color);
+      need_update_recent.value = true;
       props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     }
   }
@@ -551,6 +546,7 @@ function enter() {
     emit('change', color);
     update_dot_indicator_position(color);
     update_alpha_indicator(color);
+    need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
   } else {
     reflush.value++;
@@ -593,18 +589,15 @@ function init() {
   rgba.G = green;
   rgba.B = blue;
   rgba.alpha = alpha;
-  let r = localStorage.getItem(key_storage);
-  r = JSON.parse(r || '[]');
-  if (r) {
-    if (r.length) {
-      recent.value = [];
-      for (let i = 0; i < r.length; i++) {
-        recent.value.push(parseColorFormStorage(r[i]));
-      }
-    }
-  }
   update_dot_indicator_position(props.color);
   update_alpha_indicator(props.color);
+  let r = localStorage.getItem(key_storage);
+  r = JSON.parse(r || '[]');
+  if (!r || !r.length) return;
+  recent.value = [];
+  for (let i = 0; i < r.length; i++) {
+    recent.value.push(parseColorFormStorage(r[i]));
+  }
 }
 function update_alpha_indicator(color: Color) {
   const { alpha } = color;
@@ -612,23 +605,28 @@ function update_alpha_indicator(color: Color) {
 }
 function selectionWatcher(t: any) {
   if (t === Selection.CHANGE_SHAPE) {
-    props.context.workspace.removeColorPicker();
+    props.context.menu.removeColorPicker();
+  }
+}
+function menu_watcher(t?: any, id?: string) {
+  if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
+    removeCurColorPicker();
   }
 }
 function window_blur() {
   isDrag = false;
 }
 onMounted(() => {
-  props.context.workspace.watch(workspaceWatcher);
   props.context.selection.watch(selectionWatcher);
+  props.context.menu.watch(menu_watcher);
   init();
   window.addEventListener('blur', window_blur);
 });
 onUnmounted(() => {
   eyeDropper.destroy();
   blockUnmount();
-  props.context.workspace.unwatch(workspaceWatcher);
   props.context.selection.unwatch(selectionWatcher);
+  props.context.menu.unwatch(menu_watcher);
   window.removeEventListener('blur', window_blur)
 })
 </script>
@@ -639,7 +637,7 @@ onUnmounted(() => {
       <!-- 头部 -->
       <div class="header">
         <div class="color-type">{{ t('color.solid') }}</div>
-        <div @click="removeColorPicker" class="close">
+        <div @click="removeCurColorPicker" class="close">
           <svg-icon icon-class="close"></svg-icon>
         </div>
       </div>

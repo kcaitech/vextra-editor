@@ -15,20 +15,28 @@ export class Menu extends Watchable(Object) {
   get ispopover() {
     return this.m_popover;
   }
-  get isColorPickerMount() {
-    return this.m_color_picker;
+  popoverVisible(visible: boolean) {
+    this.m_popover = visible;
+    if (!visible) {
+      this.notify(Menu.SHUTDOWN_POPOVER);
+    }
   }
   menuMount(mount?: string) {
     this.m_menu_mounted = mount || '';
     if (!mount) this.notify(Menu.SHUTDOWN_MENU);
   }
-  colorPickerSetup(id: string) {
+  get isColorPickerMount() {
+    return this.m_color_picker;
+  }
+  setupColorPicker(id: string) {
     this.m_color_picker = id;
   }
+  clearColorPickerId() {
+    this.m_color_picker = undefined;
+  }
   removeColorPicker() {
-    if (this.m_color_picker) {
-      this.notify(Menu.REMOVE_COLOR_PICKER);
-      this.m_color_picker = undefined;
-    }
+    if (!this.m_color_picker) return;
+    this.notify(Menu.REMOVE_COLOR_PICKER, this.m_color_picker);
+    this.m_color_picker = undefined;
   }
 }
