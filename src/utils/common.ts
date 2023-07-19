@@ -199,9 +199,8 @@ export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]
   let s = 0;
   while (s < selectorPoints.length - 1) {
     const p1 = selectorPoints[s], q1 = selectorPoints[s + 1];
-
     if (shapePoints.length === 2) { // 线条
-      if (isIntersect(p1, q1, shapePoints[0], selectorPoints[1])) {
+      if (isIntersect(p1, q1, shapePoints[0], shapePoints[1])) {
         return true;
       }
     } else {
