@@ -13,12 +13,12 @@ export class Comment extends Watchable(Object) {
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await docCommentOp.start()) {
-                console.log("DocResourceUpload start失败")
+                console.log("DocCommentOp start失败")
                 this.startResolve!(false)
                 return false
             }
         } catch (e) {
-            console.log("DocResourceUpload start失败", e)
+            console.log("DocCommentOp start失败", e)
             this.startResolve!(false)
             return false
         }
