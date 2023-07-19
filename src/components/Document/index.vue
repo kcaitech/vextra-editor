@@ -321,7 +321,12 @@ const getDocumentInfo = async () => {
                     switchPage(context.data.pagesList[0]?.id);
                     loading.value = false;
                 });
-            await context.upload.start(docId, token);
+            await context.communication.upload.start(docId, token);
+            await context.communication.comment.start(docId, token);
+            context.communication.comment.onUpdated = (comment) => {
+                // todo 前端对接视图更新
+                console.log("收到评论更新", comment)
+            }
         }
         getUserInfo()
     } catch (err) {
@@ -344,7 +349,8 @@ function upload() {
             });
             ot = Ot.Make(doc_id, localStorage.getItem('token') || "", context!.data, context!.coopRepo, "0");
             ot.start();
-            context!.upload.start(doc_id, token);
+            context!.communication.upload.start(doc_id, token);
+            context!.communication.comment.start(doc_id, token);
             context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
         }
     })
@@ -391,7 +397,8 @@ onMounted(() => {
 onUnmounted(() => {
     try {
         ot?.close();
-        context?.upload.close();
+        context?.communication.upload.close();
+        context?.communication.comment.close();
     } catch (err) { }
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
