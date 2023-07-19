@@ -1,15 +1,14 @@
 import { Color } from "@kcdesign/data";
 import { Shape } from "@kcdesign/data";
-import { toHex } from "@/utils/color"
 export function render(h: Function, shape: Shape, reflush?: number) {
     if (!shape.isVisible) return;
     const frame = shape.frame;
     const path = shape.getPath(true);
     const border = shape.style.borders.at(-1);
     const borderColor = shape.style.borders.at(-1)?.color || new Color(1, 0, 0, 0);
-    const stroke = toHex({ red: borderColor.red, green: borderColor.green, blue: borderColor.blue, alpha: borderColor.alpha });
+    const stroke = borderColor.toHex();
     const fillColor = shape.style.fills.at(-1)?.color || new Color(1, 0, 0, 0);
-    const fill = toHex({ red: fillColor.red, green: fillColor.green, blue: fillColor.blue, alpha: fillColor.alpha });
+    const fill = fillColor.toHex();
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
