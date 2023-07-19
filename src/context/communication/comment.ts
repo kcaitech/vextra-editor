@@ -5,6 +5,7 @@ export class Comment extends Watchable(Object) {
     private docCommentOp?: DocCommentOp
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
+    private updateHandlerSet = new Set<(data: DocCommentOpData) => void>()
 
     public async start(documentId: string, token: string): Promise<boolean> {
         if (this.docCommentOp) return true;
@@ -23,14 +24,22 @@ export class Comment extends Watchable(Object) {
             return false
         }
         this.docCommentOp = docCommentOp
+        this.docCommentOp.onUpdated = this._onUpdated.bind(this)
         this.startResolve!(true)
         this.startPromise = undefined
         return true
     }
 
-    public set onUpdated(onUpdated: (docCommentOpData: DocCommentOpData) => void) {
-        if (!this.docCommentOp) return
-        this.docCommentOp.onUpdated = onUpdated
+    private _onUpdated(docCommentOpData: DocCommentOpData) {
+        for (const handler of this.updateHandlerSet) handler(docCommentOpData);
+    }
+
+    public addUpdatedHandler(onUpdated: (docCommentOpData: DocCommentOpData) => void) {
+        this.updateHandlerSet.add(onUpdated)
+    }
+
+    public removeUpdatedHandler(onUpdated: (docCommentOpData: DocCommentOpData) => void) {
+        this.updateHandlerSet.delete(onUpdated)
     }
 
     public available(): boolean {
@@ -42,5 +51,6 @@ export class Comment extends Watchable(Object) {
         this.docCommentOp.close()
         this.docCommentOp = undefined
         this.startPromise = undefined
+        this.updateHandlerSet.clear()
     }
 }

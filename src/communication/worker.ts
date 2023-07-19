@@ -53,8 +53,9 @@ ctx.onconnect = (event) => {
     const port = event.ports[0]
     port.onmessage = async (messageEvent) => {
         const data = messageEvent.data as CommunicationInfo
-        if (token !== "" && data.token !== token) {
-            // todo 当有第二个用户连接时，关闭前面用户的连接
+        if (token !== "" && data.token !== token && server !== undefined) { // 当有第二个用户连接时，关闭前面用户的连接
+            server.close()
+            server = undefined
         }
         const sendData = {
             name: data.name,
