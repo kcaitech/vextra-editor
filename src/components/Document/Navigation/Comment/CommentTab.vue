@@ -12,6 +12,8 @@ import { Selection } from "@/context/selection";
 import ShowHiddenLeft from "../ShowHiddenLeft.vue";
 import { watchEffect } from "vue";
 import { Comment } from "@/context/comment";
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
+
 const { t } = useI18n();
 const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
@@ -178,6 +180,22 @@ watchEffect(() => {
     getDocumentComment(docID)
 })
 onMounted(() => {
+    const updateComment = props.context.communication.comment
+    updateComment.onUpdated = (comment: DocCommentOpData) => {
+        const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
+        if(comment.type === DocCommentOpType.Update) {
+            documentCommentList.value[index] = {
+                ...documentCommentList.value[index],
+                ...comment.comment
+            }
+        }else if (comment.type === DocCommentOpType.Del) {
+            documentCommentList.value.splice(index, 1)
+        }else if (comment.type === DocCommentOpType.Add) {
+            documentCommentList.value.unshift(comment.comment)
+        }
+        console.log(11111111111111);
+        
+    }
     props.context.workspace.watch(update);
     props.context.comment.watch(commentUpdate);
     props.context.selection.watch(selectedUpdate);

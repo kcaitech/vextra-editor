@@ -8,6 +8,7 @@ import { Matrix, Shape, ShapeType } from "@kcdesign/data";
 import * as comment_api from '@/apis/comment';
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 type CommentViewEl = InstanceType<typeof CommentPopup>;
 const props = defineProps<{
     context: Context
@@ -23,7 +24,8 @@ const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
     (e: 'recover'): void
     (e: 'editComment', index: number, text: string): void
-    (e: 'updateShapeComment', index: number): void
+    (e: 'updateShapeComment', index: number): void,
+    (e: 'updateComment', comment: any): void
 }>()
 const commentPopupEl = ref<CommentViewEl>()
 const workspace = computed(() => props.context.workspace);
@@ -377,7 +379,36 @@ defineExpose({
     showComment
 })
 
+const updateComment = () => {
+    const updateComment = props.context.communication.comment  
+    updateComment.onUpdated = (comment: DocCommentOpData) => {
+        if(comment.comment.content) {
+            comment.comment.content = comment.comment.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+        }
+        if(!comment.comment.root_id) {
+            emit('updateComment', comment)
+        }
+        const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
+        if(comment.type === DocCommentOpType.Update) {
+            documentCommentList.value[index] = {
+                ...documentCommentList.value[index],
+                ...comment.comment
+            }
+        }else if (comment.type === DocCommentOpType.Del) {
+            documentCommentList.value.splice(index, 1)
+        }else if (comment.type === DocCommentOpType.Add) {
+            if(comment.comment.root_id) {
+                documentCommentList.value.push(comment.comment)
+            }
+        }
+        console.log(comment,'comment');
+    }
+}
+let timer: any
 onMounted(() => {
+    timer = setTimeout(() => {
+        updateComment()
+    },1000)
     props.context.workspace.watch(workspaceUpdate);
     props.context.comment.watch(commentUpdate);
     props.context.selection.watch(selectedUpdate);
@@ -386,6 +417,7 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
     props.context.comment.unwatch(commentUpdate);
     props.context.selection.unwatch(selectedUpdate);
+    clearTimeout(timer)
 })
 watchEffect(setOrigin)
 watchEffect(watcher)

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick, onUpdated } from 'vue';
 import { Context } from '@/context';
 import PageCommentItem from '@/components/Document/Content/PageCommentItem.vue'
 import * as comment_api from '@/apis/comment';
@@ -10,6 +10,7 @@ import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
 import { Page, Shape, ShapeType } from "@kcdesign/data";
 import { Comment } from '@/context/comment';
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 
 type CommentView = InstanceType<typeof PageCommentItem>;
 
@@ -349,17 +350,28 @@ function commentWatcher(type?: number) { // 更新编辑器状态，包括光标
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
-let timeComment: any = null
+
+const updateComment = (comment: DocCommentOpData) => {
+        const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
+        if(comment.type === DocCommentOpType.Update) {
+            documentCommentList.value[index] = {
+                ...documentCommentList.value[index],
+                ...comment.comment
+            }
+        }else if (comment.type === DocCommentOpType.Del) {
+            documentCommentList.value.splice(index, 1)
+        }else if (comment.type === DocCommentOpType.Add) {
+            documentCommentList.value.unshift(comment.comment)
+        }
+        console.log(comment,'data');
+}
 onMounted(() => {
     getDocumentComment()
-    timeComment = setInterval(() => {
-        getDocumentComment()
-    }, 20000)
     props.context.comment.watch(commentWatcher);
 })
+
 onUnmounted(() => {
     props.context.comment.unwatch(commentWatcher);
-    clearInterval(timeComment)
 })
 </script>
 
@@ -367,7 +379,7 @@ onUnmounted(() => {
     <PageCommentItem ref="commentItem" :context="props.context" @moveCommentPopup="downMoveCommentPopup"
         :matrix="matrix.toArray()" @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush"
         v-for="(item, index) in documentCommentList" :key="index" :commentInfo="item" :index="index" @recover="recover"
-        @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()">
+        @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()" @updateComment="updateComment">
     </PageCommentItem>
 </template>
 
