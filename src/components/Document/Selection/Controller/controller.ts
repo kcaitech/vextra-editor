@@ -206,25 +206,22 @@ export function useController(context: Context) {
         }
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
-        const selected = context.selection.selectedShapes;
-        if (selected.length > 1) {
-            if (!e.shiftKey) {
-                const target: Shape | undefined = context.selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).reverse()[0];
-                context.selection.selectShape(target);
-            }
-        } else if (selected.length === 1) {
-            if (selected[0].type === ShapeType.Group) {
-                const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage, selected[0], e.metaKey || e.ctrlKey);
-                if (!isHasTarget) context.selection.resetSelectShapes();
+        const selection = context.selection;
+        const selected = selection.selectedShapes;
+        const hoveredShape = selection.hoveredShape;
+        if (hoveredShape) {
+            if (e.shiftKey) {
+                selection.rangeSelectShape([...selected, hoveredShape]);
             } else {
-                const target: Shape | undefined = context.selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected)[0];
-                if (!target) {
-                    context.selection.resetSelectShapes();
-                }
+                selection.selectShape(hoveredShape);
             }
-        }
-        if (context.selection.hoveredShape) {
-            context.selection.selectShape(context.selection.hoveredShape);
+        } else {
+            const target = selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected);
+            if (target.length) {
+                if (!e.shiftKey) {
+                    selection.selectShape(target[0]);
+                }
+            } else selection.resetSelectShapes();
         }
     }
     function checkStatus() { // 检查是否可以直接开始移动

@@ -122,40 +122,39 @@ function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isC
     // O(n + dk)
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
-        if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
-            const item = g[i];
-            // 特殊处理的三类图形：容器、编组、flatten
-            if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
-                const isItemIsTarget = isTarget(scout, item, position);
-                if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
-                const c = item.childs as Shape[];
-                if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
-                    if (c.length) {
-                        result.push(...finder(scout, c, position, selected, isCtrl, result));
-                        if (result.length) {
+        if (!canBeTarget(g[i])) continue;
+        const item = g[i];
+        // 特殊处理的三类图形：容器、编组、flatten
+        if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
+            const isItemIsTarget = isTarget(scout, item, position);
+            if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
+            const c = item.childs as Shape[];
+            if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
+                if (c.length) {
+                    result.push(...finder(scout, c, position, selected, isCtrl, result));
+                    if (result.length) {
+                        return result;
+                    } else { // 在一个容器拥有子元素的情况下，需要isCtrl才可以被hover
+                        if (isCtrl) {
+                            result.push(item);
                             return result;
-                        } else { // 在一个容器拥有子元素的情况下，需要isCtrl才可以被hover
-                            if (isCtrl) {
-                                result.push(item);
-                                return result;
-                            }
                         }
-                    } else {
-                        result.push(item);
-                        return result;
                     }
-                } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
-                    const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
-                    if (g) {
-                        result.push(g);
-                        return result;
-                    }
-                }
-            } else {
-                if (isTarget(scout, item, position)) {
+                } else {
                     result.push(item);
                     return result;
                 }
+            } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
+                const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
+                if (g) {
+                    result.push(g);
+                    return result;
+                }
+            }
+        } else {
+            if (isTarget(scout, item, position)) {
+                result.push(item);
+                return result;
             }
         }
     }
@@ -196,29 +195,24 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
     let result: Shape | undefined;
     for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
         const shape = g[j];
-        if (g[j].isVisible) {
-            const childIsTarget = isTarget(scout, g[j], position);
-            if (childIsTarget) {
-                if ([ShapeType.Group, ShapeType.FlattenShape].includes(g[j].type)) {
-                    const c: Shape[] = (g[j] as GroupShape).childs;
-                    const res = forGroupHover(scout, c, position, selected, isCtrl);
-                    if (res) return res;
-                } else {
-                    let target = g[j];
-                    if (isCtrl) { //如果shift键被按下，不冒泡
-                        return g[j];
-                    }
-                    while (target.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target.parent?.type)) {
-                        if (selected) {
-                            const isBroSelected: boolean = isPartSelect(target.parent, selected);
-                            if (isBroSelected) break;
-                        }
-                        target = target.parent;
-                    }
-                    result = target!;
-                    break;
+        if (!shape.isVisible || !isTarget(scout, shape, position)) continue;
+        if ([ShapeType.Group, ShapeType.FlattenShape].includes(shape.type)) {
+            const c: Shape[] = (shape as GroupShape).childs;
+            const res = forGroupHover(scout, c, position, selected, isCtrl);
+            if (res) return res;
+        } else {
+            //如果Ctrl键被按下，不冒泡
+            if (isCtrl) return shape;
+            let target = shape;
+            while (target.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target.parent?.type)) {
+                if (selected) {
+                    const isBroSelected: boolean = isPartSelect(target.parent, selected);
+                    if (isBroSelected) break;
                 }
+                target = target.parent;
             }
+            result = target!;
+            break;
         }
     }
     return result;
