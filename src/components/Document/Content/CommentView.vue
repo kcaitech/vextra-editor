@@ -351,26 +351,39 @@ function commentWatcher(type?: number) { // 更新编辑器状态，包括光标
     }
 }
 
-const updateComment = (comment: DocCommentOpData) => {
-        const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
-        if(comment.type === DocCommentOpType.Update) {
+const docComment = (comment: DocCommentOpData) => {
+    if(comment.comment.content) {
+        comment.comment.content = comment.comment.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+    }
+    const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
+    if(comment.type === DocCommentOpType.Update) {
+        if(index !== -1) {
             documentCommentList.value[index] = {
                 ...documentCommentList.value[index],
                 ...comment.comment
             }
-        }else if (comment.type === DocCommentOpType.Del) {
+        }
+    }else if (comment.type === DocCommentOpType.Del) {
+        if(index !== -1) {
             documentCommentList.value.splice(index, 1)
-        }else if (comment.type === DocCommentOpType.Add) {
+        }
+    }else if (comment.type === DocCommentOpType.Add) {
+        if(!comment.comment.root_id) {
             documentCommentList.value.unshift(comment.comment)
         }
-        console.log(comment,'data');
+    }
+    props.context.comment.onUpdateComment(comment)
 }
 onMounted(() => {
+    const updateComment = props.context.communication.comment
+    updateComment.addUpdatedHandler(docComment)
     getDocumentComment()
     props.context.comment.watch(commentWatcher);
 })
 
 onUnmounted(() => {
+    const updateComment = props.context.communication.comment
+    updateComment.removeUpdatedHandler(docComment)
     props.context.comment.unwatch(commentWatcher);
 })
 </script>
@@ -379,7 +392,7 @@ onUnmounted(() => {
     <PageCommentItem ref="commentItem" :context="props.context" @moveCommentPopup="downMoveCommentPopup"
         :matrix="matrix.toArray()" @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush"
         v-for="(item, index) in documentCommentList" :key="index" :commentInfo="item" :index="index" @recover="recover"
-        @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()" @updateComment="updateComment">
+        @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()">
     </PageCommentItem>
 </template>
 
