@@ -23,6 +23,8 @@ export enum ClientCmdType {
     OpenTunnel, // 打开一条虚拟通道
     CloseTunnel, // 关闭一条虚拟通道
     TunnelData, // 虚拟通道数据
+    Heartbeat = 255, // 心跳包
+    HeartbeatResponse = 254, // 心跳包响应
 }
 
 export enum ServerCmdType {
@@ -30,6 +32,8 @@ export enum ServerCmdType {
     CmdReturn, // 返回cmd执行结果
     CloseTunnel, // 关闭一条虚拟通道
     TunnelData, // 虚拟通道数据
+    Heartbeat = 255, // 心跳包
+    HeartbeatResponse = 254, // 心跳包响应
 }
 
 export enum CmdStatus {
