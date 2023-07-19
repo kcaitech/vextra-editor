@@ -11,6 +11,8 @@ const MeShare = () => import("@/components/AppHome/Main/MeShare.vue");
 const RecycleBin = () => import("@/components/AppHome/Main/RecycleBin.vue");
 const Apply = () => import("@/components/Apply/index.vue")
 const per_center = () => import('@/components/Userinfo/per_center.vue')
+const Privacypolicy = () => import("@/components/Login/Privacypolicy.vue");
+const Serviceagreement = () => import("@/components/Login/Serviceagreement.vue");
 
 const routes = [
     {
@@ -81,6 +83,16 @@ const routes = [
         path: "/pcenter",
         name: "per_center",
         component: per_center
+    },
+    {
+        path: "/privacypolicy",
+        name: "privacypolicy",
+        component: Privacypolicy
+    },
+    {
+        path: "/serviceagreement",
+        name: "serviceagreement",
+        component: Serviceagreement
     },
 ]
 

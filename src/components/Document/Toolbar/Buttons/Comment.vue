@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import ToolButton from '../ToolButton.vue';
-import {} from 'vue';
 import { Action, WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
+import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
 const props = defineProps<{
   active: boolean,
@@ -18,14 +18,13 @@ function select(action: Action) {
 }
 </script>
 <template>
-  <el-tooltip class="box-item" effect="dark" :content="`${t('home.addComment')} &nbsp;&nbsp; C`" placement="bottom"
-    :show-after="500" :offset="10" :hide-after="0">
-    <ToolButton ref="button" @click="() => { select(Action.AddComment) }" :selected="props.active">
-      <div class="svg-container">
-        <svg-icon icon-class="comment"></svg-icon>
-      </div>
-    </ToolButton>
-  </el-tooltip>
+    <Tooltip :content="`${t('home.addComment')} &nbsp;&nbsp; C`">
+      <ToolButton ref="button" @click="() => { select(Action.AddComment) }" :selected="props.active">
+        <div class="svg-container">
+          <svg-icon icon-class="comment"></svg-icon>
+        </div>
+      </ToolButton>
+    </Tooltip>
 </template>
 <style scoped lang="scss">
 .svg-container {

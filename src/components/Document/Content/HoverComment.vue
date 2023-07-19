@@ -4,10 +4,10 @@ import { Context } from '@/context';
 import { ChatDotSquare, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
-import { WorkSpace } from '@/context/workspace';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
+import { Comment } from '@/context/comment';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -23,10 +23,10 @@ const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
     (e: 'moveCommentPopup', event: MouseEvent, index: number): void
 }>()
-const workspace = computed(() => props.context.workspace);
+const comment = computed(() => props.context.comment);
 const hover = ref(false)
-const commentShow = ref(props.context.workspace.isHoverComment)
-const hoverCommentId = ref(workspace.value.isHoverCommentId)
+const commentShow = ref(props.context.comment.isHoverComment)
+const hoverCommentId = ref(comment.value.isHoverCommentId)
 const replyNum = computed(() => {
     if (props.commentInfo.children) {
         const child = props.commentInfo.children.length
@@ -39,22 +39,22 @@ const resolve = computed(() => {
     return props.commentInfo.status === 0 ? true : false
 })
 const isControls = computed(() => {
-    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id || workspace.value.isUserInfo?.id === workspace.value.isDocumentInfo?.user.id) return true
+    if(comment.value.isUserInfo?.id === props.commentInfo.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
     else return false
 })
 
 const isControlsDel = computed(() => {
-    if(workspace.value.isUserInfo?.id === props.commentInfo.user.id) return true
+    if(comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
 const hoverShape = (e: MouseEvent) => {
-    workspace.value.hoverComment(true, props.commentInfo.id)
+    comment.value.hoverComment(true, props.commentInfo.id)
     hover.value = true
 }
 const unHoverShape = (e: MouseEvent) => {
-    if(!props.context.workspace.isCommentMove) {
-        workspace.value.hoverComment(false, props.commentInfo.id)
+    if(!props.context.comment.isCommentMove) {
+        comment.value.hoverComment(false, props.commentInfo.id)
     }
     hover.value = false
     emit('unHoverComment')
@@ -77,8 +77,8 @@ const onResolve = (e: Event) => {
 const onDelete = (e: Event) => {
     e.stopPropagation()
     if(!isControlsDel.value) return
-    props.context.workspace.hoverComment(false);
-    props.context.workspace.commentInput(false);
+    props.context.comment.hoverComment(false);
+    props.context.comment.commentInput(false);
     let timeout = setTimeout(() => {
         emit('deleteComment', props.index)
         deleteComment()
@@ -126,25 +126,25 @@ const filterDate = (time: string) => {
   return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-const workspaceUpdate = (t: number) => {
-    if(t === WorkSpace.CURRENT_COMMENT) {
-        hoverCommentId.value = workspace.value.isHoverCommentId
+const commentUpdate = (t: number) => {
+    if(t === Comment.CURRENT_COMMENT) {
+        hoverCommentId.value = comment.value.isHoverCommentId
     }
-    if(t === WorkSpace.HOVER_COMMENT) {
-        commentShow.value = workspace.value.isHoverComment
+    if(t === Comment.HOVER_COMMENT) {
+        commentShow.value = comment.value.isHoverComment
     }
-    if(t === WorkSpace.HOVER_SHOW_COMMENT) {
-        commentShow.value = workspace.value.isHoverComment
+    if(t === Comment.HOVER_SHOW_COMMENT) {
+        commentShow.value = comment.value.isHoverComment
     }
 }
 
 onMounted(() => {
-    props.context.workspace.watch(workspaceUpdate);
+    props.context.comment.watch(commentUpdate);
 })
 onUnmounted(() => {
-    props.context.workspace.commentOpacity(false)
-    props.context.workspace.commentInput(false);
-    props.context.workspace.unwatch(workspaceUpdate);
+    props.context.comment.commentOpacity(false)
+    props.context.comment.commentInput(false);
+    props.context.comment.unwatch(commentUpdate);
 })
 </script>
 

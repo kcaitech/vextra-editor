@@ -32,7 +32,7 @@ function select(action: Action) {
     workspace.value.setAction(action);
     if (action === Action.AddComment) {
         nextTick(() => {
-            props.context.workspace.commentInput(false);
+            props.context.comment.commentInput(false);
         })
     }
 }

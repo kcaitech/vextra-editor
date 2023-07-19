@@ -47,7 +47,7 @@ export function render2path(shape: Shape, offsetX?: number, offsetY?: number, co
         const child1 = shape.childs[i];
         const frame1 = child1.frame;
         const path1 = render2path(child1, offsetX + frame1.x, offsetY + frame1.y, consumed);
-        const pathop = child1.boolOp;
+        const pathop = child1.boolOp ?? BoolOp.None;
         if (pathop === BoolOp.None) {
             joinPath = joinPath + path1;
         } else {
