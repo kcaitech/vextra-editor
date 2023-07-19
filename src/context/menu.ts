@@ -9,37 +9,20 @@ export class Menu extends Watchable(Object) {
   private m_menu_mounted: string = '';
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
-  private invalid_items: string[] = [];
-  private m_accurate: boolean = false;
   get isMenuMount() {
     return this.m_menu_mounted;
   }
-  get accurate() {
-    return this.m_accurate;
-  }
-  get ispopover() { //xxx
+  get ispopover() {
     return this.m_popover;
   }
   get isColorPickerMount() {
     return this.m_color_picker;
   }
-  get invalidItems() {
-    return this.invalid_items;
-  }
-  setMode(isAcc: boolean) {
-    this.m_accurate = isAcc;
-  }
-  setInvalidItems(val: string[]) {
-    this.invalid_items = [];
-    this.invalid_items = val;
-  }
   menuMount(mount?: string) {
     this.m_menu_mounted = mount || '';
-    if (!mount) {
-      this.notify(Menu.SHUTDOWN_MENU);
-    }
+    if (!mount) this.notify(Menu.SHUTDOWN_MENU);
   }
-  colorPickerSetup(id: string) { //xxx
+  colorPickerSetup(id: string) {
     this.m_color_picker = id;
   }
   removeColorPicker() {

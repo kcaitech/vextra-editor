@@ -506,7 +506,7 @@ function accurate_shift() {
         search_el.value.focus();
     }
     popoverVisible.value = false;
-    props.context.menu.setMode(accurate.value);
+    props.context.navi.setMode(accurate.value);
     props.context.navi.notify(Navi.SEARCHING);
 }
 onMounted(() => {

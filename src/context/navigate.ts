@@ -16,6 +16,7 @@ export class Navi extends Watchable(Object) {
   private m_focus_text: TextSelection | undefined;
   private m_keywords: string = '';
   private m_shapelist_freeze: boolean = false;
+  private m_accurate: boolean = false;
   constructor() {
     super();
   }
@@ -25,23 +26,29 @@ export class Navi extends Watchable(Object) {
   set_page_need_extend(v: boolean) {
     this.m_page_need_extend = v;
   }
+  get focusText() {
+    return this.m_focus_text;
+  }
   set_focus_text(v?: TextSelection) {
     this.m_focus_text = v;
     this.notify(Navi.TEXT_SELECTION_CHANGE);
   }
-  set_keywords(v?: string) {
-    this.m_keywords = v || '';
+  get is_shapelist_freeze() {
+    return this.m_shapelist_freeze;
   }
   set_sl_freeze(v?: boolean) {
     this.m_shapelist_freeze = v || false;
   }
-  get is_shapelist_freeze() {
-    return this.m_shapelist_freeze;
-  }
-  get focusText() {
-    return this.m_focus_text;
-  }
   get keywords() {
     return this.m_keywords;
+  }
+  set_keywords(v?: string) {
+    this.m_keywords = v || '';
+  }
+  get accurate() {
+    return this.m_accurate;
+  }
+  setMode(isAcc: boolean) {
+    this.m_accurate = isAcc;
   }
 }
