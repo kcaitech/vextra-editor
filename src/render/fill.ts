@@ -8,11 +8,11 @@ import { objectId } from "@kcdesign/data";
 const handler: { [key: string]: (h: Function, shape: Shape, fill: Fill, path: string) => any } = {};
 handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
-    const frame = shape.frame;
+    const opacity = shape.style.contextSettings.opacity;
     return h("path", {
         d: path,
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
-        "fill-opacity": color ? color.alpha : 1,
+        "fill-opacity": (color ? color.alpha : 1) * opacity,
         stroke: 'none',
         'stroke-width': 0
     });
@@ -21,6 +21,7 @@ handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, 
 handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
     const color = fill.color;
     const frame = shape.frame;
+    const opacity = shape.style.contextSettings.opacity;
     const elArr = new Array();
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
     if (g_.node) {
@@ -42,7 +43,7 @@ handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, pa
         elArr.push(h('path', {
             d: path,
             fill: "url(#" + gid + ")",
-            "fill-opacity": color ? color.alpha : 1,
+            "fill-opacity": (color ? color.alpha : 1) * opacity,
             stroke: 'none',
             'stroke-width': 0,
         }));
