@@ -217,7 +217,7 @@ function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: n
   const diff = Math.hypot(e.clientX - root.x - start.x, e.clientY - root.y - start.y);
   return Boolean(diff > dragActiveDis);
 }
-function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
+async function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
   const workspace = context.workspace;
   const type = ShapeType.Image;
@@ -239,6 +239,7 @@ function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, 
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
     selection.selectShape(page!.getShape(new_shape.id));
+    await context.upload.uploadResource(new_shape.imageRef, media.buff.buffer.slice(0))
   }
   workspace.setAction(Action.AutoV);
   workspace.creating(false);
