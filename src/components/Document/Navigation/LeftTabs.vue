@@ -4,11 +4,8 @@ import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import CommentTab from "./Comment/CommentTab.vue";
-// import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
-import { WorkSpace } from '@/context/workspace';
-import { Action } from "@/context/tool";
 import { Comment } from "@/context/comment";
 const { t } = useI18n();
 
@@ -17,9 +14,6 @@ const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 type Tab = "Shape" | "Comps" | "Resource" | "Comment"
 
 const currentTab = ref<Tab>("Shape");
-const selected = ref<Action>(Action.AutoV);
-const workspace = computed<WorkSpace>(() => props.context.workspace)
-
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('navi.shape'),
@@ -31,26 +25,11 @@ const tabs: { title: string, id: Tab }[] = [
         title: t('home.comment'),
         id: 'Comment'
     }
-    ,
-    // {
-    //     title: t('navi.resource'),
-    //     id: 'Resource'
-    // }
 ]
 
 function update(t: number) {
-    if(t === Comment.SELECT_LIST_TAB) {
-        selected.value =props.context.tool.action;
-        selectComment()
-    }
+    if (t === Comment.SELECT_LIST_TAB) currentTab.value = 'Comment';
 }
-
-const selectComment = () => {
-    if (selected.value === Action.AddComment) {
-        currentTab.value = 'Comment'
-    }
-}
-
 function toggle(id: Tab) {
     currentTab.value = id
 }
@@ -76,7 +55,6 @@ onUnmounted(() => {
                 :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
             <CompsTab :context="props.context" v-if="currentTab === 'Comps'" :showLeft="showLeft"
                 :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
-            <!-- <ResourceTab :context="props.context" v-if="currentTab === 'Resource'"></ResourceTab> -->
             <CommentTab :context="props.context" v-if="currentTab === 'Comment'" :showLeft="showLeft"
                 :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
         </div>

@@ -85,6 +85,7 @@ export class Tool extends Watchable(Object) {
         }
     }
     setAction(action: Action) {
+        this.m_current_action = action;
         if (action.startsWith('add')) {
             if (action === Action.AddComment) {
                 if (this.m_context.workspace.documentPerm === 1) return;
@@ -93,7 +94,6 @@ export class Tool extends Watchable(Object) {
                 this.m_context.cursor.setType('comment-0');
             } else this.m_context.cursor.setType('cross-0');
         } else this.m_context.cursor.setType('auto-0');
-        this.m_current_action = action;
         this.notify(Tool.CHANGE_ACTION);
     }
     keydown_r(ctrl: boolean, shift: boolean, meta: boolean) {

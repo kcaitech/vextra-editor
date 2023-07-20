@@ -163,7 +163,7 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
         else if (action.startsWith('add')) init_insert_shape(props.context, mousedownOnPageXY, t);
     }
 }
-function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
+function contentEditOnMoving(e: MouseEvent) { // 编辑page内容    
     const { x, y } = getMouseOnPageXY(e);
     if (newShape) {
         if (wheel && asyncCreator) {

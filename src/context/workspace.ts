@@ -4,7 +4,7 @@ import { Context } from "./index";
 import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipaboard";
 import { adapt_page } from "@/utils/content";
-export enum KeyboardKeys { // 键盘按键类型
+export enum KeyboardKeys {
     Space = 'Space',
     A = 'KeyA',
     R = 'KeyR',

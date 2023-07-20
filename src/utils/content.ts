@@ -84,7 +84,8 @@ function isInner(context: Context, shape: Shape) {
 function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
   const selection = context.selection;
   const workspace = context.workspace;
-  const type = ResultByAction(workspace.action);
+  const action = context.tool.action;
+  const type = ResultByAction(action);
   const page = selection.selectedPage;
   const parent = selection.getClosetArtboard(mousedownOnPageXY);
   let asyncCreator: AsyncCreator | undefined;
