@@ -66,7 +66,7 @@ const surplusY = ref<number>(0);
 const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
 const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
-const cursorClass = ref<string>('');
+const cursor = ref<string>('');
 const styler = ref<StyleSheetController>(styleSheetController());
 const rootId = ref<string>('content');
 let wheel: Wheel | undefined;
@@ -259,7 +259,7 @@ function menu_watcher(type?: number) {
 }
 async function setClass(name: string) {
     const _n = await styler.value.getClass(name);
-    cursorClass.value = _n;
+    cursor.value = _n;
 }
 function insertImgs() {
     insert_imgs(props.context, t);
@@ -387,7 +387,7 @@ function esc(e: KeyboardEvent) {
 }
 async function stylerForCursorMount() {
     await styler.value.setup();
-    cursorClass.value = await styler.value.getClass('auto-0');
+    cursor.value = await styler.value.getClass('auto-0');
 }
 function contextMenuUnmount() {
     contextMenu.value = false;
@@ -681,7 +681,7 @@ const editCommentShapePosition = async (data: any) => {
 // 取消评论输入框
 const closeComment = (e?: MouseEvent) => {
     if (!spacePressed.value) {
-        if (e && e.target instanceof Element && e.target.closest(`.${cursorClass.value}`) && !e.target.closest('.container-popup')) {
+        if (e && e.target instanceof Element && e.target.closest(`.${cursor.value}`) && !e.target.closest('.container-popup')) {
             commentInput.value = false;
         } else if (!e) {
             commentInput.value = false;
@@ -797,7 +797,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div v-if="inited" :class="cursorClass" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
+    <div v-if="inited" :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
@@ -817,7 +817,7 @@ onUnmounted(() => {
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
             @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"
             :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursorClass">
+        <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
     </div>
 </template>

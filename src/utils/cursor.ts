@@ -135,8 +135,6 @@ function rotateBase64Image(base64Image: string, angle: number) {
     }
   });
 }
-
-// step, 输入一个整数A，返回可以被step整除的离A最近的一个整数B
 function findNearestMultipleOf(num: number, step?: number): number {
   step = step || 3
   let closest = Math.round(num / step) * step;

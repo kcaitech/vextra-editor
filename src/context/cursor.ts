@@ -1,0 +1,33 @@
+import { styleSheetController } from "@/utils/cursor";
+import { Watchable } from "@kcdesign/data";
+import { Context } from ".";
+
+export class Cursor extends Watchable(Object) {
+    static CHANGE_CURSOR = 1;
+    private m_current_cursor_type: string = '';
+    private m_context: Context;
+    private m_styler = styleSheetController();
+
+    constructor(context: Context) {
+        super();
+        this.m_context = context;
+    }
+    async init() {
+        await this.m_styler.setup();
+        const auto = await this.m_styler.getClass('auto-0');
+        this.notify(Cursor.CHANGE_CURSOR, auto);
+    }
+    get type() {
+        return this.m_current_cursor_type;
+    }
+    async setType(type: string) {
+        if (this.m_context.workspace.transforming) return;
+        const res = await this.m_styler.getClass(type);
+        this.m_current_cursor_type = res;
+        this.notify(Cursor.CHANGE_CURSOR, res);
+    }
+    reset() {
+        if (this.m_context.workspace.transforming) return;
+        this.m_current_cursor_type = 'auto-0';
+    }
+}
