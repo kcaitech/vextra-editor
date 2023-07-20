@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, TextShape, Color } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color } from '@kcdesign/data';
 import { Context } from '@/context'; // 状态顶层 store
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
 import { Action, KeyboardKeys, WorkSpace } from '@/context/workspace'; // workspace
@@ -17,7 +17,6 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { init as renderinit } from '@/render';
-import { styleSheetController, StyleSheetController } from "@/utils/cursor";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { _updateRoot, getName, init_shape, color2string, init_insert_shape, init_insert_textshape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
@@ -27,6 +26,7 @@ import * as comment_api from '@/apis/comment';
 import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
+import { Cursor } from "@/context/cursor";
 
 interface Props {
     context: Context
@@ -67,7 +67,6 @@ const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
 const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursor = ref<string>('');
-const styler = ref<StyleSheetController>(styleSheetController());
 const rootId = ref<string>('content');
 let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
@@ -148,15 +147,9 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
-    // setClass('grab-0');
 }
 function endDragPage() { // 编辑器完成拖动页面
     const action: Action = props.context.workspace.action;
-    if (action.startsWith('add')) {
-        setClass('cross-0');
-    } else {
-        setClass('auto-0');
-    }
     spacePressed.value = false;
     workspace.value.pageDragging(false);
 }
@@ -178,7 +171,6 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
             }
         }
     }
-    setClass('auto-0');
 }
 function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
     const { x, y } = getMouseOnPageXY(e);
@@ -202,44 +194,22 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
     }
 }
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) { // 更新编辑器状态，包括光标状态、是否正在进行图形变换
-    if (type === WorkSpace.CURSOR_CHANGE) {
-        if (param !== undefined) {
-            setClass((param as string));
-        }
-    } else {
-        if (type === WorkSpace.MATRIX_TRANSFORMATION) {
-            matrix.reset(workspace.value.matrix);
-        } else if (type === WorkSpace.RESET_CURSOR) {
-            setClass('auto-0');
-        } else if (type === WorkSpace.INSERT_FRAME) {
-            insertFrame(); // 同步插入容器
-        } else if (type === WorkSpace.INSERT_IMGS) {
-            insertImgs(); // 同步插入多张图片
-        } else if (type === WorkSpace.PASTE) {
-            paster(props.context, t);
-        } else if (type === WorkSpace.PASTE_RIGHT) {
-            paster(props.context, t, mousedownOnPageXY);
-        } else if (type === WorkSpace.COPY) {
-            props.context.workspace.clipboard.write_html();
-        } else if (type === WorkSpace.ONARBOARD__TITLE_MENU) {
-            if (param) {
-                contextMenuMount((param as MouseEvent))
-            }
-        } else if (type === WorkSpace.CHANGE_BACKGROUND) {
-            if (param) {
-                background_color.value = color2string(param as Color);
-            }
-        }
-        const action = props.context.workspace.action;
-        if (action.startsWith('add')) {
-            if (action === Action.AddComment) {
-                setClass('comment-0');
-            } else {
-                setClass('cross-0');
-            }
-        } else {
-            setClass('auto-0');
-        }
+    if (type === WorkSpace.MATRIX_TRANSFORMATION) {
+        matrix.reset(workspace.value.matrix);
+    } else if (type === WorkSpace.INSERT_FRAME) {
+        insertFrame(); // 同步插入容器
+    } else if (type === WorkSpace.INSERT_IMGS) {
+        insertImgs(); // 同步插入多张图片
+    } else if (type === WorkSpace.PASTE) {
+        paster(props.context, t);
+    } else if (type === WorkSpace.PASTE_RIGHT) {
+        paster(props.context, t, mousedownOnPageXY);
+    } else if (type === WorkSpace.COPY) {
+        props.context.workspace.clipboard.write_html();
+    } else if (type === WorkSpace.ONARBOARD__TITLE_MENU) {
+        if (param) contextMenuMount((param as MouseEvent));
+    } else if (type === WorkSpace.CHANGE_BACKGROUND) {
+        if (param) background_color.value = color2string(param as Color);
     }
 }
 function comment_watcher(type?: number) {
@@ -257,10 +227,7 @@ function menu_watcher(type?: number) {
         contextMenuUnmount();
     }
 }
-async function setClass(name: string) {
-    const _n = await styler.value.getClass(name);
-    cursor.value = _n;
-}
+
 function insertImgs() {
     insert_imgs(props.context, t);
 }
@@ -384,10 +351,6 @@ function contextMenuMount(e: MouseEvent) {
 }
 function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') contextMenuUnmount();
-}
-async function stylerForCursorMount() {
-    await styler.value.setup();
-    cursor.value = await styler.value.getClass('auto-0');
 }
 function contextMenuUnmount() {
     contextMenu.value = false;
@@ -727,9 +690,6 @@ const getDocumentComment = async () => {
         console.log(err);
     }
 }
-
-
-
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id);
@@ -752,48 +712,53 @@ function frame_watcher() {
     if (!root.value) return;
     _updateRoot(props.context, root.value);
 }
-renderinit()
-    .then(() => {
-        inited.value = true;
-        nextTick(() => {
-            if (root.value) {
-                resizeObserver.observe(root.value);
-                _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
-                initMatrix(props.page); // 初始化页面视图
-            }
-        });
-    }).catch((e) => {
-        console.log(e);
-    }).finally(() => {
-        props.context.workspace.setFreezeStatus(false);
-    })
+function cursor_watcher(t?: number, type?: string) {
+    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type) {
+        cursor.value = type;
+    }
+}
 onMounted(() => {
+    props.context.selection.scoutMount(props.context); // 安装图形检索器
     props.context.workspace.watch(workspace_watcher);
+    props.context.workspace.init(t); // 在workspace存储多语言工具
+    props.context.workspace.setFreezeStatus(true); // 开始加载静态资源
     props.context.comment.watch(comment_watcher);
     props.context.menu.watch(menu_watcher);
+    props.context.cursor.watch(cursor_watcher);
+    props.context.cursor.init();
     props.page.watch(watcher);
+    rootRegister(true); // 在workspace注册contentview dom节点
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     window.addEventListener('blur', windowBlur);
-    stylerForCursorMount(); // 安装鼠标光标处理器
-    rootRegister(true); // 在workspace注册contentview dom节点
-    props.context.selection.scoutMount(props.context); // 安装图形检索器
-    props.context.workspace.setFreezeStatus(true); // 开始加载静态资源
-    props.context.workspace.init(t); // 在workspace存储多语言工具
+    renderinit()
+        .then(() => {
+            inited.value = true;
+            nextTick(() => {
+                if (root.value) {
+                    resizeObserver.observe(root.value);
+                    _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
+                    initMatrix(props.page); // 初始化页面视图
+                }
+            });
+        }).catch((e) => {
+            console.log(e);
+        }).finally(() => {
+            props.context.workspace.setFreezeStatus(false);
+        })
 })
 onUnmounted(() => {
+    props.context.selection.scout?.remove(); // 卸载图形检索器
     props.context.workspace.unwatch(workspace_watcher);
     props.context.comment.unwatch(comment_watcher);
     props.context.menu.unwatch(menu_watcher);
+    props.context.cursor.unwatch(cursor_watcher);
     props.page.unwatch(watcher);
+    stopWatch();
+    resizeObserver.disconnect(); // 停止监听contentview dom节点的frame变化
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('blur', windowBlur);
-    styler.value.remove(); // 卸载鼠标光标处理器
-    rootRegister(false); // 在workspace注销contentview dom节点
-    stopWatch();
-    props.context.selection.scout?.remove(); // 卸载图形检索器
-    resizeObserver.disconnect(); // 停止监听contentview dom节点的frame变化
 })
 </script>
 <template>

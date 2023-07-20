@@ -35,7 +35,6 @@ function styleSheetController(): StyleSheetController {
   let style: HTMLStyleElement;
   const classList: Map<string, string> = new Map();
 
-  // 向document的head插入一个<style type='text/css' id='xxx'>标签
   async function appendStyleSheetForCursor() {
     style = document.createElement('style');
     style.type = 'text/css';

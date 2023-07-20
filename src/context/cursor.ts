@@ -4,6 +4,7 @@ import { Context } from ".";
 
 export class Cursor extends Watchable(Object) {
     static CHANGE_CURSOR = 1;
+    static RESET = 2;
     private m_current_cursor_type: string = '';
     private m_context: Context;
     private m_styler = styleSheetController();
@@ -28,6 +29,6 @@ export class Cursor extends Watchable(Object) {
     }
     reset() {
         if (this.m_context.workspace.transforming) return;
-        this.m_current_cursor_type = 'auto-0';
+        this.m_current_cursor_type = 'auto-0-' + this.m_styler.getId();
     }
 }

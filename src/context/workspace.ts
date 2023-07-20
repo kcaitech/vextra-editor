@@ -82,8 +82,6 @@ export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
     static INSERT_FRAME = 1; // notify类型：插入容器模版、更新光标、重置光标、矩阵变换
-    static CURSOR_CHANGE = 2;
-    static RESET_CURSOR = 3;
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
     static TEXT_FORMAT = 6;
@@ -581,41 +579,5 @@ export class WorkSpace extends Watchable(Object) {
             document.removeEventListener('keydown', WorkSpace.P_ESC_EVENT);
             WorkSpace.P_ESC_EVENT = null;
         }
-    }
-    setCursorStyle(type: CtrlElementType | string, deg: number) {
-        if (this.m_creating || this.m_selecting || this.m_scaling) {
-            // todo
-        } else {
-            let name = 'auto-0';
-            if (type == CtrlElementType.RectRBR) {
-                name = `rotate-${0 + deg}`;
-            } else if (type == CtrlElementType.RectLBR) {
-                name = `rotate-${90 + deg}`;
-            } else if (type == CtrlElementType.RectLTR) {
-                name = `rotate-${180 + deg}`;
-            } else if (type == CtrlElementType.RectRTR) {
-                name = `rotate-${270 + deg}`;
-            } else if (type == CtrlElementType.RectLT || type === CtrlElementType.RectRB) {
-                name = `scale-${45 + deg}`;
-            } else if (type == CtrlElementType.RectRT || type === CtrlElementType.RectLB) {
-                name = `scale-${135 + deg}`;
-            } else if (type == CtrlElementType.LineStart || type === CtrlElementType.LineEnd) {
-                name = 'extend-0';
-            } else if (type == CtrlElementType.LineStartR) {
-                name = `rotate-${135 + deg}`;
-            } else if (type == CtrlElementType.LineEndR) {
-                name = `rotate-${315 + deg}`;
-            } else if (type == CtrlElementType.RectTop || type === CtrlElementType.RectBottom) {
-                name = `scale-${90 + deg}`
-            } else if (type == CtrlElementType.RectLeft || type === CtrlElementType.RectRight) {
-                name = `scale-${0 + deg}`;
-            } else if (type == CtrlElementType.Text) {
-                name = `scan-0`;
-            }
-            this.notify(WorkSpace.CURSOR_CHANGE, name);
-        }
-    }
-    resetCursor() {
-        !this.transforming && this.notify(WorkSpace.RESET_CURSOR);
     }
 }
