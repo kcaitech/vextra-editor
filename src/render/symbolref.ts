@@ -1,7 +1,28 @@
-import { ShapeType, SymbolRefShape } from "@kcdesign/data";
-import { renderGroupChilds as gR } from "@/render/group";
+import { ShapeFrame, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
+import { renderGroupChilds } from "@/render/group";
 import { render as fillR } from "@/render/fill";
 import { render as borderR } from "@/render/border"
+
+function renderSym(h: Function, shape: SymbolShape, comsMap: Map<ShapeType, any>, targetFrame: ShapeFrame): any {
+    // if (!shape.isVisible) return [];
+    const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
+    const frame = shape.frame;
+
+    if (targetFrame.width === frame.width && targetFrame.height === frame.height) {
+        return childs;
+    }
+
+    const props: any = {}
+    const scaleX = targetFrame.width / frame.width;
+    const scaleY = targetFrame.height / frame.height;
+    const style: any = {}
+    style.transform = "translate(" + (targetFrame.width / 2) + "px," + (targetFrame.height / 2) + "px) "
+    style.transform += `scale(${scaleX}, ${scaleY})`
+    style.transform += "translate(" + (-frame.width / 2) + "px," + (-frame.height / 2) + "px)"
+    props.style = style;
+
+    return [h('g', props, childs)];
+}
 
 export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeType, any>, reflush?: number) {
     const sym = shape.peekSymbol();
@@ -17,7 +38,7 @@ export function render(h: Function, shape: SymbolRefShape, comsMap: Map<ShapeTyp
     childs.push(...borderR(h, shape, path));
 
     // symbol
-    childs.push(...gR(h, sym, comsMap));
+    childs.push(...renderSym(h, sym, comsMap, shape.frame)); // 有缩放
 
     const props: any = {}
     if (reflush) props.reflush = reflush;
