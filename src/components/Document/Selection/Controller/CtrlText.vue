@@ -93,7 +93,7 @@ function onMouseDown(e: MouseEvent) {
             }
             editing = true;
             workspace.contentEdit(editing);
-            workspace.setCursorStyle('text', 0);
+            props.context.cursor.setType('scan-0');
         }
         if (!editing) return;
         const selection = props.context.selection;
@@ -116,7 +116,7 @@ function be_editor(index?: number) {
     const selection = props.context.selection;
     editing = true;
     workspace.contentEdit(editing);
-    workspace.setCursorStyle('text', 0);
+    props.context.cursor.setType('scan-0');
     if (index !== undefined) {
         downIndex = { index, before: true };
         selection.setCursor(index, true);
@@ -164,11 +164,11 @@ function onMouseMove(e: MouseEvent) {
 }
 function mouseenter() {
     if (editing) {
-        props.context.workspace.setCursorStyle('text', 0);
+        props.context.cursor.setType('scan-0');
     }
 }
 function mouseleave() {
-    props.context.workspace.resetCursor();
+    props.context.cursor.reset();
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)

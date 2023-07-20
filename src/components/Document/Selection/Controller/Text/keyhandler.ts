@@ -162,7 +162,7 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
             selection.selectShape(shape);
             clearTimeout(timer);
         })
-        context.workspace.resetCursor();
+        context.cursor.reset();
         context.workspace.contentEdit(false);
     }
 

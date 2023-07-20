@@ -3,7 +3,8 @@ import { watchEffect, onMounted, onUnmounted, ref, nextTick } from "vue";
 import { Context } from "@/context";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
-import { CtrlElementType, Action } from "@/context/workspace";
+import { CtrlElementType } from "@/context/workspace";
+import { Action } from "@/context/tool";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 export interface Point {
@@ -184,7 +185,7 @@ function createController() { // 计算控件点位以及类型判定
 }
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
-    if (props.context.workspace.action === Action.AutoV) {
+    if (props.context.tool.action === Action.AutoV) {
         if (e.button === 0) {
             e.stopPropagation();
             if (props.context.menu.isMenuMount) {

@@ -2,7 +2,7 @@ import { XY, PageXY } from '@/context/selection';
 import { Matrix, ShapeFrame, Shape, ShapeType } from '@kcdesign/data';
 import { isTarget } from './common';
 import { Context } from '@/context';
-import { Action } from '@/context/workspace';
+import { Action } from '@/context/tool';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
@@ -98,5 +98,5 @@ export function insertFrameTemplate(context: Context, name: string) {
             }, 100)
         }
     }
-    workspace.setAction(Action.AutoV);
+    context.tool.setAction(Action.AutoV);
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, nextTick, onUpdated } from 'vue';
 import ToolButton from '../ToolButton.vue';
-import { Action } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import DropSelect from "./DropSelect.vue"
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';

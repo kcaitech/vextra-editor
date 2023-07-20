@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
-import { WorkSpace, Action } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import HoverComment from './HoverComment.vue'
 import CommentPopup from './CommentPopup.vue'
 import { Matrix, Shape, ShapeType } from "@kcdesign/data";
@@ -259,7 +260,7 @@ const workspaceUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin()
     }
-    action.value = workspace.value.action;
+    action.value = props.context.tool.action;
 }
 
 const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
@@ -276,7 +277,7 @@ const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === Comment.VISIBLE_COMMENT) {
         visibleComment.value = props.context.comment.isVisibleComment
     }
-    action.value = workspace.value.action;
+    action.value = props.context.tool.action;
 }
 
 const pageSkipComment = () => {

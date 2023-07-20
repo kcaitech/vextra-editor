@@ -13,45 +13,38 @@ import Arrow from "./Buttons/Arrow.vue";
 import CreateText from "./Buttons/CreateText.vue";
 import CreateImage from "./Buttons/CreateImage.vue";
 import Comment from "./Buttons/Comment.vue"
-import { Action, WorkSpace } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
+import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
-const { t } = useI18n()
-
-const props = defineProps<{
-    context: Context,
+const { t } = useI18n();
+interface Props {
+    context: Context
     selection: Selection
-}>();
-
-const workspace = computed<WorkSpace>(() => props.context.workspace)
-
+}
+const props = defineProps<Props>();
+const workspace = computed<WorkSpace>(() => props.context.workspace);
 const selected = ref<Action>(Action.AutoV);
-
 function select(action: Action) {
-    workspace.value.setAction(action);
+    props.context.tool.setAction(action);
     if (action === Action.AddComment) {
         nextTick(() => {
             props.context.comment.commentInput(false);
         })
     }
 }
-
-function update(t?: number) {
-    selected.value = workspace.value.action;
-    if (t === WorkSpace.COMPS) {
-        selectComps()
-    }
-}
-const selectComps = () => {
+function selectComps() {
     message('feature', t('navi.development'));
 }
-// hooks
-onMounted(() => {
-    props.context.workspace.watch(update);
-});
+function tool_watcher(t?: number) {
+    if (t === Tool.CHANGE_ACTION) selected.value = props.context.tool.action;
+}
+onMounted(() => {    
+    props.context.tool.watch(tool_watcher);
+})
 onUnmounted(() => {
-    props.context.workspace.unwatch(update);
+    props.context.tool.unwatch(tool_watcher);
 })
 </script>
 

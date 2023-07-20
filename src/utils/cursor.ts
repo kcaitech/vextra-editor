@@ -118,15 +118,12 @@ function rotateBase64Image(base64Image: string, angle: number) {
       const sin = Math.abs(Math.sin(radians));
       const width = image.width * cos + image.height * sin;
       const height = image.width * sin + image.height * cos;
-
       canvas.width = width;
       canvas.height = height;
       context?.translate(width / 2, height / 2);
       context?.rotate(radians);
       context?.drawImage(image, -image.width / 2, -image.height / 2);
-
       const rotatedBase64Image = canvas.toDataURL('image/png');
-      // const rotatedBase64Image = canvas.toDataURL('image/svg+xml');
       resolve(rotatedBase64Image);
     };
     image.onerror = function () {

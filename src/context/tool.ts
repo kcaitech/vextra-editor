@@ -1,7 +1,9 @@
 import { ShapeType, Watchable } from "@kcdesign/data";
+import { Context } from ".";
+import { Comment } from "./comment";
 export enum Action {
     Auto = 'auto',
-    AutoV = 'cursor',
+    AutoV = 'drag',
     AutoK = 'scale',
     AddRect = 'add-rect',
     AddLine = 'add-line',
@@ -37,25 +39,6 @@ export enum KeyboardKeys { // 键盘按键类型
     Digit1 = 'Digit1',
     Backspace = 'Backspace',
 }
-export enum CtrlElementType { // 控制元素类型
-    RectLeft = 'rect-left',
-    RectRight = 'rect-right',
-    RectBottom = 'rect-bottom',
-    RectTop = 'rect-top',
-    RectLT = 'rect-left-top',
-    RectRT = 'rect-right-top',
-    RectRB = 'rect-right-bottom',
-    RectLB = 'rect-left-bottom',
-    RectLTR = 'rect-left-top-rotate',
-    RectRTR = 'rect-right-top-rotate',
-    RectRBR = 'rect-right-bottom-rotate',
-    RectLBR = 'rect-left-bottom-rotate',
-    LineStart = 'line-start',
-    LineEnd = 'line-end',
-    LineStartR = 'line-start-rotate',
-    LineEndR = 'line-end-rotate',
-    Text = 'text'
-}
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle],
@@ -69,7 +52,95 @@ const A2R = new Map([
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 
 export class Tool extends Watchable(Object) {
+    static CHANGE_ACTION = 1;
+    static GROUP = 2;
+    static UNGROUP = 3;
+    static COMPS = 4;
+    private m_current_action: Action = Action.AutoV;
+    private m_context: Context;
+    constructor(context: Context) {
+        super();
+        this.m_context = context;
+    }
     get action() {
         return this.m_current_action;
+    }
+    keyhandle(e: KeyboardEvent) {
+        const { target, code, shiftKey, ctrlKey, metaKey, altKey } = e;
+        if (target instanceof HTMLInputElement) return;
+        if (code === 'KeyR') {
+            this.keydown_r(ctrlKey, shiftKey, metaKey);
+        } else if (code === 'KeyV') {
+            this.keydown_v(ctrlKey, metaKey);
+        } else if (code === 'KeyL') {
+            this.keydown_l(shiftKey);
+        } else if (code === 'KeyK') {
+            this.keydown_k(ctrlKey, shiftKey, metaKey);
+        } else if (code === 'KeyO') {
+            this.keydown_o(ctrlKey, shiftKey, metaKey);
+        } else if (code === 'KeyC') {
+            this.keydown_c(ctrlKey, metaKey, shiftKey)
+        } else if (code === 'KeyG') {
+            this.keydown_g(ctrlKey, metaKey, shiftKey, altKey);
+        }
+    }
+    setAction(action: Action) {
+        if (action.startsWith('add')) {
+            if (action === Action.AddComment) {
+                if (this.m_context.workspace.documentPerm === 1) return;
+                this.m_context.comment.commentInput(false);
+                this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
+                this.m_context.cursor.setType('comment-0');
+            } else this.m_context.cursor.setType('cross-0');
+        } else this.m_context.cursor.setType('auto-0');
+        this.m_current_action = action;
+        this.notify(Tool.CHANGE_ACTION);
+    }
+    keydown_r(ctrl: boolean, shift: boolean, meta: boolean) {
+        if (ctrl || shift || meta) return;
+        this.setAction(Action.AddRect);
+    }
+    keydown_v(ctrlKey: boolean, metaKey: boolean) {
+        if (ctrlKey || metaKey) return;
+        this.setAction(Action.AutoV);
+    }
+    keydown_l(shiftKey: boolean) {
+        if (shiftKey) return; // 暂时停止使用箭头图形
+        this.setAction(shiftKey ? Action.AddArrow : Action.AddLine);
+    }
+    keydown_k(ctrl: boolean, shift: boolean, meta: boolean) {
+        if (!(ctrl || meta || shift)) {
+            this.setAction(Action.AutoK);
+        }
+    }
+    keydown_o(ctrl: boolean, shift: boolean, meta: boolean) {
+        if (ctrl || shift || meta) return;
+        this.setAction(Action.AddEllipse);
+    }
+    keydown_f(ctrl: boolean, shift: boolean, meta: boolean) {
+        if (ctrl || shift || meta) return;
+        this.setAction(Action.AddFrame);
+    }
+    keydown_t(ctrl: boolean, shift: boolean, meta: boolean) {
+        if (ctrl || shift || meta) return;
+        this.setAction(Action.AddText);
+    }
+    keydown_c(ctrl: boolean, meta: boolean, shift: boolean) {
+        if (ctrl || meta || shift) return;
+        this.setAction(Action.AddComment);
+    }
+    keydown_g(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
+        if ((ctrl || meta) && !shift) { // 编组
+            if (alt) {
+                this.notify(Tool.GROUP, alt);
+            } else {
+                this.notify(Tool.GROUP);
+            }
+        } else if ((ctrl || meta) && shift) {
+            this.notify(Tool.UNGROUP);
+        }
+    }
+    keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
+        // todo
     }
 }

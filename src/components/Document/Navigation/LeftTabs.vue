@@ -7,7 +7,8 @@ import CommentTab from "./Comment/CommentTab.vue";
 // import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
-import { Action, WorkSpace } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import { Comment } from "@/context/comment";
 const { t } = useI18n();
 
@@ -39,7 +40,7 @@ const tabs: { title: string, id: Tab }[] = [
 
 function update(t: number) {
     if(t === Comment.SELECT_LIST_TAB) {
-        selected.value = workspace.value.action;
+        selected.value =props.context.tool.action;
         selectComment()
     }
 }

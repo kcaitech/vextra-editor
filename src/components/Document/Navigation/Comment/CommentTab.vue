@@ -6,7 +6,7 @@ import CommentMenu from "./CommentMenu.vue";
 import { useI18n } from 'vue-i18n';
 import * as comment_api from '@/apis/comment';
 import { useRoute } from 'vue-router';
-import { WorkSpace, Action } from "@/context/workspace";
+import { Action } from "@/context/tool";
 import { ElScrollbar } from 'element-plus'
 import { Selection } from "@/context/selection";
 import ShowHiddenLeft from "../ShowHiddenLeft.vue";
@@ -143,7 +143,7 @@ const onVisibleComment = () => {
 }
 
 const update = (t: number) => {
-    action.value = props.context.workspace.action;
+    action.value = props.context.tool.action;
 }
 const selectedUpdate = (t: number) => {
     if(t === Selection.PAGE_SORT) {

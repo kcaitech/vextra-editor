@@ -2,7 +2,8 @@ import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color } from "@kcdesign/data";
-import { Action, Media, ResultByAction } from '@/context/workspace';
+import { Media } from '@/context/workspace';
+import { Action, ResultByAction } from "@/context/tool";
 import { createHorizontalBox } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 interface SystemClipboardItem {
@@ -119,9 +120,12 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
 }
 // 普通图形从init到inset一气呵成
 function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
+  const tool = context.tool;
+  const action = tool.action;
+  if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
   const selection = context.selection;
   const workspace = context.workspace;
-  const type = _t || ResultByAction(workspace.action);
+  const type = _t || ResultByAction(action);
   const page = selection.selectedPage;
   const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
   let asyncCreator: AsyncCreator | undefined;
@@ -137,14 +141,15 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
     asyncCreator = asyncCreator.close();
     selection.selectShape(page!.getShape(new_shape.id));
   }
-  workspace.setAction(Action.AutoV);
   workspace.creating(false);
+  tool.setAction(Action.AutoV);
+  context.cursor.setType('auto-0');
 }
 // 插入文本框
-function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: Function, content: string, land?: Shape, _t?: ShapeType) {
+function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
   const selection = context.selection;
   const workspace = context.workspace;
-  const type = _t || ResultByAction(workspace.action);
+  const type = _t || ResultByAction(context.tool.action);
   const page = selection.selectedPage;
   const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
   let asyncCreator: AsyncCreator | undefined;
@@ -160,8 +165,9 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: F
     selection.selectShape(page!.getShape(new_shape.id));
     selection.selectText(0, (new_shape as TextShape).text.length);
   }
-  workspace.setAction(Action.AutoV);
   workspace.creating(false);
+  context.tool.setAction(Action.AutoV);
+  context.cursor.setType('auto-0');
 }
 // 图片从init到inset一气呵成
 function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
@@ -241,8 +247,8 @@ async function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Func
     selection.selectShape(page!.getShape(new_shape.id));
     await context.communication.upload.uploadResource(new_shape.imageRef, media.buff.buffer.slice(0))
   }
-  workspace.setAction(Action.AutoV);
   workspace.creating(false);
+  context.tool.setAction(Action.AutoV);
 }
 function adjust_content_xy(context: Context, m: Media) {
   const workspace = context.workspace;
@@ -498,6 +504,24 @@ function color2string(color: Color, t?: number) {
   const { red, green, blue, alpha } = color;
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
+function selectShapes(context: Context, shapes: Shape[]) {
+  const hoveredShape = shapes[0], selection = context.selection;
+  if (hoveredShape) {
+    const selected = selection.selectedShapes;
+    if (selected.length) {
+      const isSelected = selected.find((s: Shape) => s.id == hoveredShape.id);
+      if (!isSelected) {
+        selection.hoverShape(hoveredShape);
+      } else {
+        selection.unHoverShape();
+      }
+    } else {
+      selection.hoverShape(hoveredShape);
+    }
+  } else {
+    selection.unHoverShape();
+  }
+}
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,
@@ -505,5 +529,5 @@ export {
   init_shape, init_insert_shape, init_insert_textshape,
   insert_imgs, drop, adapt_page, page_scale, right_select,
   list2Tree, flattenShapes,
-  get_menu_items, color2string
+  get_menu_items, color2string, selectShapes
 };

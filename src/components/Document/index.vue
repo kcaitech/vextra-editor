@@ -123,11 +123,12 @@ function selectionWatcher(t: number) {
         }
     }
 }
-function keyboardEventHandler(evevt: KeyboardEvent) {
-    const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
+function keyboardEventHandler(event: KeyboardEvent) {
+    const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
     if (context) {
-        context.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
+        context.workspace.keyboardHandle(event); // 编辑器相关的键盘事件
+        context.tool.keyhandle(event);
         if (code === 'Backslash') {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
@@ -330,7 +331,7 @@ const getDocumentInfo = async () => {
                 });
             await context.communication.upload.start(docId, token);
             await context.communication.comment.start(docId, token);
-            context.communication.comment.onUpdated = (comment) => {
+            context.communication.comment.onUpdated = (comment: any) => {
                 // todo 前端对接视图更新
                 console.log("收到评论更新", comment)
             }

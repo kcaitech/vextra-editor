@@ -6,8 +6,9 @@ import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
-import { forGroupHover, groupPassthrough } from "@/utils/scout";
-import { Action, WorkSpace } from "@/context/workspace";
+import { groupPassthrough } from "@/utils/scout";
+import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
 import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
 import { paster_short } from '@/utils/clipaboard';
@@ -75,7 +76,7 @@ export function useController(context: Context) {
             root = context.workspace.root;
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
-            const action = workspace.value.action;
+            const action = context.tool.action;
             if (action == Action.AutoV || action == Action.AutoK) {
                 workspace.value.setCtrl('controller');
                 wheel = fourWayWheel(context, undefined, startPositionOnPage);

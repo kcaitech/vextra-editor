@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {} from 'vue';
 import { useI18n } from 'vue-i18n'
-import { Action } from '@/context/workspace';
+import { Action } from "@/context/tool";
 const { t } = useI18n()
 const props = defineProps<{
     lg: string,

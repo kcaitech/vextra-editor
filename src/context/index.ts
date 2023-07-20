@@ -65,7 +65,7 @@ export class Context extends Watchable(Object) {
         this.m_workspace = new WorkSpace(this);
         this.m_comment = new Comment();
         this.m_menu = new Menu();
-        this.m_tool = new Tool();
+        this.m_tool = new Tool(this);
         this.m_navi = new Navi();
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
         this.m_communication = new Communication();
