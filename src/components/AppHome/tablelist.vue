@@ -55,9 +55,11 @@ watch(() => props.noNetwork,(newV) => {
             if(net.value) {
                 loading.value = false
                 const el = net.value.parentElement
-                if(el) {
-                    el.style.top = 50 +'%'
-                }
+                nextTick(() => {
+                    if(el) {
+                        el.style.top = '50%'
+                    }
+                })
             }
         })
     }

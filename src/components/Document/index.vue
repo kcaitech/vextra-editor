@@ -24,6 +24,7 @@ import { WorkSpace } from '@/context/workspace';
 import { measure } from '@/layout/text/measure';
 import NetWorkError from '@/components/NetworkError.vue'
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
+import NetworkMessage from './NetworkMessage.vue';
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -45,6 +46,8 @@ const countdown = ref(10);
 const networkError = ref(false)
 const saveSuccess = ref(false)
 const noNetwork = ref(false)
+const netError = ref(false)
+const networkSuccess = ref(false)
 const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
@@ -405,19 +408,53 @@ const autoSaveSuccess = () => {
         clearTimeout(timer)
     }, 3000)
 }
+//网络连接成功message信息
+const networkLinkSuccess = () => {
+    networkSuccess.value = true
+    const timer = setTimeout(() => {
+        networkSuccess.value = false
+        clearTimeout(timer)
+    }, 3000)
+}
+const networkLinkError = () => {
+    netError.value = true
+    const timer = setTimeout(() => {
+        netError.value = false
+        clearTimeout(timer)
+    }, 3000)
+}
+
 //重试刷新页面
 const refreshDoc = () => {
     location.reload();
 }
 // 断网时触发
 const connectionless = () => {
-    networkError.value = true
+    networkLinkError()
 }
 // 连网成功后触发
 const connected = () => {
-    networkError.value = false
-    autoSaveSuccess()
+    networkLinkSuccess()
 }
+
+enum MessageType {
+    NetError = 0,
+    Success,
+}
+
+const docUploadState = (type: MessageType, data: any) => {
+    if(type === MessageType.NetError) {
+        // 网络异常，上传失败超过三次，弹出message信息
+        if(data.count >= 3) {
+            networkError.value = true
+        }
+    }else if(type === MessageType.Success) {
+        //需要重连且文档上传成功
+        networkError.value = false
+        autoSaveSuccess()
+    }
+}
+
 onMounted(() => {
     window.addEventListener('offline', connectionless);
     window.addEventListener('online',connected);
@@ -489,13 +526,8 @@ onUnmounted(() => {
         <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
         <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
-    <div class="network_error" v-if="!loading && !null_context && networkError">
-        <span style="margin-right: 10px;">网络异常，请勿刷新页面或关闭文档，以免内容丢失，文档尝试保存中…</span>
-        <div class="loading-spinner"><svg-icon icon-class="network-loading"></svg-icon></div>
-    </div>
-    <div class="network_error" v-if="saveSuccess">
-        <span>文档自动保存成功</span>
-    </div>
+    <NetworkMessage v-if="!loading && !null_context" :saveSuccess="saveSuccess" :networkSuccess="networkSuccess" 
+        :networkError="networkError" :netError="netError"></NetworkMessage>
 </template>
 <style>
 :root {

@@ -10,6 +10,7 @@ import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
 import Text from './Text/Text.vue';
+import Module from './module/Module.vue';
 import { throttle } from 'lodash';
 const { t } = useI18n();
 const props = defineProps<{ context: Context }>();
@@ -88,6 +89,7 @@ onUnmounted(() => {
         <div v-if="len">
             <ShapeBaseAttr :shapes="shapes" :context="props.context"></ShapeBaseAttr>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
+            <Module :context="props.context"></Module>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
         </div>
