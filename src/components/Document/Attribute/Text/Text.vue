@@ -502,22 +502,22 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
-                        <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl+B`" :offset="15">
+                        <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl B`" :offset="15">
                             <svg-icon icon-class="text-bold"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isTilt }" @click="onTilt">
-                        <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl+I`" :offset="15">
+                        <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl I`" :offset="15">
                             <svg-icon icon-class="text-tilt"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
-                        <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl+U`" :offset="15">
+                        <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
                             <svg-icon icon-class="text-underline"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isDeleteline }" @click="onDeleteline">
-                        <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl+Shift+X`" :offset="15">
+                        <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
                             <svg-icon icon-class="text-deleteline"></svg-icon>
                         </Tooltip>
                     </div>

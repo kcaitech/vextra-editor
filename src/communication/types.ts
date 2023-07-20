@@ -1,11 +1,13 @@
 export enum TunnelType {
     DocOp = 0,
-    DocResourceUpload
+    DocResourceUpload,
+    DocCommentOp,
 }
 
 export const TunnelTypeStr: Record<TunnelType, string> = {
     [TunnelType.DocOp]: "文档操作",
     [TunnelType.DocResourceUpload]: "文档资源上传",
+    [TunnelType.DocCommentOp]: "文档评论操作",
 }
 
 export type CommunicationInfo = {
@@ -21,6 +23,8 @@ export enum ClientCmdType {
     OpenTunnel, // 打开一条虚拟通道
     CloseTunnel, // 关闭一条虚拟通道
     TunnelData, // 虚拟通道数据
+    Heartbeat = 255, // 心跳包
+    HeartbeatResponse = 254, // 心跳包响应
 }
 
 export enum ServerCmdType {
@@ -28,6 +32,8 @@ export enum ServerCmdType {
     CmdReturn, // 返回cmd执行结果
     CloseTunnel, // 关闭一条虚拟通道
     TunnelData, // 虚拟通道数据
+    Heartbeat = 255, // 心跳包
+    HeartbeatResponse = 254, // 心跳包响应
 }
 
 export enum CmdStatus {

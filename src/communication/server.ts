@@ -27,7 +27,7 @@ export class Server {
         this.connectPromise = new Promise<boolean>(r => resolve = r)
         try {
             this.ws = new WebSocket(COMMUNICATION_URL)
-            this.ws.binaryType = 'arraybuffer'
+            this.ws.binaryType = "arraybuffer"
         } catch (e) {
             console.log(e)
             this.ws = undefined
@@ -78,5 +78,17 @@ export class Server {
             while (!await this.connect()) await sleep(1000);
         }
         this.ws!.send(data)
+    }
+
+    public async close() {
+        if (this.ws !== undefined) {
+            this.ws?.close()
+            this.ws = undefined
+            this.isConnected = false
+            this.isConnecting = false
+        } else if (this.isConnecting && this.connectPromise !== undefined) {
+            await this.connectPromise
+            await this.close()
+        }
     }
 }
