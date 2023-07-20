@@ -62,13 +62,13 @@ onUnmounted(() => {
 .__context-menu {
   position: absolute;
   z-index: 99;
-  background-color: var(--theme-color);
   color: var(--theme-color-anti);
   width: 240px;
   display: flex;
   flex-direction: column;
   border-radius: 2px;
   box-shadow: 4px 4px 10px rgba($color: #000000, $alpha: 0.2);
+  background-color: rgba($color: #000000, $alpha: 0.82);
 
   >.header {
     width: 100%;

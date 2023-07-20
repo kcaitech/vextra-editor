@@ -561,7 +561,6 @@ onUnmounted(() => {
     flex-direction: row;
     align-items: center;
     box-sizing: border-box;
-    background-color: var(--theme-color);
 
     >.triangle {
       margin-left: auto;
@@ -580,12 +579,10 @@ onUnmounted(() => {
 
   .line {
     width: 100%;
-    height: 17px;
-    border-width: 8px 0 8px 0;
-    border-style: solid;
-    border-color: var(--theme-color);
+    height: 8px;
+    border-bottom: 1px solid gray;
+    margin-bottom: 8px;
     box-sizing: border-box;
-    background-color: grey;
   }
 
   .item:hover {

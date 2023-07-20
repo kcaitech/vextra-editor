@@ -267,10 +267,6 @@ export class WorkSpace extends Watchable(Object) {
     setPageViewId(id: string) {
         this.m_pageViewId = id
     }
-    /**
-     * 编辑器键盘事件，支持工具快捷键、视图快捷键、选区快捷键 的实现
-     * @param {KeyboardEvent} event 
-     */
     keyboardHandle(event: KeyboardEvent) {
         const { ctrlKey, shiftKey, metaKey, target } = event;
         if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
