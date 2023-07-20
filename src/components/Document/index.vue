@@ -338,10 +338,6 @@ const getDocumentInfo = async () => {
                 });
             await context.communication.upload.start(docId, token);
             await context.communication.comment.start(docId, token);
-            context.communication.comment.onUpdated = (comment) => {
-                // todo 前端对接视图更新
-                console.log("收到评论更新", comment)
-            }
         }
         getUserInfo()
     } catch (err) {
