@@ -3,6 +3,7 @@ import ToolButton from '../ToolButton.vue';
 import {} from 'vue';
 import { Action } from '@/context/workspace';
 import { useI18n } from 'vue-i18n'
+import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
 const props = defineProps<{
     active: boolean,
@@ -15,21 +16,13 @@ function select(action: Action) {
 }
 </script>
 <template>
-  <el-tooltip
-    class="box-item"
-    effect="dark"
-    :content="`${t('shape.arrow')} &nbsp;&nbsp; Shift+L`"
-    placement="bottom"
-    :show-after="500"
-    :offset="10"
-    :hide-after="0"
-  >
-  <ToolButton ref="button" @click="() => {select(Action.AddArrow)}" :selected="props.active">
-    <div class="svg-container">
-      <svg-icon icon-class="pattern-arrow"></svg-icon>
-    </div>
-  </ToolButton>
-</el-tooltip>
+  <Tooltip :content="`${t('shape.arrow')} &nbsp;&nbsp; Shift L`">
+    <ToolButton ref="button" @click="() => {select(Action.AddArrow)}" :selected="props.active">
+      <div class="svg-container">
+        <svg-icon icon-class="pattern-arrow"></svg-icon>
+      </div>
+    </ToolButton>
+  </Tooltip>
 </template>
 <style scoped lang="scss">
 .svg-container {

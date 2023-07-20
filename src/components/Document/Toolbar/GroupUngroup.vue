@@ -10,6 +10,7 @@ import { getName } from '@/utils/content';
 import { debounce } from 'lodash';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { string_by_sys } from '@/utils/common';
+import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const NOGROUP = 0;
@@ -140,24 +141,21 @@ const ungroupClick = () => {
 <template>
     <div class="container">
         <div class="vertical-line"></div>
-        <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)"
-            placement="bottom" :show-after="500" :offset="5" :hide-after="0">
-            <div class="group">
-                <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
-                    :class="{ active: state & GROUP }">
-                    <svg-icon icon-class="group"></svg-icon>
-                </ToolButton>
-            </div>
-        </el-tooltip>
-        <el-tooltip class="box-item" effect="dark"
-            :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" placement="bottom" :show-after="500"
-            :offset="5" :hide-after="0">
-            <div class="group">
-                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
-                    <svg-icon icon-class="ungroup"></svg-icon>
-                </ToolButton>
-            </div>
-        </el-tooltip>
+            <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5">
+                <div class="group">
+                    <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
+                        :class="{ active: state & GROUP }">
+                        <svg-icon icon-class="group"></svg-icon>
+                    </ToolButton>
+                </div>
+            </Tooltip>
+            <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
+                <div class="group">
+                    <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
+                        <svg-icon icon-class="ungroup"></svg-icon>
+                    </ToolButton>
+                </div>
+            </Tooltip>
     </div>
 </template>
 
