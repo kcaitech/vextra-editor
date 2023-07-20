@@ -19,8 +19,8 @@ export class Cursor extends Watchable(Object) {
     get type() {
         return this.m_current_cursor_type;
     }
-    async setType(type: string) {
-        if (this.m_context.workspace.transforming) return;
+    async setType(type: string, force = false) {
+        if (this.m_context.workspace.transforming && !force) return;
         const res = await this.m_styler.getClass(type);
         this.m_current_cursor_type = res;
         this.notify(Cursor.CHANGE_CURSOR, res);
