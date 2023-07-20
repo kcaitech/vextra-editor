@@ -54,6 +54,23 @@ handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, pa
     return h("g", elArr);
 }
 
+handler[FillType.Pattern] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
+    const id = "clippath-fill-" + objectId(fill);
+    const cp = clippathR(h, shape, id, path);
+
+    const url = fill.peekImage();
+    const props: any = {}
+    const frame = shape.frame;
+    props.width = frame.width;
+    props.height = frame.height;
+    props['xlink:href'] = url;
+    props['preserveAspectRatio'] = "none meet";
+    props["clip-path"] = "url(#" + id + ")"
+    const img = h("image", props);
+
+    return h("g", [cp, img]);
+}
+
 export function render(h: Function, shape: Shape, path?: string): Array<any> {
     const style = shape.style;
     const fillsCount = style.fills.length;
