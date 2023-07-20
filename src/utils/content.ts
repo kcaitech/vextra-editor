@@ -57,12 +57,7 @@ function isInner(context: Context, shape: Shape) {
   const { x: rx, y: ry, bottom, right } = context.workspace.root;
   const s2pMatirx = shape.matrix2Root();
   const { width, height } = shape.frame;
-  let point = [
-    [0, 0],
-    [width, 0],
-    [width, height],
-    [0, height]
-  ]
+  let point = [[0, 0], [width, 0], [width, height], [0, height]]
   point = point.map(p => {
     const _s = s2pMatirx.computeCoord(p[0], p[1]);
     const _p = pMatrix.computeCoord(_s.x, _s.y);
