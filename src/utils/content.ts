@@ -444,63 +444,63 @@ function flattenShapes(shapes: any) {
 function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal"): string[] {
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
-    if(permIsEdit(context)) {
+    if (permIsEdit(context)) {
       contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
-    }else {
+    } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'group') { // 点击在编组上
-    if(permIsEdit(context)) {
+    if (permIsEdit(context)) {
       contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
-    }else {
+    } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'controller') { // 点击在选区上
-    if(permIsEdit(context)) {
+    if (permIsEdit(context)) {
       contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
-    }else {
+    } else {
       contextMenuItems = ['all', 'copy'];
     }
     const types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
     if (types & 1) { // 存在容器
-      if(permIsEdit(context)) {
+      if (permIsEdit(context)) {
         contextMenuItems.push('dissolution');
       }
     }
     if (types & 2) { // 存在编组
-      if(permIsEdit(context)) {
+      if (permIsEdit(context)) {
         contextMenuItems.push('un_group');
       }
     }
     if (context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
-      if(permIsEdit(context)) {
+      if (permIsEdit(context)) {
         contextMenuItems.push('forward', 'back', 'top', 'bottom');
       }
     }
   } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
-    if(permIsEdit(context)) {
+    if (permIsEdit(context)) {
       contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
-    }else {
+    } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'text-selection') {
-    if(permIsEdit(context)) {
+    if (permIsEdit(context)) {
       contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
-    }else {
+    } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else {
-    if(permIsEdit(context)) {
+    if (permIsEdit(context)) {
       contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
-    }else {
+    } else {
       contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
     }
   }
   return contextMenuItems;
 }
 
-const permIsEdit = (context: Context) => {
-  if(context.workspace.documentPerm === 3)return true
+export const permIsEdit = (context: Context) => {
+  if (context.workspace.documentPerm === 3) return true
   else return false
 }
 
