@@ -79,9 +79,7 @@ function rootRegister(mount: boolean) {
     if (mount) {
         const id = (uuid().split('-').at(-1)) || 'content';
         rootId.value = id;
-    } else {
-        rootId.value = 'content';
-    }
+    } else rootId.value = 'content';
     workspace.value.setRootId(rootId.value);
 }
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
@@ -129,7 +127,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.code === KeyboardKeys.Space) {
-        if (workspace.value.select) return;
+        if (workspace.value.select || spacePressed.value) return;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
@@ -147,10 +145,12 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
+    props.context.cursor.setType('grab-0');
 }
 function endDragPage() { // 编辑器完成拖动页面
     spacePressed.value = false;
     workspace.value.pageDragging(false);
+    props.context.cursor.reset();
 }
 function pageEditorOnMoveEnd(e: MouseEvent) {
     const action = props.context.tool.action;
@@ -230,29 +230,28 @@ function pageViewDragStart(e: MouseEvent) {
     prePt.y = e.screenY;
 }
 function pageViewDragging(e: MouseEvent) {
-    const isController = workspace.value.controller == 'page';
-    if (isController) {
-        const dx = e.screenX - prePt.x;
-        const dy = e.screenY - prePt.y;
-        if (state === STATE_MOVEING) {
+    if (workspace.value.controller !== 'page') return;
+    const dx = e.screenX - prePt.x;
+    const dy = e.screenY - prePt.y;
+    if (state === STATE_MOVEING) {
+        matrix.trans(dx, dy);
+        prePt.x = e.screenX;
+        prePt.y = e.screenY;
+    } else {
+        const diff = Math.hypot(dx, dy);
+        if (diff > dragActiveDis) {
+            state = STATE_MOVEING;
             matrix.trans(dx, dy);
             prePt.x = e.screenX;
             prePt.y = e.screenY;
-        } else {
-            const diff = Math.hypot(dx, dy);
-            if (diff > dragActiveDis) {
-                state = STATE_MOVEING;
-                matrix.trans(dx, dy);
-                prePt.x = e.screenX;
-                prePt.y = e.screenY;
-            }
         }
-        workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
+    workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    props.context.cursor.setType('grabbing-0');
 }
 function pageViewDragEnd() {
-    // setClass('grab-0');
     state = STATE_NONE;
+    props.context.cursor.setType('grab-0')
 }
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace;
