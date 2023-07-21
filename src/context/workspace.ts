@@ -66,8 +66,8 @@ export enum CtrlElementType { // 控制元素类型
 }
 export enum Perm {
     isRead = 1,
-    isComment,
-    isEdit
+    isComment = 2,
+    isEdit = 3
 }
 export interface Media {
     name: string
