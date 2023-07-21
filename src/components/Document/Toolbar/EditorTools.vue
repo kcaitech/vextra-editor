@@ -17,6 +17,7 @@ import { Action, WorkSpace } from "@/context/workspace";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
+import CreateTable from "./Buttons/CreateTable.vue";
 const { t } = useI18n()
 
 const props = defineProps<{
@@ -66,6 +67,7 @@ onUnmounted(() => {
         <!-- <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow> -->
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
+        <CreateTable @select="select" :active="selected === Action.AddTable" :context="props.context"></CreateTable>
         <div class="vertical-line" />
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
             placement="bottom" :show-after="500" :offset="10" :hide-after="0">
