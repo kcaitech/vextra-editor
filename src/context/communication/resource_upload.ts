@@ -1,7 +1,7 @@
 import { Watchable } from "@kcdesign/data";
 import { DocResourceUpload } from "@/communication/modules/doc_resource_upload";
 
-export class Upload extends Watchable(Object) {
+export class ResourceUpload extends Watchable(Object) {
     private docResourceUpload?: DocResourceUpload
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
