@@ -5,6 +5,7 @@ import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matr
 import { Action, Media, ResultByAction } from '@/context/workspace';
 import { createHorizontalBox } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
+import { paster_image } from "./clipaboard";
 interface SystemClipboardItem {
   type: ShapeType
   contentType: string
@@ -216,32 +217,6 @@ function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: n
   const dragActiveDis = threshold || 4;
   const diff = Math.hypot(e.clientX - root.x - start.x, e.clientY - root.y - start.y);
   return Boolean(diff > dragActiveDis);
-}
-function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
-  const selection = context.selection;
-  const workspace = context.workspace;
-  const type = ShapeType.Image;
-  const page = selection.selectedPage;
-  const parent = selection.selectedPage;
-  let asyncCreator: AsyncCreator | undefined;
-  let new_shape: Shape | undefined;
-  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-  if (page && parent && type) {
-    const editor = context.editor.controller();
-    const name = getName(type, parent.childs, t);
-    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    if (type === ShapeType.Image) {
-      frame.height = media.frame.height;
-      frame.width = media.frame.width;
-      new_shape = asyncCreator.init_media(page, (parent as GroupShape), name, frame, media);
-    }
-  }
-  if (asyncCreator && new_shape) {
-    asyncCreator = asyncCreator.close();
-    selection.selectShape(page!.getShape(new_shape.id));
-  }
-  workspace.setAction(Action.AutoV);
-  workspace.creating(false);
 }
 function adjust_content_xy(context: Context, m: Media) {
   const workspace = context.workspace;
