@@ -72,6 +72,7 @@ export function useController(context: Context) {
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+            context.cursor.cursor_freeze(true);
             context.menu.menuMount(); // 取消右键事件
             root = context.workspace.root;
             shapes = context.selection.selectedShapes;
@@ -196,6 +197,7 @@ export function useController(context: Context) {
             context.comment.notify(Comment.UPDATE_COMMENT_POS);
             need_update_comment = false;
         }
+        context.cursor.cursor_freeze(false);
         workspace.value.setCtrl('page');
     }
     function transform(start: ClientXY, end: ClientXY) {
@@ -289,11 +291,7 @@ export function useController(context: Context) {
         return isDragging;
     }
     function isElement(e: MouseEvent): boolean {
-        if ((e.target as Element).closest('[data-area="controller"]')) {
-            return true;
-        } else {
-            return false;
-        }
+        return Boolean((e.target as Element).closest('[data-area="controller"]'));
     }
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
@@ -306,6 +304,7 @@ export function useController(context: Context) {
         if (wheel) wheel = wheel.remove(); // 卸载滚轮
         workspace.value.setCtrl('page');
         timerClear();
+        context.cursor.cursor_freeze(false);
     }
     onMounted(() => {
         context.workspace.watch(workspace_watcher);
