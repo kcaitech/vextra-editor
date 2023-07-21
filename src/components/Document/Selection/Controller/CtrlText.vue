@@ -203,6 +203,7 @@ onUnmounted(() => {
     props.shape.unwatch(update);
     selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.cursor.reset();
 })
 onBeforeUnmount(() => {
     if (props.shape.text.length === 1) {

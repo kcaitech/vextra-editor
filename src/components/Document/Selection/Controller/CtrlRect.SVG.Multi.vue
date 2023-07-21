@@ -4,12 +4,10 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
-import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { ClientXY, Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
-import { useI18n } from "vue-i18n";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.Multi.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.Multi.vue";
@@ -28,7 +26,6 @@ const visible = ref<boolean>(true);
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-const { t } = useI18n();
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 let viewBox = '';
@@ -102,6 +99,7 @@ onUnmounted(() => {
     props.context.selection.unwatch(updater);
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
+    props.context.cursor.reset();
 })
 watchEffect(() => { updater() });
 </script>

@@ -103,6 +103,7 @@ onUnmounted(() => {
   props.context.selection.unwatch(updater);
   props.context.workspace.unwatch(workspace_watcher);
   window.removeEventListener('blur', windowBlur);
+  props.context.cursor.reset();
 })
 watchEffect(() => { updater() });
 </script>
