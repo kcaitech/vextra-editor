@@ -6,6 +6,7 @@ import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, Action } from "@/context/workspace";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
+import { permIsEdit } from "@/utils/content";
 export interface Point {
     x: number,
     y: number,
@@ -139,7 +140,9 @@ function createController() { // 计算控件点位以及类型判定
                 p.x = _p.x; p.y = _p.y;
                 return p;
             });
-            if (shape.type === ShapeType.Line) { // 控件类型判定
+            if (!permIsEdit(props.context)) {
+                controllerType.value = ControllerType.Preview;
+            } else if (shape.type === ShapeType.Line) { // 控件类型判定
                 controllerType.value = ControllerType.Line;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             } else if (shape.type === ShapeType.Text) {
@@ -177,10 +180,14 @@ function createController() { // 计算控件点位以及类型判定
                 }
             });
             rotate.value = 0; // 多选时，rect只为水平状态
-            controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
+            if (!permIsEdit(props.context)) {
+                controllerType.value = ControllerType.Preview;
+            } else {
+                controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
+            }
         }
         controller.value = true;
-    }
+    }    
 }
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形

@@ -19,11 +19,11 @@ function isBlankChar(charCode: number) {
     return false;
 }
 
-export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): string {
+export function renderText2Path(shape: TextShape, offsetX: number, offsetY: number): Path {
     const { yOffset, paras } = shape.getLayout();
     const pc = paras.length;
 
-    const paths = [];
+    const paths = new Path();
     for (let i = 0; i < pc; i++) {
         const lines = paras[i];
 
@@ -38,16 +38,16 @@ export function renderText2Path(shape: TextShape, offsetX: number, offsetY: numb
                 const y = lines.yOffset + line.y + (line.lineHeight - fontSize) / 2 + yOffset; // top
 
                 paths.push(...garr.map((g) => {
-                    if (isBlankChar(g.char.charCodeAt(0))) return '';
+                    if (isBlankChar(g.char.charCodeAt(0))) return new Path();
                     const pathstr = getTextPath(font, fontSize, g.char.charCodeAt(0))
                     const path = new Path(pathstr)
                     path.translate(g.x + offsetX + line.x, y + offsetY);
-                    return path.toString();
+                    return path;
                 }))
             }
         }
     }
-    return paths.join('');
+    return paths;
 }
 
 function collectDecorateRange(garr: GraphArray, decorateRange: { start: number, end: number, color: Color }[], preGarrIdx: number, garrIdx: number, color: Color) {
