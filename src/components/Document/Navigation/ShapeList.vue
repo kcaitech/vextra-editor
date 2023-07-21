@@ -608,6 +608,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         position: relative;
         padding-bottom: 4px;
+        overflow: hidden;
 
         .title {
             height: 36px;

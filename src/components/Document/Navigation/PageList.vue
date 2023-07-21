@@ -286,7 +286,6 @@ onUnmounted(() => {
         position: relative;
         align-items: center;
 
-
         >div:not(.space) {
             flex-shrink: 0;
         }
