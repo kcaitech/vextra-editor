@@ -2,7 +2,7 @@ import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix } from "@kcdesign/data";
-import { Action, Media, ResultByAction } from '@/context/workspace';
+import { Action, Media, ResultByAction, Perm } from '@/context/workspace';
 import { createHorizontalBox } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipaboard";
@@ -500,7 +500,7 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
 }
 
 export const permIsEdit = (context: Context) => {
-  if (context.workspace.documentPerm === 3) return true
+  if (context.workspace.documentPerm === Perm.isEdit) return true
   else return false
 }
 

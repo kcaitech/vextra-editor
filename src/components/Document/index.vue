@@ -20,7 +20,7 @@ import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import { WorkSpace } from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import { measure } from '@/layout/text/measure';
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
 import e from 'express';
@@ -136,7 +136,7 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
-        if(context && context.workspace.documentPerm !== 3) {
+        if(context && context.workspace.documentPerm !== Perm.isEdit) {
             if(permKeyBoard(evevt)) {
                 context.workspace.keyboardHandle(evevt); // 只读可评论的键盘事件
             }

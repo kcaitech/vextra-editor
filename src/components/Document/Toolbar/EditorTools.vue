@@ -13,7 +13,7 @@ import Arrow from "./Buttons/Arrow.vue";
 import CreateText from "./Buttons/CreateText.vue";
 import CreateImage from "./Buttons/CreateImage.vue";
 import Comment from "./Buttons/Comment.vue"
-import { Action, WorkSpace } from "@/context/workspace";
+import { Action, WorkSpace, Perm } from "@/context/workspace";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
@@ -52,9 +52,9 @@ const selectComps = () => {
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.context.workspace.documentPerm
-    if(perm === 1) {
+    if(perm === Perm.isRead) {
         isread.value = true
-    }else if(perm === 2) {
+    }else if(perm === Perm.isComment) {
         isread.value = false
         canComment.value = true
     }else {

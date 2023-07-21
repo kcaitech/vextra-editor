@@ -3,6 +3,7 @@ import { ref, computed, nextTick, InputHTMLAttributes, watch, onUnmounted, onMou
 import { Shape, GroupShape, ShapeType } from '@kcdesign/data';
 import { Context } from "@/context";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import { Perm } from "@/context/workspace";
 export interface ItemData {
     id: string
     shape: Shape
@@ -184,9 +185,9 @@ const mousedown = (e: MouseEvent) => {
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.data.context.workspace.documentPerm
-    if(perm === 1) {
+    if(perm === Perm.isRead) {
         isread.value = true
-    }else if(perm === 2) {
+    }else if(perm === Perm.isComment) {
         isread.value = false
         canComment.value = true
     }else {
