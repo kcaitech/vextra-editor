@@ -86,7 +86,6 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mouseup', mouseup);
 }
 function windowBlur() {
-    // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
@@ -110,12 +109,12 @@ watchEffect(() => { updater() });
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
         <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
+        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix">
         </ShapesStrokeContainer>
-        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :frame="props.controllerFrame"></BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-            :frame="props.controllerFrame"></PointsContainer>
+        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :frame="props.controllerFrame">
+        </BarsContainer>
+        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :axle="axle" :frame="props.controllerFrame">
+        </PointsContainer>
     </svg>
 </template>
 <style lang='scss' scoped>

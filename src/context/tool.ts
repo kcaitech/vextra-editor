@@ -82,6 +82,10 @@ export class Tool extends Watchable(Object) {
             this.keydown_c(ctrlKey, metaKey, shiftKey)
         } else if (code === 'KeyG') {
             this.keydown_g(ctrlKey, metaKey, shiftKey, altKey);
+        } else if (code === 'KeyT') {
+            this.keydown_t(ctrlKey, shiftKey, metaKey);
+        } else if (code === 'KeyF') {
+            this.keydown_f(ctrlKey, shiftKey, metaKey);
         }
     }
     setAction(action: Action) {

@@ -109,9 +109,9 @@ function bar_mouseleave() {
     cursor.setType('auto-0');
 }
 function window_blur() {
-    const workspace = props.context.workspace;
     if (isDragging) isDragging = false;
     if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
+    const workspace = props.context.workspace;
     workspace.scaling(false);
     workspace.setCtrl('page');
     props.context.cursor.reset();
@@ -141,7 +141,7 @@ onUnmounted(() => {
                 @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => bar_mouseenter(b.type)"
                 @mouseleave="bar_mouseleave">
             </path>
-            <path :d="b.path" fill="none" stroke='transparent' stroke-width="14px"
+            <path :d="b.path" fill="none" stroke='transparent' stroke-width="10px"
                 @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => bar_mouseenter(b.type)"
                 @mouseleave="bar_mouseleave">
             </path>

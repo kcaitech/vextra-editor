@@ -284,7 +284,7 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_0(ctrlKey, metaKey);
         } else if (event.code === KeyboardKeys.C) {
             event.preventDefault();
-            this.keydown_c(ctrlKey, metaKey);
+            this.keydown_c(ctrlKey, metaKey, shiftKey);
         } else if (event.code === KeyboardKeys.B) {
             event.preventDefault();
             this.keydown_b(ctrlKey, metaKey);
@@ -399,11 +399,11 @@ export class WorkSpace extends Watchable(Object) {
             }
         }
     }
-
     keydown_c(ctrlKey?: boolean, metaKey?: boolean, shift?: boolean) {
         if ((ctrlKey || metaKey) && !shift) {
             this.notify(WorkSpace.COPY)
         } else if (!(ctrlKey || metaKey) && shift) {
+
             this.context.comment.setVisibleComment(!this.context.comment.isVisibleComment);
         }
     }
