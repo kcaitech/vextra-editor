@@ -455,6 +455,7 @@ function onMouseMove(e: MouseEvent) {
                 pageViewDragging(e); // 拖拽页面
             } else {
                 if (workspace.value.action != Action.AutoV && workspace.value.action != Action.AddComment) {
+                    if(props.context.workspace.documentPerm !== 3) return
                     contentEditOnMoving(e); // 新增图形、切片     
                 }
             }

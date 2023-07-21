@@ -26,6 +26,7 @@ function home() {
     sessionStorage.setItem('index','1')
 }
 function rename() {
+    if(props.context.workspace.documentPerm !== 3) return
     ele.value = 2;
     nextTick(() => {
         if (input.value) {

@@ -76,7 +76,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControlsDel.value) return
+    if(!isControls.value) return
     props.context.comment.hoverComment(false);
     props.context.comment.commentInput(false);
     let timeout = setTimeout(() => {
@@ -167,8 +167,8 @@ onUnmounted(() => {
                             <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;" />
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
-                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControlsDel"/>
+                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">

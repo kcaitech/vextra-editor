@@ -270,8 +270,6 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  console.log(docInfo.value.document);
-  
   if (!value1.value) {
     setShateType(docType.Private)
   } else {

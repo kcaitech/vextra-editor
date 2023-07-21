@@ -79,7 +79,7 @@ const onQuickReply = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControlsDel.value) return
+    if(!isControls.value) return
     emit('delete', props.index, e, props.commentInfo.id)
 }
 
@@ -171,8 +171,8 @@ const filterDate = (time: string) => {
                                 <el-button plain @click="onQuickReply" style="margin-right: 5px;"><i style="font-size: 13px;">@</i></el-button>
                             </el-tooltip>
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
-                                <el-button plain :icon="Delete" @click.stop="onDelete" v-if="isControlsDel"/>
+                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                                <el-button plain :icon="Delete" @click.stop="onDelete" v-if="isControls"/>
                             </el-tooltip>
                         </el-button-group>
                     </div>
