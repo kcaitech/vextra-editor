@@ -5,7 +5,6 @@ import { Context } from "@/context";
 import { useI18n } from 'vue-i18n'
 import { Page } from '@kcdesign/data';
 import { Selection } from '@/context/selection'
-import { WorkSpace } from "@/context/workspace";
 import * as comment_api from '@/apis/comment';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
@@ -26,7 +25,6 @@ const emit = defineEmits<{
 }>()
 const hoverIcon = ref(false)
 const hoverComment = ref(false)
-const workspace = computed(() => props.context.workspace);
 const comment = computed(() => props.context.comment);
 const reply = ref(props.context.selection.commentStatus)
 const myComment = ref(props.context.selection.commentAboutMe)
