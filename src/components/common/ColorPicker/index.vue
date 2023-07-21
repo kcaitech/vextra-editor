@@ -175,6 +175,7 @@ function colorPickerMount() {
       init();
     }
   })
+  document.addEventListener('mousedown', quit);
 }
 function removeCurColorPicker() {
   if (need_update_recent.value) {
@@ -183,6 +184,13 @@ function removeCurColorPicker() {
   }
   popoverVisible.value = false;
   props.context.menu.clearColorPickerId();
+}
+function quit(e: MouseEvent) {
+  if (e.target instanceof Element && !e.target.closest('.color-block')) {
+    popoverVisible.value = false;
+    blockUnmount();
+    document.removeEventListener('mousedown', quit);
+  }
 }
 // 16进制色彩转10进制
 function hexToX(hex: string): RgbMeta {
@@ -432,6 +440,7 @@ function eyeDropperInit(): Eyedropper {
         rgba.B = rgb[2];
         const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
         emit('change', c);
+        update_dot_indicator_position(c);
       }
     }
   });
