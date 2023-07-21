@@ -1,7 +1,6 @@
 import { Shape } from '@kcdesign/data';
 import { Border } from '@kcdesign/data';
 import { MarkerType } from '@kcdesign/data';
-import { toHex } from "@/utils/color";
 import { Color } from "@kcdesign/data";
 const handler: { [key: string]: (h: Function, shape: Shape, fill: string, stroke: string, fillColor: Color, path: string, border?: Border) => any } = {};
 
@@ -28,9 +27,9 @@ export function render(h: Function, shape: Shape, path?: string): Array<any> {
 
     const border = shape.style.borders.at(-1);
     const borderColor = shape.style.borders.at(-1)?.color || new Color(1, 0, 0, 0);
-    const stroke = toHex({ red: borderColor.red, green: borderColor.green, blue: borderColor.blue, alpha: borderColor.alpha });
+    const stroke = borderColor.toHex();
     const fillColor = shape.style.fills.at(-1)?.color || new Color(1, 0, 0, 0);
-    const fill = toHex({ red: fillColor.red, green: fillColor.green, blue: fillColor.blue, alpha: fillColor.alpha });
+    const fill = fillColor.toHex();
     const elArr = new Array(); 
     path = path || shape.getPath(true).toString();
     elArr.push(handler[MarkerType.FilledArrow](h, shape, fill, stroke, fillColor, path, border));
