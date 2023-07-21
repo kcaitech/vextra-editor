@@ -14,8 +14,8 @@ export function asyncLoadFillImages(shape: Shape, reflush: Ref<number>) {
         })
     }
     load();
-    const stopWatch = shape.watch((args) => {
-        if (args.contains('fill') || args.contains('fills')) {
+    const stopWatch = shape.watch((...args: any[]) => {
+        if (args.includes('fill') || args.includes('fills')) {
             load();
             reflush.value++;
         }
