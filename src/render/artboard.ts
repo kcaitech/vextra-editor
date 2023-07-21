@@ -3,7 +3,7 @@ import { ShapeType } from "@kcdesign/data";
 import { Color } from "@kcdesign/data";
 import { renderGroupChilds as gR } from "@/render/group";
 
-const defaultColor = new Color(1, 255, 255, 255);
+const defaultColor = Color.DefaultColor;
 // artboard单独一个svg节点，需要设置overflow
 export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any>, reflush?: number) {
     if (!shape.isVisible) return;

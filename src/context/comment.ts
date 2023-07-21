@@ -1,5 +1,6 @@
 import { Shape, Watchable } from "@kcdesign/data";
 import { DocInfo, UserInfo } from "./user";
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 export class Comment extends Watchable(Object) {
   static SHUTDOWN_COMMENT = 1;
   static SELECT_LIST_TAB = 2;
@@ -20,6 +21,7 @@ export class Comment extends Watchable(Object) {
   static TOGGLE_COMMENT_PAGE = 17;
   static HOVER_SHOW_COMMENT = 18;
   static UPDATE_COMMENT_CHILD = 19;
+  static WATCH_COMMENT_CHANGE = 20;
 
   private m_user_info: UserInfo | undefined;
   private m_comment_input: boolean = false;
@@ -36,6 +38,7 @@ export class Comment extends Watchable(Object) {
   private m_comment_shape: Shape[] = [] //保存移动shape上有评论的shape
   private m_not2tree_comment: any = [] //没有转树的评论列表
   private m_comment_visible: boolean = true; //是否显示评论
+  private m_watch_comment: DocCommentOpData | undefined
   constructor() {
     super();
   }
@@ -83,6 +86,13 @@ export class Comment extends Watchable(Object) {
   }
   get isVisibleComment() {
     return this.m_comment_visible;
+  }
+  get isUpdateComment() {
+    return this.m_watch_comment;
+  }
+  onUpdateComment(comment: DocCommentOpData) {
+    this.m_watch_comment = comment
+    this.notify(Comment.WATCH_COMMENT_CHANGE)
   }
   showCommentPopup(index: number, e: MouseEvent) {
     this.notify(Comment.SHOW_COMMENT_POPUP, index, e);

@@ -5,6 +5,7 @@ import Design from "@/components/Document/Attribute/Design.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
+import { Perm } from "@/context/workspace";
 const { t } = useI18n();
 
 const props = defineProps<{
@@ -19,7 +20,7 @@ const emit = defineEmits<{
 // type Tab = "Design" | "Prototype" | "Inspect";
 type Tab = "Design" | "Inspect";
 
-
+const perm = ref(props.context.workspace.documentPerm)
 const currentTab = ref<Tab>("Design");
 const tabs: { title: string, id: Tab }[] = [
     {
@@ -62,11 +63,13 @@ const showHiddenRight = () => {
             <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
             <!-- <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab> -->
             <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
-            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                :style="{ opacity: showRight ? 1 : 0.6 }">
-                <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
-                <svg-icon v-else class="svg" icon-class="left"></svg-icon>
-            </div>
+            <template v-if="perm === Perm.isEdit">
+                <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
+                    :style="{ opacity: showRight ? 1 : 0.6 }">
+                    <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
+                    <svg-icon v-else class="svg" icon-class="left"></svg-icon>
+                </div>
+            </template>
         </div>
     </div>
 </template>

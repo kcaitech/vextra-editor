@@ -2,10 +2,11 @@ import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color } from "@kcdesign/data";
-import { Media } from '@/context/workspace';
 import { Action, ResultByAction } from "@/context/tool";
+import { Media, Perm } from '@/context/workspace';
 import { createHorizontalBox } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
+import { paster_image } from "./clipaboard";
 interface SystemClipboardItem {
   type: ShapeType
   contentType: string
@@ -218,33 +219,6 @@ function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: n
   const dragActiveDis = threshold || 4;
   const diff = Math.hypot(e.clientX - root.x - start.x, e.clientY - root.y - start.y);
   return Boolean(diff > dragActiveDis);
-}
-async function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
-  const selection = context.selection;
-  const workspace = context.workspace;
-  const type = ShapeType.Image;
-  const page = selection.selectedPage;
-  const parent = selection.selectedPage;
-  let asyncCreator: AsyncCreator | undefined;
-  let new_shape: Shape | undefined;
-  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-  if (page && parent && type) {
-    const editor = context.editor.controller();
-    const name = getName(type, parent.childs, t);
-    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    if (type === ShapeType.Image) {
-      frame.height = media.frame.height;
-      frame.width = media.frame.width;
-      new_shape = asyncCreator.init_media(page, (parent as GroupShape), name, frame, media);
-    }
-  }
-  if (asyncCreator && new_shape) {
-    asyncCreator = asyncCreator.close();
-    selection.selectShape(page!.getShape(new_shape.id));
-    await context.communication.upload.uploadResource(new_shape.imageRef, media.buff.buffer.slice(0))
-  }
-  workspace.creating(false);
-  context.tool.setAction(Action.AutoV);
 }
 function adjust_content_xy(context: Context, m: Media) {
   const workspace = context.workspace;
@@ -472,27 +446,57 @@ function flattenShapes(shapes: any) {
 function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal"): string[] {
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
-    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
   } else if (area === 'group') { // 点击在编组上
-    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
   } else if (area === 'controller') { // 点击在选区上
-    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
     const types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
     if (types & 1) { // 存在容器
-      contextMenuItems.push('dissolution');
+      if (permIsEdit(context)) {
+        contextMenuItems.push('dissolution');
+      }
     }
     if (types & 2) { // 存在编组
-      contextMenuItems.push('un_group');
+      if (permIsEdit(context)) {
+        contextMenuItems.push('un_group');
+      }
     }
     if (context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
-      contextMenuItems.push('forward', 'back', 'top', 'bottom');
+      if (permIsEdit(context)) {
+        contextMenuItems.push('forward', 'back', 'top', 'bottom');
+      }
     }
   } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
-    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
   } else if (area === 'text-selection') {
-    contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
   } else {
-    contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
+    } else {
+      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
+    }
   }
   return contextMenuItems;
 }
@@ -518,6 +522,11 @@ function selectShapes(context: Context, shapes: Shape[]) {
     selection.unHoverShape();
   }
 }
+
+export const permIsEdit = (context: Context) => {
+  return Boolean(context.workspace.documentPerm === Perm.isEdit);
+}
+
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,

@@ -48,6 +48,11 @@ export enum CtrlElementType { // 控制元素类型
     LineEndR = 'line-end-rotate',
     Text = 'text'
 }
+export enum Perm {
+    isRead = 1,
+    isComment = 2,
+    isEdit = 3
+}
 export interface Media {
     name: string
     frame: { width: number, height: number }

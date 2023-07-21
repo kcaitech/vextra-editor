@@ -211,7 +211,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if (!isControlsDel.value) return
+    if (!isControls.value) return
     props.context.comment.commentInput(false);
     deleteComment(props.commentInfo.id)
     emit('delete', props.index)
@@ -460,8 +460,8 @@ onUnmounted(() => {
             <div class="comment-commands">
                 <el-button-group class="ml-4">
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
-                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControlsDel" />
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">

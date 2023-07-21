@@ -10,6 +10,7 @@ import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { Navi } from "@/context/navigate";
+import { Perm } from "@/context/workspace";
 type List = InstanceType<typeof ListView>;
 interface Props {
     context: Context
@@ -43,6 +44,7 @@ const selectionWatcher = (type: number) => {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
+const isEdit = ref(props.context.workspace.documentPerm)
 const rightTarget = ref<string>('');
 function document_watcher() {
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -161,6 +163,11 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     if (props.context.data.pagesList.length === 1) {
         pageMenuItems[3].disable = true;
     }
+    if(props.context.workspace.documentPerm !== Perm.isEdit) {
+        pageMenuItems = [
+            { name: 'copy_link', id: id, disable: false },
+        ]
+    }
     pageMenu.value = true
     e.stopPropagation()
     document.addEventListener('keydown', Menuesc);
@@ -245,7 +252,7 @@ onUnmounted(() => {
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add" @click.stop="addPage" :title="t('navi.add_page')">
+                <div class="add" @click.stop="addPage" :title="t('navi.add_page')" v-if="isEdit === Perm.isEdit">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">
@@ -254,7 +261,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 36px)' }">
-            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0"
+            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0" :context="props.context"
                 :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
                 :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="mousedown" @after-drag="afterDrag">
             </ListView>
@@ -281,7 +288,6 @@ onUnmounted(() => {
         box-sizing: border-box;
         position: relative;
         align-items: center;
-
 
         >div:not(.space) {
             flex-shrink: 0;

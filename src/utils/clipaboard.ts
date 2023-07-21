@@ -464,7 +464,7 @@ function adjust_content_xy(context: Context, m: { width: number, height: number 
 /** 
  * 将图片插入文档
 */
-function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
+export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
     const selection = context.selection;
     const workspace = context.workspace;
     const page = selection.selectedPage;

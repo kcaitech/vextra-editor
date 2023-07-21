@@ -152,10 +152,11 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`
     }
-    const color = border.color;
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
-        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+        const color = border.color;
+        const opacity = shape.style.contextSettings.opacity;
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
         body_props.stroke = "url(#" + g_.id + ")";
@@ -184,7 +185,6 @@ handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Bo
         stroke: '',
         'stroke-width': thickness
     }
-    const color = border.color;
     const { length, gap } = border.borderStyle;
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`
@@ -192,7 +192,9 @@ handler[BorderPosition.Center] = function (h: Function, shape: Shape, border: Bo
 
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
-        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+        const color = border.color;
+        const opacity = shape.style.contextSettings.opacity;
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
         body_props.stroke = "url(#" + g_.id + ")";
@@ -220,10 +222,11 @@ handler[BorderPosition.Outer] = function (h: Function, shape: Shape, border: Bor
     if (length || gap) {
         body_props['stroke-dasharray'] = `${length}, ${gap}`;
     }
-    const color = border.color;
     const fillType = border.fillType;
     if (fillType == FillType.SolidColor) {
-        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+        const opacity = shape.style.contextSettings.opacity;
+        const color = border.color;
+        body_props.stroke = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + (color.alpha * opacity) + ")";
     } else {
         g_ = renderGradient(h, border.gradient as Gradient, frame);
         body_props.stroke = "url(#" + g_.id + ")";

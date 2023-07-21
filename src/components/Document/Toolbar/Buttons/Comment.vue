@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import ToolButton from '../ToolButton.vue';
-import { WorkSpace } from '@/context/workspace';
+import { WorkSpace, Perm } from '@/context/workspace';
 import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -13,7 +13,7 @@ const emit = defineEmits<{
   (e: "select", action: Action): void;
 }>();
 function select(action: Action) {
-  if (props.workspace.documentPerm === 1) return;
+  if (props.workspace.documentPerm === Perm.isRead) return;
   props.workspace.keydown_c()
   emit('select', action);
 }
