@@ -69,22 +69,29 @@ export class Tool extends Watchable(Object) {
         const { target, code, shiftKey, ctrlKey, metaKey, altKey } = e;
         if (target instanceof HTMLInputElement) return;
         if (code === 'KeyR') {
+            if (!(ctrlKey || shiftKey)) e.preventDefault();
             this.keydown_r(ctrlKey, shiftKey, metaKey);
         } else if (code === 'KeyV') {
+            e.preventDefault();
             this.keydown_v(ctrlKey, metaKey);
         } else if (code === 'KeyL') {
             this.keydown_l(shiftKey);
         } else if (code === 'KeyK') {
             this.keydown_k(ctrlKey, shiftKey, metaKey);
         } else if (code === 'KeyO') {
+            e.preventDefault();
             this.keydown_o(ctrlKey, shiftKey, metaKey);
         } else if (code === 'KeyC') {
+            e.preventDefault();
             this.keydown_c(ctrlKey, metaKey, shiftKey)
         } else if (code === 'KeyG') {
+            e.preventDefault();
             this.keydown_g(ctrlKey, metaKey, shiftKey, altKey);
         } else if (code === 'KeyT') {
+            e.preventDefault();
             this.keydown_t(ctrlKey, shiftKey, metaKey);
         } else if (code === 'KeyF') {
+            e.preventDefault();
             this.keydown_f(ctrlKey, shiftKey, metaKey);
         }
     }

@@ -6,6 +6,7 @@ interface Scout {
     path: SVGPathElement
     remove: () => void
     isPointInShape: (shape: Shape, point: PageXY) => boolean
+    isPointInPath: (d: string, point: PageXY) => boolean
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -37,11 +38,17 @@ function scout(context: Context): Scout {
         return result;
     }
 
+    function isPointInPath(d: string, point: PageXY): boolean {
+        SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        path.setAttributeNS(null, 'd', d);
+        return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+    }
+
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
         if (s) document.body.removeChild(s);
     }
-    return { path, isPointInShape, remove }
+    return { path, isPointInShape, remove, isPointInPath }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {

@@ -114,6 +114,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_clipboard: Clipboard;
     private m_t: Function = () => { };
     private m_bgc: Color = new Color(1, 239, 239, 239);
+    private m_controller_path: string = '';
     constructor(context: Context) {
         super();
         this.context = context;
@@ -195,6 +196,12 @@ export class WorkSpace extends Watchable(Object) {
     }
     get background() {
         return this.m_bgc;
+    }
+    get ctrlPath() {
+        return this.m_controller_path;
+    }
+    setCtrlPath(val: string) {
+        this.m_controller_path = val;
     }
     setBackground(color: Color) {
         this.m_bgc = color;

@@ -293,7 +293,8 @@ export function useController(context: Context) {
         return isDragging;
     }
     function isElement(e: MouseEvent): boolean {
-        return Boolean((e.target as Element).closest('[data-area="controller"]'));
+        const root = context.workspace.root;
+        return Boolean(context.selection.scout?.isPointInPath(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
     }
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态

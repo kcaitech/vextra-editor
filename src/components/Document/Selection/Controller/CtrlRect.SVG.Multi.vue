@@ -44,6 +44,7 @@ function updateControllerView() {
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
     boundrectPath.value = genRectPath(framePoint);
+    props.context.workspace.setCtrlPath(boundrectPath.value);
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
