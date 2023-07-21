@@ -333,6 +333,9 @@ const list_mousedown = (e: MouseEvent, shape: Shape) => {
         const types = selection_types(selected);
         if (types & 1) chartMenuItems.push('un_group');
         if (types & 2) chartMenuItems.push('dissolution');
+        if(props.context.workspace.documentPerm !== 3) {
+            chartMenuItems = ['all','copy'];
+        }
         chartMenuMount(e);
     }
 }

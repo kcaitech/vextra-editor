@@ -92,6 +92,7 @@ const pageSource = new class implements IDataSource<ItemData> {
     }
 }
 const addPage = () => {
+    if(props.context.workspace.documentPerm !== 3) return
     const editor = props.context.editor4Doc();
     const _tail = props.context.data.pagesList.length + 1;
     const id = props.context.selection.selectedPage?.id;
@@ -158,6 +159,11 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     ]
     if (props.context.data.pagesList.length === 1) {
         pageMenuItems[3].disable = true;
+    }
+    if(props.context.workspace.documentPerm !== 3) {
+        pageMenuItems = [
+            { name: 'copy_link', id: id, disable: false },
+        ]
     }
     pageMenu.value = true
     e.stopPropagation()
@@ -252,7 +258,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 36px)' }">
-            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0"
+            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0" :context="props.context"
                 :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
                 :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="mousedown" @after-drag="afterDrag">
             </ListView>

@@ -25,7 +25,9 @@ const props = defineProps<{
 }>();
 
 const workspace = computed<WorkSpace>(() => props.context.workspace)
-
+const isread = ref(false)
+const canComment = ref(false)
+const isEdit = ref(false)
 const selected = ref<Action>(Action.AutoV);
 
 function select(action: Action) {
@@ -46,8 +48,25 @@ function update(t?: number) {
 const selectComps = () => {
     message('feature', t('navi.development'));
 }
+
+//获取文档权限
+const hangdlePerm = () => {
+    const perm = props.context.workspace.documentPerm
+    if(perm === 1) {
+        isread.value = true
+    }else if(perm === 2) {
+        isread.value = false
+        canComment.value = true
+    }else {
+        isread.value = false
+        canComment.value = false
+        isEdit.value = true
+    }
+}
+
 // hooks
 onMounted(() => {
+    hangdlePerm()
     props.context.workspace.watch(update);
 });
 onUnmounted(() => {
@@ -56,7 +75,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="editor-tools" @dblclick.stop>
+    <div class="editor-tools" @dblclick.stop v-if="isEdit">
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
         <div class="vertical-line" />
         <Frame :workspace="workspace" :active="selected === Action.AddFrame" @select="select"></Frame>
@@ -77,6 +96,11 @@ onUnmounted(() => {
         </el-tooltip>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
+    </div>
+    <div class="editor-tools" @dblclick.stop v-if="isread || canComment">
+        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
+        <div class="vertical-line" />
+        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
     </div>
 </template>
 

@@ -450,6 +450,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     keydown_v(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) {
+            if(this.documentPerm !== 3) return
             this.notify(WorkSpace.PASTE);
         } else {
             this.m_current_action = Action.AutoV;

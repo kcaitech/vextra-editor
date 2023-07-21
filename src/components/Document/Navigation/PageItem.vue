@@ -32,6 +32,7 @@ function onMouseDown(e: MouseEvent) {
 }
 
 const onRename = () => {
+    if(props.data.context.workspace.documentPerm !== 3) return
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
