@@ -1,6 +1,15 @@
-import { GroupShape, ShapeType } from "@kcdesign/data";
+import { Shape, ShapeFrame, ShapeType } from "@kcdesign/data";
 
-export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>): Array<any> {
+interface GroupShapeLike { // GroupShape TableShape TableCell ...
+    frame: ShapeFrame,
+    childs: Shape[],
+    isVisible?: boolean,
+    isFlippedHorizontal?: boolean,
+    isFlippedVertical?: boolean,
+    rotation?: number
+}
+
+export function renderGroupChilds(h: Function, shape: GroupShapeLike, comsMap: Map<ShapeType, any>): Array<any> {
     const childs: Array<any> = [];
     const cc = shape.childs.length;
 
@@ -14,7 +23,7 @@ export function renderGroupChilds(h: Function, shape: GroupShape, comsMap: Map<S
     return childs;
 }
 
-export function render(h: Function, shape: GroupShape, comsMap: Map<ShapeType, any>, reflush?: number): any {
+export function render(h: Function, shape: GroupShapeLike, comsMap: Map<ShapeType, any>, reflush?: number): any {
     if (!shape.isVisible) return;
     const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
     const frame = shape.frame;
