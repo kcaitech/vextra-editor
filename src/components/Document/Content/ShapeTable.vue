@@ -9,7 +9,7 @@ const props = defineProps<{ data: TableShape }>();
 const reflush = makeReflush(props);
 
 function render() {
-    const ret = r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined);
+    const ret = r(h, props.data, comsMap, reflush.value ? reflush.value : undefined);
     return ret;
 }
 

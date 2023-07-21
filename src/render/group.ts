@@ -24,7 +24,9 @@ export function renderGroupChilds(h: Function, shape: GroupShapeLike, comsMap: M
 }
 
 export function render(h: Function, shape: GroupShapeLike, comsMap: Map<ShapeType, any>, reflush?: number): any {
-    if (!shape.isVisible) return;
+    const isVisible = shape.isVisible ?? true;
+    if (!isVisible) return;
+
     const childs: Array<any> = renderGroupChilds(h, shape, comsMap);
     const frame = shape.frame;
 
