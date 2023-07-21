@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, computed, onUnmounted } from "vue";
 import { Context } from "@/context";
+import { Perm } from "@/context/workspace";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -492,6 +493,7 @@ const substituteVisible = computed(() => {
     return draging.value
 })
 function mouseDownOnItem(index: number, e: MouseEvent) {
+    if(props.context?.workspace.documentPerm !== Perm.isEdit) return
     if (e.button !== 0) return; // 图层拖动只支持左键
     if (!props.allowDrag) return;
     // record fromIndex && pre to take off

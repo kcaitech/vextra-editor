@@ -12,6 +12,8 @@ import { Selection } from "@/context/selection";
 import ShowHiddenLeft from "../ShowHiddenLeft.vue";
 import { watchEffect } from "vue";
 import { Comment } from "@/context/comment";
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
+
 const { t } = useI18n();
 const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
@@ -177,12 +179,39 @@ const commentUpdate = (t: number) => {
 watchEffect(() => {
     getDocumentComment(docID)
 })
+
+const docComment = (comment: DocCommentOpData) => {
+    if(comment.comment.content) {
+        comment.comment.content = comment.comment.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+    }
+    const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
+    if(comment.type === DocCommentOpType.Update) {
+        if(index !== -1) {
+            documentCommentList.value[index] = {
+                ...documentCommentList.value[index],
+                ...comment.comment
+            }
+        }
+    }else if (comment.type === DocCommentOpType.Del) {
+        if(index !== -1) {
+            documentCommentList.value.splice(index, 1)
+        }
+    }else if (comment.type === DocCommentOpType.Add) {
+        if(!comment.comment.root_id) {
+            documentCommentList.value.unshift(comment.comment)
+        }
+    }
+}
 onMounted(() => {
+    const updateComment = props.context.communication.comment
+    updateComment.addUpdatedHandler(docComment)
     props.context.workspace.watch(update);
     props.context.comment.watch(commentUpdate);
     props.context.selection.watch(selectedUpdate);
 })
 onUnmounted(() => {
+    const updateComment = props.context.communication.comment
+    updateComment.removeUpdatedHandler(docComment)
     props.context.workspace.unwatch(update);
     props.context.comment.unwatch(commentUpdate);
     props.context.selection.unwatch(selectedUpdate);

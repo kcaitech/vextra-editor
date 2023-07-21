@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick, onUpdated } from 'vue';
 import { Context } from '@/context';
 import PageCommentItem from '@/components/Document/Content/PageCommentItem.vue'
 import * as comment_api from '@/apis/comment';
@@ -10,6 +10,7 @@ import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
 import { Page, Shape, ShapeType } from "@kcdesign/data";
 import { Comment } from '@/context/comment';
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 
 type CommentView = InstanceType<typeof PageCommentItem>;
 
@@ -349,17 +350,41 @@ function commentWatcher(type?: number) { // 更新编辑器状态，包括光标
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
-let timeComment: any = null
+
+const docComment = (comment: DocCommentOpData) => {
+    if(comment.comment.content) {
+        comment.comment.content = comment.comment.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+    }
+    const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
+    if(comment.type === DocCommentOpType.Update) {
+        if(index !== -1) {
+            documentCommentList.value[index] = {
+                ...documentCommentList.value[index],
+                ...comment.comment
+            }
+        }
+    }else if (comment.type === DocCommentOpType.Del) {
+        if(index !== -1) {
+            documentCommentList.value.splice(index, 1)
+        }
+    }else if (comment.type === DocCommentOpType.Add) {
+        if(!comment.comment.root_id) {
+            documentCommentList.value.unshift(comment.comment)
+        }
+    }
+    props.context.comment.onUpdateComment(comment)
+}
 onMounted(() => {
+    const updateComment = props.context.communication.comment
+    updateComment.addUpdatedHandler(docComment)
     getDocumentComment()
-    timeComment = setInterval(() => {
-        getDocumentComment()
-    }, 20000)
     props.context.comment.watch(commentWatcher);
 })
+
 onUnmounted(() => {
+    const updateComment = props.context.communication.comment
+    updateComment.removeUpdatedHandler(docComment)
     props.context.comment.unwatch(commentWatcher);
-    clearInterval(timeComment)
 })
 </script>
 

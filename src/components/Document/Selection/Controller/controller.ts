@@ -14,6 +14,7 @@ import { paster_short } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
+import { permIsEdit } from '@/utils/content';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -70,6 +71,7 @@ export function useController(context: Context) {
         return result
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
+        if (!permIsEdit(context)) return;
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
             context.menu.menuMount(); // 取消右键事件
             root = context.workspace.root;

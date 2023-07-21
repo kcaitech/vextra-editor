@@ -2,7 +2,7 @@ import { objectId } from "@kcdesign/data";
 import { ShapeFrame } from "@kcdesign/data";
 import { Color, Gradient, GradientType, Stop } from "@kcdesign/data";
 
-const defaultColor = new Color(0, 0, 0, 0)
+const defaultColor = Color.DefaultColor;
 
 function renderStop(h: Function, d: Stop): any {
     const position = d.position;
