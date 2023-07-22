@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, Repository, Page, CoopRepository } from '@kcdesign/data';
+import { Document, importDocument, uploadExForm, Repository, Page, CoopRepository } from '@kcdesign/data';
 import { Ot } from "@/communication/modules/ot";
 import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
@@ -20,9 +20,10 @@ import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import { WorkSpace } from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import { measure } from '@/layout/text/measure';
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
+import e from 'express';
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { S3Storage } from "@/utils/storage";
 
@@ -50,6 +51,9 @@ let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
+const isRead = ref(false)
+const canComment = ref(false)
+const isEdit = ref(true)
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -129,14 +133,26 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
     const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
     if (context) {
-        context.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
         if (code === 'Backslash') {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
+        if(context && context.workspace.documentPerm !== Perm.isEdit) {
+            if(permKeyBoard(evevt)) {
+                context.workspace.keyboardHandle(evevt); // 只读可评论的键盘事件
+            }
+        }else {
+            context.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
+        }
     }
 }
+const permKeyBoard = (e: KeyboardEvent) => {
+    const { code, ctrlKey, metaKey, shiftKey } = e;
+    if(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
+    else false
+}
+
 const showHiddenRight = () => {
     if (showRight.value) {
         Right.value.rightMin = 0
@@ -191,6 +207,17 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
+
+//只读权限隐藏右侧属性栏
+watchEffect(() => {
+    if(isRead.value || canComment.value) {
+        Right.value.rightMin = 0
+        Right.value.rightWidth = 0
+        Right.value.rightMinWidth = 0
+        middleWidth.value = middleWidth.value + 0.1
+    }
+})
+
 enum PermissionChange {
     update,
     close,
@@ -217,6 +244,16 @@ const getDocumentAuthority = async () => {
                 permissionChange.value = PermissionChange.close
                 showNotification(data.data.perm_type)
             }
+        }
+        if(data.data.perm_type === 1) {
+            isRead.value = true
+        }else if(data.data.perm_type === 2) {
+            isRead.value = false
+            canComment.value = true
+        }else if(data.data.perm_type === 3) {
+            isRead.value = false
+            canComment.value = false
+            isEdit.value = true
         }
         permType.value = data.data.perm_type
         context && context.workspace.setDocumentPerm(data.data.perm_type)
@@ -308,6 +345,7 @@ const getDocumentInfo = async () => {
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
+            getDocumentAuthority();
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
@@ -454,7 +492,7 @@ onUnmounted(() => {
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" v-if="!null_context" :context="context!"
+            <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
                 @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                 :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
             </Attribute>

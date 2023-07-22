@@ -10,7 +10,7 @@ import CommentView from './Content/CommentView.vue';
 import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, TextShape } from '@kcdesign/data';
 import { Context } from '@/context'; // 状态顶层 store
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
-import { Action, KeyboardKeys, WorkSpace } from '@/context/workspace'; // workspace
+import { Action, KeyboardKeys, Perm, WorkSpace } from '@/context/workspace'; // workspace
 import { Menu } from '@/context/menu'; // menu 菜单相关
 import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
@@ -455,6 +455,7 @@ function onMouseMove(e: MouseEvent) {
                 pageViewDragging(e); // 拖拽页面
             } else {
                 if (workspace.value.action != Action.AutoV && workspace.value.action != Action.AddComment) {
+                    if(props.context.workspace.documentPerm !== Perm.isEdit) return
                     contentEditOnMoving(e); // 新增图形、切片     
                 }
             }

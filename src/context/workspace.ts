@@ -64,6 +64,11 @@ export enum CtrlElementType { // 控制元素类型
     LineEndR = 'line-end-rotate',
     Text = 'text'
 }
+export enum Perm {
+    isRead = 1,
+    isComment = 2,
+    isEdit = 3
+}
 export interface Media {
     name: string
     frame: { width: number, height: number }
@@ -450,6 +455,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     keydown_v(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) {
+            if(this.documentPerm !== Perm.isEdit) return
             this.notify(WorkSpace.PASTE);
         } else {
             this.m_current_action = Action.AutoV;
@@ -528,7 +534,7 @@ export class WorkSpace extends Watchable(Object) {
             this.context.comment.setVisibleComment(!this.context.comment.isVisibleComment);
         }
         else {
-            if (this.documentPerm === 1) return
+            if (this.documentPerm === Perm.isRead) return
             this.escSetup();
             this.m_current_action = Action.AddComment;
             this.context.comment.commentInput(false);
