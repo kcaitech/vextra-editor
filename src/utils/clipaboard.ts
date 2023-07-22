@@ -482,7 +482,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
     if (asyncCreator && new_shape) {
         asyncCreator = asyncCreator.close();
         selection.selectShape(new_shape);
-        context.communication.doc_upload.uploadResource(new_shape.imageRef, media.buff.buffer.slice(0));
+        context.communication.resource_upload.uploadResource(new_shape.imageRef, media.buff.buffer.slice(0));
     }
     workspace.setAction(Action.AutoV);
     workspace.creating(false);
