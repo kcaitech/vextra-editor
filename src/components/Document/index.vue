@@ -368,7 +368,7 @@ const getDocumentInfo = async () => {
                     switchPage(context.data.pagesList[0]?.id);
                     loading.value = false;
                 });
-            await context.communication.resource_upload.start(docId, token);
+            await context.communication.resourceUpload.start(docId, token);
             await context.communication.comment.start(docId, token);
         }
         getUserInfo()
@@ -382,13 +382,13 @@ const getDocumentInfo = async () => {
 async function upload() {
     const token = localStorage.getItem("token");
     if (!token || !context || !context.data) return;
-    if (!await context.communication.doc_upload.start(token)) {
+    if (!await context.communication.docUpload.start(token)) {
         // todo 上传失败处理
         return;
     }
     let result;
     try {
-        result = await context.communication.doc_upload.upload(context.data);
+        result = await context.communication.docUpload.upload(context.data);
     } catch (e) {
         // todo 上传失败处理
         return;
@@ -404,7 +404,7 @@ async function upload() {
     });
     ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, context!.data.versionId ?? "");
     ot.start();
-    context!.communication.resource_upload.start(doc_id, token);
+    context!.communication.resourceUpload.start(doc_id, token);
     context!.communication.comment.start(doc_id, token);
     context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
@@ -450,7 +450,7 @@ onMounted(() => {
 onUnmounted(() => {
     try {
         ot?.close();
-        context?.communication.resource_upload.close();
+        context?.communication.resourceUpload.close();
         context?.communication.comment.close();
     } catch (err) { }
     window.document.title = t('product.name');

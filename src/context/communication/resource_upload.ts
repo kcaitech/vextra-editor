@@ -1,5 +1,5 @@
-import { Watchable } from "@kcdesign/data";
-import { DocResourceUpload } from "@/communication/modules/doc_resource_upload";
+import { Watchable } from "@kcdesign/data"
+import { DocResourceUpload } from "@/communication/modules/doc_resource_upload"
 
 export class ResourceUpload extends Watchable(Object) {
     private docResourceUpload?: DocResourceUpload
@@ -32,7 +32,7 @@ export class ResourceUpload extends Watchable(Object) {
         return this.docResourceUpload !== undefined
     }
 
-    public async uploadResource(name: string, data: ArrayBuffer): Promise<boolean> {
+    public async upload(name: string, data: ArrayBuffer): Promise<boolean> {
         if (!this.docResourceUpload) {
             console.error("DocResourceUpload未启动")
             return false
