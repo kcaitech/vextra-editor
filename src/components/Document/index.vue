@@ -24,6 +24,7 @@ import { WorkSpace } from '@/context/workspace';
 import { measure } from '@/layout/text/measure';
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
 import { ResponseStatus } from "@/communication/modules/doc_upload";
+import { S3Storage } from "@/utils/storage";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -301,7 +302,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
+        const document = await importDocument(new S3Storage(importDocumentParams), path, "", "", repo, measure)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
