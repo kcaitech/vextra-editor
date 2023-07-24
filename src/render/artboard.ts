@@ -21,14 +21,30 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
     ab_props.x = frame.x, ab_props.y = frame.y, ab_props.width = frame.width, ab_props.height = frame.height;
     ab_props.viewBox = `0 0 ${frame.width} ${frame.height}`;
     // background
-    if (shape.hasBackgroundColor) {
+    if (shape.hasBackgroundColor) { // 背景色垫底
         const color = shape.backgroundColor || defaultColor;
         childs.push(h("rect", {
             x: 0, y: 0, width: frame.width, height: frame.height,
             fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
         }))
     }
-    childs.push(...gR(h, shape, comsMap));
+    childs.push(...gR(h, shape, comsMap)); // 后代元素放中间
+    // border 边框放最上面
+    if (shape.style.borders.length) {
+        const b = shape.style.borders[0]
+        const color = b.color;
+        const b_p: any = {
+            x: 0, y: 0, width: frame.width, height: frame.height,
+            fill: 'none',
+            stroke: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")",
+            'stroke-width': b.thickness
+        }
+        const { length, gap } = b.borderStyle;
+        if (length || gap) {
+            b_p['stroke-dasharray'] = `${length}, ${gap}`;
+        }
+        childs.push(h("rect", b_p));
+    }
     /**
      * <svg>
      *   <svg></svg>
