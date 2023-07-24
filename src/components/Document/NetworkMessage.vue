@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 const props = defineProps<{
-    saveSuccess: boolean
-    networkSuccess: boolean
-    networkError: boolean
-    netError: boolean
+    saveSuccess?: boolean
+    networkSuccess?: boolean
+    networkError?: boolean
+    netError?: boolean
 }>()
 
 </script>
@@ -21,7 +21,7 @@ const props = defineProps<{
         <span>网络连接成功</span>
     </div>
     <div class="network_error" v-if="netError">
-        <span>网络错误</span>
+        <span>网络连接失败</span>
     </div>
 </template>
 

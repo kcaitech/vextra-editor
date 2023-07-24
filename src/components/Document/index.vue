@@ -459,6 +459,7 @@ const networkLinkError = () => {
     netError.value = true
     const timer = setTimeout(() => {
         netError.value = false
+        networkError.value = true
         clearTimeout(timer)
     }, 3000)
 }
