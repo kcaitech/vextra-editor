@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted, onUnmounted, watchEffect } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { router } from '@/router'
-import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const emit = defineEmits<{
@@ -34,9 +33,9 @@ onUnmounted(() => {
     </div>
     <div class="container">
         <div>
-            <span v-if="top">网络异常，文档无法打开，请检查网络后重试。</span>
-            <span v-else>网络异常，文件列表获取失败，请检查网络后重试。</span>
-            <button class="button" @click="refreshDoc">重试</button>
+            <span v-if="top">{{t('message.doc_notopen')}}</span>
+            <span v-else>{{t('message.list_for_failure')}}</span>
+            <button class="button" @click="refreshDoc">{{t('message.retry')}}</button>
         </div>
     </div>
 </template>

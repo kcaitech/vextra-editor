@@ -280,6 +280,18 @@ export const comment = {
 export const clipboard = {
     'invalid_data': '该内容无法解析'
 }
+
+export const message = {
+    doc_notopen: '网络异常，文档无法打开，请检查网络后重试。',
+    list_for_failure: '网络异常，文件列表获取失败，请检查网络后重试。',
+    retry: '重试',
+    leave: '您的更改尚未保存，确定要离开吗？',
+    network_error: '网络异常，请勿刷新页面或关闭文档，以免内容丢失，文档尝试保存中…',
+    network_anomaly: '网络异常',
+    link_success: '网络连接成功',
+    autosave: '文档自动保存成功'
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';

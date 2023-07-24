@@ -280,6 +280,18 @@ export const comment = {
 export const clipboard = {
     'invalid_data': 'invalid data'
 }
+
+export const message = {
+    doc_notopen: "Network anomalies, the document can't open, please try again after checking the network.",
+    list_for_failure: 'Network exception, file list acquisition failed, please check the network and try again.',
+    retry: 'Retry',
+    leave: 'Your changes have not been saved, are you sure you want to leave?',
+    network_error: 'Please do not refresh the page or close the document to avoid content loss. The document is trying to save...',
+    network_anomaly: 'Network anomaly',
+    link_success: 'Network connection successful',
+    autosave: 'Automatic document saving'
+}
+
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';
