@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed, shallowRef } from 'vue'
-import { Shape, ShapeType, RectShape, ImageShape } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { Shape, ShapeType, RectShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
-import { cloneDeep, debounce } from 'lodash';
+import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
@@ -122,8 +122,8 @@ function check_mixed() {
     isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!
 }
 function getRectShapeAttr(shape: Shape) {
-    points.value = (shape as RectShape || ImageShape).pointsCount || 0;
-    radius.value = (shape as RectShape || ImageShape).getRectRadius();
+    points.value = (shape as RectShape).pointsCount || 0;
+    radius.value = (shape as RectShape).getRectRadius();
 }
 function onChangeX(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
