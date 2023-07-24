@@ -608,8 +608,6 @@ onUnmounted(() => {
         box-sizing: border-box;
         position: relative;
         padding-bottom: 4px;
-        overflow: hidden;
-
         .title {
             height: 36px;
             font-weight: var(--font-default-bold);
@@ -625,7 +623,6 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             background-color: var(--grey-light);
-            padding: 4px var(--default-padding-half);
             border-radius: 4px;
             box-sizing: border-box;
             overflow: hidden;
@@ -635,6 +632,7 @@ onUnmounted(() => {
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
+                margin-left: 8px;
 
                 >svg {
                     width: 12px;
