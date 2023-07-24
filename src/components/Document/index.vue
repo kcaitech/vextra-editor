@@ -496,6 +496,7 @@ enum MessageType {
     NetError = 0,
     Success,
 }
+
 insertNetworkInfo('networkError', true, network_error)
 
 const docUploadState = (type: MessageType, data: any) => {
