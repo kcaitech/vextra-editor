@@ -45,18 +45,19 @@ function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }):
 }
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button === 0) {
-        props.context.menu.menuMount()
-        event.stopPropagation();
-        cur_ctrl_type = ele;
-        const workspace = props.context.workspace;
-        workspace.setCtrl('controller');
-        matrix.reset(workspace.matrix);
-        const root = workspace.root;
-        startPosition = { x: event.clientX - root.x, y: event.clientY - root.y }
-        document.addEventListener('mousemove', bar_mousemove);
-        document.addEventListener('mouseup', bar_mouseup);
-    }
+    return;
+    // if (event.button === 0) {
+    //     props.context.menu.menuMount()
+    //     event.stopPropagation();
+    //     cur_ctrl_type = ele;
+    //     const workspace = props.context.workspace;
+    //     workspace.setCtrl('controller');
+    //     matrix.reset(workspace.matrix);
+    //     const root = workspace.root;
+    //     startPosition = { x: event.clientX - root.x, y: event.clientY - root.y }
+    //     document.addEventListener('mousemove', bar_mousemove);
+    //     document.addEventListener('mouseup', bar_mouseup);
+    // }
 }
 function bar_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;

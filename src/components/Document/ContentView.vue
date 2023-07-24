@@ -20,7 +20,7 @@ import { init as renderinit } from '@/render';
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { _updateRoot, getName, init_shape, color2string, init_insert_shape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
-import { insertFrameTemplate } from '@/utils/artboardFn';
+import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
 import { Comment } from '@/context/comment';
@@ -448,6 +448,10 @@ function shapeCreateEnd() { // 造图结束
         if (newShape.type === ShapeType.Text) { // 文本框新建则进入编辑状态
             const workspace = props.context.workspace;
             workspace.notify(WorkSpace.INIT_EDITOR);
+        } else if (newShape.type === ShapeType.Artboard) { // 容器创建需要收束
+            const childs = collect(props.context);
+            const page = props.context.selection.selectedPage;
+            if (page && asyncCreator) asyncCreator.collect(page, childs, props.context.selection.selectedShapes[0]);
         }
         removeCreator();
         newShape = undefined;

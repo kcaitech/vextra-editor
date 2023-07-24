@@ -39,18 +39,19 @@ function update_dot_path() {
     dots.push(...update_dot(props.frame, 0, matrix));
 }
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0) return;
-    props.context.menu.menuMount()
-    const workspace = props.context.workspace;
-    event.stopPropagation();
-    workspace.setCtrl('controller');
-    const { clientX, clientY } = event;
-    matrix.reset(workspace.matrix);
-    const root = workspace.root;
-    startPosition = { x: clientX - root.x, y: clientY - root.y };
-    cur_ctrl_type = ele;
-    document.addEventListener('mousemove', point_mousemove);
-    document.addEventListener('mouseup', point_mouseup);
+    return;
+    // if (event.button !== 0) return;
+    // props.context.menu.menuMount()
+    // const workspace = props.context.workspace;
+    // event.stopPropagation();
+    // workspace.setCtrl('controller');
+    // const { clientX, clientY } = event;
+    // matrix.reset(workspace.matrix);
+    // const root = workspace.root;
+    // startPosition = { x: clientX - root.x, y: clientY - root.y };
+    // cur_ctrl_type = ele;
+    // document.addEventListener('mousemove', point_mousemove);
+    // document.addEventListener('mouseup', point_mouseup);
 }
 function point_mousemove(event: MouseEvent) {
     const { clientX, clientY } = event;
