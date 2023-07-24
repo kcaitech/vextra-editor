@@ -7,7 +7,7 @@ import * as share_api from '@/apis/share';
 import { nextTick, ref, onMounted, onUnmounted } from 'vue';
 import Saving from './Saving.vue';
 import { useRoute } from 'vue-router';
-import { WorkSpace } from '@/context/workspace';
+import { WorkSpace, Perm } from '@/context/workspace';
 import { message } from '@/utils/message';
 const route = useRoute();
 interface Props {
@@ -26,6 +26,7 @@ function home() {
     sessionStorage.setItem('index','1')
 }
 function rename() {
+    if(props.context.workspace.documentPerm !== Perm.isEdit) return
     ele.value = 2;
     nextTick(() => {
         if (input.value) {

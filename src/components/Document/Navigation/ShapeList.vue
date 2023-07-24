@@ -17,6 +17,7 @@ import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
+import { Perm } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -333,6 +334,9 @@ const list_mousedown = (e: MouseEvent, shape: Shape) => {
         const types = selection_types(selected);
         if (types & 1) chartMenuItems.push('un_group');
         if (types & 2) chartMenuItems.push('dissolution');
+        if(props.context.workspace.documentPerm !== Perm.isEdit) {
+            chartMenuItems = ['all','copy'];
+        }
         chartMenuMount(e);
     }
 }
@@ -605,6 +609,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         position: relative;
         padding-bottom: 4px;
+        overflow: hidden;
 
         .title {
             height: 36px;
