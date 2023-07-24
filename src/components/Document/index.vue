@@ -10,7 +10,7 @@ import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, uploadExForm, Repository, Page, CoopRepository } from '@kcdesign/data';
 import { Ot } from "@/communication/modules/ot";
-import { STORAGE_URL, DOC_UPLOAD_URL, SCREEN_SIZE } from '@/utils/setting';
+import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
@@ -20,10 +20,12 @@ import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import { WorkSpace } from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import { measure } from '@/layout/text/measure';
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
 import e from 'express';
+import { ResponseStatus } from "@/communication/modules/doc_upload";
+import { S3Storage } from "@/utils/storage";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -136,7 +138,7 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
-        if(context && context.workspace.documentPerm !== 3) {
+        if(context && context.workspace.documentPerm !== Perm.isEdit) {
             if(permKeyBoard(evevt)) {
                 context.workspace.keyboardHandle(evevt); // 只读可评论的键盘事件
             }
@@ -337,7 +339,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
+        const document = await importDocument(new S3Storage(importDocumentParams), path, "", "", repo, measure)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
@@ -351,7 +353,7 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            ot = Ot.Make(docId, token, document, context.coopRepo, "0");
+            ot = Ot.Make(docId, token, document, context.coopRepo, document.versionId ?? "");
             ot.start()
                 .catch((e) => {
                     if (!context) {
@@ -366,7 +368,7 @@ const getDocumentInfo = async () => {
                     switchPage(context.data.pagesList[0]?.id);
                     loading.value = false;
                 });
-            await context.communication.upload.start(docId, token);
+            await context.communication.resource_upload.start(docId, token);
             await context.communication.comment.start(docId, token);
         }
         getUserInfo()
@@ -377,24 +379,34 @@ const getDocumentInfo = async () => {
     }
 }
 
-function upload() {
-    const token = localStorage.getItem('token');
-    if (!token || !context || !context.data) {
-        return
+async function upload() {
+    const token = localStorage.getItem("token");
+    if (!token || !context || !context.data) return;
+    if (!await context.communication.doc_upload.start(token)) {
+        // todo 上传失败处理
+        return;
     }
-    uploadExForm(context.data, DOC_UPLOAD_URL, token, '', (isSuccess, doc_id) => {
-        if (isSuccess) {
-            router.replace({
-                path: '/document',
-                query: { id: doc_id }
-            });
-            ot = Ot.Make(doc_id, localStorage.getItem('token') || "", context!.data, context!.coopRepo, "0");
-            ot.start();
-            context!.communication.upload.start(doc_id, token);
-            context!.communication.comment.start(doc_id, token);
-            context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
-        }
-    })
+    let result;
+    try {
+        result = await context.communication.doc_upload.upload(context.data);
+    } catch (e) {
+        // todo 上传失败处理
+        return;
+    }
+    if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
+        // todo 上传失败处理
+        return;
+    }
+    const doc_id = result!.data.doc_id;
+    router.replace({
+        path: '/document',
+        query: { id: doc_id },
+    });
+    ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, context!.data.versionId ?? "");
+    ot.start();
+    context!.communication.resource_upload.start(doc_id, token);
+    context!.communication.comment.start(doc_id, token);
+    context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
 let timer: any = null;
 function init_screen_size() {
@@ -438,7 +450,7 @@ onMounted(() => {
 onUnmounted(() => {
     try {
         ot?.close();
-        context?.communication.upload.close();
+        context?.communication.resource_upload.close();
         context?.communication.comment.close();
     } catch (err) { }
     window.document.title = t('product.name');

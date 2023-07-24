@@ -2,7 +2,7 @@ import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix } from "@kcdesign/data";
-import { Action, Media, ResultByAction } from '@/context/workspace';
+import { Action, Media, ResultByAction, Perm } from '@/context/workspace';
 import { createHorizontalBox } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipaboard";
@@ -204,7 +204,7 @@ async function insert_imgs(context: Context, t: Function) {
     for (let i = 0; i < media.length; i++) {
       if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
       const img = init_insert_image(context, xy, t, media[i]);
-      if (img && await context.communication.upload.uploadResource(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
+      if (img && await context.communication.resource_upload.uploadResource(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
     }
   }
   if (new_shapes.length) {
@@ -500,7 +500,7 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
 }
 
 export const permIsEdit = (context: Context) => {
-  if (context.workspace.documentPerm === 3) return true
+  if (context.workspace.documentPerm === Perm.isEdit) return true
   else return false
 }
 

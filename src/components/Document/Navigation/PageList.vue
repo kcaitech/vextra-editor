@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
+import { Perm } from "@/context/workspace";
 type List = InstanceType<typeof ListView>;
 interface Props {
     context: Context
@@ -42,6 +43,7 @@ const selectionWatcher = (type: number) => {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
+const isEdit = ref(props.context.workspace.documentPerm)
 const rightTarget = ref<string>('');
 function document_watcher() {
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -92,7 +94,6 @@ const pageSource = new class implements IDataSource<ItemData> {
     }
 }
 const addPage = () => {
-    if(props.context.workspace.documentPerm !== 3) return
     const editor = props.context.editor4Doc();
     const _tail = props.context.data.pagesList.length + 1;
     const id = props.context.selection.selectedPage?.id;
@@ -160,7 +161,7 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     if (props.context.data.pagesList.length === 1) {
         pageMenuItems[3].disable = true;
     }
-    if(props.context.workspace.documentPerm !== 3) {
+    if(props.context.workspace.documentPerm !== Perm.isEdit) {
         pageMenuItems = [
             { name: 'copy_link', id: id, disable: false },
         ]
@@ -249,7 +250,7 @@ onUnmounted(() => {
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add" @click.stop="addPage" :title="t('navi.add_page')">
+                <div class="add" @click.stop="addPage" :title="t('navi.add_page')" v-if="isEdit === Perm.isEdit">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">
