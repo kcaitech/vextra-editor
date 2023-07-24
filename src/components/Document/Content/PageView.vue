@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection';
-import { onMounted, onUnmounted, ref, watch, watchEffect, nextTick } from 'vue';
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
-import { setToolGroup } from "@/utils/pageview";
 import ShapeTitles from './ShapeTitles.vue';
 const props = defineProps<{
     context: Context,
@@ -28,15 +26,6 @@ function pageViewRegister(mount: boolean) {
     }
     props.context.workspace.setPageViewId(rootId.value);
 }
-function updateRenderItems(t?: number) {
-    if (t === Selection.CHANGE_SHAPE) {
-        updateItems();
-    }
-}
-function updateItems() {
-    renderItems = props.data.childs;
-    reflush.value++;
-}
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
@@ -49,13 +38,11 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
 })
 onMounted(() => {
     props.data.watch(watcher);
-    props.context.selection.watch(updateRenderItems);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
-    props.context.selection.unwatch(updateRenderItems);
     pageViewRegister(false);
     stopWatchPage();
     renderItems = [];

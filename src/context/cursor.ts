@@ -15,6 +15,7 @@ export class Cursor extends Watchable(Object) {
     async init() {
         await this.m_styler.setup();
         const auto = await this.m_styler.getClass('auto-0');
+        if (!auto) return;
         this.notify(Cursor.CHANGE_CURSOR, auto);
     }
     get type() {
@@ -27,13 +28,15 @@ export class Cursor extends Watchable(Object) {
         if (this.m_freeze) return;
         if (this.m_context.workspace.transforming && !force) return;
         const res = await this.m_styler.getClass(type);
-        this.m_current_cursor_type = res;
+        if (!res) return;
+        this.m_current_cursor_type = res;        
         this.notify(Cursor.CHANGE_CURSOR, res);
     }
     async reset() {
         if (this.m_freeze) return;
         if (this.m_context.workspace.transforming) return;
         const auto = await this.m_styler.getClass('auto-0');
+        if (!auto) return;
         this.m_current_cursor_type = auto;
         this.notify(Cursor.CHANGE_CURSOR, auto);
     }

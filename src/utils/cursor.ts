@@ -14,7 +14,7 @@ interface StyleSheetController {
   setup: Function
   remove: Function
   appendClass: Function
-  getClass: Function
+  getClass: (c: string) => Promise<string | false>
 }
 const getBase64ByType = new Map([
   ['auto', auto],
@@ -33,7 +33,7 @@ function styleSheetController(): StyleSheetController {
   let styleSheetId: string = '';
   let style: HTMLStyleElement;
   const classList: Map<string, string> = new Map();
-
+  const loading: Map<string, 1> = new Map();
   async function appendStyleSheetForCursor() {
     style = document.createElement('style');
     style.type = 'text/css';
@@ -60,14 +60,20 @@ function styleSheetController(): StyleSheetController {
   }
   async function getClass(clsName: string) { //这个clsName是不带id的，只有类型和度数
     const arr = clsName.split('-');
-    arr[1] = findNearestMultipleOf(Math.floor(((Number(arr[1]) % 360))), 3).toString();
+    arr[1] = findNearestMultipleOf(Math.floor(((Number(arr[1] || -arr[2] || 0) % 360))), 3).toString();
     clsName = `${arr[0]}-${arr[1]}-${styleSheetId}`;
     // 如果获取的过程中无法从已有的样式库中取得样式，则先创建一个样式插入到样式库
     if (!classList.get(clsName)) {
       const [type, deg] = clsName.split('-');
-      const cls: string = await getClassString(type, Number(deg), styleSheetId);
-      appendClass(clsName, cls);
-      return clsName;
+      if (loading.get(clsName)) {
+        return false;
+      } else {
+        loading.set(clsName, 1);
+        const cls: string = await getClassString(type, Number(deg), styleSheetId);
+        appendClass(clsName, cls);
+        loading.delete(clsName);
+        return clsName;
+      }
     } else {
       return classList.get(clsName) || `auto-0-${styleSheetId}`;
     }
@@ -75,19 +81,17 @@ function styleSheetController(): StyleSheetController {
   async function getClassString(type: string, deg: number, id: string) {
     let src: string = getBase64ByType.get(type) || auto;
     const result = await rotateBase64Image(src, deg);
-    console.log();
-    
     let str = `.${type}-${deg}-${id} {`;
     if (result) {
       src = (result as string);
       if (type === 'auto') {
-        str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto;`;
+        str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto !important;`;
       } else if (type === 'grab') {
-        str += 'cursor: grab';
+        str += 'cursor: grab !important;';
       } else if (type === 'grabbing') {
-        str += 'cursor: grabbing';
+        str += 'cursor: grabbing !important;';
       } else {
-        str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0]} ${hot[1]}, auto;`;
+        str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0]} ${hot[1]}, auto !important;`;
       }
     }
     str += '}'
@@ -113,6 +117,7 @@ function rotateBase64Image(base64Image: string, angle: number) {
     image.onload = function () {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
+      if (!context) reject('canvas api error');
       const radians = angle * Math.PI / 180;
       const cos = Math.abs(Math.cos(radians));
       const sin = Math.abs(Math.sin(radians));
@@ -120,9 +125,9 @@ function rotateBase64Image(base64Image: string, angle: number) {
       const height = image.width * sin + image.height * cos;
       canvas.width = width;
       canvas.height = height;
-      context?.translate(width / 2, height / 2);
-      context?.rotate(radians);
-      context?.drawImage(image, -image.width / 2, -image.height / 2);
+      context!.translate(width / 2, height / 2);
+      context!.rotate(radians);
+      context!.drawImage(image, -image.width / 2, -image.height / 2);
       const rotatedBase64Image = canvas.toDataURL('image/png');
       resolve(rotatedBase64Image);
     };
@@ -132,6 +137,7 @@ function rotateBase64Image(base64Image: string, angle: number) {
   });
 }
 function findNearestMultipleOf(num: number, step?: number): number {
+  if (num < 0) num = num + 360;
   step = step || 3
   let closest = Math.round(num / step) * step;
   if (closest < num) {
