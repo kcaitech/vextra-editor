@@ -1,15 +1,34 @@
-import { ImageShape } from "@kcdesign/data";
-import { render as borderR } from "@/render/image-border";
+import { ImageShape, objectId } from "@kcdesign/data";
+import { render as borderR } from "@/render/border";
+import { render as clippathR } from "./clippath"
 
 export function render(h: Function, shape: ImageShape, url: string, reflush?: number) {
     if (!shape.isVisible) return;
     const frame = shape.frame;
-    const props: any = {}
 
+    const path = shape.getPath(true).toString();
+    const id = "clippath-image-" + objectId(shape);
+    const cp = clippathR(h, shape, id, path);
+    const childs = [cp];
+
+    const img = h("image", {
+        'xlink:href': url,
+        width: frame.width,
+        height: frame.height,
+        x: 0,
+        y: 0,
+        'preserveAspectRatio': 'none meet',
+        "clip-path": "url(#" + id + ")"
+    });
+    childs.push(img);
+
+    // border
+    childs.push(...borderR(h, shape, path));
+
+    const props: any = {}
     props.width = frame.width;
     props.height = frame.height;
-
-    if (shape.isFlippedHorizontal || shape.isFlippedVertical || shape.rotation) {
+    if (!shape.isNoTransform()) {
         const cx = frame.x + frame.width / 2;
         const cy = frame.y + frame.height / 2;
         const style: any = {}
@@ -25,13 +44,5 @@ export function render(h: Function, shape: ImageShape, url: string, reflush?: nu
     }
     if (reflush) props.reflush = reflush;
 
-    const path = shape.getPath(true).toString();
-    const childs = [...borderR(h, shape, path, url)];
-    if (childs.length) {
-        return h("g", props, childs);
-    } else {
-        props['xlink:href'] = url;
-        props['preserveAspectRatio'] = "none meet";
-        return h("image", props);
-    }
+    return h("g", props, childs);
 }

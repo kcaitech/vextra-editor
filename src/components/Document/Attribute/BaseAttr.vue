@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed, shallowRef } from 'vue'
-import { Shape, ShapeType, RectShape } from '@kcdesign/data';
+import { Shape, ShapeType, RectShape, ImageShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
@@ -122,8 +122,8 @@ function check_mixed() {
     isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!
 }
 function getRectShapeAttr(shape: Shape) {
-    points.value = (shape as RectShape).pointsCount || 0;
-    radius.value = (shape as RectShape).getRadius();
+    points.value = (shape as RectShape || ImageShape).pointsCount || 0;
+    radius.value = (shape as RectShape || ImageShape).getRectRadius();
 }
 function onChangeX(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
@@ -297,7 +297,7 @@ function adapt() {
         editor.value.adapt();
     }
 }
-const RADIUS_SETTING = [ShapeType.Rectangle, ShapeType.Artboard];
+const RADIUS_SETTING = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
 const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
 function layout() {
     if (len.value === 1) {
@@ -306,7 +306,7 @@ function layout() {
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
         shapeType.value = shape.type;
-        if (shapeType.value === ShapeType.Rectangle) {
+        if (shapeType.value === ShapeType.Rectangle || shapeType.value === ShapeType.Image) {
             getRectShapeAttr(shape);
         }
     }
