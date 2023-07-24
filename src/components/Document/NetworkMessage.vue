@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const props = defineProps<{
     saveSuccess?: boolean
     networkSuccess?: boolean
@@ -11,17 +13,17 @@ const props = defineProps<{
 
 <template>
     <div class="network_error_message" v-if="networkError">
-        <span style="margin-right: 10px;">网络异常，请勿刷新页面或关闭文档，以免内容丢失，文档尝试保存中…</span>
+        <span style="margin-right: 10px;">{{ t('massage.network_error') }}</span>
         <div class="loading-spinner"><svg-icon icon-class="network-loading"></svg-icon></div>
     </div>
     <div class="network_error_message" v-else-if="saveSuccess">
-        <span>文档自动保存成功</span>
+        <span>{{t('massage.autosave')}}</span>
     </div>
     <div class="network_error_message" v-if="networkSuccess">
-        <span>网络连接成功</span>
+        <span>{{t('massage.link_success')}}</span>
     </div>
     <div class="network_error_message" v-if="netError">
-        <span>网络连接失败</span>
+        <span>{{t('massage.network_anomaly')}}</span>
     </div>
 </template>
 
