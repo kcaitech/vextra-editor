@@ -97,7 +97,7 @@ export class Tunnel {
 
     receiveFromServer(cmdData: ServerCmd) {
         switch (cmdData.cmd_type) {
-            case ServerCmdType.CmdReturn:
+            case ServerCmdType.CmdReturn: {
                 const cmdId = cmdData.data?.cmd_id
                 if (typeof cmdId !== "string" || cmdId === "") return;
                 if (!this.pendingCmdList.has(cmdId)) return;
@@ -108,10 +108,12 @@ export class Tunnel {
                     data: cmdData.data,
                 })
                 break
-            case ServerCmdType.CloseTunnel:
+            }
+            case ServerCmdType.CloseTunnel: {
                 this.close()
                 break
-            case ServerCmdType.TunnelData:
+            }
+            case ServerCmdType.TunnelData: {
                 const dataType = cmdData.data?.data_type
                 if (dataType !== DataType.Text && dataType !== DataType.Binary) {
                     console.log("不支持的数据类型", dataType)
@@ -125,8 +127,10 @@ export class Tunnel {
                     data: cmdData.data.data,
                 })
                 break
-            default:
+            }
+            default: {
                 console.log("不支持的cmd_type", cmdData.cmd_type)
+            }
         }
     }
 

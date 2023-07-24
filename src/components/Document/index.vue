@@ -25,7 +25,7 @@ import { measure } from '@/layout/text/measure';
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
 import e from 'express';
 import { ResponseStatus } from "@/communication/modules/doc_upload";
-import { S3Storage } from "@/utils/storage";
+import { S3Storage, StorageOptions } from "@/utils/storage";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -330,7 +330,7 @@ const getDocumentInfo = async () => {
         // documentKey.value = data
 
         const repo = new Repository();
-        const importDocumentParams = {
+        const importDocumentParams: StorageOptions = {
             endPoint: STORAGE_URL,
             region: "zhuhai-1",
             accessKey: data.access_key,
