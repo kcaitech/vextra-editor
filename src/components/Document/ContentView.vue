@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
 import { Context } from '@/context'; // 状态顶层 store
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace'; // workspace
@@ -123,8 +123,13 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
         }
     }
     search_once(e) // 滚动过程进行常规图形检索
+    workspace.value.pageDragging(true);
     workspace.value.matrixTransformation();
+    de_freeze();
 }
+const de_freeze = debounce(() => {
+    workspace.value.pageDragging(false);
+}, 50)
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
@@ -451,7 +456,7 @@ function shapeCreateEnd() { // 造图结束
         } else if (newShape.type === ShapeType.Artboard) { // 容器创建需要收束
             const childs = collect(props.context);
             const page = props.context.selection.selectedPage;
-            if (page && asyncCreator) asyncCreator.collect(page, childs, props.context.selection.selectedShapes[0]);
+            if (page && asyncCreator) asyncCreator.collect(page, childs, props.context.selection.selectedShapes[0] as Artboard);
         }
         removeCreator();
         newShape = undefined;
