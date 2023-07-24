@@ -9,14 +9,15 @@ export class Ot extends Communication {
     private versionId: string = ""
     private coopLocal?: CoopLocal
 
-    private constructor(documentId: string) {
+    private constructor(documentId: string, versionId: string) {
         super(TunnelType.DocOp, {
             document_id: documentId,
+            version_id: versionId,
         })
     }
 
     public static Make(documentId: string, token: string, document: Document, repo: CoopRepository, versionId: string): Ot {
-        const ot = new Ot(documentId)
+        const ot = new Ot(documentId, versionId)
         ot.token = token
         ot.document = document
         ot.repo = repo
