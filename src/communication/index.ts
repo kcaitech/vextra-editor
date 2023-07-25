@@ -10,6 +10,10 @@ import {
     TunnelTypeStr
 } from "./types"
 
+declare const COMMUNICATION_WORKER_CONTENT: string
+const workerBlob = new Blob([COMMUNICATION_WORKER_CONTENT], { type: "text/javascript" });
+const workerScript = URL.createObjectURL(workerBlob);
+
 export class Communication {
     protected info: CommunicationInfo
     protected worker: SharedWorker | undefined = undefined
@@ -38,7 +42,7 @@ export class Communication {
 
     public async start(token: string): Promise<boolean> {
         // todo 关闭已开启的连接
-        this.worker = new SharedWorker("worker.js")
+        this.worker = new SharedWorker(workerScript)
         const port = this.worker.port
         this.info.name = uuid()
         this.info.id = ""

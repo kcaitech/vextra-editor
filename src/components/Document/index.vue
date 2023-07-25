@@ -25,7 +25,7 @@ import { measure } from '@/layout/text/measure';
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
 import e from 'express';
 import { ResponseStatus } from "@/communication/modules/doc_upload";
-import { S3Storage } from "@/utils/storage";
+import { S3Storage, StorageOptions } from "@/utils/storage";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -331,7 +331,7 @@ const getDocumentInfo = async () => {
         // documentKey.value = data
 
         const repo = new Repository();
-        const importDocumentParams = {
+        const importDocumentParams: StorageOptions = {
             endPoint: STORAGE_URL,
             region: "zhuhai-1",
             accessKey: data.access_key,
@@ -340,7 +340,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(new S3Storage(importDocumentParams), path, "", "", repo, measure)
+        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo, measure)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
@@ -369,7 +369,7 @@ const getDocumentInfo = async () => {
                     switchPage(context.data.pagesList[0]?.id);
                     loading.value = false;
                 });
-            await context.communication.resource_upload.start(docId, token);
+            await context.communication.resourceUpload.start(docId, token);
             await context.communication.comment.start(docId, token);
             context.communication.comment.onUpdated = (comment: any) => {
                 // todo 前端对接视图更新
@@ -387,13 +387,13 @@ const getDocumentInfo = async () => {
 async function upload() {
     const token = localStorage.getItem("token");
     if (!token || !context || !context.data) return;
-    if (!await context.communication.doc_upload.start(token)) {
+    if (!await context.communication.docUpload.start(token)) {
         // todo 上传失败处理
         return;
     }
     let result;
     try {
-        result = await context.communication.doc_upload.upload(context.data);
+        result = await context.communication.docUpload.upload(context.data);
     } catch (e) {
         // todo 上传失败处理
         return;
@@ -407,9 +407,10 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
+    context!.data.versionId = result!.data.version_id;
     ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, context!.data.versionId ?? "");
     ot.start();
-    context!.communication.resource_upload.start(doc_id, token);
+    context!.communication.resourceUpload.start(doc_id, token);
     context!.communication.comment.start(doc_id, token);
     context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
@@ -455,7 +456,7 @@ onMounted(() => {
 onUnmounted(() => {
     try {
         ot?.close();
-        context?.communication.resource_upload.close();
+        context?.communication.resourceUpload.close();
         context?.communication.comment.close();
     } catch (err) { }
     window.document.title = t('product.name');
