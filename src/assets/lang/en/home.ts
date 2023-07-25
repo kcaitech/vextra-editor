@@ -280,6 +280,15 @@ export const comment = {
 export const clipboard = {
     'invalid_data': 'invalid data'
 }
+
+export const bool = {
+    union: 'Union set',
+    subtract: 'Minus the top',
+    intersection: 'intersection',
+    difference: 'Difference set',
+    cohere: 'cohere'
+}
+
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';

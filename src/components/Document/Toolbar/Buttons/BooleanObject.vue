@@ -1,8 +1,8 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { ref, nextTick, onUpdated } from 'vue';
 import ToolButton from '../ToolButton.vue';
-import { Action } from '@/context/workspace';
 import DropSelect from "./DropSelect.vue"
+import { BoolOp } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
@@ -11,26 +11,23 @@ type Button = InstanceType<typeof ToolButton>
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
-const selected = ref<Action>(Action.AutoV);
-const selects = ref<Action>(Action.AutoV);
 const visible = ref(false)
-const props = defineProps<{
-  active: boolean,
-  d: Action
-}>();
+const selectBool = ref('union')
+const boolType = ref(BoolOp.Union)
 const emit = defineEmits<{
-  (e: "select", action: Action): void;
+  (e: "changeBool", type: BoolOp): void;
 }>();
-function select(action: Action) {
-  emit('select', action);
-}
 
-const patterns = ((items: [string, Action, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2] }))))([
-  ['object_selector', Action.AutoV, 'V'],
-  ['scale', Action.AutoK, 'K']
+const patterns = ((items: [string, any, BoolOp][]) => (items.map(item => ({ value: item[0], content: item[1], bool: item[2]}))))([
+    ['union', 'union', BoolOp.Union],
+    ['subtract', 'subtract', BoolOp.Subtract],
+    ['intersection', 'intersection', BoolOp.Intersect],
+    ['difference','difference', BoolOp.Diff],
+    ['cohere', 'cohere', BoolOp.None]
 ]);
 
-function showMenu() {
+function showMenu(e: MouseEvent) {
+    e.stopPropagation()
   if (popoverVisible.value) return popoverVisible.value = false;
   if (button.value?.toolButtonEl) {
     const el = button.value?.toolButtonEl;
@@ -47,10 +44,11 @@ function showMenu() {
   }
 }
 
-const selector = (active: Action) => {
-  selected.value = active
-  emit('select', active);
-  popoverVisible.value = false;
+const selector = (active: string, type: BoolOp) => {
+    selectBool.value = active
+    boolType.value = type
+    popoverVisible.value = false;
+    emit('changeBool', type);
 }
 
 function onMenuBlur(e: MouseEvent) {
@@ -75,43 +73,37 @@ const onMouseleave = () => {
   visible.value = false
 }
 
+const changeBool = () => {
+    emit('changeBool', boolType.value);
+}
+
 onUpdated(() => {
-  if (props.d === Action.AutoV || props.d === Action.AutoK) {
-    if (props.d === Action.AutoV) {
-      selects.value = props.d
-    } else {
-      selects.value = props.d
-    }
 
-  }
 })
-
 </script>
 
 <template>
-  <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-    <template v-for="item in patterns" :key="item.value">
-      <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content" type="cursor"></DropSelect>
-    </template>
-
+     <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+        <template v-for="(item, index) in patterns" :key="item.value">
+            <div class="line" v-if="index === 4"></div>
+            <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool" :d="selectBool"></DropSelect>
+        </template>
   </div>
   <el-tooltip class="box-item" effect="dark"
-    :content="props.d === Action.AutoV ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
-    placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-      <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
+    :content="t(`bool.${selectBool}`)" placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
+      <ToolButton ref="button" @click="changeBool" :selected="false" @mouseenter.stop="onMouseenter"
         @mouseleave.stop="onMouseleave">
         <div class="svg-container">
-          <!-- <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon> -->
-          <svg-icon icon-class="cursor"></svg-icon>
+            <svg-icon :icon-class="selectBool"></svg-icon>
         </div>
-        <!-- <div class="menu" @click="showMenu">
+        <div class="menu" @click="showMenu">
           <svg-icon icon-class="down"></svg-icon>
-        </div> -->
+        </div>
       </ToolButton>
-    </el-tooltip>
+    </el-tooltip >
 </template>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .svg-container {
   width: 28px;
   height: 28px;
@@ -157,5 +149,14 @@ onUpdated(() => {
   border-radius: 4px;
   outline: none;
   padding: var(--default-padding-half) 0;
+  .line {
+        width: 100%;
+        height: 11px;
+        border-width: 5px 0 5px 0;
+        border-style: solid;
+        border-color: var(--theme-color);
+        box-sizing: border-box;
+        background-color: rgba(255, 255, 255, .5)
+    }
 }
 </style>

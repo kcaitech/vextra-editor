@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
-import { Shape, ShapeType, GroupShape, Artboard } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, Artboard, BoolOp } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
@@ -11,21 +11,31 @@ import { debounce } from 'lodash';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
+import BooleanObject from "./Buttons/BooleanObject.vue"
 const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const NOGROUP = 0;
 const GROUP = 1;
 const UNGROUP = 2;
+const isBoolGroup = ref(false)
 const state = ref(0);
 function _updater(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
         state.value = 0;
         const selection = props.selection;
         const shapes = selection.selectedShapes;
+        console.log(shapes,'shapes');
+        
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
+            isBoolGroup.value = false
         } else if (shapes.length === 1) {
             const type = shapes[0].type;
+            if(type === ShapeType.FlattenShape) {
+                isBoolGroup.value = true
+            }else {
+                isBoolGroup.value = false
+            }
             if (type === ShapeType.Group || type === ShapeType.Artboard) {
                 state.value = state.value ^ UNGROUP;
                 state.value = state.value ^ GROUP;
@@ -33,6 +43,7 @@ function _updater(t?: number) {
                 state.value = state.value ^ GROUP;
             }
         } else {
+            isBoolGroup.value = true
             const groups = shapes.filter(s => s.type === ShapeType.Group || s.type === ShapeType.Artboard);
             if (groups.length) {
                 state.value = state.value ^ UNGROUP;
@@ -136,32 +147,43 @@ const ungroupClick = () => {
         }
     }
 }
+
+const changeBoolgroup = (type: BoolOp) => {
+    const selection = props.selection;
+    const shapes = selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if(shapes.length && page) {
+        const editor = props.context.editor4Page(page)
+        editor.boolgroup(shapes, type, type)        
+    }
+}
+
 </script>
 
 <template>
     <div class="container">
         <div class="vertical-line"></div>
-            <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5">
-                <div class="group">
-                    <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
-                        :class="{ active: state & GROUP }">
-                        <svg-icon icon-class="group"></svg-icon>
-                    </ToolButton>
-                </div>
-            </Tooltip>
-            <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
-                <div class="group">
-                    <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
-                        <svg-icon icon-class="ungroup"></svg-icon>
-                    </ToolButton>
-                </div>
-            </Tooltip>
+        <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5">
+            <div class="group">
+                <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
+                    :class="{ active: state & GROUP }">
+                    <svg-icon icon-class="group"></svg-icon>
+                </ToolButton>
+            </div>
+        </Tooltip>
+        <BooleanObject @changeBool="changeBoolgroup" v-if="isBoolGroup"></BooleanObject>
+        <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
+            <div class="group">
+                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
+                    <svg-icon icon-class="ungroup"></svg-icon>
+                </ToolButton>
+            </div>
+        </Tooltip>
     </div>
 </template>
 
 <style scoped lang="scss">
 .container {
-    width: 80px;
     height: 40px;
     display: flex;
     justify-content: center;
@@ -172,7 +194,7 @@ const ungroupClick = () => {
         flex-direction: row;
         align-items: center;
         height: 100%;
-        width: 40px;
+        width: 34.5px;
 
         >div {
             height: 100%;

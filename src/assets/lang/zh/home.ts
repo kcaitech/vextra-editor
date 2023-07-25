@@ -280,6 +280,15 @@ export const comment = {
 export const clipboard = {
     'invalid_data': '该内容无法解析'
 }
+
+export const bool = {
+    union: '联集',
+    subtract: '减去顶层',
+    intersection: '交集',
+    difference: '差集',
+    cohere: '拼合'
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';
