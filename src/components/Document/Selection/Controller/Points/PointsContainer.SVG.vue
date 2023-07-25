@@ -70,6 +70,8 @@ function point_mousemove(event: MouseEvent) {
       const { x: mx, y: my } = mouseOnClient;
       const { x: ax, y: ay } = props.axle;
       deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
+      if (props.shape.isFlippedHorizontal) deg = -deg;
+      if (props.shape.isFlippedVertical) deg = -deg
       aType = 'rotate';
     }
     if (asyncBaseAction) {
@@ -190,7 +192,7 @@ onUnmounted(() => {
         @mouseleave="point_mouseleave">
       </rect>
       <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px"
-        :fill="p.type === CtrlElementType.RectLT ? 'red' : '#ffffff'" stroke='#865dff' stroke-width="1.5px" rx="4px"
+        fill="#ffffff" stroke='#865dff' stroke-width="1.5px" rx="4px"
         ry="4px" @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
         @mouseleave="point_mouseleave"></rect>
     </g>

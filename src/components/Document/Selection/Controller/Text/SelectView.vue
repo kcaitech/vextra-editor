@@ -116,15 +116,15 @@ function cursor_tracking(p0: { x: number, y: number }, p1: { x: number, y: numbe
     const matrix = props.context.workspace.matrix;
     let dx = 0, dy = 0;
     if (p0.x > root.right - root.x) {
-        dx = -(p0.x - (root.right - root.x)) - 16;
+        dx = -(p0.x - (root.right - root.x)) - 24;
     } else if (p0.x < 0) {
-        dx = -p0.x + 12;
+        dx = -p0.x + 24;
     }
     if (p1.y > root.bottom - root.y) {
-        dy = -(p1.y - (root.bottom - root.y)) - 16;
+        dy = -(p1.y - (root.bottom - root.y)) - 24;
     }
     if (p0.y < 0) {
-        dy = -p0.y + 12;
+        dy = -p0.y + 24;
     }
     if (dx || dy) {
         matrix.trans(dx, dy);
