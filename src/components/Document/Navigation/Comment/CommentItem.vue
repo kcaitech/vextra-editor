@@ -29,6 +29,7 @@ const comment = computed(() => props.context.comment);
 const reply = ref(props.context.selection.commentStatus)
 const myComment = ref(props.context.selection.commentAboutMe)
 const aboutMe = ref(false)
+const pageName = ref()
 const resolve = computed(() => {
     return props.commentItem.status === 0 ? true : false
 })
@@ -100,7 +101,6 @@ const hoverShape = (e: MouseEvent) => {
     hoverIcon.value = true
     hoverComment.value = true
 }
-const page = ref<Page>()
 const unHoverShape = (e: MouseEvent) => {
     hoverIcon.value = false
     hoverComment.value = false
@@ -198,13 +198,12 @@ const filterDate = (time: string) => {
   return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-const getPage = () => {
-    const p = props.context.data
-    p.pagesMgr.get(props.pageId).then((p: Page | undefined) => {
-        if(!p) return
-            page.value = p
-    })
+const getPageName = () => {
+    const pages = props.context.data.pagesList
+    const name = pages.find(item => item.id === props.pageId)?.name
+    pageName.value = name
 }
+getPageName()
 
 const selectionUpdate = (t: number) => {
     if(t === Selection.SOLVE_MENU_STATUS) {
@@ -228,7 +227,6 @@ const commentUpdate = (t: number) => {
     }
 }
 
-getPage()
 onMounted(() => {
     props.context.selection.watch(selectionUpdate);
     props.context.comment.watch(commentUpdate);
@@ -273,7 +271,7 @@ onUnmounted(() => {
             <div class="text" v-html="commentItem.content"></div>
             <div class="bottom-info">
                 <div class="reply" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">{{replyNum}} {{ t('comment.a_few_reply') }}</div>
-                <div class="page">{{ page?.name }}</div>
+                <div class="page">{{ pageName }}</div>
             </div>
         </div>
     </div>

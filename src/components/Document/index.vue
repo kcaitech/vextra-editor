@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page, CoopRepository } from '@kcdesign/data';
+import { Document, importDocument, Repository, Page, CoopRepository } from '@kcdesign/data';
 import { Ot } from "@/communication/modules/ot";
 import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
@@ -129,8 +129,8 @@ function selectionWatcher(t: number) {
         }
     }
 }
-function keyboardEventHandler(evevt: KeyboardEvent) {
-    const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
+function keyboardEventHandler(event: KeyboardEvent) {
+    const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
     if (context) {
         if (code === 'Backslash') {
@@ -138,18 +138,19 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
-        if(context && context.workspace.documentPerm !== Perm.isEdit) {
-            if(permKeyBoard(evevt)) {
-                context.workspace.keyboardHandle(evevt); // 只读可评论的键盘事件
+        if (context && context.workspace.documentPerm !== Perm.isEdit) {
+            if (permKeyBoard(event)) {
+                context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
             }
-        }else {
-            context.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
+        } else {
+            context.workspace.keyboardHandle(event); // 编辑器相关的键盘事件
+            context.tool.keyhandle(event);
         }
     }
 }
 const permKeyBoard = (e: KeyboardEvent) => {
     const { code, ctrlKey, metaKey, shiftKey } = e;
-    if(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
+    if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
     else false
 }
 
@@ -210,7 +211,7 @@ function keyToggleTB() {
 
 //只读权限隐藏右侧属性栏
 watchEffect(() => {
-    if(isRead.value || canComment.value) {
+    if (isRead.value || canComment.value) {
         Right.value.rightMin = 0
         Right.value.rightWidth = 0
         Right.value.rightMinWidth = 0
@@ -245,12 +246,12 @@ const getDocumentAuthority = async () => {
                 showNotification(data.data.perm_type)
             }
         }
-        if(data.data.perm_type === 1) {
+        if (data.data.perm_type === 1) {
             isRead.value = true
-        }else if(data.data.perm_type === 2) {
+        } else if (data.data.perm_type === 2) {
             isRead.value = false
             canComment.value = true
-        }else if(data.data.perm_type === 3) {
+        } else if (data.data.perm_type === 3) {
             isRead.value = false
             canComment.value = false
             isEdit.value = true
@@ -370,6 +371,10 @@ const getDocumentInfo = async () => {
                 });
             await context.communication.resourceUpload.start(docId, token);
             await context.communication.comment.start(docId, token);
+            context.communication.comment.onUpdated = (comment: any) => {
+                // todo 前端对接视图更新
+                console.log("收到评论更新", comment)
+            }
         }
         getUserInfo()
     } catch (err) {

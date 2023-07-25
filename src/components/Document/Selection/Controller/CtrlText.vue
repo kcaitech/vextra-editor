@@ -58,9 +58,8 @@ function _update() {
     ];
 
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
-    if (editing) {
-        boundrectPath.value = genRectPath(boundrect);
-    }
+    boundrectPath.value = genRectPath(boundrect);
+    props.context.workspace.setCtrlPath(boundrectPath.value);
     const p0 = boundrect[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -88,9 +87,12 @@ function onMouseDown(e: MouseEvent) {
         const workspace = props.context.workspace;
         props.context.menu.menuMount();
         if (!editing && isDblClick()) {
+            if (props.context.navi.focusText) {
+                props.context.navi.set_focus_text();
+            }
             editing = true;
             workspace.contentEdit(editing);
-            workspace.setCursorStyle('text', 0);
+            props.context.cursor.setType('scan-0');
         }
         if (!editing) return;
         const selection = props.context.selection;
@@ -113,7 +115,7 @@ function be_editor(index?: number) {
     const selection = props.context.selection;
     editing = true;
     workspace.contentEdit(editing);
-    workspace.setCursorStyle('text', 0);
+    props.context.cursor.setType('scan-0');
     if (index !== undefined) {
         downIndex = { index, before: true };
         selection.setCursor(index, true);
@@ -161,11 +163,11 @@ function onMouseMove(e: MouseEvent) {
 }
 function mouseenter() {
     if (editing) {
-        props.context.workspace.setCursorStyle('text', 0);
+        props.context.cursor.setType('scan-0');
     }
 }
 function mouseleave() {
-    props.context.workspace.resetCursor();
+    props.context.cursor.reset();
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
@@ -200,6 +202,7 @@ onUnmounted(() => {
     props.shape.unwatch(update);
     selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.cursor.reset();
 })
 onBeforeUnmount(() => {
     if (props.shape.text.length === 1) {

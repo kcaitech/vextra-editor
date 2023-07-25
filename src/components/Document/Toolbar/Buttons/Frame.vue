@@ -3,7 +3,8 @@ import { ref, nextTick } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { useI18n } from 'vue-i18n';
 import FrameChild from './FrameChild.vue'
-import { Action, WorkSpace } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
 import Tooltip from '@/components/common/Tooltip.vue';
 type Button = InstanceType<typeof ToolButton>
 

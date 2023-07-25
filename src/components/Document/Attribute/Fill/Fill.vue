@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, TextShape, ShapeType, AttrGetter } from "@kcdesign/data";
+import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, TextShape, ShapeType, AttrGetter, Artboard } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -60,10 +60,18 @@ function updateData() {
     if (len.value === 1) {
         const shape = props.shapes[0];
         const style = shape.style;
-        for (let i = 0, len = style.fills.length; i < len; i++) {
-            const fill = style.fills[i];
-            const f = { id: i, fill };
-            fills.unshift(f);
+        if (shape.type === ShapeType.Artboard) {
+            const _f = style.fills[0];
+            if (_f) {
+                const f = { id: 0, fill: _f };
+                fills.unshift(f);
+            }
+        } else {
+            for (let i = 0, len = style.fills.length; i < len; i++) {
+                const fill = style.fills[i];
+                const f = { id: i, fill };
+                fills.unshift(f);
+            }
         }
     } else if (len.value > 1) {
         const _fs = get_fills(props.shapes);
@@ -235,12 +243,12 @@ function selection_wather(t: any) {
 }
 
 const selectColor = (id: number) => {
-    if(colorFill.value) {
+    if (colorFill.value) {
         colorFill.value[id].select()
     }
 }
 const selectAlpha = (id: number) => {
-    if(alphaFill.value) {
+    if (alphaFill.value) {
         alphaFill.value[id].select()
     }
 }
@@ -248,7 +256,7 @@ const filterAlpha = (a: number) => {
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
         return alpha.toFixed(0); // 返回整数形式
-    }else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
         return alpha.toFixed(1); // 保留一位小数
     } else {
         return alpha.toFixed(2); // 保留两位小数
@@ -286,11 +294,11 @@ watchEffect(updateData);
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" @change="c => getColorFromPicker(idx, c)">
                     </ColorPicker>
-                    <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
-                        @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"/>
+                    <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
+                        :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" />
                     <!-- <input ref="alphaFill" style="text-align: center;" :value="(f.fill.color.alpha * 100).toFixed(0) + '%'"
                         @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" /> -->
-                        <input ref="alphaFill" style="text-align: center;" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
+                    <input ref="alphaFill" style="text-align: center;" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
                         @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" />
                 </div>
                 <div style="width: 22px;"></div>

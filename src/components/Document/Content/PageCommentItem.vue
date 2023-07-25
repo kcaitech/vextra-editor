@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
-import { WorkSpace, Action } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import HoverComment from './HoverComment.vue'
 import CommentPopup from './CommentPopup.vue'
 import { Matrix, Shape, ShapeType } from "@kcdesign/data";
@@ -260,7 +261,7 @@ const workspaceUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin()
     }
-    action.value = workspace.value.action;
+    action.value = props.context.tool.action;
 }
 
 const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
@@ -285,21 +286,21 @@ const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
 
 const docComment = (comment: DocCommentOpData) => {
     const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
-    if(comment.type === DocCommentOpType.Update) {
-        if(index != -1) {
+    if (comment.type === DocCommentOpType.Update) {
+        if (index != -1) {
             documentCommentList.value[index] = {
                 ...documentCommentList.value[index],
                 ...comment.comment
             }
             props.context.comment.sendComment()
         }
-    }else if (comment.type === DocCommentOpType.Del) {
-        if(index != -1) {
+    } else if (comment.type === DocCommentOpType.Del) {
+        if (index != -1) {
             documentCommentList.value.splice(index, 1)
             props.context.comment.sendComment()
         }
-    }else if (comment.type === DocCommentOpType.Add) {
-        if(comment.comment.root_id) {
+    } else if (comment.type === DocCommentOpType.Add) {
+        if (comment.comment.root_id) {
             documentCommentList.value.push(comment.comment)
             props.context.comment.sendComment()
             documentCommentList.value = [...documentCommentList.value]
@@ -392,7 +393,7 @@ function watchShapes() { // 监听评论相关shape的变化
 
 const update = (shape?: Shape) => {
     watcher()
-    if(!shape) return
+    if (!shape) return
     emit('updateShapeComment', props.index)
     props.context.comment.editShapeComment(true, [shape])
 }

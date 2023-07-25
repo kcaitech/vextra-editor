@@ -41,7 +41,6 @@ function mouseout() {
   .item {
     height: 28px;
     width: 100%;
-    background-color: var(--theme-color);
     color: var(--theme-color-anti);
     box-sizing: border-box;
     padding: 0 var(--default-padding);

@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection';
-import { onMounted, onUnmounted, ref, watch, watchEffect, nextTick } from 'vue';
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
-import { setToolGroup } from "@/utils/pageview";
 import ShapeTitles from './ShapeTitles.vue';
 const props = defineProps<{
     context: Context,
@@ -28,34 +26,6 @@ function pageViewRegister(mount: boolean) {
     }
     props.context.workspace.setPageViewId(rootId.value);
 }
-function updateRenderItems(t?: number) {
-    if (t === Selection.CHANGE_SHAPE) {
-        updateItems();
-    }
-}
-function updateItems() {
-    // const selection = props.context.selection;
-    // const workspace = props.context.workspace;
-    // const shapes = selection.selectedShapes;
-    // const len = shapes.length;
-    // if (len > 1) {
-    //     const editor = props.context.editor.editor4Page(props.data);
-    //     const toolGroup = editor.createGroup();
-    //     toolGroup.childs.push(...shapes);
-    //     toolGroup.id = 'tool-group';
-    //     renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
-    //     nextTick(() => { setToolGroup(props.context) });
-    // } else {
-    //     if (renderItems.length) {
-    //         if (renderItems[0].id === 'tool-group') {
-    //             workspace.toolGroupUnmount();
-    //         }
-    //     }
-    //     renderItems = props.data.childs;
-    // }
-    renderItems = props.data.childs;
-    reflush.value++;
-}
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
@@ -63,18 +33,16 @@ watchEffect(() => {
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
-    pageViewRegister(true);    
+    pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onMounted(() => {
     props.data.watch(watcher);
-    props.context.selection.watch(updateRenderItems);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
-    props.context.selection.unwatch(updateRenderItems);
     pageViewRegister(false);
     stopWatchPage();
     renderItems = [];
@@ -97,6 +65,5 @@ onUnmounted(() => {
 svg {
     position: absolute;
     transform-origin: top left;
-    background-color: var(--center-content-bg-color);
 }
 </style>

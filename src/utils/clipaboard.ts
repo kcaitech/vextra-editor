@@ -5,9 +5,10 @@ import {
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
-import { Media, Action } from '@/context/workspace';
+import { Media } from '@/context/workspace';
 import { getName } from '@/utils/content';
 import { message } from './message';
+import { Action } from '@/context/tool';
 interface SystemClipboardItem {
     type: ShapeType
     contentType: string
@@ -484,7 +485,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
         selection.selectShape(new_shape);
         context.communication.resourceUpload.upload(new_shape.imageRef, media.buff.buffer.slice(0));
     }
-    workspace.setAction(Action.AutoV);
+    context.tool.setAction(Action.AutoV);
     workspace.creating(false);
 }
 /**
@@ -507,7 +508,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
         asyncCreator = asyncCreator.close();
         selection.selectShape(new_shape);
     }
-    workspace.setAction(Action.AutoV);
+    context.tool.setAction(Action.AutoV);
     workspace.creating(false);
 }
 // 不经过剪切板，直接复制(Shape[])
