@@ -1,4 +1,4 @@
-import { Color, Watchable } from "@kcdesign/data";
+import { Watchable } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
@@ -98,7 +98,6 @@ export class WorkSpace extends Watchable(Object) {
     private m_setting: boolean = false; // 是否正在设置属性
     private m_page_dragging: boolean = false; // 编辑器正在拖动页面
     private m_content_editing: boolean = false; // 编辑器正在内容编辑
-    private m_popover: boolean = false;
     private m_rootId: string = 'content';
     private m_pageViewId: string = 'pageview';
     private m_pre_to_translating: boolean = false;
@@ -106,7 +105,6 @@ export class WorkSpace extends Watchable(Object) {
     private m_controller: 'page' | 'controller' = 'page';
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
     private m_document_perm: number = 3;
-    private m_tool_group: SVGAElement | undefined;
     private m_should_selection_view_update: boolean = true;
     private m_image: Media[] | undefined = undefined;
     private m_freeze: boolean = false;
@@ -168,9 +166,6 @@ export class WorkSpace extends Watchable(Object) {
     get select() {
         return this.m_selecting;
     }
-    get ispopover() { //xxx
-        return this.m_popover;
-    }
     get isTranslating() {
         return this.m_translating;
     }
@@ -182,9 +177,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     get isEditing() {
         return this.m_content_editing;
-    }
-    get toolGroup() {
-        return this.m_tool_group;
     }
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
@@ -233,9 +225,6 @@ export class WorkSpace extends Watchable(Object) {
     setSelectionViewUpdater(isWork: boolean) {
         this.m_should_selection_view_update = isWork;
     }
-    toolGroupMount(toolGroupMount: SVGAElement) {
-        this.m_tool_group = toolGroupMount;
-    }
     updateRoot(root: Root) {
         this.m_root = root;
     }
@@ -256,12 +245,6 @@ export class WorkSpace extends Watchable(Object) {
         } else {
             this.m_pre_to_translating = false;
             this.m_mousedown_on_page = undefined;
-        }
-    }
-    popoverVisible(visible: boolean) {
-        this.m_popover = visible;
-        if (!visible) {
-            this.notify(WorkSpace.SHUTDOWN_POPOVER);
         }
     }
     setRootId(id: string) {
