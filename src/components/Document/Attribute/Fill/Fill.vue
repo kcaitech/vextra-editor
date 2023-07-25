@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, TextShape, ShapeType, AttrGetter, Artboard } from "@kcdesign/data";
+import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, ShapeType } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -60,18 +60,10 @@ function updateData() {
     if (len.value === 1) {
         const shape = props.shapes[0];
         const style = shape.style;
-        if (shape.type === ShapeType.Artboard) {
-            const _f = style.fills[0];
-            if (_f) {
-                const f = { id: 0, fill: _f };
-                fills.unshift(f);
-            }
-        } else {
-            for (let i = 0, len = style.fills.length; i < len; i++) {
-                const fill = style.fills[i];
-                const f = { id: i, fill };
-                fills.unshift(f);
-            }
+        for (let i = 0, len = style.fills.length; i < len; i++) {
+            const fill = style.fills[i];
+            const f = { id: i, fill };
+            fills.unshift(f);
         }
     } else if (len.value > 1) {
         const _fs = get_fills(props.shapes);
@@ -90,7 +82,9 @@ function addFill(): void {
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const fill = new Fill(v4(), true, FillType.SolidColor, color, contextSettings);
     if (len.value === 1) {
-        editor.value.addFill(fill);
+        const s = props.context.selection.selectedShapes[0];
+        const e = props.context.editor4Shape(s);
+        e.addFill(fill);
     } else if (len.value > 1) {
         if (mixed.value) {
             const actions = get_actions_fill_unify(props.shapes);
@@ -110,9 +104,7 @@ function addFill(): void {
     }
 }
 function first() {
-    if (fills.length === 0 && !mixed.value) {
-        addFill();
-    }
+    if (fills.length === 0 && !mixed.value) addFill();
 }
 function deleteFill(idx: number) {
     const _idx = fills.length - idx - 1;
