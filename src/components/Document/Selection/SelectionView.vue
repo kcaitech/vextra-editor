@@ -142,7 +142,7 @@ function createController() { // 计算控件点位以及类型判定
                 return p;
             });
             if (!permIsEdit(props.context)) {
-                controllerType.value = ControllerType.Preview;
+                controllerType.value = ControllerType.Readonly;
             } else if (shape.type === ShapeType.Line) { // 控件类型判定
                 controllerType.value = ControllerType.Line;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
@@ -182,13 +182,13 @@ function createController() { // 计算控件点位以及类型判定
             });
             rotate.value = 0; // 多选时，rect只为水平状态
             if (!permIsEdit(props.context)) {
-                controllerType.value = ControllerType.Preview;
+                controllerType.value = ControllerType.Readonly;
             } else {
                 controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
             }
         }
         controller.value = true;
-    }    
+    }
 }
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
