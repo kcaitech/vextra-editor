@@ -24,8 +24,8 @@ function _updater(t?: number) {
         state.value = 0;
         const selection = props.selection;
         const shapes = selection.selectedShapes;
-        console.log(shapes,'shapes');
-        
+        console.log(shapes,'shpaes');
+
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
             isBoolGroup.value = false
@@ -77,11 +77,10 @@ const groupClick = (alt?: boolean) => {
         props.context.workspace.setSelectionViewUpdater(false);
         const selection = props.selection;
         const shapes = selection.selectedShapes;
-        const page = selection.selectedPage;
+        const page = selection.selectedPage;        
         if (page) {
             if (shapes.length) {
                 const bro = Array.from(page.shapes.values());
-
                 const editor = props.context.editor4Page(page);
                 const shapes = sort_by_layer(props.context, props.context.selection.selectedShapes);
                 if (alt) {
@@ -148,13 +147,24 @@ const ungroupClick = () => {
     }
 }
 
-const changeBoolgroup = (type: BoolOp) => {
+const changeBoolgroup = (type: BoolOp, name: string) => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
+    const shapeType = shapes[0].type;
     if(shapes.length && page) {
-        const editor = props.context.editor4Page(page)
-        editor.boolgroup(shapes, type, type)        
+        if(shapes.length === 1 && shapeType === ShapeType.FlattenShape) {
+            const editor = props.context.editor4Shape(shapes[0])
+            editor.setBoolOp(type)
+        }else {
+            if(shapes[0].parent && shapes[0].parent.type === ShapeType.FlattenShape) {
+                const editor = props.context.editor4Shape(shapes[0].parent)
+                editor.setBoolOp(type)
+            }else {
+                const editor = props.context.editor4Page(page)
+                editor.boolgroup(shapes, name, type)  
+            }
+        }
     }
 }
 

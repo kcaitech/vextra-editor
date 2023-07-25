@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, nextTick, onUpdated } from 'vue';
+import { ref, nextTick, onUpdated, watch } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
 import { BoolOp } from '@kcdesign/data';
@@ -14,8 +14,9 @@ const button = ref<Button>();
 const visible = ref(false)
 const selectBool = ref('union')
 const boolType = ref(BoolOp.Union)
+const boolName = ref('Union')
 const emit = defineEmits<{
-  (e: "changeBool", type: BoolOp): void;
+  (e: "changeBool", type: BoolOp, name: string): void;
 }>();
 
 const patterns = ((items: [string, any, BoolOp][]) => (items.map(item => ({ value: item[0], content: item[1], bool: item[2]}))))([
@@ -44,11 +45,25 @@ function showMenu(e: MouseEvent) {
   }
 }
 
+watch(() => selectBool.value, (newV) => {
+  if(newV === 'union') {
+    boolName.value = 'Union'
+  }else if (newV === 'subtract') {
+    boolName.value = 'Subtract'
+  }else if (newV === 'intersection') {
+    boolName.value = 'Intersect'
+  }else if (newV === 'difference') {
+    boolName.value = 'Exclude'
+  }else if (newV === 'cohere') {
+    boolName.value = 'cohere'
+  }
+})
+
 const selector = (active: string, type: BoolOp) => {
     selectBool.value = active
     boolType.value = type
     popoverVisible.value = false;
-    emit('changeBool', type);
+    emit('changeBool', type, boolName.value);
 }
 
 function onMenuBlur(e: MouseEvent) {
@@ -74,7 +89,7 @@ const onMouseleave = () => {
 }
 
 const changeBool = () => {
-    emit('changeBool', boolType.value);
+    emit('changeBool', boolType.value, boolName.value);
 }
 
 onUpdated(() => {
