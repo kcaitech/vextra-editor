@@ -87,7 +87,6 @@ export class WorkSpace extends Watchable(Object) {
     static ITALIC = 30;
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
-    static CHANGE_BACKGROUND = 33;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
@@ -113,7 +112,6 @@ export class WorkSpace extends Watchable(Object) {
     private m_freeze: boolean = false;
     private m_clipboard: Clipboard;
     private m_t: Function = () => { };
-    private m_bgc: Color = new Color(1, 239, 239, 239);
     private m_controller_path: string = '';
     constructor(context: Context) {
         super();
@@ -194,18 +192,11 @@ export class WorkSpace extends Watchable(Object) {
     get isFreeze() {
         return this.m_freeze;
     }
-    get background() {
-        return this.m_bgc;
-    }
     get ctrlPath() {
         return this.m_controller_path;
     }
     setCtrlPath(val: string) {
         this.m_controller_path = val;
-    }
-    setBackground(color: Color) {
-        this.m_bgc = color;
-        this.notify(WorkSpace.CHANGE_BACKGROUND, color);
     }
     focusText() {
         this.notify(WorkSpace.TEXT_FORMAT)

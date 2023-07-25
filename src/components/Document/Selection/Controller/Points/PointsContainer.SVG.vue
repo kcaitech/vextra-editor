@@ -105,26 +105,43 @@ function setCursor(t: CtrlElementType, force?: boolean) {
   let deg = props.shape.rotation || 0;
   if (t === CtrlElementType.RectLT) {
     deg = deg + 45;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
     cursor.setType(`scale-${deg}`, force);
-  } else if (t === CtrlElementType.RectLTR) {
-    deg = deg + 180;
-    cursor.setType(`rotate-${deg}`, force);
   } else if (t === CtrlElementType.RectRT) {
     deg = deg + 135;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
     cursor.setType(`scale-${deg}`, force);
-  } else if (t === CtrlElementType.RectRTR) {
-    deg = deg + 270;
-    cursor.setType(`rotate-${deg}`, force);
   } else if (t === CtrlElementType.RectRB) {
     deg = deg + 45;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
     cursor.setType(`scale-${deg}`, force);
-  } else if (t === CtrlElementType.RectRBR) {
-    cursor.setType(`rotate-${deg}`, force);
   } else if (t === CtrlElementType.RectLB) {
     deg = deg + 135;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
     cursor.setType(`scale-${deg}`, force);
+  } else if (t === CtrlElementType.RectLTR) {
+    deg = deg + 225;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`rotate-${deg}`, force);
+  } else if (t === CtrlElementType.RectRTR) {
+    deg = deg + 315;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`rotate-${deg}`, force);
+  } else if (t === CtrlElementType.RectRBR) {
+    deg = deg + 45;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`rotate-${deg}`, force);
   } else if (t === CtrlElementType.RectLBR) {
-    deg = deg + 90;
+    deg = deg + 135;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
     cursor.setType(`rotate-${deg}`, force);
   }
 }
@@ -172,8 +189,9 @@ onUnmounted(() => {
         ry="7px" @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
         @mouseleave="point_mouseleave">
       </rect>
-      <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
-        rx="4px" ry="4px" @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
+      <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px"
+        :fill="p.type === CtrlElementType.RectLT ? 'red' : '#ffffff'" stroke='#865dff' stroke-width="1.5px" rx="4px"
+        ry="4px" @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
         @mouseleave="point_mouseleave"></rect>
     </g>
   </g>

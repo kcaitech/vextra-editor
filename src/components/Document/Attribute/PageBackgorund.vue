@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import ColorPicker from "@/components/common/ColorPicker/index.vue";
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Context } from "@/context";
-import { Color } from "@kcdesign/data";
+import { Color, Page } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
 interface Props {
     context: Context
+    page: Page
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -26,16 +27,17 @@ function setColor(clr: string, alpha: number) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
-    clr_v.value = toHex(r, b, b);
     const nc = new Color(alpha, r, g, b);
-    props.context.workspace.setBackground(nc);
-    background_color.value = nc;
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const editor = props.context.editor4Page(page);
+    editor.setBackground(nc);
 }
 function colorChangeFromPicker(c: Color) {
-    background_color.value = c;
-    props.context.workspace.setBackground(c);
-    clr_v.value = toHex(c.red, c.green, c.blue);
-    alpha_v.value = c.alpha * 100;
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const editor = props.context.editor4Page(page);
+    editor.setBackground(c);
 }
 function change_c(e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -48,11 +50,18 @@ function change_c(e: Event) {
         message('danger', t('system.illegal_input'));
     }
 }
-function init() {
-    const c = props.context.workspace.background;
-    background_color.value = c || new Color(1, 239, 239, 239);
-    clr_v.value = toHex(c.red, c.green, c.blue);
-    alpha_v.value = c.alpha * 100;
+function update() {
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const f = page.style.fills[0];
+    if (!f) {
+        const editor = props.context.editor4Page(page);
+        editor.setBackground(new Color(1, 239, 239, 239));
+        const c = page.style.fills[0].color;
+        init_value(c);
+    } else {
+        init_value(f.color);
+    }
 }
 function change_a(e: Event) {
     let value = (e.currentTarget as any)['value'];
@@ -63,25 +72,37 @@ function change_a(e: Event) {
     } else if (value > 1) {
         if (alpha_ele.value) {
             alpha_ele.value.value = String(100);
+            setColor("#" + clr_v.value, 1);
         }
     } else if (value < 0) {
         if (alpha_ele.value) {
             alpha_ele.value.value = String(0);
+            setColor("#" + clr_v.value, 0);
         }
     }
 }
+function init_value(c: Color) {
+    background_color.value = c;
+    clr_v.value = toHex(c.red, c.green, c.blue);
+    alpha_v.value = c.alpha * 100;
+}
 function clr_click() {
-    if (clr_ele.value) {
-        clr_ele.value.select();
-    }
+    if (clr_ele.value) clr_ele.value.select();
 }
 function alpha_click() {
-    if (alpha_ele.value) {
-        alpha_ele.value?.select();
-    }
+    if (alpha_ele.value) alpha_ele.value.select();
 }
+const stopWatch = watch(() => props.page, (cur) => {
+    const f = cur.style.fills[0];
+    if (f) init_value(f.color);
+})
 onMounted(() => {
-    init();
+    update();
+    props.page.watch(update);
+})
+onUnmounted(() => {
+    props.page.unwatch(update);
+    stopWatch();
 })
 </script>
 <template>

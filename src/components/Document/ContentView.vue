@@ -9,7 +9,7 @@ import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
 import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
 import { Context } from '@/context'; // 状态顶层 store
-import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
+import { PageXY, ClientXY, ClientXYRaw, Selection } from '@/context/selection'; // selection
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace'; // workspace
 import { Menu } from '@/context/menu'; // menu 菜单相关
 import { useRoute } from 'vue-router';
@@ -18,7 +18,7 @@ import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { init as renderinit } from '@/render';
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, color2string, init_insert_shape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -53,7 +53,6 @@ const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix = reactive(props.context.workspace.matrix);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
-const watcher = () => { reflush.value++ };
 const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
@@ -75,6 +74,13 @@ let isMouseLeftPress: boolean = false; // 针对在contentview里面
 const commentInput = ref(false);
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>('rgba(239,239,239,1)');
+function page_watcher(...args: any) {
+    if (args.includes('style')) {
+        const f = props.page.style.fills[0];
+        if (f) background_color.value = color2string(f.color);
+    }
+    reflush.value++
+}
 function rootRegister(mount: boolean) {
     if (mount) {
         const id = (uuid().split('-').at(-1)) || 'content';
@@ -195,7 +201,6 @@ function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     else if (type === WorkSpace.PASTE_RIGHT) paster(props.context, t, mousedownOnPageXY);
     else if (type === WorkSpace.COPY) props.context.workspace.clipboard.write_html();
     else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) contextMenuMount((param as MouseEvent));
-    else if ((type === WorkSpace.CHANGE_BACKGROUND) && param) background_color.value = color2string(param as Color);
 }
 function comment_watcher(type?: number) {
     if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
@@ -655,11 +660,13 @@ function initMatrix(cur: Page) {
     workspace.value.matrixTransformation();
 }
 const stopWatch = watch(() => props.page, (cur, old) => {
-    old.unwatch(watcher)
-    cur.watch(watcher)
+    old.unwatch(page_watcher)
+    cur.watch(page_watcher)
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
-    initMatrix(cur)
+    initMatrix(cur);
+    const f = cur.style.fills[0];
+    if (f) background_color.value = color2string(f.color);
 })
 function frame_watcher() {
     if (!root.value) return;
@@ -679,7 +686,7 @@ onMounted(() => {
     props.context.menu.watch(menu_watcher);
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
-    props.page.watch(watcher);
+    props.page.watch(page_watcher);
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
@@ -701,7 +708,7 @@ onUnmounted(() => {
     props.context.comment.unwatch(comment_watcher);
     props.context.menu.unwatch(menu_watcher);
     props.context.cursor.unwatch(cursor_watcher);
-    props.page.unwatch(watcher);
+    props.page.unwatch(page_watcher);
     resizeObserver.disconnect();
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);

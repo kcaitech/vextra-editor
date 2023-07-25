@@ -82,6 +82,8 @@ function bar_mousemove(event: MouseEvent) {
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
     let deg = props.shape.rotation || 0;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
     if (t === CtrlElementType.RectTop) {
         cursor.setType(`scale-${deg + 90}`, force);
     } else if (t === CtrlElementType.RectRight) {

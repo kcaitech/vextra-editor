@@ -55,7 +55,7 @@ onUnmounted(() => {
 <template>
     <section>
         <div v-if="len === 0">
-            <PageBackgorund :context="props.context"></PageBackgorund>
+            <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage" :page="props.context.selection.selectedPage"></PageBackgorund>
         </div>
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len">

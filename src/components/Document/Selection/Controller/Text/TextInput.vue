@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix } from '@kcdesign/data';
-import { TextShape, AttrGetter } from '@kcdesign/data';
+import { TextShape } from '@kcdesign/data';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
 import { throttle } from '../../common';
