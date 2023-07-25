@@ -23,7 +23,8 @@
         "src/*"
       ],
       "@pal/*": [
-        "src/PAL/browser/*", "src/PAL/nodejs/*"
+        "src/PAL/browser/*",
+        "src/PAL/nodejs/*"
       ]
     },
     "lib": [
@@ -44,6 +45,6 @@
   ],
   "exclude": [
     "node_modules",
-    "src/**/*.js",
+    "src/**/*.js"
   ]
 }

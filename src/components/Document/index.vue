@@ -339,7 +339,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(new S3Storage(importDocumentParams), path, "", "", repo, measure)
+        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo, measure)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
@@ -402,6 +402,7 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
+    context!.data.versionId = result!.data.version_id;
     ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, context!.data.versionId ?? "");
     ot.start();
     context!.communication.resourceUpload.start(doc_id, token);
