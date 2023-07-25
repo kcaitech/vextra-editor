@@ -61,10 +61,11 @@ function updateData() {
         const shape = props.shapes[0];
         const style = shape.style;
         if (shape.type === ShapeType.Artboard) {
-            const bc = Object.assign({}, style.fills[0]);
-            bc.color = (shape as Artboard).backgroundColor || new Color(1, 255, 255, 255);
-            const f = { id: 0, fill: bc };
-            fills.unshift(f);
+            const _f = style.fills[0];
+            if (_f) {
+                const f = { id: 0, fill: _f };
+                fills.unshift(f);
+            }
         } else {
             for (let i = 0, len = style.fills.length; i < len; i++) {
                 const fill = style.fills[i];
@@ -82,7 +83,7 @@ function updateData() {
     }
 }
 function watcher(...args: any[]) {
-    if (args.length > 0 && args.includes('style') || args.length > 0 && args.includes('backgroundColor')) updateData();
+    if (args.length > 0 && args.includes('style')) updateData();
 }
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);

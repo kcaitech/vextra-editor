@@ -22,7 +22,7 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
     ab_props.viewBox = `0 0 ${frame.width} ${frame.height}`;
     // background
     if (shape.hasBackgroundColor) { // 背景色垫底
-        const color = shape.backgroundColor || defaultColor;
+        const color = shape.style.fills[0].color || defaultColor;
         childs.push(h("rect", {
             x: 0, y: 0, width: frame.width, height: frame.height,
             fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
