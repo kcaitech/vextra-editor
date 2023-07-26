@@ -4,7 +4,7 @@ import { Selection } from '@/context/selection';
 import { Context } from '@/context';
 import ToolButton from '../ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
-import { BoolOp } from '@kcdesign/data';
+import { BoolOp, GroupShape, ShapeType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
@@ -92,9 +92,31 @@ const changeBool = () => {
     emit('changeBool', boolType.value, boolName.value);
 }
 
+const selectionWatch = (t?: number) => {
+  if(t === Selection.CHANGE_SHAPE) {
+    const shapes = props.selection.selectedShapes
+    if(shapes.length === 1 && shapes[0].type === ShapeType.Group) {
+      const type = (shapes[0] as GroupShape).getBoolOp()
+      if(type.op === 'union') {
+        selectBool.value = 'union'
+      }else if (type.op === 'subtract') {
+        selectBool.value = 'subtract'
+      }else if (type.op === 'intersect') {
+        selectBool.value = 'intersection'
+      }else if (type.op === 'diff') {
+        selectBool.value = 'difference'
+      }else if (type.op === 'none') {
+        selectBool.value = 'union'
+      }
+    }
+  }
+}
+
 onMounted(() => {
+  props.context.selection.watch(selectionWatch)
 })
 onUnmounted(() => {
+  props.context.selection.unwatch(selectionWatch)
 })
 
 </script>
