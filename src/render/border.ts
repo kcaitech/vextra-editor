@@ -32,7 +32,8 @@ angularHandler[BorderPosition.Inner] = function (h: Function, shape: Shape, bord
                 fill: "black"
             }),
             h("clipPath", { id: clipId }, h("path", {
-                d: path
+                d: path,
+                "clip-rule": "evenodd",
             })),
             h('path', {
                 d: path,
@@ -168,7 +169,8 @@ handler[BorderPosition.Inner] = function (h: Function, shape: Shape, border: Bor
     }
     elArr.push(
         h("clipPath", { id: clipId }, h("path", {
-            d: path
+            d: path,
+            "clip-rule": "evenodd",
         })),
         h('path', body_props)
     );
