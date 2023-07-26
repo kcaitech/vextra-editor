@@ -12,7 +12,7 @@ export function render(h: Function, shape: Shape, reflush?: number) {
     const childs = [];
     const path = shape.getPath(true).toString();
     // fill
-    childs.push(...fillR(h, shape, path));
+    childs.push(...fillR(h, shape.style, frame, path));
     // border
     childs.push(...borderR(h, shape, path));
 

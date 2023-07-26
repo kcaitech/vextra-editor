@@ -1,14 +1,14 @@
-import { Shape } from "@kcdesign/data";
+import { Shape, ShapeFrame, Style } from "@kcdesign/data";
 import { Fill, FillType, Gradient } from "@kcdesign/data";
 // import { ELArray, EL, h } from "./basic";
 import { render as renderGradient } from "./gradient";
 import { render as clippathR } from "./clippath"
 import { objectId } from "@kcdesign/data";
 
-const handler: { [key: string]: (h: Function, shape: Shape, fill: Fill, path: string) => any } = {};
-handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
+const handler: { [key: string]: (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string) => any } = {};
+handler[FillType.SolidColor] = function (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string): any {
     const color = fill.color;
-    const opacity = shape.style.contextSettings.opacity;
+    const opacity = style.contextSettings.opacity;
     return h("path", {
         d: path,
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
@@ -18,10 +18,10 @@ handler[FillType.SolidColor] = function (h: Function, shape: Shape, fill: Fill, 
     });
 }
 
-handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
+handler[FillType.Gradient] = function (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string): any {
     const color = fill.color;
-    const frame = shape.frame;
-    const opacity = shape.style.contextSettings.opacity;
+    // const frame = shape.frame;
+    const opacity = style.contextSettings.opacity;
     const elArr = new Array();
     const g_ = renderGradient(h, fill.gradient as Gradient, frame);
     if (g_.node) {
@@ -31,7 +31,7 @@ handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, pa
     const gStyle = g_.style;
     if (gStyle) {
         const id = "clippath-fill-" + objectId(fill);
-        const cp = clippathR(h, shape, id, path);
+        const cp = clippathR(h, id, path);
         elArr.push(cp);
         elArr.push(h("foreignObject", {
             width: frame.width, height: frame.height, x: 0, y: 0,
@@ -54,13 +54,13 @@ handler[FillType.Gradient] = function (h: Function, shape: Shape, fill: Fill, pa
     return h("g", elArr);
 }
 
-handler[FillType.Pattern] = function (h: Function, shape: Shape, fill: Fill, path: string): any {
+handler[FillType.Pattern] = function (h: Function, style: Style, frame: ShapeFrame, fill: Fill, path: string): any {
     const id = "clippath-fill-" + objectId(fill);
-    const cp = clippathR(h, shape, id, path);
+    const cp = clippathR(h, id, path);
 
     const url = fill.peekImage();
     const props: any = {}
-    const frame = shape.frame;
+    // const frame = shape.frame;
     props.width = frame.width;
     props.height = frame.height;
     props['xlink:href'] = url;
@@ -71,19 +71,19 @@ handler[FillType.Pattern] = function (h: Function, shape: Shape, fill: Fill, pat
     return h("g", [cp, img]);
 }
 
-export function render(h: Function, shape: Shape, path?: string): Array<any> {
-    const style = shape.style;
+export function render(h: Function, style: Style, frame: ShapeFrame, path: string): Array<any> {
+    // const style = shape.style;
     const fillsCount = style.fills.length;
     const elArr = new Array();
-    path = path || shape.getPath(true).toString();
+    // path = path || shape.getPath(true).toString();
 
     for (let i = 0; i < fillsCount; i++) {
-        const fill = style.fills[i];
+        const fill =  style.fills[i];
         if (!fill.isEnabled) {
             continue;
         }
         const fillType = fill.fillType;
-        elArr.push(handler[fillType](h, shape, fill, path));
+        elArr.push(handler[fillType](h, style, frame, fill, path));
     }
     return elArr;
 }

@@ -72,7 +72,12 @@ export function render(h: Function, shape: GroupShape, reflush?: number, consume
     const childs = [];
 
     // fill
-    childs.push(...fillR(h, shape, path));
+    if (shape.style.fills.length > 0) {
+        childs.push(...fillR(h, shape.style, frame, path));
+    } else {
+        const child0 = shape.childs[0];
+        if (child0) childs.push(...fillR(h, child0.style, frame, path));
+    }
 
     // border
     childs.push(...borderR(h, shape, path));

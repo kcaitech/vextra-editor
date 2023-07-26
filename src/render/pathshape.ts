@@ -13,7 +13,7 @@ export function render(h: Function, shape: PathShape, reflush?: number) {
     const childs = [];
 
     // fill
-    childs.push(...fillR(h, shape, path));
+    childs.push(...fillR(h, shape.style, frame, path));
 
     // border
     childs.push(...borderR(h, shape, path));
