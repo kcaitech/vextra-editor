@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Shape, GroupShape } from "@kcdesign/data";
-import { render as r } from "@/render/shapegroup";
+import { render as opr } from "@/render/shapegroup";
+import { render as normalR } from "@/render/group";
+import comsMap from './comsmap';
 
 const props = defineProps<{ data: GroupShape }>();
 const reflush = ref(0);
@@ -31,7 +33,13 @@ onUnmounted(() => {
 })
 function render() {
     const consumed0: Array<Shape> = [];
-    const ret = r(h, props.data, reflush.value !== 0 ? reflush.value : undefined, consumed0);
+
+    const isBoolOpShape = props.data.isBoolOpShape;
+
+    const ret = isBoolOpShape ?
+        opr(h, props.data, reflush.value !== 0 ? reflush.value : undefined, consumed0) :
+        normalR(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined);
+
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
             consumed[i].unwatch(watcher);
