@@ -12,6 +12,7 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
 import BooleanObject from "./Buttons/BooleanObject.vue"
+import { popoverProps } from 'element-plus';
 const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const NOGROUP = 0;
@@ -107,7 +108,6 @@ const groupClick = (alt?: boolean) => {
         }
         props.context.workspace.setSelectionViewUpdater(true);
         props.context.workspace.selectionViewUpdate();
-
     }
 }
 const ungroupClick = () => {
@@ -154,27 +154,12 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
         if(shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const editor = props.context.editor4Shape(shapes[0])
             editor.setBoolOp(type, name)
+            props.context.selection.notify(Selection.CHANGE_SHAPE)
         }else {
-            const parent = shapes[0].parent
-            let t: boolean = false
-            //选中的shape都是否同一个父级
-            shapes.forEach(item => {
-                if(parent && parent.type !== ShapeType.Page) {
-                    if(item.parent?.id !== parent?.id) {
-                        return t = true
-                    }
-                }else {
-                    return t = true
-                }
-            })
-            //切换布尔对象
-            if(parent && !t && parent.childs.length === shapes.length ) {
-                const editor = props.context.editor4Shape(shapes[0].parent!)
-                editor.setBoolOp(type, name)
-            }else {
-                // 添加对象
-                const editor = props.context.editor4Page(page)
-                editor.boolgroup(shapes, name, type)  
+            const editor = props.context.editor4Page(page)
+            const g = editor.boolgroup(shapes, name, type)  
+            if(g) {
+                props.context.selection.selectShape(g)
             }
         }
     }
