@@ -13,9 +13,9 @@ import { throttle } from 'lodash';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
-const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard];
+const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard, ShapeType.Group];
 const WITH_TEXT = [ShapeType.Text];
-const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard];
+const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard, ShapeType.Group];
 const shapeType = ref();
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {

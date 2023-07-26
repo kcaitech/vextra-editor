@@ -30,7 +30,7 @@ function _updater(t?: number) {
             isBoolGroup.value = false
         } else if (shapes.length === 1) {
             const type = shapes[0].type;
-            if(type === ShapeType.FlattenShape) {
+            if(type === ShapeType.FlattenShape || type === ShapeType.Group) {
                 isBoolGroup.value = true
             }else {
                 isBoolGroup.value = false
@@ -62,13 +62,13 @@ function toolUpdate(t?: number, alt?: boolean) {
     }
 }
 onMounted(() => {
-    props.context.workspace.watch(toolUpdate)
+    props.context.tool.watch(toolUpdate)
     props.selection.watch(updater);
     updater();
 })
 onUnmounted(() => {
     props.selection.unwatch(updater);
-    props.context.workspace.unwatch(toolUpdate)
+    props.context.tool.unwatch(toolUpdate)
 })
 
 const groupClick = (alt?: boolean) => {
@@ -167,10 +167,12 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
                     return t = true
                 }
             })
+            //切换布尔对象
             if(parent && !t && parent.childs.length === shapes.length ) {
                 const editor = props.context.editor4Shape(shapes[0].parent!)
                 editor.setBoolOp(type, name)
             }else {
+                // 添加对象
                 const editor = props.context.editor4Page(page)
                 editor.boolgroup(shapes, name, type)  
             }
@@ -191,7 +193,7 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
                 </ToolButton>
             </div>
         </Tooltip>
-        <BooleanObject @changeBool="changeBoolgroup" v-if="isBoolGroup"></BooleanObject>
+        <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"></BooleanObject>
         <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
             <div class="group">
                 <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">

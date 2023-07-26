@@ -19,7 +19,8 @@ const emit = defineEmits<{
 const selector = (active: Action) => {
     emit('selector', active);
 }
-const handleBoolean = () => {
+const handleBoolean = (e: MouseEvent) => {
+  e.stopPropagation()
   emit('selectBool',props.select, props.bool!)
 }
 
@@ -35,7 +36,7 @@ const handleBoolean = () => {
       </div>
       <span class="quick">{{ props.quick }}</span>
     </div>
-    <div class="container-change" v-if="props.type === 'bool'" @click="handleBoolean">
+    <div class="container-change" v-if="props.type === 'bool'" @mousedown="handleBoolean">
       <div style="display: flex; align-items: center;">
         <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>
         <div class="svg-container">

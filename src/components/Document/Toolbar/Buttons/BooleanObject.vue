@@ -1,11 +1,14 @@
 <script lang="ts" setup>
-import { ref, nextTick, onUpdated } from 'vue';
+import { ref, nextTick, onMounted, onUnmounted } from 'vue';
+import { Selection } from '@/context/selection';
+import { Context } from '@/context';
 import ToolButton from '../ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
 import { BoolOp } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
+const props = defineProps<{ context: Context, selection: Selection }>();
 type Button = InstanceType<typeof ToolButton>
 
 const popoverVisible = ref<boolean>(false);
@@ -89,9 +92,11 @@ const changeBool = () => {
     emit('changeBool', boolType.value, boolName.value);
 }
 
-onUpdated(() => {
-
+onMounted(() => {
 })
+onUnmounted(() => {
+})
+
 </script>
 
 <template>
