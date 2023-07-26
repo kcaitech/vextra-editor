@@ -7,7 +7,7 @@ import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
 import { useI18n } from 'vue-i18n';
 import { getName } from '@/utils/content';
-import { debounce } from 'lodash';
+import { debounce, indexOf } from 'lodash';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -25,7 +25,6 @@ function _updater(t?: number) {
         const selection = props.selection;
         const shapes = selection.selectedShapes;
         console.log(shapes,'shpaes');
-
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
             isBoolGroup.value = false
@@ -151,14 +150,25 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
-    const shapeType = shapes[0].type;
     if(shapes.length && page) {
-        if(shapes.length === 1 && shapeType === ShapeType.FlattenShape) {
+        if(shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const editor = props.context.editor4Shape(shapes[0])
             editor.setBoolOp(type, name)
         }else {
-            if(shapes[0].parent && shapes[0].parent.type === ShapeType.FlattenShape) {
-                const editor = props.context.editor4Shape(shapes[0].parent)
+            const parent = shapes[0].parent
+            let t: boolean = false
+            //选中的shape都是否同一个父级
+            shapes.forEach(item => {
+                if(parent && parent.type !== ShapeType.Page) {
+                    if(item.parent?.id !== parent?.id) {
+                        return t = true
+                    }
+                }else {
+                    return t = true
+                }
+            })
+            if(parent && !t && parent.childs.length === shapes.length ) {
+                const editor = props.context.editor4Shape(shapes[0].parent!)
                 editor.setBoolOp(type, name)
             }else {
                 const editor = props.context.editor4Page(page)
