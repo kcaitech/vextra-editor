@@ -10,7 +10,8 @@ const props = defineProps<{
     select?: any,
     d?: any,
     type: string,
-    bool?: BoolOp
+    bool?: BoolOp,
+    state?: boolean
 }>();
 const emit = defineEmits<{
     (e: "selector", select: Action): void;
@@ -40,7 +41,7 @@ const handleBoolean = (e: MouseEvent) => {
     <!-- 布尔对象下拉菜单 -->
     <div class="container-change" v-if="props.type === 'bool'" @mousedown="handleBoolean">
       <div style="display: flex; align-items: center;">
-        <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>
+        <div class="choose" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden'  }"></div>
         <div class="svg-container">
           <svg-icon :icon-class="select"></svg-icon>
         </div>
