@@ -6,14 +6,14 @@ import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget } from '@/utils/common';
 export interface SelectorFrame {
-    top: number,
-    left: number,
-    width: number,
-    height: number,
+    top: number
+    left: number
+    width: number
+    height: number
     includes: boolean
 }
 interface Props {
-    selectorFrame: SelectorFrame,
+    selectorFrame: SelectorFrame
     context: Context
 }
 const props = defineProps<Props>();
