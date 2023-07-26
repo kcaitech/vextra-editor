@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, nextTick, onUpdated, watch } from 'vue';
+import { ref, nextTick, onUpdated } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
 import { BoolOp } from '@kcdesign/data';
@@ -45,24 +45,21 @@ function showMenu(e: MouseEvent) {
   }
 }
 
-watch(() => selectBool.value, (newV) => {
-  if(newV === 'union') {
-    boolName.value = 'Union'
-  }else if (newV === 'subtract') {
-    boolName.value = 'Subtract'
-  }else if (newV === 'intersection') {
-    boolName.value = 'Intersect'
-  }else if (newV === 'difference') {
-    boolName.value = 'Exclude'
-  }else if (newV === 'cohere') {
-    boolName.value = 'cohere'
-  }
-})
-
 const selector = (active: string, type: BoolOp) => {
     selectBool.value = active
     boolType.value = type
     popoverVisible.value = false;
+    if(active === 'union') {
+      boolName.value = 'Union'
+    }else if (active === 'subtract') {
+      boolName.value = 'Subtract'
+    }else if (active === 'intersection') {
+      boolName.value = 'Intersect'
+    }else if (active === 'difference') {
+      boolName.value = 'Exclude'
+    }else if (active === 'cohere') {
+      boolName.value = 'cohere'
+    }
     emit('changeBool', type, boolName.value);
 }
 
