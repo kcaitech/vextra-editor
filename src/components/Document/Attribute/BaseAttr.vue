@@ -258,13 +258,13 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
             if (!radius.value) return;
             radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            editor.value.setRadius(radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
+            editor.value.setRectRadius(radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
         } else {
             value = Number.parseFloat(value).toFixed(fix);
             const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
             if (!radius.value) return;
             const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            editor.value.setRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
+            editor.value.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
         }
     } else {
         // todo
