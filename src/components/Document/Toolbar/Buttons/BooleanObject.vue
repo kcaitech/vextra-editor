@@ -4,7 +4,7 @@ import { Selection } from '@/context/selection';
 import { Context } from '@/context';
 import ToolButton from '../ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
-import { BoolOp, GroupShape, ShapeType } from '@kcdesign/data';
+import { BoolOp, GroupShape, Shape, ShapeType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
@@ -18,6 +18,7 @@ const visible = ref(false)
 const selectBool = ref('union')
 const boolType = ref(BoolOp.Union)
 const boolName = ref('Union')
+const state = ref(false)
 const emit = defineEmits<{
   (e: "changeBool", type: BoolOp, name: string): void;
   (e: 'flattenShape'): void;
@@ -100,7 +101,12 @@ const changeBool = () => {
 const selectionWatch = (t?: number) => {
   if(t === Selection.CHANGE_SHAPE) {
     const shapes = props.selection.selectedShapes
-    if(shapes.length === 1 && shapes[0].type === ShapeType.Group) {
+    getBoolGroupType(shapes)
+  }
+}
+
+const getBoolGroupType = (shapes: Shape[]) => {
+  if(shapes.length === 1 && shapes[0].type === ShapeType.Group) {
       const type = (shapes[0] as GroupShape).getBoolOp()
       if(type.op === 'union') {
         selectBool.value = 'union'
@@ -110,14 +116,20 @@ const selectionWatch = (t?: number) => {
         selectBool.value = 'intersection'
       }else if (type.op === 'diff') {
         selectBool.value = 'difference'
-      }else if (type.op === 'none') {
-        selectBool.value = 'union'
       }
+      if (type.op === 'none') {
+        state.value = true
+      }else {
+        state.value = false
+      }
+    }else if(shapes.length > 1) {
+      state.value = true
     }
-  }
 }
 
 onMounted(() => {
+  const shapes = props.selection.selectedShapes
+  getBoolGroupType(shapes)
   props.context.selection.watch(selectionWatch)
 })
 onUnmounted(() => {
@@ -130,14 +142,14 @@ onUnmounted(() => {
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
     <template v-for="(item, index) in patterns" :key="item.value">
         <div class="line" v-if="index === 4"></div>
-        <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool" :d="selectBool"></DropSelect>
+        <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool" :d="selectBool" :state="state"></DropSelect>
     </template>
   </div>
   <el-tooltip class="box-item" effect="dark"
     :content="t(`bool.${selectBool}`)" placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
       <ToolButton ref="button" @click="changeBool" :selected="false" @mouseenter.stop="onMouseenter"
         @mouseleave.stop="onMouseleave">
-        <div class="svg-container">
+        <div class="svg-container" :class="{active: state}">
             <svg-icon :icon-class="selectBool"></svg-icon>
         </div>
         <div class="menu" @click="showMenu">
@@ -161,6 +173,9 @@ onUnmounted(() => {
     width: 17px;
     height: 17px;
   }
+}
+.active {
+  color: gray;
 }
 
 .menu {
