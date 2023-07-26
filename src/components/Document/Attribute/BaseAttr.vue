@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed } from 'vue'
-import { Shape, ShapeType, RectShape } from '@kcdesign/data';
+import { Shape, ShapeType, RectShape, GroupShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
@@ -286,6 +286,11 @@ function layout() {
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
         if (shapeType.value === ShapeType.Rectangle) getRectShapeAttr(shape);
+        if(shape.type === ShapeType.Group) {
+            if((shape as GroupShape).isBoolOpShape) {
+                showRadius.value = true
+            }
+        }
     }
 }
 function workspace_watcher(t?: any) {

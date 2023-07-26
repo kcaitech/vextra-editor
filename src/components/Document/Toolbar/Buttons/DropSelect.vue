@@ -26,6 +26,7 @@ const handleBoolean = (e: MouseEvent) => {
 
 </script>
 <template>
+  <!-- cursor -->
   <div class="container-change" @click="selector(props.select!)" v-if="props.type === 'cursor'">
       <div style="display: flex; align-items: center;">
         <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>
@@ -36,6 +37,7 @@ const handleBoolean = (e: MouseEvent) => {
       </div>
       <span class="quick">{{ props.quick }}</span>
     </div>
+    <!-- 布尔对象下拉菜单 -->
     <div class="container-change" v-if="props.type === 'bool'" @mousedown="handleBoolean">
       <div style="display: flex; align-items: center;">
         <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>

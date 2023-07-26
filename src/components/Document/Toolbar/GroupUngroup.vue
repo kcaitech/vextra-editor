@@ -7,12 +7,11 @@ import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
 import { useI18n } from 'vue-i18n';
 import { getName } from '@/utils/content';
-import { debounce, indexOf } from 'lodash';
+import { debounce } from 'lodash';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
 import BooleanObject from "./Buttons/BooleanObject.vue"
-import { popoverProps } from 'element-plus';
 const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const NOGROUP = 0;
@@ -164,6 +163,10 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
     }
 }
 
+const flattenShape = () => {
+    console.log('拼合');
+}
+
 </script>
 
 <template>
@@ -177,7 +180,8 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
                 </ToolButton>
             </div>
         </Tooltip>
-        <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"></BooleanObject>
+        <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"
+            @flatten-shape="flattenShape"></BooleanObject>
         <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
             <div class="group">
                 <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
