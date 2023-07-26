@@ -5,11 +5,13 @@
 </template>
 <!-- 需要 parent relative/absolute 定位。 然后再指定 sash 的位置-->
 <script setup lang="ts">
+import e from 'express';
 import { ref } from 'vue';
 
 const emit = defineEmits<{
     (e: 'dragStart'): void;
     (e: 'offset', offset: number): void;
+    (e: 'dragEnd'): void;
 }>();
 
 const props = defineProps<{ side: 'right' | 'bottom' | 'top' | 'left' }>();
@@ -35,6 +37,7 @@ function onMouseUp(event: MouseEvent) {
     event.preventDefault();
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
+    emit('dragEnd');
 }
 function onMouseMove(event: MouseEvent) {
     // console.log('mouse move', 'isDown:' + isDown, 'draging:' + draging)

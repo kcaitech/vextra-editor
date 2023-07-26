@@ -48,6 +48,7 @@ function updateControllerView() {
   if (!submatrix.equals(matrix)) submatrix.reset(matrix)
   const framePoint = props.controllerFrame;
   boundrectPath.value = genRectPath(framePoint);
+  props.context.workspace.setCtrlPath(boundrectPath.value);
   const p0 = framePoint[0];
   bounds.left = p0.x;
   bounds.top = p0.y;
@@ -89,9 +90,7 @@ function mouseup(e: MouseEvent) {
   document.removeEventListener('mousemove', mousemove);
   document.removeEventListener('mouseup', mouseup);
 }
-function keyboardHandle(e: KeyboardEvent) {
-  handle(e, props.context, t);
-}
+
 function windowBlur() {
   // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
   document.removeEventListener('mousemove', mousemove);
@@ -101,13 +100,12 @@ onMounted(() => {
   props.context.selection.watch(updater);
   props.context.workspace.watch(workspace_watcher);
   window.addEventListener('blur', windowBlur);
-  document.addEventListener('keydown', keyboardHandle);
 })
 onUnmounted(() => {
   props.context.selection.unwatch(updater);
   props.context.workspace.unwatch(workspace_watcher);
   window.removeEventListener('blur', windowBlur);
-  document.removeEventListener('keydown', keyboardHandle);
+  props.context.cursor.reset();
 })
 watchEffect(() => { updater() });
 </script>

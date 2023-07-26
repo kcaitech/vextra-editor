@@ -78,16 +78,13 @@ function onMouseUp(event: MouseEvent) {
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
         setStatus(false);
-        workspace.value.resetCursor();
     }
 }
 function mouseleave() {
     if (scaling) return;
-    workspace.value.resetCursor();
 }
 function mousemove() {
     if (scaling) return;
-    workspace.value.setCursorStyle(props.ctrlType, props.rotate);
 }
 function windowBlur() {
     if (isDragging) {
@@ -97,7 +94,6 @@ function windowBlur() {
         setStatus(false);
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
-        workspace.value.resetCursor();
         isDragging = false;
     }
 }

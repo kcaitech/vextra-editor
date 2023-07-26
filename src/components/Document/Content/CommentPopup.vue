@@ -3,9 +3,8 @@ import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick, watch } f
 import { Context } from '@/context';
 import { Close, Delete, CircleCheck, Back, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
-import { Action } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import { Matrix } from "@kcdesign/data";
-import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
 import { v4 } from 'uuid';
@@ -170,7 +169,7 @@ const handleInput = () => {
 
 function handleClickOutside(event: MouseEvent) {
     event.stopPropagation()
-    const action = workspace.value.action === Action.AddComment
+    const action = props.context.tool.action === Action.AddComment
     const length = textarea.value.trim().length < 4
     if (event.target instanceof Element && !event.target.closest('.container-popup') && length) {
         emit('close', event);
@@ -493,7 +492,7 @@ onUnmounted(() => {
                 <el-input ref="inputPopup" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }"
                     type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
                     :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
-                    @input="handleInput"/>
+                    @input="handleInput" />
                 <div class="send" :style="{ opacity: sendBright ? '1' : '0.5' }" @click="addComment"><svg-icon
                         icon-class="send"></svg-icon></div>
             </div>

@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "baseUrl": "../",
-    "outDir": "../../dist",
+    "outDir": "./",
     "types": [
       "webpack-env",
       "jest"
@@ -31,7 +31,7 @@
     ]
   },
   "include": [
-    "worker.ts"
+    "communication-worker.ts"
   ],
   "exclude": [
 

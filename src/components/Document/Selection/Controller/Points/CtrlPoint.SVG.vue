@@ -90,7 +90,6 @@ function onMouseMove(event: MouseEvent) {
       const { x: mx, y: my } = mouseOnPage;
       const { x: ax, y: ay } = props.axle;
       deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-      workspace.value.setCursorStyle(clt, props.rotate);
       aType = 'rotate';
     }
     if (asyncBaseAction) {
@@ -120,17 +119,14 @@ function onMouseUp(event: MouseEvent) {
     document.removeEventListener('mouseup', onMouseUp);
     setStatus();
     workspace.value.setCtrl('page');
-    workspace.value.resetCursor();
   }
 }
 function mouseleave() {
   if (rotating || scaling) return;
-  workspace.value.resetCursor();
 }
 function mousemove(event: MouseEvent) {
   if (rotating || scaling) return;
   const ct = getCtrlElementType(event);
-  workspace.value.setCursorStyle(ct, props.rotate);
 }
 function windowBlur() {
   if (isDragging) {
@@ -140,7 +136,6 @@ function windowBlur() {
     }
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
-    workspace.value.resetCursor();
     isDragging = false;
   }
 }

@@ -23,7 +23,8 @@
         "src/*"
       ],
       "@pal/*": [
-        "src/PAL/browser/*", "src/PAL/nodejs/*"
+        "src/PAL/browser/*",
+        "src/PAL/nodejs/*"
       ]
     },
     "lib": [
@@ -39,9 +40,11 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx", "src/utils/dom-to-image.js" ],
+    "tests/**/*.tsx",
+    "src/utils/dom-to-image.js"
+  ],
   "exclude": [
     "node_modules",
-    "src/**/*.js",
+    "src/**/*.js"
   ]
 }

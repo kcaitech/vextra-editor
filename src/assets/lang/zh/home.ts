@@ -80,8 +80,8 @@ export const home = {
     recycling_station: '回收站',
     file_name: '文件名称',
     modification_time: '最近访问',
-    Creation_time:'创建时间',
-    delete_file_time:'删除时间',
+    Creation_time: '创建时间',
+    delete_file_time: '删除时间',
     size: '大小',
     operation: '操作',
     star_marking: '标星',
@@ -128,14 +128,22 @@ export const home = {
     login_failed: '登录失败',
     login_refresh: '点击刷新二维码',
     invitation_code_tips: '请输入试用邀请码',
-    table_empty_tips:'没有内容'
+    table_empty_tips: '没有内容',
+    'align_left': '左对齐',
+    'align_h_c': '左右居中对齐',
+    'align_right': '右对齐',
+    'align_top': '顶对齐',
+    'align_v_c': '上下居中对齐',
+    'align_bottom': '底对齐',
+    'distribute_h': '左右等距分布',
+    'distribute_v': '上下等距分布',
 }
 
 export const search = {
     search_results: '没有匹配的结果',
     search_history: '没有搜索记录',
-    search_history_title:'历史记录',
-    search_history_clear:'清除',
+    search_history_title: '历史记录',
+    search_history_clear: '清除',
     result_count: '共xx条结果'
 }
 
@@ -248,7 +256,9 @@ export const attr: any = {
     highlight_color: '高亮颜色',
     multiple_colors: '存在多种颜色值，点击+可统一设置',
     unfold: '展开',
-    packup: '收起'
+    packup: '收起',
+    'flip_v': '垂直翻转',
+    'flip_h': '水平翻转'
 }
 
 export const login = {

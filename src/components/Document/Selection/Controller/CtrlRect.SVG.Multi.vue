@@ -4,15 +4,14 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
-import { keyboardHandle as handle } from "@/utils/controllerFn";
-import { Selection } from "@/context/selection";
+import { ClientXY, Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
-import { useI18n } from "vue-i18n";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.Multi.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.Multi.vue";
+import { getAxle } from "@/utils/common";
 interface Props {
     context: Context
     controllerFrame: Point[]
@@ -27,10 +26,13 @@ const visible = ref<boolean>(true);
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-const { t } = useI18n();
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 let viewBox = '';
+const axle = computed<ClientXY>(() => {
+    const [lt, rt, rb, lb] = props.controllerFrame;
+    return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+});
 // #region 绘制控件
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
@@ -42,6 +44,7 @@ function updateControllerView() {
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
     boundrectPath.value = genRectPath(framePoint);
+    props.context.workspace.setCtrlPath(boundrectPath.value);
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -83,11 +86,7 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
-function keyboardHandle(e: KeyboardEvent) {
-    handle(e, props.context, t);
-}
 function windowBlur() {
-    // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
@@ -95,13 +94,12 @@ onMounted(() => {
     props.context.selection.watch(updater);
     props.context.workspace.watch(workspace_watcher);
     window.addEventListener('blur', windowBlur);
-    document.addEventListener('keydown', keyboardHandle);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(updater);
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
-    document.removeEventListener('keydown', keyboardHandle);
+    props.context.cursor.reset();
 })
 watchEffect(() => { updater() });
 </script>
@@ -112,12 +110,12 @@ watchEffect(() => { updater() });
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
         <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
+        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix">
         </ShapesStrokeContainer>
-        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :frame="props.controllerFrame"></BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :frame="props.controllerFrame"></PointsContainer>
+        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :frame="props.controllerFrame">
+        </BarsContainer>
+        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :axle="axle" :frame="props.controllerFrame">
+        </PointsContainer>
     </svg>
 </template>
 <style lang='scss' scoped>

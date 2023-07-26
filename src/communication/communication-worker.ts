@@ -67,7 +67,8 @@ ctx.onconnect = (event) => {
             return
         }
         if (server === undefined) {
-            server = new Server(data.token, receiveFromServer)
+            token = data.token
+            server = new Server(token, receiveFromServer)
             server.connect()
         }
         data.id = uuid()

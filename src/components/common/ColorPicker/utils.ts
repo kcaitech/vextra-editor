@@ -333,13 +333,13 @@ function setLocalStorageForColors(si: string[]) {
 }
 
 // RGB => H
-export function RGB2H(color: Color) {
+export function RGB2H(color: Color, sub?: number) {
   const { red, green, blue } = color;
   const max = Math.max(red, green, blue);
   const min = Math.min(red, green, blue);
   let h = 0;
   if (max === min) {
-    h = 0;
+    h = sub ? sub * 360 : 0;
   } else if (max === red && green >= blue) {
     h = 60 * ((green - blue) / (max - min)) + 0;
   } else if (max === red && green < blue) {

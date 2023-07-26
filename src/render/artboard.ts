@@ -2,6 +2,7 @@ import { Artboard } from "@kcdesign/data";
 import { ShapeType } from "@kcdesign/data";
 import { Color } from "@kcdesign/data";
 import { renderGroupChilds as gR } from "@/render/group";
+import { render as borderR } from "@/render/border";
 
 const defaultColor = Color.DefaultColor;
 // artboard单独一个svg节点，需要设置overflow
@@ -20,15 +21,18 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
     const frame = shape.frame;
     ab_props.x = frame.x, ab_props.y = frame.y, ab_props.width = frame.width, ab_props.height = frame.height;
     ab_props.viewBox = `0 0 ${frame.width} ${frame.height}`;
-    // background
-    if (shape.hasBackgroundColor) {
-        const color = shape.backgroundColor || defaultColor;
-        childs.push(h("rect", {
-            x: 0, y: 0, width: frame.width, height: frame.height,
-            fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
-        }))
+    // background 背景色垫底
+    const fills = shape.style.fills;
+    if (fills && fills.length) {
+        for (let i = 0; i < fills.length; i++) {
+            const color = fills[i].color || defaultColor;
+            childs.push(h("rect", {
+                x: 0, y: 0, width: frame.width, height: frame.height,
+                fill: "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")"
+            }))
+        }
     }
-    childs.push(...gR(h, shape, comsMap));
+    childs.push(...gR(h, shape, comsMap)); // 后代元素放中间
     /**
      * <svg>
      *   <svg></svg>
@@ -43,7 +47,17 @@ export function render(h: Function, shape: Artboard, comsMap: Map<ShapeType, any
      * </svg>
      */
     if (shape.isNoTransform()) {
-        return h('svg', ab_props, childs);
+        if (shape.style.borders.length) {
+            const props: any = {}
+            if (reflush) props.reflush = reflush;
+            props.transform = `translate(${frame.x},${frame.y})`;
+            const path = shape.getPath(true).toString();
+            ab_props.x = 0;
+            ab_props.y = 0;
+            return h("g", props, [h('svg', ab_props, childs), ...borderR(h, shape, path)]);
+        } else {
+            return h('svg', ab_props, childs);
+        }
     } else {
         const foreign_object_props = {
             x: frame.x,

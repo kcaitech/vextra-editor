@@ -15,11 +15,12 @@ const selectPath = ref<string[]>([]);
 function update() {
   selectPath.value.length = 0;
   matrix.reset(props.matrix);
-  const words = props.context.navi.keywords;
-  const len = (props.shape as TextShape).text.length;
-  const text = (props.shape as TextShape).text.getText(0, len).replaceAll('\n', '');
-  const _b = text.indexOf(words);
-  selectPath.value.push(genRectPath(props.shape.text.locateRange(_b, _b + words.length).map((point) => matrix.computeCoord(point.x, point.y))));
+  const slice = props.context.navi.focusText?.slice;
+  if (!slice) return;
+  for (let i = 0; i < slice.length; i++) {
+    const s = slice[i];
+    selectPath.value.push(genRectPath(props.shape.text.locateRange(s[0], s[1]).map((point) => matrix.computeCoord(point.x, point.y))));
+  }
 }
 
 function selection_watcher(t?: any[]) {

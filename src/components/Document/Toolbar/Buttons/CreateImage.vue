@@ -18,6 +18,7 @@ function key(e: KeyboardEvent) {
     if (props.context.workspace.isFreeze) return;
     const { shiftKey, ctrlKey, metaKey, code } = e;
     if (shiftKey && (ctrlKey || metaKey) && code === 'KeyK') {
+        e.preventDefault();
         const filepicker = document.getElementById('filepicker');
         if (filepicker) {
             filepicker.click();

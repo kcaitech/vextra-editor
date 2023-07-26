@@ -1,12 +1,14 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
+const fs = require('fs')
 // 按需引入element ui
 const AutoImport = require('unplugin-auto-import/webpack')
 const Components = require('unplugin-vue-components/webpack')
 const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin")
+const webpack = require('webpack')
 
-var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs';
+var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs'
 // var run_env = 'nodejs'
 console.log('building for: ' + run_env)
 var configureWebpack = (config) => {
@@ -73,13 +75,17 @@ var configureWebpack = (config) => {
         },
     )
 
+    const communicationWorkerContent = fs.readFileSync(path.resolve(__dirname, 'src/communication/communication-worker.js')).toString()
     config.plugins = [
         AutoImport({resolvers: [ElementPlusResolver()]}),
         Components({resolvers: [ElementPlusResolver()]}),
         new CopyWebpackPlugin({patterns: [
             { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
         ]}),
-        ...config.plugins
+        ...config.plugins,
+        new webpack.DefinePlugin({
+            COMMUNICATION_WORKER_CONTENT: JSON.stringify(communicationWorkerContent),
+        }),
     ]
 
     config.watchOptions = {

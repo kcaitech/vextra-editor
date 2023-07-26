@@ -29,53 +29,6 @@ const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const invalid_items = ref<string[]>([]);
-/** 
- * @description 右键菜单开启，检查剪切板内容，禁用一些无法执行的项
-*/
-async function check() {
-  try {
-    invalid_items.value = ['replace'];
-    if (!navigator.clipboard || !navigator.clipboard.read) { // 不支持clipboard api
-      invalid_items.value.push('copy', 'paste-here', 'replace', 'copy', 'cut');
-      return;
-    }
-    navigator.clipboard.read().then(async (_data) => {
-      const data = _data[0];
-      const types = data.types;
-      if (types.includes('text/html') && !types.includes('text/plain')) {
-        const val = await data.getType('text/html');
-        if (!val) {
-          invalid_items.value.push('replace', 'paste-here', 'paste');
-          return;
-        }
-        const fr = new FileReader();
-        fr.onload = function (event) {
-          const text_html = event.target?.result;
-          if (!(text_html && typeof text_html === 'string')) {
-            invalid_items.value.push('replace', 'paste-here', 'paste');
-            return;
-          }
-          const is_paras = text_html.slice(0, 70).indexOf(`${identity}-${paras}`) > -1;
-          const is_shape = text_html.slice(0, 60).indexOf(identity) > -1;
-          if (!(is_paras || is_shape)) {
-            invalid_items.value.push('replace', 'paste-here', 'paste');
-          }
-          if (is_shape) {
-            const index = invalid_items.value.indexOf('replace');
-            if (index > -1) {
-              invalid_items.value.splice(index, 1);
-            }
-          }
-        }
-        fr.readAsText(val);
-      }
-    });
-  } catch (error) {
-    console.log(error);
-    invalid_items.value.push('replace', 'paste-here', 'paste');
-  }
-  props.context.menu.setInvalidItems(invalid_items.value);
-}
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
@@ -608,7 +561,6 @@ onUnmounted(() => {
     flex-direction: row;
     align-items: center;
     box-sizing: border-box;
-    background-color: var(--theme-color);
 
     >.triangle {
       margin-left: auto;
@@ -627,12 +579,10 @@ onUnmounted(() => {
 
   .line {
     width: 100%;
-    height: 17px;
-    border-width: 8px 0 8px 0;
-    border-style: solid;
-    border-color: var(--theme-color);
+    height: 8px;
+    border-bottom: 1px solid gray;
+    margin-bottom: 8px;
     box-sizing: border-box;
-    background-color: grey;
   }
 
   .item:hover {

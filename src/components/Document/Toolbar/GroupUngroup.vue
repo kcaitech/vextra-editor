@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
-import { WorkSpace } from '@/context/workspace';
+import { Tool } from "@/context/tool"
 import { Shape, ShapeType, GroupShape, Artboard, BoolOp } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
@@ -55,21 +55,21 @@ function _updater(t?: number) {
     }
 }
 const updater = debounce(_updater, 50);
-function workspaceUpdate(t?: number, alt?: boolean) {
-    if (t === WorkSpace.GROUP) {
+function toolUpdate(t?: number, alt?: boolean) {
+    if (t === Tool.GROUP) {
         groupClick(alt);
-    } else if (t === WorkSpace.UNGROUP) {
+    } else if (t === Tool.UNGROUP) {
         ungroupClick();
     }
 }
 onMounted(() => {
-    props.context.workspace.watch(workspaceUpdate)
+    props.context.workspace.watch(toolUpdate)
     props.selection.watch(updater);
     updater();
 })
 onUnmounted(() => {
     props.selection.unwatch(updater);
-    props.context.workspace.unwatch(workspaceUpdate)
+    props.context.workspace.unwatch(toolUpdate)
 })
 
 const groupClick = (alt?: boolean) => {
@@ -155,11 +155,11 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
     if(shapes.length && page) {
         if(shapes.length === 1 && shapeType === ShapeType.FlattenShape) {
             const editor = props.context.editor4Shape(shapes[0])
-            editor.setBoolOp(type)
+            editor.setBoolOp(type, name)
         }else {
             if(shapes[0].parent && shapes[0].parent.type === ShapeType.FlattenShape) {
                 const editor = props.context.editor4Shape(shapes[0].parent)
-                editor.setBoolOp(type)
+                editor.setBoolOp(type, name)
             }else {
                 const editor = props.context.editor4Page(page)
                 editor.boolgroup(shapes, name, type)  

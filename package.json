@@ -9,16 +9,16 @@
     "registry": "https://packages.aliyun.com/6393d698d690c872dceedcc0/npm/npm-registry/"
   },
   "scripts": {
-    "dev:web": "vue-cli-service --public=protodesign.cn serve",
-    "build:web": "vue-cli-service build",
+    "build-worker": "cd ./src/communication && npm run build",
+    "dev:web": "npm run build-worker && vue-cli-service --public=protodesign.cn serve",
+    "build:web": "npm run build-worker && vue-cli-service build",
     "install-electron-deps": "electron-builder install-app-deps",
-    "dev:electron": "vue-cli-service electron:serve",
-    "build:electron": "vue-cli-service electron:build",
+    "dev:electron": "npm run build-worker && vue-cli-service electron:serve",
+    "build:electron": "npm run build-worker && vue-cli-service electron:build",
     "lint": "vue-cli-service lint",
     "test": "jest",
     "generate-package-dev": "node generate-package.js dev && npm install",
-    "generate-package-prod": "node generate-package.js prod && npm install",
-    "build-worker": "npx tsc -p src/communication/worker-tsconfig.json"
+    "generate-package-prod": "node generate-package.js prod && npm install"
   },
   "dependencies": {
     "@kcdesign/data": "file:../../kcdesign-data",
