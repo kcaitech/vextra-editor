@@ -73,7 +73,6 @@ const borderEndStyleOptionsSource: SelectSource[] = genOptions([
 ]);
 
 function showMenu() {
-  props.context.workspace.popoverVisible(false);
   updater();
   popover.value.show();
 }
