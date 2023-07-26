@@ -7,7 +7,7 @@ import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
 import { useI18n } from 'vue-i18n';
 import { getName } from '@/utils/content';
-import { debounce, indexOf } from 'lodash';
+import { debounce } from 'lodash';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -24,7 +24,6 @@ function _updater(t?: number) {
         state.value = 0;
         const selection = props.selection;
         const shapes = selection.selectedShapes;
-        console.log(shapes,'shpaes');
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
             isBoolGroup.value = false
@@ -107,7 +106,6 @@ const groupClick = (alt?: boolean) => {
         }
         props.context.workspace.setSelectionViewUpdater(true);
         props.context.workspace.selectionViewUpdate();
-
     }
 }
 const ungroupClick = () => {
@@ -154,30 +152,19 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
         if(shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const editor = props.context.editor4Shape(shapes[0])
             editor.setBoolOp(type, name)
+            props.context.selection.notify(Selection.CHANGE_SHAPE)
         }else {
-            const parent = shapes[0].parent
-            let t: boolean = false
-            //选中的shape都是否同一个父级
-            shapes.forEach(item => {
-                if(parent && parent.type !== ShapeType.Page) {
-                    if(item.parent?.id !== parent?.id) {
-                        return t = true
-                    }
-                }else {
-                    return t = true
-                }
-            })
-            //切换布尔对象
-            if(parent && !t && parent.childs.length === shapes.length ) {
-                const editor = props.context.editor4Shape(shapes[0].parent!)
-                editor.setBoolOp(type, name)
-            }else {
-                // 添加对象
-                const editor = props.context.editor4Page(page)
-                editor.boolgroup(shapes, name, type)  
+            const editor = props.context.editor4Page(page)
+            const g = editor.boolgroup(shapes, name, type)  
+            if(g) {
+                props.context.selection.selectShape(g)
             }
         }
     }
+}
+
+const flattenShape = () => {
+    console.log('拼合');
 }
 
 </script>
@@ -193,7 +180,8 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
                 </ToolButton>
             </div>
         </Tooltip>
-        <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"></BooleanObject>
+        <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"
+            @flatten-shape="flattenShape"></BooleanObject>
         <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
             <div class="group">
                 <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">

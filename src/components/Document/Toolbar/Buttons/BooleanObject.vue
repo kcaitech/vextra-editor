@@ -4,7 +4,7 @@ import { Selection } from '@/context/selection';
 import { Context } from '@/context';
 import ToolButton from '../ToolButton.vue';
 import DropSelect from "./DropSelect.vue"
-import { BoolOp } from '@kcdesign/data';
+import { BoolOp, GroupShape, ShapeType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
@@ -20,6 +20,7 @@ const boolType = ref(BoolOp.Union)
 const boolName = ref('Union')
 const emit = defineEmits<{
   (e: "changeBool", type: BoolOp, name: string): void;
+  (e: 'flattenShape'): void;
 }>();
 
 const patterns = ((items: [string, any, BoolOp][]) => (items.map(item => ({ value: item[0], content: item[1], bool: item[2]}))))([
@@ -63,7 +64,11 @@ const selector = (active: string, type: BoolOp) => {
     }else if (active === 'cohere') {
       boolName.value = 'cohere'
     }
-    emit('changeBool', type, boolName.value);
+    if(active === 'cohere') {
+      emit('flattenShape')
+    }else {
+      emit('changeBool', type, boolName.value);
+    }
 }
 
 function onMenuBlur(e: MouseEvent) {
@@ -92,19 +97,41 @@ const changeBool = () => {
     emit('changeBool', boolType.value, boolName.value);
 }
 
+const selectionWatch = (t?: number) => {
+  if(t === Selection.CHANGE_SHAPE) {
+    const shapes = props.selection.selectedShapes
+    if(shapes.length === 1 && shapes[0].type === ShapeType.Group) {
+      const type = (shapes[0] as GroupShape).getBoolOp()
+      if(type.op === 'union') {
+        selectBool.value = 'union'
+      }else if (type.op === 'subtract') {
+        selectBool.value = 'subtract'
+      }else if (type.op === 'intersect') {
+        selectBool.value = 'intersection'
+      }else if (type.op === 'diff') {
+        selectBool.value = 'difference'
+      }else if (type.op === 'none') {
+        selectBool.value = 'union'
+      }
+    }
+  }
+}
+
 onMounted(() => {
+  props.context.selection.watch(selectionWatch)
 })
 onUnmounted(() => {
+  props.context.selection.unwatch(selectionWatch)
 })
 
 </script>
 
 <template>
-     <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-        <template v-for="(item, index) in patterns" :key="item.value">
-            <div class="line" v-if="index === 4"></div>
-            <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool" :d="selectBool"></DropSelect>
-        </template>
+  <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+    <template v-for="(item, index) in patterns" :key="item.value">
+        <div class="line" v-if="index === 4"></div>
+        <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool" :d="selectBool"></DropSelect>
+    </template>
   </div>
   <el-tooltip class="box-item" effect="dark"
     :content="t(`bool.${selectBool}`)" placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
