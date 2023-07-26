@@ -6,6 +6,6 @@ import { Shape } from "@kcdesign/data";
  * return a clipPath el
  * @param shape 
  */
-export function render(h: Function,id: string, path: string): any {
-    return h("clipPath", {id}, [h("path", {d: path})]);
+export function render(h: Function, id: string, path: string): any {
+    return h("clipPath", { id }, [h("path", { d: path, "clip-rule": "evenodd", })]);
 }

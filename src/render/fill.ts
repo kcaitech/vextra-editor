@@ -14,7 +14,8 @@ handler[FillType.SolidColor] = function (h: Function, style: Style, frame: Shape
         fill: "rgb(" + color.red + "," + color.green + "," + color.blue + ")",
         "fill-opacity": (color ? color.alpha : 1) * opacity,
         stroke: 'none',
-        'stroke-width': 0
+        'stroke-width': 0,
+        "fill-rule": "evenodd",
     });
 }
 
@@ -46,6 +47,7 @@ handler[FillType.Gradient] = function (h: Function, style: Style, frame: ShapeFr
             "fill-opacity": (color ? color.alpha : 1) * opacity,
             stroke: 'none',
             'stroke-width': 0,
+            "fill-rule": "evenodd",
         }));
     }
     // if (elArr.length == 1) {
@@ -78,7 +80,7 @@ export function render(h: Function, style: Style, frame: ShapeFrame, path: strin
     // path = path || shape.getPath(true).toString();
 
     for (let i = 0; i < fillsCount; i++) {
-        const fill =  style.fills[i];
+        const fill = style.fills[i];
         if (!fill.isEnabled) {
             continue;
         }
