@@ -2,7 +2,7 @@
 import { h, ref, onMounted, onUnmounted, watch } from 'vue';
 import comsMap from './comsmap'
 import { Artboard } from '@kcdesign/data';
-import { render as r } from "@/render/artboard"
+import { renderArtboard as r } from "@kcdesign/data"
 
 const props = defineProps<{ data: Artboard }>();
 const reflush = ref(0);

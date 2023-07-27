@@ -102,7 +102,7 @@ function check_mixed() {
 }
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
-    radius.value = (shape as RectShape).getRadius();
+    radius.value = (shape as RectShape).getRectRadius();
 }
 function onChangeX(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
