@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { AsyncMultiAction, CtrlElementType, Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { ClientXY, PageXY } from '@/context/selection';
+import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { Navi } from '@/context/navigate';
 import { update_dot } from './common';
@@ -22,6 +22,7 @@ interface Dot {
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
+const submatrix = new Matrix();
 const data: { dots: Dot[] } = reactive({ dots: [] });
 const { dots } = data;
 const rotating = ref<boolean>(false);
@@ -57,36 +58,63 @@ function point_mousemove(event: MouseEvent) {
     const { clientX, clientY } = event;
     const workspace = props.context.workspace;
     const root = workspace.root;
-    const mouseOnClient: ClientXY = { x: clientX - root.x, y: clientY - root.y };
-    if (isDragging) {
-        rotating.value = true;
-        const { x: sx, y: sy } = startPosition;
-        const { x: mx, y: my } = mouseOnClient;
-        const { x: ax, y: ay } = props.axle;
-        let deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-        if (asyncMultiAction) {
-            // workspace.scaling(true);
-            // const m = new Matrix(workspace.matrix);
-            // const p1OnPage: PageXY = m.inverseCoord(startPosition.x, startPosition.y);
-            // const p2Onpage: PageXY = m.inverseCoord(mouseOnClient.x, mouseOnClient.y);
-            if (cur_ctrl_type.endsWith('rotate')) {
-                const mr = new Matrix(workspace.matrix);
-                const root_axle = mr.inverseCoord(ax, ay); // 中心点在root的位置
-                const r = new Matrix();
-                r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y); // 控件旋转矩阵
-                asyncMultiAction.executeRotate(deg, r);
-            } else {
-                // asyncMultiAction.executeScale();
+    const { x: sx, y: sy } = startPosition;
+    const { x: mx, y: my } = { x: clientX - root.x, y: clientY - root.y };
+    const { x: ax, y: ay } = props.axle;
+    if (isDragging && asyncMultiAction) {
+        if (cur_ctrl_type.endsWith('rotate')) {
+            let deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
+            const root_axle = submatrix.computeCoord(ax, ay); // 中心点在root的位置
+            const r = new Matrix();
+            r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y); // 控件旋转矩阵
+            asyncMultiAction.executeRotate(deg, r);
+            rotating.value = true;
+        } else {
+            if (cur_ctrl_type === CtrlElementType.RectLT) {
+                const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+                const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+                const o_w = f_rb.x - f_lt.x;
+                const o_h = f_rb.y - f_lt.y;
+                const s = submatrix.computeCoord(sx, sy);
+                const e = submatrix.computeCoord(mx, my);
+                const trans = { x: e.x - s.x, y: e.y - s.y };
+                asyncMultiAction.executeScale(f_lt, { x: f_lt.x + trans.x, y: f_lt.y + trans.y }, (o_w - trans.x) / o_w, (o_h - trans.y) / o_h);
+            } else if (cur_ctrl_type === CtrlElementType.RectRT) {
+                const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+                const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+                const o_w = f_rb.x - f_lt.x;
+                const o_h = f_rb.y - f_lt.y;
+                const s = submatrix.computeCoord(sx, sy);
+                const e = submatrix.computeCoord(mx, my);
+                const trans = { x: e.x - s.x, y: e.y - s.y };
+                asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + trans.y }, (o_w + trans.x) / o_w, (o_h - trans.y) / o_h);
+            } else if (cur_ctrl_type === CtrlElementType.RectRB) {
+                const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+                const f_lt = props.frame[0];
+                const f_rb = props.frame[2];
+                const o_w = f_rb.x - f_lt.x;
+                const o_h = f_rb.y - f_lt.y;
+                const trans = { x: mx - sx, y: my - sy };
+                asyncMultiAction.executeScale(origin, origin, (o_w + trans.x) / o_w, (o_h + trans.y) / o_h);
+            } else if (cur_ctrl_type === CtrlElementType.RectLB) {
+                const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+                const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+                const o_w = f_rb.x - f_lt.x;
+                const o_h = f_rb.y - f_lt.y;
+                const s = submatrix.computeCoord(sx, sy);
+                const e = submatrix.computeCoord(mx, my);
+                const trans = { x: e.x - s.x, y: e.y - s.y };
+                asyncMultiAction.executeScale(f_lt, { x: f_lt.x + trans.x, y: f_lt.y }, (o_w - trans.x) / o_w, (o_h + trans.y) / o_h);
             }
         }
-        startPosition = { ...mouseOnClient };
-    } else {
-        if (Math.hypot(mouseOnClient.x - startPosition.x, mouseOnClient.y - startPosition.y) > dragActiveDis) {
-            isDragging = true;
-            const shapes = props.context.selection.selectedShapes;
-            const page = props.context.selection.selectedPage;
-            asyncMultiAction = props.context.editor.controller().asyncMultiEditor(shapes, page!);
-        }
+        startPosition = { x: mx, y: my };
+    } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
+        isDragging = true;
+        const shapes = props.context.selection.selectedShapes;
+        const page = props.context.selection.selectedPage;
+        asyncMultiAction = props.context.editor.controller().asyncMultiEditor(shapes, page!);
+        workspace.scaling(true);
+        submatrix.reset(workspace.matrix.inverse);
     }
 }
 function point_mouseup(event: MouseEvent) {
