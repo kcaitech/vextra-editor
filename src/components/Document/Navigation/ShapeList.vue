@@ -15,7 +15,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import SearchPanel from "./Search/SearchPanel.vue";
 import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
-import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
+import { is_shape_in_selection, selection_types, fit } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
 import { Perm } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
@@ -279,8 +279,15 @@ const isRead = (read: boolean, shape: Shape) => {
     }
 }
 function shapeScrollToContentView(shape: Shape) {
+    const is_p2 = props.context.navi.isPhase2(shape);
+    if (is_p2) {
+        fit(props.context, shape);
+        return;
+    }
+
     if (isInner(props.context, shape)) {
         props.context.selection.selectShape(shape);
+        props.context.navi.set_phase(shape.id);
         return;
     }
     const workspace = props.context.workspace;
@@ -307,8 +314,8 @@ function shapeScrollToContentView(shape: Shape) {
             workspace.matrix.trans(transX, transY);
         }
         workspace.matrixTransformation();
+        props.context.navi.set_phase('');
     }
-
 }
 function selectshape_right(shape: Shape, shiftKey: boolean) {
     const selection = props.context.selection;
@@ -336,8 +343,8 @@ const list_mousedown = (e: MouseEvent, shape: Shape) => {
         const types = selection_types(selected);
         if (types & 1) chartMenuItems.push('un_group');
         if (types & 2) chartMenuItems.push('dissolution');
-        if(props.context.workspace.documentPerm !== Perm.isEdit) {
-            chartMenuItems = ['all','copy'];
+        if (props.context.workspace.documentPerm !== Perm.isEdit) {
+            chartMenuItems = ['all', 'copy'];
         }
         chartMenuMount(e);
     }
@@ -608,6 +615,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         position: relative;
         padding-bottom: 4px;
+
         .title {
             height: 36px;
             font-weight: var(--font-default-bold);
