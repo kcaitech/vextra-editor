@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, computed, reactive } from "vue";
+import { watchEffect, onMounted, onUnmounted, computed, reactive, ref, nextTick } from "vue";
 import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
@@ -22,7 +22,6 @@ interface Title {
     maxWidth: number
     selected: boolean
 }
-
 const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
@@ -58,7 +57,7 @@ const setPosition = () => {
                     selected = true
                 } else {
                     selected = false
-                }
+                }                
                 const m = artboard.matrix2Root(); // 图形到页面的转换矩阵
                 const f2p = artboard.frame2Root(); // 
                 const frame = artboard.frame;
@@ -83,10 +82,14 @@ const setPosition = () => {
                 anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y }); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
+
                 anchor.y -= 16; // 顶上去16像素
                 const width = f2p.width;
                 const maxWidth = frame.width
-                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth, selected });
+                if(artboard.isFlippedHorizontal) {
+                    anchor.x = 0
+                }
+                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth, selected});
             }
         }
     } else {
@@ -153,7 +156,7 @@ watchEffect(() => updater());
 <template>
     <!-- container -->
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
-        <div v-for="(t, index) in titles" class="title-container" :key="index"
+        <div class="title-container" v-for="(t, index) in titles" :key="index"
             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth" @rename="rename"
                 @hover="hover" @leave="leave" :shape="t.shape" :selected="t.selected"></ArtboardName>
