@@ -35,7 +35,18 @@ export class Server {
             this.isConnecting = false
             return false
         }
-        await new Promise<void>(resolve => this.ws!.onopen = _ => resolve())
+        try {
+            await new Promise<void>((resolve, reject) => {
+                this.ws!.onopen = _ => resolve()
+                this.ws!.onerror = err => reject(err)
+            })
+        } catch (err) {
+            console.log(err)
+            this.ws = undefined
+            resolve(false)
+            this.isConnecting = false
+            return false
+        }
         this.ws.send(JSON.stringify({
             token: this.token,
         }))
