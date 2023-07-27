@@ -16,7 +16,7 @@ import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
-import { init as renderinit } from '@/render';
+// import { init as renderinit } from '@/render';
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
@@ -28,6 +28,7 @@ import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action } from "@/context/tool";
+import { initpal } from './initpal';
 
 interface Props {
     context: Context
@@ -691,7 +692,7 @@ onMounted(() => {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     window.addEventListener('blur', windowBlur);
-    renderinit().then(() => {
+    initpal().then(() => {
         inited.value = true;
         nextTick(() => {
             if (root.value) {
@@ -740,4 +741,4 @@ onUnmounted(() => {
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
     </div>
-</template>
+</template>@/components/Document/initpal

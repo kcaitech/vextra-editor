@@ -16,14 +16,10 @@ import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { Perm, WorkSpace } from '@/context/workspace';
-import { measure } from '@/layout/text/measure';
-import Home from "@/components/Document/Toolbar/BackToHome.vue";
-import e from 'express';
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { S3Storage, StorageOptions } from "@/utils/storage";
 
@@ -340,7 +336,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo, measure)
+        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
