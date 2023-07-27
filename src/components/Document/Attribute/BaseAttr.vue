@@ -37,7 +37,9 @@ const isLock = ref<boolean>(false);
 const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
 const points = ref<number>(0);
-const radius = ref<{ lt: number, rt: number, rb: number, lb: number }>();
+const radius = ref<{ lt: number, rt: number, rb: number, lb: number }>({
+    lt: 0, rt: 0, rb: 0, lb: 0
+});
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
 const isFlippedHorizontal = ref<boolean>()
@@ -102,7 +104,17 @@ function check_mixed() {
 }
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
-    radius.value = (shape as RectShape).getRectRadius();
+    if(shape instanceof RectShape) {
+        radius.value = (shape as RectShape).getRectRadius();
+    }else if(shape instanceof GroupShape) {
+        console.log(radius.value,'radius.value');
+        
+        radius.value.lt = (shape as GroupShape).fixedRadius || 0
+        radius.value.lb = (shape as GroupShape).fixedRadius || 0
+        radius.value.rt = (shape as GroupShape).fixedRadius || 0
+        radius.value.rb = (shape as GroupShape).fixedRadius || 0
+    }
+
 }
 function onChangeX(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
@@ -264,7 +276,12 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
             if (!radius.value) return;
             const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            editor.value.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
+            const shape = props.context.selection.selectedShapes[0];
+            if(shape instanceof GroupShape) {
+                editor.value.setBoolOpShapeFixedRadius(fixedRadius)
+            }else {
+                editor.value.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
+            }
         }
     } else {
         // todo
@@ -286,9 +303,10 @@ function layout() {
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
         if (shapeType.value === ShapeType.Rectangle) getRectShapeAttr(shape);
-        if(shape.type === ShapeType.Group) {
-            if((shape as GroupShape).isBoolOpShape) {
+        if(shape.type === ShapeType.Group || shape.type === ShapeType.Path) {
+            if((shape as GroupShape).isBoolOpShape || shape.type === ShapeType.Path) {
                 showRadius.value = true
+                getRectShapeAttr(shape);
             }
         }
     }

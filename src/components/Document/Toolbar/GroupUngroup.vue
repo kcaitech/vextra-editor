@@ -24,6 +24,7 @@ function _updater(t?: number) {
         state.value = 0;
         const selection = props.selection;
         const shapes = selection.selectedShapes;
+        console.log(shapes[0],'shapes');
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
             isBoolGroup.value = false
@@ -168,9 +169,10 @@ const flattenShape = () => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     if (page && shapes.length) {
+        const editor = props.context.editor4Page(page)
         if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
-            const editor = props.context.editor4Page(page)
             editor.flattenBoolShape(shapes[0])
+        }else {
         }
     }
 }
