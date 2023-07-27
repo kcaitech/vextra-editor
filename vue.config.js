@@ -1,6 +1,7 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
 const fs = require('fs')
+const crypto = require('crypto')
 // 按需引入element ui
 const AutoImport = require('unplugin-auto-import/webpack')
 const Components = require('unplugin-vue-components/webpack')
@@ -75,7 +76,10 @@ var configureWebpack = (config) => {
         },
     )
 
-    const communicationWorkerContent = fs.readFileSync(path.resolve(__dirname, 'src/communication/communication-worker.js')).toString()
+    const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication-worker.js')
+    const communicationWorkerContent = fs.readFileSync(communicationWorkerSourcePath)
+    const communicationWorkerHash = crypto.createHash('md5').update(communicationWorkerContent).digest('hex')
+    const communicationWorkerTargetFilename = `communication-worker.${communicationWorkerHash.slice(0, 8)}.js`
     config.plugins = [
         AutoImport({resolvers: [ElementPlusResolver()]}),
         Components({resolvers: [ElementPlusResolver()]}),
@@ -83,8 +87,16 @@ var configureWebpack = (config) => {
             { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
         ]}),
         ...config.plugins,
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: communicationWorkerSourcePath,
+                    to: communicationWorkerTargetFilename,
+                },
+            ],
+        }),
         new webpack.DefinePlugin({
-            COMMUNICATION_WORKER_CONTENT: JSON.stringify(communicationWorkerContent),
+            COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
         }),
     ]
 
