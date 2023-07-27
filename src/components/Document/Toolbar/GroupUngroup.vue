@@ -171,8 +171,15 @@ const flattenShape = () => {
     if (page && shapes.length) {
         const editor = props.context.editor4Page(page)
         if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
-            editor.flattenBoolShape(shapes[0])
+            const flatten = editor.flattenBoolShape(shapes[0])
+            if(flatten) {
+                props.context.selection.selectShape(flatten)
+            }
         }else {
+            const flatten = editor.flattenShapes(shapes,'Vector')
+            if(flatten) {
+                props.context.selection.selectShape(flatten)
+            }
         }
     }
 }

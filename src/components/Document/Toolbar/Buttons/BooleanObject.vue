@@ -51,7 +51,9 @@ function showMenu(e: MouseEvent) {
 }
 
 const selector = (active: string, type: BoolOp) => {
-    selectBool.value = active
+    if(active !== 'cohere') {
+      selectBool.value = active
+    }
     boolType.value = type
     popoverVisible.value = false;
     if(active === 'union') {
