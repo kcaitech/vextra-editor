@@ -95,6 +95,7 @@ function point_mousemove(event: MouseEvent) {
                 const o_w = f_rb.x - f_lt.x;
                 const o_h = f_rb.y - f_lt.y;
                 const trans = { x: mx - sx, y: my - sy };
+                if (Math.abs(o_w + trans.x) < 1 || Math.abs(o_h + trans.y) < 1) return startPosition = { x: mx, y: my };
                 asyncMultiAction.executeScale(origin, origin, (o_w + trans.x) / o_w, (o_h + trans.y) / o_h);
             } else if (cur_ctrl_type === CtrlElementType.RectLB) {
                 const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
