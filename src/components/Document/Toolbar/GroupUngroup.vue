@@ -29,9 +29,9 @@ function _updater(t?: number) {
             isBoolGroup.value = false
         } else if (shapes.length === 1) {
             const type = shapes[0].type;
-            if(type === ShapeType.FlattenShape || type === ShapeType.Group) {
+            if (type === ShapeType.FlattenShape || type === ShapeType.Group) {
                 isBoolGroup.value = true
-            }else {
+            } else {
                 isBoolGroup.value = false
             }
             if (type === ShapeType.Group || type === ShapeType.Artboard) {
@@ -75,7 +75,7 @@ const groupClick = (alt?: boolean) => {
         props.context.workspace.setSelectionViewUpdater(false);
         const selection = props.selection;
         const shapes = selection.selectedShapes;
-        const page = selection.selectedPage;        
+        const page = selection.selectedPage;
         if (page) {
             if (shapes.length) {
                 const bro = Array.from(page.shapes.values());
@@ -148,15 +148,15 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
-    if(shapes.length && page) {
-        if(shapes.length === 1 && shapes[0] instanceof GroupShape) {
+    if (shapes.length && page) {
+        if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const editor = props.context.editor4Shape(shapes[0])
             editor.setBoolOp(type, name)
             props.context.selection.notify(Selection.CHANGE_SHAPE)
-        }else {
+        } else {
             const editor = props.context.editor4Page(page)
-            const g = editor.boolgroup(shapes, name, type)  
-            if(g) {
+            const g = editor.boolgroup(shapes, name, type)
+            if (g) {
                 props.context.selection.selectShape(g)
             }
         }
@@ -164,7 +164,15 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
 }
 
 const flattenShape = () => {
-    console.log('拼合');
+    const page = props.context.selection.selectedPage;
+    const selection = props.selection;
+    const shapes = selection.selectedShapes;
+    if (page && shapes.length) {
+        if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
+            const editor = props.context.editor4Page(page)
+            editor.flattenBoolShape(shapes[0])
+        }
+    }
 }
 
 </script>

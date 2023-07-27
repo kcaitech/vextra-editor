@@ -82,13 +82,15 @@ const setPosition = () => {
                 anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y }); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
-
                 anchor.y -= 16; // 顶上去16像素
                 const width = f2p.width;
                 const maxWidth = frame.width
-                if(artboard.isFlippedHorizontal) {
-                    anchor.x = 0
-                }
+                // if(artboard.isFlippedHorizontal) {
+                //     anchor.x = 0
+                // }
+                // if(artboard.isFlippedVertical) {
+                //     anchor.y = 0
+                // }
                 titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth, selected});
             }
         }
