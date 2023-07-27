@@ -158,13 +158,13 @@ function setCursor(t: CtrlElementType, force?: boolean) {
         deg = deg + 45;
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLTR) {
-        deg = deg + 180;
+        deg = deg + 225;
         cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectRT) {
         deg = deg + 135;
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectRTR) {
-        deg = deg + 270;
+        deg = deg + 315;
         cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectRB) {
         deg = deg + 45;
@@ -176,7 +176,7 @@ function setCursor(t: CtrlElementType, force?: boolean) {
         deg = deg + 135;
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLBR) {
-        deg = deg + 90;
+        deg = deg + 135;
         cursor.setType(`rotate-${deg}`, force);
     }
 }
