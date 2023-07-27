@@ -16,7 +16,6 @@ import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
-// import { init as renderinit } from '@/render';
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
