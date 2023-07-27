@@ -56,8 +56,10 @@ export class Tool extends Watchable(Object) {
     static GROUP = 2;
     static UNGROUP = 3;
     static COMPS = 4;
+    static TITILE_VISIBLE = 5
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
+    private m_show_title: boolean = true;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -153,5 +155,12 @@ export class Tool extends Watchable(Object) {
     }
     keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
         // todo
+    }
+    get isShowTitle() {
+        return this.m_show_title;
+    }
+    setTitleVisibale(val: boolean) {
+        this.m_show_title = val;
+        this.notify(Tool.TITILE_VISIBLE);
     }
 }
