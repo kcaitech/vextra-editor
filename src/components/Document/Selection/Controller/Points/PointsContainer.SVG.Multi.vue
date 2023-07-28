@@ -80,12 +80,8 @@ function point_mousemove(event: MouseEvent) {
                 const trans = { x: e.x - s.x, y: e.y - s.y };
                 const _w = o_w - trans.x;
                 const _h = o_h - trans.y;
-                if (_w < 0) {
-                    cur_ctrl_type = o_h < 0 ? CtrlElementType.RectRB : CtrlElementType.RectRT;
-                }
-                if (_h < 0) {
-                    cur_ctrl_type = _w < 0 ? CtrlElementType.RectRB : CtrlElementType.RectLB;
-                }
+                if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectRB : CtrlElementType.RectRT;
+                if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectRB : CtrlElementType.RectLB;
                 asyncMultiAction.executeScale(f_lt, { x: f_lt.x + trans.x, y: f_lt.y + trans.y }, _w / o_w, _h / o_h);
             } else if (cur_ctrl_type === CtrlElementType.RectRT) {
                 const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
@@ -97,12 +93,8 @@ function point_mousemove(event: MouseEvent) {
                 const trans = { x: e.x - s.x, y: e.y - s.y };
                 const _w = o_w + trans.x;
                 const _h = o_h - trans.y;
-                if (_w < 0) {
-                    cur_ctrl_type = o_h < 0 ? CtrlElementType.RectLB : CtrlElementType.RectLT;
-                }
-                if (_h < 0) {
-                    cur_ctrl_type = _w < 0 ? CtrlElementType.RectLB : CtrlElementType.RectRB;
-                }
+                if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectLB : CtrlElementType.RectLT;
+                if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectLB : CtrlElementType.RectRB;
                 asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + trans.y }, _w / o_w, _h / o_h);
             } else if (cur_ctrl_type === CtrlElementType.RectRB) {
                 const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
@@ -114,12 +106,8 @@ function point_mousemove(event: MouseEvent) {
                 if (Math.abs(o_w + trans.x) < 1 || Math.abs(o_h + trans.y) < 1) return startPosition = { x: mx, y: my };
                 const _w = o_w + trans.x;
                 const _h = o_h + trans.y;
-                if (_w < 0) {
-                    cur_ctrl_type = o_h < 0 ? CtrlElementType.RectLT : CtrlElementType.RectLB;
-                }
-                if (_h < 0) {
-                    cur_ctrl_type = _w < 0 ? CtrlElementType.RectLT : CtrlElementType.RectRT;
-                }
+                if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectLT : CtrlElementType.RectLB;
+                if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectLT : CtrlElementType.RectRT;
                 asyncMultiAction.executeScale(origin, origin, _w / o_w, _h / o_h);
             } else if (cur_ctrl_type === CtrlElementType.RectLB) {
                 const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
@@ -131,12 +119,8 @@ function point_mousemove(event: MouseEvent) {
                 const trans = { x: e.x - s.x, y: e.y - s.y };
                 const _w = o_w - trans.x;
                 const _h = o_h + trans.y;
-                if (_w < 0) {
-                    cur_ctrl_type = o_h < 0 ? CtrlElementType.RectRT : CtrlElementType.RectRB;
-                }
-                if (_h < 0) {
-                    cur_ctrl_type = _w < 0 ? CtrlElementType.RectRT : CtrlElementType.RectLT;
-                }
+                if (_w < 0) cur_ctrl_type = o_h < 0 ? CtrlElementType.RectRT : CtrlElementType.RectRB;
+                if (_h < 0) cur_ctrl_type = _w < 0 ? CtrlElementType.RectRT : CtrlElementType.RectLT;
                 asyncMultiAction.executeScale(f_lt, { x: f_lt.x + trans.x, y: f_lt.y }, _w / o_w, _h / o_h);
             }
         }
