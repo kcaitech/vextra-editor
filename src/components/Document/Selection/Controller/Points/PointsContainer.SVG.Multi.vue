@@ -4,9 +4,8 @@ import { AsyncMultiAction, CtrlElementType, Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
-import { Navi } from '@/context/navigate';
 import { update_dot } from './common';
-import { getAngle } from '@/utils/common';
+import { getAngle, getHorizontalAngle } from '@/utils/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -69,6 +68,7 @@ function point_mousemove(event: MouseEvent) {
             r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y); // 控件旋转矩阵
             asyncMultiAction.executeRotate(deg, r);
             rotating.value = true;
+            props.context.cursor.setType(`rotate-${getRotate(props.axle, { x: mx, y: my })}`, true);
         } else {
             if (cur_ctrl_type === CtrlElementType.RectLT) {
                 const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
@@ -130,8 +130,12 @@ function point_mousemove(event: MouseEvent) {
         const shapes = props.context.selection.selectedShapes;
         const page = props.context.selection.selectedPage;
         asyncMultiAction = props.context.editor.controller().asyncMultiEditor(shapes, page!);
-        if (!cur_ctrl_type.endsWith('rotate')) setCursor(cur_ctrl_type);
-        workspace.scaling(true);
+        if (cur_ctrl_type.endsWith('rotate')) {
+            workspace.rotating(true);
+        } else {
+            setCursor(cur_ctrl_type);
+            workspace.scaling(true);
+        }
         submatrix.reset(workspace.matrix.inverse);
     }
 }
@@ -147,10 +151,7 @@ function point_mouseup(event: MouseEvent) {
         }
         document.removeEventListener('mousemove', point_mousemove);
         document.removeEventListener('mouseup', point_mouseup);
-        const workspace = props.context.workspace;
-        workspace.scaling(false);
-        workspace.setCtrl('page');
-        props.context.cursor.reset();
+        action_end();
     }
 }
 function window_blur() {
@@ -158,15 +159,10 @@ function window_blur() {
     if (asyncMultiAction) {
         asyncMultiAction.close();
         asyncMultiAction = undefined;
-        const navi = props.context.navi;
-        navi.set_sl_freeze(false);
-        navi.notify(Navi.SHAPELIST_UPDATE);
     }
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
-    const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.setCtrl('page');
+    action_end();
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
@@ -197,8 +193,18 @@ function setCursor(t: CtrlElementType, force?: boolean) {
         cursor.setType(`rotate-${deg}`, force);
     }
 }
+function action_end() {
+    const workspace = props.context.workspace;
+    workspace.scaling(false);
+    workspace.rotating(false);
+    workspace.setCtrl('page');
+    props.context.cursor.reset();
+}
 function point_mouseleave() {
-    props.context.cursor.setType('auto-0');
+    props.context.cursor.reset();
+}
+function getRotate(axle: { x: number, y: number }, cm: { x: number, y: number }) {
+    return getHorizontalAngle(axle, cm);
 }
 watch(() => props.matrix, update)
 
