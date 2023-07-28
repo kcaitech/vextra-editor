@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed } from 'vue'
-import { Shape, ShapeType, RectShape, GroupShape } from '@kcdesign/data';
+import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2 } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
 import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
@@ -294,8 +294,8 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             if (!radius.value) return;
             const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
             const shape = props.context.selection.selectedShapes[0];
-            if(shape instanceof GroupShape) {
-                editor.value.setBoolOpShapeFixedRadius(fixedRadius)
+            if(shape instanceof GroupShape || shape instanceof PathShape || shape instanceof PathShape2) {
+                editor.value.setFixedRadius(fixedRadius)
             }else {
                 editor.value.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
             }
