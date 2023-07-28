@@ -8,6 +8,7 @@ import { Action } from "@/context/tool";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
+import Assist from "@/components/Document/Assist/index.vue"
 export interface Point {
     x: number,
     y: number,
@@ -252,6 +253,7 @@ onUnmounted(() => {
 watchEffect(updater);
 </script>
 <template>
+    <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
     <!-- 描边 -->
     <svg ref="traceEle" v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
