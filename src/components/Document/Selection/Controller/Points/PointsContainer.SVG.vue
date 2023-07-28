@@ -41,7 +41,7 @@ function update_dot_path() {
   let rt = matrix.computeCoord(frame.width, 0);
   let rb = matrix.computeCoord(frame.width, frame.height);
   let lb = matrix.computeCoord(0, frame.height);
-  dots.push(...update_dot([lt, rt, rb, lb], s_r, matrix, props.shape));
+  dots.push(...update_dot([lt, rt, rb, lb], s_r, props.shape));
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {

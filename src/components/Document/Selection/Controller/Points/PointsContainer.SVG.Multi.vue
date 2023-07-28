@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncMultiAction, CtrlElementType, Matrix } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { update_dot } from './common';
@@ -24,7 +24,6 @@ const matrix = new Matrix();
 const submatrix = new Matrix();
 const data: { dots: Dot[] } = reactive({ dots: [] });
 const { dots } = data;
-const rotating = ref<boolean>(false);
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncMultiAction: AsyncMultiAction | undefined = undefined;
@@ -37,7 +36,7 @@ function update() {
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     dots.length = 0;
-    dots.push(...update_dot(props.frame, 0, matrix));
+    dots.push(...update_dot(props.frame, 0));
 }
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) return;
@@ -67,8 +66,7 @@ function point_mousemove(event: MouseEvent) {
             const r = new Matrix();
             r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y); // 控件旋转矩阵
             asyncMultiAction.executeRotate(deg, r);
-            rotating.value = true;
-            props.context.cursor.setType(`rotate-${getRotate(props.axle, { x: mx, y: my })}`, true);
+            props.context.cursor.setType(`rotate-${getHorizontalAngle(props.axle, { x: mx, y: my })}`, true);
         } else {
             if (cur_ctrl_type === CtrlElementType.RectLT) {
                 const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
@@ -130,9 +128,8 @@ function point_mousemove(event: MouseEvent) {
         const shapes = props.context.selection.selectedShapes;
         const page = props.context.selection.selectedPage;
         asyncMultiAction = props.context.editor.controller().asyncMultiEditor(shapes, page!);
-        if (cur_ctrl_type.endsWith('rotate')) {
-            workspace.rotating(true);
-        } else {
+        if (cur_ctrl_type.endsWith('rotate')) workspace.rotating(true);
+        else {
             setCursor(cur_ctrl_type);
             workspace.scaling(true);
         }
@@ -147,7 +144,6 @@ function point_mouseup(event: MouseEvent) {
                 asyncMultiAction = undefined;
             }
             isDragging = false;
-            rotating.value = false;
         }
         document.removeEventListener('mousemove', point_mousemove);
         document.removeEventListener('mouseup', point_mouseup);
@@ -203,9 +199,6 @@ function action_end() {
 function point_mouseleave() {
     props.context.cursor.reset();
 }
-function getRotate(axle: { x: number, y: number }, cm: { x: number, y: number }) {
-    return getHorizontalAngle(axle, cm);
-}
 watch(() => props.matrix, update)
 
 onMounted(() => {
@@ -230,6 +223,4 @@ onUnmounted(() => {
                 @mouseenter="() => setCursor(p.type)" @mouseleave="point_mouseleave"></rect>
         </g>
     </g>
-    <rect :style="`opacity: ${rotating ? 1 : 0};`" :x="props.axle.x" :y="props.axle.y" width="10px" height="10px"
-        fill="pink" rx="5px" ry="5px" stroke='#fff' stroke-width="1.5px"></rect>
 </template>

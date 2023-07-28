@@ -493,9 +493,11 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
+      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
+      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
     } else {
-      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
+      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
+      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
     }
   }
   return contextMenuItems;
