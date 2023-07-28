@@ -130,6 +130,7 @@ function point_mousemove(event: MouseEvent) {
         const shapes = props.context.selection.selectedShapes;
         const page = props.context.selection.selectedPage;
         asyncMultiAction = props.context.editor.controller().asyncMultiEditor(shapes, page!);
+        if (!cur_ctrl_type.endsWith('rotate')) setCursor(cur_ctrl_type);
         workspace.scaling(true);
         submatrix.reset(workspace.matrix.inverse);
     }
@@ -196,12 +197,8 @@ function setCursor(t: CtrlElementType, force?: boolean) {
         cursor.setType(`rotate-${deg}`, force);
     }
 }
-function point_mouseenter(t: CtrlElementType) {
-    setCursor(t);
-}
 function point_mouseleave() {
-    const cursor = props.context.cursor;
-    cursor.setType('auto-0');
+    props.context.cursor.setType('auto-0');
 }
 watch(() => props.matrix, update)
 
@@ -217,14 +214,14 @@ onUnmounted(() => {
     <g>
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
             <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-                @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
+                @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
             </path>
             <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'
-                @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
+                @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
                 @mouseleave="point_mouseleave"></rect>
             <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#865dff'
                 stroke-width="1.5px" @mousedown.stop="(e) => point_mousedown(e, p.type)"
-                @mouseenter="() => point_mouseenter(p.type)" @mouseleave="point_mouseleave"></rect>
+                @mouseenter="() => setCursor(p.type)" @mouseleave="point_mouseleave"></rect>
         </g>
     </g>
     <rect :style="`opacity: ${rotating ? 1 : 0};`" :x="props.axle.x" :y="props.axle.y" width="10px" height="10px"

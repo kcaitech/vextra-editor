@@ -110,6 +110,7 @@ function bar_mousemove(event: MouseEvent) {
             isDragging = true;
             asyncMultiAction = props.context.editor.controller().asyncMultiEditor(props.context.selection.selectedShapes, props.context.selection.selectedPage!);
             submatrix.reset(workspace.matrix.inverse);
+            setCursor(cur_ctrl_type);
             workspace.scaling(true);
         }
     }
@@ -138,8 +139,7 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale-0', force);
 }
 function bar_mouseleave() {
-    const cursor = props.context.cursor;
-    cursor.setType('auto-0');
+    props.context.cursor.setType('auto-0');
 }
 function window_blur() {
     if (isDragging) isDragging = false;
