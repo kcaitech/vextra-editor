@@ -1,4 +1,4 @@
-import { Shape, ShapeType } from "@kcdesign/data";
+import { RectShape, Shape, ShapeType } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 
@@ -35,7 +35,33 @@ export function is_mixed(shapes: Shape[]) {
   if (result.rotate !== 'mixed') result.rotate = Number((result.rotate as number).toFixed(2));
   return result;
 }
-export function is_mixed_for_radius(shapes: Shape[]) { }
+export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
+  shapes = shapes.filter(i => i instanceof RectShape);
+  if (shapes.length === 1) {
+    const s = shapes[0];
+    const rs = Object.values((s as RectShape).getRadius());
+    if (cor) {
+      if (rs.every(v => v === rs[0])) return rs;
+      else return 'mixed'
+    } else {
+      return rs;
+    }
+  } else if (shapes.length > 1) {
+    const res: any[] = Object.values((shapes[0] as RectShape).getRadius());
+    for (let i = 1; i < shapes.length; i++) {
+      const s = shapes[i];
+      const rs = Object.values((s as RectShape).getRadius());
+      if (cor) {
+        if (!rs.every(v => v === rs[0])) return 'mixed';
+      } else {
+        for (let i = 0; i < rs.length; i++) {
+          if (rs[i] !== res[i]) res[i] = 'mixed';
+        }
+        return res;
+      }
+    }
+  }
+}
 export function get_actions_constrainer_proportions(shapes: Shape[], value: boolean): ConstrainerProportionsAction[] {
   const actions: ConstrainerProportionsAction[] = [];
   for (let i = 0; i < shapes.length; i++) {

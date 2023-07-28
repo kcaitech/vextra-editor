@@ -711,6 +711,8 @@ onUnmounted(() => {
                 transition: 0.15s;
                 margin-left: 4px;
                 line-height: 18px;
+                height: 18px;
+                margin-right: 4px;
             }
 
             .accurate-active {
