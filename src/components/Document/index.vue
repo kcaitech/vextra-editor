@@ -348,7 +348,7 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            ot = Ot.Make(docId, token, document, context.coopRepo, document.versionId ?? "");
+            ot = Ot.Make(docId, token, document, context.coopRepo, dataInfo.data.document.version_id ?? "");
             ot.start()
                 .catch((e) => {
                     if (!context) {
@@ -401,8 +401,7 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
-    context!.data.versionId = result!.data.version_id;
-    ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, context!.data.versionId ?? "");
+    ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, result!.data.version_id ?? "");
     ot.start();
     context!.communication.resourceUpload.start(doc_id, token);
     context!.communication.comment.start(doc_id, token);

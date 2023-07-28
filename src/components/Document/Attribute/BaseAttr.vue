@@ -116,17 +116,27 @@ function radiusValuesMixed(radius: any) {
 }
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
-    if(shape instanceof RectShape) {
+    if (shape instanceof RectShape) {
         radius.value = (shape as RectShape).getRectRadius();
         if(!radiusValuesMixed(radius.value) && !isMoreForRadius.value) {
             multipleValues.value = true
             radius.value.lt = mixed
         }
-    }else if(shape instanceof GroupShape) {
+    } else if(shape instanceof GroupShape) {
         radius.value.lt = (shape as GroupShape).fixedRadius || 0
         radius.value.lb = (shape as GroupShape).fixedRadius || 0
         radius.value.rt = (shape as GroupShape).fixedRadius || 0
         radius.value.rb = (shape as GroupShape).fixedRadius || 0
+    } else if( shape instanceof PathShape) {
+        radius.value.lt = (shape as PathShape).fixedRadius || 0
+        radius.value.lb = (shape as PathShape).fixedRadius || 0
+        radius.value.rt = (shape as PathShape).fixedRadius || 0
+        radius.value.rb = (shape as PathShape).fixedRadius || 0
+    } else if(shape instanceof PathShape2) {
+        radius.value.lt = (shape as PathShape2).fixedRadius || 0
+        radius.value.lb = (shape as PathShape2).fixedRadius || 0
+        radius.value.rt = (shape as PathShape2).fixedRadius || 0
+        radius.value.rb = (shape as PathShape2).fixedRadius || 0
     }
 
 }
@@ -296,10 +306,10 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             if (!radius.value) return;
             const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
             const shape = props.context.selection.selectedShapes[0];
-            if(shape instanceof GroupShape || shape instanceof PathShape || shape instanceof PathShape2) {
-                editor.value.setFixedRadius(fixedRadius)
-            }else {
+            if (shape instanceof RectShape) {
                 editor.value.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
+            } else {
+                editor.value.setFixedRadius(fixedRadius)
             }
         }
     } else {
