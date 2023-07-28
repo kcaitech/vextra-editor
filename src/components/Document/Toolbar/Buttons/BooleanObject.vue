@@ -211,13 +211,13 @@ onUnmounted(() => {
   outline: none;
   padding: var(--default-padding-half) 0;
   .line {
-        width: 100%;
-        height: 11px;
-        border-width: 5px 0 5px 0;
-        border-style: solid;
-        border-color: var(--theme-color);
-        box-sizing: border-box;
-        background-color: rgba(255, 255, 255, .5)
-    }
+    width: 100%;
+    height: 11px;
+    border-width: 5px 0 5px 0;
+    border-style: solid;
+    border-color: var(--theme-color);
+    box-sizing: border-box;
+    background-color: rgba(255, 255, 255, .5)
+  }
 }
 </style>

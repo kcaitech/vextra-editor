@@ -535,7 +535,7 @@ onUnmounted(() => {
     width: 100%;
     height: 40px;
     background-color: var(--top-toolbar-bg-color);
-    z-index: 2;
+    z-index: 10;
     min-height: 40px;
 }
 

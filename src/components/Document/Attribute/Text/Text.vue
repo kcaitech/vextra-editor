@@ -628,6 +628,7 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
                 <div class="color-title">
                     <div>{{t('attr.highlight_color')}}</div>
+                    <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -828,6 +829,16 @@ onUnmounted(() => {
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 5px;
+                .color_border {
+                    flex: 1;
+                    background-color: rgba(216, 216, 216, 0.4);
+                    height: 25px;
+                    padding: 0px 3px;
+                    margin-left: 3px;
+                    margin-right: 3px;
+                    border-radius: 3px;
+                    box-sizing: border-box;
+                }
                 .add {
                     width: 22px;
                     height: 22px;

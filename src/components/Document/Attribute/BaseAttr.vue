@@ -25,7 +25,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.context.selection.selectedShapes[0]));
-const len = computed<number>(() => props.context.selection.selectedShapes.length || 0);
+const len = ref<number>(props.context.selection.selectedShapes.length || 0);
 const { t } = useI18n();
 const shapeType = ref<ShapeType>();
 const x = ref<number | string>(0);
@@ -37,7 +37,7 @@ const isLock = ref<boolean>(false);
 const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
 const points = ref<number>(0);
-const radius = ref<{ lt: number, rt: number, rb: number, lb: number }>({
+const radius = ref<{ lt: number | string, rt: number, rb: number, lb: number }>({
     lt: 0, rt: 0, rb: 0, lb: 0
 });
 const showRadius = ref<boolean>(false)
@@ -102,13 +102,24 @@ function check_mixed() {
     isMixed.rotate === 'mixed' ? rotate.value = mixed : rotate.value = isMixed.rotate;
     isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!
 }
+
+function radiusValuesMixed(radius: any) {
+  const referenceValue = Object.values(radius)[0];
+  for (const value of Object.values(radius)) {
+    if (value !== referenceValue) {
+      return false;
+    }
+  }
+  return true;
+}
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
     if(shape instanceof RectShape) {
         radius.value = (shape as RectShape).getRectRadius();
+        if(!radiusValuesMixed(radius.value) && !multipleValues.value) {
+            radius.value.lt = mixed
+        }
     }else if(shape instanceof GroupShape) {
-        console.log(radius.value,'radius.value');
-        
         radius.value.lt = (shape as GroupShape).fixedRadius || 0
         radius.value.lb = (shape as GroupShape).fixedRadius || 0
         radius.value.rt = (shape as GroupShape).fixedRadius || 0
@@ -221,6 +232,8 @@ function radiusToggle() {
         }
     } else {
         multipleValues.value = false
+        const shape = props.context.selection.selectedShapes[0];
+        getRectShapeAttr(shape)
     }
 }
 function fliph() {
@@ -270,7 +283,7 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
             if (!radius.value) return;
             radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            editor.value.setRectRadius(radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
+            editor.value.setRectRadius(+radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
         } else {
             value = Number.parseFloat(value).toFixed(fix);
             const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
@@ -316,6 +329,7 @@ function workspace_watcher(t?: any) {
 }
 function selection_wather(t: any) {
     if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
+        len.value = props.context.selection.selectedShapes.length || 0
         watch_shapes();
         update_view();
         calc_attri();
@@ -380,7 +394,7 @@ onUnmounted(() => {
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
                 :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')" />
-            <div class="more-for-radius" @click="radiusToggle" v-if="showRadius">
+            <div class="more-for-radius" @click="radiusToggle" v-if="showRadius && shapeType !== ShapeType.Group">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>

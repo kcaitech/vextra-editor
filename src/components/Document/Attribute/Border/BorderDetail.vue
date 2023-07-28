@@ -149,6 +149,23 @@ function setThickness(e: Event) {
   }
   props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
+
+const augment = (e: Event) => {
+  if (borderThickness.value) {
+    const thickness = Number(borderThickness.value.value) + 1
+    editor.value.setBorderThickness(props.index, thickness);
+    borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
+  }
+}
+const decrease = (e: Event) => {
+  if (borderThickness.value) {
+    if(Number(borderThickness.value.value) === 0) return
+    const thickness = Number(borderThickness.value.value) - 1
+    editor.value.setBorderThickness(props.index, thickness);
+    borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
+  }
+}
+
 function borderApexStyleSelect(selected: SelectItem) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   if (selected.content.startsWith('end')) {
@@ -272,6 +289,10 @@ onUnmounted(() => {
             <div class="thickness-container">
               <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
               <input ref="borderThickness" type="text" :value="border.thickness" @change="e => setThickness(e)" @focus="selectBorderThicknes">
+              <div class="up_down">
+                <svg-icon icon-class="down" style="transform: rotate(180deg);" @click="augment"></svg-icon>
+                <svg-icon icon-class="down" @click="decrease"></svg-icon>
+              </div>
             </div>
           </div>
           <!-- 边框样式 -->
@@ -345,7 +366,7 @@ onUnmounted(() => {
 
         >.thickness-container {
           box-sizing: border-box;
-          padding: 0 var(--default-padding);
+          padding: 0 14px;
           background-color: var(--input-background);
           width: calc(100% - 72px);
           height: 32px;
@@ -362,9 +383,18 @@ onUnmounted(() => {
           >input {
             outline: none;
             border: none;
-            width: calc(100% - 24px);
+            width: calc(100% - 37px);
             margin-left: var(--default-margin-half);
             background-color: transparent;
+          }
+
+          .up_down {
+            width: 10px;
+            height: 100%;
+            >svg {
+              width: 10px;
+              height: 10px;
+            }
           }
         }
       }
