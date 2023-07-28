@@ -62,7 +62,6 @@ function workspaceUpdate(t?: number) {
   }
 }
 onMounted(() => {
-  props.context.workspace.popoverVisible(true);
   props.context.workspace.watch(workspaceUpdate);
 })
 onUnmounted(() => {
