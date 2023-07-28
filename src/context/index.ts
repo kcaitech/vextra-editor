@@ -57,6 +57,7 @@ export class Context extends Watchable(Object) {
 
     constructor(data: Document, repo: CoopRepository) {
         super();
+        (window as any).__context = this;
         this.m_data = data;
         this.m_coopRepo = repo;
         this.m_repo = new RepoWraper(this.m_coopRepo);

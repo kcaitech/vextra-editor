@@ -96,7 +96,7 @@ function createShapeTracing() { // 描边
         if (selected.includes(hoveredShape)) {
             tracing.value = false;
         } else {
-            const path = hoveredShape.getPath(true);
+            const path = hoveredShape.getPath();
             let m = hoveredShape.matrix2Root();
             m.multiAtLeft(matrix);
             path.transform(m);

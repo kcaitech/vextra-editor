@@ -26,7 +26,6 @@ import { S3Storage, StorageOptions } from "@/utils/storage";
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
-(window as any).__context = context;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
@@ -105,7 +104,6 @@ function switchPage(id?: string) {
                 curPage.value = undefined;
                 ctx.comment.commentMount(false)
                 ctx.selection.selectPage(page);
-                (window as any).__context = ctx;
                 curPage.value = page;
             }
         })
