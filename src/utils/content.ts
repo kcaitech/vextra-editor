@@ -527,6 +527,17 @@ export const permIsEdit = (context: Context) => {
   return Boolean(context.workspace.documentPerm === Perm.isEdit);
 }
 
+export const hasRadiusShape = (shape: Shape,type: ShapeType[]) => {
+  const shapeType = shape.type
+  if(shapeType === ShapeType.Group) {
+    if(!(shape as GroupShape).isBoolOpShape) return false
+  }
+  
+  if(!type.includes(shapeType)) return false
+  
+  return true
+}
+
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,

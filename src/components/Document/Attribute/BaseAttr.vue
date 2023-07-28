@@ -10,6 +10,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import Tooltip from '@/components/common/Tooltip.vue';
+import { hasRadiusShape } from '@/utils/content'
 import {
     get_rotation,
     is_mixed,
@@ -42,6 +43,7 @@ const radius = ref<{ lt: number | string, rt: number, rb: number, lb: number }>(
 });
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
+const multiRadius = ref(false)
 const isFlippedHorizontal = ref<boolean>()
 const isFlippedVertical = ref<boolean>()
 const shwoAdapt = ref<boolean>(false)
@@ -309,22 +311,24 @@ function adapt() {
         editor.value.adapt();
     }
 }
-const RADIUS_SETTING = [ShapeType.Rectangle, ShapeType.Artboard];
+const RADIUS_SETTING = [
+    ShapeType.Rectangle, ShapeType.Artboard, 
+    ShapeType.Image, ShapeType.Group, 
+    ShapeType.Path, ShapeType.Path2
+];
+const MULTI_RADIUS = [ ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
 const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
 function layout() {
     const len = props.context.selection.selectedShapes.length;
     if (len === 1) {
         const shape = props.context.selection.selectedShapes[0];
         shapeType.value = shape.type;
-        showRadius.value = RADIUS_SETTING.includes(shape.type);
+        showRadius.value = hasRadiusShape(shape, RADIUS_SETTING)
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
-        if (shapeType.value === ShapeType.Rectangle) getRectShapeAttr(shape);
-        if(shape.type === ShapeType.Group || shape.type === ShapeType.Path) {
-            if((shape as GroupShape).isBoolOpShape || shape.type === ShapeType.Path) {
-                showRadius.value = true
-                getRectShapeAttr(shape);
-            }
+        if(hasRadiusShape(shape, RADIUS_SETTING)) {
+            multiRadius.value = MULTI_RADIUS.includes(shape.type)
+            getRectShapeAttr(shape);
         }
     }
 }
@@ -398,7 +402,7 @@ onUnmounted(() => {
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
                 :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')" />
-            <div class="more-for-radius" @click="radiusToggle" v-if="showRadius && shapeType !== ShapeType.Group">
+            <div class="more-for-radius" @click="radiusToggle" v-if="showRadius && multiRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
