@@ -85,14 +85,6 @@ const setPosition = () => {
                 anchor.y -= 16; // 顶上去16像素
                 const width = f2p.width;
                 const maxWidth = frame.width
-                const p = matrix.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
-                const _p = matrix.computeCoord({ x: 0, y: 0 });
-                if(artboard.isFlippedHorizontal) {
-                    anchor.x = anchor.x - (p.x - _p.x)
-                }
-                if(artboard.isFlippedVertical) {
-                    anchor.y = anchor.y - (p.y - _p.y)
-                }
                 titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth, selected});
             }
         }
