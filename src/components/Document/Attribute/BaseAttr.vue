@@ -116,7 +116,8 @@ function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
     if(shape instanceof RectShape) {
         radius.value = (shape as RectShape).getRectRadius();
-        if(!radiusValuesMixed(radius.value) && !multipleValues.value) {
+        if(!radiusValuesMixed(radius.value) && !isMoreForRadius.value) {
+            multipleValues.value = true
             radius.value.lt = mixed
         }
     }else if(shape instanceof GroupShape) {
@@ -228,6 +229,9 @@ function radiusToggle() {
                 multipleValues.value = false
             } else {
                 multipleValues.value = true
+                if(!radiusValuesMixed(radius.value)) {
+                    radius.value.lt = mixed
+                }
             }
         }
     } else {
