@@ -154,9 +154,10 @@ const changeBoolgroup = (type: BoolOp, name: string) => {
             const editor = props.context.editor4Shape(shapes[0])
             editor.setBoolOp(type, name)
             props.context.selection.notify(Selection.CHANGE_SHAPE)
-        } else {
+        } else if (shapes.length > 1) {
+            const shapessorted = sort_by_layer(props.context, shapes);
             const editor = props.context.editor4Page(page)
-            const g = editor.boolgroup(shapes, name, type)
+            const g = editor.boolgroup(shapessorted, name, type)
             if (g) {
                 props.context.selection.selectShape(g)
             }
@@ -175,8 +176,9 @@ const flattenShape = () => {
             if(flatten) {
                 props.context.selection.selectShape(flatten)
             }
-        }else {
-            const flatten = editor.flattenShapes(shapes,'Vector')
+        } else if (shapes.length > 1) {
+            const shapessorted = sort_by_layer(props.context, shapes);
+            const flatten = editor.flattenShapes(shapessorted,'Vector')
             if(flatten) {
                 props.context.selection.selectShape(flatten)
             }
