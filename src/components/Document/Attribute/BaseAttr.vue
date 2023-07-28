@@ -304,17 +304,19 @@ function adapt() {
         e.adapt();
     }
 }
-const RADIUS_SETTING = [ShapeType.Rectangle, ShapeType.Artboard];
+const RADIUS_SETTING = [ShapeType.Rectangle];
 const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
 function layout() {
-    const len = props.context.selection.selectedShapes.length;
-    if (len === 1) {
-        const shape = props.context.selection.selectedShapes[0];
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const shape = selected[0];
         shapeType.value = shape.type;
         showRadius.value = RADIUS_SETTING.includes(shape.type);
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
         if (shapeType.value === ShapeType.Rectangle) getRectShapeAttr(shape);
+    } else if (selected.length > 1) {
+        if (selected.find(i => i instanceof RectShape)) showRadius.value = true;
     }
 }
 function workspace_watcher(t?: any) {
