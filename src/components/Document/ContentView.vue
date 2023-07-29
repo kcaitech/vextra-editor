@@ -9,7 +9,7 @@ import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
 import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
 import { Context } from '@/context'; // 状态顶层 store
-import { PageXY, ClientXY, ClientXYRaw, Selection } from '@/context/selection'; // selection
+import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace'; // workspace
 import { Menu } from '@/context/menu'; // menu 菜单相关
 import { useRoute } from 'vue-router';
@@ -50,7 +50,7 @@ const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
 const dragActiveDis = 4; // 拖动 3px 后开始触发移动
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
-const matrix = reactive(props.context.workspace.matrix);
+const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const inited = ref(false);
@@ -722,8 +722,8 @@ onUnmounted(() => {
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
-        <TextSelection :context="props.context" :matrix="matrix.toArray()"> </TextSelection>
-        <SelectionView :context="props.context" :matrix="matrix.toArray()" />
+        <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
+        <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
@@ -735,8 +735,8 @@ onUnmounted(() => {
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
-            @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"
-            :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+            @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix" :x2="shapePosition.x" :y2="shapePosition.y"
+            @completed="completed" :posi="posi"></CommentInput>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
     </div>

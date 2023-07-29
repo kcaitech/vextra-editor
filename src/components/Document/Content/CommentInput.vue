@@ -14,10 +14,10 @@ const props = defineProps<{
     rootWidth?: number
     pageID: string
     shapeID: string
-    matrix: number[]
+    matrix: Matrix
     x2: number
     y2: number
-    posi: {x: number, y: number}
+    posi: { x: number, y: number }
 }>()
 
 const emit = defineEmits<{
@@ -59,15 +59,15 @@ const commentData = ref<Comment>({
 })
 
 function handleClickOutside(event: MouseEvent) {
-  event.stopPropagation()
-  const length = textarea.value.trim().length < 4
-  if(event.target instanceof Element && !event.target.closest('.comment-input') && length) {
-    emit('close', event);
-  }else if(event.target instanceof Element && !event.target.closest('.comment-input') && !length) {
-      startShake()
-      input.value && input.value.focus()
-      input.value && input.value.select()
-  }
+    event.stopPropagation()
+    const length = textarea.value.trim().length < 4
+    if (event.target instanceof Element && !event.target.closest('.comment-input') && length) {
+        emit('close', event);
+    } else if (event.target instanceof Element && !event.target.closest('.comment-input') && !length) {
+        startShake()
+        input.value && input.value.focus()
+        input.value && input.value.select()
+    }
 }
 
 const inputPosition = () => {
@@ -80,16 +80,16 @@ const sendBright = computed(() => textarea.value.trim().length > 0)
 const carriageReturn = (event: KeyboardEvent) => {
     event.stopPropagation()
     const { code, ctrlKey, metaKey } = event;
-    if(event.key === 'Enter') {
-        if(ctrlKey || metaKey) {
+    if (event.key === 'Enter') {
+        if (ctrlKey || metaKey) {
             textarea.value = textarea.value + '\n'
-        }else {
+        } else {
             event.preventDefault()
             addComment()
         }
-    }else if(code === 'Escape' && textarea.value.trim().length < 4) {
+    } else if (code === 'Escape' && textarea.value.trim().length < 4) {
         emit('close')
-    }else if (code === 'Escape' && textarea.value.trim().length >= 4) {
+    } else if (code === 'Escape' && textarea.value.trim().length >= 4) {
         startShake()
     }
 }
@@ -100,7 +100,7 @@ const mouseDownCommentInput = (e: MouseEvent) => {
 }
 
 const addComment = () => {
-    const timestamp  = getCurrentTime()
+    const timestamp = getCurrentTime()
     commentData.value.record_created_at = timestamp
     commentData.value.content = textarea.value
     commentData.value.doc_id = docID
@@ -133,16 +133,16 @@ function padNumber(number: number, length = 2) {
     return String(number).padStart(length, '0');
 }
 
-const createComment = async(data: any) => {
+const createComment = async (data: any) => {
     try {
         await comment_api.createCommentAPI(data)
-    }catch (err) {
+    } catch (err) {
         console.log(err);
     }
 }
 
 const setPosition = () => {
-    position.value = matrix.computeCoord({x: props.x1, y: props.y1})
+    position.value = matrix.computeCoord({ x: props.x1, y: props.y1 })
 }
 
 const startShake = () => {
@@ -151,22 +151,22 @@ const startShake = () => {
     const timer = setTimeout(() => {
         isShaking.value = false;
         clearTimeout(timer)
-      }, 500); // 停止时间可以根据需要进行调整
+    }, 500); // 停止时间可以根据需要进行调整
 }
 
 const scrollVisible = ref(false)
 const handleInput = () => {
     nextTick(() => {
-        if(textareaEl.value) {
+        if (textareaEl.value) {
             const text = input.value.$refs.textarea
             if (text) {
                 text.style.height = "auto"; // 重置高度，避免高度叠加
                 text.style.height = text.scrollHeight + "px";
                 const lineHeight = parseInt(getComputedStyle(text).lineHeight)
                 const textareaHeight = text.clientHeight
-                const numberOfLines = Math.ceil(textareaHeight / lineHeight)    
+                const numberOfLines = Math.ceil(textareaHeight / lineHeight)
                 scrollVisible.value = numberOfLines > 10 ? true : false
-            }            
+            }
         }
     })
 }
@@ -175,7 +175,7 @@ defineExpose({
     comment
 })
 
-let clickTimer:any = null
+let clickTimer: any = null
 watchEffect(() => {
     matrix.reset(props.matrix);
     matrix.preTrans(props.x1, props.y1);
@@ -183,158 +183,167 @@ watchEffect(() => {
     setPosition()
 })
 
-onMounted(() => {  
+onMounted(() => {
     clickTimer = setTimeout(() => {
         document.addEventListener('click', handleClickOutside);
-    },10)
+    }, 10)
 })
-onUnmounted(() => {  
-  document.removeEventListener('click', handleClickOutside);
-  clearTimeout(clickTimer)
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+    clearTimeout(clickTimer)
 })
 </script>
 
 <template>
-    <div ref="comment" class="comment-input" 
-    :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`,left: offside ? surplusX + 'px': 38 + 'px', top: -43 + 'px' }">
-        <div :class="{ icon_left: !offside, icon_right: offside }" ref="inputIcon"  @mousedown="mouseDownCommentInput">
+    <div ref="comment" class="comment-input"
+        :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`, left: offside ? surplusX + 'px' : 38 + 'px', top: -43 + 'px' }">
+        <div :class="{ icon_left: !offside, icon_right: offside }" ref="inputIcon" @mousedown="mouseDownCommentInput">
             <div class="line1"></div>
             <div class="line2"></div>
         </div>
-        <div class="textarea" ref="textareaEl" :class="{'shake': isShaking}">
-            <el-input
-                ref="input"
-                class="input"
-                v-model="textarea"
-                :autosize="{ minRows: 1, maxRows: 10 }"
-                type="textarea"
-                :placeholder="t('comment.input_comments')"
-                resize="none"
-                size="small"
-                :input-style="{ overflow: scrollVisible ? 'visible' :'hidden'}"
-                @keydown="carriageReturn"
-                @input="handleInput"
-            />
-            <div class="send" :style="{opacity: sendBright ? '1' : '0.5'}" @click="addComment"><svg-icon icon-class="send"></svg-icon></div>
+        <div class="textarea" ref="textareaEl" :class="{ 'shake': isShaking }">
+            <el-input ref="input" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }" type="textarea"
+                :placeholder="t('comment.input_comments')" resize="none" size="small"
+                :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
+                @input="handleInput" />
+            <div class="send" :style="{ opacity: sendBright ? '1' : '0.5' }" @click="addComment"><svg-icon
+                    icon-class="send"></svg-icon></div>
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
-    .comment-input {
-        position: absolute;
-        width: 330px;
-        z-index: 9;
-        font-size: var(--font-default-fontsize);
-        cursor: default;
+.comment-input {
+    position: absolute;
+    width: 330px;
+    z-index: 9;
+    font-size: var(--font-default-fontsize);
+    cursor: default;
 
-        .icon_left {
-            position: absolute;
-            top: 15px;
-            left: -40px;
-            width: 30px;
-            height: 30px;
-            border-radius: calc(13px);
-            border-bottom-left-radius: 0;
-            background-color: #fff;
-            box-shadow: 0px 5px 10px rgba(0,0,0,0.15);
-        }
-        .icon_right {
-            position: absolute;
-            top: 15px;
-            right: -40px;
-            width: 30px;
-            height: 30px;
-            border-radius: calc(13px);
-            border-bottom-left-radius: 0;
-            background-color: #fff;
-            box-shadow: 0px 5px 10px rgba(0,0,0,0.15);
-        }
-        .textarea {
+    .icon_left {
+        position: absolute;
+        top: 15px;
+        left: -40px;
+        width: 30px;
+        height: 30px;
+        border-radius: calc(13px);
+        border-bottom-left-radius: 0;
+        background-color: #fff;
+        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .icon_right {
+        position: absolute;
+        top: 15px;
+        right: -40px;
+        width: 30px;
+        height: 30px;
+        border-radius: calc(13px);
+        border-bottom-left-radius: 0;
+        background-color: #fff;
+        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .textarea {
+        display: flex;
+        align-items: self-end;
+        padding: 10px;
+        background-color: #fff;
+        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+        border-radius: 4px;
+
+        .send {
+            color: #fff;
             display: flex;
-            align-items: self-end;
-            padding: 10px;
-            background-color: #fff;
-            box-shadow: 0px 5px 10px rgba(0,0,0,0.15);
-            border-radius: 4px;
-            .send {
-                color: #fff;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                margin-left: 2px;
-                width: 25px;
-                height: 23px;
-                background-color: var(--active-color);
-                border-radius: 50%;
-                >svg {
-                    width: 15px;
-                    height: 15px;
-                }
+            justify-content: center;
+            align-items: center;
+            margin-left: 2px;
+            width: 25px;
+            height: 23px;
+            background-color: var(--active-color);
+            border-radius: 50%;
+
+            >svg {
+                width: 15px;
+                height: 15px;
             }
         }
     }
-    .line1 {
-        position: absolute;
-        left: 7px;
-        top: 11px;
-        width: 40%;
-        height: 3px;
-        border: 1px solid #fff;
-        box-sizing: border-box;
-        background-color:  rgb(0, 0, 0,.8);
-    }
-    .line2 {
-        position: absolute;
-        left: 7px;
-        top: 16px;
-        width: 50%;
-        height: 3px;
-        border: 1px solid #fff;
-        box-sizing: border-box;
-        background-color:  rgb(0, 0, 0,.8);
-    }
-    @keyframes shake {
-        0% {
-            transform: translateX(0);
-        }
-        20% {
-            transform: translateX(10px);
-        }
-        40% {
-            transform: translateX(0);
-        }
-        55% {
-            transform: translateX(7px);
-        }
-        70% {
-            transform: translateX(0);
-        }
-        85% {
-            transform: translateX(5px);
-        }
-        100% {
-            transform: translateX(0);
-        }
-    }
-    .shake {
-        animation: shake 0.7s;
-    }
-    :deep(.el-textarea__inner) {
-        border: none;
-        box-shadow: none;
-    }
-    :deep(.el-textarea__inner::-webkit-scrollbar){
-     width: 6px ;
-    }
-    :deep(.el-textarea__inner::-webkit-scrollbar-thumb) {
-        border-radius: 3px ;
-        -moz-border-radius: 3px ;
-        -webkit-border-radius: 3px ;
-        background-color: #c3c3c3 ;
-    }
-    :deep(.el-textarea__inner::-webkit-scrollbar-track) {
-        background-color: transparent ;
+}
+
+.line1 {
+    position: absolute;
+    left: 7px;
+    top: 11px;
+    width: 40%;
+    height: 3px;
+    border: 1px solid #fff;
+    box-sizing: border-box;
+    background-color: rgb(0, 0, 0, .8);
+}
+
+.line2 {
+    position: absolute;
+    left: 7px;
+    top: 16px;
+    width: 50%;
+    height: 3px;
+    border: 1px solid #fff;
+    box-sizing: border-box;
+    background-color: rgb(0, 0, 0, .8);
+}
+
+@keyframes shake {
+    0% {
+        transform: translateX(0);
     }
 
+    20% {
+        transform: translateX(10px);
+    }
+
+    40% {
+        transform: translateX(0);
+    }
+
+    55% {
+        transform: translateX(7px);
+    }
+
+    70% {
+        transform: translateX(0);
+    }
+
+    85% {
+        transform: translateX(5px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.shake {
+    animation: shake 0.7s;
+}
+
+:deep(.el-textarea__inner) {
+    border: none;
+    box-shadow: none;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar) {
+    width: 6px;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar-thumb) {
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    background-color: #c3c3c3;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar-track) {
+    background-color: transparent;
+}
 </style>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { watchEffect, onMounted, onUnmounted, ref, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, nextTick, watch } from "vue";
 import { Context } from "@/context";
+import { Selection } from "@/context/selection";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType } from "@/context/workspace";
@@ -12,24 +13,16 @@ import Assist from "@/components/Document/Assist/index.vue"
 export interface Point {
     x: number,
     y: number,
-    type: CtrlElementType
 }
 export interface Bar {
     width: number,
     height: number,
     type: CtrlElementType
 }
-interface TracingFrame {
-    path: string,
-    viewBox: string,
-    height: number,
-    width: number
-}
 interface Props {
     context: Context
-    matrix: number[]
+    matrix: Matrix
 }
-const reflush = ref(0);
 const props = defineProps<Props>();
 const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
@@ -38,7 +31,7 @@ const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 const tracing = ref<boolean>(false);
 const traceEle = ref<Element>();
-let tracingFrame: TracingFrame = { path: '', viewBox: '', height: 0, width: 0, };
+const tracingPath = ref<string>('');
 const altKey = ref<boolean>(false);
 const watchedShapes = new Map();
 function watchShapes() { // 监听选区相关shape的变化
@@ -63,34 +56,43 @@ function watchShapes() { // 监听选区相关shape的变化
         watchedShapes.set(k, v);
     })
 }
-function updater() { // 针对描边与控件的可控更新
-    matrix.reset(props.matrix); // 必须要有一定会执行的代码用来触发watchEffect执行
-    // 更新前检查阀门是否开启(ps：在持续性动作中，因为只需要在终点更新即可，所以在动作执行过程中，阀门会关闭，并在持续性动作结束前再次开启)；
-    // 阀门开启后可以根据所有监听的notify更新，关闭则只能通过WorkSpace.SELECTION_VIEW_UPDATE进行更新
-    const shouldSelectionViewUpdate = props.context.workspace.shouldSelectionViewUpdate;
-    if (shouldSelectionViewUpdate) {
-        execute();
-    }
+function shapesWatcher() {
+    if (props.context.workspace.shouldSelectionViewUpdate) update_by_shapes();
 }
-function execute() { // 更新机执行器
-    watchShapes();
+function update_by_shapes() {
+    matrix.reset(props.matrix);
     createShapeTracing();
     createController();
-    reflush.value++; // 数据完毕，触发视图更新
 }
-function shapesWatcher() { // 选区图形有任何变化改变都要更新
-    updater();
+function update_by_matrix() {
+    matrix.reset(props.matrix);
+    createShapeTracing();
+    createController();
 }
 function workspaceWatcher(t?: any) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) { // 由workspace主动触发更新，可跳过是否可以更新的检查
-        matrix.reset(props.matrix); // 先将坐标系确定在页面坐标系
-        execute();
+        matrix.reset(props.matrix);
+        createShapeTracing();
+        createController();
     }
 }
-function selectionWatcher() { // selection的部分动作可触发更新
-    updater()
+function selectionWatcher(t?: any) { // selection的部分动作可触发更新
+    if (t === Selection.CHANGE_PAGE) {
+        watchedShapes.forEach(v => { v.unwatch(shapesWatcher) });
+        watchedShapes.clear();
+        tracing.value = false;
+        controller.value = false;
+    } else if (t === Selection.CHANGE_SHAPE) {
+        matrix.reset(props.matrix);
+        createController();
+        watchShapes();
+    } else if (t === Selection.CHANGE_SHAPE_HOVER) {
+        matrix.reset(props.matrix);
+        createShapeTracing();
+        watchShapes();
+    }
 }
-function createShapeTracing() { // 描边    
+function createShapeTracing() { // 描边  
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
     if (hoveredShape) {
         const selected = props.context.selection.selectedShapes;
@@ -98,13 +100,10 @@ function createShapeTracing() { // 描边
             tracing.value = false;
         } else {
             const path = hoveredShape.getPath(true);
-            let m = hoveredShape.matrix2Root();
+            const m = hoveredShape.matrix2Root();
             m.multiAtLeft(matrix);
             path.transform(m);
-            const { x, y, right, bottom } = props.context.workspace.root;
-            const w = right - x;
-            const h = bottom - y;
-            tracingFrame = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
+            tracingPath.value = path.toString();
             tracing.value = true;
             if (altKey.value) {
                 nextTick(() => {
@@ -113,8 +112,8 @@ function createShapeTracing() { // 描边
                     }
                 })
             }
-
         }
+        console.log('描边');
     } else {
         tracing.value = false;
     }
@@ -127,21 +126,10 @@ function createController() { // 计算控件点位以及类型判定
         if (selection.length === 1) { // 单选
             const shape = selection[0];
             const m = shape.matrix2Root();
-            const frame = shape.frame;
-            // p1 p2
-            // p4 p3
-            const points = [
-                { x: 0, y: 0, type: CtrlElementType.RectLT },
-                { x: frame.width, y: 0, type: CtrlElementType.RectRT },
-                { x: frame.width, y: frame.height, type: CtrlElementType.RectRB },
-                { x: 0, y: frame.height, type: CtrlElementType.RectLB }
-            ];
-            controllerFrame.value = points.map(p => {
-                let _s = m.computeCoord(p.x, p.y);
-                let _p = matrix.computeCoord(_s.x, _s.y);
-                p.x = _p.x; p.y = _p.y;
-                return p;
-            });
+            const f = shape.frame;
+            const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
+            m.multiAtLeft(matrix);
+            controllerFrame.value = points.map(p => m.computeCoord(p.x, p.y));
             if (!permIsEdit(props.context)) {
                 controllerType.value = ControllerType.Readonly;
             } else if (shape.type === ShapeType.Line) { // 控件类型判定
@@ -174,10 +162,10 @@ function createController() { // 计算控件点位以及类型判定
                 const bounding = createHorizontalBox(__points);
                 if (bounding) {
                     controllerFrame.value = [
-                        { x: bounding.left, y: bounding.top, type: CtrlElementType.RectLT },
-                        { x: bounding.right, y: bounding.top, type: CtrlElementType.RectRT },
-                        { x: bounding.right, y: bounding.bottom, type: CtrlElementType.RectRB },
-                        { x: bounding.left, y: bounding.bottom, type: CtrlElementType.RectLB }
+                        { x: bounding.left, y: bounding.top },
+                        { x: bounding.right, y: bounding.top },
+                        { x: bounding.right, y: bounding.bottom },
+                        { x: bounding.left, y: bounding.bottom }
                     ]
                 }
             });
@@ -188,7 +176,9 @@ function createController() { // 计算控件点位以及类型判定
                 controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
             }
         }
+        tracing.value = false;
         controller.value = true;
+        console.log('绘制控件');
     }
 }
 
@@ -235,6 +225,8 @@ function window_blur() {
     }
 }
 // hooks
+watch(() => props.matrix, update_by_matrix, { deep: true });
+
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspaceWatcher);
@@ -250,17 +242,16 @@ onUnmounted(() => {
     document.removeEventListener('keyup', keyboard_up_watcher);
     window.removeEventListener('blur', window_blur);
 })
-watchEffect(updater);
 </script>
 <template>
-    <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
+    <!-- <Assist :context="props.context" :controller-frame="controllerFrame"></Assist> -->
     <!-- 描边 -->
     <svg ref="traceEle" v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        preserveAspectRatio="xMinYMin meet" overflow="visible" :width="tracingFrame.width" :height="tracingFrame.height"
-        :viewBox="tracingFrame.viewBox" @mousedown="(e: MouseEvent) => pathMousedown(e)"
-        style="transform: translate(0px, 0px)" :reflush="reflush !== 0 ? reflush : undefined">
-        <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
+        preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100" :height="100" viewBox="0 0 100 100"
+        style="position: absolute">
+        <path :d="tracingPath" fill="transparent" stroke="#865dff" stroke-width="1.5px"
+            @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
     </svg>
     <!-- 控制 -->

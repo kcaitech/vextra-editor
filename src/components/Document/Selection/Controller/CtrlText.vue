@@ -31,10 +31,6 @@ watch(() => props.shape, (value, old) => {
     value.watch(update);
     update();
 })
-
-watch(() => props.matrix, () => {
-    update();
-})
 const { isDblClick } = useController(props.context);
 // const update = throttle(_update, 5);
 const update = _update;
@@ -189,6 +185,8 @@ function selectionWatcher(...args: any[]) {
         editing = false;
     }
 }
+watch(() => props.matrix, update, { deep: true })
+
 onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
