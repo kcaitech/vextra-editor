@@ -6,7 +6,7 @@ import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType } from "@/context/workspace";
 import { Action } from "@/context/tool";
-import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
+import { getHorizontalAngle, createHorizontalBox, XYsBounding } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue"
@@ -143,32 +143,17 @@ function createController() { // 计算控件点位以及类型判定
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             }
         } else { // 多选
-            const __points: [number, number][] = [];
-            selection.forEach(p => {
-                const m = p.matrix2Root();
-                const frame = p.frame;
-                let _ps: [number, number][] = [
-                    [0, 0],
-                    [frame.width, 0],
-                    [frame.width, frame.height],
-                    [0, frame.height]
-                ];
-                _ps = _ps.map(p => {
-                    let _s = m.computeCoord(p[0], p[1]);
-                    let _p = matrix.computeCoord(_s.x, _s.y);
-                    return [_p.x, _p.y];
-                });
-                __points.push(..._ps);
-                const bounding = createHorizontalBox(__points);
-                if (bounding) {
-                    controllerFrame.value = [
-                        { x: bounding.left, y: bounding.top },
-                        { x: bounding.right, y: bounding.top },
-                        { x: bounding.right, y: bounding.bottom },
-                        { x: bounding.left, y: bounding.bottom }
-                    ]
-                }
-            });
+            const points: { x: number, y: number }[] = [];
+            for (let i = 0; i < selection.length; i++) {
+                const s = selection[i];
+                const m = s.matrix2Root();
+                m.multiAtLeft(matrix);
+                const f = s.frame;
+                const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+                points.push(...ps);
+            }
+            const b = XYsBounding(points);
+            controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
             rotate.value = 0; // 多选时，rect只为水平状态
             if (!permIsEdit(props.context)) {
                 controllerType.value = ControllerType.Readonly;
@@ -178,7 +163,7 @@ function createController() { // 计算控件点位以及类型判定
         }
         tracing.value = false;
         controller.value = true;
-        console.log('绘制控件');
+        // console.log('绘制控件');
     }
 }
 
