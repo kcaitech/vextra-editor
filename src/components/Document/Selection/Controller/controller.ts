@@ -149,28 +149,21 @@ export function useController(context: Context) {
             const { clientX, clientY } = e;
             const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
             if (isDragging) {
-                workspace.value.translating(true); // 编辑器开始处于transforming状态 ---start transforming---
-                // 当编辑器处于transforming状态时, 此时的编辑器焦点为选中的图层, 应该取消被hover图层的hover状态, 同时不再给其他图层赋予hover状态
                 if (!editing) { // 处于编辑状态时，不拖动图形
                     if (wheel && asyncTransfer) {
                         const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
-                        if (!isOut) {
-                            transform(startPosition, mousePosition);
-                        }
+                        if (!isOut) transform(startPosition, mousePosition);
                     }
+                    startPosition = { ...mousePosition };
                 }
-                startPosition = { ...mousePosition };
             } else {
-                if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 是否开始移动的判定条件
-                    if (!editing) {
-                        isDragging = true;
-                        if (e.altKey) {
-                            shapes = paster_short(context, shapes);
-                        }
-                        asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
-                        context.selection.unHoverShape();
-                        workspace.value.setSelectionViewUpdater(false);
-                    }
+                if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
+                    isDragging = true;
+                    if (e.altKey) shapes = paster_short(context, shapes);
+                    asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
+                    context.selection.unHoverShape();
+                    workspace.value.setSelectionViewUpdater(false);
+                    workspace.value.translating(true);
                 }
             }
         }
@@ -182,12 +175,12 @@ export function useController(context: Context) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
                     _migrate(shapes, startPosition, mousePosition);
-                    asyncTransfer = asyncTransfer?.close();
+                    asyncTransfer = asyncTransfer.close();
                 }
-                isDragging = false;
-                workspace.value.translating(false); // 编辑器关闭transforming状态  ---end transforming---
+                workspace.value.translating(false);
                 workspace.value.setSelectionViewUpdater(true);
                 workspace.value.selectionViewUpdate();
+                isDragging = false;
             } else {
                 pickerFromSelectedShapes(e);
             }
@@ -221,12 +214,7 @@ export function useController(context: Context) {
                 selection.selectShape(hoveredShape);
             }
         } else {
-            const target = selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected);
-            if (target.length) {
-                if (!e.shiftKey) {
-                    selection.selectShape(target[0]);
-                }
-            } else selection.resetSelectShapes();
+            if (!selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).length) selection.resetSelectShapes();
         }
     }
     function checkStatus() { // 检查是否可以直接开始移动
@@ -262,9 +250,7 @@ export function useController(context: Context) {
      * @description workspace监听器
      */
     function workspace_watcher(t?: number) {
-        if (t === WorkSpace.CHECKSTATUS) {
-            checkStatus();
-        }
+        if (t === WorkSpace.CHECKSTATUS) checkStatus();
     }
     function initController() {
         trans.x = 0, trans.y = 0;
@@ -301,7 +287,7 @@ export function useController(context: Context) {
             workspace.value.translating(false);
             document.removeEventListener('mousemove', mousemove);
             document.removeEventListener('mouseup', mouseup);
-            asyncTransfer = asyncTransfer?.close();
+            if (asyncTransfer) asyncTransfer = asyncTransfer.close();
             isDragging = false;
         }
         if (wheel) wheel = wheel.remove(); // 卸载滚轮

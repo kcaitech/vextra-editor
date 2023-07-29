@@ -65,7 +65,7 @@ function update_by_matrix() {
     createShapeTracing();
     createController();
 }
-function workspaceWatcher(t?: any) {
+function workspace_watcher(t?: any) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) { // 由workspace主动触发更新，可跳过是否可以更新的检查
         matrix.reset(props.matrix);
         createShapeTracing();
@@ -94,15 +94,14 @@ function createShapeTracing() { // 描边
         if (props.context.selection.selectedShapes.includes(hoveredShape)) {
             tracing.value = false;
         } else {
-            const path = hoveredShape.getPath(true);
             const m = hoveredShape.matrix2Root();
             m.multiAtLeft(matrix);
+            const path = hoveredShape.getPath(true);
             path.transform(m);
             tracingPath.value = path.toString();
             tracing.value = true;
             if (altKey.value) nextTick(() => { if (traceEle.value) traceEle.value.classList.add('cursor-copy') });
         }
-        console.log('描边');
     } else {
         tracing.value = false;
     }
@@ -152,7 +151,6 @@ function createController() { // 计算控件点位以及类型判定
         }
         tracing.value = false;
         controller.value = true;
-        console.log('绘制控件');
     }
 }
 
@@ -160,17 +158,15 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     if (props.context.tool.action === Action.AutoV) {
         if (e.button === 0) {
             e.stopPropagation();
-            if (props.context.menu.isMenuMount) {
-                props.context.menu.menuMount();
-            }
+            if (props.context.menu.isMenuMount) props.context.menu.menuMount();
             props.context.workspace.preToTranslating(e);
             const hoveredShape = props.context.selection.hoveredShape;
-            if (e.shiftKey) { // 多选
+            if (e.shiftKey) {
                 if (hoveredShape) {
                     const selected = props.context.selection.selectedShapes;
                     props.context.selection.rangeSelectShape([...selected, hoveredShape]);
                 }
-            } else { // 单选并取消在此之前已选的shape
+            } else {
                 props.context.selection.selectShape(hoveredShape);
             }
         }
@@ -203,21 +199,21 @@ watch(() => props.matrix, update_by_matrix, { deep: true });
 
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
-    props.context.workspace.watch(workspaceWatcher);
+    props.context.workspace.watch(workspace_watcher);
     document.addEventListener('keydown', keyboard_down_watcher);
     document.addEventListener('keyup', keyboard_up_watcher);
     window.addEventListener('blur', window_blur)
-
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
-    props.context.workspace.unwatch(workspaceWatcher);
+    props.context.workspace.unwatch(workspace_watcher);
     document.removeEventListener('keydown', keyboard_down_watcher);
     document.removeEventListener('keyup', keyboard_up_watcher);
     window.removeEventListener('blur', window_blur);
 })
 </script>
 <template>
+    <!-- 辅助 -->
     <!-- <Assist :context="props.context" :controller-frame="controllerFrame"></Assist> -->
     <!-- 描边 -->
     <svg ref="traceEle" v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg"

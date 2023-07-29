@@ -1,4 +1,4 @@
-import { CtrlElementType, Matrix, Shape } from "@kcdesign/data"
+import { CtrlElementType, Shape } from "@kcdesign/data"
 
 interface Dot {
     point: { x: number, y: number }
