@@ -717,11 +717,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div v-if="inited" :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-        @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
-        :style="{ 'background-color': background_color }">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
+    <div v-if="inited" :class="cursor" :data-area="rootId" ref="root" @wheel="onMouseWheel" @mousedown="onMouseDown"
+        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave" @drop="(e: DragEvent) => { drop(e, props.context, t) }"
+        @dragover.prevent :style="{ 'background-color': background_color }">
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()"
+            :reflush="reflush !== 0 ? reflush : undefined" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop

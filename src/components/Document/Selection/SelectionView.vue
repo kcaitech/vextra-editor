@@ -6,7 +6,7 @@ import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType } from "@/context/workspace";
 import { Action } from "@/context/tool";
-import { getHorizontalAngle, createHorizontalBox, XYsBounding } from "@/utils/common";
+import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue"
@@ -163,7 +163,7 @@ function createController() { // 计算控件点位以及类型判定
         }
         tracing.value = false;
         controller.value = true;
-        // console.log('绘制控件');
+        console.log('绘制控件');
     }
 }
 
