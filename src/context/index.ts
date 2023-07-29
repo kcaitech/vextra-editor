@@ -75,7 +75,7 @@ export class Context extends Watchable(Object) {
         this.m_communication = new Communication();
         this.m_cursor = new Cursor(this);
         this.m_escstack = new EscStack();
-        this.m_assist = new Asssit();
+        this.m_assist = new Asssit(this);
         const pagelist = data.pagesList.slice(0);
         this.m_taskMgr.add(new class implements Task { // page auto loader
             isValid(): boolean {

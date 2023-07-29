@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Context } from '@/context';
+
 interface Props {
     context: Context
 }

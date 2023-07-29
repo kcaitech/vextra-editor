@@ -643,7 +643,7 @@ onUnmounted(() => {
 
 <template>
   <div class="color-block" :style="{ backgroundColor: toRGBA(color) }" ref="block" @click="triggle">
-    <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel">
+    <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
       <!-- 头部 -->
       <div class="header">
         <div class="color-type">{{ t('color.solid') }}</div>
@@ -665,7 +665,7 @@ onUnmounted(() => {
       </div>
       <div class="controller">
         <div class="eyedropper">
-          <svg-icon icon-class="eyedropper" @click="eyedropper"></svg-icon>
+          <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
         </div>
         <div class="sliders-container" ref="sliders">
           <!-- 色相 -->
