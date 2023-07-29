@@ -154,11 +154,11 @@ function createController() { // 计算控件点位以及类型判定
             }
             const b = XYsBounding(points);
             controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
-            rotate.value = 0; // 多选时，rect只为水平状态
+            rotate.value = 0;
             if (!permIsEdit(props.context)) {
                 controllerType.value = ControllerType.Readonly;
             } else {
-                controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
+                controllerType.value = ControllerType.RectMulti;
             }
         }
         tracing.value = false;
