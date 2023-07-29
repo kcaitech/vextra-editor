@@ -37,23 +37,19 @@ const watchedShapes = new Map();
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
-    if (selection.selectedShapes.length > 0) {
-        selection.selectedShapes.forEach((v) => {
-            needWatchShapes.set(v.id, v);
-        })
-    }
+    if (selection.hoveredShape) needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
+    if (selection.selectedShapes.length > 0) selection.selectedShapes.forEach((v) => { needWatchShapes.set(v.id, v) });
     watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(shapesWatcher);
-        watchedShapes.delete(k);
+        if (!needWatchShapes.has(k)) {
+            v.unwatch(shapesWatcher);
+            watchedShapes.delete(k);
+        }
     })
     needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(shapesWatcher);
-        watchedShapes.set(k, v);
+        if (!watchedShapes.has(k)) {
+            v.watch(shapesWatcher);
+            watchedShapes.set(k, v);
+        }
     })
 }
 function shapesWatcher() {
@@ -95,8 +91,7 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
 function createShapeTracing() { // 描边  
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
     if (hoveredShape) {
-        const selected = props.context.selection.selectedShapes;
-        if (selected.includes(hoveredShape)) {
+        if (props.context.selection.selectedShapes.includes(hoveredShape)) {
             tracing.value = false;
         } else {
             const path = hoveredShape.getPath(true);
@@ -105,13 +100,7 @@ function createShapeTracing() { // 描边
             path.transform(m);
             tracingPath.value = path.toString();
             tracing.value = true;
-            if (altKey.value) {
-                nextTick(() => {
-                    if (traceEle.value) {
-                        traceEle.value.classList.add('cursor-copy');
-                    }
-                })
-            }
+            if (altKey.value) nextTick(() => { if (traceEle.value) traceEle.value.classList.add('cursor-copy') });
         }
         console.log('描边');
     } else {
