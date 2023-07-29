@@ -181,9 +181,7 @@ function workspace_watcher(t?: number) {
 }
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
-    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
-        editing = false;
-    }
+    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) editing = false;
 }
 watch(() => props.matrix, update, { deep: true })
 

@@ -123,26 +123,26 @@ function createController() { // 计算控件点位以及类型判定
     if (selection.length === 0) {
         controller.value = false;
     } else {
-        if (selection.length === 1) { // 单选
-            const shape = selection[0];
-            const m = shape.matrix2Root();
-            const f = shape.frame;
+        if (selection.length === 1) {
+            const s = selection[0];
+            const m = s.matrix2Root();
+            const f = s.frame;
             const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
             m.multiAtLeft(matrix);
             controllerFrame.value = points.map(p => m.computeCoord(p.x, p.y));
             if (!permIsEdit(props.context)) {
                 controllerType.value = ControllerType.Readonly;
-            } else if (shape.type === ShapeType.Line) { // 控件类型判定
+            } else if (s.type === ShapeType.Line) { // 控件类型判定
                 controllerType.value = ControllerType.Line;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
-            } else if (shape.type === ShapeType.Text) {
+            } else if (s.type === ShapeType.Text) {
                 controllerType.value = ControllerType.Text;
                 rotate.value = getHorizontalAngle(points[0], points[2]); // 线条的水平夹角与其他图形有区别
             } else {
                 controllerType.value = ControllerType.Rect;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             }
-        } else { // 多选
+        } else {
             const points: { x: number, y: number }[] = [];
             for (let i = 0; i < selection.length; i++) {
                 const s = selection[i];
