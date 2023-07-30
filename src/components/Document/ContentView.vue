@@ -677,6 +677,10 @@ function cursor_watcher(t?: number, type?: string) {
         cursor.value = type;
     }
 }
+function matrix_watcher() {
+    props.context.assist.collect(true);
+}
+watch(() => matrix, matrix_watcher, { deep: true });
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
@@ -687,6 +691,7 @@ onMounted(() => {
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
     props.page.watch(page_watcher);
+    props.context.assist.init();
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);

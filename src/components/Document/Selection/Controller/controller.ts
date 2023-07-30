@@ -180,6 +180,8 @@ export function useController(context: Context) {
                 workspace.value.translating(false);
                 workspace.value.setSelectionViewUpdater(true);
                 workspace.value.selectionViewUpdate();
+                context.assist.collect(true);
+                context.assist.reset();
                 isDragging = false;
             } else {
                 pickerFromSelectedShapes(e);
@@ -199,6 +201,8 @@ export function useController(context: Context) {
         const ps: PageXY = matrix.computeCoord(start.x, start.y);
         const pe: PageXY = matrix.computeCoord(end.x, end.y);
         if (asyncTransfer) {
+            const d = context.assist.match(shapes[0]);
+            pe.x += d.x;
             asyncTransfer.trans(ps, pe);
             migrate(shapes, start, end);
         }
@@ -236,9 +240,6 @@ export function useController(context: Context) {
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context, t);
     }
-    /**
-    * @description 选区监听器 
-    */
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
             initController();
@@ -246,9 +247,6 @@ export function useController(context: Context) {
             context.workspace.contentEdit(false);
         }
     }
-    /**
-     * @description workspace监听器
-     */
     function workspace_watcher(t?: number) {
         if (t === WorkSpace.CHECKSTATUS) checkStatus();
     }
@@ -290,7 +288,7 @@ export function useController(context: Context) {
             if (asyncTransfer) asyncTransfer = asyncTransfer.close();
             isDragging = false;
         }
-        if (wheel) wheel = wheel.remove(); // 卸载滚轮
+        if (wheel) wheel = wheel.remove();
         workspace.value.setCtrl('page');
         timerClear();
         context.cursor.cursor_freeze(false);
