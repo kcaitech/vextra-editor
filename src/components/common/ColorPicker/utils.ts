@@ -1,6 +1,7 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Color } from '@kcdesign/data';
+import { Border, Color, Fill, GroupShape } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
+import { Context } from '@/context';
 export interface HSB {
   h: number
   s: number
@@ -532,4 +533,39 @@ export function HSL2RGB(hsl: HSL): RGB {
   function withLight(r: number, g: number, b: number) {
     return { R: (r + m) * 255, G: (g + m) * 255, B: (b + m) * 255 };
   }
+}
+export function getColorsFromDoc(context: Context) {
+  const s = Date.now();
+  const page = context.selection.selectedPage;
+  if (!page) return [];
+  let dcs = Array.from(finder(page).values());
+  dcs = dcs.sort((a, b) => {
+    if (a.length > b.length) return -1;
+    else if (a.length === b.length) return 0;
+    else return 1;
+  });
+  const result: { times: number, color: Color }[] = [];
+  for (let i = 0; i < dcs.length; i++)  result.push({ times: dcs[i].length, color: dcs[i][0] });
+  const e = Date.now();
+  console.log(e - s);
+  return result;
+}
+
+function finder(shape: GroupShape, init?: Map<string, Color[]>) {
+  const cs = shape.childs;
+  const result: Map<string, Color[]> = init || new Map();
+  for (let i = 0; i < cs.length; i++) {
+    const s = cs[i];
+    const fbs: Array<Fill | Border> = [...s.style.fills, ...s.style.borders];
+    for (let j = 0; j < fbs.length; j++) {
+      const r = result.get(c2s(fbs[j].color));
+      if (r) r.push(fbs[j].color);
+      else result.set(c2s(fbs[j].color), [fbs[j].color]);
+    }
+    if (s.childs && s.childs.length) finder(s as GroupShape, result);
+  }
+  return result;
+}
+function c2s(c: Color) {
+  return `${c.alpha}|${c.red}|${c.green}|${c.blue}`;
 }

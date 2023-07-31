@@ -14,7 +14,6 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
 import { getAxle } from "@/utils/common";
-import { permIsEdit } from "@/utils/content";
 interface Props {
   context: Context
   controllerFrame: Point[]
@@ -119,7 +118,8 @@ watchEffect(() => { updater() });
     <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
     </ShapesStrokeContainer>
     <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></BarsContainer>
-    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle">
+    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
+      :c-frame="props.controllerFrame">
     </PointsContainer>
   </svg>
 </template>

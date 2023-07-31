@@ -401,7 +401,7 @@ function onMouseMove_CV(e: MouseEvent) {
                     select(e); // 选区
                 }
             } else if (e.buttons === 0) {
-                if (action === Action.AutoV) {
+                if (action === Action.AutoV || action === Action.AutoK) {
                     search(e); // 图形检索(hover)
                 }
             }
@@ -652,7 +652,7 @@ const getDocumentComment = async () => {
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id);
     if (!info) {
-        const m = new Matrix(adapt_page(props.context));
+        const m = new Matrix(adapt_page(props.context, true));
         info = { m, x: cur.frame.x, y: cur.frame.y };
         matrixMap.set(cur.id, info);
     }
