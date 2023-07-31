@@ -9,7 +9,9 @@ import {
     ServerCmdType,
     WorkerPostData,
     CmdResult,
-    TunnelType, SendToServerCmd,
+    TunnelType,
+    TunnelCmdData,
+    ClientCmd,
 } from "@/communication/types"
 import { Server } from "@/communication/server"
 
@@ -17,6 +19,7 @@ export class Tunnel {
     port: MessagePort
     server: Server
     info: CommunicationInfo
+    onclose: () => void
     tunnelId: string = ""
     tunnelType: TunnelType
     pendingCmdList = new Map<string, {
@@ -27,11 +30,12 @@ export class Tunnel {
     sendToServerHandler?: (cmdId: string, cmd: any) => void
     receivingData: ClientPostData | undefined = undefined
 
-    constructor(port: MessagePort, server: Server, info: CommunicationInfo) {
+    constructor(port: MessagePort, server: Server, info: CommunicationInfo, onclose: () => void) {
         this.port = port
         this.server = server
         this.info = info
         this.tunnelType = info.tunnelType
+        this.onclose = onclose
     }
 
     async start(): Promise<boolean> {
@@ -59,7 +63,7 @@ export class Tunnel {
             this.receivingData = undefined
         }
         if (isBinary) {
-            this.server.send(data)
+            await this.server.send(data)
             this.receivingData = undefined
             return
         }
@@ -136,21 +140,20 @@ export class Tunnel {
 
     async sendToServer(cmdType: ClientCmdType, data?: any, isListened: boolean = false, cmdId?: string) {
         if (typeof cmdId !== "string" || cmdId === "") cmdId = uuid();
-        const cmdData: SendToServerCmd = {
+        const cmdData: TunnelCmdData = {
             cmd_id: data?.cmdId,
             tunnel_id: this.tunnelId ? this.tunnelId : undefined,
             data_type: data?.dataType,
             data: data?.data,
         }
-        const cmd = {
+        const cmd: ClientCmd = {
             cmd_type: cmdType,
             cmd_id: cmdId,
             tunnel_type: this.tunnelType,
             data: cmdData,
         }
         if (isListened) {
-            let resolve: (value: CmdResult) => void = () => {
-            }
+            let resolve: (value: CmdResult) => void = () => {}
             const promise: Promise<CmdResult> = new Promise(r => resolve = r)
             this.pendingCmdList.set(cmdId, {
                 cmd: cmd,
@@ -182,5 +185,6 @@ export class Tunnel {
             })
         }
         this.port.close()
+        this.onclose()
     }
 }

@@ -47,7 +47,7 @@ export class Comment extends Watchable(Object) {
     }
 
     public close() {
-        if (!this.docCommentOp) return
+        if (!this.docCommentOp) return;
         this.docCommentOp.close()
         this.docCommentOp = undefined
         this.startPromise = undefined

@@ -1,5 +1,11 @@
 import { v4 as uuid } from "uuid"
-import { CommunicationInfo, ServerCmdType, DataType, ServerCmd } from "@/communication/types"
+import {
+    CommunicationInfo,
+    ServerCmdType,
+    DataType,
+    TunnelType,
+    NetworkStatusType
+} from "@/communication/types"
 import { Tunnel } from "@/communication/tunnel"
 import { Server } from "@/communication/server"
 
@@ -8,45 +14,21 @@ let server: Server | undefined = undefined
 const tunnelMap = new Map<string, Tunnel>()
 const cmdIdToTunnel = new Map<string, Tunnel>()
 let token: string = ""
-let receivingTunnel: Tunnel | undefined = undefined
-let receivingTunnelCmd: ServerCmd | undefined = undefined
 
-function receiveFromServer(event: MessageEvent) {
-    const isBinary = event.data instanceof ArrayBuffer
-    const data = (isBinary ? event.data : JSON.parse(event.data)) as ServerCmd
-    if (isBinary && (receivingTunnel === undefined || receivingTunnelCmd === undefined)) {
-        console.log("数据传输错误：缺少数据头")
-        return
+const networkStatusTunnelMap = new Map<string, Tunnel>()
+function sendNetworkStatusToClient(status: NetworkStatusType) {
+    for (const tunnel of networkStatusTunnelMap.values()) {
+        tunnel.receiveFromServer({
+            cmd_type: ServerCmdType.TunnelData,
+            cmd_id: uuid(),
+            data: {
+                data_type: DataType.Text,
+                data: {
+                    status: status,
+                },
+            }
+        })
     }
-    if (!isBinary && (receivingTunnel !== undefined || receivingTunnelCmd !== undefined)) {
-        console.log("数据传输错误：缺少数据段")
-        receivingTunnel = undefined
-        receivingTunnelCmd = undefined
-    }
-    if (isBinary) {
-        receivingTunnelCmd!.data.data = data
-        receivingTunnel!.receiveFromServer(receivingTunnelCmd!)
-        receivingTunnel = undefined
-        receivingTunnelCmd = undefined
-        return
-    }
-    const cmdId = data.cmd_id
-    if (typeof cmdId !== "string" || cmdId === "") {
-        console.log("cmd_id参数错误", cmdId)
-        return
-    }
-    const originCmdId = data.data?.cmd_id
-    const tunnelId = data.data?.tunnel_id
-    const isTunnelDataCmd = data.cmd_type === ServerCmdType.TunnelData
-    const tunnel = isTunnelDataCmd ? tunnelMap.get(tunnelId): cmdIdToTunnel.get(originCmdId)
-    if (!tunnel) return;
-    if (isTunnelDataCmd && data.data?.data_type === DataType.Binary) {
-        receivingTunnel = tunnel
-        receivingTunnelCmd = data
-        return
-    }
-    tunnel.receiveFromServer(data)
-    console.log("receiveFromServer", data)
 }
 
 ctx.onconnect = (event) => {
@@ -68,13 +50,26 @@ ctx.onconnect = (event) => {
         }
         if (server === undefined) {
             token = data.token
-            server = new Server(token, receiveFromServer)
+            server = new Server(token, tunnelMap, cmdIdToTunnel)
+            server.onNetworkOnline = () => {
+                sendNetworkStatusToClient(NetworkStatusType.Online)
+            }
+            server.onNetworkOffline = () => {
+                sendNetworkStatusToClient(NetworkStatusType.Offline)
+            }
             server.connect()
         }
         data.id = uuid()
-        const tunnel = new Tunnel(port, server, data)
+        const tunnel = new Tunnel(port, server, data, () => {
+            tunnelMap.delete(tunnel.tunnelId)
+            networkStatusTunnelMap.delete(tunnel.tunnelId)
+        })
+        if (data.tunnelType === TunnelType.NetworkStatus) {
+            tunnel.tunnelId = uuid()
+            networkStatusTunnelMap.set(tunnel.tunnelId, tunnel)
+        }
         tunnel.setSendToServerHandler((cmdId, cmd) => cmdIdToTunnel.set(cmdId, tunnel))
-        if (await tunnel.start()) {
+        if (data.tunnelType === TunnelType.NetworkStatus || await tunnel.start()) {
             console.log("tunnel创建成功", tunnel.tunnelId)
             sendData.id = tunnel.tunnelId
             tunnelMap.set(tunnel.tunnelId, tunnel)
