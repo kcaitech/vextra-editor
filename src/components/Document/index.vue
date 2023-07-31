@@ -502,7 +502,7 @@ enum MessageType {
     Success,
 }
 
-// insertNetworkInfo('networkError', true, network_error)
+insertNetworkInfo('networkError', true, network_error)
 
 const docUploadState = (type: MessageType, data: any) => {
     if(type === MessageType.NetError) {
