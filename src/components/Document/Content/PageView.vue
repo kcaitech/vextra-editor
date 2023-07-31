@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
+import { Tool } from '@/context/tool';
 import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
@@ -13,6 +14,7 @@ const props = defineProps<{
 const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
+const show_t = ref<boolean>(true);
 let renderItems: Shape[] = []; // 渲染数据，里面除了真实的data数据之外，还有工具对象
 const watcher = () => {
     reflush.value++;
@@ -36,13 +38,21 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
+function tool_watcher(t?: number) {
+    if (t === Tool.TITILE_VISIBLE) {
+        const v = props.context.tool.isShowTitle;
+        show_t.value = v;
+    }
+}
 onMounted(() => {
     props.data.watch(watcher);
+    props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
+    props.context.tool.unwatch(tool_watcher);
     pageViewRegister(false);
     stopWatchPage();
     renderItems = [];
@@ -58,7 +68,7 @@ onUnmounted(() => {
         <component v-for="c in renderItems" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>
-    <ShapeTitles :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
+    <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>
 
 <style scoped>

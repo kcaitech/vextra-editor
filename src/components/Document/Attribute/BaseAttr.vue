@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { Shape, ShapeType, RectShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
@@ -24,8 +24,6 @@ interface Props {
     context: Context
 }
 const props = defineProps<Props>();
-const editor = computed(() => props.context.editor4Shape(props.context.selection.selectedShapes[0]));
-const len = computed<number>(() => props.context.selection.selectedShapes.length || 0);
 const { t } = useI18n();
 const shapeType = ref<ShapeType>();
 const x = ref<number | string>(0);
@@ -40,8 +38,6 @@ const points = ref<number>(0);
 const radius = ref<{ lt: number, rt: number, rb: number, lb: number }>();
 const showRadius = ref<boolean>(false)
 const showRadian = ref<boolean>(false)
-const isFlippedHorizontal = ref<boolean>()
-const isFlippedVertical = ref<boolean>()
 const shwoAdapt = ref<boolean>(false)
 const multipleValues = ref<boolean>(false)
 const mixed = t('attr.mixed');
@@ -72,8 +68,6 @@ function calc_attri() {
         w.value = Math.max(frame.width, 1);
         h.value = Math.max(frame.height, 1);
         rotate.value = get_rotation(shape);
-        isFlippedHorizontal.value = Boolean(shape.isFlippedHorizontal);
-        isFlippedVertical.value = Boolean(shape.isFlippedVertical);
         isLock.value = Boolean(shape.constrainerProportions);
     } else if (len > 1) {
         const shape = props.context.selection.selectedShapes[0];
@@ -108,13 +102,15 @@ function onChangeX(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const _x: number = Number.parseFloat(value);
     if (isNaN(_x)) return;
-    if (len.value === 1) {
-        const shape = props.context.selection.selectedShapes[0];
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const shape = selected[0];
         if (shape.frame.x.toFixed(fix) != value) {
             const xy = shape.frame2Root();
-            editor.value.translateTo(_x, xy.y);
+            const e = props.context.editor4Shape(shape);
+            e.translateTo(_x, xy.y);
         }
-    } else if (len.value > 1) {
+    } else if (selected.length > 1) {
         const actions = get_actions_frame_x(props.context.selection.selectedShapes, _x);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -128,13 +124,15 @@ function onChangeY(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const _y: number = Number.parseFloat(value);
     if (isNaN(_y)) return;
-    if (len.value === 1) {
-        const shape = props.context.selection.selectedShapes[0];
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const shape = selected[0];
         if (shape.frame.y.toFixed(fix) != value) {
             const xy = shape.frame2Root();
-            editor.value.translateTo(xy.x, _y);
+            const e = props.context.editor4Shape(shape);
+            e.translateTo(xy.x, _y);
         }
-    } else if (len.value > 1) {
+    } else if (selected.length > 1) {
         const actions = get_actions_frame_y(props.context.selection.selectedShapes, _y);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -147,15 +145,17 @@ function onChangeY(value: string) {
 function onChangeW(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const _w: number = Number.parseFloat(value);
-    if (isNaN(_w)) return editor.value.expandTo((w.value as number), (h.value as number));
-    if (len.value === 1) {
+    if (isNaN(_w)) return;
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
         const rate = _w / (w.value as number);
-        const shape = props.context.selection.selectedShapes[0];
+        const shape = selected[0];
         if (shape.frame.width.toFixed(fix) != value) {
             const _h = isLock.value ? Number((rate * (h.value as number)).toFixed(fix)) : shape.frame.height;
-            editor.value.expandTo(_w, _h);
+            const e = props.context.editor4Shape(shape)
+            e.expandTo(_w, _h);
         }
-    } else if (len.value > 1) {
+    } else if (selected.length > 1) {
         const actions = get_actions_frame_w(props.context.selection.selectedShapes, _w, isLock.value);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -168,15 +168,17 @@ function onChangeW(value: string) {
 function onChangeH(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const _h: number = Number.parseFloat(value);
-    if (isNaN(_h)) return editor.value.expandTo((w.value as number), (h.value as number));
-    if (len.value === 1) {
+    if (isNaN(_h)) return;
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
         const rate = _h / (h.value as number);
-        const shape = props.context.selection.selectedShapes[0];
+        const shape = selected[0];
         if (shape.frame.height.toFixed(fix) !== value) {
             const _w = isLock.value ? Number((rate * (w.value as number)).toFixed(fix)) : shape.frame.width;
-            editor.value.expandTo(_w, _h);
+            const e = props.context.editor4Shape(shape);
+            e.expandTo(_w, _h);
         }
-    } else if (len.value > 1) {
+    } else if (selected.length > 1) {
         const actions = get_actions_frame_h(props.context.selection.selectedShapes, _h, isLock.value);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -212,9 +214,11 @@ function radiusToggle() {
     }
 }
 function fliph() {
-    if (len.value === 1) {
-        editor.value.flipH();
-    } else if (len.value > 1) {
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const e = props.context.editor4Shape(selected[0]);
+        e.flipH();
+    } else if (selected.length > 1) {
         const page = props.context.selection.selectedPage;
         if (page) {
             const actions = get_actions_flip_h(props.context.selection.selectedShapes);
@@ -224,9 +228,11 @@ function fliph() {
     }
 }
 function flipv() {
-    if (len.value === 1) {
-        editor.value.flipV();
-    } else if (len.value > 1) {
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const e = props.context.editor4Shape(selected[0]);
+        e.flipV();
+    } else if (selected.length > 1) {
         const page = props.context.selection.selectedPage;
         if (page) {
             const actions = get_actions_flip_v(props.context.selection.selectedShapes);
@@ -238,10 +244,12 @@ function flipv() {
 function onChangeRotate(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
-    if (isNaN(newRotate)) return editor.value.rotate(rotate.value as number);
-    if (len.value === 1) {
-        editor.value.rotate(newRotate);
-    } else if (len.value > 1) {
+    if (isNaN(newRotate)) return;
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const e = props.context.editor4Shape(selected[0]);
+        e.rotate(newRotate);
+    } else if (selected.length > 1) {
         const actions = get_actions_rotate(props.context.selection.selectedShapes, newRotate);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -252,40 +260,63 @@ function onChangeRotate(value: string) {
     }
 }
 const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
-    if (len.value === 1) {
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const e = props.context.editor4Shape(selected[0]);
         if (isMoreForRadius.value) {
             value = Number.parseFloat(value).toFixed(fix);
             const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
             if (!radius.value) return;
             radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            editor.value.setRadius(radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
+            e.setRadius(radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
         } else {
             value = Number.parseFloat(value).toFixed(fix);
             const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
             if (!radius.value) return;
             const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            editor.value.setRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
+            e.setRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
         }
-    } else {
+    } else if (selected.length > 1) {
         // todo
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const e = props.context.editor4Page(page);
+            if (isMoreForRadius.value) {
+                value = Number.parseFloat(value).toFixed(fix);
+                const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
+                if (!radius.value) return;
+                radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+                e.setShapesRadius(selected, radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
+            } else {
+                value = Number.parseFloat(value).toFixed(fix);
+                const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
+                if (!radius.value) return;
+                const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+                e.setShapesRadius(selected, fixedRadius, fixedRadius, fixedRadius, fixedRadius);
+            }
+        }
     }
 }
 function adapt() {
-    if (len.value === 1) {
-        editor.value.adapt();
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const e = props.context.editor4Shape(selected[0]);
+        e.adapt();
     }
 }
-const RADIUS_SETTING = [ShapeType.Rectangle, ShapeType.Artboard];
+const RADIUS_SETTING = [ShapeType.Rectangle];
 const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
 function layout() {
-    const len = props.context.selection.selectedShapes.length;
-    if (len === 1) {
-        const shape = props.context.selection.selectedShapes[0];
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1) {
+        const shape = selected[0];
         shapeType.value = shape.type;
         showRadius.value = RADIUS_SETTING.includes(shape.type);
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
         if (shapeType.value === ShapeType.Rectangle) getRectShapeAttr(shape);
+    } else if (selected.length > 1) {
+        if (selected.find(i => i instanceof RectShape)) showRadius.value = true;
     }
 }
 function workspace_watcher(t?: any) {
@@ -301,7 +332,7 @@ function selection_wather(t: any) {
 // hooks
 onMounted(() => {
     watch_shapes(); // 组件挂载之后，第一次整理需要监听的shape（得到watchedShapes）
-    if (len.value > 1) check_mixed(); // 检查是否多值
+    if (props.context.selection.selectedShapes.length > 1) check_mixed(); // 检查是否多值
     layout(); // 属性栏布局
     calc_attri(); // 第一次计算frame属性
     props.context.selection.watch(selection_wather);
@@ -340,12 +371,12 @@ onUnmounted(() => {
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
             <Tooltip :content="t('attr.flip_h')" :offset="15">
-                <div class="flip ml-24" @click="fliph" :class="{ active: isFlippedHorizontal }">
+                <div class="flip ml-24" @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
             <Tooltip :content="t('attr.flip_v')" :offset="15">
-                <div class="flip ml-12" @click="flipv" :class="{ active: isFlippedVertical }">
+                <div class="flip ml-12" @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>
                 </div>
             </Tooltip>

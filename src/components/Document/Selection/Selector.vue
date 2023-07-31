@@ -6,14 +6,14 @@ import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget } from '@/utils/common';
 export interface SelectorFrame {
-    top: number,
-    left: number,
-    width: number,
-    height: number,
+    top: number
+    left: number
+    width: number
+    height: number
     includes: boolean
 }
 interface Props {
-    selectorFrame: SelectorFrame,
+    selectorFrame: SelectorFrame
     context: Context
 }
 const props = defineProps<Props>();
@@ -32,9 +32,7 @@ function select() {
         const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
         if (selectedShapes.size) remove(selectedShapes, ps); // 先剔除已经不再框选区的图形
         finder(page.childs, ps); // 再寻找框选区外的图形
-        if (selectedShapes.size !== selection.selectedShapes.length) {
-            selection.rangeSelectShape(Array.from(selectedShapes.values()));
-        }
+        if (selectedShapes.size !== selection.selectedShapes.length) selection.rangeSelectShape(Array.from(selectedShapes.values()));
     }
 
 }
@@ -66,18 +64,12 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
                 for (let i = 0; i < shape.childs.length; i++) {
                     selectedShapes.delete(shape.childs[i].id);
                 }
-            } else {
-                finder(shape.childs, Points);
-            }
+            } else finder(shape.childs, Points);
         }
         else if (shape.type === ShapeType.Line) {
-            if (isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) {
-                selectedShapes.set(shape.id, shape);
-            }
+            if (isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) selectedShapes.set(shape.id, shape);
         }
-        else if (isTarget(Points, ps, props.selectorFrame.includes)) {
-            selectedShapes.set(shape.id, shape);
-        }
+        else if (isTarget(Points, ps, props.selectorFrame.includes)) selectedShapes.set(shape.id, shape);
         ids++;
     }
 }
@@ -94,25 +86,17 @@ function remove(childs: Map<string, Shape>, Points: [XY, XY, XY, XY, XY]) {
             { x: 0, y: 0 },
         ].map(p => m.computeCoord(p.x, p.y));
         if (value.type === ShapeType.Artboard) {
-            if (!isTarget(Points, ps, true)) {
-                selectedShapes.delete(key);
-            }
+            if (!isTarget(Points, ps, true)) selectedShapes.delete(key);
         } else if (value.type === ShapeType.Line) {
-            if (!isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) {
-                selectedShapes.delete(key);
-            }
+            if (!isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) selectedShapes.delete(key);
         } else {
-            if (!isTarget(Points, ps, props.selectorFrame.includes)) {
-                selectedShapes.delete(key);
-            }
+            if (!isTarget(Points, ps, props.selectorFrame.includes)) selectedShapes.delete(key);
         }
     })
 }
 
 function reset(t?: number) {
-    if (t === WorkSpace.SELECTING) {
-        selectedShapes.clear();
-    }
+    if (t === WorkSpace.SELECTING) selectedShapes.clear();
 }
 // hooks
 onMounted(() => {

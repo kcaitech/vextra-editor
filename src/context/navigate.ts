@@ -17,11 +17,18 @@ export class Navi extends Watchable(Object) {
   private m_keywords: string = '';
   private m_shapelist_freeze: boolean = false;
   private m_accurate: boolean = false;
+  private m_phase1: string = '';
   constructor() {
     super();
   }
   get needExtend() {
     return this.m_page_need_extend;
+  }
+  set_phase(id: string) {
+    this.m_phase1 = id;
+  }
+  isPhase2(shape: Shape) {
+    return Boolean(shape.id === this.m_phase1);
   }
   set_page_need_extend(v: boolean) {
     this.m_page_need_extend = v;

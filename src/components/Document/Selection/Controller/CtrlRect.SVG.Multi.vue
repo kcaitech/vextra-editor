@@ -77,10 +77,7 @@ function mousedown(e: MouseEvent) {
     document.addEventListener('mouseup', mouseup);
 }
 function mousemove(e: MouseEvent) {
-    const isDragging = isDrag();
-    if (isDragging) {
-        visible.value = false; // 控件在移动过程中不可视
-    }
+    if (isDrag()) visible.value = false; // 控件在移动过程中不可视
 }
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);

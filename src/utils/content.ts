@@ -325,7 +325,7 @@ function adapt_page(context: Context, r?: Root) {
 
   const ratio = Math.max(ratio_h, ratio_w);
 
-  if (ratio != 1) {
+  if (ratio !== 1) {
     const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     matrix.trans(del.x, del.y);
@@ -493,8 +493,10 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else {
     if (permIsEdit(context)) {
+      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
       contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
     } else {
+      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
       contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
     }
   }

@@ -122,3 +122,19 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         }
     }
 }
+export function d(s: { x: number, y: number }, e: { x: number, y: number }): number {
+    const is2r = e.x - s.x;
+    const is2b = e.y - s.y;
+    let d = 0;
+    if (is2r > 0) {
+        d = d ^ 2;
+    } else if (is2r < 0) {
+        d = d ^ 1;
+    }
+    if (is2b > 0) {
+        d = d ^ 8
+    } else if (is2b < 0) {
+        d = d ^ 4;
+    }
+    return d;
+}
