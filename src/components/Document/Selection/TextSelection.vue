@@ -17,7 +17,7 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const focus_shape = ref<Shape>();
 const visible = ref<boolean>(true);
 function update() {
-  const shape = props.context.navi.focusText;
+  const shape = props.context.navi.focusText?.shape;
   if (shape) {
     shape.watch(update);
   } else {

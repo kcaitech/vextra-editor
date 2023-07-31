@@ -6,8 +6,9 @@ import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
 import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
-import { forGroupHover, groupPassthrough } from "@/utils/scout";
-import { Action, WorkSpace } from "@/context/workspace";
+import { groupPassthrough } from "@/utils/scout";
+import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
 import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
 import { paster_short } from '@/utils/clipaboard';
@@ -34,8 +35,8 @@ export function useController(context: Context) {
     const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
-            const ps: PageXY = matrix.inverseCoord(start.x, start.y);
-            const pe: PageXY = matrix.inverseCoord(end.x, end.y);
+            const ps: PageXY = matrix.computeCoord(start.x, start.y);
+            const pe: PageXY = matrix.computeCoord(end.x, end.y);
             const selection = context.selection;
             let targetParent;
             const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
@@ -73,11 +74,12 @@ export function useController(context: Context) {
     function preTodo(e: MouseEvent) { // 移动之前做的准备
         if (!permIsEdit(context)) return;
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+            context.cursor.cursor_freeze(true);
             context.menu.menuMount(); // 取消右键事件
             root = context.workspace.root;
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
-            const action = workspace.value.action;
+            const action = context.tool.action;
             if (action == Action.AutoV || action == Action.AutoK) {
                 workspace.value.setCtrl('controller');
                 wheel = fourWayWheel(context, undefined, startPositionOnPage);
@@ -127,7 +129,7 @@ export function useController(context: Context) {
         }
         if (context.workspace.isPageDragging) return;
         if (isElement(e)) {
-            matrix.reset(workspace.value.matrix);
+            matrix.reset(workspace.value.matrix.inverse);
             setPosition(e);
             if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
                 handleDblClick();
@@ -197,36 +199,34 @@ export function useController(context: Context) {
             context.comment.notify(Comment.UPDATE_COMMENT_POS);
             need_update_comment = false;
         }
+        context.cursor.cursor_freeze(false);
         workspace.value.setCtrl('page');
     }
     function transform(start: ClientXY, end: ClientXY) {
-        const ps: PageXY = matrix.inverseCoord(start.x, start.y);
-        const pe: PageXY = matrix.inverseCoord(end.x, end.y);
+        const ps: PageXY = matrix.computeCoord(start.x, start.y);
+        const pe: PageXY = matrix.computeCoord(end.x, end.y);
         if (asyncTransfer) {
             asyncTransfer.trans(ps, pe);
             migrate(shapes, start, end);
         }
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
-        const selected = context.selection.selectedShapes;
-        if (selected.length > 1) {
-            if (!e.shiftKey) {
-                const target: Shape | undefined = context.selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).reverse()[0];
-                context.selection.selectShape(target);
-            }
-        } else if (selected.length === 1) {
-            if (selected[0].type === ShapeType.Group) {
-                const isHasTarget = forGroupHover(context.selection.scout!, (selected[0] as GroupShape).childs, startPositionOnPage, selected[0], e.metaKey || e.ctrlKey);
-                if (!isHasTarget) context.selection.resetSelectShapes();
+        const selection = context.selection;
+        const selected = selection.selectedShapes;
+        const hoveredShape = selection.hoveredShape;
+        if (hoveredShape) {
+            if (e.shiftKey) {
+                selection.rangeSelectShape([...selected, hoveredShape]);
             } else {
-                const target: Shape | undefined = context.selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected)[0];
-                if (!target) {
-                    context.selection.resetSelectShapes();
-                }
+                selection.selectShape(hoveredShape);
             }
-        }
-        if (context.selection.hoveredShape) {
-            context.selection.selectShape(context.selection.hoveredShape);
+        } else {
+            const target = selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected);
+            if (target.length) {
+                if (!e.shiftKey) {
+                    selection.selectShape(target[0]);
+                }
+            } else selection.resetSelectShapes();
         }
     }
     function checkStatus() { // 检查是否可以直接开始移动
@@ -240,10 +240,10 @@ export function useController(context: Context) {
     }
     function setPosition(e: MouseEvent) {
         const { clientX, clientY } = e;
-        matrix.reset(workspace.value.matrix);
+        matrix.reset(workspace.value.matrix.inverse);
         root = workspace.value.root;
         startPosition = { x: clientX - root.x, y: clientY - root.y };
-        startPositionOnPage = matrix.inverseCoord(startPosition.x, startPosition.y);
+        startPositionOnPage = matrix.computeCoord(startPosition.x, startPosition.y);
     }
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context, t);
@@ -293,11 +293,8 @@ export function useController(context: Context) {
         return isDragging;
     }
     function isElement(e: MouseEvent): boolean {
-        if ((e.target as Element).closest('[data-area="controller"]')) {
-            return true;
-        } else {
-            return false;
-        }
+        const root = context.workspace.root;
+        return Boolean(context.selection.scout?.isPointInPath(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
     }
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
@@ -310,6 +307,7 @@ export function useController(context: Context) {
         if (wheel) wheel = wheel.remove(); // 卸载滚轮
         workspace.value.setCtrl('page');
         timerClear();
+        context.cursor.cursor_freeze(false);
     }
     onMounted(() => {
         context.workspace.watch(workspace_watcher);

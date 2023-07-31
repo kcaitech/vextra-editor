@@ -199,9 +199,8 @@ export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]
   let s = 0;
   while (s < selectorPoints.length - 1) {
     const p1 = selectorPoints[s], q1 = selectorPoints[s + 1];
-
     if (shapePoints.length === 2) { // 线条
-      if (isIntersect(p1, q1, shapePoints[0], selectorPoints[1])) {
+      if (isIntersect(p1, q1, shapePoints[0], shapePoints[1])) {
         return true;
       }
     } else {
@@ -221,11 +220,7 @@ export function is_mac() {
 }
 export function string_by_sys(str: string): string {
   if (is_mac()) {
-    let src = str;
-    src = src.replace(/ctrl|Ctrl/g, "⌘");
-    src = src.replace(/shift|Shift/g, "⇧");
-    src = src.replace(/alt|Alt/g, "⌥");
-    return src;
+    return str.replace(/ctrl|Ctrl/g, "⌘").replace(/shift|Shift/g, "⇧").replace(/alt|Alt/g, "⌥");
   } else {
     return str;
   }

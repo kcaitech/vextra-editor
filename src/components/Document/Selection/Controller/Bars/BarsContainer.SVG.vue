@@ -1,40 +1,47 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { ClientXY, PageXY, Selection } from '@/context/selection';
+import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { ClientXY, PageXY } from '@/context/selection';
 interface Props {
     matrix: number[]
     context: Context
     shape: Shape
 }
+interface Bar {
+    path: string
+    type: CtrlElementType
+}
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const paths = ref<string[]>([]);
+const submatrix = new Matrix();
+const data: { paths: Bar[] } = reactive({ paths: [] });
+const { paths } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 const dragActiveDis = 3;
+const types = [CtrlElementType.RectTop, CtrlElementType.RectRight, CtrlElementType.RectBottom, CtrlElementType.RectLeft];
 
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
 }
 function update_dot_path() {
-    paths.value.length = 0;
+    paths.length = 0;
     const frame = props.shape.frame;
     let apex = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }];
     apex = apex.map(p => matrix.computeCoord(p.x, p.y));
     apex.push(apex[0]);
     for (let i = 0; i < apex.length - 1; i++) {
-        paths.value.push(get_bar_path(apex[i], apex[i + 1]));
+        const path = get_bar_path(apex[i], apex[i + 1]);
+        paths.push({ path, type: types[i] });
     }
 }
 function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }): string {
     return `M ${s.x} ${s.y} L ${e.x} ${e.y} z`;
 }
-function selection_watcher(t?: number) { }
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button === 0) {
@@ -59,36 +66,60 @@ function bar_mousemove(event: MouseEvent) {
     if (isDragging) {
         if (asyncBaseAction) {
             matrix.reset(workspace.matrix);
-            const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y); // page
-            const p2Onpage: PageXY = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
-            asyncBaseAction.execute(cur_ctrl_type, p1OnPage, p2Onpage);
+            const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
+            const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
+            asyncBaseAction.executeScale(cur_ctrl_type, p1OnPage, p2Onpage);
         }
         startPosition = { ...mouseOnPage };
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            const shapes: Shape[] = props.context.selection.selectedShapes;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes, props.context.selection.selectedPage!);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
+            submatrix.reset(workspace.matrix.inverse);
+            setCursor(cur_ctrl_type, true);
+            workspace.scaling(true);
         }
+    }
+}
+function setCursor(t: CtrlElementType, force?: boolean) {
+    const cursor = props.context.cursor;
+    let deg = props.shape.rotation || 0;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    if (t === CtrlElementType.RectTop) {
+        cursor.setType(`scale-${deg + 90}`, force);
+    } else if (t === CtrlElementType.RectRight) {
+        cursor.setType(`scale-${deg}`, force);
+    } else if (t === CtrlElementType.RectBottom) {
+        cursor.setType(`scale-${deg + 90}`, force);
+    } else if (t === CtrlElementType.RectLeft) {
+        cursor.setType(`scale-${deg}`, force);
     }
 }
 function bar_mouseup(event: MouseEvent) {
-    if (event.button === 0) {
-        const workspace = props.context.workspace;
-        workspace.setCtrl('page');
-        if (isDragging) {
-            if (asyncBaseAction) {
-                asyncBaseAction = asyncBaseAction.close();
-            }
-            isDragging = false;
-        }
-        document.removeEventListener('mousemove', bar_mousemove);
-        document.removeEventListener('mouseup', bar_mouseup);
-    }
+    if (event.button !== 0) return;
+    const workspace = props.context.workspace;
+    workspace.scaling(false);
+    workspace.setCtrl('page');
+    if (isDragging) isDragging = false;
+    if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
+    document.removeEventListener('mousemove', bar_mousemove);
+    document.removeEventListener('mouseup', bar_mouseup);
 }
-watch(() => props.matrix, () => {
-    update();
-})
+function bar_mouseleave() {
+    props.context.cursor.setType('auto-0');
+}
+function window_blur() {
+    if (isDragging) isDragging = false;
+    if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
+    const workspace = props.context.workspace;
+    workspace.scaling(false);
+    workspace.setCtrl('page');
+    props.context.cursor.reset();
+    document.removeEventListener('mousemove', bar_mousemove);
+    document.removeEventListener('mouseup', bar_mouseup);
+}
+watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
     value.watch(update);
@@ -96,40 +127,26 @@ watch(() => props.shape, (value, old) => {
 })
 onMounted(() => {
     props.shape.watch(update);
-    props.context.selection.watch(selection_watcher);
+    window.addEventListener('blur', window_blur);
     update();
 })
 onUnmounted(() => {
     props.shape.unwatch(update);
-    props.context.selection.unwatch(selection_watcher);
+    window.removeEventListener('blur', window_blur);
 })
 </script>
 <template>
     <g>
-        <path :d="paths[0]" fill="none" stroke='#865dff' stroke-width="1.5px"
-            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectTop)">
-        </path>
-        <path :d="paths[0]" fill="none" stroke='transparent' style="cursor: ns-resize;" stroke-width="14px"
-            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectTop)">
-        </path>
-        <path :d="paths[1]" fill="none" stroke='#865dff' stroke-width="1.5px"
-            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectRight)">
-        </path>
-        <path :d="paths[1]" fill="none" stroke='transparent' style="cursor: ew-resize;" stroke-width="14px"
-            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectRight)">
-        </path>
-        <path :d="paths[2]" fill="none" stroke='#865dff' stroke-width="1.5px"
-            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectBottom)">
-        </path>
-        <path :d="paths[2]" fill="none" stroke='transparent' style="cursor: ns-resize;" stroke-width="14px"
-            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectBottom)">
-        </path>
-        <path :d="paths[3]" fill="none" stroke='#865dff' stroke-width="1.5px"
-            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectLeft)">
-        </path>
-        <path :d="paths[3]" fill="none" stroke='transparent' style="cursor: ew-resize;" stroke-width="14px"
-            @mousedown.stop="(e) => bar_mousedown(e, CtrlElementType.RectLeft)">
-        </path>
+        <g v-for="(b, i) in paths" :key="i">
+            <path :d="b.path" fill="none" stroke='#865dff' stroke-width="1.5px"
+                @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => setCursor(b.type)"
+                @mouseleave="bar_mouseleave">
+            </path>
+            <path :d="b.path" fill="none" stroke='transparent' stroke-width="10px"
+                @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => setCursor(b.type)"
+                @mouseleave="bar_mouseleave">
+            </path>
+        </g>
     </g>
 </template>
 <style lang='scss' scoped></style>

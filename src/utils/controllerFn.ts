@@ -4,7 +4,6 @@ import { replace } from "./clipaboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { permIsEdit } from "./content";
 
-
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context)) return;
     const { target, shiftKey, ctrlKey, metaKey } = e;
@@ -85,9 +84,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         if (shiftKey && (ctrlKey || metaKey)) {
             e.preventDefault();
             const selected = context.selection.selectedShapes;
-            if (selected.length) {
-                replace(context, t, selected);
-            }
+            if (selected.length) replace(context, t, selected);
         }
     } else if (e.code === 'KeyX') {
         context.workspace.clipboard.cut().then((res) => {
@@ -123,4 +120,20 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             editor.translate(dx, dy);
         }
     }
+}
+export function d(s: { x: number, y: number }, e: { x: number, y: number }): number {
+    const is2r = e.x - s.x;
+    const is2b = e.y - s.y;
+    let d = 0;
+    if (is2r > 0) {
+        d = d ^ 2;
+    } else if (is2r < 0) {
+        d = d ^ 1;
+    }
+    if (is2b > 0) {
+        d = d ^ 8
+    } else if (is2b < 0) {
+        d = d ^ 4;
+    }
+    return d;
 }

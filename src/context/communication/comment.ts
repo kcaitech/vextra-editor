@@ -1,5 +1,5 @@
-import { Watchable } from "@kcdesign/data";
-import { DocCommentOp, DocCommentOpData } from "@/communication/modules/doc_comment_op";
+import { Watchable } from "@kcdesign/data"
+import { DocCommentOp, DocCommentOpData } from "@/communication/modules/doc_comment_op"
 
 export class Comment extends Watchable(Object) {
     private docCommentOp?: DocCommentOp

@@ -186,7 +186,7 @@ function update_slice() {
   const len = (props.data.shape as TextShape).text.length;
   const src = (props.data.shape as TextShape).text.getText(0, len).replaceAll('\n', '');
   const word = props.data.keywords;
-  const is_acc = props.data.context.menu.accurate ? 'mg' : 'img';
+  const is_acc = props.data.context.navi.accurate ? 'mg' : 'img';
   const reg = new RegExp(`${word}`, is_acc);
   const index = src.search(reg);
   if (index < 8) {

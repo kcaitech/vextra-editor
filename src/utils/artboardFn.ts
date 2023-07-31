@@ -1,8 +1,9 @@
 import { XY, PageXY } from '@/context/selection';
-import { Matrix, ShapeFrame, Shape, ShapeType } from '@kcdesign/data';
+import { Matrix, ShapeFrame, Shape, ShapeType, Artboard, Color } from '@kcdesign/data';
 import { isTarget } from './common';
 import { Context } from '@/context';
-import { Action } from '@/context/workspace';
+import { Action } from '@/context/tool';
+import { sort_by_layer } from './group_ungroup';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
@@ -98,5 +99,61 @@ export function insertFrameTemplate(context: Context, name: string) {
             }, 100)
         }
     }
-    workspace.setAction(Action.AutoV);
+    context.tool.setAction(Action.AutoV);
+}
+export function collect(context: Context): Shape[] {
+    const selection = context.selection;
+    const page = selection.selectedPage;
+    const artboard = selection.selectedShapes[0];
+    if (page && artboard && artboard.type === ShapeType.Artboard) {
+        const m2r = artboard.matrix2Root();
+        const frame = artboard.frame;
+        const ps = [
+            { x: 0, y: 0 },
+            { x: frame.width, y: 0 },
+            { x: frame.width, y: frame.height },
+            { x: 0, y: frame.height },
+            { x: 0, y: 0 }
+        ].map(p => m2r.computeCoord(p.x, p.y));
+        const scope = (artboard.parent || page).childs || [];
+        return finder(context, scope, ps as [XY, XY, XY, XY, XY]);
+    } else return [];
+}
+function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
+    let ids = 0;
+    const selectedShapes: Map<string, Shape> = new Map();
+    while (ids < childs.length) {
+        const shape = childs[ids];
+        if (shape.isLocked || !shape.isVisible) {
+            ids++;
+            continue;
+        }
+        const m = childs[ids].matrix2Root();
+        const { width: w, height: h } = shape.frame;
+        const ps: XY[] = [
+            { x: 0, y: 0 },
+            { x: w, y: 0 },
+            { x: w, y: h },
+            { x: 0, y: h },
+            { x: 0, y: 0 },
+        ].map(p => m.computeCoord(p.x, p.y));
+        if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
+            if (isTarget(Points, ps, true)) {
+                selectedShapes.set(shape.id, shape);
+                for (let i = 0; i < shape.childs.length; i++) {
+                    selectedShapes.delete(shape.childs[i].id);
+                }
+            }
+        }
+        else if (shape.type === ShapeType.Line) {
+            if (isTarget(Points, [ps[0], ps[2]], true)) {
+                selectedShapes.set(shape.id, shape);
+            }
+        }
+        else if (isTarget(Points, ps, true)) {
+            selectedShapes.set(shape.id, shape);
+        }
+        ids++;
+    }
+    return sort_by_layer(context, Array.from(selectedShapes.values()));
 }

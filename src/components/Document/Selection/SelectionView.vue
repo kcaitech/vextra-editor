@@ -3,7 +3,8 @@ import { watchEffect, onMounted, onUnmounted, ref, nextTick } from "vue";
 import { Context } from "@/context";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
-import { CtrlElementType, Action } from "@/context/workspace";
+import { CtrlElementType } from "@/context/workspace";
+import { Action } from "@/context/tool";
 import { getHorizontalAngle, createHorizontalBox } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
@@ -95,10 +96,10 @@ function createShapeTracing() { // 描边
         if (selected.includes(hoveredShape)) {
             tracing.value = false;
         } else {
-            const path = hoveredShape.getPath(true);
-            const m2page = hoveredShape.matrix2Root();
-            path.transform(m2page);
-            path.transform(matrix);
+            const path = hoveredShape.getPath();
+            let m = hoveredShape.matrix2Root();
+            m.multiAtLeft(matrix);
+            path.transform(m);
             const { x, y, right, bottom } = props.context.workspace.root;
             const w = right - x;
             const h = bottom - y;
@@ -141,7 +142,7 @@ function createController() { // 计算控件点位以及类型判定
                 return p;
             });
             if (!permIsEdit(props.context)) {
-                controllerType.value = ControllerType.Preview;
+                controllerType.value = ControllerType.Readonly;
             } else if (shape.type === ShapeType.Line) { // 控件类型判定
                 controllerType.value = ControllerType.Line;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
@@ -185,17 +186,17 @@ function createController() { // 计算控件点位以及类型判定
             });
             rotate.value = 0; // 多选时，rect只为水平状态
             if (!permIsEdit(props.context)) {
-                controllerType.value = ControllerType.Preview;
+                controllerType.value = ControllerType.Readonly;
             } else {
                 controllerType.value = ControllerType.RectMulti; // 且控件类型都为矩形控件
             }
         }
         controller.value = true;
-    }    
+    }
 }
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
-    if (props.context.workspace.action === Action.AutoV) {
+    if (props.context.tool.action === Action.AutoV) {
         if (e.button === 0) {
             e.stopPropagation();
             if (props.context.menu.isMenuMount) {

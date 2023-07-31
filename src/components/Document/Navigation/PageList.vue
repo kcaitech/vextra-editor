@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
 import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
+import { Navi } from "@/context/navigate";
 import { Perm } from "@/context/workspace";
 type List = InstanceType<typeof ListView>;
 interface Props {
@@ -114,6 +115,7 @@ const addPage = () => {
                 pagelist.value.clampScroll(0, -itemScrollH)
             }
         }
+        props.context.navi.notify(Navi.ADD_PAGE);
         nextTick(() => {
             props.context.selection.reName();
         })

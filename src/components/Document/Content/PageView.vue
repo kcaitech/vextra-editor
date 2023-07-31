@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection';
-import { onMounted, onUnmounted, ref, watch, watchEffect, nextTick } from 'vue';
+import { Tool } from '@/context/tool';
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
-import { setToolGroup } from "@/utils/pageview";
 import ShapeTitles from './ShapeTitles.vue';
 const props = defineProps<{
     context: Context,
@@ -15,6 +14,7 @@ const props = defineProps<{
 const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
+const show_t = ref<boolean>(true);
 let renderItems: Shape[] = []; // 渲染数据，里面除了真实的data数据之外，还有工具对象
 const watcher = () => {
     reflush.value++;
@@ -28,34 +28,6 @@ function pageViewRegister(mount: boolean) {
     }
     props.context.workspace.setPageViewId(rootId.value);
 }
-function updateRenderItems(t?: number) {
-    if (t === Selection.CHANGE_SHAPE) {
-        updateItems();
-    }
-}
-function updateItems() {
-    // const selection = props.context.selection;
-    // const workspace = props.context.workspace;
-    // const shapes = selection.selectedShapes;
-    // const len = shapes.length;
-    // if (len > 1) {
-    //     const editor = props.context.editor.editor4Page(props.data);
-    //     const toolGroup = editor.createGroup();
-    //     toolGroup.childs.push(...shapes);
-    //     toolGroup.id = 'tool-group';
-    //     renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
-    //     nextTick(() => { setToolGroup(props.context) });
-    // } else {
-    //     if (renderItems.length) {
-    //         if (renderItems[0].id === 'tool-group') {
-    //             workspace.toolGroupUnmount();
-    //         }
-    //     }
-    //     renderItems = props.data.childs;
-    // }
-    renderItems = props.data.childs;
-    reflush.value++;
-}
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
@@ -63,18 +35,24 @@ watchEffect(() => {
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
-    pageViewRegister(true);    
+    pageViewRegister(true);
     renderItems = props.data.childs;
 })
+function tool_watcher(t?: number) {
+    if (t === Tool.TITILE_VISIBLE) {
+        const v = props.context.tool.isShowTitle;
+        show_t.value = v;
+    }
+}
 onMounted(() => {
     props.data.watch(watcher);
-    props.context.selection.watch(updateRenderItems);
+    props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
-    props.context.selection.unwatch(updateRenderItems);
+    props.context.tool.unwatch(tool_watcher);
     pageViewRegister(false);
     stopWatchPage();
     renderItems = [];
@@ -90,13 +68,12 @@ onUnmounted(() => {
         <component v-for="c in renderItems" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>
-    <ShapeTitles :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
+    <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>
 
 <style scoped>
 svg {
     position: absolute;
     transform-origin: top left;
-    background-color: var(--center-content-bg-color);
 }
 </style>

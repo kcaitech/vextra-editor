@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page, CoopRepository } from '@kcdesign/data';
+import { Document, importDocument, Repository, Page, CoopRepository } from '@kcdesign/data';
 import { Ot } from "@/communication/modules/ot";
 import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
@@ -25,7 +25,7 @@ import { measure } from '@/layout/text/measure';
 import Home from "@/components/Document/Toolbar/BackToHome.vue";
 import e from 'express';
 import { ResponseStatus } from "@/communication/modules/doc_upload";
-import { S3Storage } from "@/utils/storage";
+import { S3Storage, StorageOptions } from "@/utils/storage";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -129,8 +129,8 @@ function selectionWatcher(t: number) {
         }
     }
 }
-function keyboardEventHandler(evevt: KeyboardEvent) {
-    const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
+function keyboardEventHandler(event: KeyboardEvent) {
+    const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
     if (context) {
         if (code === 'Backslash') {
@@ -138,18 +138,19 @@ function keyboardEventHandler(evevt: KeyboardEvent) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
-        if(context && context.workspace.documentPerm !== Perm.isEdit) {
-            if(permKeyBoard(evevt)) {
-                context.workspace.keyboardHandle(evevt); // 只读可评论的键盘事件
+        if (context && context.workspace.documentPerm !== Perm.isEdit) {
+            if (permKeyBoard(event)) {
+                context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
             }
-        }else {
-            context.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
+        } else {
+            context.workspace.keyboardHandle(event); // 编辑器相关的键盘事件
+            context.tool.keyhandle(event);
         }
     }
 }
 const permKeyBoard = (e: KeyboardEvent) => {
     const { code, ctrlKey, metaKey, shiftKey } = e;
-    if(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
+    if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
     else false
 }
 
@@ -210,7 +211,7 @@ function keyToggleTB() {
 
 //只读权限隐藏右侧属性栏
 watchEffect(() => {
-    if(isRead.value || canComment.value) {
+    if (isRead.value || canComment.value) {
         Right.value.rightMin = 0
         Right.value.rightWidth = 0
         Right.value.rightMinWidth = 0
@@ -245,12 +246,12 @@ const getDocumentAuthority = async () => {
                 showNotification(data.data.perm_type)
             }
         }
-        if(data.data.perm_type === 1) {
+        if (data.data.perm_type === 1) {
             isRead.value = true
-        }else if(data.data.perm_type === 2) {
+        } else if (data.data.perm_type === 2) {
             isRead.value = false
             canComment.value = true
-        }else if(data.data.perm_type === 3) {
+        } else if (data.data.perm_type === 3) {
             isRead.value = false
             canComment.value = false
             isEdit.value = true
@@ -330,7 +331,7 @@ const getDocumentInfo = async () => {
         // documentKey.value = data
 
         const repo = new Repository();
-        const importDocumentParams = {
+        const importDocumentParams: StorageOptions = {
             endPoint: STORAGE_URL,
             region: "zhuhai-1",
             accessKey: data.access_key,
@@ -339,7 +340,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(new S3Storage(importDocumentParams), path, "", "", repo, measure)
+        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
@@ -353,7 +354,7 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            ot = Ot.Make(docId, token, document, context.coopRepo, document.versionId ?? "");
+            ot = Ot.Make(docId, token, document, context.coopRepo, dataInfo.data.document.version_id ?? "");
             ot.start()
                 .catch((e) => {
                     if (!context) {
@@ -368,8 +369,12 @@ const getDocumentInfo = async () => {
                     switchPage(context.data.pagesList[0]?.id);
                     loading.value = false;
                 });
-            await context.communication.resource_upload.start(docId, token);
+            await context.communication.resourceUpload.start(docId, token);
             await context.communication.comment.start(docId, token);
+            context.communication.comment.onUpdated = (comment: any) => {
+                // todo 前端对接视图更新
+                console.log("收到评论更新", comment)
+            }
         }
         getUserInfo()
     } catch (err) {
@@ -382,13 +387,13 @@ const getDocumentInfo = async () => {
 async function upload() {
     const token = localStorage.getItem("token");
     if (!token || !context || !context.data) return;
-    if (!await context.communication.doc_upload.start(token)) {
+    if (!await context.communication.docUpload.start(token)) {
         // todo 上传失败处理
         return;
     }
     let result;
     try {
-        result = await context.communication.doc_upload.upload(context.data);
+        result = await context.communication.docUpload.upload(context.data);
     } catch (e) {
         // todo 上传失败处理
         return;
@@ -402,9 +407,9 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
-    ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, context!.data.versionId ?? "");
+    ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, result!.data.version_id ?? "");
     ot.start();
-    context!.communication.resource_upload.start(doc_id, token);
+    context!.communication.resourceUpload.start(doc_id, token);
     context!.communication.comment.start(doc_id, token);
     context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
@@ -450,7 +455,7 @@ onMounted(() => {
 onUnmounted(() => {
     try {
         ot?.close();
-        context?.communication.resource_upload.close();
+        context?.communication.resourceUpload.close();
         context?.communication.comment.close();
     } catch (err) { }
     window.document.title = t('product.name');

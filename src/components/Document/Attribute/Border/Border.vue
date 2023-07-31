@@ -214,7 +214,8 @@ function onAlphaChange(e: Event, idx: number) {
                 const border = borders[idx].border;
                 const { red, green, blue } = border.color
                 const color = new Color(alpha, red, green, blue);
-                editor.value.setBorderColor(idx, color);
+                const _idx = borders.length - idx - 1;
+                editor.value.setBorderColor(_idx, color);
             } else {
                 message('danger', t('system.illegal_input'));
                 return (e.target as HTMLInputElement).value = (borders[idx].border.color.alpha * 100) + '%'
