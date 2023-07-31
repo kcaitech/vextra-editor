@@ -16,21 +16,16 @@ import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { Perm, WorkSpace } from '@/context/workspace';
-import { measure } from '@/layout/text/measure';
-import Home from "@/components/Document/Toolbar/BackToHome.vue";
-import e from 'express';
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { S3Storage, StorageOptions } from "@/utils/storage";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
-(window as any).__context = context;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
@@ -109,7 +104,6 @@ function switchPage(id?: string) {
                 curPage.value = undefined;
                 ctx.comment.commentMount(false)
                 ctx.selection.selectPage(page);
-                (window as any).__context = ctx;
                 curPage.value = page;
             }
         })
@@ -538,7 +532,7 @@ onUnmounted(() => {
     width: 100%;
     height: 40px;
     background-color: var(--top-toolbar-bg-color);
-    z-index: 2;
+    z-index: 10;
     min-height: 40px;
 }
 

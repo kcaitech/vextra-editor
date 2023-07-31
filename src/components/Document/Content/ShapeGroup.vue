@@ -2,7 +2,7 @@
 import { h } from 'vue';
 import comsMap from './comsmap'
 import { GroupShape } from "@kcdesign/data";
-import { render as r } from "@/render/group";
+import { renderGroup as r } from "@kcdesign/data";
 import { makeReflush } from "./common";
 
 const props = defineProps<{ data: GroupShape }>();

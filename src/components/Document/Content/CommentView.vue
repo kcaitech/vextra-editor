@@ -91,7 +91,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
         if (diff < 4) {
             props.context.comment.showCommentPopup(commentIndex.value, e)
         } else {
-            if (documentCommentList.value[index].user.id !== userId) return
+            // if (documentCommentList.value[index].user.id !== userId) return
             const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
             const shape_frame = documentCommentList.value[index].shape_frame
             const commentxy = { x: shape_frame.x1, y: shape_frame.y1 }

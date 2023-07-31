@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import comsMap from './comsmap'
-import { render as r } from "@/render/symbolref"
+import { renderSymbolRef as r } from "@kcdesign/data"
 import { SymbolRefShape } from '@kcdesign/data';
 
 const props = defineProps<{ data: SymbolRefShape }>();
