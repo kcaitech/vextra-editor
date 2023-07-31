@@ -18,7 +18,6 @@ export class Asssit extends Watchable(Object) {
     private m_x_axis: Map<number, PageXY[]> = new Map();
     private m_y_axis: Map<number, PageXY[]> = new Map();
     private m_current_pg: PointGroup | undefined;
-    private m_nodes: PageXY[] = [];
     private m_nodes_x: PageXY[] = [];
     private m_nodes_y: PageXY[] = [];
     private m_x_sticked: boolean = false;
@@ -27,14 +26,18 @@ export class Asssit extends Watchable(Object) {
         super();
         this.m_context = context;
     }
-    get nodes() {
-        return this.m_nodes;
+    get nodes_x() {
+        return this.m_nodes_x;
+    }
+    get nodes_y() {
+        return this.m_nodes_y;
     }
     init() { this.m_context.selection.watch(this.selection_watcher.bind(this)) }
     collect() {
+        const s = Date.now();
         const page = this.m_context.selection.selectedPage;
         if (!page) return;
-        const s = Date.now();
+        this.clear();
         this.m_shape_inner = finder(this.m_context, page, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
         const e = Date.now();
         console.log('收集用时(ms):', e - s);
@@ -52,32 +55,43 @@ export class Asssit extends Watchable(Object) {
         }
     }
     match(s: Shape) {
+        this.m_nodes_x = [];
+        this.m_nodes_y = [];
         this.m_current_pg = update_pg(s);
-        const c = this.m_current_pg;
+        const s_pg = this.m_current_pg;
         const delta = { x: 0, y: 0 };
-        const nodes: PageXY[] = [];
         let need_update: boolean = false;
-        // this.m_shape_inner.forEach((v, k) => {
-        //     if (v.id !== s.id) {
-        //         const tg = this.m_pg_inner.get(k);
-        //         if (tg) {
-        //             if (Math.abs(tg.lt.x - c.lt.x) < 5) {
-        //                 need_update = true;
-        //                 delta.x = tg.lt.x - c.lt.x;
-        //                 nodes.push(...[tg.lt, { x: tg.lt.x, y: c.lt.y }]);
-        //             }
-        //         }
-        //     }
-        // })
-        if (need_update) {
-            this.m_nodes = nodes;
-            this.notify(Asssit.UPDATE_ASSIST);
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const cs = this.m_shape_inner[i];
+            if (cs.id === s.id) continue;
+            const c_pg = this.m_pg_inner.get(cs.id);
+            if (!c_pg) continue;
+            if (Math.abs(c_pg.lt.x - s_pg.lt.x) < 5) {
+                this.m_nodes_x = this.m_x_axis.get(c_pg.lt.x) || [];
+                delta.x = c_pg.lt.x - s_pg.lt.x;
+                need_update = true;
+            }
         }
+        if (need_update) this.notify(Asssit.UPDATE_ASSIST);
         return delta;
     }
+    match_test() {
+        const st = Date.now();
+        const s = this.m_context.selection.selectedShapes[0];
+        this.match(s);
+        const et = Date.now();
+        console.log('单次匹配用时(ms):', et - st);
+    }
     reset() {
-        this.m_nodes = [];
+        this.m_nodes_x = [];
+        this.m_nodes_y = [];
         this.notify(Asssit.UPDATE_ASSIST);
+    }
+    clear() {
+        this.m_shape_inner.length = 0;
+        this.m_pg_inner.clear();
+        this.m_x_axis.clear();
+        this.m_y_axis.clear();
     }
 }
 function update_pg(s: Shape): PointGroup {
@@ -100,15 +114,24 @@ function isShapeOut(context: Context, shape: Shape) {
     const b = Math.max(point[0][1], point[1][1], point[2][1], point[3][1]);
     return l > right - x || r < 0 || b < 0 || t > bottom - y;
 }
-function finder(context: Context, scope: GroupShape, pg: Map<string, PointGroup>, x_axis: Map<number, PageXY[]>, y_axis: Map<number, PageXY[]>) {
+function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, PageXY[]>, y_axis: Map<number, PageXY[]>) {
     let result: Shape[] = [];
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
         const c = cs[i];
         if (isShapeOut(context, cs[i])) continue;
         result.push(c);
-        pg.set(c.id, update_pg(c));
-        if (c instanceof GroupShape) result = [...result, ...finder(context, c, pg, x_axis, y_axis)];
+        const pg = update_pg(c);
+        all_pg.set(c.id, pg);
+        const pvs = Object.values(pg);
+        for (let i = 0; i < pvs.length; i++) {
+            const p = pvs[i];
+            let x = x_axis.get(p.x);
+            let y = y_axis.get(p.y);
+            if (x) x.push(p); else x_axis.set(p.x, [p]);
+            if (y) y.push(p); else y_axis.set(p.y, [p]);
+        }
+        if (c instanceof GroupShape) result = [...result, ...finder(context, c, all_pg, x_axis, y_axis)];
     }
     return result;
 }

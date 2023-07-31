@@ -24,15 +24,15 @@ function assist_watcher(t?: any) {
     if (t === Asssit.UPDATE_ASSIST) render();
 }
 function render() {
-    let ns = props.context.assist.nodes;
-    clear();
-    if (ns.length) {
-        const m = props.context.workspace.matrix;
-        ns = ns.map(n => m.computeCoord(n.x, n.y))
-        nodes.push(...ns);
-        lines.push(gen_line(ns));
-        assist.value = true;
-    }
+    // let ns = props.context.assist.nodes;
+    // clear();
+    // if (ns.length) {
+    //     const m = props.context.workspace.matrix;
+    //     ns = ns.map(n => m.computeCoord(n.x, n.y))
+    //     nodes.push(...ns);
+    //     lines.push(gen_line(ns));
+    //     assist.value = true;
+    // }
 }
 function clear() {
     nodes.length = 0;

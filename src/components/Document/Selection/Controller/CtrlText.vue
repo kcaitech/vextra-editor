@@ -19,7 +19,7 @@ const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
     rotate: number,
-    matrix: number[],
+    matrix: Matrix,
     shape: Shape
 }>();
 
