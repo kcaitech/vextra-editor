@@ -6,6 +6,7 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { getAngle } from '@/utils/common';
 import { update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
+import { Action } from '@/context/tool';
 
 interface Props {
   matrix: number[]
@@ -80,13 +81,11 @@ function point_mousemove(event: MouseEvent) {
       if (props.shape.isFlippedVertical) deg = -deg
       asyncBaseAction.executeRotate(deg);
     } else {
-      if (event.shiftKey) {
-        const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
-        const p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        const t = { x: p1.x + pre_delta.x, y: p1.y + pre_delta.x * (1 / r) };
+      const action = props.context.tool.action;
+      if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
+        let p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
+        let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
+        const t = get_t(cur_ctrl_type, p1, p2);
         asyncBaseAction.executeScale(cur_ctrl_type, p1, t);
       } else {
         const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
@@ -104,6 +103,41 @@ function point_mousemove(event: MouseEvent) {
       asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
     }
   }
+}
+function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
+  if (cct === CtrlElementType.RectLT) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(pre_delta.x, pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectRT) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(f.width + pre_delta.x, -pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectRB) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectLB) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(pre_delta.x, f.height - pre_delta.x * (1 / r));
+  } else return p2
 }
 function point_mouseup(event: MouseEvent) {
   if (event.button !== 0) return;
