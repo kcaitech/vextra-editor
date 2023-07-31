@@ -42,9 +42,7 @@ function onChange(e: Event) {
             return input.value!.value = String(props.text)
         }
     } else if (props.svgicon === 'angle') {
-        if (input.value!.value.slice(-1) === '°' && isNaN(Number(input.value!.value.slice(0, -1)))) {
-            return input.value!.value = String(props.text)
-        } else if (input.value!.value.slice(-1) !== '°' && isNaN(Number(input.value!.value))) {
+        if (input.value!.value.slice(-1) !== '°' && isNaN(Number(input.value!.value))) {
             return input.value!.value = String(props.text)
         }
     }

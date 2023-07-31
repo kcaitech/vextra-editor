@@ -293,11 +293,11 @@ export const clipboard = {
 }
 
 export const bool = {
-    union: 'Union set',
-    subtract: 'Minus the top',
-    intersection: 'intersection',
-    difference: 'Difference set',
-    cohere: 'Path combination'
+    union: 'Union',
+    subtract: 'Subtract',
+    intersection: 'Intersect',
+    difference: 'Exclude',
+    cohere: 'Vector'
 }
 
 attr[BorderPosition.Inner] = 'Inner';

@@ -17,7 +17,7 @@ const button = ref<Button>();
 const visible = ref(false)
 const selectBool = ref('union')
 const boolType = ref(BoolOp.Union)
-const boolName = ref('Union')
+const boolName = ref('union')
 const state = ref(false)
 const emit = defineEmits<{
   (e: "changeBool", type: BoolOp, name: string): void;
@@ -56,17 +56,7 @@ const selector = (active: string, type: BoolOp) => {
     }
     boolType.value = type
     popoverVisible.value = false;
-    if(active === 'union') {
-      boolName.value = 'Union'
-    }else if (active === 'subtract') {
-      boolName.value = 'Subtract'
-    }else if (active === 'intersection') {
-      boolName.value = 'Intersect'
-    }else if (active === 'difference') {
-      boolName.value = 'Exclude'
-    }else if (active === 'cohere') {
-      boolName.value = 'cohere'
-    }
+    boolName.value = active
     if(active === 'cohere') {
       emit('flattenShape')
     }else {
