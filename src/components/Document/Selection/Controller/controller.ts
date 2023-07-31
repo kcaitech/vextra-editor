@@ -35,8 +35,8 @@ export function useController(context: Context) {
     const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
-            const ps: PageXY = matrix.inverseCoord(start.x, start.y);
-            const pe: PageXY = matrix.inverseCoord(end.x, end.y);
+            const ps: PageXY = matrix.computeCoord(start.x, start.y);
+            const pe: PageXY = matrix.computeCoord(end.x, end.y);
             const selection = context.selection;
             let targetParent;
             const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
@@ -129,7 +129,7 @@ export function useController(context: Context) {
         }
         if (context.workspace.isPageDragging) return;
         if (isElement(e)) {
-            matrix.reset(workspace.value.matrix);
+            matrix.reset(workspace.value.matrix.inverse);
             setPosition(e);
             if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
                 handleDblClick();
@@ -203,8 +203,8 @@ export function useController(context: Context) {
         workspace.value.setCtrl('page');
     }
     function transform(start: ClientXY, end: ClientXY) {
-        const ps: PageXY = matrix.inverseCoord(start.x, start.y);
-        const pe: PageXY = matrix.inverseCoord(end.x, end.y);
+        const ps: PageXY = matrix.computeCoord(start.x, start.y);
+        const pe: PageXY = matrix.computeCoord(end.x, end.y);
         if (asyncTransfer) {
             asyncTransfer.trans(ps, pe);
             migrate(shapes, start, end);
@@ -240,10 +240,10 @@ export function useController(context: Context) {
     }
     function setPosition(e: MouseEvent) {
         const { clientX, clientY } = e;
-        matrix.reset(workspace.value.matrix);
+        matrix.reset(workspace.value.matrix.inverse);
         root = workspace.value.root;
         startPosition = { x: clientX - root.x, y: clientY - root.y };
-        startPositionOnPage = matrix.inverseCoord(startPosition.x, startPosition.y);
+        startPositionOnPage = matrix.computeCoord(startPosition.x, startPosition.y);
     }
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context, t);

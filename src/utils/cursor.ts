@@ -60,7 +60,7 @@ function styleSheetController(): StyleSheetController {
   }
   async function getClass(clsName: string) { //这个clsName是不带id的，只有类型和度数
     const arr = clsName.split('-');
-    arr[1] = findNearestMultipleOf(Math.floor(((Number(arr[1] || -arr[2] || 0) % 360))), 3).toString();
+    arr[1] = findNearestMultipleOf(Math.floor(((Number(arr[1] || -arr[2] || 0) % 360))), 6).toString();
     clsName = `${arr[0]}-${arr[1]}-${styleSheetId}`;
     // 如果获取的过程中无法从已有的样式库中取得样式，则先创建一个样式插入到样式库
     if (!classList.get(clsName)) {

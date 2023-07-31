@@ -1,11 +1,9 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncMultiAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncMultiAction, CtrlElementType, Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
-import { ClientXY, PageXY } from '@/context/selection';
+import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
-import { sort_by_layer } from '@/utils/group_ungroup';
-import { Navi } from '@/context/navigate';
 interface Props {
     matrix: number[]
     context: Context
@@ -17,11 +15,12 @@ interface Bar {
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
+const submatrix = new Matrix();
 const data: { bars: Bar[] } = reactive({ bars: [] });
 const { bars } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
-let asyncBaseAction: AsyncMultiAction | undefined = undefined;
+let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 const dragActiveDis = 3;
 const types = [CtrlElementType.RectTop, CtrlElementType.RectRight, CtrlElementType.RectBottom, CtrlElementType.RectLeft];
@@ -45,83 +44,106 @@ function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }):
 }
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    return;
-    // if (event.button === 0) {
-    //     props.context.menu.menuMount()
-    //     event.stopPropagation();
-    //     cur_ctrl_type = ele;
-    //     const workspace = props.context.workspace;
-    //     workspace.setCtrl('controller');
-    //     matrix.reset(workspace.matrix);
-    //     const root = workspace.root;
-    //     startPosition = { x: event.clientX - root.x, y: event.clientY - root.y }
-    //     document.addEventListener('mousemove', bar_mousemove);
-    //     document.addEventListener('mouseup', bar_mouseup);
-    // }
+    if (event.button === 0) {
+        props.context.menu.menuMount()
+        event.stopPropagation();
+        cur_ctrl_type = ele;
+        const workspace = props.context.workspace;
+        workspace.setCtrl('controller');
+        matrix.reset(workspace.matrix);
+        const root = workspace.root;
+        startPosition = { x: event.clientX - root.x, y: event.clientY - root.y }
+        document.addEventListener('mousemove', bar_mousemove);
+        document.addEventListener('mouseup', bar_mouseup);
+    }
 }
 function bar_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const root = workspace.root;
-    const { clientX, clientY } = event;
-    const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+    const { x: sx, y: sy } = startPosition;
+    const { x: mx, y: my } = { x: event.clientX - root.x, y: event.clientY - root.y };
     if (isDragging) {
-        if (asyncBaseAction) {
-            matrix.reset(workspace.matrix);
-            const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y); // page
-            const p2Onpage: PageXY = matrix.inverseCoord(mouseOnPage.x, mouseOnPage.y);
-            asyncBaseAction.execute(cur_ctrl_type, p1OnPage, p2Onpage);
+        if (asyncMultiAction) {
+            if (cur_ctrl_type === CtrlElementType.RectTop) {
+                const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+                const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+                const o_h = f_rb.y - f_lt.y;
+                const s = submatrix.computeCoord(sx, sy);
+                const e = submatrix.computeCoord(mx, my);
+                const transy = e.y - s.y;
+                const _h = o_h - transy;
+                if (_h < 0) cur_ctrl_type = CtrlElementType.RectBottom;
+                asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + transy }, 1, _h / o_h);
+            } else if (cur_ctrl_type === CtrlElementType.RectRight) {
+                const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+                const f_lt = props.frame[0];
+                const f_rb = props.frame[2];
+                const o_w = f_rb.x - f_lt.x;
+                const transx = mx - sx;
+                const _w = o_w + transx;
+                if (_w < 0) cur_ctrl_type = CtrlElementType.RectLeft;
+                asyncMultiAction.executeScale(origin, origin, _w / o_w, 1);
+            } else if (cur_ctrl_type === CtrlElementType.RectBottom) {
+                const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+                const f_lt = props.frame[0];
+                const f_rb = props.frame[2];
+                const o_h = f_rb.y - f_lt.y;
+                const transy = my - sy;
+                const _h = o_h + transy;
+                if (_h < 0) cur_ctrl_type = CtrlElementType.RectTop;
+                asyncMultiAction.executeScale(origin, origin, 1, _h / o_h);
+            } else if (cur_ctrl_type === CtrlElementType.RectLeft) {
+                const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+                const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+                const o_w = f_rb.x - f_lt.x;
+                const s = submatrix.computeCoord(sx, sy);
+                const e = submatrix.computeCoord(mx, my);
+                const transx = e.x - s.x;
+                const _w = o_w - transx;
+                if (_w < 0) cur_ctrl_type = CtrlElementType.RectRight;
+                asyncMultiAction.executeScale(f_lt, { x: f_lt.x + transx, y: f_lt.y }, _w / o_w, 1);
+            }
         }
-        startPosition = { ...mouseOnPage };
+        startPosition = { x: mx, y: my };
     } else {
-        if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
+        if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             isDragging = true;
-            const shapes: Shape[] = sort_by_layer(props.context, props.context.selection.selectedShapes);
-            props.context.navi.set_sl_freeze(true);
-            asyncBaseAction = props.context.editor.controller().asyncMultiEditor(shapes, props.context.selection.selectedPage!);
+            asyncMultiAction = props.context.editor.controller().asyncMultiEditor(props.context.selection.selectedShapes, props.context.selection.selectedPage!);
+            submatrix.reset(workspace.matrix.inverse);
+            setCursor(cur_ctrl_type);
+            workspace.scaling(true);
         }
     }
 }
 function bar_mouseup(event: MouseEvent) {
     if (event.button === 0) {
-        const workspace = props.context.workspace;
-        workspace.setCtrl('page');
         if (isDragging) {
-            if (asyncBaseAction) {
-                const s = asyncBaseAction.close();
-                if (s) props.context.selection.rangeSelectShape(s);
-                props.context.navi.set_sl_freeze(false);
-                props.context.navi.notify(Navi.SHAPELIST_UPDATE);
-                asyncBaseAction = undefined;
+            if (asyncMultiAction) {
+                asyncMultiAction.close();
+                asyncMultiAction = undefined;
             }
             isDragging = false;
         }
         document.removeEventListener('mousemove', bar_mousemove);
         document.removeEventListener('mouseup', bar_mouseup);
+        const workspace = props.context.workspace;
+        workspace.scaling(false);
+        workspace.setCtrl('page');
+        props.context.cursor.reset();
     }
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
-    const cursor = props.context.cursor;
-    let deg = 0;
-    if (t === CtrlElementType.RectTop) {
-        cursor.setType(`scale-${deg + 90}`, force);
-    } else if (t === CtrlElementType.RectRight) {
-        cursor.setType(`scale-${deg}`, force);
-    } else if (t === CtrlElementType.RectBottom) {
-        cursor.setType(`scale-${deg + 90}`, force);
-    } else if (t === CtrlElementType.RectLeft) {
-        cursor.setType(`scale-${deg}`, force);
-    }
-}
-function bar_mouseenter(t: CtrlElementType) {
-    setCursor(t);
+    if (t === CtrlElementType.RectTop) props.context.cursor.setType('scale-90', force);
+    else if (t === CtrlElementType.RectRight) props.context.cursor.setType('scale-0', force);
+    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType('scale-90', force);
+    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale-0', force);
 }
 function bar_mouseleave() {
-    const cursor = props.context.cursor;
-    cursor.setType('auto-0');
+    props.context.cursor.setType('auto-0');
 }
 function window_blur() {
     if (isDragging) isDragging = false;
-    if (asyncBaseAction) asyncBaseAction = undefined;
+    if (asyncMultiAction) asyncMultiAction = undefined;
     const workspace = props.context.workspace;
     workspace.scaling(false);
     workspace.setCtrl('page');
@@ -144,11 +166,11 @@ onUnmounted(() => {
     <g>
         <g v-for="(b, i) in bars" :key="i">
             <path :d="b.path" fill="none" stroke='#865dff' stroke-width="1.5px"
-                @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => bar_mouseenter(b.type)"
+                @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => setCursor(b.type)"
                 @mouseleave="bar_mouseleave">
             </path>
             <path :d="b.path" fill="none" stroke='transparent' stroke-width="10px"
-                @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => bar_mouseenter(b.type)"
+                @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => setCursor(b.type)"
                 @mouseleave="bar_mouseleave">
             </path>
         </g>

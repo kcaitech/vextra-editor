@@ -14,8 +14,6 @@ const progressBtn = ref<HTMLDivElement>()
 let isDragging = false
 const text = ref<number>(0)
 function showMenu() {
-  const workspace = props.context.workspace
-  workspace.popoverVisible(false);
   popover.value?.show();
 }
 const onMouseDown = (e: MouseEvent) => {

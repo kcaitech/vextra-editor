@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ref, watch, onUnmounted, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import Loading from '@/components/common/Loading.vue';
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ResultItem, { ItemData } from "./ResultItem.vue";
 import TextResultItem, { TItemData } from "./TextResultItem.vue";
@@ -9,7 +8,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Shape, ShapeType, TextShape } from '@kcdesign/data';
 import { isInner } from '@/utils/content';
-import { is_shape_in_selection, selection_types } from '@/utils/shapelist';
+import { is_shape_in_selection, selection_types, fit } from '@/utils/shapelist';
 import { Navi } from '@/context/navigate';
 import { get_words_index_selection_sequence } from '@/utils/search';
 interface Props {
@@ -213,8 +212,14 @@ function unHovershape() {
   props.context.selection.unHoverShape();
 }
 function shapeScrollToContentView_1(shape: Shape) {
+  const is_p2 = props.context.navi.isPhase2(shape);
+  if (is_p2) {
+    fit(props.context, shape);
+    return;
+  }
   if (isInner(props.context, shape)) {
     props.context.selection.selectShape(shape);
+    props.context.navi.set_phase(shape.id);
     return;
   }
   const workspace = props.context.workspace;
@@ -241,6 +246,7 @@ function shapeScrollToContentView_1(shape: Shape) {
       workspace.matrix.trans(transX, transY);
     }
     workspace.matrixTransformation();
+    props.context.navi.set_phase('');
   }
 
 }
@@ -251,8 +257,14 @@ function set_focus(shape: Shape) {
   props.context.navi.set_focus_text({ shape, slice });
 }
 function shapeScrollToContentView(shape: Shape) {
+  const is_p2 = props.context.navi.isPhase2(shape);
+  if (is_p2) {
+    fit(props.context, shape);
+    return;
+  }
   if (isInner(props.context, shape)) {
     props.context.selection.selectShape(shape);
+    props.context.navi.set_phase(shape.id);
     if (shape.type === ShapeType.Text) {
       set_focus(shape);
     }
@@ -287,6 +299,7 @@ function shapeScrollToContentView(shape: Shape) {
       workspace.matrix.trans(transX, transY);
     }
     workspace.matrixTransformation();
+    props.context.navi.set_phase('');
   }
 
 }

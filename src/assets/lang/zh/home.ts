@@ -57,7 +57,8 @@ export const system = {
     'page1': '页面 1',
     'dissolution': '取消容器',
     'content_includes': '文本包含',
-    'title_includes': '标题包含'
+    'title_includes': '标题包含',
+    'artboart_title_visible': '显示容器标题'
 }
 
 export const home = {
@@ -136,7 +137,7 @@ export const home = {
     'align_v_c': '上下居中对齐',
     'align_bottom': '底对齐',
     'distribute_h': '左右等距分布',
-    'distribute_v': '上下等距分布',
+    'distribute_v': '上下等距分布'
 }
 
 export const search = {

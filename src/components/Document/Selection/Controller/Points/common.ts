@@ -7,7 +7,7 @@ interface Dot {
     type: CtrlElementType
     type2: CtrlElementType
 }
-export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[], s_r: number, matrix: Matrix, shape?: Shape): Dot[] {
+export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[], s_r: number, shape?: Shape): Dot[] {
     const bit_v = 4;
     const bit_v_d = 7;
     const [lt, rt, rb, lb] = ps;
