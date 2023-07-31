@@ -502,7 +502,7 @@ enum MessageType {
     Success,
 }
 
-insertNetworkInfo('networkError', true, network_error)
+// insertNetworkInfo('networkError', true, network_error)
 
 const docUploadState = (type: MessageType, data: any) => {
     if(type === MessageType.NetError) {
@@ -516,7 +516,7 @@ const docUploadState = (type: MessageType, data: any) => {
         autoSaveSuccess()
     }
 }
-const msg = false
+const msg = true
 // 浏览器弹框提示
 const confirmClose = (e: any) => {
     if(msg) return
@@ -626,7 +626,7 @@ onUnmounted(() => {
     width: 100%;
     height: 40px;
     background-color: var(--top-toolbar-bg-color);
-    z-index: 2;
+    z-index: 10;
     min-height: 40px;
 }
 
