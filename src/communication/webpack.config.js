@@ -1,7 +1,10 @@
 const path = require("path");
 
 module.exports = {
-    entry: "./communication-worker.ts",
+    entry: {
+        "communication-worker": "./communication-worker.ts",
+    },
+    target: "web",
     module: {
         rules: [
             {
@@ -23,7 +26,7 @@ module.exports = {
         },
     },
     output: {
-        filename: "communication-worker.js",
+        filename: "[name].js",
         path: path.resolve(__dirname, "./"),
     },
 };
