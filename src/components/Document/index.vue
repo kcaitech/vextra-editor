@@ -489,8 +489,6 @@ enum MessageType {
     Success,
 }
 
-insertNetworkInfo('networkError', true, network_error)
-
 const docUploadState = (type: MessageType, data: any) => {
     if(type === MessageType.NetError) {
         // 网络异常，上传失败超过三次，弹出message信息
@@ -503,15 +501,16 @@ const docUploadState = (type: MessageType, data: any) => {
         autoSaveSuccess()
     }
 }
-const msg = false
 // 浏览器弹框提示
 const confirmClose = (e: any) => {
-    if(msg) return
-    //浏览器默认提示信息不能修改？？
-    e.preventDefault();
-    const confirmationMessage = t('message.leave');
-    e.returnValue = confirmationMessage;
-    return confirmationMessage;
+    if(context) {
+        if(!context.communication.docOt.hasPendingSyncCmd()) return
+        //浏览器默认提示信息不能修改？？
+        e.preventDefault();
+        const confirmationMessage = t('message.leave');
+        e.returnValue = confirmationMessage;
+        return confirmationMessage;
+    }
 }
 
 onMounted(() => {

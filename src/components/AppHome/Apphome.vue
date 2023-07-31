@@ -39,7 +39,6 @@ const update = (data: any, title: any) => {
   searchtitle.value = title
 }
 
-
 </script>
 
 <style lang="scss" scoped>
