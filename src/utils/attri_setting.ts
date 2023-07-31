@@ -1,4 +1,4 @@
-import { Shape, ShapeType } from "@kcdesign/data";
+import { RectShape, Shape, ShapeType } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 
@@ -17,7 +17,7 @@ export function is_mixed(shapes: Shape[]) {
     y: frame0.y,
     w: frame.width,
     h: frame.height,
-    rotate: Number(shapes[0].rotation?.toFixed(2)) || 0,
+    rotate: shapes[0].rotation || 0,
     constrainerProportions: Boolean(shapes[0].constrainerProportions)
   }
   for (let i = 1; i < shapes.length; i++) {
@@ -28,11 +28,39 @@ export function is_mixed(shapes: Shape[]) {
     if (frame_i.y !== result.y) result.y = 'mixed';
     if (frame.width !== result.w) result.w = 'mixed';
     if (frame.height !== result.h) result.h = 'mixed';
-    if (shape.rotation !== result.rotate) result.rotate = 'mixed';
+    if ((shape.rotation || 0) !== result.rotate) result.rotate = 'mixed';
     if (shape.constrainerProportions !== result.constrainerProportions) result.constrainerProportions = 'mixed';
     if (Object.values(result).every(v => v === 'mixed')) return result;
   }
+  if (result.rotate !== 'mixed') result.rotate = Number((result.rotate as number).toFixed(2));
   return result;
+}
+export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
+  shapes = shapes.filter(i => i instanceof RectShape);
+  if (shapes.length === 1) {
+    const s = shapes[0];
+    const rs = Object.values((s as RectShape).getRadius());
+    if (cor) {
+      if (rs.every(v => v === rs[0])) return rs;
+      else return 'mixed'
+    } else {
+      return rs;
+    }
+  } else if (shapes.length > 1) {
+    const res: any[] = Object.values((shapes[0] as RectShape).getRadius());
+    for (let i = 1; i < shapes.length; i++) {
+      const s = shapes[i];
+      const rs = Object.values((s as RectShape).getRadius());
+      if (cor) {
+        if (!rs.every(v => v === rs[0])) return 'mixed';
+      } else {
+        for (let i = 0; i < rs.length; i++) {
+          if (rs[i] !== res[i]) res[i] = 'mixed';
+        }
+        return res;
+      }
+    }
+  }
 }
 export function get_actions_constrainer_proportions(shapes: Shape[], value: boolean): ConstrainerProportionsAction[] {
   const actions: ConstrainerProportionsAction[] = [];

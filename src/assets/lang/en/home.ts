@@ -57,7 +57,8 @@ export const system = {
     'page1': 'Page 1',
     'dissolution': 'Dissolution',
     'content_includes': 'Content includes',
-    'title_includes': 'Title includes'
+    'title_includes': 'Title includes',
+    'artboart_title_visible': 'Show artboard title'
 }
 
 export const home = {
@@ -136,7 +137,7 @@ export const home = {
     'align_v_c': 'Align vertical centers',
     'align_bottom': 'Align bottom',
     'distribute_h': 'Distribute horizontal spacing',
-    'distribute_v': 'Distribute vertical spacing',
+    'distribute_v': 'Distribute vertical spacing'
 }
 
 export const search = {
@@ -296,7 +297,7 @@ export const bool = {
     subtract: 'Minus the top',
     intersection: 'intersection',
     difference: 'Difference set',
-    cohere: 'cohere'
+    cohere: 'Path combination'
 }
 
 attr[BorderPosition.Inner] = 'Inner';

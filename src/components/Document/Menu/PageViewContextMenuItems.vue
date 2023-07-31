@@ -28,6 +28,7 @@ const emit = defineEmits<{
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
+const isTitle = ref<boolean>(props.context.tool.isShowTitle);
 const invalid_items = ref<string[]>([]);
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
@@ -353,6 +354,10 @@ function show_placement(val: boolean) {
   if (invalid_items.value.includes('paste-here')) return;
   props.context.menu.notify(val ? Menu.SHOW_PLACEMENT : Menu.HIDE_PLACEMENT);
 }
+function toggle_title() {
+  props.context.tool.setTitleVisibale(!props.context.tool.isShowTitle);
+  emit('close');
+}
 function menu_watcher() {
   // check();
 }
@@ -544,6 +549,10 @@ onUnmounted(() => {
       <span class="shortkey">
         <Key code="Shift L"></Key>
       </span>
+    </div>
+    <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
+      <div class="choose" v-show="isTitle"></div>
+      <span>{{ t('system.artboart_title_visible') }}</span>
     </div>
   </div>
 </template>

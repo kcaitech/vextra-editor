@@ -25,6 +25,18 @@ const input = ref<HTMLInputElement>();
 
 function onChange(e: Event) {
     let value = (e.currentTarget as any)['value']
+    try {
+        if(props.svgicon == 'angle' && input.value!.value.slice(-1) === '°') {
+            const raduis = input.value!.value.slice(0, -1)
+            value = eval(raduis);   
+            input.value!.value = value   
+        }else {
+            value = eval(value);   
+            input.value!.value = value   
+        }
+    } catch (error) {
+        return input.value!.value = String(props.text)
+    }
     if (props.svgicon !== 'angle') {
         if (isNaN(Number(input.value!.value))) {
             return input.value!.value = String(props.text)
