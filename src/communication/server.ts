@@ -1,5 +1,7 @@
-import { ServerCmdType, CmdStatus } from "@/communication/types"
+import { v4 as uuid } from "uuid"
+import { ClientCmdType, CmdStatus, DataType, NetworkStatusType, ServerCmd, ServerCmdType } from "@/communication/types"
 import { COMMUNICATION_URL } from "@/utils/setting"
+import { Tunnel } from "@/communication/tunnel"
 
 function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -8,18 +10,31 @@ function sleep(ms: number) {
 export class Server {
     token: string
     ws: WebSocket | undefined = undefined
+    receivingTunnel: Tunnel | undefined = undefined
+    receivingTunnelCmd: ServerCmd | undefined = undefined
+    tunnelMap: Map<string, Tunnel>
+    cmdIdToTunnel: Map<string, Tunnel>
     isConnected: boolean = false
     isConnecting: boolean = false
     connectPromise: Promise<boolean> | undefined = undefined
-    onmessage: (event: MessageEvent) => any
+    isClosed: boolean = false
+    onNetworkOnline: () => void = () => {}
+    onNetworkOffline: () => void = () => {}
+    isFirstConnect: boolean = true // 首次连接成功后置为false
     id: string = ""
+    lastReceiveHeartbeatTime: number = 0
+    sendHeartbeatInterval?: number
+    receiveHeartbeatInterval?: number
+    networkStatus: NetworkStatusType = NetworkStatusType.Offline
 
-    constructor(token: string, onmessage: (event: MessageEvent) => any) {
+    constructor(token: string, tunnelMap: Map<string, Tunnel>, cmdIdToTunnel: Map<string, Tunnel>,) {
         this.token = token
-        this.onmessage = onmessage
+        this.tunnelMap = tunnelMap
+        this.cmdIdToTunnel = cmdIdToTunnel
     }
 
     async connect(): Promise<boolean> {
+        if (this.isClosed) return false;
         if (this.isConnected) return true;
         if (this.isConnecting && this.connectPromise) return await this.connectPromise;
         this.isConnecting = true
@@ -79,19 +94,120 @@ export class Server {
         this.isConnecting = false
         this.isConnected = true
         this.ws.onclose = event => {
+            this.onNetworkOffline()
             this.isConnected = false
+        }
+        if (this.isFirstConnect) {
+            this.isFirstConnect = false
+            this.networkStatus = NetworkStatusType.Online
+            this.sendHeartbeatInterval = setInterval(() => {
+                this.sendHeartbeat()
+            }, 1000) as any
+            this.receiveHeartbeatInterval = setTimeout(() => {
+                if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
+                this.networkStatus = NetworkStatusType.Offline
+                this.onNetworkOffline()
+            }, 3000) as any
+        } else {
+            this.onNetworkOnline()
         }
         return true
     }
 
-    async send(data: any) {
+    async send(data: any): Promise<boolean> {
+        if (this.isClosed) return false;
         if (!this.isConnected) {
-            while (!await this.connect()) await sleep(1000);
+            while (!await this.connect()) {
+                if (this.isClosed) return false;
+                await sleep(1000)
+            }
         }
         this.ws!.send(data)
+        return true
     }
 
-    public async close() {
+    onmessage(event: MessageEvent) {
+        const isBinary = event.data instanceof ArrayBuffer
+        const data = (isBinary ? event.data : JSON.parse(event.data)) as ServerCmd
+        if (isBinary && (this.receivingTunnel === undefined || this.receivingTunnelCmd === undefined)) {
+            console.log("数据传输错误：缺少数据头")
+            return
+        }
+        if (!isBinary && (this.receivingTunnel !== undefined || this.receivingTunnelCmd !== undefined)) {
+            console.log("数据传输错误：缺少数据段")
+            this.receivingTunnel = undefined
+            this.receivingTunnelCmd = undefined
+        }
+        if (isBinary) {
+            this.receivingTunnelCmd!.data.data = data
+            this.receivingTunnel!.receiveFromServer(this.receivingTunnelCmd!)
+            this.receivingTunnel = undefined
+            this.receivingTunnelCmd = undefined
+            return
+        }
+        const cmdId = data.cmd_id
+        if (typeof cmdId !== "string" || cmdId === "") {
+            console.log("cmd_id参数错误", cmdId)
+            return
+        }
+        const isHeartbeatCmd = data.cmd_type === ServerCmdType.Heartbeat || data.cmd_type === ServerCmdType.HeartbeatResponse
+        if (isHeartbeatCmd) {
+            this.receiveHeartbeat(data)
+            return
+        }
+        const originCmdId = data.data?.cmd_id
+        const tunnelId = data.data?.tunnel_id
+        const isTunnelDataCmd = data.cmd_type === ServerCmdType.TunnelData
+        const tunnel = isTunnelDataCmd ? this.tunnelMap.get(tunnelId): (() => {
+            const tunnel = this.cmdIdToTunnel.get(originCmdId)
+            this.cmdIdToTunnel.delete(originCmdId)
+            return tunnel
+        })()
+        if (!tunnel) return;
+        if (isTunnelDataCmd && data.data?.data_type === DataType.Binary) {
+            this.receivingTunnel = tunnel
+            this.receivingTunnelCmd = data
+            return
+        }
+        tunnel.receiveFromServer(data)
+        console.log("receiveFromServer", data)
+    }
+
+    async sendHeartbeat(): Promise<boolean> {
+        return this.send(JSON.stringify({
+            cmd_type: ClientCmdType.Heartbeat,
+            cmd_id: uuid(),
+            data: {
+                time: Date.now(),
+            },
+        }))
+    }
+
+    receiveHeartbeat(cmd: ServerCmd) {
+        if (this.receiveHeartbeatInterval !== undefined) clearTimeout(this.receiveHeartbeatInterval);
+        this.receiveHeartbeatInterval = setTimeout(() => {
+            if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
+            this.networkStatus = NetworkStatusType.Offline
+            this.onNetworkOffline()
+        }, 3000) as any
+        if (this.networkStatus === NetworkStatusType.Offline) {
+            this.networkStatus = NetworkStatusType.Online
+            this.onNetworkOnline()
+        }
+        this.lastReceiveHeartbeatTime = Date.now()
+        if (cmd.cmd_type === ServerCmdType.Heartbeat) {
+            this.send({
+                cmd_type: ClientCmdType.HeartbeatResponse,
+                cmd_id: uuid(),
+                data: {
+                    time: Date.now(),
+                    cmd_id: cmd.cmd_id,
+                },
+            })
+        }
+    }
+
+    async close() {
         if (this.ws !== undefined) {
             this.ws?.close()
             this.ws = undefined
@@ -101,5 +217,14 @@ export class Server {
             await this.connectPromise
             await this.close()
         }
+        if (this.sendHeartbeatInterval !== undefined) {
+            clearInterval(this.sendHeartbeatInterval)
+            this.sendHeartbeatInterval = undefined
+        }
+        if (this.receiveHeartbeatInterval !== undefined) {
+            clearTimeout(this.receiveHeartbeatInterval)
+            this.receiveHeartbeatInterval = undefined
+        }
+        this.isClosed = true
     }
 }

@@ -14,7 +14,7 @@ export type DocCommentOpData = {
 
 export class DocCommentOp extends Communication {
     private token: string = ""
-    public onUpdated: (docCommentOpData: DocCommentOpData) => void = docCommentOpData => {}
+    public onUpdated: (docCommentOpData: DocCommentOpData) => void = _ => {}
 
     private constructor(documentId: string) {
         super(TunnelType.DocCommentOp, {
