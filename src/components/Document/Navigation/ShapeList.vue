@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { Menu } from "@/context/menu";
-import { onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data";
@@ -88,6 +88,8 @@ const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
 const list_h = ref<number>(0)
 function _notifySourceChange(t?: number | string, shape?: Shape) {
+    const is_freeze = props.context.navi.is_shapelist_freeze;
+    if (is_freeze) return;
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
@@ -417,10 +419,13 @@ function navi_watcher(t: number) {
         if (search_el.value) {
             search_el.value.select();
         }
+    } else if (t === Navi.SHAPELIST_UPDATE) {
+        listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
 function clear_text() {
     keywords.value = '';
+    props.context.navi.set_focus_text();
     if (search_el.value) {
         search_el.value.select();
     }
@@ -505,14 +510,8 @@ function accurate_shift() {
         search_el.value.focus();
     }
     popoverVisible.value = false;
-    props.context.menu.setMode(accurate.value);
+    props.context.navi.setMode(accurate.value);
     props.context.navi.notify(Navi.SEARCHING);
-}
-function search_el_mouseenter() {
-    show_accrate_btn.value = true;
-}
-function search_el_mouseleave() {
-    show_accrate_btn.value = false;
 }
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
@@ -536,7 +535,7 @@ onUnmounted(() => {
     <div class="shapelist-wrap" ref="shapeList">
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
-            <div class="search" ref="search_wrap" @mouseenter="search_el_mouseenter" @mouseleave="search_el_mouseleave">
+            <div class="search" ref="search_wrap">
                 <div class="tool-container" @click="preto_search">
                     <svg-icon icon-class="search"></svg-icon>
                 </div>
@@ -544,12 +543,12 @@ onUnmounted(() => {
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <input ref="search_el" type="text" id="xpxp" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
-                    @blur="leave_search" @click="preto_search" @change="search" @input="inputing" @focus="input_focus">
+                    @blur="leave_search" @click.stop="preto_search" @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close"
-                    :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }">
+                    :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
                     <svg-icon icon-class="close-x"></svg-icon>
                 </div>
-                <div :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }"
+                <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
                     :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
                     Aa
                 </div>
@@ -609,8 +608,6 @@ onUnmounted(() => {
         box-sizing: border-box;
         position: relative;
         padding-bottom: 4px;
-        overflow: hidden;
-
         .title {
             height: 36px;
             font-weight: var(--font-default-bold);
@@ -626,7 +623,6 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             background-color: var(--grey-light);
-            padding: 4px var(--default-padding-half);
             border-radius: 4px;
             box-sizing: border-box;
             overflow: hidden;
@@ -636,6 +632,7 @@ onUnmounted(() => {
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
+                margin-left: 8px;
 
                 >svg {
                     width: 12px;

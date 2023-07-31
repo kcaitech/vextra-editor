@@ -1,12 +1,15 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
+const fs = require('fs')
+const crypto = require('crypto')
 // 按需引入element ui
 const AutoImport = require('unplugin-auto-import/webpack')
 const Components = require('unplugin-vue-components/webpack')
 const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin")
+const webpack = require('webpack')
 
-var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs';
+var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs'
 // var run_env = 'nodejs'
 console.log('building for: ' + run_env)
 var configureWebpack = (config) => {
@@ -73,13 +76,28 @@ var configureWebpack = (config) => {
         },
     )
 
+    const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication-worker.js')
+    const communicationWorkerContent = fs.readFileSync(communicationWorkerSourcePath)
+    const communicationWorkerHash = crypto.createHash('md5').update(communicationWorkerContent).digest('hex')
+    const communicationWorkerTargetFilename = `communication-worker.${communicationWorkerHash.slice(0, 8)}.js`
     config.plugins = [
         AutoImport({resolvers: [ElementPlusResolver()]}),
         Components({resolvers: [ElementPlusResolver()]}),
         new CopyWebpackPlugin({patterns: [
             { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
         ]}),
-        ...config.plugins
+        ...config.plugins,
+        new CopyWebpackPlugin({
+            patterns: [
+                {
+                    from: communicationWorkerSourcePath,
+                    to: communicationWorkerTargetFilename,
+                },
+            ],
+        }),
+        new webpack.DefinePlugin({
+            COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
+        }),
     ]
 
     config.watchOptions = {

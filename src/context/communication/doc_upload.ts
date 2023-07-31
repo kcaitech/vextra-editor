@@ -1,10 +1,10 @@
-import { Watchable } from "@kcdesign/data";
+import { Watchable } from "@kcdesign/data"
 import { Document } from "@kcdesign/data"
 import {
     DocUpload as DocumentUpload,
     Response,
     ResponseStatus
-} from "@/communication/modules/doc_upload";
+} from "@/communication/modules/doc_upload"
 
 export class DocUpload extends Watchable(Object) {
     private docUpload?: DocumentUpload

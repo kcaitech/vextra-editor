@@ -11,6 +11,8 @@ import { Menu } from "./menu";
 import { Tool } from "./tool";
 import { Navi } from "./navigate";
 import { Communication } from "@/context/communication/communication";
+import { Cursor } from "./cursor";
+import { EscStack } from "./escstack";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -51,7 +53,9 @@ export class Context extends Watchable(Object) {
     private m_menu: Menu;
     private m_tool: Tool;
     private m_navi: Navi;
+    private m_cursor: Cursor;
     private m_communication: Communication;
+    private m_escstack: EscStack;
 
     constructor(data: Document, repo: CoopRepository) {
         super();
@@ -63,11 +67,12 @@ export class Context extends Watchable(Object) {
         this.m_workspace = new WorkSpace(this);
         this.m_comment = new Comment();
         this.m_menu = new Menu();
-        this.m_tool = new Tool();
+        this.m_tool = new Tool(this);
         this.m_navi = new Navi();
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
         this.m_communication = new Communication();
-
+        this.m_cursor = new Cursor(this);
+        this.m_escstack = new EscStack();
         const pagelist = data.pagesList.slice(0);
         this.m_taskMgr.add(new class implements Task { // page auto loader
             isValid(): boolean {
@@ -160,5 +165,8 @@ export class Context extends Watchable(Object) {
 
     get communication() {
         return this.m_communication;
+    }
+    get cursor() {
+        return this.m_cursor;
     }
 }
