@@ -180,7 +180,7 @@ export function useController(context: Context) {
                 workspace.value.translating(false);
                 workspace.value.setSelectionViewUpdater(true);
                 workspace.value.selectionViewUpdate();
-                context.assist.collect(true);
+                context.assist.collect();
                 context.assist.reset();
                 isDragging = false;
             } else {

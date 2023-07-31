@@ -1,6 +1,7 @@
 import { GroupShape, Shape, ShapeType, Watchable } from "@kcdesign/data";
 import { PageXY, Selection } from "./selection";
 import { Context } from ".";
+import { debounce } from "lodash";
 interface PointGroup {
     host: Shape
     lt: PageXY
@@ -12,11 +13,16 @@ interface PointGroup {
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
     private m_context: Context;
-    private m_shape_inner: Map<string, Shape> = new Map();
+    private m_shape_inner: Shape[] = [];
     private m_pg_inner: Map<string, PointGroup> = new Map();
+    private m_x_axis: Map<number, PageXY[]> = new Map();
+    private m_y_axis: Map<number, PageXY[]> = new Map();
     private m_current_pg: PointGroup | undefined;
     private m_nodes: PageXY[] = [];
-    private m_is_shaps_sticked: number = 0;
+    private m_nodes_x: PageXY[] = [];
+    private m_nodes_y: PageXY[] = [];
+    private m_x_sticked: boolean = false;
+    private m_y_sticked: boolean = false;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -24,16 +30,14 @@ export class Asssit extends Watchable(Object) {
     get nodes() {
         return this.m_nodes;
     }
-    init() {
-        this.m_context.selection.watch(this.selection_watcher.bind(this));
-    }
-    update() { }
-    adsorb() { }
-    collect(update_p?: boolean) {
+    init() { this.m_context.selection.watch(this.selection_watcher.bind(this)) }
+    collect() {
         const page = this.m_context.selection.selectedPage;
         if (!page) return;
-        if (update_p) this.m_pg_inner.clear();
-        this.m_shape_inner = finder(this.m_context, page, update_p ? this.m_pg_inner : undefined);
+        const s = Date.now();
+        this.m_shape_inner = finder(this.m_context, page, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        const e = Date.now();
+        console.log('收集用时(ms):', e - s);
     }
     selection_watcher(t?: any) {
         if (t === Selection.CHANGE_SHAPE) {
@@ -53,19 +57,18 @@ export class Asssit extends Watchable(Object) {
         const delta = { x: 0, y: 0 };
         const nodes: PageXY[] = [];
         let need_update: boolean = false;
-        this.m_shape_inner.forEach((v, k) => {
-            if (v.id !== s.id) {
-                const tg = this.m_pg_inner.get(k);
-                if (tg) {
-                    if (Math.abs(tg.lt.x - c.lt.x) < 5) {
-                        need_update = true;
-                        delta.x = tg.lt.x - c.lt.x;
-                        nodes.push(...[tg.lt, { x: tg.lt.x, y: c.lt.y }]);
-                        this.m_is_shaps_sticked = 1;
-                    }
-                }
-            }
-        })
+        // this.m_shape_inner.forEach((v, k) => {
+        //     if (v.id !== s.id) {
+        //         const tg = this.m_pg_inner.get(k);
+        //         if (tg) {
+        //             if (Math.abs(tg.lt.x - c.lt.x) < 5) {
+        //                 need_update = true;
+        //                 delta.x = tg.lt.x - c.lt.x;
+        //                 nodes.push(...[tg.lt, { x: tg.lt.x, y: c.lt.y }]);
+        //             }
+        //         }
+        //     }
+        // })
         if (need_update) {
             this.m_nodes = nodes;
             this.notify(Asssit.UPDATE_ASSIST);
@@ -79,9 +82,7 @@ export class Asssit extends Watchable(Object) {
 }
 function update_pg(s: Shape): PointGroup {
     const m = s.matrix2Root(), f = s.frame;
-    return {
-        host: s, lt: m.cc(0, 0), rt: m.cc(f.width, 0), rb: m.cc(f.width, f.height), lb: m.cc(0, f.height), pivot: m.cc(f.width / 2, f.height / 2)
-    }
+    return { host: s, lt: m.cc(0, 0), rt: m.cc(f.width, 0), rb: m.cc(f.width, f.height), lb: m.cc(0, f.height), pivot: m.cc(f.width / 2, f.height / 2) };
 }
 
 function isShapeOut(context: Context, shape: Shape) {
@@ -99,15 +100,15 @@ function isShapeOut(context: Context, shape: Shape) {
     const b = Math.max(point[0][1], point[1][1], point[2][1], point[3][1]);
     return l > right - x || r < 0 || b < 0 || t > bottom - y;
 }
-function finder(context: Context, scope: GroupShape, u_pg?: Map<string, PointGroup>) {
-    let result: Map<string, Shape> = new Map();
+function finder(context: Context, scope: GroupShape, pg: Map<string, PointGroup>, x_axis: Map<number, PageXY[]>, y_axis: Map<number, PageXY[]>) {
+    let result: Shape[] = [];
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
         const c = cs[i];
         if (isShapeOut(context, cs[i])) continue;
-        result.set(c.id, c);
-        if (u_pg) u_pg.set(c.id, update_pg(c));
-        if (c instanceof GroupShape) result = new Map([...result, ...finder(context, c, u_pg)]);
+        result.push(c);
+        pg.set(c.id, update_pg(c));
+        if (c instanceof GroupShape) result = [...result, ...finder(context, c, pg, x_axis, y_axis)];
     }
     return result;
 }
@@ -116,3 +117,7 @@ function getClosestAB(shape: Shape) {
     while (resust && resust.type !== ShapeType.Artboard) resust = shape.parent as GroupShape;
     return resust;
 }
+function _collect(context: Context) {
+    context.assist.collect();
+}
+export const collect_once = debounce(_collect, 100);

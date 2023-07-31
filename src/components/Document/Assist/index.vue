@@ -7,10 +7,19 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 interface Props {
     context: Context
 }
+interface Data {
+    nodes: ClientXY[]
+    nodesX: ClientXY[]
+    nodesY: ClientXY[]
+    lines: string[]
+    lineX: string
+    lineY: string
+}
 const props = defineProps<Props>();
 const assist = ref<boolean>(false);
-const data = reactive<{ nodes: ClientXY[], lines: string[] }>({ nodes: [], lines: [] });
+const data = reactive<Data>({ nodes: [], nodesX: [], nodesY: [], lines: [], lineX: '', lineY: '' });
 const { nodes, lines } = data;
+let { lineX, lineY } = data;
 function assist_watcher(t?: any) {
     if (t === Asssit.UPDATE_ASSIST) render();
 }
@@ -28,9 +37,12 @@ function render() {
 function clear() {
     nodes.length = 0;
     lines.length = 0;
+    lineX = '';
+    lineY = '';
     assist.value = false;
 }
 function gen_line(nodes: ClientXY[]) {
+    nodes = sort_nodes_x(nodes);
     let d = 'M'
     for (let i = 0; i < nodes.length; i++) {
         const n = nodes[i];
@@ -42,6 +54,13 @@ function gen_line(nodes: ClientXY[]) {
     }
     d += 'z';
     return d;
+}
+function sort_nodes_x(nodes: ClientXY[]): ClientXY[] {
+    return nodes.sort((a, b) => {
+        if (a.y > b.y) return -1;
+        else if (a.y === b.y) return 0;
+        else return 1;
+    })
 }
 onMounted(() => {
     props.context.assist.watch(assist_watcher);
@@ -60,7 +79,7 @@ onUnmounted(() => {
         </g>
         <g v-if="assist">
             <use v-for="(n, i) in nodes" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"></use>
-            <path v-for="(l, i) in lines" :d="l" stroke-width="1px" stroke="red" :key="i"></path>
+            <path v-for="(l, i) in lines" :d="l" stroke-width="1px" stroke="red" :key="i" fill="none"></path>
         </g>
     </svg>
 </template>

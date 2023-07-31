@@ -8,10 +8,11 @@ import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
 import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
-import { Context } from '@/context'; // 状态顶层 store
-import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection'; // selection
-import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace'; // workspace
-import { Menu } from '@/context/menu'; // menu 菜单相关
+import { Context } from '@/context';
+import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
+import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace';
+import { collect_once } from '@/context/assist';
+import { Menu } from '@/context/menu';
 import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
@@ -648,6 +649,16 @@ const getDocumentComment = async () => {
         console.log(err);
     }
 }
+function frame_watcher() {
+    if (!root.value) return;
+    _updateRoot(props.context, root.value);
+}
+function cursor_watcher(t?: number, type?: string) {
+    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type) {
+        cursor.value = type;
+    }
+}
+function matrix_watcher() { collect_once(props.context) }
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id);
@@ -668,18 +679,6 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     const f = cur.style.fills[0];
     if (f) background_color.value = color2string(f.color);
 })
-function frame_watcher() {
-    if (!root.value) return;
-    _updateRoot(props.context, root.value);
-}
-function cursor_watcher(t?: number, type?: string) {
-    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type) {
-        cursor.value = type;
-    }
-}
-function matrix_watcher() {
-    props.context.assist.collect(true);
-}
 watch(() => matrix, matrix_watcher, { deep: true });
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
@@ -722,11 +721,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div v-if="inited" :class="cursor" :data-area="rootId" ref="root" @wheel="onMouseWheel" @mousedown="onMouseDown"
-        @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave" @drop="(e: DragEvent) => { drop(e, props.context, t) }"
-        @dragover.prevent :style="{ 'background-color': background_color }">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()"
-            :reflush="reflush !== 0 ? reflush : undefined" />
+    <div v-if="inited" :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
+        @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
+        :style="{ 'background-color': background_color }">
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
