@@ -1,5 +1,5 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, GroupShape } from '@kcdesign/data';
+import { Border, Color, Fill, GroupShape, ShapeType, TextShape } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 export interface HSB {
@@ -538,7 +538,7 @@ export function getColorsFromDoc(context: Context) {
   const s = Date.now();
   const page = context.selection.selectedPage;
   if (!page) return [];
-  let dcs = Array.from(finder(page).values());
+  let dcs = Array.from(finder(context, page).values());
   dcs = dcs.sort((a, b) => {
     if (a.length > b.length) return -1;
     else if (a.length === b.length) return 0;
@@ -551,7 +551,7 @@ export function getColorsFromDoc(context: Context) {
   return result;
 }
 
-function finder(shape: GroupShape, init?: Map<string, Color[]>) {
+function finder(context: Context, shape: GroupShape, init?: Map<string, Color[]>) {
   const cs = shape.childs;
   const result: Map<string, Color[]> = init || new Map();
   for (let i = 0; i < cs.length; i++) {
@@ -562,7 +562,16 @@ function finder(shape: GroupShape, init?: Map<string, Color[]>) {
       if (r) r.push(fbs[j].color);
       else result.set(c2s(fbs[j].color), [fbs[j].color]);
     }
-    if (s.childs && s.childs.length) finder(s as GroupShape, result);
+    if (s.type === ShapeType.Text) {
+      const editor = context.editor4TextShape(s as TextShape);
+      const format = s.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+      const c = format.color;
+      if (format.colorIsMulti || !c) continue;
+      const r = result.get(c2s(c));
+      if (r) r.push(c);
+      else result.set(c2s(c), [c]);
+    }
+    if (s.childs && s.childs.length) finder(context, s as GroupShape, result);
   }
   return result;
 }
