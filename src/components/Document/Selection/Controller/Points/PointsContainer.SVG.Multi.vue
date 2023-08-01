@@ -30,11 +30,19 @@ let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 function update() {
+    const s = Date.now();
     matrix.reset(props.matrix);
     update_dot_path();
+    const e = Date.now();
+    console.log('绘制控点用时(ms):', e - s);
 }
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    dots.length = 0;
+    dots.push(...update_dot(props.frame, 0));
+}
+function passive_update() {
+    matrix.reset(props.matrix);
     dots.length = 0;
     dots.push(...update_dot(props.frame, 0));
 }
@@ -123,6 +131,7 @@ function point_mousemove(event: MouseEvent) {
             }
         }
         startPosition = { x: mx, y: my };
+        workspace.selectionViewUpdate();
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
         isDragging = true;
         const shapes = props.context.selection.selectedShapes;
@@ -133,6 +142,7 @@ function point_mousemove(event: MouseEvent) {
             setCursor(cur_ctrl_type);
             workspace.scaling(true);
         }
+        workspace.setSelectionViewUpdater(false);
         submatrix.reset(workspace.matrix.inverse);
     }
 }
@@ -144,6 +154,7 @@ function point_mouseup(event: MouseEvent) {
                 asyncMultiAction = undefined;
             }
             isDragging = false;
+            props.context.workspace.setSelectionViewUpdater(true);
         }
         document.removeEventListener('mousemove', point_mousemove);
         document.removeEventListener('mouseup', point_mouseup);
@@ -199,7 +210,9 @@ function action_end() {
 function point_mouseleave() {
     props.context.cursor.reset();
 }
-watch(() => props.matrix, update)
+function frame_watcher() { if (!props.context.workspace.shouldSelectionViewUpdate) passive_update() }
+watch(() => props.frame, frame_watcher);
+watch(() => props.matrix, update);
 
 onMounted(() => {
     window.addEventListener('blur', window_blur);

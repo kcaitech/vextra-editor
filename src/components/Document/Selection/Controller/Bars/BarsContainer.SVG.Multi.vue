@@ -29,8 +29,17 @@ function update() {
     update_dot_path();
 }
 function update_dot_path() {
-    const valve = props.context.workspace.shouldSelectionViewUpdate;
-    if (!valve) return;
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    bars.length = 0;
+    let apex = props.frame.map(p => { return { x: p.x, y: p.y } });
+    apex.push(apex[0]);
+    for (let i = 0; i < apex.length - 1; i++) {
+        const p = get_bar_path(apex[i], apex[i + 1]);
+        bars.push({ path: p, type: types[i] });
+    }
+}
+function passive_update() {
+    matrix.reset(props.matrix);
     bars.length = 0;
     let apex = props.frame.map(p => { return { x: p.x, y: p.y } });
     apex.push(apex[0]);
@@ -105,6 +114,8 @@ function bar_mousemove(event: MouseEvent) {
             }
         }
         startPosition = { x: mx, y: my };
+        workspace.selectionViewUpdate();
+
     } else {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             isDragging = true;
@@ -112,6 +123,7 @@ function bar_mousemove(event: MouseEvent) {
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type);
             workspace.scaling(true);
+            workspace.setSelectionViewUpdater(false);
         }
     }
 }
@@ -123,6 +135,7 @@ function bar_mouseup(event: MouseEvent) {
                 asyncMultiAction = undefined;
             }
             isDragging = false;
+            props.context.workspace.setSelectionViewUpdater(true);
         }
         document.removeEventListener('mousemove', bar_mousemove);
         document.removeEventListener('mouseup', bar_mouseup);
@@ -151,9 +164,10 @@ function window_blur() {
     document.removeEventListener('mousemove', bar_mousemove);
     document.removeEventListener('mouseup', bar_mouseup);
 }
-watch(() => props.matrix, () => {
-    update();
-})
+
+function frame_watcher() { if (!props.context.workspace.shouldSelectionViewUpdate) passive_update() }
+watch(() => props.frame, frame_watcher);
+watch(() => props.matrix, update);
 onMounted(() => {
     update();
     window.addEventListener('blur', window_blur);
