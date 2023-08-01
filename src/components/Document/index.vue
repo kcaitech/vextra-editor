@@ -23,6 +23,7 @@ import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
 import { S3Storage, StorageOptions } from "@/utils/storage";
+import { NetworkStatus } from '@/communication/modules/network_status'
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -450,17 +451,19 @@ const autoSaveSuccess = () => {
 }
 //网络连接成功message信息
 const networkLinkSuccess = () => {
+    insertNetworkInfo('netError', false, network_anomaly)
     insertNetworkInfo('networkSuccess', true, link_success)
     const timer = setTimeout(() => {
         insertNetworkInfo('networkSuccess', false, link_success)
         clearTimeout(timer)
     }, 3000)
 }
+// 网络断开连接提示信息
 const networkLinkError = () => {
+    insertNetworkInfo('networkSuccess', false, link_success)
     insertNetworkInfo('netError', true, network_anomaly)
     const timer = setTimeout(() => {
         insertNetworkInfo('netError', false, network_anomaly)
-        insertNetworkInfo('networkError', true, network_error)
         clearTimeout(timer)
     }, 3000)
 }
@@ -469,33 +472,85 @@ const networkLinkError = () => {
 const refreshDoc = () => {
     location.reload();
 }
-// 断网时触发
-const connectionless = () => {
-    networkLinkError()
-}
-// 连网成功后触发
-const connected = () => {
-    insertNetworkInfo('networkError', false, network_error)
-    networkLinkSuccess()
-}
-
-enum MessageType {
-    NetError = 0,
-    Success,
-}
-
-const docUploadState = (type: MessageType, data: any) => {
-    if(type === MessageType.NetError) {
-        // 网络异常，上传失败超过三次，弹出message信息
-        if(data.count >= 3) {
-            insertNetworkInfo('networkError', true, network_error)
+//监听网络状态
+let netErr: any = null
+const networkStatu = async() => {
+    const token = localStorage.getItem("token") || "";
+    const networkStatus = NetworkStatus.Make(token);
+    await networkStatus.start();
+    networkStatus.onChange = (status: any) => {
+        const s = (status.status)as any
+        if(s === 1) {
+            // 网络断开连接
+            if(context && context.communication.docOt.hasPendingSyncCmd()) {
+                //有未上传资源
+                const t = setTimeout(() => {
+                    //3秒后还有未上传的，给出提示
+                    if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
+                        insertNetworkInfo('networkError', true, network_error)
+                        netErr = setInterval(() => {
+                            if(context && !context.communication.docOt.hasPendingSyncCmd()) {
+                                insertNetworkInfo('networkError', false, network_error)
+                                autoSaveSuccess()
+                                clearInterval(netErr)
+                                netErr = null
+                            }
+                        },3000)
+                    }
+                    clearTimeout(t)
+                }, 3000);
+            }else {
+                networkLinkError()
+            }
+        }else {
+            //网络连接成功
+            if(context && context.communication.docOt.hasPendingSyncCmd()) {
+                //有未上传资源
+                const t = setTimeout(() => {
+                    //3秒后还有未上传的，给出提示
+                    if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
+                        insertNetworkInfo('networkError', true, network_error)
+                        netErr = setInterval(() => {
+                            if(context && !context.communication.docOt.hasPendingSyncCmd()) {
+                                insertNetworkInfo('networkError', false, network_error)
+                                autoSaveSuccess()
+                                clearInterval(netErr)
+                                netErr = null
+                            }
+                        },3000)
+                    }
+                    clearTimeout(t)
+                }, 3000);
+            }else {
+                networkLinkSuccess()
+            }
         }
-    }else if(type === MessageType.Success) {
-        //需要重连且文档上传成功
-        insertNetworkInfo('networkError', false, network_error)
-        autoSaveSuccess()
     }
 }
+// 检测是否有未上传的数据
+let loopNet: any = null
+const watchHasPendingSync = () => {
+    loopNet = setInterval(() => {
+        if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr) {
+            const t = setTimeout(() => {
+                //3秒后还有未上传的，给出提示
+                if(context && context.communication.docOt.hasPendingSyncCmd()){
+                    insertNetworkInfo('networkError', true, network_error)
+                    netErr = setInterval(() => {
+                        if(context && !context.communication.docOt.hasPendingSyncCmd()) {
+                            insertNetworkInfo('networkError', false, network_error)
+                            autoSaveSuccess()
+                            clearInterval(netErr)
+                            netErr = null
+                        }
+                    },3000)
+                }
+                clearTimeout(t)
+            }, 3000);
+        }
+    },10000)
+}
+
 // 浏览器弹框提示
 const confirmClose = (e: any) => {
     if(context) {
@@ -509,9 +564,9 @@ const confirmClose = (e: any) => {
 }
 
 onMounted(() => {
+    watchHasPendingSync()
+    networkStatu()
     window.addEventListener('beforeunload', confirmClose);
-    window.addEventListener('offline', connectionless);
-    window.addEventListener('online',connected);
     init_screen_size();
     init_doc();
 })
@@ -532,8 +587,8 @@ onUnmounted(() => {
     showHint.value = false;
     countdown.value = 10;
     window.removeEventListener('beforeunload', confirmClose);
-    window.removeEventListener('online', connectionless);
-    window.removeEventListener('offline', connected);
+    clearInterval(loopNet)
+    clearInterval(netErr)
 })
 </script>
 

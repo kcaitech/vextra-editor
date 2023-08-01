@@ -9,6 +9,7 @@ import Saving from './Saving.vue';
 import { useRoute } from 'vue-router';
 import { WorkSpace, Perm } from '@/context/workspace';
 import { message } from '@/utils/message';
+import { ElMessage, ElMessageBox } from 'element-plus'
 const route = useRoute();
 interface Props {
     context: Context
@@ -19,12 +20,35 @@ const input = ref<HTMLInputElement>();
 const name = ref<string>('');
 const { t } = useI18n();
 function home() {
+    if(props.context.communication.docOt.hasPendingSyncCmd()) return hasPendingSyncCmd()
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     router.push({ name: 'recently' });
     sessionStorage.setItem('index','1')
 }
+
+const hasPendingSyncCmd = () => {
+    ElMessageBox.confirm(
+        '文档存在未上传资源，是否退出?',
+        '返回首页',
+        {
+        confirmButtonText: '退出文档',
+        cancelButtonText: '取消',
+        }
+    )
+    .then(() => {
+        window.document.title = t('product.name');
+        (window as any).sketchDocument = undefined;
+        (window as any).skrepo = undefined;
+        router.push({ name: 'recently' });
+        sessionStorage.setItem('index','1')
+    })
+    .catch(() => {
+        return
+    })
+}
+
 function rename() {
     if(props.context.workspace.documentPerm !== Perm.isEdit) return
     ele.value = 2;
@@ -149,4 +173,5 @@ onUnmounted(() => {
         height: 8px;
     }
 }
+
 </style>

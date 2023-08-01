@@ -66,3 +66,26 @@
       }
   }
 }
+.is-message-box {
+  .el-message-box__title {
+    span {
+        font-size: 15px;
+    }
+  }
+  .el-message-box__message {
+    font-size: 10px;
+  }
+  .el-button span {
+    font-size: 10px;
+  }
+  .el-message-box {
+    width: 370px;
+  }
+  .el-button {
+    height: 28px !important;
+  }
+  .el-message-box .el-button--primary {
+    border: none !important;
+    background-color: var(--active-color-beta) !important;
+  }
+}

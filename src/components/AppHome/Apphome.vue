@@ -21,12 +21,18 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { NetworkStatus } from '@/communication/modules/network_status'
+import { insertNetworkInfo } from "@/utils/message"
 const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
-const searchtitle = ref()
+const searchtitle = ref('')
 let items = ref<any[]>([])
+const autosave = t('message.autosave')
+const link_success = t('message.link_success')
+const network_anomaly = t('message.network_anomaly')
+const network_error = t('message.network_error')
 
 function setTitle(t: string) {
   title.value = t;
@@ -38,6 +44,49 @@ const update = (data: any, title: any) => {
   items.value = data
   searchtitle.value = title
 }
+
+//网络连接成功message信息
+const networkLinkSuccess = () => {
+    insertNetworkInfo('netError', false, network_anomaly)
+    insertNetworkInfo('networkSuccess', true, link_success)
+    const timer = setTimeout(() => {
+        insertNetworkInfo('networkSuccess', false, link_success)
+        clearTimeout(timer)
+    }, 3000)
+}
+// 网络断开连接提示信息
+const networkLinkError = () => {
+    insertNetworkInfo('networkSuccess', false, link_success)
+    insertNetworkInfo('netError', true, network_anomaly)
+    const timer = setTimeout(() => {
+        insertNetworkInfo('netError', false, network_anomaly)
+        clearTimeout(timer)
+    }, 3000)
+}
+
+const networkStatu = async() => {
+    const token = localStorage.getItem("token") || "";
+    const networkStatus = NetworkStatus.Make(token);
+    await networkStatus.start();
+    networkStatus.onChange = (status: any) => {
+        const s = (status.status)as any
+        if(s === 1) {
+          // 网络断开连接
+          networkLinkError()
+        }else {
+          // 网络连接成功
+          networkLinkSuccess()
+        }
+    }
+}
+
+onMounted(() => {
+  networkStatu()
+})
+
+onUnmounted(() => {
+
+})
 
 </script>
 
