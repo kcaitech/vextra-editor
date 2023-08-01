@@ -15,7 +15,9 @@ declare const COMMUNICATION_WORKER_URL: string
 export class Communication {
     protected info: CommunicationInfo
     protected worker: SharedWorker | undefined = undefined
-    protected _onmessage: (data: any) => void = () => {}
+    protected onMessage: (data: any) => void = () => {}
+    protected onClose: () => void = () => {}
+    protected isClosed: boolean = false
     protected pendingCmdList = new Map<string, {
         cmd: any,
         promise: Promise<any>,
@@ -31,11 +33,6 @@ export class Communication {
             tunnelType: tunnelType,
             data: firstData,
         }
-    }
-
-    protected setOnMessage(onmessage: (data: any) => void) {
-        this._onmessage = onmessage
-        return this
     }
 
     public async start(token: string): Promise<boolean> {
@@ -71,6 +68,10 @@ export class Communication {
 
     protected receiveFromWorker(event: MessageEvent) {
         const data = event.data as WorkerPostData
+        if (data.close) {
+            this.close(false)
+            return
+        }
         const isBinary = (data as any) instanceof ArrayBuffer
         if (isBinary && this.receivingData === undefined) {
             console.log("数据传输错误：缺少数据头")
@@ -81,7 +82,7 @@ export class Communication {
             this.receivingData = undefined
         }
         if (isBinary) {
-            this._onmessage(data)
+            this.onMessage(data)
             this.receivingData = undefined
             return
         }
@@ -102,7 +103,7 @@ export class Communication {
             return
         }
         if (data.dataType === DataType.Text) {
-            this._onmessage(data.data)
+            this.onMessage(data.data)
         } else if (data.dataType === DataType.Binary) {
             this.receivingData = data
         } else {
@@ -143,12 +144,17 @@ export class Communication {
         return result
     }
 
-    public close() {
+    public close(closeWorkerPeer = true) {
+        if (this.isClosed) return;
         console.log("通道关闭", TunnelTypeStr[this.info.tunnelType], this.info.id)
-        this.worker?.port.postMessage({
-            dataType: DataType.Text,
-            close: true,
-        } as ClientPostData)
+        if (closeWorkerPeer) {
+            this.worker?.port.postMessage({
+                dataType: DataType.Text,
+                close: true,
+            } as ClientPostData)
+        }
         this.worker?.port.close()
+        this.onClose()
+        this.isClosed = true
     }
 }

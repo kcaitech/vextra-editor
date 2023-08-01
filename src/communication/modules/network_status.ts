@@ -12,11 +12,11 @@ export class NetworkStatus extends Communication {
     public static Make(token: string): NetworkStatus {
         const networkStatus = new NetworkStatus()
         networkStatus.token = token
-        networkStatus.setOnMessage(networkStatus.onmessage.bind(networkStatus))
+        networkStatus.onMessage = networkStatus._onMessage.bind(networkStatus)
         return networkStatus
     }
 
-    private onmessage(data: any) {
+    private _onMessage(data: any) {
         console.log("network status receive", data)
         this.onChange(data as NetworkStatusType)
     }

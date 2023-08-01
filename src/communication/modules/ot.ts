@@ -22,8 +22,9 @@ export class Ot extends Communication {
         ot.document = document
         ot.repo = repo
         ot.versionId = versionId
-        ot.setOnMessage(ot.onmessage.bind(ot))
-        ot.coopLocal = new CoopLocal(document, repo, versionId, ot.send.bind(ot)).setOnClose(() => ot.close())
+        ot.onMessage = ot._onMessage.bind(ot)
+        ot.coopLocal = new CoopLocal(document, repo, versionId, ot.send.bind(ot))
+        ot.coopLocal.setOnClose(() => ot.close())
         return ot
     }
 
@@ -31,9 +32,13 @@ export class Ot extends Communication {
         return this.coopLocal?.hasPendingSyncCmd?.() ?? false
     }
 
-    private onmessage(data: any) {
+    private _onMessage(data: any) {
         console.log("ot receive", data)
         this.coopLocal!.onmessage(data)
+    }
+
+    public setOnClose(onClose: () => void) {
+        this.onClose = onClose
     }
 
     public async start(): Promise<boolean> {
