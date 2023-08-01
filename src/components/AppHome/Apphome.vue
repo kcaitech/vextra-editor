@@ -25,7 +25,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
-const searchtitle = ref()
+const searchtitle = ref('')
 let items = ref<any[]>([])
 
 function setTitle(t: string) {

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import ColInfo from './ColInfo.vue'
+import { ref } from 'vue'
 interface Props {
     context: Context
 }
 const props = defineProps<Props>();
+const showList = ref(false)
 const info = [
     {
         name: '李四',
@@ -22,7 +24,29 @@ const info = [
         name: '王麻1111111111111111',
         perm: '可评论'
     },
+    {
+        name: '王麻1111111111111111',
+        perm: '可评论'
+    },
+    {
+        name: '王麻1111111111111111',
+        perm: '可评论'
+    },
 ]
+
+const userList = () => {
+    if(showList.value) return showList.value = false
+    showList.value = true
+    document.addEventListener('click', onShowUserList);
+}
+
+const onShowUserList = (e: MouseEvent) => {
+    if (e.target instanceof Element && !e.target.closest('.personnel_list')) {
+        showList.value = false;
+        props.context.workspace.focusText()
+        document.removeEventListener('click', onShowUserList);
+    }
+}
 </script>
 
 <template>
@@ -30,19 +54,21 @@ const info = [
         <template v-for="(item, index) in info" :key="index">
             <ColInfo :context="context" :userInfo="info"  :info="item" v-if="index < 3"></ColInfo>
         </template>
-        <div class="info_num" v-if="info.length > 3">
+        <div class="info_num" v-if="info.length > 3" @click.stop="userList">
             <div>
                 {{ info.length }}
             </div>
-            <div class="personnel_list">
+            <div class="personnel_list" v-if="showList" @click.stop>
                 <div class="title">正在访问的人:</div>
-                <div class="info" v-for="(item, index) in info" :key="index">
-                    <div class="user">
-                        <div class="avatar"></div>
-                        <div class="name">{{ item.name }}</div>
+                <el-scrollbar height="150px">
+                    <div class="info" v-for="(item, index) in info" :key="index">
+                        <div class="user">
+                            <div class="avatar"></div>
+                            <div class="name">{{ item.name }}</div>
+                        </div>
+                        <div class="perm">{{ item.perm }}</div>
                     </div>
-                    <div class="perm">{{ item.perm }}</div>
-                </div>
+                </el-scrollbar>
             </div>
         </div>
     </div>
@@ -72,13 +98,14 @@ const info = [
             top: 33px;
             right: 0px;
             width: 150px;
-            height: 200px;
+            height: 170px;
             border-radius: 4px;
             background-color: #fff;
             border: 1px solid #ccc;
             box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
             z-index: 990;
             padding: var(--default-padding);
+            padding-right: 5px;
             .title {
                 height: 20px;
                 width: 100%;
@@ -88,6 +115,7 @@ const info = [
                 align-items: center;
                 justify-content: space-between;
                 height: 30px;
+                padding-right: 5px;
                 .user {
                     width: calc(100% - 40px);
                     display: flex;
@@ -112,5 +140,9 @@ const info = [
             }
         }
     }
+}
+.el-scrollbar {
+    padding-right: 10px;
+    padding-left: 5px;
 }
 </style>
