@@ -111,15 +111,14 @@ export class Communication {
         }
     }
 
-    public async send(data: any, isListened?: boolean) {
+    public async send(data: any, isListened: boolean = false, timeout: number = -1): Promise<boolean> {
         if (this.worker === undefined) {
-            // todo
             console.log("worker未开启")
-            return
+            return false
         }
         const postData: ClientPostData = {
             cmdId: uuid(),
-            isListened: isListened ?? false,
+            isListened: isListened,
             dataType: data instanceof ArrayBuffer ? DataType.Binary : DataType.Text,
         }
         if (!(data instanceof ArrayBuffer)) postData.data = data;
@@ -133,13 +132,20 @@ export class Communication {
                 promise: promise,
                 resolve: resolve,
             })
+            const result: CmdResult | undefined = await this.getCmdResult(postData.cmdId!, timeout)
+            return result?.status === CmdStatus.Success
         }
+        return true
     }
 
-    protected async getCmdResult(cmdId: string): Promise<any> {
+    protected async getCmdResult(cmdId: string, timeout: number): Promise<any> {
         if (!this.pendingCmdList.has(cmdId)) return;
         const cmd = this.pendingCmdList.get(cmdId)
-        const result = await cmd!.promise
+        const task = [cmd!.promise]
+        if (timeout > 0) {
+            task.push(new Promise<void>(resolve => setTimeout(() => resolve(), timeout)))
+        }
+        const result = await Promise.any(task)
         this.pendingCmdList.delete(cmdId)
         return result
     }

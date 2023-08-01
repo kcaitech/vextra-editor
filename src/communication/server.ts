@@ -36,6 +36,7 @@ export class Server {
     sendHeartbeatInterval?: number
     receiveHeartbeatInterval?: number
     networkStatus: NetworkStatusType = NetworkStatusType.Offline
+    onConnected: () => void = () => {}
 
     constructor(token: string, tunnelMap: Map<string, Tunnel>, cmdIdToTunnel: Map<string, Tunnel>,) {
         this.token = token
@@ -122,6 +123,7 @@ export class Server {
         } else {
             this._onNetworkOnline()
         }
+        this.onConnected()
         return true
     }
 
@@ -166,15 +168,10 @@ export class Server {
             this.receiveHeartbeat(data)
             return
         }
-        const originCmdId = data.data?.cmd_id
         const tunnelId = data.data?.tunnel_id
         const isTunnelDataCmd = data.cmd_type === ServerCmdType.TunnelData
-        const tunnel = isTunnelDataCmd ? this.tunnelMap.get(tunnelId): (() => {
-            const tunnel = this.cmdIdToTunnel.get(originCmdId)
-            this.cmdIdToTunnel.delete(originCmdId)
-            return tunnel
-        })()
-        if (!tunnel) {
+        let tunnel = this.tunnelMap.get(tunnelId)
+        if (isTunnelDataCmd && !tunnel) {
             this.send(JSON.stringify({
                 cmd_type: ClientCmdType.Return,
                 cmd_id: uuid(),
@@ -192,7 +189,12 @@ export class Server {
             this.receivingTunnelCmd = data
             return
         }
-        tunnel.receiveFromServer(data)
+        if (!tunnel) {
+            const originCmdId = data.data?.cmd_id
+            tunnel = this.cmdIdToTunnel.get(originCmdId)
+            this.cmdIdToTunnel.delete(originCmdId)
+        }
+        tunnel?.receiveFromServer(data)
         console.log("receiveFromServer", data)
     }
 

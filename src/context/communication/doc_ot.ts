@@ -1,5 +1,5 @@
 import { Watchable, Document, CoopRepository } from "@kcdesign/data"
-import { Ot } from "@/communication/modules/ot";
+import { Options, Ot } from "@/communication/modules/ot"
 
 export class DocOt extends Watchable(Object) {
     private ot?: Ot
@@ -7,15 +7,15 @@ export class DocOt extends Watchable(Object) {
     private startResolve?: (value: boolean) => void
     private isClosed: boolean = false
 
-    public async start(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string): Promise<boolean> {
+    public async start(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): Promise<boolean> {
         if (this.ot) return true;
         if (this.startPromise) return await this.startPromise;
-        const ot = Ot.Make(documentId, token, document, repo, versionId)
+        const ot = Ot.Make(documentId, token, document, repo, versionId, options)
         const startParams = [token, documentId, document, repo, versionId]
-        ot.setOnClose(() => {
+        ot.setOnClose((options?: Options) => {
             if (this.isClosed) return;
             this.ot = undefined
-            this.start.apply(this, startParams as any) // eslint-disable-line prefer-spread
+            this.start.apply(this, [...startParams.slice(0, 5), options] as any) // eslint-disable-line prefer-spread
         })
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
