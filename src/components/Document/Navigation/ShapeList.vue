@@ -123,7 +123,7 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
     const e = Date.now();
-    console.log('列表更新用时(ms):', e - s);
+    // console.log('列表更新用时(ms):', e - s);
 }
 const notifySourceChange = debounce(_notifySourceChange, 48);
 const stopWatch = watch(() => props.page, () => {

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, InputHTMLAttributes, watch, onUnmounted, onMounted } from "vue";
-import { Shape, GroupShape, ShapeType, PathShape, RectShape } from '@kcdesign/data';
+import { Shape, GroupShape, ShapeType, PathShape, RectShape, Matrix } from '@kcdesign/data';
 import { Context } from "@/context";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import Abbrevition from "./Abbreviation.vue";
 import { Perm } from "@/context/workspace";
+import { XYsBounding } from "@/utils/common";
 export interface ItemData {
     id: string
     shape: Shape
@@ -199,11 +200,27 @@ const hangdlePerm = () => {
 function init_d() {
     d.value = '';
     const s = props.data.shape;
-    if ([ShapeType.Rectangle, ShapeType.Oval, ShapeType.Line].includes(s.type)) {
-        const m = s.matrix2Root();
-        m.multiAtLeft(props.data.context.workspace.matrix);
-
-    }
+    if (![ShapeType.Rectangle, ShapeType.Oval, ShapeType.Line].includes(s.type)) return;
+    const m = s.matrix2Root();
+    m.multiAtLeft(props.data.context.workspace.matrix);
+    const f = s.frame;
+    let points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+    let b = XYsBounding(points);
+    let h = b.bottom - b.top, w = b.right - b.left;
+    const max = Math.max(h, w);
+    const ratio = max / 10;
+    const m_composite = new Matrix();
+    m_composite.scale(1 / ratio); // 获取缩放矩阵
+    points = points.map(p => m_composite.computeCoord(p.x, p.y));
+    b = XYsBounding(points);
+    h = b.bottom - b.top, w = b.right - b.left;
+    m_composite.trans(5 - w / 2, 5 - h / 2); // 偏移矩阵
+    const path = s.getPath();
+    const tm = m.toArray();
+    tm[4] = 0, tm[5] = 0;
+    path.transform(new Matrix(tm));
+    path.transform(m_composite);
+    d.value = path.toString();
 }
 onMounted(() => {
     hangdlePerm()
@@ -224,6 +241,8 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="container-svg" @dblclick="toggleContainer">
+            <!-- <Abbrevition v-if="d" :d="d"></Abbrevition>
+            <svg-icon v-else class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon> -->
             <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
         </div>
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
@@ -306,6 +325,7 @@ onUnmounted(() => {
     >.container-svg {
         display: flex;
         width: 10px;
+        height: 10px;
         justify-content: center;
         align-items: center;
         margin-left: 2px;
