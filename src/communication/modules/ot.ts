@@ -27,6 +27,10 @@ export class Ot extends Communication {
         return ot
     }
 
+    public hasPendingSyncCmd(): boolean {
+        return this.coopLocal?.hasPendingSyncCmd?.() ?? false
+    }
+
     private onmessage(data: any) {
         console.log("ot receive", data)
         this.coopLocal!.onmessage(data)

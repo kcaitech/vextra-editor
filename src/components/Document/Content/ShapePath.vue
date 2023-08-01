@@ -2,7 +2,7 @@
 <script setup lang="ts">
 import { PathShape } from '@kcdesign/data';
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { render as r } from "@/render/pathshape";
+import { renderPathShape as r } from "@kcdesign/data";
 import { asyncLoadFillImages } from './common';
 
 const props = defineProps<{ data: PathShape }>();

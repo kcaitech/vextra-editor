@@ -91,11 +91,13 @@ onUpdated(() => {
 <template>
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
     <template v-for="item in patterns" :key="item.value">
-      <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content"></DropSelect>
+      <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content" type="cursor"></DropSelect>
     </template>
 
   </div>
-    <Tooltip :content="props.d === Action.AutoV ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`">
+  <el-tooltip class="box-item" effect="dark"
+    :content="props.d === Action.AutoV ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
+    placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
       <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
         @mouseleave.stop="onMouseleave">
         <div class="svg-container">
@@ -106,7 +108,7 @@ onUpdated(() => {
           <svg-icon icon-class="down"></svg-icon>
         </div> -->
       </ToolButton>
-    </Tooltip>
+    </el-tooltip>
 </template>
 
 <style scoped lang="scss">

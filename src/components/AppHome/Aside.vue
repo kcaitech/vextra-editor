@@ -7,7 +7,6 @@ import {
     Plus,
     Folder,
     FolderOpened,
-    Menu as IconMenu,
 } from '@element-plus/icons-vue'
 import { router } from '@/router'
 import { FilePicker } from '../common/filepicker';
@@ -19,7 +18,6 @@ import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
 
-import { measure } from '@/layout/text/measure';
 import { onUnmounted } from 'vue';
 
 interface Emits {
@@ -32,7 +30,7 @@ const picker = new FilePicker((file) => {
     if (!file) return;
     const lzdata = new LzDataLocal(new Zip(file));
     const repo = new Repository();
-    importSketch(file.name, lzdata, repo, measure).then((document: Document) => {
+    importSketch(file.name, lzdata, repo).then((document: Document) => {
         window.document.title = document.name;
         const coopRepo = new CoopRepository(document, repo);
         (window as any).skrepo = coopRepo;
@@ -43,7 +41,7 @@ const picker = new FilePicker((file) => {
 
 function newFile() {
     const repo = new Repository();
-    const nd = createDocument(t('system.new_file'), repo, measure);
+    const nd = createDocument(t('system.new_file'), repo);
     const coopRepo = new CoopRepository(nd, repo)
     const editor = new DocEditor(nd, coopRepo);
     const page = editor.create(t('system.page1'));

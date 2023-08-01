@@ -21,6 +21,7 @@ declare module '@vue/runtime-core' {
     'BarsContainer.SVG': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.vue')['default']
     'BarsContainer.SVG.Multi': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.Multi.vue')['default']
     BaseAttr: typeof import('./src/components/Document/Attribute/BaseAttr.vue')['default']
+    BooleanObject: typeof import('./src/components/Document/Toolbar/Buttons/BooleanObject.vue')['default']
     Border: typeof import('./src/components/Document/Attribute/Border/Border.vue')['default']
     BorderApexStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderApexStyleItem.vue')['default']
     BorderApexStyleSelectedItem: typeof import('./src/components/Document/Attribute/Border/BorderApexStyleSelectedItem.vue')['default']

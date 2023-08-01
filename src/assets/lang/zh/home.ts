@@ -302,6 +302,13 @@ export const message = {
     link_success: '网络连接成功',
     autosave: '文档自动保存成功'
 }
+export const bool = {
+    union: '联集',
+    subtract: '减去顶层',
+    intersection: '交集',
+    difference: '差集',
+    cohere: '路径拼合'
+}
 
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';

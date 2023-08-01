@@ -1,5 +1,4 @@
-import { Watchable } from "@kcdesign/data"
-import { Document } from "@kcdesign/data"
+import { Watchable, Document } from "@kcdesign/data"
 import {
     DocUpload as DocumentUpload,
     Response,
@@ -49,7 +48,7 @@ export class DocUpload extends Watchable(Object) {
     }
 
     public close() {
-        if (!this.docUpload) return
+        if (!this.docUpload) return;
         this.docUpload.close()
         this.docUpload = undefined
         this.startPromise = undefined

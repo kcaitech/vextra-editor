@@ -9,21 +9,17 @@ import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, Repository, Page, CoopRepository } from '@kcdesign/data';
-import { Ot } from "@/communication/modules/ot";
 import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { Perm, WorkSpace } from '@/context/workspace';
-import { measure } from '@/layout/text/measure';
 import NetWorkError from '@/components/NetworkError.vue'
-import Home from "@/components/Document/Toolbar/BackToHome.vue";
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
 import { S3Storage, StorageOptions } from "@/utils/storage";
@@ -31,7 +27,6 @@ import { S3Storage, StorageOptions } from "@/utils/storage";
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
-(window as any).__context = context;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
@@ -111,7 +106,6 @@ function switchPage(id?: string) {
                 curPage.value = undefined;
                 ctx.comment.commentMount(false)
                 ctx.selection.selectPage(page);
-                (window as any).__context = ctx;
                 curPage.value = page;
             }
         })
@@ -300,7 +294,6 @@ const getUserInfo = async () => {
 }
 
 //获取文档信息
-let ot: Ot | undefined;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -343,7 +336,7 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo, measure)
+        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
@@ -357,27 +350,15 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            ot = Ot.Make(docId, token, document, context.coopRepo, dataInfo.data.document.version_id ?? "");
-            ot.start()
-                .catch((e) => {
-                    if (!context) {
-                        router.push('/');
-                        throw new Error(e);
-                    }
-                }).finally(() => {
-                    if (!context) {
-                        router.push('/');
-                        return;
-                    }
-                    switchPage(context.data.pagesList[0]?.id);
-                    loading.value = false;
-                });
+            context.communication.docOt.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "").then(() => {
+                switchPage(context!.data.pagesList[0]?.id);
+                loading.value = false;
+            }).catch((err) => {
+                router.push("/");
+                console.error(err);
+            });
             await context.communication.resourceUpload.start(docId, token);
             await context.communication.comment.start(docId, token);
-            context.communication.comment.onUpdated = (comment: any) => {
-                // todo 前端对接视图更新
-                console.log("收到评论更新", comment)
-            }
         }
         getUserInfo()
     } catch (err) {
@@ -411,8 +392,9 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
-    ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, result!.data.version_id ?? "");
-    ot.start();
+    context.communication.docOt.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "").catch((err) => {
+        console.error(err);
+    });
     context!.communication.resourceUpload.start(doc_id, token);
     context!.communication.comment.start(doc_id, token);
     context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
@@ -536,7 +518,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     try {
-        ot?.close();
+        context?.communication.docOt.close();
         context?.communication.resourceUpload.close();
         context?.communication.comment.close();
     } catch (err) { }

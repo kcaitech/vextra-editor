@@ -302,6 +302,13 @@ export const message = {
     link_success: 'Network connection successful',
     autosave: 'Automatic document saving'
 }
+export const bool = {
+    union: 'Union',
+    subtract: 'Subtract',
+    intersection: 'Intersect',
+    difference: 'Exclude',
+    cohere: 'Vector'
+}
 
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';

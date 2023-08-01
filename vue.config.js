@@ -77,9 +77,12 @@ var configureWebpack = (config) => {
     )
 
     const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication-worker.js')
-    const communicationWorkerContent = fs.readFileSync(communicationWorkerSourcePath)
-    const communicationWorkerHash = crypto.createHash('md5').update(communicationWorkerContent).digest('hex')
-    const communicationWorkerTargetFilename = `communication-worker.${communicationWorkerHash.slice(0, 8)}.js`
+    const communicationWorkerTargetFilename = `communication-worker.${
+        crypto.createHash('md5')
+            .update(fs.readFileSync(communicationWorkerSourcePath))
+            .digest('hex')
+            .slice(0, 8)
+    }.js`
     config.plugins = [
         AutoImport({resolvers: [ElementPlusResolver()]}),
         Components({resolvers: [ElementPlusResolver()]}),
@@ -88,12 +91,10 @@ var configureWebpack = (config) => {
         ]}),
         ...config.plugins,
         new CopyWebpackPlugin({
-            patterns: [
-                {
-                    from: communicationWorkerSourcePath,
-                    to: communicationWorkerTargetFilename,
-                },
-            ],
+            patterns: [{
+                from: communicationWorkerSourcePath,
+                to: communicationWorkerTargetFilename,
+            }]
         }),
         new webpack.DefinePlugin({
             COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
