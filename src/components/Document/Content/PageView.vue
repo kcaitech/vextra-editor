@@ -6,6 +6,7 @@ import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 as uuid } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
+import ShapeAvatar from './ShapeAvatar.vue';
 const props = defineProps<{
     context: Context,
     data: Page,
@@ -69,6 +70,7 @@ onUnmounted(() => {
             :data="c" />
     </svg>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
+    <ShapeAvatar :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeAvatar>
 </template>
 
 <style scoped>
