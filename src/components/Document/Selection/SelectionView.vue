@@ -119,6 +119,7 @@ function createShapeTracing() { // 描边
     }
 }
 function createController() { // 计算控件点位以及类型判定
+    const s = Date.now();
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (selection.length === 0) {
         controller.value = false;
@@ -189,6 +190,8 @@ function createController() { // 计算控件点位以及类型判定
         }
         controller.value = true;
     }
+    const e = Date.now();
+    console.log('控件绘制用时(ms):', e - s);
 }
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
