@@ -336,19 +336,12 @@ export class WorkSpace extends Watchable(Object) {
             const selection = this.context.selection;
             if (selection.selectedShapes.length) {
                 const p_map = new Map();
-                selection.selectedShapes.forEach(s => {
-                    if (s.parent) {
-                        p_map.set(s.parent.id, s.parent);
-                    }
-                })
+                selection.selectedShapes.forEach(s => { if (s.parent) p_map.set(s.parent.id, s.parent) });
                 if (p_map.size > 1) {
                     const page = selection.selectedPage;
-                    if (page) {
-                        selection.rangeSelectShape(page.childs);
-                    }
+                    if (page) selection.rangeSelectShape(page.childs);
                 } else {
-                    const childs = Array.from(p_map.values())[0].childs;
-                    selection.rangeSelectShape(childs);
+                    selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
                 }
             } else {
                 const page = selection.selectedPage;
