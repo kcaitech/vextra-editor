@@ -4,6 +4,7 @@ import { AsyncMultiAction, CtrlElementType, Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
+import { Action } from '@/context/tool';
 interface Props {
     matrix: number[]
     context: Context
@@ -71,47 +72,12 @@ function bar_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = { x: event.clientX - root.x, y: event.clientY - root.y };
-    if (isDragging) {
-        if (asyncMultiAction) {
-            if (cur_ctrl_type === CtrlElementType.RectTop) {
-                const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-                const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-                const o_h = f_rb.y - f_lt.y;
-                const s = submatrix.computeCoord(sx, sy);
-                const e = submatrix.computeCoord(mx, my);
-                const transy = e.y - s.y;
-                const _h = o_h - transy;
-                if (_h < 0) cur_ctrl_type = CtrlElementType.RectBottom;
-                asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + transy }, 1, _h / o_h);
-            } else if (cur_ctrl_type === CtrlElementType.RectRight) {
-                const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-                const f_lt = props.frame[0];
-                const f_rb = props.frame[2];
-                const o_w = f_rb.x - f_lt.x;
-                const transx = mx - sx;
-                const _w = o_w + transx;
-                if (_w < 0) cur_ctrl_type = CtrlElementType.RectLeft;
-                asyncMultiAction.executeScale(origin, origin, _w / o_w, 1);
-            } else if (cur_ctrl_type === CtrlElementType.RectBottom) {
-                const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-                const f_lt = props.frame[0];
-                const f_rb = props.frame[2];
-                const o_h = f_rb.y - f_lt.y;
-                const transy = my - sy;
-                const _h = o_h + transy;
-                if (_h < 0) cur_ctrl_type = CtrlElementType.RectTop;
-                asyncMultiAction.executeScale(origin, origin, 1, _h / o_h);
-            } else if (cur_ctrl_type === CtrlElementType.RectLeft) {
-                const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
-                const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
-                const o_w = f_rb.x - f_lt.x;
-                const s = submatrix.computeCoord(sx, sy);
-                const e = submatrix.computeCoord(mx, my);
-                const transx = e.x - s.x;
-                const _w = o_w - transx;
-                if (_w < 0) cur_ctrl_type = CtrlElementType.RectRight;
-                asyncMultiAction.executeScale(f_lt, { x: f_lt.x + transx, y: f_lt.y }, _w / o_w, 1);
-            }
+    if (isDragging && asyncMultiAction) {
+        const action = props.context.tool.action;
+        if (event.shiftKey || action === Action.AutoK) {
+            er_scale(asyncMultiAction, sx, sy, mx, my);
+        } else {
+            irregular_scale(asyncMultiAction, sx, sy, mx, my);
         }
         startPosition = { x: mx, y: my };
         workspace.selectionViewUpdate();
@@ -125,6 +91,96 @@ function bar_mousemove(event: MouseEvent) {
             workspace.scaling(true);
             workspace.setSelectionViewUpdater(false);
         }
+    }
+}
+function er_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
+    if (cur_ctrl_type === CtrlElementType.RectTop) {
+        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+        const o_h = f_rb.y - f_lt.y;
+        const o_w = f_rb.x - f_lt.x;
+        const s = submatrix.computeCoord(sx, sy);
+        const e = submatrix.computeCoord(mx, my);
+        const transy = e.y - s.y;
+        const _h = o_h - transy;
+        if (_h < 0) cur_ctrl_type = CtrlElementType.RectBottom;
+        const scale = _h / o_h;
+        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + ((1 - scale) * o_w) / 2, y: f_lt.y + transy }, scale, scale);
+    } else if (cur_ctrl_type === CtrlElementType.RectRight) {
+        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+        const f_lt = props.frame[0];
+        const f_rb = props.frame[2];
+        const o_w = f_rb.x - f_lt.x;
+        const o_h = f_rb.y - f_lt.y;
+        const transx = mx - sx;
+        const _w = o_w + transx;
+        if (_w < 0) cur_ctrl_type = CtrlElementType.RectLeft;
+        const scale = _w / o_w;
+        asyncMultiAction.executeScale(origin, { x: origin.x, y: origin.y + ((1 - scale) * o_h) / 2 }, scale, scale);
+    } else if (cur_ctrl_type === CtrlElementType.RectBottom) {
+        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+        const f_lt = props.frame[0];
+        const f_rb = props.frame[2];
+        const o_w = f_rb.x - f_lt.x;
+        const o_h = f_rb.y - f_lt.y;
+        const transy = my - sy;
+        const _h = o_h + transy;
+        if (_h < 0) cur_ctrl_type = CtrlElementType.RectTop;
+        const scale = _h / o_h;
+        asyncMultiAction.executeScale(origin, { x: origin.x + ((1 - scale) * o_w) / 2, y: origin.y }, scale, scale);
+    } else if (cur_ctrl_type === CtrlElementType.RectLeft) {
+        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+        const o_w = f_rb.x - f_lt.x;
+        const o_h = f_rb.y - f_lt.y;
+        const s = submatrix.computeCoord(sx, sy);
+        const e = submatrix.computeCoord(mx, my);
+        const transx = e.x - s.x;
+        const _w = o_w - transx;
+        if (_w < 0) cur_ctrl_type = CtrlElementType.RectRight;
+        const scale = _w / o_w;
+        asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + ((1 - scale) * o_h) / 2 }, scale, scale);
+    }
+}
+function irregular_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
+    if (cur_ctrl_type === CtrlElementType.RectTop) {
+        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+        const o_h = f_rb.y - f_lt.y;
+        const s = submatrix.computeCoord(sx, sy);
+        const e = submatrix.computeCoord(mx, my);
+        const transy = e.y - s.y;
+        const _h = o_h - transy;
+        if (_h < 0) cur_ctrl_type = CtrlElementType.RectBottom;
+        asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + transy }, 1, _h / o_h);
+    } else if (cur_ctrl_type === CtrlElementType.RectRight) {
+        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+        const f_lt = props.frame[0];
+        const f_rb = props.frame[2];
+        const o_w = f_rb.x - f_lt.x;
+        const transx = mx - sx;
+        const _w = o_w + transx;
+        if (_w < 0) cur_ctrl_type = CtrlElementType.RectLeft;
+        asyncMultiAction.executeScale(origin, origin, _w / o_w, 1);
+    } else if (cur_ctrl_type === CtrlElementType.RectBottom) {
+        const origin = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+        const f_lt = props.frame[0];
+        const f_rb = props.frame[2];
+        const o_h = f_rb.y - f_lt.y;
+        const transy = my - sy;
+        const _h = o_h + transy;
+        if (_h < 0) cur_ctrl_type = CtrlElementType.RectTop;
+        asyncMultiAction.executeScale(origin, origin, 1, _h / o_h);
+    } else if (cur_ctrl_type === CtrlElementType.RectLeft) {
+        const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
+        const f_rb = submatrix.computeCoord(props.frame[2].x, props.frame[2].y);
+        const o_w = f_rb.x - f_lt.x;
+        const s = submatrix.computeCoord(sx, sy);
+        const e = submatrix.computeCoord(mx, my);
+        const transx = e.x - s.x;
+        const _w = o_w - transx;
+        if (_w < 0) cur_ctrl_type = CtrlElementType.RectRight;
+        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + transx, y: f_lt.y }, _w / o_w, 1);
     }
 }
 function bar_mouseup(event: MouseEvent) {
