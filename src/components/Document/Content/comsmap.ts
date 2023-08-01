@@ -9,7 +9,6 @@ import ArtboardView from "./ArtboardView.vue"
 import ShapeGroupShape from "./ShapeGroupShape.vue"
 import Line from "./Line.vue";
 import ShapeTable from "./ShapeTable.vue";
-import ShapeTableCell from "./ShapeTableCell.vue";
 
 const comsMap: Map<ShapeType, any> = new Map();
 
