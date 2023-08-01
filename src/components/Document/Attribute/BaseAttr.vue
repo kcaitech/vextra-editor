@@ -111,7 +111,7 @@ function radiusValuesMixed(radius: any) {
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
     if (shape instanceof RectShape) {
-        radius.value = (shape as RectShape).getRectRectRadius();
+        radius.value = (shape as RectShape).getRectRadius();
         if(!radiusValuesMixed(radius.value) && !isMoreForRadius.value) {
             multipleValues.value = true
             radius.value.lt = mixed
