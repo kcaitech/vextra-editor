@@ -114,7 +114,8 @@ watchEffect(() => { updater() });
     <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
     <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
     </ShapesStrokeContainer>
-    <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></BarsContainer>
+    <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+      :c-frame="props.controllerFrame"></BarsContainer>
     <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
       :c-frame="props.controllerFrame">
     </PointsContainer>

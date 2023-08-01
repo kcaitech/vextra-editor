@@ -126,8 +126,8 @@ function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGr
         const pvs = Object.values(pg);
         for (let i = 0; i < pvs.length; i++) {
             const p = pvs[i];
-            let x = x_axis.get(p.x);
-            let y = y_axis.get(p.y);
+            const x = x_axis.get(p.x);
+            const y = y_axis.get(p.y);
             if (x) x.push(p); else x_axis.set(p.x, [p]);
             if (y) y.push(p); else y_axis.set(p.y, [p]);
         }

@@ -96,7 +96,7 @@ function createShapeTracing() { // 描边
         } else {
             const m = hoveredShape.matrix2Root();
             m.multiAtLeft(matrix);
-            const path = hoveredShape.getPath(true);
+            const path = hoveredShape.getPath();
             path.transform(m);
             tracingPath.value = path.toString();
             tracing.value = true;
@@ -107,7 +107,7 @@ function createShapeTracing() { // 描边
     }
 }
 function createController() { // 计算控件点位以及类型判定
-    const s = Date.now();
+    // const s = Date.now();
     const selection: Shape[] = props.context.selection.selectedShapes;
     if (selection.length === 0) {
         controller.value = false;
@@ -153,8 +153,8 @@ function createController() { // 计算控件点位以及类型判定
         tracing.value = false;
         controller.value = true;
     }
-    const e = Date.now();
-    console.log('控件绘制用时(ms):', e - s);
+    // const e = Date.now();
+    // console.log('控件绘制用时(ms):', e - s);
 }
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形

@@ -3,10 +3,13 @@ import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
+import { Action } from '@/context/tool';
+import { Point } from '../../SelectionView.vue';
 interface Props {
     matrix: number[]
     context: Context
     shape: Shape
+    cFrame: Point[]
 }
 interface Bar {
     path: string
@@ -63,8 +66,11 @@ function bar_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const { clientX, clientY } = event;
     const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
-    if (isDragging) {
-        if (asyncBaseAction) {
+    if (isDragging && asyncBaseAction) {
+        const action = props.context.tool.action;
+        if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
+            asyncBaseAction.executeErScale(cur_ctrl_type, getScale(cur_ctrl_type, startPosition, mouseOnPage));
+        } else {
             matrix.reset(workspace.matrix);
             const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
             const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
@@ -80,6 +86,21 @@ function bar_mousemove(event: MouseEvent) {
             workspace.scaling(true);
         }
     }
+}
+function getScale(type: CtrlElementType, p1: ClientXY, p2: ClientXY): number {
+    if (type === CtrlElementType.RectTop) {
+        const o_h = props.cFrame[2].y - props.cFrame[0].y;
+        return (o_h - (p2.y - p1.y)) / o_h;
+    } else if (type === CtrlElementType.RectRight) {
+        const o_w = props.cFrame[2].x - props.cFrame[0].x;
+        return (o_w + (p2.x - p1.x)) / o_w;
+    } else if (type === CtrlElementType.RectBottom) {
+        const o_h = props.cFrame[2].y - props.cFrame[0].y;
+        return (o_h + (p2.y - p1.y)) / o_h;
+    } else if (type === CtrlElementType.RectLeft) {
+        const o_w = props.cFrame[2].x - props.cFrame[0].x;
+        return (o_w - (p2.x - p1.x)) / o_w;
+    } else return 1
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
@@ -101,6 +122,7 @@ function bar_mouseup(event: MouseEvent) {
     const workspace = props.context.workspace;
     workspace.scaling(false);
     workspace.setCtrl('page');
+    props.context.cursor.reset();
     if (isDragging) isDragging = false;
     if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
     document.removeEventListener('mousemove', bar_mousemove);

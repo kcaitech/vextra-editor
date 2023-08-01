@@ -30,11 +30,11 @@ let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 function update() {
-    const s = Date.now();
+    // const s = Date.now();
     matrix.reset(props.matrix);
     update_dot_path();
-    const e = Date.now();
-    console.log('绘制控点用时(ms):', e - s);
+    // const e = Date.now();
+    // console.log('绘制控点用时(ms):', e - s);
 }
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;

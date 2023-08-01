@@ -42,19 +42,19 @@ function selection_watcher(t?: number) {
     }
 }
 function update_paths(shapes: Shape[]) {
-    const s = Date.now();
+    // const s = Date.now();
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const path = shape.getPath(true);
+        const path = shape.getPath();
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(props.matrix);
         path.transform(m2r);
         paths.value.push(path.toString());
     }
-    const e = Date.now();
-    console.log('描边绘制用时(ms):', e - s);
+    // const e = Date.now();
+    // console.log('描边绘制用时(ms):', e - s);
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) passive_update();
@@ -65,7 +65,7 @@ function passive_update() {
     const shapes = props.context.selection.selectedShapes;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const path = shape.getPath(true);
+        const path = shape.getPath();
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(props.matrix);
         path.transform(m2r);
