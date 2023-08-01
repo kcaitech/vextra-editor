@@ -9,7 +9,6 @@ import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, Repository, Page, CoopRepository } from '@kcdesign/data';
-import { Ot } from "@/communication/modules/ot";
 import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
@@ -292,7 +291,6 @@ const getUserInfo = async () => {
 }
 
 //获取文档信息
-let ot: Ot | undefined;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
@@ -348,27 +346,15 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            ot = Ot.Make(docId, token, document, context.coopRepo, dataInfo.data.document.version_id ?? "");
-            ot.start()
-                .catch((e) => {
-                    if (!context) {
-                        router.push('/');
-                        throw new Error(e);
-                    }
-                }).finally(() => {
-                    if (!context) {
-                        router.push('/');
-                        return;
-                    }
-                    switchPage(context.data.pagesList[0]?.id);
-                    loading.value = false;
-                });
+            context.communication.docOt.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "").then(() => {
+                switchPage(context!.data.pagesList[0]?.id);
+                loading.value = false;
+            }).catch((err) => {
+                router.push("/");
+                console.error(err);
+            });
             await context.communication.resourceUpload.start(docId, token);
             await context.communication.comment.start(docId, token);
-            context.communication.comment.onUpdated = (comment: any) => {
-                // todo 前端对接视图更新
-                console.log("收到评论更新", comment)
-            }
         }
         getUserInfo()
     } catch (err) {
@@ -401,8 +387,9 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
-    ot = Ot.Make(doc_id, localStorage.getItem("token") || "", context!.data, context!.coopRepo, result!.data.version_id ?? "");
-    ot.start();
+    context.communication.docOt.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "").catch((err) => {
+        console.error(err);
+    });
     context!.communication.resourceUpload.start(doc_id, token);
     context!.communication.comment.start(doc_id, token);
     context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
@@ -448,7 +435,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     try {
-        ot?.close();
+        context?.communication.docOt.close();
         context?.communication.resourceUpload.close();
         context?.communication.comment.close();
     } catch (err) { }

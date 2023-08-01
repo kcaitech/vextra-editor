@@ -42,7 +42,7 @@ export class ResourceUpload extends Watchable(Object) {
     }
 
     public close() {
-        if (!this.docResourceUpload) return
+        if (!this.docResourceUpload) return;
         this.docResourceUpload.close()
         this.docResourceUpload = undefined
         this.startPromise = undefined

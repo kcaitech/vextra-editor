@@ -145,10 +145,13 @@ const ungroupClick = () => {
     }
 }
 
-const changeBoolgroup = (type: BoolOp, name: string) => {
+const changeBoolgroup = (type: BoolOp, n: string) => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
+    const name = t(`bool.${n}`)
+    console.log(n,'name');
+    
     if (shapes.length && page) {
         if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const editor = props.context.editor4Shape(shapes[0])
@@ -178,7 +181,7 @@ const flattenShape = () => {
             }
         } else if (shapes.length > 1) {
             const shapessorted = sort_by_layer(props.context, shapes);
-            const flatten = editor.flattenShapes(shapessorted,'Vector')
+            const flatten = editor.flattenShapes(shapessorted)
             if(flatten) {
                 props.context.selection.selectShape(flatten)
             }
@@ -202,7 +205,7 @@ const flattenShape = () => {
 
         <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"
             @flatten-shape="flattenShape"></BooleanObject>
-            
+
         <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
             <div class="group">
                 <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
