@@ -139,7 +139,7 @@ function er_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx
         const _w = o_w - transx;
         if (_w < 0) cur_ctrl_type = CtrlElementType.RectRight;
         const scale = _w / o_w;
-        asyncMultiAction.executeScale(f_lt, { x: f_lt.x, y: f_lt.y + ((1 - scale) * o_h) / 2 }, scale, scale);
+        asyncMultiAction.executeScale(f_lt, { x: f_lt.x + ((1 - scale) * o_w), y: f_lt.y + ((1 - scale) * o_h) / 2 }, scale, scale);
     }
 }
 function irregular_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
