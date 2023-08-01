@@ -66,40 +66,45 @@ function bar_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const { clientX, clientY } = event;
     const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+    const s = props.shape;
     if (isDragging && asyncBaseAction) {
         const action = props.context.tool.action;
-        if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
-            asyncBaseAction.executeErScale(cur_ctrl_type, getScale(cur_ctrl_type, startPosition, mouseOnPage));
+        matrix.reset(workspace.matrix);
+        const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
+        const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
+        if (event.shiftKey || s.constrainerProportions || action === Action.AutoK) {
+            asyncBaseAction.executeErScale(cur_ctrl_type, getScale(cur_ctrl_type, s, p1OnPage, p2Onpage));
         } else {
-            matrix.reset(workspace.matrix);
-            const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
-            const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
             asyncBaseAction.executeScale(cur_ctrl_type, p1OnPage, p2Onpage);
         }
         startPosition = { ...mouseOnPage };
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(s, props.context.selection.selectedPage!);
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type, true);
             workspace.scaling(true);
         }
     }
 }
-function getScale(type: CtrlElementType, p1: ClientXY, p2: ClientXY): number {
+function getScale(type: CtrlElementType, shape: Shape, start: ClientXY, end: ClientXY): number {
+    const m = new Matrix(shape.matrix2Root().inverse);
+    const f = shape.frame;
+    const p1 = m.computeCoord(start.x, start.y);
+    const p2 = m.computeCoord(end.x, end.y);
     if (type === CtrlElementType.RectTop) {
-        const o_h = props.cFrame[2].y - props.cFrame[0].y;
-        return (o_h - (p2.y - p1.y)) / o_h;
+        const dy = p2.y - p1.y;
+        return (f.height - dy) / f.height;
     } else if (type === CtrlElementType.RectRight) {
-        const o_w = props.cFrame[2].x - props.cFrame[0].x;
-        return (o_w + (p2.x - p1.x)) / o_w;
+        const dx = p2.x - p1.x;
+        return (f.width + dx) / f.width;
     } else if (type === CtrlElementType.RectBottom) {
-        const o_h = props.cFrame[2].y - props.cFrame[0].y;
-        return (o_h + (p2.y - p1.y)) / o_h;
+        const dy = p2.y - p1.y;
+        return (f.height + dy) / f.height;
     } else if (type === CtrlElementType.RectLeft) {
-        const o_w = props.cFrame[2].x - props.cFrame[0].x;
-        return (o_w - (p2.x - p1.x)) / o_w;
+        const dx = p2.x - p1.x;
+        return (f.width - dx) / f.width;
     } else return 1
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
