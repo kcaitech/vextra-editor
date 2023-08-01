@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ToolButton from '../ToolButton.vue';
 import { } from 'vue';
-import { Action } from '@/context/workspace';
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import { Action } from '@/context/tool';
 const { t } = useI18n()
 const props = defineProps<{
     active: boolean,
