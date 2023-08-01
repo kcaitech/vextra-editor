@@ -57,7 +57,10 @@ export const system = {
     'page1': '页面 1',
     'dissolution': '取消容器',
     'content_includes': '文本包含',
-    'title_includes': '标题包含'
+    'title_includes': '标题包含',
+    'license_key':'粤ICP备2023042416号',
+    'phonetips':'移动端暂不支持登录，请在电脑端进行登录！',
+    'btn_login':'登录'
 }
 
 export const home = {

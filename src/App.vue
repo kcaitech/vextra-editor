@@ -8,25 +8,28 @@ import { RouterView } from 'vue-router';
 
 <style lang="scss">
 html {
+    margin: 0;
+    padding: 0;
     width: 100%;
-    height: 100%;
+
+    &::-webkit-scrollbar {
+        height: 0;
+        width: 0;
+    }
 
     >body {
         font-family: var(--font-family);
-        overflow: hidden;
-        margin: 0px;
-        width: 100%;
-        height: 100%;
-        user-select: none;
+        margin: inherit;
+        padding: inherit;
+        width: inherit;
+        user-select: none; //禁止复制内容
+        position: relative;
 
         >#app {
-            position: absolute;
-            display: flex;
-            flex-flow: column nowrap;
-            width: 100%;
-            height: 100%;
+            margin: inherit;
+            padding: inherit;
+            width: inherit;
         }
     }
 }
-
 </style>

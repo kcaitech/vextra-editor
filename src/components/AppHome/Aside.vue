@@ -18,7 +18,6 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-
 import { measure } from '@/layout/text/measure';
 import { onUnmounted } from 'vue';
 

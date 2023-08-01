@@ -57,7 +57,10 @@ export const system = {
     'page1': 'Page 1',
     'dissolution': 'Dissolution',
     'content_includes': 'Content includes',
-    'title_includes': 'Title includes'
+    'title_includes': 'Title includes',
+    'license_key':'粤ICP备2023042416号',
+    'phonetips':'Mobile terminal does not support login, please login on the computer side!',
+    'btn_login':'Login'
 }
 
 export const home = {

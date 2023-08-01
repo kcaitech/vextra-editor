@@ -70,15 +70,28 @@ var configureWebpack = (config) => {
             ],
             include: [iconspath],
             exclude: /node_modules/,
+        }
+    )
+
+    config.module.rules.push(
+        {
+            test: /\.md?$/,
+            use: [
+                {
+                    loader: 'raw-loader',
+                },
+            ],
         },
     )
 
     config.plugins = [
-        AutoImport({resolvers: [ElementPlusResolver()]}),
-        Components({resolvers: [ElementPlusResolver()]}),
-        new CopyWebpackPlugin({patterns: [
-            { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
-        ]}),
+        AutoImport({ resolvers: [ElementPlusResolver()] }),
+        Components({ resolvers: [ElementPlusResolver()] }),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
+            ]
+        }),
         ...config.plugins
     ]
 
@@ -93,8 +106,8 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
-    // publicPath: '/zbb',
+    // publicPath: './',
+    publicPath: '/zbb',
     configureWebpack,
 
     pluginOptions: {
@@ -121,7 +134,11 @@ var exports = defineConfig({
                 }
             }
         }
-    }
+    },
 
-})
+
+}
+
+
+)
 module.exports = exports

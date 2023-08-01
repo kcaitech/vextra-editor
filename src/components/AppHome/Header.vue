@@ -149,16 +149,6 @@ onUnmounted(() => {
 
 })
 
-const cellStyle = (row: any) => {
-    if (row.column.label === t('home.file_name')) {
-        return {
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            cursor: 'Pointer'
-        }
-    }
-}
 
 const mouseEnter = (row: any, column: any, cell: any) => {
     if (column.label === t('home.file_name')) {
@@ -207,9 +197,9 @@ const textHighLight = (text: string) => {
             <transition name="el-zoom-in-top">
                 <div v-if="showSearchHistory" class="searchhistory" @click="inputRef?.focus()">
                     <div class="tabledata" v-if="search != ''">
-                        <el-table :data="SearchList" max-height="600" :cell-style=cellStyle @row-click="toDocument"
+                        <el-table :data="SearchList" max-height="600" @row-click="toDocument"
                             @cell-mouse-enter="mouseEnter" @cell-mouse-leave="mouseleave">
-                            <el-table-column :label="t('home.file_name')" header-align="left" align="left"
+                            <el-table-column :label="t('home.file_name')" header-align="left" align="left" :min-width="150"
                                 show-overflow-tooltip>
                                 <template #default="{ row: { document: { name } } }">
                                     <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -217,8 +207,7 @@ const textHighLight = (text: string) => {
                                     </div>
                                 </template>
                             </el-table-column>
-                            <el-table-column :prop=prpotitle :label=props.title header-align="center" align="center"
-                                width="140" />
+                            <el-table-column :prop=prpotitle :label=props.title header-align="center" align="center" show-overflow-tooltip/>
                             <template #empty>
                                 <el-skeleton v-if="isLoading" style="width: 100%" :count="6" animated>
                                     <template #template>

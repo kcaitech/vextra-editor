@@ -345,9 +345,9 @@ const handleClickOutside = (event: MouseEvent) => {
 //     }, { deep: true })
 
 //===>Main组件接收
-watchEffect(() => {
-    emits('data-update', lists.value, t('home.modification_time'))
-})
+watch(lists, (Nlist) => {
+    emits('data-update', Nlist, t('home.modification_time'))
+}, { deep: true })
 
 onMounted(() => {
     getUserdata()

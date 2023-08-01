@@ -23,7 +23,8 @@
         "src/*"
       ],
       "@pal/*": [
-        "src/PAL/browser/*", "src/PAL/nodejs/*"
+        "src/PAL/browser/*",
+        "src/PAL/nodejs/*"
       ]
     },
     "lib": [
@@ -32,6 +33,10 @@
       "dom.iterable",
       "scripthost",
       "webworker"
+    ],
+    "typeRoots": [
+      "./src",
+      "./node_modules/@types"
     ]
   },
   "include": [
@@ -39,7 +44,9 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx", "src/utils/dom-to-image.js" ],
+    "tests/**/*.tsx",
+    "src/utils/dom-to-image.js"
+  ],
   "exclude": [
     "node_modules",
     "src/**/*.js",

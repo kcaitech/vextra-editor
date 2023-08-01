@@ -9,6 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    AgreementBaseComponent: typeof import('./src/components/Login/AgreementBaseComponent.vue')['default']
     Apphome: typeof import('./src/components/AppHome/Apphome.vue')['default']
     Apply: typeof import('./src/components/Apply/index.vue')['default']
     ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']
@@ -71,11 +72,13 @@ declare module '@vue/runtime-core' {
     GroupUngroup: typeof import('./src/components/Document/Toolbar/GroupUngroup.vue')['default']
     Header: typeof import('./src/components/AppHome/Header.vue')['default']
     Home: typeof import('./src/components/Home/index.vue')['default']
+    HomeContent: typeof import('./src/components/Home/HomeContent.vue')['default']
     HoverComment: typeof import('./src/components/Document/Content/HoverComment.vue')['default']
     Icon: typeof import('./src/components/common/Icon.vue')['default']
     IconText: typeof import('./src/components/common/IconText.vue')['default']
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
     Inform: typeof import('./src/components/AppHome/Inform.vue')['default']
+    KChome: typeof import('./src/components/Home/KChome.vue')['default']
     Key: typeof import('./src/components/common/Key.vue')['default']
     Layers: typeof import('./src/components/Document/Menu/Layers.vue')['default']
     LeftTabs: typeof import('./src/components/Document/Navigation/LeftTabs.vue')['default']
