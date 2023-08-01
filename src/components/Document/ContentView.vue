@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -197,7 +197,6 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) matrix.reset(workspace.value.matrix);
     else if (type === WorkSpace.INSERT_FRAME) insertFrame();
-    else if (type === WorkSpace.INSERT_IMGS) insert_imgs(props.context, t);
     else if (type === WorkSpace.PASTE) paster(props.context, t);
     else if (type === WorkSpace.PASTE_RIGHT) paster(props.context, t, mousedownOnPageXY);
     else if (type === WorkSpace.COPY) props.context.workspace.clipboard.write_html();

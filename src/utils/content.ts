@@ -3,10 +3,16 @@ import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
-import { Media, Perm } from '@/context/workspace';
-import { XYsBounding, createHorizontalBox } from '@/utils/common';
+import { Perm } from '@/context/workspace';
+import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipaboard";
+export interface Media {
+  name: string
+  frame: { width: number, height: number }
+  buff: Uint8Array
+  base64: string
+}
 interface SystemClipboardItem {
   type: ShapeType
   contentType: string
@@ -90,24 +96,7 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     const editor = context.editor.controller();
     const name = getName(type, parent.childs, t);
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    if (type === ShapeType.Image) {
-      const media = workspace.getImageFromDoc();
-      if (media && media.length) {
-        const _m = media[0];
-        let _name: any = _m.name.split('.');
-        if (_name.length > 1) {
-          _name.pop();
-          if (_name[0]) {
-            _name = get_image_name(parent.childs, _name[0]);
-          } else {
-            _name = name;
-          }
-        }
-        new_shape = asyncCreator.init_media(page, (parent as GroupShape), _name as string, frame, _m);
-      }
-    } else {
-      new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
-    }
+    new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
   }
   if (asyncCreator && new_shape) {
     selection.selectShape(new_shape);
@@ -197,9 +186,8 @@ function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Funct
     return new_shape;
   }
 }
-async function insert_imgs(context: Context, t: Function) {
+async function insert_imgs(context: Context, t: Function, media: Media[]) {
   const selection = context.selection;
-  const media = context.workspace.getImageFromDoc();
   const new_shapes: Shape[] = [];
   if (media && media.length) {
     const xy = adjust_content_xy(context, media[0]);
@@ -518,14 +506,14 @@ export const permIsEdit = (context: Context) => {
   return Boolean(context.workspace.documentPerm === Perm.isEdit);
 }
 
-export const hasRadiusShape = (shape: Shape,type: ShapeType[]) => {
+export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
   const shapeType = shape.type
-  if(shapeType === ShapeType.Group) {
-    if(!(shape as GroupShape).isBoolOpShape) return false
+  if (shapeType === ShapeType.Group) {
+    if (!(shape as GroupShape).isBoolOpShape) return false
   }
-  
-  if(!type.includes(shapeType)) return false
-  
+
+  if (!type.includes(shapeType)) return false
+
   return true
 }
 

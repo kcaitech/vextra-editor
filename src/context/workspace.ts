@@ -53,12 +53,6 @@ export enum Perm {
     isComment = 2,
     isEdit = 3
 }
-export interface Media {
-    name: string
-    frame: { width: number, height: number }
-    buff: Uint8Array
-    base64: string
-}
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
     static INSERT_FRAME = 1; // notify类型：插入容器模版、更新光标、重置光标、矩阵变换
@@ -74,7 +68,6 @@ export class WorkSpace extends Watchable(Object) {
     static CTRL_APPEAR = 16;
     static PASTE = 17;
     static PASTE_RIGHT = 18;
-    static INSERT_IMGS = 19;
     static FREEZE = 20;
     static THAW = 21;
     static CLAC_ATTRI = 22;
@@ -106,7 +99,6 @@ export class WorkSpace extends Watchable(Object) {
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
     private m_document_perm: number = 3;
     private m_should_selection_view_update: boolean = true;
-    private m_image: Media[] | undefined = undefined;
     private m_freeze: boolean = false;
     private m_clipboard: Clipboard;
     private m_t: Function = () => { };
@@ -217,13 +209,6 @@ export class WorkSpace extends Watchable(Object) {
     setFreezeStatus(isFreeze: boolean) {
         this.m_freeze = isFreeze;
         this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
-    }
-    setImage(files: Media[]) {
-        this.m_image = [...files];
-        this.notify(WorkSpace.INSERT_IMGS);
-    }
-    getImageFromDoc() {
-        return this.m_image;
     }
     selectionViewUpdate() {
         this.notify(WorkSpace.SELECTION_VIEW_UPDATE);
