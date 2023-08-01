@@ -9,6 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    Abbreviation: typeof import('./src/components/Document/Navigation/Abbreviation.vue')['default']
     Apphome: typeof import('./src/components/AppHome/Apphome.vue')['default']
     Apply: typeof import('./src/components/Apply/index.vue')['default']
     ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']
