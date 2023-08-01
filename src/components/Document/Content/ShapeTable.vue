@@ -2,7 +2,7 @@
 import { h } from 'vue';
 import comsMap from './comsmap'
 import { TableShape } from "@kcdesign/data";
-import { renderGroup as r } from "@kcdesign/data";
+import { renderTable as r } from "@kcdesign/data";
 import { makeReflush } from "./common";
 
 const props = defineProps<{ data: TableShape }>();

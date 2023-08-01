@@ -27,6 +27,5 @@ comsMap.set(ShapeType.Symbol, ShapeGroup);
 comsMap.set(ShapeType.SymbolRef, SymbolRef);
 comsMap.set(ShapeType.Line, Line);
 comsMap.set(ShapeType.Table, ShapeTable);
-comsMap.set(ShapeType.TableCell, ShapeTableCell);
 
 export default comsMap;
