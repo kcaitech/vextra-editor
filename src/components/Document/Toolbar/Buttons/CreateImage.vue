@@ -79,6 +79,7 @@ function multiple(files: any) {
     try {
         iteration();
     } catch (error) {
+        console.log(error);
         props.context.workspace.setFreezeStatus(false);
     }
     // 挨个加载，遇到错误资源跳一步
