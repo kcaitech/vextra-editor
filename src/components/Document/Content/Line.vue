@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Shape } from '@kcdesign/data';
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { render as r } from "@/render/line";
+import { renderLine as r } from "@kcdesign/data";
 
 const props = defineProps<{ data: Shape }>();
 const reflush = ref(0);

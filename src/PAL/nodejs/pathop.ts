@@ -1,4 +1,6 @@
 import { Path2D } from "skia-canvas";
+import { IPalPath } from "@kcdesign/data";
+
 export async function init() {
 }
 
@@ -30,4 +32,36 @@ export function union(path0: string, path1: string): string {
     const result = p0.union(p1);
     // console.log("union", result);
     return result.d;
+}
+
+export class PalPath implements IPalPath {
+    private _path: Path2D;
+    constructor(path: string) {
+        this._path = new Path2D(path);
+    }
+    difference(path: PalPath): boolean {
+        this._path = this._path.xor(path._path);
+        return true;
+    }
+    intersection(path: PalPath): boolean {
+        this._path = this._path.intersect(path._path);
+        return true;
+    }
+    subtract(path: PalPath): boolean {
+        this._path = this._path.difference(path._path);
+        return true;
+    }
+    union(path: PalPath): boolean {
+        this._path = this._path.union(path._path);
+        return true;
+    }
+    addPath(path: PalPath): boolean {
+        this._path.addPath(path._path);
+        return true;
+    }
+    toSVGString(): string {
+        return this._path.d;
+    }
+    delete(): void {
+    }
 }

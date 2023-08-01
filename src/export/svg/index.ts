@@ -1,13 +1,13 @@
 import { GroupShape, ImageShape, PathShape, Shape, FlattenShape, SymbolRefShape, TextShape } from "@kcdesign/data";
 import { Artboard } from "@kcdesign/data";
-import { render as art } from "@/render/artboard";
-import { render as group } from "@/render/group";
-import { render as shapegroup } from "@/render/shapegroup";
-import { render as image } from "@/render/image";
-import { render as path } from "@/render/pathshape";
-import { render as rect } from "@/render/rectangle";
-import { render as text } from "@/render/text";
-import { render as symref } from "@/render/symbolref";
+import { renderArtboard as art } from "@kcdesign/data";
+import { renderGroup as group } from "@kcdesign/data";
+import { renderBoolOpShape as shapegroup } from "@kcdesign/data";
+import { renderImage as image } from "@kcdesign/data";
+import { renderPathShape as path } from "@kcdesign/data";
+import { renderRecShape as rect } from "@kcdesign/data";
+import { renderTextShape as text } from "@kcdesign/data";
+import { renderSymbolRef as symref } from "@kcdesign/data";
 import { ShapeType, BoolOp } from "@kcdesign/data";
 
 const comsMap: Map<ShapeType, any> = new Map();

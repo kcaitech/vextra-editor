@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Shape } from '@kcdesign/data';
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { render as r } from "@/render/rectangle";
+import { renderRecShape as r } from "@kcdesign/data";
 import { asyncLoadFillImages } from './common';
 
 const props = defineProps<{ data: Shape }>();

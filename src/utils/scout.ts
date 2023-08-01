@@ -66,7 +66,7 @@ function createPath(path: string, id: string): SVGPathElement {
     return p;
 }
 function getPathOnPageString(shape: Shape): string { // path坐标系：页面
-    const path = shape.getPath(true);
+    const path = shape.getPath();
     const m2page = shape.matrix2Root();
     path.transform(m2page);
     const d = path.toString();
