@@ -19,7 +19,7 @@ const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
     rotate: number,
-    matrix: number[],
+    matrix: Matrix,
     shape: Shape
 }>();
 
@@ -29,10 +29,6 @@ watch(() => props.shape, (value, old) => {
     }
     old.unwatch(update);
     value.watch(update);
-    update();
-})
-
-watch(() => props.matrix, () => {
     update();
 })
 const { isDblClick } = useController(props.context);
@@ -185,10 +181,10 @@ function workspace_watcher(t?: number) {
 }
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
-    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
-        editing = false;
-    }
+    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) editing = false;
 }
+watch(() => props.matrix, update, { deep: true })
+
 onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);

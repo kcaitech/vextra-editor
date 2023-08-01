@@ -17,6 +17,7 @@ declare module '@vue/runtime-core' {
     ArtboardName: typeof import('./src/components/Document/Content/ArtboardName.vue')['default']
     ArtboardView: typeof import('./src/components/Document/Content/ArtboardView.vue')['default']
     Aside: typeof import('./src/components/AppHome/Aside.vue')['default']
+    Assist: typeof import('./src/components/Document/Assist/index.vue')['default']
     BackToHome: typeof import('./src/components/Document/Toolbar/BackToHome.vue')['default']
     'BarsContainer.SVG': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.vue')['default']
     'BarsContainer.SVG.Multi': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.Multi.vue')['default']
