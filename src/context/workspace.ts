@@ -116,6 +116,12 @@ export class WorkSpace extends Watchable(Object) {
         this.context = context;
         this.m_clipboard = new Clipboard(context);
     }
+    // position_test() {
+    //     const s = this.context.selection.selectedShapes[0];
+    //     if (!s) return '先选择图形';
+    //     const m2p = s.matrix2Parent();
+    //     console.log(m2p.computeCoord(0, 0));
+    // }
     get matrix() {
         return this.m_matrix;
     }
