@@ -15,7 +15,7 @@ export class Comment extends Watchable(Object) {
         const startParams = [token, documentId]
         docCommentOp.setOnClose(async () => {
             this.docCommentOp = undefined
-            while (!this.isClosed && !await this.start.apply(this, startParams as any)) {
+            while (!this.isClosed && !await this.start.apply(this, startParams as any)) { // eslint-disable-line prefer-spread
                 await new Promise(resolve => setTimeout(resolve, 1000))
             }
         })

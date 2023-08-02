@@ -14,7 +14,7 @@ export class DocOt extends Watchable(Object) {
         const startParams = [token, documentId, document, repo, versionId]
         ot.setOnClose(async (options?: Options) => {
             this.ot = undefined
-            while (!this.isClosed && !await this.start.apply(this, [...startParams.slice(0, 5), options] as any)) {
+            while (!this.isClosed && !await this.start.apply(this, [...startParams.slice(0, 5), options] as any)) { // eslint-disable-line prefer-spread
                 await new Promise(resolve => setTimeout(resolve, 1000))
             }
         })
