@@ -1,25 +1,63 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { TableCell, TableShape, TableCellType } from '@kcdesign/data';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { TableCell, TableShape, TableCellType, Shape, Text, Matrix } from '@kcdesign/data';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { throttle } from '../../common';
 import { FilePicker } from '@/components/common/filepicker';
 import { v4 as uuid } from "uuid"
+import SelectView from "../Text/SelectView.vue";
+import { useController } from '../controller';
+import { noneState } from './cellnonestate';
+import { textState } from './celltextstate';
+import { imageState } from './cellimagestate';
+import { loadImage } from './loadimage';
+
+type TextShape = Shape & { text: Text };
 
 const props = defineProps<{
     shape: TableCell,
     matrix: number[],
-    context: Context,
-    lt: { x: number, y: number },
-    rb: { x: number, y: number }
+    context: Context
 }>();
-const reflush = ref(0);
+
+const emit = defineEmits<{
+    (e: 'editCell', cell: TableCell): void
+}>()
+
 const editor = props.context.editor4Table(props.shape.parent as TableShape)
-let filePicker: FilePicker | undefined;
-const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
+const submatrix = reactive(new Matrix());
+const cellType = ref(TableCellType.None);
+
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const update = throttle(_update, 5);
 function _update() {
-    reflush.value++;
+    const matrix = props.shape.matrix2Parent();
+    matrix.multiAtLeft(props.matrix);
+    if (!submatrix.equals(matrix)) submatrix.reset(matrix)
+    cellType.value = props.shape.cellType ?? TableCellType.None;
+
+    const frame = props.shape.frame;
+    const points = [
+        { x: 0, y: 0 }, // left top
+        { x: frame.width, y: 0 }, //right top
+        { x: frame.width, y: frame.height }, // right bottom
+        { x: 0, y: frame.height }, // left bottom
+    ];
+
+    const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
+
+    const p0 = boundrect[0];
+    bounds.left = p0.x;
+    bounds.top = p0.y;
+    bounds.right = p0.x;
+    bounds.bottom = p0.y;
+    boundrect.reduce((bounds, point) => {
+        if (point.x < bounds.left) bounds.left = point.x;
+        else if (point.x > bounds.right) bounds.right = point.x;
+        if (point.y < bounds.top) bounds.top = point.y;
+        else if (point.y > bounds.bottom) bounds.bottom = point.y;
+        return bounds;
+    }, bounds)
 }
 
 function selectionWatcher(...args: any[]) {
@@ -50,17 +88,17 @@ onUnmounted(() => {
     if (filePicker) filePicker.unmount();
 })
 
-const width = computed(() => props.rb.x - props.lt.x);
-const height = computed(() => props.rb.y - props.lt.y)
-const imageIconVisibleSize = 20;
+// const width = 0;//computed(() => props.rb.x - props.lt.x);
+// const height = 0;//computed(() => props.rb.y - props.lt.y)
 
 function onCellClick(e: MouseEvent) {
     if (props.shape.cellType === undefined || props.shape.cellType === TableCellType.None) {
         editor.setCellContentText(props.shape);
     }
-    props.context.selection.selectShape(props.shape);
+    // props.context.selection.selectShape(props.shape);
     e.preventDefault();
     e.stopPropagation();
+    emit("editCell", props.shape);
 }
 
 function onCellBlur(e: FocusEvent) {
@@ -68,33 +106,14 @@ function onCellBlur(e: FocusEvent) {
 
 }
 function onLoadImage(name: string, buffer: ArrayBuffer) {
-    const uInt8Array = new Uint8Array(buffer);
-    let i = uInt8Array.length;
-    const binaryString = new Array(i);
-    while (i--) {
-        binaryString[i] = String.fromCharCode(uInt8Array[i]);
-    }
-    const data = binaryString.join('');
-
-    const base64 = window.btoa(data);
-
-    let url = '';
-    const ext = name.substring(name.lastIndexOf('.') + 1);
-    if (ext == "png") {
-        url = "data:image/png;base64," + base64;
-    }
-    else if (ext == "gif") {
-        url = "data:image/gif;base64," + base64;
-    }
-    else {
-        console.log("imageExt", ext);
-    }
-
+    const data = loadImage(name, buffer);
     const id = uuid();
-    props.context.data.mediasMgr.add(id, { buff: uInt8Array, base64: url });
+    props.context.data.mediasMgr.add(id, data);
     editor.setCellContentImage(props.shape, id);
 }
 
+let filePicker: FilePicker | undefined;
+const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 function onImageClick(e: MouseEvent) {
     if (!filePicker) filePicker = new FilePicker(accept, (file: File) => {
         const reader = new FileReader();
@@ -115,20 +134,66 @@ function onImageClick(e: MouseEvent) {
 }
 
 function showImageIcon() {
-    return width.value > imageIconVisibleSize &&
-        height.value > imageIconVisibleSize &&
-        ((props.shape.cellType ?? TableCellType.None) === TableCellType.None)
+    const imageIconVisibleSize = 40;
+    return props.shape.frame.width > imageIconVisibleSize &&
+        props.shape.frame.height > imageIconVisibleSize &&
+        cellType.value === TableCellType.None;
+}
+
+function showTextInput() {
+    return cellType.value === TableCellType.Text;
+}
+
+const submatrixArray = computed(() => submatrix.toArray())
+
+let cellState = noneState(props);
+function getCellState() {
+    if (cellState.cellType === cellType.value) return cellState;
+    if (cellType.value === TableCellType.Text) {
+        cellState = textState(props);
+    }
+    else if (cellType.value === TableCellType.Image) {
+        cellState = imageState(props);
+    }
+    else {
+        cellState = noneState(props);
+    }
+    return cellState;
+}
+
+function onMouseDown(e: MouseEvent) {
+    e.stopPropagation();
+    getCellState().onMouseDown(e);
+}
+
+function onMouseUp(e: MouseEvent) {
+    e.stopPropagation();
+    getCellState().onMouseUp(e);
+}
+
+function onMouseMove(e: MouseEvent) {
+    e.stopPropagation();
+    getCellState().onMouseMove(e);
+
+}
+function onMouseEnter() {
+    getCellState().onMouseEnter();
+}
+function onMouseLeave() {
+    getCellState().onMouseLeave();
 }
 
 </script>
 <template>
-    <div class="table-cell" :style="{
-        transform: `translate(${lt.x}px,${lt.y}px)`,
-        left: '0px', top: '0px', position: 'absolute',
-        width: `${width}px`, height: `${height}px`
-    }" @click="onCellClick" @blur="onCellBlur" :reflush="reflush">
-        <svg-icon class="cell-image" v-if="showImageIcon()" icon-class="pattern-image" @click="onImageClick"></svg-icon>
-    </div>
+    <rect class="un-visible" :x="bounds.left" :y="bounds.top" :width="bounds.right - bounds.left"
+        :height="bounds.bottom - bounds.top" @click="onCellClick" @blur="onCellBlur"></rect>
+
+    <g v-if="showImageIcon()" :transform="`translate(${bounds.left}, ${bounds.top})`" @click="onImageClick">
+        <svg-icon class="cell-image" icon-class="pattern-image" width="20px" height="20px"></svg-icon>
+    </g>
+
+    <SelectView v-if="showTextInput()" :context="props.context" :shape="(props.shape as TextShape)"
+        :matrix="submatrixArray"></SelectView>
 </template>
 <style lang='scss' scoped>
 .table-cell {
@@ -141,5 +206,9 @@ function showImageIcon() {
     width: 20px;
     height: 20px;
 
+}
+
+.un-visible {
+    opacity: 0;
 }
 </style>

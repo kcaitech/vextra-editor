@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix } from '@kcdesign/data';
-import { TextShape } from '@kcdesign/data';
+import { Shape, Text} from '@kcdesign/data';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
 import { throttle } from '../../common';
@@ -9,7 +9,7 @@ import { handleKeyEvent } from './keyhandler';
 import { WorkSpace } from '@/context/workspace';
 
 const props = defineProps<{
-    shape: TextShape,
+    shape: Shape & { text: Text },
     context: Context,
     matrix: number[],
 }>();

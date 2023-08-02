@@ -1,7 +1,9 @@
 import { Context } from "@/context";
-import { TextShape } from "@kcdesign/data";
+import { Text, Shape } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
 import { paster_inner_shape } from "@/utils/clipaboard";
+
+type TextShape = Shape & { text: Text };
 
 const keydelays = 150;
 function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): T {
