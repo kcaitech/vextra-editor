@@ -8,10 +8,10 @@ export class Comment extends Watchable(Object) {
     private updateHandlerSet = new Set<(data: DocCommentOpData) => void>()
     private isClosed: boolean = false
 
-    public async start(documentId: string, token: string): Promise<boolean> {
+    public async start(token: string, documentId: string): Promise<boolean> {
         if (this.docCommentOp) return true;
         if (this.startPromise) return await this.startPromise;
-        const docCommentOp = DocCommentOp.Make(documentId, token)
+        const docCommentOp = DocCommentOp.Make(token, documentId)
         const startParams = [token, documentId]
         docCommentOp.setOnClose(async () => {
             this.docCommentOp = undefined
@@ -55,8 +55,9 @@ export class Comment extends Watchable(Object) {
     }
 
     public close() {
-        if (this.isClosed || !this.docCommentOp) return;
+        if (this.isClosed) return;
         this.isClosed = true
+        if (!this.docCommentOp) return;
         this.docCommentOp.close()
         this.docCommentOp = undefined
         this.startPromise = undefined

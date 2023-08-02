@@ -7,10 +7,10 @@ export class ResourceUpload extends Watchable(Object) {
     private startResolve?: (value: boolean) => void
     private isClosed: boolean = false
 
-    public async start(documentId: string, token: string): Promise<boolean> {
+    public async start(token: string, documentId: string): Promise<boolean> {
         if (this.docResourceUpload) return true;
         if (this.startPromise) return await this.startPromise;
-        const docResourceUpload = DocResourceUpload.Make(documentId, token)
+        const docResourceUpload = DocResourceUpload.Make(token, documentId)
         const startParams = [token, documentId]
         docResourceUpload.setOnClose(async () => {
             this.docResourceUpload = undefined
@@ -53,8 +53,9 @@ export class ResourceUpload extends Watchable(Object) {
     }
 
     public close() {
-        if (this.isClosed || !this.docResourceUpload) return;
+        if (this.isClosed) return;
         this.isClosed = true
+        if (!this.docResourceUpload) return;
         this.docResourceUpload.close()
         this.docResourceUpload = undefined
         this.startPromise = undefined

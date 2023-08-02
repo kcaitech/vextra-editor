@@ -14,7 +14,7 @@ export class DocResourceUpload extends Communication {
         })
     }
 
-    public static Make(documentId: string, token: string): DocResourceUpload {
+    public static Make(token: string, documentId: string): DocResourceUpload {
         const docResourceUpload = new DocResourceUpload(documentId)
         docResourceUpload.token = token
         docResourceUpload.onMessage = docResourceUpload._onMessage.bind(docResourceUpload)
