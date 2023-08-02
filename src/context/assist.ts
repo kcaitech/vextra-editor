@@ -40,7 +40,7 @@ export class Asssit extends Watchable(Object) {
         this.clear();
         this.m_shape_inner = finder(this.m_context, page, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
         const e = Date.now();
-        console.log('收集用时(ms):', e - s);
+        console.log('点位收集用时(ms):', e - s);
     }
     selection_watcher(t?: any) {
         if (t === Selection.CHANGE_SHAPE) {
