@@ -8,16 +8,17 @@ import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
 import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
-import { Context } from '@/context'; // 状态顶层 store
-import { PageXY, ClientXY, ClientXYRaw, Selection } from '@/context/selection'; // selection
-import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace'; // workspace
-import { Menu } from '@/context/menu'; // menu 菜单相关
+import { Context } from '@/context';
+import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
+import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace';
+import { collect_once } from '@/context/assist';
+import { Menu } from '@/context/menu';
 import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, insert_imgs, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -50,7 +51,7 @@ const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
 const dragActiveDis = 4; // 拖动 3px 后开始触发移动
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
-const matrix = reactive(props.context.workspace.matrix);
+const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const inited = ref(false);
@@ -196,7 +197,6 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) matrix.reset(workspace.value.matrix);
     else if (type === WorkSpace.INSERT_FRAME) insertFrame();
-    else if (type === WorkSpace.INSERT_IMGS) insert_imgs(props.context, t);
     else if (type === WorkSpace.PASTE) paster(props.context, t);
     else if (type === WorkSpace.PASTE_RIGHT) paster(props.context, t, mousedownOnPageXY);
     else if (type === WorkSpace.COPY) props.context.workspace.clipboard.write_html();
@@ -401,7 +401,7 @@ function onMouseMove_CV(e: MouseEvent) {
                     select(e); // 选区
                 }
             } else if (e.buttons === 0) {
-                if (action === Action.AutoV) {
+                if (action === Action.AutoV || action === Action.AutoK) {
                     search(e); // 图形检索(hover)
                 }
             }
@@ -648,11 +648,21 @@ const getDocumentComment = async () => {
         console.log(err);
     }
 }
+function frame_watcher() {
+    if (!root.value) return;
+    _updateRoot(props.context, root.value);
+}
+function cursor_watcher(t?: number, type?: string) {
+    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type) {
+        cursor.value = type;
+    }
+}
+function matrix_watcher() { collect_once(props.context) }
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id);
     if (!info) {
-        const m = new Matrix(adapt_page(props.context));
+        const m = new Matrix(adapt_page(props.context, true));
         info = { m, x: cur.frame.x, y: cur.frame.y };
         matrixMap.set(cur.id, info);
     }
@@ -668,15 +678,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     const f = cur.style.fills[0];
     if (f) background_color.value = color2string(f.color);
 })
-function frame_watcher() {
-    if (!root.value) return;
-    _updateRoot(props.context, root.value);
-}
-function cursor_watcher(t?: number, type?: string) {
-    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type) {
-        cursor.value = type;
-    }
-}
+watch(() => matrix, matrix_watcher, { deep: true });
 onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
@@ -687,6 +689,7 @@ onMounted(() => {
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
     props.page.watch(page_watcher);
+    props.context.assist.init();
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
@@ -722,8 +725,8 @@ onUnmounted(() => {
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
-        <TextSelection :context="props.context" :matrix="matrix.toArray()"> </TextSelection>
-        <SelectionView :context="props.context" :matrix="matrix.toArray()" />
+        <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
+        <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
@@ -735,8 +738,8 @@ onUnmounted(() => {
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
             :pageID="page.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth" @close="closeComment"
-            @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix.toArray()" :x2="shapePosition.x"
-            :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+            @mouseDownCommentInput="mouseDownCommentInput" :matrix="matrix" :x2="shapePosition.x" :y2="shapePosition.y"
+            @completed="completed" :posi="posi"></CommentInput>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
     </div>

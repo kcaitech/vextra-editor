@@ -24,7 +24,6 @@ function _updater(t?: number) {
         state.value = 0;
         const selection = props.selection;
         const shapes = selection.selectedShapes;
-        console.log(shapes[0],'shapes');
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
             isBoolGroup.value = false

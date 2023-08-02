@@ -16,6 +16,7 @@ interface Avatar {
     rotate: number
     shape: Shape
     img: string
+    width: number
 }
 
 const matrix = new Matrix(props.matrix);
@@ -39,6 +40,7 @@ const setPosition = () => {
             if (shape.parent?.type === ShapeType.Page && shape.isVisible) {
                 const m = shape.matrix2Root()
                 const frame = shape.frame;
+                const f2p = shape.frame2Root();
                 const matrix = props.context.workspace.matrix
                 let anchor = {x: 0, y: 0}
                 let rotate = shape.rotation || 0;
@@ -60,8 +62,9 @@ const setPosition = () => {
                 anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
+                const width = f2p.width;
                 anchor.y -= 24
-                avatars.push({x: anchor.x, y: anchor.y, img: '', shape: shape, rotate})
+                avatars.push({x: anchor.x, y: anchor.y, img: '', shape: shape, rotate, width})
             }
         }
     }else {
@@ -124,7 +127,7 @@ watchEffect(() => updater())
 <template>
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <div class="avatar_content" v-for="(a, index) in avatars" :key="index"
-         :style="{top: `${a.y}px`, left: `${a.x}`, transform: `rotate(${a.rotate}deg)`}">
+         :style="{top: `${a.y}px`, left: `${a.x}px`, transform: `rotate(${a.rotate}deg)`}">
             <div class="avatars">1</div>
         </div>
     </div>

@@ -1,24 +1,32 @@
 import { Watchable, Document, CoopRepository } from "@kcdesign/data"
-import { Ot } from "@/communication/modules/ot";
+import { Options, Ot } from "@/communication/modules/ot"
 
 export class DocOt extends Watchable(Object) {
     private ot?: Ot
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
+    private isClosed: boolean = false
 
-    public async start(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string): Promise<boolean> {
+    public async start(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): Promise<boolean> {
         if (this.ot) return true;
         if (this.startPromise) return await this.startPromise;
-        const ot = Ot.Make(documentId, token, document, repo, versionId)
+        const ot = Ot.Make(documentId, token, document, repo, versionId, options)
+        const startParams = [token, documentId, document, repo, versionId]
+        ot.setOnClose(async (options?: Options) => {
+            this.ot = undefined
+            while (!this.isClosed && !await this.start.apply(this, [...startParams.slice(0, 5), options] as any)) { // eslint-disable-line prefer-spread
+                await new Promise(resolve => setTimeout(resolve, 1000))
+            }
+        })
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await ot.start()) {
-                console.log("DocUpload start失败")
+                console.log("Ot start失败")
                 this.startResolve!(false)
                 return false
             }
         } catch (e) {
-            console.log("DocUpload start失败", e)
+            console.log("Ot start失败", e)
             this.startResolve!(false)
             return false
         }
@@ -37,7 +45,8 @@ export class DocOt extends Watchable(Object) {
     }
 
     public close() {
-        if (!this.ot) return;
+        if (!this.ot || this.isClosed) return;
+        this.isClosed = true
         this.ot.close()
         this.ot = undefined
         this.startPromise = undefined

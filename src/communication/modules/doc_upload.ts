@@ -26,11 +26,11 @@ export class DocUpload extends Communication {
     public static Make(token: string): DocUpload {
         const docUpload = new DocUpload()
         docUpload.token = token
-        docUpload.setOnMessage(docUpload.onmessage.bind(docUpload))
+        docUpload.onMessage = docUpload._onMessage.bind(docUpload)
         return docUpload
     }
 
-    private onmessage(data: Response) {
+    private _onMessage(data: Response) {
         console.log("document upload receive", data)
         this.resolve?.(data)
         this.close()

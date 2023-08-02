@@ -3,10 +3,13 @@ import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
+import { Action } from '@/context/tool';
+import { Point } from '../../SelectionView.vue';
 interface Props {
     matrix: number[]
     context: Context
     shape: Shape
+    cFrame: Point[]
 }
 interface Bar {
     path: string
@@ -64,23 +67,46 @@ function bar_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const { clientX, clientY } = event;
     const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
-    if (isDragging) {
-        if (asyncBaseAction) {
-            matrix.reset(workspace.matrix);
-            const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
-            const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
+    const s = props.shape;
+    if (isDragging && asyncBaseAction) {
+        const action = props.context.tool.action;
+        matrix.reset(workspace.matrix);
+        const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
+        const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
+        if (event.shiftKey || s.constrainerProportions || action === Action.AutoK) {
+            asyncBaseAction.executeErScale(cur_ctrl_type, getScale(cur_ctrl_type, s, p1OnPage, p2Onpage));
+        } else {
             asyncBaseAction.executeScale(cur_ctrl_type, p1OnPage, p2Onpage);
         }
         startPosition = { ...mouseOnPage };
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(s, props.context.selection.selectedPage!);
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type, true);
             workspace.scaling(true);
         }
     }
+}
+function getScale(type: CtrlElementType, shape: Shape, start: ClientXY, end: ClientXY): number {
+    const m = new Matrix(shape.matrix2Root().inverse);
+    const f = shape.frame;
+    const p1 = m.computeCoord(start.x, start.y);
+    const p2 = m.computeCoord(end.x, end.y);
+    if (type === CtrlElementType.RectTop) {
+        const dy = p2.y - p1.y;
+        return (f.height - dy) / f.height;
+    } else if (type === CtrlElementType.RectRight) {
+        const dx = p2.x - p1.x;
+        return (f.width + dx) / f.width;
+    } else if (type === CtrlElementType.RectBottom) {
+        const dy = p2.y - p1.y;
+        return (f.height + dy) / f.height;
+    } else if (type === CtrlElementType.RectLeft) {
+        const dx = p2.x - p1.x;
+        return (f.width - dx) / f.width;
+    } else return 1
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
@@ -102,6 +128,7 @@ function bar_mouseup(event: MouseEvent) {
     const workspace = props.context.workspace;
     workspace.scaling(false);
     workspace.setCtrl('page');
+    props.context.cursor.reset();
     if (isDragging) isDragging = false;
     if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
     document.removeEventListener('mousemove', bar_mousemove);
