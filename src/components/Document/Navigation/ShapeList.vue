@@ -87,7 +87,6 @@ const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
 const list_h = ref<number>(0)
 function _notifySourceChange(t?: number | string, shape?: Shape) {
-    const s = Date.now();
     const is_freeze = props.context.navi.is_shapelist_freeze;
     if (is_freeze) return;
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
@@ -122,8 +121,6 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
         }
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
-    const e = Date.now();
-    // console.log('列表更新用时(ms):', e - s);
 }
 const notifySourceChange = debounce(_notifySourceChange, 48);
 const stopWatch = watch(() => props.page, () => {
