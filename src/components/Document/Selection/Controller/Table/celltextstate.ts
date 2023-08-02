@@ -102,8 +102,6 @@ export function textState(props: {
 
     return {
         onMouseDown,
-        onMouseUp,
-        onMouseMove,
         onMouseEnter,
         onMouseLeave,
         cellType: TableCellType.Text

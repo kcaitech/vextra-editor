@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, TableCell, Text } from '@kcdesign/data';
+import { Matrix, Shape, TableCell, TableCellType, Text } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref, reactive, computed } from 'vue';
 import CellView from './Table/CtrlCell.vue';
 import { genRectPath, throttle } from '../common';
@@ -137,8 +137,8 @@ const submatrixArray = computed(() => submatrix.toArray())
         :onmousedown="mousemove" :on-mouseup="mouseup" :on-mousemove="mousemove" overflow="visible"
         :class="{ 'un-visible': !visible }">
 
-        <component v-for="c in props.shape.childs" :key="c.id" :is="CellView" :shape="c" :matrix="submatrixArray" @editCell="onEditCell"
-            :context="context" />
+        <component v-for="c in props.shape.childs" :key="c.id" :is="CellView" :shape="c" :matrix="submatrixArray"
+            @editCell="onEditCell" :context="context" />
 
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape">
@@ -148,7 +148,8 @@ const submatrixArray = computed(() => submatrix.toArray())
         </PointsContainer>
 
     </svg>
-    <TextInput v-if="editCellId.length > 0 && editCell" :context="props.context" :shape="(editCell as TextShape)" :matrix="submatrixArray"></TextInput>
+    <TextInput v-if="editCellId.length > 0 && editCell && editCell.cellType === TableCellType.Text && editCell.text"
+        :context="props.context" :shape="(editCell as TextShape)" :matrix="submatrixArray"></TextInput>
 </template>
 <style lang='scss' scoped>
 .un-visible {

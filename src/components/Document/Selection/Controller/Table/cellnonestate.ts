@@ -27,8 +27,6 @@ export function noneState(props: {
 
     return {
         onMouseDown,
-        onMouseUp,
-        onMouseMove,
         onMouseEnter,
         onMouseLeave,
         cellType: TableCellType.None

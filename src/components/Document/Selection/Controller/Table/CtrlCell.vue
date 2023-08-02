@@ -6,7 +6,6 @@ import { throttle } from '../../common';
 import { FilePicker } from '@/components/common/filepicker';
 import { v4 as uuid } from "uuid"
 import SelectView from "../Text/SelectView.vue";
-import { useController } from '../controller';
 import { noneState } from './cellnonestate';
 import { textState } from './celltextstate';
 import { imageState } from './cellimagestate';
@@ -133,15 +132,16 @@ function onImageClick(e: MouseEvent) {
     e.stopPropagation();
 }
 
+const imageIconSize = 20; // px
 function showImageIcon() {
-    const imageIconVisibleSize = 40;
+    const imageIconVisibleSize = imageIconSize << 1;
     return props.shape.frame.width > imageIconVisibleSize &&
         props.shape.frame.height > imageIconVisibleSize &&
         cellType.value === TableCellType.None;
 }
 
 function showTextInput() {
-    return cellType.value === TableCellType.Text;
+    return cellType.value === TableCellType.Text && props.shape.text;
 }
 
 const submatrixArray = computed(() => submatrix.toArray())
@@ -162,20 +162,13 @@ function getCellState() {
 }
 
 function onMouseDown(e: MouseEvent) {
-    e.stopPropagation();
+    if (props.shape.cellType === undefined || props.shape.cellType === TableCellType.None) {
+        editor.setCellContentText(props.shape);
+    }
+
     getCellState().onMouseDown(e);
 }
 
-function onMouseUp(e: MouseEvent) {
-    e.stopPropagation();
-    getCellState().onMouseUp(e);
-}
-
-function onMouseMove(e: MouseEvent) {
-    e.stopPropagation();
-    getCellState().onMouseMove(e);
-
-}
 function onMouseEnter() {
     getCellState().onMouseEnter();
 }
@@ -186,10 +179,15 @@ function onMouseLeave() {
 </script>
 <template>
     <rect class="un-visible" :x="bounds.left" :y="bounds.top" :width="bounds.right - bounds.left"
-        :height="bounds.bottom - bounds.top" @click="onCellClick" @blur="onCellBlur"></rect>
+        :height="bounds.bottom - bounds.top" @mousedown="onMouseDown" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
+    </rect>
 
-    <g v-if="showImageIcon()" :transform="`translate(${bounds.left}, ${bounds.top})`" @click="onImageClick">
-        <svg-icon class="cell-image" icon-class="pattern-image" width="20px" height="20px"></svg-icon>
+    <g v-if="showImageIcon()"
+        :transform="`translate(${bounds.left + (bounds.right - bounds.left - imageIconSize) / 2}, ${bounds.top + (bounds.bottom - bounds.top - imageIconSize) / 2})`">
+        <rect class="un-visible" x=0 y=0 :width="`${imageIconSize}px`" :height="`${imageIconSize}px`" @click="onImageClick">
+        </rect>
+        <svg-icon class="cell-image" icon-class="pattern-image" :width="`${imageIconSize}px`"
+            :height="`${imageIconSize}px`"></svg-icon>
     </g>
 
     <SelectView v-if="showTextInput()" :context="props.context" :shape="(props.shape as TextShape)"

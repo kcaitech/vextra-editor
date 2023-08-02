@@ -27,8 +27,6 @@ export function imageState(props: {
 
     return {
         onMouseDown,
-        onMouseUp,
-        onMouseMove,
         onMouseEnter,
         onMouseLeave,
         cellType: TableCellType.Image
