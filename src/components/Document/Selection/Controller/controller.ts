@@ -16,10 +16,12 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
+import { Asssit } from '@/context/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
     const dragActiveDis = 3;
+    const STICKNESS = Asssit.STICKNESS + 2;
     let timer: any;
     const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
@@ -31,7 +33,10 @@ export function useController(context: Context) {
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let need_update_comment: boolean = false;
-    const trans = { x: 0, y: 0 };
+    let stickedX: boolean = false;
+    let stickedY: boolean = false;
+    let sticked_x_v: number = 0;
+    let sticked_y_v: number = 0;
     const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
@@ -129,16 +134,12 @@ export function useController(context: Context) {
         if (isElement(e)) {
             matrix.reset(workspace.value.matrix.inverse);
             setPosition(e);
-            if (timer) { // 双击预定时间还没过，再次mousedown，则判定为双击
-                handleDblClick();
-            }
-            initTimer(); // 每次点击都应该开始预定下一次可以形成双击的点击
+            if (timer) handleDblClick();
+            initTimer();
             preTodo(e);
         } else {
             if (isMouseOnContent(e)) {
-                if (!context.selection.hoveredShape) {
-                    context.selection.resetSelectShapes();
-                }
+                if (!context.selection.hoveredShape) context.selection.resetSelectShapes();
             }
         }
     }
@@ -199,17 +200,38 @@ export function useController(context: Context) {
         const ps: PageXY = matrix.computeCoord(start.x, start.y);
         const pe: PageXY = matrix.computeCoord(end.x, end.y);
         if (asyncTransfer) {
-            const { x, y } = get_extra_trans();
-            pe.x += x, pe.y += y;
-            asyncTransfer.trans(ps, pe);
+            check_sticked_status(pe);
+            asyncTransfer.trans(ps, get_pe(ps, pe));
             migrate(shapes, start, end);
         }
     }
-    function get_extra_trans() {
-        const delta = { x: 0, y: 0 };
+    function check_sticked_status(pe: PageXY) {
+        const { x, y } = pe;
+        console.log(x, sticked_x_v);
+        if (stickedX && Math.abs(x - sticked_x_v) > STICKNESS) {
+            stickedX = false;
+        }
+        if (stickedY && Math.abs(y - sticked_y_v) > STICKNESS) {
+            stickedY = false;
+        }
+    }
+    function get_pe(ps: PageXY, pe: PageXY) {
         const { x, y } = context.assist.match(shapes[0]);
-        
-        return delta;
+        if (stickedX) {
+            pe.x = ps.x;
+        } else if (x) {
+            pe.x += x;
+            stickedX = true;
+            sticked_x_v = pe.x;
+        }
+        if (stickedY) {
+            pe.y = ps.y;
+        } else if (y) {
+            pe.y += y;
+            stickedY = true;
+            sticked_y_v = pe.y;
+        }
+        return pe;
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selection = context.selection;
@@ -255,7 +277,6 @@ export function useController(context: Context) {
         if (t === WorkSpace.CHECKSTATUS) checkStatus();
     }
     function initController() {
-        trans.x = 0, trans.y = 0;
         initTimer(); // 控件生成之后立马开始进行双击预定，该预定将在duration(ms)之后取消
     }
     function initTimer() {

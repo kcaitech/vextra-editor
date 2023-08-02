@@ -1,25 +1,26 @@
 import { GroupShape, Shape, ShapeType, Watchable } from "@kcdesign/data";
-import { ClientXY, Selection } from "./selection";
+import { PageXY, Selection } from "./selection";
 import { Context } from ".";
 import { debounce } from "lodash";
 interface PointGroup {
     host: Shape
-    lt: ClientXY
-    rt: ClientXY
-    rb: ClientXY
-    lb: ClientXY
-    pivot: ClientXY
+    lt: PageXY
+    rt: PageXY
+    rb: PageXY
+    lb: PageXY
+    pivot: PageXY
 }
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
+    static STICKNESS = 7;
     private m_context: Context;
     private m_shape_inner: Shape[] = [];
     private m_pg_inner: Map<string, PointGroup> = new Map();
-    private m_x_axis: Map<number, ClientXY[]> = new Map();
-    private m_y_axis: Map<number, ClientXY[]> = new Map();
+    private m_x_axis: Map<number, PageXY[]> = new Map();
+    private m_y_axis: Map<number, PageXY[]> = new Map();
     private m_current_pg: PointGroup | undefined;
-    private m_nodes_x: ClientXY[] = [];
-    private m_nodes_y: ClientXY[] = [];
+    private m_nodes_x: PageXY[] = [];
+    private m_nodes_y: PageXY[] = [];
     private m_x_sticked: boolean = false;
     private m_y_sticked: boolean = false;
     constructor(context: Context) {
@@ -60,25 +61,29 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_y = [];
         this.m_current_pg = update_pg(s);
         const s_pg = this.m_current_pg;
-        const delta = { x: 0, y: 0 };
+        const target = { x: 0, y: 0 };
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const cs = this.m_shape_inner[i];
             if (cs.id === s.id) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
             if (!c_pg) continue;
-            if (Math.abs(c_pg.lt.x - s_pg.lt.x) < 5) {
+            if (Math.abs(c_pg.lt.x - s_pg.lt.x) < Asssit.STICKNESS) {
                 this.m_nodes_x = this.m_x_axis.get(c_pg.lt.x) || [];
-                delta.x = c_pg.lt.x - s_pg.lt.x;
+                target.x = c_pg.lt.x - s_pg.lt.x;
             }
-            if (Math.abs(c_pg.lt.y - s_pg.lt.y) < 5) {
+            if (Math.abs(c_pg.rt.x - s_pg.rt.x) < Asssit.STICKNESS) {
+                this.m_nodes_x = this.m_x_axis.get(c_pg.rt.x) || [];
+                target.x = c_pg.rt.x - s_pg.rt.x;
+            }
+            if (Math.abs(c_pg.lt.y - s_pg.lt.y) < Asssit.STICKNESS) {
                 this.m_nodes_y = this.m_y_axis.get(c_pg.lt.y) || [];
-                delta.x = c_pg.lt.y - s_pg.lt.y;
+                target.y = c_pg.lt.y - s_pg.lt.y;
             }
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
         console.log('单次匹配用时(ms):', e - st);
-        return delta;
+        return target;
     }
     match_test() {
         const st = Date.now();
@@ -119,7 +124,7 @@ function isShapeOut(context: Context, shape: Shape) {
     const b = Math.max(point[0][1], point[1][1], point[2][1], point[3][1]);
     return l > right - x || r < 0 || b < 0 || t > bottom - y;
 }
-function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, ClientXY[]>, y_axis: Map<number, ClientXY[]>) {
+function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, PageXY[]>, y_axis: Map<number, PageXY[]>) {
     let result: Shape[] = [];
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
@@ -149,7 +154,7 @@ function _collect(context: Context) {
     context.assist.collect();
 }
 function get_nodes_from_pg_by_x(pg: PointGroup, x: number) {
-    const result: ClientXY[] = [];
+    const result: PageXY[] = [];
     const pvs = Object.values(pg);
     for (let i = 0; i < pvs.length; i++) {
         const p = pvs[i];
@@ -158,7 +163,7 @@ function get_nodes_from_pg_by_x(pg: PointGroup, x: number) {
     return result;
 }
 function get_nodes_from_pg_by_y(pg: PointGroup, y: number) {
-    const result: ClientXY[] = [];
+    const result: PageXY[] = [];
     const pvs = Object.values(pg);
     for (let i = 0; i < pvs.length; i++) {
         const p = pvs[i];
