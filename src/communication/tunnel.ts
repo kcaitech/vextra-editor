@@ -12,6 +12,7 @@ import {
     TunnelType,
     TunnelCmdData,
     ClientCmd,
+    CmdMessage,
 } from "@/communication/types"
 import { Server } from "@/communication/server"
 
@@ -29,6 +30,7 @@ export class Tunnel {
     }>()
     sendToServerHandler?: (cmdId: string, cmd: any) => void
     receivingData: ClientPostData | undefined = undefined
+    isClosed: boolean = false
 
     constructor(port: MessagePort, server: Server, info: CommunicationInfo, onclose: () => void) {
         this.port = port
@@ -50,7 +52,7 @@ export class Tunnel {
         const data = event.data as ClientPostData
         console.log("receiveFromClient", this.tunnelId, data)
         if (data.close) {
-            this.close(true)
+            this.close(true, false)
             return
         }
         const isBinary = (data as any) instanceof ArrayBuffer
@@ -99,17 +101,21 @@ export class Tunnel {
         if (isBinary) this.port.postMessage(dataData, [dataData]);
     }
 
-    receiveFromServer(cmdData: ServerCmd) {
-        switch (cmdData.cmd_type) {
+    receiveFromServer(cmd: ServerCmd) {
+        switch (cmd.cmd_type) {
             case ServerCmdType.CmdReturn: {
-                const cmdId = cmdData.data?.cmd_id
+                if (cmd.status === CmdStatus.Fail && cmd.message === CmdMessage.TunnelIdError) {
+                    this.close(false, true)
+                    return
+                }
+                const cmdId = cmd.data?.cmd_id
                 if (typeof cmdId !== "string" || cmdId === "") return;
                 if (!this.pendingCmdList.has(cmdId)) return;
-                const cmd = this.pendingCmdList.get(cmdId)
-                cmd!.resolve({
-                    status: cmdData.status ?? CmdStatus.Fail,
-                    message: cmdData.message,
-                    data: cmdData.data,
+                const originalCmd = this.pendingCmdList.get(cmdId)
+                originalCmd!.resolve({
+                    status: cmd.status ?? CmdStatus.Fail,
+                    message: cmd.message,
+                    data: cmd.data,
                 })
                 break
             }
@@ -118,22 +124,22 @@ export class Tunnel {
                 break
             }
             case ServerCmdType.TunnelData: {
-                const dataType = cmdData.data?.data_type
+                const dataType = cmd.data?.data_type
                 if (dataType !== DataType.Text && dataType !== DataType.Binary) {
                     console.log("不支持的数据类型", dataType)
                     break
                 }
-                if (dataType === DataType.Binary && !(cmdData.data.data instanceof ArrayBuffer)) {
+                if (dataType === DataType.Binary && !(cmd.data.data instanceof ArrayBuffer)) {
                     console.log("数据类型错误：非二进制数据")
                     break
                 }
                 this.sendToClient({
-                    data: cmdData.data.data,
+                    data: cmd.data.data,
                 })
                 break
             }
             default: {
-                console.log("不支持的cmd_type", cmdData.cmd_type)
+                console.log("不支持的cmd_type", cmd.cmd_type)
             }
         }
     }
@@ -178,13 +184,21 @@ export class Tunnel {
         this.sendToServerHandler = handler
     }
 
-    close(closeServerPeer: boolean = false) {
+    close(closeServerPeer = false, closeClientPeer = true) {
+        if (this.isClosed) return;
         if (closeServerPeer) {
             this.sendToServer(ClientCmdType.CloseTunnel, {
                 tunnel_id: this.tunnelId,
             })
         }
+        if (closeClientPeer) {
+            this.sendToClient({
+                close: true,
+                data: undefined,
+            })
+        }
         this.port.close()
         this.onclose()
+        this.isClosed = true
     }
 }
