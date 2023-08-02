@@ -96,7 +96,7 @@ export class Asssit extends Watchable(Object) {
 }
 function update_pg(s: Shape): PointGroup {
     const m = s.matrix2Root(), f = s.frame;
-    return { host: s, lt: m.cc(0, 0), rt: m.cc(f.width, 0), rb: m.cc(f.width, f.height), lb: m.cc(0, f.height), pivot: m.cc(f.width / 2, f.height / 2) };
+    return { host: s, lt: m.computeCoord2(0, 0), rt: m.computeCoord2(f.width, 0), rb: m.computeCoord2(f.width, f.height), lb: m.computeCoord2(0, f.height), pivot: m.computeCoord2(f.width / 2, f.height / 2) };
 }
 
 function isShapeOut(context: Context, shape: Shape) {
@@ -105,7 +105,7 @@ function isShapeOut(context: Context, shape: Shape) {
     const m = shape.matrix2Root();
     m.multiAtLeft(context.workspace.matrix);
     const point = [[0, 0], [width, 0], [width, height], [0, height]].map(p => {
-        const _p = m.cc(p[0], p[1]);
+        const _p = m.computeCoord2(p[0], p[1]);
         return [_p.x, _p.y];
     })
     const r = Math.max(point[0][0], point[1][0], point[2][0], point[3][0]);

@@ -42,28 +42,30 @@ const setPosition = () => {
                 const frame = shape.frame;
                 const f2p = shape.frame2Root();
                 const matrix = props.context.workspace.matrix
-                let anchor = {x: 0, y: 0}
+                let anchor = {x: frame.width, y: 0}
                 let rotate = shape.rotation || 0;
-                rotate = rotate < 0 ? rotate + 360 : rotate; // 这些关于角度的计算把图画出来就会比较清楚
+                rotate = rotate < 0 ? rotate + 360 : rotate;
                 if (rotate < 135 && rotate >= 45) {
-                    anchor = m.computeCoord({ x: 0, y: 0 + frame.height }); // 将 [图形坐标系] 的锚点通过 [图形到页面的转换矩阵] 转换到 [页面坐标系]，下面的也是
+                    anchor = m.computeCoord({ x: 0, y: 0 });
                     rotate -= 90;
                 } else if (rotate < 225 && rotate >= 135) {
-                    anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
+                    anchor = m.computeCoord({ x: 0, y: 0 + frame.height });
                     rotate -= 180;
                 } else if (rotate < 315 && rotate >= 225) {
-                    anchor = m.computeCoord({ x: 0 + frame.width, y: 0 });
+                    anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
                     rotate += 90;
                 } else if (rotate < 360 && rotate > 315) {
-                    anchor = m.computeCoord({ x: 0, y: 0 });
+                    anchor = m.computeCoord({ x: frame.width, y: 0 });
                 } else if (rotate < 45 && rotate >= 0) {
-                    anchor = m.computeCoord({ x: 0, y: 0 });
+                    anchor = m.computeCoord({ x: frame.width, y: 0 });
                 }
                 anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
                 const width = f2p.width;
                 anchor.y -= 24
+                let u = 4
+                anchor.x = anchor.x -(u * 20)
                 avatars.push({x: anchor.x, y: anchor.y, img: '', shape: shape, rotate, width})
             }
         }
@@ -129,6 +131,9 @@ watchEffect(() => updater())
         <div class="avatar_content" v-for="(a, index) in avatars" :key="index"
          :style="{top: `${a.y}px`, left: `${a.x}px`, transform: `rotate(${a.rotate}deg)`}">
             <div class="avatars">1</div>
+            <div class="avatars">1</div>
+            <div class="avatars">1</div>
+            <div class="avatars bgc">4</div>
         </div>
     </div>
 </template>
@@ -138,16 +143,29 @@ watchEffect(() => updater())
     position: absolute;
     overflow: visible;
     .avatar_content {
+        display: flex;
         position: absolute;
         font-size: var(--font-default-fontsize);
-        height: 20px;
+        height: 21px;
         z-index: 1;
-        transform-origin: bottom left;
+        transform-origin: bottom right;
         .avatars {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             width: 20px;
             height: 20px;
             border-radius: 50%;
             background-color: var(--active-color-beta);
+            box-sizing: border-box;
+        }
+        .bgc {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #000;
+            background-color: #fff;
+            box-sizing: border-box;
         }
     }
 }

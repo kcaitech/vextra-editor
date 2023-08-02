@@ -357,8 +357,8 @@ const getDocumentInfo = async () => {
                 router.push("/");
                 console.error(err);
             });
-            await context.communication.resourceUpload.start(docId, token);
-            await context.communication.comment.start(docId, token);
+            await context.communication.resourceUpload.start(token, docId);
+            await context.communication.comment.start(token, docId);
         }
         getUserInfo()
     } catch (err) {
@@ -395,8 +395,8 @@ async function upload() {
     context.communication.docOt.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "").catch((err) => {
         console.error(err);
     });
-    context!.communication.resourceUpload.start(doc_id, token);
-    context!.communication.comment.start(doc_id, token);
+    context!.communication.resourceUpload.start(token, doc_id);
+    context!.communication.comment.start(token, doc_id);
     context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
 let timer: any = null;
