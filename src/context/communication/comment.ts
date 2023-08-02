@@ -6,11 +6,19 @@ export class Comment extends Watchable(Object) {
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
     private updateHandlerSet = new Set<(data: DocCommentOpData) => void>()
+    private isClosed: boolean = false
 
     public async start(documentId: string, token: string): Promise<boolean> {
         if (this.docCommentOp) return true;
         if (this.startPromise) return await this.startPromise;
         const docCommentOp = DocCommentOp.Make(documentId, token)
+        const startParams = [token, documentId]
+        docCommentOp.setOnClose(async () => {
+            this.docCommentOp = undefined
+            while (!this.isClosed && !await this.start.apply(this, startParams as any)) {
+                await new Promise(resolve => setTimeout(resolve, 1000))
+            }
+        })
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await docCommentOp.start()) {
@@ -47,7 +55,8 @@ export class Comment extends Watchable(Object) {
     }
 
     public close() {
-        if (!this.docCommentOp) return;
+        if (this.isClosed || !this.docCommentOp) return;
+        this.isClosed = true
         this.docCommentOp.close()
         this.docCommentOp = undefined
         this.startPromise = undefined

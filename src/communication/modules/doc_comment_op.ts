@@ -37,4 +37,8 @@ export class DocCommentOp extends Communication {
     public async start(): Promise<boolean> {
         return await super.start(this.token)
     }
+
+    public setOnClose(onClose: () => void) {
+        this.onClose = onClose
+    }
 }
