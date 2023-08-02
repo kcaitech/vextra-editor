@@ -9,6 +9,7 @@ export class DocUpload extends Watchable(Object) {
     private docUpload?: DocumentUpload
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
+    private isClosed: boolean = false
 
     public async start(token: string): Promise<boolean> {
         if (this.docUpload) return true;
@@ -48,6 +49,8 @@ export class DocUpload extends Watchable(Object) {
     }
 
     public close() {
+        if (this.isClosed) return;
+        this.isClosed = true
         if (!this.docUpload) return;
         this.docUpload.close()
         this.docUpload = undefined

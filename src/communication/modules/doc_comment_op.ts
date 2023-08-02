@@ -22,7 +22,7 @@ export class DocCommentOp extends Communication {
         })
     }
 
-    public static Make(documentId: string, token: string): DocCommentOp {
+    public static Make(token: string, documentId: string): DocCommentOp {
         const docCommentOp = new DocCommentOp(documentId)
         docCommentOp.token = token
         docCommentOp.onMessage = docCommentOp._onMessage.bind(docCommentOp)

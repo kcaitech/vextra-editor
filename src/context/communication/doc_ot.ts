@@ -10,7 +10,7 @@ export class DocOt extends Watchable(Object) {
     public async start(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): Promise<boolean> {
         if (this.ot) return true;
         if (this.startPromise) return await this.startPromise;
-        const ot = Ot.Make(documentId, token, document, repo, versionId, options)
+        const ot = Ot.Make(token, documentId, document, repo, versionId, options)
         const startParams = [token, documentId, document, repo, versionId]
         ot.setOnClose(async (options?: Options) => {
             this.ot = undefined
@@ -45,8 +45,9 @@ export class DocOt extends Watchable(Object) {
     }
 
     public close() {
-        if (!this.ot || this.isClosed) return;
+        if (this.isClosed) return;
         this.isClosed = true
+        if (!this.ot) return;
         this.ot.close()
         this.ot = undefined
         this.startPromise = undefined
