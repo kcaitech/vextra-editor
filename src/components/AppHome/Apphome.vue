@@ -72,8 +72,6 @@ const networkStatu = () => {
           networkLinkError()
         }else {
           // 网络连接成功
-          console.log('jinlai ');
-          
           networkLinkSuccess()
         }
     })
@@ -91,7 +89,7 @@ onUnmounted(() => {
   closeNetMsg()
   const token = localStorage.getItem("token") || "";
   const networkStatus = NetworkStatus.Make(token);
-  // networkStatus.close()
+  networkStatus.close()
 })
 
 </script>

@@ -475,7 +475,6 @@ const refreshDoc = () => {
 
 const hasPendingSync = () => {
     console.log(loopNet,'定时器还在');
-    
     if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
         insertNetworkInfo('networkError', true, network_error)
         netErr = setInterval(() => {
@@ -500,6 +499,8 @@ const networkStatu = () => {
         if(s === 1) {
             // 网络断开连接
             if(context) {
+                clearInterval(loopNet);
+                loopNet = null;
                 loopNet = setInterval(() => {
                     hasPendingSync()
                 },1000)
@@ -572,7 +573,7 @@ onUnmounted(() => {
     clearInterval(netErr)
     const token = localStorage.getItem("token") || "";
     const networkStatus = NetworkStatus.Make(token);
-    // networkStatus.close()
+    networkStatus.close()
 })
 </script>
 
