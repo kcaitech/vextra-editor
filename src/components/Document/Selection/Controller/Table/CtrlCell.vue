@@ -71,6 +71,12 @@ function onImageClick() {
     filePicker.invoke();
 }
 
+function showImageIcon() {
+    return width.value > imageIconVisibleSize &&
+        height.value > imageIconVisibleSize &&
+        ((props.shape.cellType ?? TableCellType.None) === TableCellType.None)
+}
+
 </script>
 <template>
     <div class="table-cell" :style="{
@@ -78,9 +84,7 @@ function onImageClick() {
         left: '0px', top: '0px', position: 'absolute',
         width: `${width}px`, height: `${height}px`
     }" @click="onCellClick" @blur="onCellBlur">
-        <svg-icon class="cell-image"
-            v-if="width > imageIconVisibleSize && height > imageIconVisibleSize && props.shape.child === undefined"
-            icon-class="pattern-image" @click="onImageClick"></svg-icon>
+        <svg-icon class="cell-image" v-if="showImageIcon()" icon-class="pattern-image" @click="onImageClick"></svg-icon>
     </div>
 </template>
 <style lang='scss' scoped>

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix, TableCell, Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, ref, onBeforeUpdate } from 'vue';
+import { onMounted, onUnmounted, watch, ref } from 'vue';
 import CellView from './Table/CtrlCell.vue';
 import { throttle } from '../common';
 import { Point } from "../SelectionView.vue";
