@@ -12,10 +12,11 @@ export class DocOt extends Watchable(Object) {
         if (this.startPromise) return await this.startPromise;
         const ot = Ot.Make(documentId, token, document, repo, versionId, options)
         const startParams = [token, documentId, document, repo, versionId]
-        ot.setOnClose((options?: Options) => {
-            if (this.isClosed) return;
+        ot.setOnClose(async (options?: Options) => {
             this.ot = undefined
-            this.start.apply(this, [...startParams.slice(0, 5), options] as any) // eslint-disable-line prefer-spread
+            while (!this.isClosed && !await this.start.apply(this, [...startParams.slice(0, 5), options] as any)) { // eslint-disable-line prefer-spread
+                await new Promise(resolve => setTimeout(resolve, 1000))
+            }
         })
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {

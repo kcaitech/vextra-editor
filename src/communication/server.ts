@@ -105,9 +105,10 @@ export class Server {
         this.isConnecting = false
         this.isConnected = true
         this.ws.onclose = event => {
+            this.isConnected = false
+            if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
             this.networkStatus = NetworkStatusType.Offline
             this.onNetworkOffline()
-            this.isConnected = false
         }
         if (this.isFirstConnect) {
             this.isFirstConnect = false

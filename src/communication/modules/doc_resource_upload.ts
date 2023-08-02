@@ -33,6 +33,10 @@ export class DocResourceUpload extends Communication {
         await this.send({
             name: name,
         } as ResourceHeader)
-        await this.send(data)
+        return await this.send(data, true, 10000)
+    }
+
+    public setOnClose(onClose: () => void) {
+        this.onClose = onClose
     }
 }
