@@ -180,7 +180,13 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
     if (newShape) {
         if (wheel && asyncCreator) {
             const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
-            if (!isOut) asyncCreator.setFrame({ x, y });
+            if (!isOut) {
+                if (e.shiftKey) {
+                    er_frame(asyncCreator, x, y);
+                } else {
+                    asyncCreator.setFrame({ x, y });
+                }
+            }
         }
     } else {
         const isDrag = is_drag(props.context, e, mousedownOnClientXY, 2 * dragActiveDis);
@@ -193,6 +199,11 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
             }
         }
     }
+}
+function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
+    const del = x - mousedownOnPageXY.x;
+    y = mousedownOnPageXY.y + del;
+    asyncCreator.setFrame({ x, y });
 }
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) matrix.reset(workspace.value.matrix);
