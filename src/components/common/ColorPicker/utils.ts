@@ -547,7 +547,7 @@ export function getColorsFromDoc(context: Context) {
   const result: { times: number, color: Color }[] = [];
   for (let i = 0; i < dcs.length; i++)  result.push({ times: dcs[i].length, color: dcs[i][0] });
   const e = Date.now();
-  console.log(e - s);
+  // console.log(e - s);
   return result;
 }
 
