@@ -62,11 +62,10 @@ const networkLinkError = () => {
     }, 3000)
 }
 
-const networkStatu = async() => {
+const networkStatu = () => {
     const token = localStorage.getItem("token") || "";
     const networkStatus = NetworkStatus.Make(token);
-    await networkStatus.start();
-    networkStatus.onChange = (status: any) => {
+    networkStatus.addOnChange((status: any) => {
         const s = (status.status)as any
         if(s === 1) {
           // 网络断开连接
@@ -75,7 +74,7 @@ const networkStatu = async() => {
           // 网络连接成功
           networkLinkSuccess()
         }
-    }
+    })
 }
 
 const closeNetMsg = () => {
@@ -90,7 +89,7 @@ onUnmounted(() => {
   closeNetMsg()
   const token = localStorage.getItem("token") || "";
   const networkStatus = NetworkStatus.Make(token);
-  networkStatus.close()
+  // networkStatus.close()
 })
 
 </script>
