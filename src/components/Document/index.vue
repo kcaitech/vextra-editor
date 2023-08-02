@@ -24,6 +24,7 @@ import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
 import { S3Storage, StorageOptions } from "@/utils/storage";
 import { NetworkStatus } from '@/communication/modules/network_status'
+import { Comment } from '@/context/comment';
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -474,7 +475,6 @@ const refreshDoc = () => {
 }
 
 const hasPendingSync = () => {
-    console.log(loopNet,'定时器还在');
     if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
         insertNetworkInfo('networkError', true, network_error)
         netErr = setInterval(() => {
@@ -491,40 +491,39 @@ const hasPendingSync = () => {
 let loopNet: any = null
 //监听网络状态
 let netErr: any = null
-const networkStatu = () => {
-    const token = localStorage.getItem("token") || "";
-    const networkStatus = NetworkStatus.Make(token);
-    networkStatus.addOnChange((status: any) => {
-        const s = (status.status)as any
-        if(s === 1) {
-            // 网络断开连接
-            if(context) {
-                clearInterval(loopNet);
-                loopNet = null;
-                loopNet = setInterval(() => {
-                    hasPendingSync()
-                },1000)
-                if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
-                    //有未上传资源
-                    hasPendingSync()
-                }else {
-                    networkLinkError()
-                }
-            }
-        }else {
-            //网络连接成功
-            if(context) {
-                if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
-                    //有未上传资源
-                    hasPendingSync()
-                }else {
-                    networkLinkSuccess()
-                }
-                clearInterval(loopNet)
+const token = localStorage.getItem("token") || "";
+const networkStatus = NetworkStatus.Make(token);
+networkStatus.addOnChange((status: any) => {
+    const s = (status.status)as any
+    if(s === 1) {
+        // 网络断开连接
+        if(context) {
+            clearInterval(loopNet);
+            loopNet = null;
+            loopNet = setInterval(() => {
+                hasPendingSync()
+            },1000)
+            if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
+                //有未上传资源
+                hasPendingSync()
+            }else {
+                networkLinkError()
             }
         }
-    })
-}
+    }else {
+        //网络连接成功
+        if(context) {
+            if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
+                //有未上传资源
+                hasPendingSync()
+            }else {
+                networkLinkSuccess()
+            }
+            context.comment.notify(Comment.EDIT_COMMENT)
+            clearInterval(loopNet)
+        }
+    }
+})
 
 // 浏览器弹框提示
 const confirmClose = (e: any) => {
@@ -546,7 +545,6 @@ const closeNetMsg = () => {
 }
 
 onMounted(() => {
-    networkStatu()
     window.addEventListener('beforeunload', confirmClose);
     init_screen_size();
     init_doc();
@@ -571,8 +569,6 @@ onUnmounted(() => {
     window.removeEventListener('beforeunload', confirmClose);
     clearInterval(loopNet)
     clearInterval(netErr)
-    const token = localStorage.getItem("token") || "";
-    const networkStatus = NetworkStatus.Make(token);
     networkStatus.close()
 })
 </script>

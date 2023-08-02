@@ -61,34 +61,26 @@ const networkLinkError = () => {
         clearTimeout(timer)
     }, 3000)
 }
-
-const networkStatu = () => {
-    const token = localStorage.getItem("token") || "";
-    const networkStatus = NetworkStatus.Make(token);
-    networkStatus.addOnChange((status: any) => {
-        const s = (status.status)as any
-        if(s === 1) {
-          // 网络断开连接
-          networkLinkError()
-        }else {
-          // 网络连接成功
-          networkLinkSuccess()
-        }
-    })
-}
+const token = localStorage.getItem("token") || "";
+const networkStatus = NetworkStatus.Make(token);
+networkStatus.addOnChange((status: any) => {
+    const s = (status.status)as any
+    if(s === 1) {
+      // 网络断开连接
+      networkLinkError()
+    }else {
+      // 网络连接成功
+      networkLinkSuccess()
+    }
+})
 
 const closeNetMsg = () => {
     insertNetworkInfo('netError', false, network_anomaly)
     insertNetworkInfo('networkSuccess', false, link_success)
 }
-onMounted(() => {
-  networkStatu()
-})
 
 onUnmounted(() => {
   closeNetMsg()
-  const token = localStorage.getItem("token") || "";
-  const networkStatus = NetworkStatus.Make(token);
   networkStatus.close()
 })
 
