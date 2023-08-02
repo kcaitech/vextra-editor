@@ -24,7 +24,7 @@ export class Ot extends Communication {
         })
     }
 
-    public static Make(documentId: string, token: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): Ot {
+    public static Make(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): Ot {
         const ot = new Ot(documentId, versionId, options?.coopLocal?.lastServerCmdId)
         ot.token = token
         ot.document = document

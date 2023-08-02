@@ -6,11 +6,19 @@ export class Comment extends Watchable(Object) {
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
     private updateHandlerSet = new Set<(data: DocCommentOpData) => void>()
+    private isClosed: boolean = false
 
-    public async start(documentId: string, token: string): Promise<boolean> {
+    public async start(token: string, documentId: string): Promise<boolean> {
         if (this.docCommentOp) return true;
         if (this.startPromise) return await this.startPromise;
-        const docCommentOp = DocCommentOp.Make(documentId, token)
+        const docCommentOp = DocCommentOp.Make(token, documentId)
+        const startParams = [token, documentId]
+        docCommentOp.setOnClose(async () => {
+            this.docCommentOp = undefined
+            while (!this.isClosed && !await this.start.apply(this, startParams as any)) { // eslint-disable-line prefer-spread
+                await new Promise(resolve => setTimeout(resolve, 1000))
+            }
+        })
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await docCommentOp.start()) {
@@ -47,6 +55,8 @@ export class Comment extends Watchable(Object) {
     }
 
     public close() {
+        if (this.isClosed) return;
+        this.isClosed = true
         if (!this.docCommentOp) return;
         this.docCommentOp.close()
         this.docCommentOp = undefined

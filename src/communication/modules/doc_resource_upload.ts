@@ -14,7 +14,7 @@ export class DocResourceUpload extends Communication {
         })
     }
 
-    public static Make(documentId: string, token: string): DocResourceUpload {
+    public static Make(token: string, documentId: string): DocResourceUpload {
         const docResourceUpload = new DocResourceUpload(documentId)
         docResourceUpload.token = token
         docResourceUpload.onMessage = docResourceUpload._onMessage.bind(docResourceUpload)
@@ -33,6 +33,10 @@ export class DocResourceUpload extends Communication {
         await this.send({
             name: name,
         } as ResourceHeader)
-        await this.send(data)
+        return await this.send(data, true, 10000)
+    }
+
+    public setOnClose(onClose: () => void) {
+        this.onClose = onClose
     }
 }

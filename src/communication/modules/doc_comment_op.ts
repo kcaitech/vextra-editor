@@ -22,7 +22,7 @@ export class DocCommentOp extends Communication {
         })
     }
 
-    public static Make(documentId: string, token: string): DocCommentOp {
+    public static Make(token: string, documentId: string): DocCommentOp {
         const docCommentOp = new DocCommentOp(documentId)
         docCommentOp.token = token
         docCommentOp.onMessage = docCommentOp._onMessage.bind(docCommentOp)
@@ -36,5 +36,9 @@ export class DocCommentOp extends Communication {
 
     public async start(): Promise<boolean> {
         return await super.start(this.token)
+    }
+
+    public setOnClose(onClose: () => void) {
+        this.onClose = onClose
     }
 }

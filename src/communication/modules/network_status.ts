@@ -33,6 +33,8 @@ class _NetworkStatus extends Communication {
 export class NetworkStatus {
     private token: string
     private onChangeList: ((networkStatus: NetworkStatusType) => void)[] = []
+    private isClosed: boolean = false
+    private _networkStatus: _NetworkStatus | undefined
 
     private constructor(token: string) {
         this.token = token
@@ -42,9 +44,10 @@ export class NetworkStatus {
         const _networkStatus = _NetworkStatus.Make(this.token)
         _networkStatus.onChange = this._onChange.bind(this)
         _networkStatus.setOnClose(() => {
-            this.create()
+            if (!this.isClosed) this.create();
         })
         _networkStatus.start()
+        this._networkStatus = _networkStatus
     }
 
     public static Make(token: string): NetworkStatus {
@@ -64,5 +67,11 @@ export class NetworkStatus {
     public removeOnChange(onChange: (networkStatus: NetworkStatusType) => void) {
         const index = this.onChangeList.indexOf(onChange)
         if (index >= 0) this.onChangeList.splice(index, 1);
+    }
+
+    public close() {
+        if (this.isClosed) return;
+        this.isClosed = true
+        this._networkStatus?.close()
     }
 }
