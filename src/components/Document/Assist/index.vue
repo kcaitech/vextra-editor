@@ -2,6 +2,7 @@
 import { Context } from '@/context';
 import { Asssit } from '@/context/assist';
 import { ClientXY } from '@/context/selection';
+import { Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Data {
 }
 const props = defineProps<Props>();
 const assist = ref<boolean>(false);
-const matrix = props.context.workspace.matrix;
+const matrix = ref<Matrix>(props.context.workspace.matrix);
 const data = reactive<Data>({ nodesX: [], nodesY: [], lineX: '', lineY: '' });
 let { lineX, nodesX, lineY, nodesY } = data;
 function assist_watcher(t?: any) {
@@ -29,7 +30,7 @@ function render() {
     if (ns_x.length) { // 绘制x轴线
         ns_x = minus_nodes_x(ns_x);
         if (ns_x.length) {
-            nodesX = ns_x.map(n => matrix.computeCoord(n.x, n.y));
+            nodesX = ns_x.map(n => matrix.value.computeCoord(n.x, n.y));
             lineX = render_line_x(nodesX);
             assist.value = true;
         }
@@ -37,7 +38,7 @@ function render() {
     if (ns_y.length) { // 绘制y轴线
         ns_y = minus_nodes_y(ns_y);
         if (ns_y.length) {
-            nodesY = ns_y.map(n => matrix.computeCoord(n.x, n.y));
+            nodesY = ns_y.map(n => matrix.value.computeCoord(n.x, n.y));
             lineY = render_line_y(nodesY);
             assist.value = true;
         }

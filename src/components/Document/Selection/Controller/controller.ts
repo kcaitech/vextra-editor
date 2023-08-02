@@ -207,7 +207,6 @@ export function useController(context: Context) {
     }
     function check_sticked_status(pe: PageXY) {
         const { x, y } = pe;
-        console.log(x, sticked_x_v);
         if (stickedX && Math.abs(x - sticked_x_v) > STICKNESS) {
             stickedX = false;
         }
