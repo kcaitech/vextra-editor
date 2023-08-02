@@ -17,11 +17,11 @@ export class DocResourceUpload extends Communication {
     public static Make(documentId: string, token: string): DocResourceUpload {
         const docResourceUpload = new DocResourceUpload(documentId)
         docResourceUpload.token = token
-        docResourceUpload.setOnMessage(docResourceUpload.onmessage.bind(docResourceUpload))
+        docResourceUpload.onMessage = docResourceUpload._onMessage.bind(docResourceUpload)
         return docResourceUpload
     }
 
-    private onmessage(data: any) {
+    private _onMessage(data: any) {
         console.log("document resource upload receive", data)
     }
 

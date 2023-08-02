@@ -25,11 +25,11 @@ export class DocCommentOp extends Communication {
     public static Make(documentId: string, token: string): DocCommentOp {
         const docCommentOp = new DocCommentOp(documentId)
         docCommentOp.token = token
-        docCommentOp.setOnMessage(docCommentOp.onmessage.bind(docCommentOp))
+        docCommentOp.onMessage = docCommentOp._onMessage.bind(docCommentOp)
         return docCommentOp
     }
 
-    private onmessage(data: any) {
+    private _onMessage(data: any) {
         console.log("document comment op receive", data)
         this.onUpdated(data as DocCommentOpData)
     }

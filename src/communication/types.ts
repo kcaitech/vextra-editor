@@ -62,6 +62,10 @@ export type TunnelCmdData = {
     data?: any,
 }
 
+export enum CmdMessage {
+    TunnelIdError = "tunnel_id错误",
+}
+
 export type ClientCmd = {
     cmd_type: ClientCmdType,
     cmd_id: string,
@@ -92,6 +96,7 @@ export type WorkerPostData = {
     isListened?: boolean,
     dataType?: DataType,
     data: any,
+    close?: boolean,
 }
 
 export type CmdResult = {
