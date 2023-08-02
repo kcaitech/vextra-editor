@@ -72,12 +72,8 @@ function updater(t?: any) {
     showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0;
     lock_status.value = props.data.shape.isLocked ? 1 : 0;
     visible_status.value = props.data.shape.isVisible ? 0 : 1;
-    if (is_parent_locked(props.data.shape)) {
-        lock_status.value = 2;
-    }
-    if (is_parent_unvisible(props.data.shape)) {
-        visible_status.value = 2;
-    }
+    if (is_parent_locked(props.data.shape)) lock_status.value = 2;
+    if (is_parent_unvisible(props.data.shape)) visible_status.value = 2;
 }
 
 function toggleExpand(e: Event) {
@@ -204,28 +200,23 @@ function init_d() {
     const m = s.matrix2Root();
     m.multiAtLeft(props.data.context.workspace.matrix);
     const f = s.frame;
-    let points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
-    let b = XYsBounding(points);
-    let h = b.bottom - b.top, w = b.right - b.left;
+    const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+    const b = XYsBounding(points);
+    const w = b.right - b.left, h = b.bottom - b.top;
+    m.trans(-w / 2, -h / 2);
     const max = Math.max(h, w);
     const ratio = max / 10;
     const m_composite = new Matrix();
     m_composite.scale(1 / ratio); // 获取缩放矩阵
-    points = points.map(p => m_composite.computeCoord(p.x, p.y));
-    b = XYsBounding(points);
-    h = b.bottom - b.top, w = b.right - b.left;
-    m_composite.trans(5 - w / 2, 5 - h / 2); // 偏移矩阵
+    m_composite.trans(5 - (w / ratio) / 2, 5 - (h / ratio) / 2); // 偏移矩阵
     const path = s.getPath();
-    const tm = m.toArray();
-    tm[4] = 0, tm[5] = 0;
-    path.transform(new Matrix(tm));
     path.transform(m_composite);
     d.value = path.toString();
 }
 onMounted(() => {
     hangdlePerm()
     updater();
-    init_d();
+    // init_d();
 })
 onUnmounted(() => {
     stop();
