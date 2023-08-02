@@ -30,11 +30,11 @@ function home() {
 
 const hasPendingSyncCmd = () => {
     ElMessageBox.confirm(
-        '文档存在未上传资源，是否退出?',
-        '返回首页',
+        `${t('message.unuploaded_msg')}`,
+        `${t('message.back_home')}`,
         {
-        confirmButtonText: '退出文档',
-        cancelButtonText: '取消',
+        confirmButtonText: `${t('message.exit_document')}`,
+        cancelButtonText: `${t('message.cancel')}`,
         }
     )
     .then(() => {

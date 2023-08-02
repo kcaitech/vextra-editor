@@ -300,7 +300,11 @@ export const message = {
     network_error: '网络异常，请勿刷新页面或关闭文档，以免内容丢失，文档尝试保存中…',
     network_anomaly: '网络异常',
     link_success: '网络连接成功',
-    autosave: '文档自动保存成功'
+    autosave: '文档自动保存成功',
+    cancel: '取消',
+    exit_document: '退出文档',
+    back_home: '返回首页',
+    unuploaded_msg: '文档存在未上传资源，退出可能会造成丢失，是否退出?'
 }
 export const bool = {
     union: '联集',
