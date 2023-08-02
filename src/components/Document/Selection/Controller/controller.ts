@@ -96,9 +96,7 @@ export function useController(context: Context) {
                 const scope = (item as GroupShape).childs;
                 const scout = context.selection.scout;
                 const target = groupPassthrough(scout!, scope, startPositionOnPage);
-                if (target) {
-                    context.selection.selectShape(target);
-                }
+                if (target) context.selection.selectShape(target);
             } else {
                 editing = !editing;
             }
@@ -201,11 +199,17 @@ export function useController(context: Context) {
         const ps: PageXY = matrix.computeCoord(start.x, start.y);
         const pe: PageXY = matrix.computeCoord(end.x, end.y);
         if (asyncTransfer) {
-            // const d = context.assist.match(shapes[0]);
-            // pe.x += d.x;
+            const { x, y } = get_extra_trans();
+            pe.x += x, pe.y += y;
             asyncTransfer.trans(ps, pe);
             migrate(shapes, start, end);
         }
+    }
+    function get_extra_trans() {
+        const delta = { x: 0, y: 0 };
+        const { x, y } = context.assist.match(shapes[0]);
+        
+        return delta;
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selection = context.selection;

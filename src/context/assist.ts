@@ -1,25 +1,25 @@
 import { GroupShape, Shape, ShapeType, Watchable } from "@kcdesign/data";
-import { PageXY, Selection } from "./selection";
+import { ClientXY, Selection } from "./selection";
 import { Context } from ".";
 import { debounce } from "lodash";
 interface PointGroup {
     host: Shape
-    lt: PageXY
-    rt: PageXY
-    rb: PageXY
-    lb: PageXY
-    pivot: PageXY
+    lt: ClientXY
+    rt: ClientXY
+    rb: ClientXY
+    lb: ClientXY
+    pivot: ClientXY
 }
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
     private m_context: Context;
     private m_shape_inner: Shape[] = [];
     private m_pg_inner: Map<string, PointGroup> = new Map();
-    private m_x_axis: Map<number, PageXY[]> = new Map();
-    private m_y_axis: Map<number, PageXY[]> = new Map();
+    private m_x_axis: Map<number, ClientXY[]> = new Map();
+    private m_y_axis: Map<number, ClientXY[]> = new Map();
     private m_current_pg: PointGroup | undefined;
-    private m_nodes_x: PageXY[] = [];
-    private m_nodes_y: PageXY[] = [];
+    private m_nodes_x: ClientXY[] = [];
+    private m_nodes_y: ClientXY[] = [];
     private m_x_sticked: boolean = false;
     private m_y_sticked: boolean = false;
     constructor(context: Context) {
@@ -55,12 +55,12 @@ export class Asssit extends Watchable(Object) {
         }
     }
     match(s: Shape) {
+        const st = Date.now();
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         this.m_current_pg = update_pg(s);
         const s_pg = this.m_current_pg;
         const delta = { x: 0, y: 0 };
-        let need_update: boolean = false;
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const cs = this.m_shape_inner[i];
             if (cs.id === s.id) continue;
@@ -69,10 +69,15 @@ export class Asssit extends Watchable(Object) {
             if (Math.abs(c_pg.lt.x - s_pg.lt.x) < 5) {
                 this.m_nodes_x = this.m_x_axis.get(c_pg.lt.x) || [];
                 delta.x = c_pg.lt.x - s_pg.lt.x;
-                need_update = true;
+            }
+            if (Math.abs(c_pg.lt.y - s_pg.lt.y) < 5) {
+                this.m_nodes_y = this.m_y_axis.get(c_pg.lt.y) || [];
+                delta.x = c_pg.lt.y - s_pg.lt.y;
             }
         }
-        if (need_update) this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Asssit.UPDATE_ASSIST);
+        const e = Date.now();
+        console.log('单次匹配用时(ms):', e - st);
         return delta;
     }
     match_test() {
@@ -114,7 +119,7 @@ function isShapeOut(context: Context, shape: Shape) {
     const b = Math.max(point[0][1], point[1][1], point[2][1], point[3][1]);
     return l > right - x || r < 0 || b < 0 || t > bottom - y;
 }
-function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, PageXY[]>, y_axis: Map<number, PageXY[]>) {
+function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, ClientXY[]>, y_axis: Map<number, ClientXY[]>) {
     let result: Shape[] = [];
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
@@ -142,5 +147,23 @@ function getClosestAB(shape: Shape) {
 }
 function _collect(context: Context) {
     context.assist.collect();
+}
+function get_nodes_from_pg_by_x(pg: PointGroup, x: number) {
+    const result: ClientXY[] = [];
+    const pvs = Object.values(pg);
+    for (let i = 0; i < pvs.length; i++) {
+        const p = pvs[i];
+        if (p.x === x) result.push(p);
+    }
+    return result;
+}
+function get_nodes_from_pg_by_y(pg: PointGroup, y: number) {
+    const result: ClientXY[] = [];
+    const pvs = Object.values(pg);
+    for (let i = 0; i < pvs.length; i++) {
+        const p = pvs[i];
+        if (p.y === y) result.push(p);
+    }
+    return result;
 }
 export const collect_once = debounce(_collect, 100);
