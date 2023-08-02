@@ -1,15 +1,19 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { getAngle } from '@/utils/common';
 import { update_dot } from './common';
+import { Point } from "../../SelectionView.vue";
+import { Action } from '@/context/tool';
+
 interface Props {
   matrix: number[]
   context: Context
   shape: Shape
   axle: { x: number, y: number }
+  cFrame: Point[]
 }
 interface Dot {
   point: { x: number, y: number }
@@ -21,6 +25,7 @@ interface Dot {
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
+const valid = ref<boolean>(true);
 const data: { dots: Dot[] } = reactive({ dots: [] });
 const { dots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
@@ -33,6 +38,7 @@ function update() {
   update_dot_path();
 }
 function update_dot_path() {
+  if (!valid.value) return;
   if (!props.context.workspace.shouldSelectionViewUpdate) return;
   dots.length = 0;
   const frame = props.shape.frame;
@@ -45,6 +51,7 @@ function update_dot_path() {
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
+  if (!valid.value) return;
   if (event.button !== 0) return;
   props.context.menu.menuMount();
   const workspace = props.context.workspace;
@@ -74,9 +81,17 @@ function point_mousemove(event: MouseEvent) {
       if (props.shape.isFlippedVertical) deg = -deg
       asyncBaseAction.executeRotate(deg);
     } else {
-      const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
-      const p2Onpage: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
-      asyncBaseAction.executeScale(cur_ctrl_type, p1OnPage, p2Onpage);
+      const action = props.context.tool.action;
+      if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
+        let p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
+        let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
+        const t = get_t(cur_ctrl_type, p1, p2);
+        asyncBaseAction.executeScale(cur_ctrl_type, p1, t);
+      } else {
+        const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
+        const p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
+        asyncBaseAction.executeScale(cur_ctrl_type, p1, p2);
+      }
     }
     setCursor(cur_ctrl_type, true);
     startPosition = { ...mouseOnClient };
@@ -88,6 +103,41 @@ function point_mousemove(event: MouseEvent) {
       asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
     }
   }
+}
+function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
+  if (cct === CtrlElementType.RectLT) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(pre_delta.x, pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectRT) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(f.width + pre_delta.x, -pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectRB) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectLB) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(pre_delta.x, f.height - pre_delta.x * (1 / r));
+  } else return p2
 }
 function point_mouseup(event: MouseEvent) {
   if (event.button !== 0) return;
@@ -102,6 +152,7 @@ function point_mouseup(event: MouseEvent) {
   props.context.cursor.reset();
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
+  if (!valid.value) return;
   const cursor = props.context.cursor;
   let deg = props.shape.rotation || 0;
   if (t === CtrlElementType.RectLT) {
@@ -160,6 +211,13 @@ function window_blur() {
   document.removeEventListener('mousemove', point_mousemove);
   document.removeEventListener('mouseup', point_mouseup);
 }
+function ctrl_frame_watcher() {
+  valid.value = true;
+  const p1 = props.cFrame[0], p2 = props.cFrame[2];
+  const w = Math.abs(p2.x - p1.x), h = Math.abs(p2.y - p1.y);
+  if (w < 6 || h < 6) valid.value = false;
+}
+watch(() => props.cFrame, ctrl_frame_watcher, { deep: true, immediate: true });
 watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
   old.unwatch(update);
@@ -177,7 +235,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <g>
+  <g :opacity="valid ? 1 : 0">
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
       <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
         @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">

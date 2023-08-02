@@ -19,7 +19,7 @@ const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
     rotate: number,
-    matrix: number[],
+    matrix: Matrix,
     shape: Shape
 }>();
 
@@ -29,10 +29,6 @@ watch(() => props.shape, (value, old) => {
     }
     old.unwatch(update);
     value.watch(update);
-    update();
-})
-
-watch(() => props.matrix, () => {
     update();
 })
 const { isDblClick } = useController(props.context);
@@ -185,10 +181,10 @@ function workspace_watcher(t?: number) {
 }
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
-    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
-        editing = false;
-    }
+    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) editing = false;
 }
+watch(() => props.matrix, update, { deep: true })
+
 onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
@@ -220,10 +216,11 @@ onBeforeUnmount(() => {
         @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape">
+        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :c-frame="props.controllerFrame">
         </BarsContainer>
         <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :axle="axle">
+            :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>

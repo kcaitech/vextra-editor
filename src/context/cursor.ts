@@ -29,7 +29,7 @@ export class Cursor extends Watchable(Object) {
         if (this.m_context.workspace.transforming && !force) return;
         const res = await this.m_styler.getClass(type);
         if (!res) return;
-        this.m_current_cursor_type = res;        
+        this.m_current_cursor_type = res;
         this.notify(Cursor.CHANGE_CURSOR, res);
     }
     async reset() {
