@@ -29,10 +29,8 @@ const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 const searchtitle = ref('')
 let items = ref<any[]>([])
-const autosave = t('message.autosave')
 const link_success = t('message.link_success')
 const network_anomaly = t('message.network_anomaly')
-const network_error = t('message.network_error')
 
 function setTitle(t: string) {
   title.value = t;
@@ -80,12 +78,19 @@ const networkStatu = async() => {
     }
 }
 
+const closeNetMsg = () => {
+    insertNetworkInfo('netError', false, network_anomaly)
+    insertNetworkInfo('networkSuccess', false, link_success)
+}
 onMounted(() => {
   networkStatu()
 })
 
 onUnmounted(() => {
-
+  closeNetMsg()
+  const token = localStorage.getItem("token") || "";
+  const networkStatus = NetworkStatus.Make(token);
+  networkStatus.close()
 })
 
 </script>

@@ -472,6 +472,25 @@ const networkLinkError = () => {
 const refreshDoc = () => {
     location.reload();
 }
+
+const hasPendingSyncCmd = () => {
+    const t = setTimeout(() => {
+        //3秒后还有未上传的，给出提示
+        if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
+            insertNetworkInfo('networkError', true, network_error)
+            netErr = setInterval(() => {
+                if(context && !context.communication.docOt.hasPendingSyncCmd()) {
+                    insertNetworkInfo('networkError', false, network_error)
+                    autoSaveSuccess()
+                    clearInterval(netErr)
+                    netErr = null
+                }
+            },3000)
+        }
+        clearTimeout(t)
+    }, 3000);
+}
+
 //监听网络状态
 let netErr: any = null
 const networkStatu = async() => {
@@ -482,47 +501,23 @@ const networkStatu = async() => {
         const s = (status.status)as any
         if(s === 1) {
             // 网络断开连接
-            if(context && context.communication.docOt.hasPendingSyncCmd()) {
-                //有未上传资源
-                const t = setTimeout(() => {
-                    //3秒后还有未上传的，给出提示
-                    if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
-                        insertNetworkInfo('networkError', true, network_error)
-                        netErr = setInterval(() => {
-                            if(context && !context.communication.docOt.hasPendingSyncCmd()) {
-                                insertNetworkInfo('networkError', false, network_error)
-                                autoSaveSuccess()
-                                clearInterval(netErr)
-                                netErr = null
-                            }
-                        },3000)
-                    }
-                    clearTimeout(t)
-                }, 3000);
-            }else {
-                networkLinkError()
+            if(context) {
+                if(context.communication.docOt.hasPendingSyncCmd()) {
+                    //有未上传资源
+                    hasPendingSyncCmd()
+                }else {
+                    networkLinkError()
+                }
             }
         }else {
             //网络连接成功
-            if(context && context.communication.docOt.hasPendingSyncCmd()) {
-                //有未上传资源
-                const t = setTimeout(() => {
-                    //3秒后还有未上传的，给出提示
-                    if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
-                        insertNetworkInfo('networkError', true, network_error)
-                        netErr = setInterval(() => {
-                            if(context && !context.communication.docOt.hasPendingSyncCmd()) {
-                                insertNetworkInfo('networkError', false, network_error)
-                                autoSaveSuccess()
-                                clearInterval(netErr)
-                                netErr = null
-                            }
-                        },3000)
-                    }
-                    clearTimeout(t)
-                }, 3000);
-            }else {
-                networkLinkSuccess()
+            if(context) {
+                if(context.communication.docOt.hasPendingSyncCmd()) {
+                    //有未上传资源
+                    hasPendingSyncCmd()
+                }else {
+                    networkLinkSuccess()
+                }
             }
         }
     }
@@ -532,21 +527,7 @@ let loopNet: any = null
 const watchHasPendingSync = () => {
     loopNet = setInterval(() => {
         if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr) {
-            const t = setTimeout(() => {
-                //3秒后还有未上传的，给出提示
-                if(context && context.communication.docOt.hasPendingSyncCmd()){
-                    insertNetworkInfo('networkError', true, network_error)
-                    netErr = setInterval(() => {
-                        if(context && !context.communication.docOt.hasPendingSyncCmd()) {
-                            insertNetworkInfo('networkError', false, network_error)
-                            autoSaveSuccess()
-                            clearInterval(netErr)
-                            netErr = null
-                        }
-                    },3000)
-                }
-                clearTimeout(t)
-            }, 3000);
+            hasPendingSyncCmd()
         }
     },10000)
 }
@@ -563,6 +544,13 @@ const confirmClose = (e: any) => {
     }
 }
 
+const closeNetMsg = () => {
+    insertNetworkInfo('saveSuccess', false, autosave)
+    insertNetworkInfo('networkError', false, network_error)
+    insertNetworkInfo('netError', false, network_anomaly)
+    insertNetworkInfo('networkSuccess', false, link_success)
+}
+
 onMounted(() => {
     watchHasPendingSync()
     networkStatu()
@@ -571,6 +559,7 @@ onMounted(() => {
     init_doc();
 })
 onUnmounted(() => {
+    closeNetMsg()
     try {
         context?.communication.docOt.close();
         context?.communication.resourceUpload.close();
@@ -589,6 +578,9 @@ onUnmounted(() => {
     window.removeEventListener('beforeunload', confirmClose);
     clearInterval(loopNet)
     clearInterval(netErr)
+    const token = localStorage.getItem("token") || "";
+    const networkStatus = NetworkStatus.Make(token);
+    networkStatus.close()
 })
 </script>
 
