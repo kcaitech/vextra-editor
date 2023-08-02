@@ -23,6 +23,8 @@ import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
 import { S3Storage, StorageOptions } from "@/utils/storage";
+import { NetworkStatus } from '@/communication/modules/network_status'
+import { Comment } from '@/context/comment';
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -450,17 +452,19 @@ const autoSaveSuccess = () => {
 }
 //网络连接成功message信息
 const networkLinkSuccess = () => {
+    insertNetworkInfo('netError', false, network_anomaly)
     insertNetworkInfo('networkSuccess', true, link_success)
     const timer = setTimeout(() => {
         insertNetworkInfo('networkSuccess', false, link_success)
         clearTimeout(timer)
     }, 3000)
 }
+// 网络断开连接提示信息
 const networkLinkError = () => {
+    insertNetworkInfo('networkSuccess', false, link_success)
     insertNetworkInfo('netError', true, network_anomaly)
     const timer = setTimeout(() => {
         insertNetworkInfo('netError', false, network_anomaly)
-        insertNetworkInfo('networkError', true, network_error)
         clearTimeout(timer)
     }, 3000)
 }
@@ -469,54 +473,84 @@ const networkLinkError = () => {
 const refreshDoc = () => {
     location.reload();
 }
-// 断网时触发
-const connectionless = () => {
-    networkLinkError()
-}
-// 连网成功后触发
-const connected = () => {
-    insertNetworkInfo('networkError', false, network_error)
-    networkLinkSuccess()
-}
 
-enum MessageType {
-    NetError = 0,
-    Success,
-}
-
-// insertNetworkInfo('networkError', true, network_error)
-
-const docUploadState = (type: MessageType, data: any) => {
-    if(type === MessageType.NetError) {
-        // 网络异常，上传失败超过三次，弹出message信息
-        if(data.count >= 3) {
-            insertNetworkInfo('networkError', true, network_error)
-        }
-    }else if(type === MessageType.Success) {
-        //需要重连且文档上传成功
-        insertNetworkInfo('networkError', false, network_error)
-        autoSaveSuccess()
+const hasPendingSync = () => {
+    if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
+        insertNetworkInfo('networkError', true, network_error)
+        netErr = setInterval(() => {
+            if(context && !context.communication.docOt.hasPendingSyncCmd()) {
+                insertNetworkInfo('networkError', false, network_error)
+                autoSaveSuccess()
+                clearInterval(netErr)
+                netErr = null
+            }
+        },1000)
     }
 }
-const msg = true
+// 检测是否有未上传的数据
+let loopNet: any = null
+//监听网络状态
+let netErr: any = null
+const token = localStorage.getItem("token") || "";
+const networkStatus = NetworkStatus.Make(token);
+networkStatus.addOnChange((status: any) => {
+    const s = (status.status)as any
+    if(s === 1) {
+        // 网络断开连接
+        if(context) {
+            clearInterval(loopNet);
+            loopNet = null;
+            loopNet = setInterval(() => {
+                hasPendingSync()
+            },1000)
+            if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
+                //有未上传资源
+                hasPendingSync()
+            }else {
+                networkLinkError()
+            }
+        }
+    }else {
+        //网络连接成功
+        if(context) {
+            if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
+                //有未上传资源
+                hasPendingSync()
+            }else {
+                networkLinkSuccess()
+            }
+            context.comment.notify(Comment.EDIT_COMMENT)
+            clearInterval(loopNet)
+        }
+    }
+})
+
 // 浏览器弹框提示
 const confirmClose = (e: any) => {
-    if(msg) return
-    //浏览器默认提示信息不能修改？？
-    e.preventDefault();
-    const confirmationMessage = t('message.leave');
-    e.returnValue = confirmationMessage;
-    return confirmationMessage;
+    if(context) {
+        if(!context.communication.docOt.hasPendingSyncCmd()) return
+        //浏览器默认提示信息不能修改？？
+        e.preventDefault();
+        const confirmationMessage = t('message.leave');
+        e.returnValue = confirmationMessage;
+        return confirmationMessage;
+    }
+}
+
+const closeNetMsg = () => {
+    insertNetworkInfo('saveSuccess', false, autosave)
+    insertNetworkInfo('networkError', false, network_error)
+    insertNetworkInfo('netError', false, network_anomaly)
+    insertNetworkInfo('networkSuccess', false, link_success)
 }
 
 onMounted(() => {
     window.addEventListener('beforeunload', confirmClose);
-    window.addEventListener('offline', connectionless);
-    window.addEventListener('online',connected);
     init_screen_size();
     init_doc();
 })
 onUnmounted(() => {
+    closeNetMsg()
     try {
         context?.communication.docOt.close();
         context?.communication.resourceUpload.close();
@@ -533,8 +567,9 @@ onUnmounted(() => {
     showHint.value = false;
     countdown.value = 10;
     window.removeEventListener('beforeunload', confirmClose);
-    window.removeEventListener('online', connectionless);
-    window.removeEventListener('offline', connected);
+    clearInterval(loopNet)
+    clearInterval(netErr)
+    networkStatus.close()
 })
 </script>
 

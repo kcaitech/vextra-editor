@@ -300,7 +300,11 @@ export const message = {
     network_error: 'Please do not refresh the page or close the document to avoid content loss. The document is trying to save...',
     network_anomaly: 'Network anomaly',
     link_success: 'Network connection successful',
-    autosave: 'Automatic document saving'
+    autosave: 'Automatic document saving',
+    cancel: 'Cancel',
+    exit_document: 'Exit document',
+    back_home: 'Back to home',
+    unuploaded_msg: 'The document is not upload resources，Exit may cause lost，Quit or not?'
 }
 export const bool = {
     union: 'Union',
