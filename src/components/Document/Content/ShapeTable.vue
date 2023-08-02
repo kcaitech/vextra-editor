@@ -2,6 +2,7 @@
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Shape, TableShape } from "@kcdesign/data";
 import { renderTable as r } from "@kcdesign/data";
+import comsMap from './comsmap';
 
 const props = defineProps<{ data: TableShape }>();
 const reflush = ref(0);
@@ -9,11 +10,6 @@ const consumed: Array<Shape> = [];
 
 const watcher = () => {
     reflush.value++;
-
-    // load image // todo
-    props.data.childs.forEach((cell) => {
-        if (cell.isImageCell() && !cell.peekImage()) cell.loadImage().then(() => { reflush.value++ })
-    })
 }
 const stopWatch = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
@@ -38,7 +34,7 @@ onUnmounted(() => {
 function render() {
     const consumed0: Array<Shape> = props.data.childs;
 
-    const ret = r(h, props.data, reflush.value !== 0 ? reflush.value : undefined)
+    const ret = r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined)
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
