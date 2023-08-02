@@ -4,22 +4,19 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
-import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { ClientXY, Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
-import { useI18n } from "vue-i18n";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
 import { getAxle } from "@/utils/common";
-import { permIsEdit } from "@/utils/content";
 interface Props {
   context: Context
   controllerFrame: Point[]
   rotate: number
-  matrix: number[]
+  matrix: Matrix
   shape: Shape
 }
 const props = defineProps<Props>();
@@ -29,7 +26,6 @@ const visible = ref<boolean>(true);
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-const { t } = useI18n();
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 let viewBox = '';
@@ -118,8 +114,10 @@ watchEffect(() => { updater() });
     <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
     <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
     </ShapesStrokeContainer>
-    <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"></BarsContainer>
-    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle">
+    <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+      :c-frame="props.controllerFrame"></BarsContainer>
+    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
+      :c-frame="props.controllerFrame">
     </PointsContainer>
   </svg>
 </template>

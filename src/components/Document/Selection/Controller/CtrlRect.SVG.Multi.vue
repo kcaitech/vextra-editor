@@ -16,7 +16,7 @@ interface Props {
     context: Context
     controllerFrame: Point[]
     rotate: number
-    matrix: number[]
+    matrix: Matrix
     shape: Shape
 }
 const props = defineProps<Props>();

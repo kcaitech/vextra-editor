@@ -473,7 +473,9 @@ const refreshDoc = () => {
     location.reload();
 }
 
-const hasPendingSyncCmd = () => {
+const hasPendingSync = () => {
+    console.log(loopNet,'定时器还在');
+    
     if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
         insertNetworkInfo('networkError', true, network_error)
         netErr = setInterval(() => {
@@ -499,11 +501,11 @@ const networkStatu = () => {
             // 网络断开连接
             if(context) {
                 loopNet = setInterval(() => {
-                    hasPendingSyncCmd()
+                    hasPendingSync()
                 },1000)
                 if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
                     //有未上传资源
-                    hasPendingSyncCmd()
+                    hasPendingSync()
                 }else {
                     networkLinkError()
                 }
@@ -513,7 +515,7 @@ const networkStatu = () => {
             if(context) {
                 if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
                     //有未上传资源
-                    hasPendingSyncCmd()
+                    hasPendingSync()
                 }else {
                     networkLinkSuccess()
                 }

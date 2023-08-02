@@ -9,6 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    Abbreviation: typeof import('./src/components/Document/Navigation/Abbreviation.vue')['default']
     Apphome: typeof import('./src/components/AppHome/Apphome.vue')['default']
     Apply: typeof import('./src/components/Apply/index.vue')['default']
     ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']
@@ -17,6 +18,7 @@ declare module '@vue/runtime-core' {
     ArtboardName: typeof import('./src/components/Document/Content/ArtboardName.vue')['default']
     ArtboardView: typeof import('./src/components/Document/Content/ArtboardView.vue')['default']
     Aside: typeof import('./src/components/AppHome/Aside.vue')['default']
+    Assist: typeof import('./src/components/Document/Assist/index.vue')['default']
     BackToHome: typeof import('./src/components/Document/Toolbar/BackToHome.vue')['default']
     'BarsContainer.SVG': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.vue')['default']
     'BarsContainer.SVG.Multi': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.Multi.vue')['default']

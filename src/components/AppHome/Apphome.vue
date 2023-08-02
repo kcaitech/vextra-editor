@@ -72,6 +72,8 @@ const networkStatu = () => {
           networkLinkError()
         }else {
           // 网络连接成功
+          console.log('jinlai ');
+          
           networkLinkSuccess()
         }
     })
