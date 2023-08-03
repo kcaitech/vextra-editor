@@ -10,6 +10,7 @@ import { noneState } from './cellnonestate';
 import { textState } from './celltextstate';
 import { imageState } from './cellimagestate';
 import { loadImage } from './loadimage';
+import { useI18n } from 'vue-i18n';
 
 type TextShape = Shape & { text: Text };
 
@@ -146,17 +147,20 @@ function showTextInput() {
 
 const submatrixArray = computed(() => submatrix.toArray())
 
-let cellState = noneState(props);
+const { t } = useI18n();
+
+let cellState = noneState(props, t);
 function getCellState() {
     if (cellState.cellType === cellType.value) return cellState;
+    cellState.dispose();
     if (cellType.value === TableCellType.Text) {
-        cellState = textState(props);
+        cellState = textState(props, t);
     }
     else if (cellType.value === TableCellType.Image) {
-        cellState = imageState(props);
+        cellState = imageState(props, t);
     }
     else {
-        cellState = noneState(props);
+        cellState = noneState(props, t);
     }
     return cellState;
 }
@@ -165,7 +169,7 @@ function onMouseDown(e: MouseEvent) {
     if (props.shape.cellType === undefined || props.shape.cellType === TableCellType.None) {
         editor.setCellContentText(props.shape);
     }
-
+    emit("editCell", props.shape);
     getCellState().onMouseDown(e);
 }
 

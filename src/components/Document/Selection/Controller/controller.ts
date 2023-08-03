@@ -16,7 +16,8 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-export function useController(context: Context) {
+
+export function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
     const dragActiveDis = 3;
@@ -32,7 +33,7 @@ export function useController(context: Context) {
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let need_update_comment: boolean = false;
     const trans = { x: 0, y: 0 };
-    const { t } = useI18n();
+
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
             const ps: PageXY = matrix.computeCoord(start.x, start.y);
@@ -246,7 +247,7 @@ export function useController(context: Context) {
         startPositionOnPage = matrix.computeCoord(startPosition.x, startPosition.y);
     }
     function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context, t);
+        handle(e, context, i18nT);
     }
     /**
     * @description 选区监听器 
@@ -309,7 +310,7 @@ export function useController(context: Context) {
         timerClear();
         context.cursor.cursor_freeze(false);
     }
-    onMounted(() => {
+    function init() {
         context.workspace.watch(workspace_watcher);
         context.selection.watch(selection_watcher);
         window.addEventListener('blur', windowBlur);
@@ -318,14 +319,27 @@ export function useController(context: Context) {
         checkStatus();
         initController();
         context.workspace.contentEdit(false);
-    })
-    onUnmounted(() => {
+    }
+    function dispose() {
         context.workspace.unwatch(workspace_watcher);
         context.selection.unwatch(selection_watcher);
         window.removeEventListener('blur', windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
+    }
+    return { isDblClick, isEditing, isDrag, downpoint, downpoint_page, init, dispose };
+}
+
+export function useController(context: Context) {
+    const { t } = useI18n();
+
+    const ctrl = useControllerCustom(context, t);
+    onMounted(() => {
+        ctrl.init();
     })
-    return { isDblClick, isEditing, isDrag, downpoint, downpoint_page };
+    onUnmounted(() => {
+        ctrl.dispose();
+    })
+    return ctrl;
 }

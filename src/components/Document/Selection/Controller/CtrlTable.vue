@@ -30,6 +30,7 @@ function onEditCell(cell: TableCell) {
     editCellId.value = cell.id;
     editCell = cell;
     editing.value = true;
+    console.log("editCell", editCell)
 }
 
 // let cells: { cell: TableCell, lt: { x: number, y: number }, rb: { x: number, y: number } }[] = [];

@@ -1,16 +1,17 @@
 import { Matrix, TableCell, TableCellType } from "@kcdesign/data";
 import { Context } from '@/context';
 import { ref } from "vue";
-import { useController } from "../controller";
+import { useControllerCustom } from "../controller";
 
 export function textState(props: {
     shape: TableCell,
     matrix: number[],
     context: Context
-}) {
+}, i18nT: Function) {
     const editing = ref(false);
     const matrix = new Matrix();
-    const { isDblClick } = useController(props.context);
+    const ctrl = useControllerCustom(props.context, i18nT);
+    const { isDblClick } = ctrl;
     let downIndex: { index: number, before: boolean };
     function onMouseDown(e: MouseEvent) {
         if (e.button === 0) {
@@ -100,10 +101,17 @@ export function textState(props: {
         props.context.cursor.reset();
     }
 
+    function dispose() {
+        ctrl.dispose();
+    }
+
+    ctrl.init();
+
     return {
         onMouseDown,
         onMouseEnter,
         onMouseLeave,
+        dispose,
         cellType: TableCellType.Text
     }
 }
