@@ -7,7 +7,7 @@ export type Options = {
     pendingSend: any[],
 }
 
-export class Ot extends Communication {
+export class DocOp extends Communication {
     private token: string = ""
     private document?: Document
     private repo?: CoopRepository
@@ -24,22 +24,22 @@ export class Ot extends Communication {
         })
     }
 
-    public static Make(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): Ot {
-        const ot = new Ot(documentId, versionId, options?.coopLocal?.lastServerCmdId)
-        ot.token = token
-        ot.document = document
-        ot.repo = repo
-        ot.versionId = versionId
-        ot.onMessage = ot._onMessage.bind(ot)
+    public static Make(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): DocOp {
+        const docOp = new DocOp(documentId, versionId, options?.coopLocal?.lastServerCmdId)
+        docOp.token = token
+        docOp.document = document
+        docOp.repo = repo
+        docOp.versionId = versionId
+        docOp.onMessage = docOp._onMessage.bind(docOp)
         if (!options?.coopLocal) {
-            ot.coopLocal = new CoopLocal(document, repo, versionId, ot.send.bind(ot))
+            docOp.coopLocal = new CoopLocal(document, repo, versionId, docOp.send.bind(docOp))
         } else {
-            ot.coopLocal = options.coopLocal
-            if (options.pendingSend) ot.pendingSend = options.pendingSend;
-            ot.needStartOt = false
+            docOp.coopLocal = options.coopLocal
+            if (options.pendingSend) docOp.pendingSend = options.pendingSend;
+            docOp.needStartOt = false
         }
-        ot.coopLocal.setOnClose(() => ot.close())
-        return ot
+        docOp.coopLocal.setOnClose(() => docOp.close())
+        return docOp
     }
 
     public hasPendingSyncCmd(): boolean {

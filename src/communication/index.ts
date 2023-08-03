@@ -24,6 +24,8 @@ export class Communication {
         resolve: (value: any) => void,
     }>()
     protected receivingData: WorkerPostData | undefined = undefined
+    protected isStarted: boolean = false
+    protected startPromise?: Promise<boolean>
 
     constructor(tunnelType: TunnelType, firstData?: any) {
         this.info = {
@@ -36,34 +38,41 @@ export class Communication {
     }
 
     public async start(token: string): Promise<boolean> {
-        // todo 关闭已开启的连接
+        if (this.isStarted) return true;
+        if (this.isClosed) return false;
+        if (this.startPromise) return this.startPromise;
         this.worker = new SharedWorker(COMMUNICATION_WORKER_URL)
         const port = this.worker.port
         this.info.name = uuid()
         this.info.id = ""
         this.info.token = token
-        return await new Promise<boolean>(resolve => {
+        this.startPromise = new Promise<boolean>(resolve => {
             port.onmessage = (event) => {
                 const data = event.data as CommunicationInfo
                 if (data.name !== this.info.name) {
                     console.log("worker：name参数错误", this.info.name, data.name)
                     resolve(false)
+                    this.startPromise = undefined
                     return
                 }
                 if (!data.id) {
                     console.log("worker：返回id为空")
                     resolve(false)
+                    this.startPromise = undefined
                     return
                 }
                 this.info.name = data.name
                 this.info.id = data.id
                 port.onmessage = this.receiveFromWorker.bind(this)
+                this.isStarted = true
                 resolve(true)
+                this.startPromise = undefined
                 console.log("通道建立", TunnelTypeStr[this.info.tunnelType], this.info.id)
             }
             port.start()
             port.postMessage(this.info)
         })
+        return this.startPromise
     }
 
     protected receiveFromWorker(event: MessageEvent) {
@@ -112,8 +121,10 @@ export class Communication {
     }
 
     public async send(data: any, isListened: boolean = false, timeout: number = -1): Promise<boolean> {
-        if (this.worker === undefined) {
-            console.log("worker未开启")
+        if (this.isClosed) return false;
+        if (this.startPromise) await this.startPromise;
+        if (!this.isStarted || !this.worker) {
+            console.log("通道未启动")
             return false
         }
         const postData: ClientPostData = {

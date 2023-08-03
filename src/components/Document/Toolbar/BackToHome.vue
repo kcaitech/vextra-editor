@@ -20,7 +20,7 @@ const input = ref<HTMLInputElement>();
 const name = ref<string>('');
 const { t } = useI18n();
 function home() {
-    if(props.context.communication.docOt.hasPendingSyncCmd()) return hasPendingSyncCmd()
+    if(props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd()
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;

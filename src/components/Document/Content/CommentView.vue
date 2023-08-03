@@ -375,14 +375,14 @@ const docComment = (comment: DocCommentOpData) => {
     props.context.comment.onUpdateComment(comment)
 }
 onMounted(() => {
-    const updateComment = props.context.communication.comment
+    const updateComment = props.context.communication.docCommentOp
     updateComment.addUpdatedHandler(docComment)
     getDocumentComment()
     props.context.comment.watch(commentWatcher);
 })
 
 onUnmounted(() => {
-    const updateComment = props.context.communication.comment
+    const updateComment = props.context.communication.docCommentOp
     updateComment.removeUpdatedHandler(docComment)
     props.context.comment.unwatch(commentWatcher);
 })

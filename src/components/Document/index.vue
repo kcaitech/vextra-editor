@@ -25,6 +25,8 @@ import { insertNetworkInfo } from "@/utils/message"
 import { S3Storage, StorageOptions } from "@/utils/storage";
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
+import { DocSelectionOp } from "@/context/communication/doc_selection_op";
+import { throttle } from "@/utils/timing_util";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -127,6 +129,21 @@ function selectionWatcher(t: number) {
         }
     }
 }
+
+let docSelectionOpUpdate: typeof DocSelectionOp.prototype.update | undefined;
+function selectionWatcherForOp(t: number) {
+    if (![Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE, Selection.CHANGE_SHAPE_HOVER, Selection.CHANGE_TEXT].includes(t)) return;
+    if (!context) return;
+    if (!docSelectionOpUpdate) docSelectionOpUpdate = throttle(context.communication.docSelectionOp.update, 1000).bind(context.communication.docSelectionOp);
+    docSelectionOpUpdate({
+        select_page_id: context.selection.selectedPage?.id ?? "",
+        select_shape_id_list: context.selection.selectedShapes.map((shape) => shape.id),
+        hover_shape_id: context.selection.hoveredShape?.id,
+        cursor_start: context.selection.cursorStart,
+        cursor_end: context.selection.cursorEnd,
+    }).catch(err => {});
+}
+
 function keyboardEventHandler(event: KeyboardEvent) {
     const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
@@ -352,15 +369,17 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            context.communication.docOt.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "").then(() => {
+            context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "").then(() => {
                 switchPage(context!.data.pagesList[0]?.id);
                 loading.value = false;
             }).catch((err) => {
                 router.push("/");
                 console.error(err);
             });
-            await context.communication.resourceUpload.start(token, docId);
-            await context.communication.comment.start(token, docId);
+            await context.communication.docResourceUpload.start(token, docId);
+            await context.communication.docCommentOp.start(token, docId);
+            await context.communication.docSelectionOp.start(token, docId);
+            context.selection.watch(selectionWatcherForOp);
         }
         getUserInfo()
     } catch (err) {
@@ -394,12 +413,14 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
-    context.communication.docOt.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "").catch((err) => {
+    context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "").catch((err) => {
         console.error(err);
     });
-    context!.communication.resourceUpload.start(token, doc_id);
-    context!.communication.comment.start(token, doc_id);
-    context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
+    context.communication.docResourceUpload.start(token, doc_id);
+    context.communication.docCommentOp.start(token, doc_id);
+    context.communication.docSelectionOp.start(token, doc_id);
+    context.selection.watch(selectionWatcherForOp);
+    context.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
 let timer: any = null;
 function init_screen_size() {
@@ -475,10 +496,10 @@ const refreshDoc = () => {
 }
 
 const hasPendingSync = () => {
-    if(context && context.communication.docOt.hasPendingSyncCmd() && !netErr){
+    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr){
         insertNetworkInfo('networkError', true, network_error)
         netErr = setInterval(() => {
-            if(context && !context.communication.docOt.hasPendingSyncCmd()) {
+            if(context && !context.communication.docOp.hasPendingSyncCmd()) {
                 insertNetworkInfo('networkError', false, network_error)
                 autoSaveSuccess()
                 clearInterval(netErr)
@@ -503,7 +524,7 @@ networkStatus.addOnChange((status: any) => {
             loopNet = setInterval(() => {
                 hasPendingSync()
             },1000)
-            if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
+            if(context.communication.docOp.hasPendingSyncCmd() || netErr) {
                 //有未上传资源
                 hasPendingSync()
             }else {
@@ -513,7 +534,7 @@ networkStatus.addOnChange((status: any) => {
     }else {
         //网络连接成功
         if(context) {
-            if(context.communication.docOt.hasPendingSyncCmd() || netErr) {
+            if(context.communication.docOp.hasPendingSyncCmd() || netErr) {
                 //有未上传资源
                 hasPendingSync()
             }else {
@@ -525,16 +546,23 @@ networkStatus.addOnChange((status: any) => {
     }
 })
 
+function onUnloadForCommunication() {
+    try {
+        context?.communication.docOp.close();
+        context?.communication.docResourceUpload.close();
+        context?.communication.docCommentOp.close();
+        context?.communication.docSelectionOp.close();
+    } catch (err) { }
+}
+
 // 浏览器弹框提示
 const confirmClose = (e: any) => {
-    if(context) {
-        if(!context.communication.docOt.hasPendingSyncCmd()) return
-        //浏览器默认提示信息不能修改？？
-        e.preventDefault();
-        const confirmationMessage = t('message.leave');
-        e.returnValue = confirmationMessage;
-        return confirmationMessage;
-    }
+    onUnloadForCommunication();
+    if(context?.communication.docOp.hasPendingSyncCmd()) return;
+    e.preventDefault();
+    const confirmationMessage = t('message.leave');
+    e.returnValue = confirmationMessage;
+    return confirmationMessage;
 }
 
 const closeNetMsg = () => {
@@ -551,15 +579,12 @@ onMounted(() => {
 })
 onUnmounted(() => {
     closeNetMsg()
-    try {
-        context?.communication.docOt.close();
-        context?.communication.resourceUpload.close();
-        context?.communication.comment.close();
-    } catch (err) { }
+    onUnloadForCommunication();
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     context?.selection.unwatch(selectionWatcher);
+    context?.selection.unwatch(selectionWatcherForOp);
     context?.workspace.unwatch(workspaceWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);
