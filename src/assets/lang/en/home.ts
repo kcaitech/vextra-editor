@@ -304,7 +304,7 @@ export const message = {
     cancel: 'Cancel',
     exit_document: 'Exit document',
     back_home: 'Back to home',
-    unuploaded_msg: 'The document is not upload resources，Exit may cause lost，Quit or not?'
+    unuploaded_msg: 'The document has unuploaded resources. If you exit, content will be lost. Do you want to exit?'
 }
 export const bool = {
     union: 'Union',

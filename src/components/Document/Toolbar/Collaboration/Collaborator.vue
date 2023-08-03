@@ -1,38 +1,15 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import ColInfo from './ColInfo.vue'
-import { ref } from 'vue'
+import { UserSelection } from '@/context/selection'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { Selection } from '@/context/selection';
 interface Props {
     context: Context
 }
 const props = defineProps<Props>();
 const showList = ref(false)
-const info = [
-    {
-        name: '李四',
-        perm: '创建者'
-    },
-    {
-        name: '张三',
-        perm: '可读'
-    },
-    {
-        name: '奥利',
-        perm: '可编辑'
-    },
-    {
-        name: '王麻1111111111111111',
-        perm: '可评论'
-    },
-    {
-        name: '王麻1111111111111111',
-        perm: '可评论'
-    },
-    {
-        name: '王麻1111111111111111',
-        perm: '可评论'
-    },
-]
+const userInfoList = ref<UserSelection[]>(props.context.selection.getUserSelection)
 
 const userList = () => {
     if(showList.value) return showList.value = false
@@ -47,26 +24,39 @@ const onShowUserList = (e: MouseEvent) => {
         document.removeEventListener('click', onShowUserList);
     }
 }
+
+const selectionUpdate = (t: number) => {
+    if(t === Selection.CHANGE_USER_STATE) {
+        userInfoList.value =  props.context.selection.getUserSelection
+    }
+}
+
+onMounted(() => {
+    props.context.selection.watch(selectionUpdate)
+})
+onUnmounted(() => {
+    props.context.selection.unwatch(selectionUpdate)
+})
 </script>
 
 <template>
     <div class="synergy_container">
-        <template v-for="(item, index) in info" :key="index">
-            <ColInfo :context="context" :userInfo="info"  :info="item" v-if="index < 3"></ColInfo>
+        <template v-for="(item, index) in userInfoList" :key="index">
+            <ColInfo :context="context" :info="(item as UserSelection)" v-if="index < 3"></ColInfo>
         </template>
-        <div class="info_num" v-if="info.length > 3" @click.stop="userList">
+        <div class="info_num" v-if="userInfoList.length > 3" @click.stop="userList">
             <div>
-                {{ info.length }}
+                {{ userInfoList.length }}
             </div>
             <div class="personnel_list" v-if="showList" @click.stop>
                 <div class="title">正在访问的人:</div>
                 <el-scrollbar height="150px">
-                    <div class="info" v-for="(item, index) in info" :key="index">
+                    <div class="info" v-for="(item, index) in userInfoList" :key="index">
                         <div class="user">
-                            <div class="avatar"></div>
-                            <div class="name">{{ item.name }}</div>
+                            <div class="avatar"><img :src="item.avatar" alt=""></div>
+                            <div class="name">{{ item.userInfo.name }}</div>
                         </div>
-                        <div class="perm">{{ item.perm }}</div>
+                        <div class="perm">{{ item.userInfo.perm }}</div>
                     </div>
                 </el-scrollbar>
             </div>
@@ -126,6 +116,11 @@ const onShowUserList = (e: MouseEvent) => {
                     height: 25px;
                     border-radius: 50%;
                     background-color: red;
+                    >img {
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 50%;
+                    }
                 }
                 .name {
                     margin-left: 5px;

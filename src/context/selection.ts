@@ -44,7 +44,23 @@ interface TextLocate {
     attr: SpanAttr | undefined
 }
 
+type UserInfo = {
+    name: string
+    perm: string
+}
+
 export type ActionType = 'translate' | 'scale' | 'rotate';
+
+export type UserSelection = {
+    userInfo: UserInfo,
+    avatar?: string,
+    selectPage?: Page,
+    selectShapes: Shape[],
+    hoverShape?: Shape,
+    cursorStart: number,
+    cursorEnd: number,
+}
+
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -61,6 +77,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
+
+
+    static CHANGE_USER_STATE = 15;
+    private userSelectionList: UserSelection[] = []
+    // private userSelectionMap: Map<string, UserSelection> = new Map()
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -121,6 +142,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     get commentAboutMe() { //评论显示关于我的
         return this.m_comment_about_me;
+    }
+    get getUserSelection() {
+        return this.userSelectionList;
+    }
+    setUsetSelection(list: UserSelection[]) {
+        this.userSelectionList = list
+        this.notify(Selection.CHANGE_USER_STATE)
     }
 
     selectCommentPage(id: string) {

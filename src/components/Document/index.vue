@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
-import { Selection } from '@/context/selection';
+import { Selection, UserSelection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
@@ -361,6 +361,8 @@ const getDocumentInfo = async () => {
             });
             await context.communication.resourceUpload.start(token, docId);
             await context.communication.comment.start(token, docId);
+            const list = usetSelection(context)
+            context.selection.setUsetSelection(list)
         }
         getUserInfo()
     } catch (err) {
@@ -369,6 +371,95 @@ const getDocumentInfo = async () => {
         console.log(err)
         throw err;
     }
+}
+const usetSelection = (context: Context): UserSelection[]  => {
+    const arr:UserSelection[] = [
+        {
+            userInfo: {
+                name:'老六',
+                perm: '可编辑'
+            },
+            avatar: 'https://img1.baidu.com/it/u=4207603089,2458937640&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+            selectPage: context.selection.selectedPage,
+            selectShapes: [context.selection.selectedPage!.childs[0],context.selection.selectedPage!.childs[1],context.selection.selectedPage!.childs[2]] || [],
+            hoverShape: undefined,
+            cursorStart: -1,
+            cursorEnd: -1
+        },
+        {
+            userInfo: {
+                name:'张三',
+                perm: '可读'
+            },
+            avatar: 'https://img2.baidu.com/it/u=3618236253,1028428296&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+            selectPage: context.selection.selectedPage,
+            selectShapes: [context.selection.selectedPage!.childs[1]] || [],
+            hoverShape: undefined,
+            cursorStart: -1,
+            cursorEnd: -1
+        },
+        {
+            userInfo: {
+                name:'鸟人',
+                perm: '可评论'
+            },
+            avatar: 'https://img0.baidu.com/it/u=4278216090,542028317&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+            selectPage: context.selection.selectedPage,
+            selectShapes: [context.selection.selectedPage!.childs[0]] || [],
+            hoverShape: undefined,
+            cursorStart: -1,
+            cursorEnd: -1
+        },
+        {
+            userInfo: {
+                name:'雷猴',
+                perm: '可读'
+            },
+            avatar: 'https://img1.baidu.com/it/u=1389865980,20476010&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+            selectPage: context.selection.selectedPage,
+            selectShapes: [context.selection.selectedPage!.childs[2]] || [],
+            hoverShape: undefined,
+            cursorStart: -1,
+            cursorEnd: -1
+        },
+        {
+            userInfo: {
+                name:'合肥推拿',
+                perm: '可编辑'
+            },
+            avatar: 'https://img1.baidu.com/it/u=2172256658,108239306&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+            selectPage: context.selection.selectedPage,
+            selectShapes: [context.selection.selectedPage!.childs[0]] || [],
+            hoverShape: undefined,
+            cursorStart: -1,
+            cursorEnd: -1
+        },
+        {
+            userInfo: {
+                name:'精油护体',
+                perm: '可评论'
+            },
+            avatar: 'https://img2.baidu.com/it/u=1649279387,2871752923&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
+            selectPage: context.selection.selectedPage,
+            selectShapes: [context.selection.selectedPage!.childs[0]] || [],
+            hoverShape: undefined,
+            cursorStart: -1,
+            cursorEnd: -1
+        },
+        {
+            userInfo: {
+                name:'文本',
+                perm: '可评论'
+            },
+            avatar: 'https://img0.baidu.com/it/u=965332594,965381015&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=501',
+            selectPage: context.selection.selectedPage,
+            selectShapes: [context.selection.selectedPage!.childs[7]] || [],
+            hoverShape: undefined,
+            cursorStart: 0,
+            cursorEnd: 15
+        }
+    ]
+    return arr
 }
 
 async function upload() {

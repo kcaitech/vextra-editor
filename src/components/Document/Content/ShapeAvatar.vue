@@ -2,6 +2,7 @@
 import { watchEffect, onMounted, onUnmounted, reactive, ref, nextTick } from "vue";
 import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
+import { Selection, UserSelection } from '@/context/selection'
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection"
 
@@ -15,14 +16,15 @@ interface Avatar {
     y: number
     rotate: number
     shape: Shape
-    img: string
-    width: number
+    avatar: string | undefined
+    userSelectInfo: UserSelection
 }
 
 const matrix = new Matrix(props.matrix);
 const origin: ClientXY = { x: 0, y: 0 };
-const avatars:Avatar[] = reactive([])
-
+const avatars = ref<Avatar[]>([])
+const userSelectionInfo = ref<UserSelection[]>(props.context.selection.getUserSelection)
+const groupedShapes = ref()
 const setOrigin = () => {
     matrix.reset(props.context.workspace.matrix)
     matrix.preTrans(props.data.frame.x, props.data.frame.y)
@@ -31,47 +33,57 @@ const setOrigin = () => {
 }
 
 const setPosition = () => {
-    const shapes: Shape[] = props.context.selection.selectedPage!.childs
-    const len = shapes.length
-    if(len) {
-        avatars.length = 0
-        for (let i = 0; i < len; i++) {
-            const shape = shapes[i]
-            if (shape.parent?.type === ShapeType.Page && shape.isVisible) {
-                const m = shape.matrix2Root()
-                const frame = shape.frame;
-                const f2p = shape.frame2Root();
-                const matrix = props.context.workspace.matrix
-                let anchor = {x: frame.width, y: 0}
-                let rotate = shape.rotation || 0;
-                rotate = rotate < 0 ? rotate + 360 : rotate;
-                if (rotate < 135 && rotate >= 45) {
-                    anchor = m.computeCoord({ x: 0, y: 0 });
-                    rotate -= 90;
-                } else if (rotate < 225 && rotate >= 135) {
-                    anchor = m.computeCoord({ x: 0, y: 0 + frame.height });
-                    rotate -= 180;
-                } else if (rotate < 315 && rotate >= 225) {
-                    anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
-                    rotate += 90;
-                } else if (rotate < 360 && rotate > 315) {
-                    anchor = m.computeCoord({ x: frame.width, y: 0 });
-                } else if (rotate < 45 && rotate >= 0) {
-                    anchor = m.computeCoord({ x: frame.width, y: 0 });
+    // const userSelectShape = props.context.selection.getUserSelection
+    const startTime = performance.now();
+    avatars.value.length = 0
+    groupedShapes.value = []
+    for (let i = 0; i < userSelectionInfo.value.length; i++) {
+        const userSelectInfo = userSelectionInfo.value[i]
+        const shapes = userSelectInfo.selectShapes
+        const len = userSelectInfo.selectShapes.length
+        if(len) {
+            for (let i = 0; i < len; i++) {
+                const shape = (shapes[i] as Shape)
+                if (shape.parent?.type === ShapeType.Page && shape.isVisible) {
+                    const m = shape.matrix2Root()
+                    const frame = shape.frame;
+                    const matrix = props.context.workspace.matrix
+                    let anchor = {x: frame.width, y: 0}
+                    let rotate = shape.rotation || 0;
+                    rotate = rotate < 0 ? rotate + 360 : rotate;
+                    if (rotate < 135 && rotate >= 45) {
+                        anchor = m.computeCoord({ x: 0, y: 0 });
+                        rotate -= 90;
+                    } else if (rotate < 225 && rotate >= 135) {
+                        anchor = m.computeCoord({ x: 0, y: 0 + frame.height });
+                        rotate -= 180;
+                    } else if (rotate < 315 && rotate >= 225) {
+                        anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
+                        rotate += 90;
+                    } else if (rotate < 360 && rotate > 315) {
+                        anchor = m.computeCoord({ x: frame.width, y: 0 });
+                    } else if (rotate < 45 && rotate >= 0) {
+                        anchor = m.computeCoord({ x: frame.width, y: 0 });
+                    }
+                    anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
+                    anchor.y -= origin.y;
+                    anchor.x -= origin.x;
+                    anchor.y -= 24
+                    const avatar = userSelectInfo.avatar
+                    avatars.value.push({x: anchor.x, y: anchor.y, avatar, shape: shape, rotate, userSelectInfo})
                 }
-                anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
-                anchor.y -= origin.y;
-                anchor.x -= origin.x;
-                const width = f2p.width;
-                anchor.y -= 24
-                let u = 4
-                anchor.x = anchor.x -(u * 20)
-                avatars.push({x: anchor.x, y: anchor.y, img: '', shape: shape, rotate, width})
             }
+        }else {
+            avatars.value.length = 0
         }
-    }else {
-        avatars.length = 0
     }
+    avatars.value.forEach((item, i) => {
+        if (!groupedShapes.value[item.shape.id]) {
+            groupedShapes.value[item.shape.id] = [];
+        }
+        groupedShapes.value[item.shape.id].push(item);
+    });
+    const endTime = performance.now();
 }
 
 const workspaceUpdate = (t: number) => {
@@ -80,10 +92,13 @@ const workspaceUpdate = (t: number) => {
         setPosition()
     }
 }
-const updater = () => {
+const updater = (t?: number) => {
     setOrigin()
     setPosition()
     watchShapes()
+    if(t === Selection.CHANGE_USER_STATE) {
+        userSelectionInfo.value = props.context.selection.getUserSelection
+    }
 }
 
 const watcher = () => {
@@ -129,11 +144,11 @@ watchEffect(() => updater())
 <template>
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <div class="avatar_content" v-for="(a, index) in avatars" :key="index"
-         :style="{top: `${a.y}px`, left: `${a.x}px`, transform: `rotate(${a.rotate}deg)`}">
-            <div class="avatars">1</div>
-            <div class="avatars">1</div>
-            <div class="avatars">1</div>
-            <div class="avatars bgc">4</div>
+         :style="{top: `${a.y}px`, left: `${a.x - (Math.min(groupedShapes[a.shape.id].length, 4) * 20)}px`, transform: `rotate(${a.rotate}deg)`}">
+            <template v-for="(u, i) in groupedShapes[a.shape.id]" :key="i">
+                <div class="avatars" v-if="i < 3"><img :src="u.avatar" alt=""></div>
+            </template>
+            <div class="avatars bgc" v-if="groupedShapes[a.shape.id].length > 3">{{ groupedShapes[a.shape.id].length }}</div>
         </div>
     </div>
 </template>
@@ -158,6 +173,11 @@ watchEffect(() => updater())
             border-radius: 50%;
             background-color: var(--active-color-beta);
             box-sizing: border-box;
+            >img {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+            }
         }
         .bgc {
             display: flex;

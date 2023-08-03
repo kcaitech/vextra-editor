@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { ref } from 'vue'
+import { UserSelection } from '@/context/selection'
 interface Props {
     context: Context
-    info: any
+    info: UserSelection
 }
 const props = defineProps<Props>();
 const showInfo = ref(false)
@@ -21,14 +22,15 @@ const closeStaff = () => {
 
 <template>
     <div class="info_container" @mouseenter="showStaffInfo" @mouseleave="closeStaff">
+        <img :src="info.avatar" alt="">
         <div class="popup" v-if="showInfo">
             <div>
-                <div class="avatar"></div>
-                <div class="name">{{ info.name }}</div>
+                <div class="avatar"><img :src="info.avatar" alt=""></div>
+                <div class="name">{{ info.userInfo.name }}</div>
             </div>
             <div>
                 <div class="author">权限:</div>
-                <div class="perm">{{ info.perm }}</div>
+                <div class="perm">{{ info.userInfo.perm }}</div>
             </div>
         </div>
     </div>
@@ -44,6 +46,11 @@ const closeStaff = () => {
     text-align: center;
     margin-left: 3px;
     font-size: var(--font-default-fontsize);
+    >img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+    }
     .popup {
         position: absolute;
         top: 33px;
@@ -67,6 +74,11 @@ const closeStaff = () => {
             height: 25px;
             background-color: red;
             border-radius: 50%;
+            >img {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+            }
         }
         .name {
             width: 60%;            

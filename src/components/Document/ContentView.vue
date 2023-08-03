@@ -29,6 +29,7 @@ import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action } from "@/context/tool";
 import { initpal } from './initpal';
+import UsersSelection from './Selection/UsersSelection.vue';
 
 interface Props {
     context: Context
@@ -737,6 +738,7 @@ onUnmounted(() => {
         :style="{ 'background-color': background_color }">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
+        <UsersSelection :context="props.context" :matrix="matrix"/>
         <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
