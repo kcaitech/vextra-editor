@@ -45,12 +45,12 @@ export function useController(context: Context) {
             const selection = context.selection;
             let targetParent;
             const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
-            if (artboardOnStart && artboardOnStart.type != ShapeType.Page) {
+            if (artboardOnStart && artboardOnStart.type !== ShapeType.Page) {
                 targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
             } else {
                 targetParent = context.selection.getClosetArtboard(pe);
             }
-            const m = getCloesetContainer(shapes[0]).id != targetParent.id;
+            const m = getCloesetContainer(shapes[0]).id !== targetParent.id;
             if (m && asyncTransfer) {
                 shapes = sort_by_layer(context, shapes);
                 asyncTransfer.migrate(targetParent as GroupShape);
@@ -200,8 +200,9 @@ export function useController(context: Context) {
         const ps: PageXY = matrix.computeCoord(start.x, start.y);
         const pe: PageXY = matrix.computeCoord(end.x, end.y);
         if (asyncTransfer) {
-            check_sticked_status(pe);
-            asyncTransfer.trans(ps, get_pe(ps, pe));
+            // check_sticked_status(pe);
+            // asyncTransfer.trans(ps, get_pe(ps, pe));
+            asyncTransfer.trans(ps, pe);
             migrate(shapes, start, end);
         }
     }
@@ -212,6 +213,7 @@ export function useController(context: Context) {
         }
         if (stickedY && Math.abs(y - sticked_y_v) > STICKNESS) {
             stickedY = false;
+            pe.y += y - sticked_y_v;
         }
     }
     function get_pe(ps: PageXY, pe: PageXY) {

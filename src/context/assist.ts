@@ -21,8 +21,6 @@ export class Asssit extends Watchable(Object) {
     private m_current_pg: PointGroup | undefined;
     private m_nodes_x: PageXY[] = [];
     private m_nodes_y: PageXY[] = [];
-    private m_x_sticked: boolean = false;
-    private m_y_sticked: boolean = false;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -82,7 +80,7 @@ export class Asssit extends Watchable(Object) {
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
-        console.log('单次匹配用时(ms):', e - st);
+        // console.log('单次匹配用时(ms):', e - st);
         return target;
     }
     match_test() {

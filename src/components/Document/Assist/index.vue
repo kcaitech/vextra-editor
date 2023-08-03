@@ -44,7 +44,7 @@ function render() {
         }
     }
     const e = Date.now();
-    console.log('辅助线绘制用时(ms):', e - s);
+    // console.log('辅助线绘制用时(ms):', e - s);
 }
 function clear() {
     nodesX.length = 0;
