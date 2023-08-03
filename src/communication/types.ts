@@ -3,6 +3,7 @@ export enum TunnelType {
     DocResourceUpload,
     DocCommentOp,
     DocUpload,
+    DocSelectionOp,
     NetworkStatus = 255,
 }
 
@@ -11,6 +12,7 @@ export const TunnelTypeStr: Record<TunnelType, string> = {
     [TunnelType.DocResourceUpload]: "文档资源上传",
     [TunnelType.DocCommentOp]: "文档评论操作",
     [TunnelType.DocUpload]: "文档上传",
+    [TunnelType.DocSelectionOp]: "文档选区操作",
     [TunnelType.NetworkStatus]: "监听网络状态",
 }
 

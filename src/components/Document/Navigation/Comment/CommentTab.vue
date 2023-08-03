@@ -203,14 +203,14 @@ const docComment = (comment: DocCommentOpData) => {
     }
 }
 onMounted(() => {
-    const updateComment = props.context.communication.comment
+    const updateComment = props.context.communication.docCommentOp
     updateComment.addUpdatedHandler(docComment)
     props.context.workspace.watch(update);
     props.context.comment.watch(commentUpdate);
     props.context.selection.watch(selectedUpdate);
 })
 onUnmounted(() => {
-    const updateComment = props.context.communication.comment
+    const updateComment = props.context.communication.docCommentOp
     updateComment.removeUpdatedHandler(docComment)
     props.context.workspace.unwatch(update);
     props.context.comment.unwatch(commentUpdate);

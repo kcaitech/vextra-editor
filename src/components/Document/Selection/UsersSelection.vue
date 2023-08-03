@@ -6,6 +6,7 @@ import { Selection, UserSelection } from '@/context/selection'
 import { XYsBounding } from "@/utils/common";
 import { genRectPath } from './common'
 import { WorkSpace } from '@/context/workspace'
+import { forEach } from 'lodash';
 interface Props {
     context: Context
     matrix: Matrix
@@ -18,18 +19,24 @@ const matrix = new Matrix();
 
 const createShapeTracing = () => { // 描边 
     tracingPath.value = []
+    const startTime = performance.now();
     for (let i = 0; i < usersSelectionList.value.length; i++) {
         const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
+        const selection: Shape[] = props.context.selection.selectedShapes;
         const userSelectInfo = usersSelectionList.value[i]
         const shapes = userSelectInfo.selectShapes
         const len = shapes.length
         if (len === 1) {
+            if(hoveredShape && hoveredShape.id === shapes[0].id || selection.length > 0 && selection[0].id === shapes[0].id) continue
+            const s = selection.find(v => v.id === shapes[0].id)
+            if(s) continue
             const m = shapes[0].matrix2Root()
             m.multiAtLeft(matrix)
             const path = shapes[0].getPath()
             path.transform(m)
             tracingPath.value.push(path.toString())
         } else if (len > 1) {
+            if (arraysOfObjectsWithIdAreEqual(selection, shapes)) continue
             const points: { x: number, y: number }[] = [];
             for (let index = 0; index < shapes.length; index++) {
                 const s = shapes[index];
@@ -44,6 +51,21 @@ const createShapeTracing = () => { // 描边
             tracingPath.value.push(genRectPath(framePoint))
         }
     }
+    const endTime = performance.now();
+    const executionTime = endTime - startTime;
+}
+
+function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (const obj1 of arr1) {
+    const match = arr2.some((obj2: any) => obj1.id === obj2.id);
+    if (!match) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function update_by_shapes() {
@@ -57,6 +79,9 @@ const selectionWatcher = (t?: any) => {
         createShapeTracing()
     }
     if(t === Selection.CHANGE_SHAPE_HOVER) {
+        createShapeTracing()
+    }
+    if(t === Selection.CHANGE_SHAPE) {
         createShapeTracing()
     }
 }
