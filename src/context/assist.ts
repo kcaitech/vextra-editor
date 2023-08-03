@@ -9,6 +9,20 @@ interface PointGroup {
     rb: PageXY
     lb: PageXY
     pivot: PageXY
+    apexX: number[]
+    apexY: number[]
+}
+export enum Align {
+    LT_X,
+    RT_X,
+    C_X,
+    RB_X,
+    LB_X,
+    LT_Y,
+    RT_Y,
+    C_Y,
+    RB_Y,
+    LB_Y
 }
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
@@ -59,28 +73,66 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_y = [];
         this.m_current_pg = update_pg(s);
         const s_pg = this.m_current_pg;
-        const target = { x: 0, y: 0 };
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, align: Align.LT_X };
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const cs = this.m_shape_inner[i];
             if (cs.id === s.id) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
             if (!c_pg) continue;
-            if (Math.abs(c_pg.lt.x - s_pg.lt.x) < Asssit.STICKNESS) {
-                this.m_nodes_x = this.m_x_axis.get(c_pg.lt.x) || [];
-                target.x = c_pg.lt.x - s_pg.lt.x;
+            const apexX = c_pg.apexX;
+            for (let i = 0; i < apexX.length; i++) {
+                if (Math.abs(apexX[i] - s_pg.lt.x) < Asssit.STICKNESS) {
+                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.lt.y }]);
+                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.LT_X;
+                }
+                if (Math.abs(apexX[i] - s_pg.rt.x) < Asssit.STICKNESS) {
+                    this.m_nodes_x = this.m_x_axis.get(apexX[i]) || [];
+                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.rt.y }]);
+                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.RT_X;
+                }
+                if (Math.abs(apexX[i] - s_pg.pivot.x) < Asssit.STICKNESS) {
+                    this.m_nodes_x = this.m_x_axis.get(apexX[i]) || [];
+                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.pivot.y }]);
+                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.C_X;
+                }
+                if (Math.abs(apexX[i] - s_pg.rb.x) < Asssit.STICKNESS) {
+                    this.m_nodes_x = this.m_x_axis.get(apexX[i]) || [];
+                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.rb.y }]);
+                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.RB_X;
+                }
+                if (Math.abs(apexX[i] - s_pg.lb.x) < Asssit.STICKNESS) {
+                    this.m_nodes_x = this.m_x_axis.get(apexX[i]) || [];
+                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.lb.y }]);
+                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.LB_X;
+                }
             }
-            if (Math.abs(c_pg.rt.x - s_pg.rt.x) < Asssit.STICKNESS) {
-                this.m_nodes_x = this.m_x_axis.get(c_pg.rt.x) || [];
-                target.x = c_pg.rt.x - s_pg.rt.x;
-            }
-            if (Math.abs(c_pg.lt.y - s_pg.lt.y) < Asssit.STICKNESS) {
-                this.m_nodes_y = this.m_y_axis.get(c_pg.lt.y) || [];
-                target.y = c_pg.lt.y - s_pg.lt.y;
+            const apexY = c_pg.apexY;
+            for (let i = 0; i < apexY.length; i++) {
+                if (Math.abs(apexY[i] - s_pg.lt.y) < Asssit.STICKNESS) {
+                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.lt.x, y: apexY[i] }]);
+                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.LT_Y;
+                }
+                if (Math.abs(apexY[i] - s_pg.rt.y) < Asssit.STICKNESS) {
+                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.rt.x, y: apexY[i] }]);
+                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.RT_Y;
+                }
+                if (Math.abs(apexY[i] - s_pg.pivot.y) < Asssit.STICKNESS) {
+                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.pivot.x, y: apexY[i] }]);
+                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.C_Y;
+                }
+                if (Math.abs(apexY[i] - s_pg.rb.y) < Asssit.STICKNESS) {
+                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.rb.x, y: apexY[i] }]);
+                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.RB_Y;
+                }
+                if (Math.abs(apexY[i] - s_pg.lb.y) < Asssit.STICKNESS) {
+                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.lb.x, y: apexY[i] }]);
+                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.LB_Y;
+                }
             }
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
-        // console.log('单次匹配用时(ms):', e - st);
+        console.log('单次匹配用时(ms):', e - st);
         return target;
     }
     match_test() {
@@ -102,9 +154,16 @@ export class Asssit extends Watchable(Object) {
         this.m_y_axis.clear();
     }
 }
-function update_pg(s: Shape): PointGroup {
-    const m = s.matrix2Root(), f = s.frame;
-    return { host: s, lt: m.computeCoord2(0, 0), rt: m.computeCoord2(f.width, 0), rb: m.computeCoord2(f.width, f.height), lb: m.computeCoord2(0, f.height), pivot: m.computeCoord2(f.width / 2, f.height / 2) };
+function update_pg(host: Shape): PointGroup {
+    const m = host.matrix2Root(), f = host.frame;
+    const lt = m.computeCoord2(0, 0);
+    const rt = m.computeCoord2(f.width, 0);
+    const rb = m.computeCoord2(f.width, f.height);
+    const lb = m.computeCoord2(0, f.height);
+    const pivot = m.computeCoord2(f.width / 2, f.height / 2);
+    const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
+    const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
+    return { host, lt, rt, rb, lb, pivot, apexX, apexY };
 }
 
 function isShapeOut(context: Context, shape: Shape) {

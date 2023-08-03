@@ -16,7 +16,9 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { Asssit } from '@/context/assist';
+import { Align, Asssit } from '@/context/assist';
+import { get_individuality_left } from '@/utils/arrange';
+import { apex } from '@/utils/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -200,40 +202,25 @@ export function useController(context: Context) {
         const ps: PageXY = matrix.computeCoord(start.x, start.y);
         const pe: PageXY = matrix.computeCoord(end.x, end.y);
         if (asyncTransfer) {
-            // check_sticked_status(pe);
-            // asyncTransfer.trans(ps, get_pe(ps, pe));
-            asyncTransfer.trans(ps, pe);
+            trans(asyncTransfer, ps, pe);
             migrate(shapes, start, end);
         }
     }
-    function check_sticked_status(pe: PageXY) {
-        const { x, y } = pe;
-        if (stickedX && Math.abs(x - sticked_x_v) > STICKNESS) {
-            stickedX = false;
-        }
-        if (stickedY && Math.abs(y - sticked_y_v) > STICKNESS) {
-            stickedY = false;
-            pe.y += (y - sticked_y_v);
-        }
-    }
-    function get_pe(ps: PageXY, pe: PageXY) {
-        const { x, y } = context.assist.match(shapes[0]);
-        if (stickedX) {
-            pe.x = ps.x;
-        } else if (x) {
-            pe.x += x;
-            stickedX = true;
-            sticked_x_v = pe.x;
-        }
-        if (stickedY) {
-            pe.y = ps.y;
-        } else if (y) {
-            console.log('deltay', y, pe.y);
-            pe.y += y;
-            stickedY = true;
-            sticked_y_v = pe.y;
-        }
-        return pe;
+    function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY) {
+        const shape = shapes[0];
+        const target = context.assist.match(shape);
+        asyncTransfer.trans(ps, pe);
+        // if (shapes.length === 1) {
+        //     const shape = shapes[0];
+        //     const target = context.assist.match(shape);
+        //     if (target.sticked_by_x) {
+        //         const sl = apex(shape, target.align);
+        //         const trans_x = target.x - sl;
+        //         asyncTransfer.stick(trans_x, pe.y - ps.y);
+        //     } else {
+        //         asyncTransfer.trans(ps, pe);
+        //     }
+        // }
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selection = context.selection;
