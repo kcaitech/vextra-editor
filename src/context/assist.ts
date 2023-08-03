@@ -3,11 +3,14 @@ import { PageXY, Selection } from "./selection";
 import { Context } from ".";
 import { debounce } from "lodash";
 interface PointGroup {
-    host: Shape
     lt: PageXY
     rt: PageXY
     rb: PageXY
     lb: PageXY
+    th?: PageXY
+    rh?: PageXY
+    bh?: PageXY
+    lh?: PageXY
     pivot: PageXY
     apexX: number[]
     apexY: number[]
@@ -81,37 +84,29 @@ export class Asssit extends Watchable(Object) {
             if (!c_pg) continue;
             const apexX = c_pg.apexX;
             for (let i = 0; i < apexX.length; i++) {
-                if (Math.abs(apexX[i] - s_pg.lt.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.lt.y }]);
-                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.LT_X;
-                }
                 if (Math.abs(apexX[i] - s_pg.rt.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = this.m_x_axis.get(apexX[i]) || [];
                     this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.rt.y }]);
                     target.x = apexX[i], target.sticked_by_x = true, target.align = Align.RT_X;
                 }
                 if (Math.abs(apexX[i] - s_pg.pivot.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = this.m_x_axis.get(apexX[i]) || [];
                     this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.pivot.y }]);
                     target.x = apexX[i], target.sticked_by_x = true, target.align = Align.C_X;
                 }
                 if (Math.abs(apexX[i] - s_pg.rb.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = this.m_x_axis.get(apexX[i]) || [];
                     this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.rb.y }]);
                     target.x = apexX[i], target.sticked_by_x = true, target.align = Align.RB_X;
                 }
                 if (Math.abs(apexX[i] - s_pg.lb.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = this.m_x_axis.get(apexX[i]) || [];
                     this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.lb.y }]);
                     target.x = apexX[i], target.sticked_by_x = true, target.align = Align.LB_X;
+                }
+                if (Math.abs(apexX[i] - s_pg.lt.x) < Asssit.STICKNESS) {
+                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.lt.y }]);
+                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.LT_X;
                 }
             }
             const apexY = c_pg.apexY;
             for (let i = 0; i < apexY.length; i++) {
-                if (Math.abs(apexY[i] - s_pg.lt.y) < Asssit.STICKNESS) {
-                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.lt.x, y: apexY[i] }]);
-                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.LT_Y;
-                }
                 if (Math.abs(apexY[i] - s_pg.rt.y) < Asssit.STICKNESS) {
                     this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.rt.x, y: apexY[i] }]);
                     target.y = apexY[i], target.sticked_by_y = true, target.align = Align.RT_Y;
@@ -127,6 +122,10 @@ export class Asssit extends Watchable(Object) {
                 if (Math.abs(apexY[i] - s_pg.lb.y) < Asssit.STICKNESS) {
                     this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.lb.x, y: apexY[i] }]);
                     target.y = apexY[i], target.sticked_by_y = true, target.align = Align.LB_Y;
+                }
+                if (Math.abs(apexY[i] - s_pg.lt.y) < Asssit.STICKNESS) {
+                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.lt.x, y: apexY[i] }]);
+                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.LT_Y;
                 }
             }
         }
@@ -163,7 +162,16 @@ function update_pg(host: Shape): PointGroup {
     const pivot = m.computeCoord2(f.width / 2, f.height / 2);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    return { host, lt, rt, rb, lb, pivot, apexX, apexY };
+    if (host.type === ShapeType.Artboard) {
+        const th = m.computeCoord2(f.width / 2, 0);
+        const rh = m.computeCoord2(f.width, f.height / 2);
+        const bh = m.computeCoord2(f.width / 2, f.height);
+        const lh = m.computeCoord2(0, f.height / 2);
+        apexX.push(th.x, rh.x, bh.x, lh.x);
+        apexY.push(th.y, rh.y, bh.y, lh.y);
+        return { lt, rt, rb, lb, th, rh, bh, lh, pivot, apexX, apexY };
+    }
+    return { lt, rt, rb, lb, pivot, apexX, apexY };
 }
 
 function isShapeOut(context: Context, shape: Shape) {

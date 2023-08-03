@@ -130,14 +130,14 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="position: absolute">
         <g id="node">
-            <path d="M -2 -2 L 2 2 z" stroke-width="0.6px" stroke="red"></path>
-            <path d="M 2 -2 L -2 2 z" stroke-width="0.6px" stroke="red"></path>
+            <path d="M -2 -2 L 2 2 z" stroke-width="1px" stroke="#ff2200"></path>
+            <path d="M 2 -2 L -2 2 z" stroke-width="1px" stroke="#ff2200"></path>
         </g>
         <g v-if="assist">
             <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"></use>
             <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"></use>
-            <path v-if="lineX" :d="lineX" stroke-width="0.6px" stroke="red" fill="none"></path>
-            <path v-if="lineY" :d="lineY" stroke-width="0.6px" stroke="red" fill="none"></path>
+            <path v-if="lineX" :d="lineX" stroke-width="1px" stroke="#ff2200" fill="none"></path>
+            <path v-if="lineY" :d="lineY" stroke-width="1px" stroke="#ff2200" fill="none"></path>
         </g>
     </svg>
 </template>
