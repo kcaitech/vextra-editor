@@ -46,9 +46,9 @@ export function useController(context: Context) {
             let targetParent;
             const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
             if (artboardOnStart && artboardOnStart.type !== ShapeType.Page) {
-                targetParent = context.selection.getClosetArtboard(pe, artboardOnStart);
+                targetParent = selection.getClosetArtboard(pe, artboardOnStart);
             } else {
-                targetParent = context.selection.getClosetArtboard(pe);
+                targetParent = selection.getClosetArtboard(pe);
             }
             const m = getCloesetContainer(shapes[0]).id !== targetParent.id;
             if (m && asyncTransfer) {
@@ -213,7 +213,7 @@ export function useController(context: Context) {
         }
         if (stickedY && Math.abs(y - sticked_y_v) > STICKNESS) {
             stickedY = false;
-            pe.y += y - sticked_y_v;
+            pe.y += (y - sticked_y_v);
         }
     }
     function get_pe(ps: PageXY, pe: PageXY) {
@@ -228,6 +228,7 @@ export function useController(context: Context) {
         if (stickedY) {
             pe.y = ps.y;
         } else if (y) {
+            console.log('deltay', y, pe.y);
             pe.y += y;
             stickedY = true;
             sticked_y_v = pe.y;
@@ -264,19 +265,6 @@ export function useController(context: Context) {
         startPosition = { x: clientX - root.x, y: clientY - root.y };
         startPositionOnPage = matrix.computeCoord(startPosition.x, startPosition.y);
     }
-    function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context, t);
-    }
-    function selection_watcher(t?: number) {
-        if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
-            initController();
-            editing = false;
-            context.workspace.contentEdit(false);
-        }
-    }
-    function workspace_watcher(t?: number) {
-        if (t === WorkSpace.CHECKSTATUS) checkStatus();
-    }
     function initController() {
         initTimer(); // 控件生成之后立马开始进行双击预定，该预定将在duration(ms)之后取消
     }
@@ -305,6 +293,19 @@ export function useController(context: Context) {
     function isElement(e: MouseEvent): boolean {
         const root = context.workspace.root;
         return Boolean(context.selection.scout?.isPointInPath(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
+    }
+    function keyboardHandle(e: KeyboardEvent) {
+        handle(e, context, t);
+    }
+    function selection_watcher(t?: number) {
+        if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
+            initController();
+            editing = false;
+            context.workspace.contentEdit(false);
+        }
+    }
+    function workspace_watcher(t?: number) {
+        if (t === WorkSpace.CHECKSTATUS) checkStatus();
     }
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
