@@ -29,7 +29,7 @@ export enum Align {
 }
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
-    static STICKNESS = 7;
+    static STICKNESS = 5;
     private m_context: Context;
     private m_shape_inner: Shape[] = [];
     private m_pg_inner: Map<string, PointGroup> = new Map();

@@ -47,4 +47,4 @@ get_pos[Align.LB_Y] = function (shape: Shape) {
 
 export function apex(shape: Shape, align: Align): number {
     return get_pos[align](shape);
-}
+} 

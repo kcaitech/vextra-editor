@@ -16,8 +16,7 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { Align, Asssit } from '@/context/assist';
-import { get_individuality_left } from '@/utils/arrange';
+import { Asssit } from '@/context/assist';
 import { apex } from '@/utils/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
@@ -39,6 +38,7 @@ export function useController(context: Context) {
     let stickedY: boolean = false;
     let sticked_x_v: number = 0;
     let sticked_y_v: number = 0;
+    let pe_if_no_sticked: PageXY = { x: 0, y: 0 };
     const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
@@ -152,10 +152,19 @@ export function useController(context: Context) {
             if (isDragging) {
                 if (!editing) { // 处于编辑状态时，不拖动图形
                     if (wheel && asyncTransfer) {
+                        let trans_t = 3;
                         const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
-                        if (!isOut) transform(startPosition, mousePosition);
+                        if (!isOut) {
+                            trans_t = transform(startPosition, mousePosition);
+                        }
+                        if (trans_t & 3) {
+                            startPosition = { ...mousePosition };
+                        } else if (trans_t & 2) {
+                            startPosition.y = mousePosition.y;
+                        } else if (trans_t & 1) {
+                            startPosition.x = mousePosition.x;
+                        }
                     }
-                    startPosition = { ...mousePosition };
                 }
             } else {
                 if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
@@ -201,26 +210,39 @@ export function useController(context: Context) {
     function transform(start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.computeCoord(start.x, start.y);
         const pe: PageXY = matrix.computeCoord(end.x, end.y);
+        let trans_t = 3;
         if (asyncTransfer) {
-            trans(asyncTransfer, ps, pe);
+            pe_if_no_sticked = pe;
+            trans_t = trans(asyncTransfer, ps, pe);
             migrate(shapes, start, end);
         }
+        return trans_t;
     }
-    function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY) {
+    function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         const shape = shapes[0];
-        const target = context.assist.match(shape);
         asyncTransfer.trans(ps, pe);
+        context.assist.match(shape);
         // if (shapes.length === 1) {
         //     const shape = shapes[0];
         //     const target = context.assist.match(shape);
+        //     if (stickedX) {
+        //         if (Math.abs(pe.x - sticked_x_v) > STICKNESS) {
+        //             console.log('解除');
+        //         }
+        //     }
         //     if (target.sticked_by_x) {
         //         const sl = apex(shape, target.align);
         //         const trans_x = target.x - sl;
+        //         stickedX = true;
+        //         sticked_x_v = target.x;
         //         asyncTransfer.stick(trans_x, pe.y - ps.y);
         //     } else {
         //         asyncTransfer.trans(ps, pe);
         //     }
+        // } else {
+        //     asyncTransfer.trans(ps, pe);
         // }
+        return 3;
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selection = context.selection;
