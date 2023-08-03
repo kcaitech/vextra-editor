@@ -31,7 +31,7 @@ function pageViewRegister(mount: boolean) {
     props.context.workspace.setPageViewId(rootId.value);
 }
 watchEffect(() => {
-    get_abbre_pos();
+    // get_abbre_pos();
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
 })
