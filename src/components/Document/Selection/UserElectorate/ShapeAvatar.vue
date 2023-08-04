@@ -5,11 +5,11 @@ import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { Selection, UserSelection } from '@/context/selection'
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection"
+import { XYsBounding } from "@/utils/common";
 
 const props = defineProps<{
     context: Context
-    data: Page,
-    matrix: number[]
+    matrix: Matrix
 }>()
 interface Avatar {
     x: number
@@ -19,62 +19,88 @@ interface Avatar {
     avatar: string | undefined
     userSelectInfo: UserSelection
 }
+interface MultipShape {
+    x: number
+    y: number
+    shapes: Shape[]
+    avatar: string | undefined
+    userSelectInfo: UserSelection
+    shapesIds: string
+}
 
-const matrix = new Matrix(props.matrix);
+const matrix = new Matrix();
 const origin: ClientXY = { x: 0, y: 0 };
 const avatars = ref<Avatar[]>([])
+const multipShape = ref<MultipShape[]>([])
 const userSelectionInfo = ref<UserSelection[]>(props.context.selection.getUserSelection)
 const groupedShapes = ref()
+const multipShapeGroup = ref<any>({})
 const setOrigin = () => {
-    matrix.reset(props.context.workspace.matrix)
-    matrix.preTrans(props.data.frame.x, props.data.frame.y)
+    matrix.reset(props.matrix)
     origin.x = matrix.m02
     origin.y = matrix.m12
 }
-
 const setPosition = () => {
     // const userSelectShape = props.context.selection.getUserSelection
-    const startTime = performance.now();
     avatars.value.length = 0
+    multipShape.value.length = 0
     groupedShapes.value = []
+    multipShapeGroup.value = []
     for (let i = 0; i < userSelectionInfo.value.length; i++) {
         const userSelectInfo = userSelectionInfo.value[i]
         const shapes = userSelectInfo.selectShapes
         const len = userSelectInfo.selectShapes.length
-        if(len) {
-            for (let i = 0; i < len; i++) {
-                const shape = (shapes[i] as Shape)
-                if (shape.parent?.type === ShapeType.Page && shape.isVisible) {
-                    const m = shape.matrix2Root()
-                    const frame = shape.frame;
-                    const matrix = props.context.workspace.matrix
-                    let anchor = {x: frame.width, y: 0}
-                    let rotate = shape.rotation || 0;
-                    rotate = rotate < 0 ? rotate + 360 : rotate;
-                    if (rotate < 135 && rotate >= 45) {
-                        anchor = m.computeCoord({ x: 0, y: 0 });
-                        rotate -= 90;
-                    } else if (rotate < 225 && rotate >= 135) {
-                        anchor = m.computeCoord({ x: 0, y: 0 + frame.height });
-                        rotate -= 180;
-                    } else if (rotate < 315 && rotate >= 225) {
-                        anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
-                        rotate += 90;
-                    } else if (rotate < 360 && rotate > 315) {
-                        anchor = m.computeCoord({ x: frame.width, y: 0 });
-                    } else if (rotate < 45 && rotate >= 0) {
-                        anchor = m.computeCoord({ x: frame.width, y: 0 });
-                    }
-                    anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
-                    anchor.y -= origin.y;
-                    anchor.x -= origin.x;
-                    anchor.y -= 24
-                    const avatar = userSelectInfo.avatar
-                    avatars.value.push({x: anchor.x, y: anchor.y, avatar, shape: shape, rotate, userSelectInfo})
+        if(len === 1) {
+            const shape = (shapes[0] as Shape)
+            if (shape.parent?.type === ShapeType.Page && shape.isVisible) {
+                const m = shape.matrix2Root()
+                const frame = shape.frame;
+                const matrix = props.context.workspace.matrix
+                let anchor = {x: frame.width, y: 0}
+                let rotate = shape.rotation || 0;
+                rotate = rotate < 0 ? rotate + 360 : rotate;
+                if (rotate < 135 && rotate >= 45) {
+                    anchor = m.computeCoord({ x: 0, y: 0 });
+                    rotate -= 90;
+                } else if (rotate < 225 && rotate >= 135) {
+                    anchor = m.computeCoord({ x: 0, y: 0 + frame.height });
+                    rotate -= 180;
+                } else if (rotate < 315 && rotate >= 225) {
+                    anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
+                    rotate += 90;
+                } else if (rotate < 360 && rotate > 315) {
+                    anchor = m.computeCoord({ x: frame.width, y: 0 });
+                } else if (rotate < 45 && rotate >= 0) {
+                    anchor = m.computeCoord({ x: frame.width, y: 0 });
                 }
+                anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
+                anchor.y -= origin.y;
+                anchor.x -= origin.x;
+                anchor.y -= 24
+                const avatar = userSelectInfo.avatar
+                avatars.value.push({x: anchor.x, y: anchor.y, avatar, shape: shape, rotate, userSelectInfo})
             }
+        }else if(len > 1) {
+            const points: { x: number, y: number }[] = [];
+            for (let index = 0; index < shapes.length; index++) {
+                const s = shapes[index];
+                const m = s.matrix2Root()
+                m.multiAtLeft(matrix)
+                const f = s.frame
+                const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+                points.push(...ps);
+            }
+            const b = XYsBounding(points);
+            const avatar = userSelectInfo.avatar
+            let anchor = { x: b.right, y: b.top }
+            anchor.y -= 24
+            const shapesIds = shapes.map(shape => shape.id).sort().join(',');
+            multipShape.value.push({x: anchor.x, y: anchor.y, avatar, shapes: shapes, userSelectInfo, shapesIds})
         }else {
             avatars.value.length = 0
+            multipShape.value.length = 0
+            groupedShapes.value = []
+            multipShapeGroup.value = []
         }
     }
     avatars.value.forEach((item, i) => {
@@ -83,7 +109,14 @@ const setPosition = () => {
         }
         groupedShapes.value[item.shape.id].push(item);
     });
-    const endTime = performance.now();
+
+    multipShape.value.forEach(item => {
+        const shapesIds = item.shapes.map(shape => shape.id).sort().join(',');
+        if (!multipShapeGroup.value[shapesIds]) {
+            multipShapeGroup.value[shapesIds] = [];
+        }
+        multipShapeGroup.value[shapesIds].push(item);
+    });
 }
 
 const workspaceUpdate = (t: number) => {
@@ -125,19 +158,16 @@ function watchShapes() { // 监听相关shape的变化
         watchedShapes.set(k, v);
     })
 }
-
 onMounted(() => {
     props.context.workspace.watch(workspaceUpdate)
     props.context.selection.watch(updater)
-    props.data.watch(watcher)
 })
 
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate)
     props.context.selection.unwatch(updater)
-    props.data.watch(watcher)
 })
-watchEffect(() => updater())
+watchEffect(() => setPosition())
 
 </script>
 
@@ -149,6 +179,15 @@ watchEffect(() => updater())
                 <div class="avatars" v-if="i < 3"><img :src="u.avatar" alt=""></div>
             </template>
             <div class="avatars bgc" v-if="groupedShapes[a.shape.id].length > 3">{{ groupedShapes[a.shape.id].length }}</div>
+        </div>
+    </div>
+    <div class="container" v-if="multipShape">
+        <div class="avatar_content" v-for="(m, index) in multipShape" :key="index"
+            :style="{top: `${m.y}px`, left: `${m.x - (Math.min(multipShapeGroup[m.shapesIds].length, 4) * 20)}px`}">
+            <template v-for="(u, i) in multipShapeGroup[m.shapesIds]" :key="i">
+                <div class="avatars" v-if="i < 3"><img :src="u.avatar" alt=""></div>
+            </template>
+            <div class="avatars bgc" v-if="multipShapeGroup[m.shapesIds].length > 3">{{ multipShapeGroup[m.shapesIds].length }}</div>
         </div>
     </div>
 </template>

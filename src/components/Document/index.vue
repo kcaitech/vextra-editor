@@ -27,6 +27,7 @@ import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
 import { DocSelectionOp } from "@/context/communication/doc_selection_op";
 import { throttle } from "@/utils/timing_util";
+import { DocSelectionOpData, DocSelectionOpType, DocSelectionData } from "@/communication/modules/doc_selection_op"
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -380,6 +381,7 @@ const getDocumentInfo = async () => {
             await context.communication.docCommentOp.start(token, docId);
             await context.communication.docSelectionOp.start(token, docId);
             context.selection.watch(selectionWatcherForOp);
+            context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
             const list = usetSelection(context)
             context.selection.setUsetSelection(list)
         }
@@ -534,6 +536,7 @@ function init_doc() {
             upload();
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
+            context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
         } else {
             router.push('/');
         }
@@ -649,7 +652,7 @@ function onUnloadForCommunication() {
 // 浏览器弹框提示
 const confirmClose = (e: any) => {
     onUnloadForCommunication();
-    if(context?.communication.docOp.hasPendingSyncCmd()) return;
+    if(!context?.communication.docOp.hasPendingSyncCmd()) return;
     e.preventDefault();
     const confirmationMessage = t('message.leave');
     e.returnValue = confirmationMessage;
@@ -661,6 +664,23 @@ const closeNetMsg = () => {
     insertNetworkInfo('networkError', false, network_error)
     insertNetworkInfo('netError', false, network_anomaly)
     insertNetworkInfo('networkSuccess', false, link_success)
+}
+//协作人员进入过操作文档执行
+const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
+    console.log(docCommentOpData, 'docCommentOpData');
+    const data = docCommentOpData.data
+    if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
+        const addUset = context!.selection.getUserSelection
+        if(docCommentOpData.type === DocSelectionOpType.Exit) {
+            // addUset.push(data)
+            context!.selection.setUsetSelection(addUset)
+        }else if (docCommentOpData.type === DocSelectionOpType.Update) {
+            // const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+            // if(index != -1) {
+            //     addUset[index] = data
+            // }
+        }
+    }
 }
 
 onMounted(() => {

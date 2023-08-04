@@ -132,7 +132,7 @@ declare module '@vue/runtime-core' {
     SelectView: typeof import('./src/components/Document/Selection/Controller/Text/SelectView.vue')['default']
     Serviceagreement: typeof import('./src/components/Login/Serviceagreement.vue')['default']
     Shadow: typeof import('./src/components/Document/Attribute/Shadow.vue')['default']
-    ShapeAvatar: typeof import('./src/components/Document/Content/ShapeAvatar.vue')['default']
+    ShapeAvatar: typeof import('./src/components/Document/Selection/UserElectorate/ShapeAvatar.vue')['default']
     ShapeGroup: typeof import('./src/components/Document/Content/ShapeGroup.vue')['default']
     ShapeGroupShape: typeof import('./src/components/Document/Content/ShapeGroupShape.vue')['default']
     ShapeItem: typeof import('./src/components/Document/Navigation/ShapeItem.vue')['default']
@@ -164,6 +164,6 @@ declare module '@vue/runtime-core' {
     UndoRedo: typeof import('./src/components/Document/Toolbar/UndoRedo.vue')['default']
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
-    UsersSelection: typeof import('./src/components/Document/Selection/UsersSelection.vue')['default']
+    UsersSelection: typeof import('./src/components/Document/Selection/UserElectorate/UsersSelection.vue')['default']
   }
 }

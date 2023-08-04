@@ -29,7 +29,7 @@ import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action } from "@/context/tool";
 import { initpal } from './initpal';
-import UsersSelection from './Selection/UsersSelection.vue';
+import UsersSelection from './Selection/UserElectorate/UsersSelection.vue';
 
 interface Props {
     context: Context

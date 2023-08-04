@@ -22,7 +22,7 @@ export type DocSelectionData = {
 
 export type DocSelectionOpData = {
     type: DocSelectionOpType,
-    userId: string,
+    user_id: string,
     data: DocSelectionData,
 }
 

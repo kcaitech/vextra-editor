@@ -1,25 +1,36 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, reactive } from 'vue'
 import { Context } from '@/context'
-import { Matrix, Shape } from "@kcdesign/data";
+import { Matrix, Shape, TextShape, Page } from "@kcdesign/data";
 import { Selection, UserSelection } from '@/context/selection'
 import { XYsBounding } from "@/utils/common";
-import { genRectPath } from './common'
+import { genRectPath } from '../common'
 import { WorkSpace } from '@/context/workspace'
-import { forEach } from 'lodash';
+import ShapeAvatar from './ShapeAvatar.vue';
 interface Props {
     context: Context
     matrix: Matrix
 }
+
+const userSelectColor = ['#FF7A05', '#FFAB05', '#E701FF', '#FF0172', '#00C9C5', '#0199FF', '#6FFFAC', '#36C45F', '#13D6F4', '#9112D1']
 const props = defineProps<Props>();
-const tracingPath = ref<string[]>([]);
-const isHover = ref<boolean>(false);
+type BorderPath = {
+    path: string
+    color: string
+}
+type TextFillPath = {
+    path: string
+    color: string
+}
+const tracingPath = ref<BorderPath[]>([]);
+const selectPath = ref<TextFillPath[]>([]);
 const usersSelectionList = ref<UserSelection[]>(props.context.selection.getUserSelection)
 const matrix = new Matrix();
+const submatrix = reactive(new Matrix());
 
 const createShapeTracing = () => { // 描边 
     tracingPath.value = []
-    const startTime = performance.now();
+    selectPath.value = []
     for (let i = 0; i < usersSelectionList.value.length; i++) {
         const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
         const selection: Shape[] = props.context.selection.selectedShapes;
@@ -27,16 +38,26 @@ const createShapeTracing = () => { // 描边
         const shapes = userSelectInfo.selectShapes
         const len = shapes.length
         if (len === 1) {
-            if(hoveredShape && hoveredShape.id === shapes[0].id || selection.length > 0 && selection[0].id === shapes[0].id) continue
+            if (hoveredShape && hoveredShape.id === shapes[0].id || selection.length > 0 && selection[0].id === shapes[0].id) continue
             const s = selection.find(v => v.id === shapes[0].id)
-            if(s) continue
+            if (s) continue
             const m = shapes[0].matrix2Root()
             m.multiAtLeft(matrix)
             const path = shapes[0].getPath()
             path.transform(m)
-            tracingPath.value.push(path.toString())
+            const borPath = {path: path.toString(), color: userSelectColor[i]}
+            tracingPath.value.push(borPath)
+            // if (shapes[0] instanceof TextShape) {
+            //     const m2p = shapes[0].matrix2Root();
+            //     submatrix.reset(m2p);
+            //     submatrix.multiAtLeft(props.matrix);
+            //     submatrix.reset(submatrix as Matrix)
+            //     const path = shapes[0].text.locateRange(userSelectInfo.cursorStart, userSelectInfo.cursorEnd).map((point) => submatrix.computeCoord(point.x, point.y))
+            //     const textPath = {path: genRectPath(path), color: userSelectColor[i]}
+            //     selectPath.value.push(textPath)
+            // }
         } else if (len > 1) {
-            if (arraysOfObjectsWithIdAreEqual(selection, shapes)) continue
+            if (arraysOfObjectsWithIdAreEqual(shapes, selection)) continue
             const points: { x: number, y: number }[] = [];
             for (let index = 0; index < shapes.length; index++) {
                 const s = shapes[index];
@@ -48,24 +69,22 @@ const createShapeTracing = () => { // 描边
             }
             const b = XYsBounding(points);
             const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
-            tracingPath.value.push(genRectPath(framePoint))
+            const borPath = {path: genRectPath(framePoint), color: userSelectColor[i]}
+            tracingPath.value.push(borPath)
         }
     }
-    const endTime = performance.now();
-    const executionTime = endTime - startTime;
 }
 
 function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
-  if (arr1.length !== arr2.length) {
-    return false;
-  }
-  for (const obj1 of arr1) {
-    const match = arr2.some((obj2: any) => obj1.id === obj2.id);
-    if (!match) {
-      return false;
+    const idsSet1 = new Set(arr1.map((obj: any) => obj.id));
+    const idsSet2 = new Set(arr2.map((obj: any) => obj.id));
+
+    for (const id of idsSet1) {
+        if (!idsSet2.has(id)) {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 function update_by_shapes() {
@@ -78,20 +97,13 @@ const selectionWatcher = (t?: any) => {
         update_by_shapes()
         createShapeTracing()
     }
-    if(t === Selection.CHANGE_SHAPE_HOVER) {
-        createShapeTracing()
-    }
-    if(t === Selection.CHANGE_SHAPE) {
-        createShapeTracing()
-    }
 }
 
 const workspaceUpdate = (t: number) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(props.matrix);
         createShapeTracing()
-    }
-    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         matrix.reset(props.matrix);
         createShapeTracing();
     }
@@ -113,9 +125,11 @@ onUnmounted(() => {
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="position: absolute">
-        <path v-for="(p, i) in tracingPath" :key="i" :d="p" fill="transparent" stroke="#ac08b8" stroke-width="1.5px"
-            opacity="0.6"></path>
+        <path v-for="(p, i) in tracingPath" :key="i" :d="p.path" fill="transparent" :stroke="p.color" stroke-width="1.5px"
+            opacity="0.8"></path>
+        <!-- <path v-for="(p, i) in selectPath" :key="i" :d="p.path" :fill="p.color" fill-opacity="0.5" stroke='none'></path> -->
     </svg>
+    <ShapeAvatar :context="props.context" :matrix="props.matrix"></ShapeAvatar>
 </template>
 
 <style lang="scss" scoped></style>
