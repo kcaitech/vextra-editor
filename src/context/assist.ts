@@ -15,6 +15,18 @@ interface PointGroup {
     apexX: number[]
     apexY: number[]
 }
+interface PT1 {
+    x: number
+    sy: number
+    align: Align
+    delta: number | undefined
+}
+interface PT2 {
+    y: number
+    sx: number
+    align: Align
+    delta: number | undefined
+}
 export enum Align {
     LT_X,
     RT_X,
@@ -76,58 +88,24 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_y = [];
         this.m_current_pg = update_pg(s);
         const s_pg = this.m_current_pg;
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, align: Align.LT_X };
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
+        const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
+        const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const cs = this.m_shape_inner[i];
             if (cs.id === s.id) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
             if (!c_pg) continue;
-            const apexX = c_pg.apexX;
-            for (let i = 0; i < apexX.length; i++) {
-                if (Math.abs(apexX[i] - s_pg.rt.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.rt.y }]);
-                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.RT_X;
-                }
-                if (Math.abs(apexX[i] - s_pg.pivot.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.pivot.y }]);
-                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.C_X;
-                }
-                if (Math.abs(apexX[i] - s_pg.rb.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.rb.y }]);
-                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.RB_X;
-                }
-                if (Math.abs(apexX[i] - s_pg.lb.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.lb.y }]);
-                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.LB_X;
-                }
-                if (Math.abs(apexX[i] - s_pg.lt.x) < Asssit.STICKNESS) {
-                    this.m_nodes_x = (this.m_x_axis.get(apexX[i]) || []).concat([{ x: apexX[i], y: s_pg.lt.y }]);
-                    target.x = apexX[i], target.sticked_by_x = true, target.align = Align.LT_X;
-                }
-            }
-            const apexY = c_pg.apexY;
-            for (let i = 0; i < apexY.length; i++) {
-                if (Math.abs(apexY[i] - s_pg.rt.y) < Asssit.STICKNESS) {
-                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.rt.x, y: apexY[i] }]);
-                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.RT_Y;
-                }
-                if (Math.abs(apexY[i] - s_pg.pivot.y) < Asssit.STICKNESS) {
-                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.pivot.x, y: apexY[i] }]);
-                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.C_Y;
-                }
-                if (Math.abs(apexY[i] - s_pg.rb.y) < Asssit.STICKNESS) {
-                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.rb.x, y: apexY[i] }]);
-                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.RB_Y;
-                }
-                if (Math.abs(apexY[i] - s_pg.lb.y) < Asssit.STICKNESS) {
-                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.lb.x, y: apexY[i] }]);
-                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.LB_Y;
-                }
-                if (Math.abs(apexY[i] - s_pg.lt.y) < Asssit.STICKNESS) {
-                    this.m_nodes_y = (this.m_y_axis.get(apexY[i]) || []).concat([{ x: s_pg.lt.x, y: apexY[i] }]);
-                    target.y = apexY[i], target.sticked_by_y = true, target.align = Align.LT_Y;
-                }
-            }
+            modify_pt_x(pre_target1, s_pg, c_pg.apexX);
+            modify_pt_y(pre_target2, s_pg, c_pg.apexY);
+        }
+        if (pre_target1.delta !== undefined) {
+            target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{ x: target.x, y: pre_target1.sy }]);
+        }
+        if (pre_target2.delta !== undefined) {
+            target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ x: pre_target2.sx, y: target.y }]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
@@ -179,15 +157,11 @@ function isShapeOut(context: Context, shape: Shape) {
     const { width, height } = shape.frame;
     const m = shape.matrix2Root();
     m.multiAtLeft(context.workspace.matrix);
-    const point = [[0, 0], [width, 0], [width, height], [0, height]].map(p => {
-        const _p = m.computeCoord2(p[0], p[1]);
-        return [_p.x, _p.y];
-    })
-    const r = Math.max(point[0][0], point[1][0], point[2][0], point[3][0]);
-    const l = Math.min(point[0][0], point[1][0], point[2][0], point[3][0]);
-    const t = Math.min(point[0][1], point[1][1], point[2][1], point[3][1]);
-    const b = Math.max(point[0][1], point[1][1], point[2][1], point[3][1]);
-    return l > right - x || r < 0 || b < 0 || t > bottom - y;
+    const point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }].map(p => m.computeCoord2(p.x, p.y));
+    return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
+        Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
+        Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
+        Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
 }
 function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, PageXY[]>, y_axis: Map<number, PageXY[]>) {
     let result: Shape[] = [];
@@ -218,22 +192,54 @@ function getClosestAB(shape: Shape) {
 function _collect(context: Context) {
     context.assist.collect();
 }
-function get_nodes_from_pg_by_x(pg: PointGroup, x: number) {
-    const result: PageXY[] = [];
-    const pvs = Object.values(pg);
-    for (let i = 0; i < pvs.length; i++) {
-        const p = pvs[i];
-        if (p.x === x) result.push(p);
+function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[]) {
+    for (let i = 0; i < apexX.length; i++) {
+        const x = apexX[i]
+        const delta1 = Math.abs(x - s_pg.lt.x);
+        if (delta1 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta1 < pre_target1.delta)) {
+            pre_target1.delta = delta1, pre_target1.x = x, pre_target1.sy = s_pg.lt.y, pre_target1.align = Align.LT_X;
+        }
+        const delta2 = Math.abs(x - s_pg.pivot.x);
+        if (delta2 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta2 < pre_target1.delta)) {
+            pre_target1.delta = delta2, pre_target1.x = x, pre_target1.sy = s_pg.pivot.y, pre_target1.align = Align.C_X;
+        }
+        const delta3 = Math.abs(x - s_pg.rb.x)
+        if (delta3 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta3 < pre_target1.delta)) {
+            pre_target1.delta = delta3, pre_target1.x = x, pre_target1.sy = s_pg.rb.y, pre_target1.align = Align.RB_X;
+        }
+        const delta4 = Math.abs(x - s_pg.lb.x);
+        if (delta4 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta4 < pre_target1.delta)) {
+            pre_target1.delta = delta4, pre_target1.x = x, pre_target1.sy = s_pg.lb.y, pre_target1.align = Align.LB_X;
+        }
+        const delta5 = Math.abs(x - s_pg.rt.x);
+        if (delta5 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta5 < pre_target1.delta)) {
+            pre_target1.delta = delta5, pre_target1.x = x, pre_target1.sy = s_pg.rt.y, pre_target1.align = Align.RT_X;
+        }
     }
-    return result;
 }
-function get_nodes_from_pg_by_y(pg: PointGroup, y: number) {
-    const result: PageXY[] = [];
-    const pvs = Object.values(pg);
-    for (let i = 0; i < pvs.length; i++) {
-        const p = pvs[i];
-        if (p.y === y) result.push(p);
+function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[]) {
+    for (let i = 0; i < apexY.length; i++) {
+        const y = apexY[i];
+        const delta1 = Math.abs(y - s_pg.lt.y);
+        if (delta1 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta1 < pre_target2.delta)) {
+            pre_target2.delta = delta1, pre_target2.y = y, pre_target2.sx = s_pg.lt.x, pre_target2.align = Align.LT_Y;
+        }
+        const delta2 = Math.abs(y - s_pg.pivot.y);
+        if (delta2 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta2 < pre_target2.delta)) {
+            pre_target2.delta = delta2, pre_target2.y = y, pre_target2.sx = s_pg.pivot.x, pre_target2.align = Align.C_Y;
+        }
+        const delta3 = Math.abs(y - s_pg.rb.y);
+        if (delta3 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta3 < pre_target2.delta)) {
+            pre_target2.delta = delta3, pre_target2.y = y, pre_target2.sx = s_pg.rb.x, pre_target2.align = Align.RB_Y;
+        }
+        const delta4 = Math.abs(y - s_pg.lb.y);
+        if (delta4 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta4 < pre_target2.delta)) {
+            pre_target2.delta = delta4, pre_target2.y = y, pre_target2.sx = s_pg.lb.x, pre_target2.align = Align.LB_Y;
+        }
+        const delta5 = Math.abs(y - s_pg.rt.y);
+        if (delta5 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta5 < pre_target2.delta)) {
+            pre_target2.delta = delta5, pre_target2.y = y, pre_target2.sx = s_pg.rt.x, pre_target2.align = Align.RT_Y;
+        }
     }
-    return result;
 }
 export const collect_once = debounce(_collect, 100);

@@ -17,7 +17,6 @@ import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
 import { Asssit } from '@/context/assist';
-import { apex } from '@/utils/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
