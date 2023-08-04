@@ -68,7 +68,7 @@ export class Asssit extends Watchable(Object) {
         this.clear();
         this.m_shape_inner = finder(this.m_context, page, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
         const e = Date.now();
-        console.log('点位收集用时(ms):', e - s);
+        // console.log('点位收集用时(ms):', e - s);
     }
     selection_watcher(t?: any) {
         if (t === Selection.CHANGE_SHAPE) {
@@ -109,7 +109,7 @@ export class Asssit extends Watchable(Object) {
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
-        console.log('单次匹配用时(ms):', e - st);
+        // console.log('单次匹配用时(ms):', e - st);
         return target;
     }
     match_test() {

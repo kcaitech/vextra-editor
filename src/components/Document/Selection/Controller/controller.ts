@@ -17,11 +17,12 @@ import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
 import { Asssit } from '@/context/assist';
+import { distance2apex } from '@/utils/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
     const dragActiveDis = 3;
-    const STICKNESS = Asssit.STICKNESS + 2;
+    const STICKNESS = Asssit.STICKNESS;
     let timer: any;
     const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
@@ -145,37 +146,65 @@ export function useController(context: Context) {
         }
     }
     function mousemove(e: MouseEvent) {
-        if (e.buttons == 1) { //只处理鼠标左键按下时的移动
-            const { clientX, clientY } = e;
-            const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
-            if (isDragging) {
-                if (!editing) { // 处于编辑状态时，不拖动图形
-                    if (wheel && asyncTransfer) {
-                        let trans_t = 3;
-                        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
-                        if (!isOut) {
-                            trans_t = transform(startPosition, mousePosition);
-                        }
-                        if (trans_t & 3) {
-                            startPosition = { ...mousePosition };
-                        } else if (trans_t & 2) {
-                            startPosition.y = mousePosition.y;
-                        } else if (trans_t & 1) {
-                            startPosition.x = mousePosition.x;
-                        }
-                    }
-                }
-            } else {
-                if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
-                    isDragging = true;
-                    if (e.altKey) shapes = paster_short(context, shapes);
-                    asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
-                    context.selection.unHoverShape();
-                    workspace.value.setSelectionViewUpdater(false);
-                    workspace.value.translating(true);
-                }
-            }
+        if (e.buttons !== 1) return;
+        const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
+        if (isDragging && !editing && wheel && asyncTransfer) {
+            let trans_t = 3;
+            const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+            if (!isOut) trans_t = transform(startPosition, mousePosition);
+            if (trans_t === 3) startPosition = { ...mousePosition };
+            else if (trans_t === 2) startPosition.y = mousePosition.y;
+            else if (trans_t === 1) startPosition.x = mousePosition.x;
+        } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
+            if (e.altKey) shapes = paster_short(context, shapes);
+            asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
+            context.selection.unHoverShape();
+            workspace.value.setSelectionViewUpdater(false);
+            workspace.value.translating(true);
+            isDragging = true;
         }
+    }
+    function transform(start: ClientXY, end: ClientXY) {
+        const ps: PageXY = matrix.computeCoord(start.x, start.y);
+        const pe: PageXY = matrix.computeCoord(end.x, end.y);
+        let trans_t = 3;
+        if (asyncTransfer) {
+            pe_if_no_sticked = pe;
+            trans_t = trans(asyncTransfer, ps, pe);
+            migrate(shapes, start, end);
+        }
+        return trans_t;
+    }
+    function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
+        // const shape = shapes[0];
+        // asyncTransfer.trans(ps, pe);
+        // context.assist.match(shape);
+        if (shapes.length === 1) {
+            const shape = shapes[0];
+            const target = context.assist.match(shape);
+            if (stickedX) {
+                if (Math.abs(pe.x - ps.x) > STICKNESS) {
+                    console.log('解除');
+                    asyncTransfer.trans(ps, pe);
+                    stickedX = false;
+                    return 3;
+                } else {
+                    pe.x = ps.x;
+                    asyncTransfer.trans(ps, pe);
+                    return 2;
+                }
+            } else if (target.sticked_by_x) {
+                const distance = distance2apex(shape, target.alignX), trans_x = target.x - distance;
+                stickedX = true, sticked_x_v = target.x;
+                asyncTransfer.stick(trans_x, pe.y - ps.y);
+                return 2;
+            } else {
+                asyncTransfer.trans(ps, pe);
+            }
+        } else {
+            asyncTransfer.trans(ps, pe);
+        }
+        return 3;
     }
     function mouseup(e: MouseEvent) {
         if (e.button === 0) { // 只处理鼠标左键按下时的抬起
@@ -205,43 +234,6 @@ export function useController(context: Context) {
         }
         context.cursor.cursor_freeze(false);
         workspace.value.setCtrl('page');
-    }
-    function transform(start: ClientXY, end: ClientXY) {
-        const ps: PageXY = matrix.computeCoord(start.x, start.y);
-        const pe: PageXY = matrix.computeCoord(end.x, end.y);
-        let trans_t = 3;
-        if (asyncTransfer) {
-            pe_if_no_sticked = pe;
-            trans_t = trans(asyncTransfer, ps, pe);
-            migrate(shapes, start, end);
-        }
-        return trans_t;
-    }
-    function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
-        const shape = shapes[0];
-        asyncTransfer.trans(ps, pe);
-        context.assist.match(shape);
-        // if (shapes.length === 1) {
-        //     const shape = shapes[0];
-        //     const target = context.assist.match(shape);
-        //     if (stickedX) {
-        //         if (Math.abs(pe.x - sticked_x_v) > STICKNESS) {
-        //             console.log('解除');
-        //         }
-        //     }
-        //     if (target.sticked_by_x) {
-        //         const sl = apex(shape, target.align);
-        //         const trans_x = target.x - sl;
-        //         stickedX = true;
-        //         sticked_x_v = target.x;
-        //         asyncTransfer.stick(trans_x, pe.y - ps.y);
-        //     } else {
-        //         asyncTransfer.trans(ps, pe);
-        //     }
-        // } else {
-        //     asyncTransfer.trans(ps, pe);
-        // }
-        return 3;
     }
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selection = context.selection;

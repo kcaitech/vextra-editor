@@ -35,6 +35,6 @@ get_pos[Align.LB_Y] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(0, shape.frame.height).y;
 }
 
-export function delta2apex(shape: Shape, align: Align): number {
+export function distance2apex(shape: Shape, align: Align): number {
     return get_pos[align](shape);
 } 
