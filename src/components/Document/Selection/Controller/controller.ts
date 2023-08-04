@@ -36,8 +36,6 @@ export function useController(context: Context) {
     let need_update_comment: boolean = false;
     let stickedX: boolean = false;
     let stickedY: boolean = false;
-    let sticked_x_v: number = 0;
-    let sticked_y_v: number = 0;
     let pe_if_no_sticked: PageXY = { x: 0, y: 0 };
     const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
@@ -195,7 +193,7 @@ export function useController(context: Context) {
                 }
             } else if (target.sticked_by_x) {
                 const distance = distance2apex(shape, target.alignX), trans_x = target.x - distance;
-                stickedX = true, sticked_x_v = target.x;
+                stickedX = true;
                 asyncTransfer.stick(trans_x, pe.y - ps.y);
                 return 2;
             } else {

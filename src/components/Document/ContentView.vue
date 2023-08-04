@@ -11,7 +11,7 @@ import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboa
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace';
-import { collect_once } from '@/context/assist';
+import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
 import { useRoute } from 'vue-router';
 import { debounce } from 'lodash';
