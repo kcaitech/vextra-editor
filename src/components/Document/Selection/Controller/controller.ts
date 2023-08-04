@@ -147,12 +147,12 @@ export function useController(context: Context) {
         if (e.buttons !== 1) return;
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
         if (isDragging && !editing && wheel && asyncTransfer) {
-            let trans_t = 3;
+            let update_type = 0;
             const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
-            if (!isOut) trans_t = transform(startPosition, mousePosition);
-            if (trans_t === 3) startPosition = { ...mousePosition };
-            else if (trans_t === 2) startPosition.y = mousePosition.y;
-            else if (trans_t === 1) startPosition.x = mousePosition.x;
+            if (!isOut) update_type = transform(startPosition, mousePosition);
+            if (update_type === 3) startPosition = { ...mousePosition };
+            else if (update_type === 2) startPosition.y = mousePosition.y;
+            else if (update_type === 1) startPosition.x = mousePosition.x;
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
             if (e.altKey) shapes = paster_short(context, shapes);
             asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
@@ -165,44 +165,51 @@ export function useController(context: Context) {
     function transform(start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.computeCoord(start.x, start.y);
         const pe: PageXY = matrix.computeCoord(end.x, end.y);
-        let trans_t = 3;
+        let update_type = 0;
         if (asyncTransfer) {
             pe_if_no_sticked = pe;
-            trans_t = trans(asyncTransfer, ps, pe);
+            update_type = trans(asyncTransfer, ps, pe);
             migrate(shapes, start, end);
         }
-        return trans_t;
+        return update_type;
     }
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
-        // const shape = shapes[0];
-        // asyncTransfer.trans(ps, pe);
-        // context.assist.match(shape);
+        let update_type = 3;
+        const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
         if (shapes.length === 1) {
             const shape = shapes[0];
             const target = context.assist.match(shape);
             if (stickedX) {
-                if (Math.abs(pe.x - ps.x) > STICKNESS) {
-                    console.log('解除');
-                    asyncTransfer.trans(ps, pe);
-                    stickedX = false;
-                    return 3;
-                } else {
+                if (Math.abs(pe.x - ps.x) > STICKNESS) stickedX = false;
+                else {
                     pe.x = ps.x;
-                    asyncTransfer.trans(ps, pe);
-                    return 2;
+                    update_type = update_type - 1;
                 }
             } else if (target.sticked_by_x) {
                 const distance = distance2apex(shape, target.alignX), trans_x = target.x - distance;
+                stick.dx = trans_x, stick.sticked_x = true;
+                if (!stickedY) stick.dy = pe.y - ps.y;
+                update_type = update_type - 1;
                 stickedX = true;
-                asyncTransfer.stick(trans_x, pe.y - ps.y);
-                return 2;
-            } else {
-                asyncTransfer.trans(ps, pe);
             }
+            if (stickedY) {
+                if (Math.abs(pe.y - ps.y) > STICKNESS) stickedY = false;
+                else {
+                    pe.y = ps.y;
+                    update_type = update_type - 2;
+                }
+            } else if (target.sticked_by_y) {
+                const distance = distance2apex(shape, target.alignY), trans_y = target.y - distance;
+                stick.dy = trans_y, stick.sticked_y = true;
+                if (!stick.sticked_x) stick.dx = pe.x - ps.x;
+                update_type = update_type - 2;
+                stickedY = true;
+            }
+            if (stick.sticked_x || stick.sticked_y) asyncTransfer.stick(stick.dx, stick.dy); else asyncTransfer.trans(ps, pe);
         } else {
             asyncTransfer.trans(ps, pe);
         }
-        return 3;
+        return update_type;
     }
     function mouseup(e: MouseEvent) {
         if (e.button === 0) { // 只处理鼠标左键按下时的抬起
