@@ -164,4 +164,13 @@ export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[])
         }
     }
 }
+export function get_tree(shape: Shape, init?: Map<string, Shape>) {
+    const result = init || new Map();
+    result.set(shape.id, shape);
+    const cs = shape.childs
+    if (cs && cs.length) {
+        for (let i = 0; i < cs.length; i++)  get_tree(cs[i], result);
+    }
+    return result;
+}
 export const collect_once = debounce(_collect, 100);

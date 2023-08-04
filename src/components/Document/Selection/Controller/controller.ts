@@ -179,6 +179,7 @@ export function useController(context: Context) {
         if (shapes.length === 1) {
             const shape = shapes[0];
             const target = context.assist.match(shape);
+            if (!target) return update_type;
             if (stickedX) {
                 if (Math.abs(pe.x - ps.x) > STICKNESS) stickedX = false;
                 else {
