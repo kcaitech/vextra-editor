@@ -33,10 +33,6 @@ export class DocUpload extends Watchable(Object) {
         return true
     }
 
-    public available(): boolean {
-        return this.docUpload !== undefined
-    }
-
     public async upload(document: Document): Promise<Response> {
         if (!this.docUpload) {
             console.error("DocUpload未启动")

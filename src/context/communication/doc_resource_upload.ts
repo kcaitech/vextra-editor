@@ -36,10 +36,6 @@ export class DocResourceUpload extends Watchable(Object) {
         return true
     }
 
-    public available(): boolean {
-        return this.docResourceUpload !== undefined
-    }
-
     public async upload(name: string, data: ArrayBuffer): Promise<boolean> {
         if (!this.docResourceUpload) {
             console.error("DocResourceUpload未启动")

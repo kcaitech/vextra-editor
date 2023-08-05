@@ -130,20 +130,6 @@ function selectionWatcher(t: number) {
     }
 }
 
-let docSelectionOpUpdate: typeof DocSelectionOp.prototype.update | undefined;
-function selectionWatcherForOp(t: number) {
-    if (![Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE, Selection.CHANGE_SHAPE_HOVER, Selection.CHANGE_TEXT].includes(t)) return;
-    if (!context) return;
-    if (!docSelectionOpUpdate) docSelectionOpUpdate = throttle(context.communication.docSelectionOp.update, 1000).bind(context.communication.docSelectionOp);
-    docSelectionOpUpdate({
-        select_page_id: context.selection.selectedPage?.id ?? "",
-        select_shape_id_list: context.selection.selectedShapes.map((shape) => shape.id),
-        hover_shape_id: context.selection.hoveredShape?.id,
-        cursor_start: context.selection.cursorStart,
-        cursor_end: context.selection.cursorEnd,
-    }).catch(err => {});
-}
-
 function keyboardEventHandler(event: KeyboardEvent) {
     const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
@@ -332,7 +318,7 @@ const getDocumentInfo = async () => {
             return
         }
         permType.value = dataInfo.data.document_permission.perm_type;
-        //获取文档类型是否为私有文档且有无权限   
+        //获取文档类型是否为私有文档且有无权限
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -369,17 +355,16 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "").then(() => {
+            if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
                 switchPage(context!.data.pagesList[0]?.id);
                 loading.value = false;
-            }).catch((err) => {
+            } else {
                 router.push("/");
-                console.error(err);
-            });
+                return;
+            }
             await context.communication.docResourceUpload.start(token, docId);
             await context.communication.docCommentOp.start(token, docId);
-            await context.communication.docSelectionOp.start(token, docId);
-            context.selection.watch(selectionWatcherForOp);
+            await context.communication.docSelectionOp.start(token, docId, context);
         }
         getUserInfo()
     } catch (err) {
@@ -394,7 +379,7 @@ async function upload() {
     const token = localStorage.getItem("token");
     if (!token || !context || !context.data) return;
     if (!await context.communication.docUpload.start(token)) {
-        // todo 上传失败处理
+        // todo 上传通道开启失败处理
         return;
     }
     let result;
@@ -413,13 +398,12 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
-    context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "").catch((err) => {
-        console.error(err);
-    });
+    if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
+        // todo 文档操作通道开启失败处理
+    }
     context.communication.docResourceUpload.start(token, doc_id);
     context.communication.docCommentOp.start(token, doc_id);
-    context.communication.docSelectionOp.start(token, doc_id);
-    context.selection.watch(selectionWatcherForOp);
+    context.communication.docSelectionOp.start(token, doc_id, context);
     context.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
 let timer: any = null;
@@ -558,11 +542,9 @@ function onUnloadForCommunication() {
 // 浏览器弹框提示
 const confirmClose = (e: any) => {
     onUnloadForCommunication();
-    if(context?.communication.docOp.hasPendingSyncCmd()) return;
+    if(!context?.communication.docOp.hasPendingSyncCmd()) return;
     e.preventDefault();
-    const confirmationMessage = t('message.leave');
-    e.returnValue = confirmationMessage;
-    return confirmationMessage;
+    return e.returnValue = t('message.leave');
 }
 
 const closeNetMsg = () => {
@@ -584,7 +566,6 @@ onUnmounted(() => {
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     context?.selection.unwatch(selectionWatcher);
-    context?.selection.unwatch(selectionWatcherForOp);
     context?.workspace.unwatch(workspaceWatcher);
     document.removeEventListener('keydown', keyboardEventHandler);
     clearInterval(timer);

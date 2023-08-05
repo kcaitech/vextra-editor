@@ -16,12 +16,12 @@ export function throttle<T extends (this: any, ...args: any[]) => any>(func: T, 
         const remaining = delay - (now - previous)
         if (remaining <= 0) {
             previous = now
-            return func.apply(this, args)
+            return func.apply(this, args) // eslint-disable-line prefer-spread
         }
         return new Promise((resolve, reject) => {
             timer = setTimeout(() => {
                 previous = Date.now()
-                resolve(func.apply(this, args))
+                resolve(func.apply(this, args)) // eslint-disable-line prefer-spread
             }, remaining) as any
             cancel = reject
         })
@@ -41,7 +41,7 @@ export function debounce<T extends (this: any, ...args: any[]) => any>(func: T, 
         }
         return new Promise((resolve, reject) => {
             timer = setTimeout(() => {
-                resolve(func.apply(this, args))
+                resolve(func.apply(this, args)) // eslint-disable-line prefer-spread
             }, delay) as any
             cancel = reject
         })
