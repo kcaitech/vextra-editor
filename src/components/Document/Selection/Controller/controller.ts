@@ -36,7 +36,6 @@ export function useController(context: Context) {
     let need_update_comment: boolean = false;
     let stickedX: boolean = false;
     let stickedY: boolean = false;
-    let pe_if_no_sticked: PageXY = { x: 0, y: 0 };
     const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
@@ -168,7 +167,6 @@ export function useController(context: Context) {
         const pe: PageXY = matrix.computeCoord(end.x, end.y);
         let update_type = 0;
         if (asyncTransfer) {
-            pe_if_no_sticked = pe;
             update_type = trans(asyncTransfer, ps, pe);
             migrate(shapes, start, end);
         }

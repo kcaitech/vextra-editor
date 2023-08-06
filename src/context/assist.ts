@@ -1,7 +1,7 @@
 import { Shape, Watchable } from "@kcdesign/data";
 import { PageXY } from "./selection";
 import { Context } from ".";
-import { _collect, finder, get_tree, modify_pt_x, modify_pt_y, update_pg } from "@/utils/assist";
+import { _collect, finder, get_tree, modify_pt_x, modify_pt_x4p, modify_pt_y, modify_pt_y4p, update_pg } from "@/utils/assist";
 export interface PointGroup {
     lt: PageXY
     rt: PageXY
@@ -15,6 +15,8 @@ export interface PointGroup {
     apexX: number[]
     apexY: number[]
 }
+export type PointType = 'lt' | 'rt' | 'rb' | 'lb' | 'pivot';
+
 export interface PT1 {
     x: number
     sy: number
@@ -25,6 +27,16 @@ export interface PT2 {
     y: number
     sx: number
     align: Align
+    delta: number | undefined
+}
+export interface PT4P1 {
+    x: number
+    sy: number
+    delta: number | undefined
+}
+export interface PT4P2 {
+    y: number
+    sx: number
     delta: number | undefined
 }
 enum Align {
@@ -39,10 +51,6 @@ enum Align {
     RB_Y,
     LB_Y
 }
-interface TransTarget {
-    pg: PointGroup;
-    expect: Map<string, Shape>;
-}
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
     static STICKNESS = 5;
@@ -51,7 +59,6 @@ export class Asssit extends Watchable(Object) {
     private m_pg_inner: Map<string, PointGroup> = new Map();
     private m_x_axis: Map<number, PageXY[]> = new Map();
     private m_y_axis: Map<number, PageXY[]> = new Map();
-    private m_trans_target: TransTarget | undefined;
     private m_except: Map<string, Shape> = new Map();
     private m_current_pg: PointGroup | undefined;
     private m_nodes_x: PageXY[] = [];
@@ -114,7 +121,6 @@ export class Asssit extends Watchable(Object) {
         this.m_except.clear();
         if (shapes.length === 1) {
             const s = shapes[0];
-            this.m_current_pg = update_pg(s);
             this.m_except = get_tree(s);
         } else if (shapes.length > 1) {
             // todo
@@ -143,6 +149,37 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ x: pre_target2.sx, y: target.y }]);
+        }
+        this.notify(Asssit.UPDATE_ASSIST);
+        const e = Date.now();
+        // console.log('单次匹配用时(ms):', e - st);
+        return target;
+    }
+    point_match(s: Shape, t: PointType) {
+        const st = Date.now();
+        if (!this.m_except.size) return;
+        this.m_nodes_x = [];
+        this.m_nodes_y = [];
+        this.m_current_pg = update_pg(s);
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const cs = this.m_shape_inner[i];
+            if (this.m_except.get(cs.id)) continue;
+            const c_pg = this.m_pg_inner.get(cs.id);
+            if (!c_pg) continue;
+            const p = this.m_current_pg[t];
+            modify_pt_x4p(pre_target1, p, c_pg.apexX);
+            modify_pt_y4p(pre_target2, p, c_pg.apexY);
+        }
+        if (pre_target1.delta !== undefined) {
+            target.x = pre_target1.x, target.sticked_by_x = true;
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{ x: target.x, y: pre_target1.sy }]);
+        }
+        if (pre_target2.delta !== undefined) {
+            target.y = pre_target2.y, target.sticked_by_y = true;
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ x: pre_target2.sx, y: target.y }]);
         }
         this.notify(Asssit.UPDATE_ASSIST);

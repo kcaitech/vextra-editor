@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Asssit, PT1, PT2, PointGroup } from "@/context/assist";
+import { Asssit, PT1, PT2, PT4P1, PT4P2, PointGroup } from "@/context/assist";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import { debounce } from "lodash";
@@ -174,3 +174,21 @@ export function get_tree(shape: Shape, init?: Map<string, Shape>) {
     return result;
 }
 export const collect_once = debounce(_collect, 100);
+export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[]) {
+    for (let i = 0; i < apexX.length; i++) {
+        const x = apexX[i]
+        const delta = Math.abs(x - p.x);
+        if (delta < Asssit.STICKNESS && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
+            pre_target1.delta = delta, pre_target1.x = x, pre_target1.sy = p.y;
+        }
+    }
+}
+export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[]) {
+    for (let i = 0; i < apexY.length; i++) {
+        const y = apexY[i]
+        const delta = Math.abs(y - p.y);
+        if (delta < Asssit.STICKNESS && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
+            pre_target2.delta = delta, pre_target2.y = y, pre_target2.sx = p.x;
+        }
+    }
+}
