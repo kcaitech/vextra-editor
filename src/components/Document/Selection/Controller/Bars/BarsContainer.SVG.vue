@@ -26,7 +26,6 @@ let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 const dragActiveDis = 3;
 const types = [CtrlElementType.RectTop, CtrlElementType.RectRight, CtrlElementType.RectBottom, CtrlElementType.RectLeft];
-
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
@@ -75,9 +74,7 @@ function bar_mousemove(event: MouseEvent) {
         const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
         if (event.shiftKey || s.constrainerProportions || action === Action.AutoK) {
             asyncBaseAction.executeErScale(cur_ctrl_type, getScale(cur_ctrl_type, s, p1OnPage, p2Onpage));
-        } else {
-            asyncBaseAction.executeScale(cur_ctrl_type, p1OnPage, p2Onpage);
-        }
+        } else asyncBaseAction.executeScale(cur_ctrl_type, p1OnPage, p2Onpage);
         startPosition = { ...mouseOnPage };
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
@@ -129,7 +126,9 @@ function bar_mouseup(event: MouseEvent) {
     workspace.scaling(false);
     workspace.setCtrl('page');
     props.context.cursor.reset();
-    if (isDragging) isDragging = false;
+    if (isDragging) {
+        isDragging = false;
+    }
     if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
     document.removeEventListener('mousemove', bar_mousemove);
     document.removeEventListener('mouseup', bar_mouseup);
@@ -138,7 +137,9 @@ function bar_mouseleave() {
     props.context.cursor.setType('auto-0');
 }
 function window_blur() {
-    if (isDragging) isDragging = false;
+    if (isDragging) {
+        isDragging = false;
+    }
     if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
     const workspace = props.context.workspace;
     workspace.scaling(false);

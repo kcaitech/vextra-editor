@@ -37,7 +37,6 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
-
 const STICKNESS = Asssit.STICKNESS + 1;
 
 const dragActiveDis = 3;
@@ -88,7 +87,6 @@ function point_mousemove(event: MouseEvent) {
   const mouseOnClient: ClientXY = { x: clientX - root.x, y: clientY - root.y };
   const { x: sx, y: sy } = startPosition;
   const { x: mx, y: my } = mouseOnClient;
-  let update_type = 0;
   if (isDragging && asyncBaseAction) {
     if (cur_ctrl_type.endsWith('rotate')) {
       let deg = 0;
@@ -97,7 +95,6 @@ function point_mousemove(event: MouseEvent) {
       if (props.shape.isFlippedHorizontal) deg = -deg;
       if (props.shape.isFlippedVertical) deg = -deg
       asyncBaseAction.executeRotate(deg);
-      update_type = 3;
     } else {
       const action = props.context.tool.action;
       const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
@@ -105,11 +102,9 @@ function point_mousemove(event: MouseEvent) {
       if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
         p2 = get_t(cur_ctrl_type, p1, p2);
       }
-      update_type = scale(asyncBaseAction, p1, p2);
+      scale(asyncBaseAction, p1, p2);
     }
-    if (update_type === 3) startPosition = { ...mouseOnClient };
-    else if (update_type === 2) startPosition.y = mouseOnClient.y;
-    else if (update_type === 1) startPosition.x = mouseOnClient.x;
+    startPosition = { ...mouseOnClient };
     setCursor(cur_ctrl_type, true);
   } else {
     if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
@@ -157,38 +152,26 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
   } else return p2
 }
 function scale(asyncBaseAction: AsyncBaseAction, p1: PageXY, p2: PageXY) {
-  let update_type = 3;
   const target = props.context.assist.point_match(props.shape, pointType);
   if (target) {
     if (stickedX) {
       if (Math.abs(p2.x - sticked_x_v) > STICKNESS) stickedX = false;
-      else {
-        p2.x = sticked_x_v;
-        update_type = update_type - 1;
-      }
+      else p2.x = sticked_x_v;
     } else if (target.sticked_by_x) {
       p2.x = target.x;
       sticked_x_v = p2.x;
-      update_type = update_type - 1;
       stickedX = true;
     }
     if (stickedY) {
       if (Math.abs(p2.y - sticked_y_v) > STICKNESS) stickedY = false;
-      else {
-        p2.y = sticked_y_v;
-        update_type = update_type - 2;
-      }
+      else p2.y = sticked_y_v;
     } else if (target.sticked_by_y) {
       p2.y = target.y;
       sticked_y_v = p2.y;
-      update_type = update_type - 2;
       stickedY = true;
     }
-    asyncBaseAction.executeScale(cur_ctrl_type, p1, p2);
-  } else {
-    asyncBaseAction.executeScale(cur_ctrl_type, p1, p2);
   }
-  return update_type;
+  asyncBaseAction.executeScale(cur_ctrl_type, p1, p2);
 }
 function point_mouseup(event: MouseEvent) {
   if (event.button !== 0) return;
