@@ -101,8 +101,10 @@ function point_mousemove(event: MouseEvent) {
       let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
       if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
         p2 = get_t(cur_ctrl_type, p1, p2);
+        asyncBaseAction.executeScale(cur_ctrl_type, p1, p2);
+      } else {
+        scale(asyncBaseAction, p1, p2);
       }
-      scale(asyncBaseAction, p1, p2);
     }
     startPosition = { ...mouseOnClient };
     setCursor(cur_ctrl_type, true);
