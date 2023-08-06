@@ -4,7 +4,7 @@ import { Context } from '@/context';
 import { Tool } from '@/context/tool';
 import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
-import { v4 as uuid } from "uuid";
+import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import { debounce } from 'lodash';
 const props = defineProps<{
@@ -22,7 +22,7 @@ const watcher = () => {
 }
 function pageViewRegister(mount: boolean) {
     if (mount) {
-        const id = (uuid().split('-').at(-1)) || 'pageview';
+        const id = (v4().split('-').at(-1)) || 'pageview';
         rootId.value = id;
     } else {
         rootId.value = 'pageview';
@@ -30,7 +30,7 @@ function pageViewRegister(mount: boolean) {
     props.context.workspace.setPageViewId(rootId.value);
 }
 function _collect(t?: any) {
-    if (typeof t === 'string' && ['shape-frame', 'childs'].includes(t)) props.context.assist.collect();
+    if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
 }
 const collect = debounce(_collect, 15);
 watchEffect(() => {

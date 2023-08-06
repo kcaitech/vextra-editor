@@ -52,6 +52,7 @@ export class Asssit extends Watchable(Object) {
     private m_x_axis: Map<number, PageXY[]> = new Map();
     private m_y_axis: Map<number, PageXY[]> = new Map();
     private m_trans_target: TransTarget | undefined;
+    private m_except: Map<string, Shape> = new Map();
     private m_current_pg: PointGroup | undefined;
     private m_nodes_x: PageXY[] = [];
     private m_nodes_y: PageXY[] = [];
@@ -110,29 +111,31 @@ export class Asssit extends Watchable(Object) {
         return target;
     }
     setTransTarget(shapes: Shape[]) {
+        this.m_except.clear();
         if (shapes.length === 1) {
             const s = shapes[0];
-            this.m_trans_target = { pg: update_pg(s), expect: get_tree(s) };
+            this.m_current_pg = update_pg(s);
+            this.m_except = get_tree(s);
         } else if (shapes.length > 1) {
             // todo
         }
     }
-    trans_match() {
+    trans_match(s: Shape) {
         const st = Date.now();
-        if (!this.m_trans_target) return;
+        if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        const tt = this.m_trans_target;
+        this.m_current_pg = update_pg(s);
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
         const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
         const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
         for (let i = 0; i < this.m_shape_inner.length; i++) {
             const cs = this.m_shape_inner[i];
-            if (tt.expect.get(cs.id)) continue;
+            if (this.m_except.get(cs.id)) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
             if (!c_pg) continue;
-            modify_pt_x(pre_target1, tt.pg, c_pg.apexX);
-            modify_pt_y(pre_target2, tt.pg, c_pg.apexY);
+            modify_pt_x(pre_target1, this.m_current_pg, c_pg.apexX);
+            modify_pt_y(pre_target2, this.m_current_pg, c_pg.apexY);
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;

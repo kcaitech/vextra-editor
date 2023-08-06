@@ -159,6 +159,7 @@ export function useController(context: Context) {
             context.selection.unHoverShape();
             workspace.value.setSelectionViewUpdater(false);
             workspace.value.translating(true);
+            context.assist.setTransTarget(shapes);
             isDragging = true;
         }
     }
@@ -178,7 +179,7 @@ export function useController(context: Context) {
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
         if (shapes.length === 1) {
             const shape = shapes[0];
-            const target = context.assist.match(shape);
+            const target = context.assist.trans_match(shape);
             if (!target) return update_type;
             if (stickedX) {
                 if (Math.abs(pe.x - ps.x) > STICKNESS) stickedX = false;
