@@ -38,7 +38,7 @@ let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 
-const STICKNESS = Asssit.STICKNESS + 2;
+const STICKNESS = Asssit.STICKNESS + 1;
 
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;

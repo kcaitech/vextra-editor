@@ -29,6 +29,7 @@ import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action } from "@/context/tool";
 import { initpal } from './initpal';
+import { Asssit } from '@/context/assist';
 
 interface Props {
     context: Context
@@ -75,6 +76,12 @@ let isMouseLeftPress: boolean = false; // 针对在contentview里面
 const commentInput = ref(false);
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>('rgba(239,239,239,1)');
+let stickedX: boolean = false;
+let stickedY: boolean = false;
+let sticked_x_v: number = 0;
+let sticked_y_v: number = 0;
+const STICKNESS = Asssit.STICKNESS + 1;
+
 function page_watcher(...args: any) {
     if (args.includes('style')) {
         const f = props.page.style.fills[0];
@@ -176,7 +183,7 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     }
 }
 function contentEditOnMoving(e: MouseEvent) { // 编辑page内容    
-    const { x, y } = getMouseOnPageXY(e);
+    let { x, y } = getMouseOnPageXY(e);
     if (newShape) {
         if (wheel && asyncCreator) {
             const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
@@ -184,6 +191,29 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
                 if (e.shiftKey) {
                     er_frame(asyncCreator, x, y);
                 } else {
+                    const target = props.context.assist.point_match(newShape, 'rb');
+                    if (target) {
+                        if (stickedX) {
+                            if (Math.abs(x - sticked_x_v) > STICKNESS) stickedX = false;
+                            else {
+                                x = sticked_x_v;
+                            }
+                        } else if (target.sticked_by_x) {
+                            x = target.x;
+                            sticked_x_v = x;
+                            stickedX = true;
+                        }
+                        if (stickedY) {
+                            if (Math.abs(y - sticked_y_v) > STICKNESS) stickedY = false;
+                            else {
+                                y = sticked_y_v;
+                            }
+                        } else if (target.sticked_by_y) {
+                            y = target.y;
+                            sticked_y_v = y;
+                            stickedY = true;
+                        }
+                    }
                     asyncCreator.setFrame({ x, y });
                 }
             }
@@ -475,6 +505,7 @@ function shapeCreateEnd() { // 造图结束
             if (page && asyncCreator) asyncCreator.collect(page, childs, props.context.selection.selectedShapes[0] as Artboard);
         }
         removeCreator();
+        props.context.assist.reset();
         newShape = undefined;
     }
 }
