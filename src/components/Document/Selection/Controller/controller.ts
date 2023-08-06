@@ -77,7 +77,7 @@ export function useController(context: Context) {
         return result
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
-        if (!permIsEdit(context)) return;
+        if (!permIsEdit(context) || context.workspace.action === Action.AddComment) return;
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
             context.cursor.cursor_freeze(true);
             context.menu.menuMount(); // 取消右键事件

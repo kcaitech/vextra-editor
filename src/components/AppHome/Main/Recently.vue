@@ -1,7 +1,7 @@
 
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" />
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
         
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
@@ -46,6 +46,7 @@ import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
+import listsitem from '@/components/AppHome/listsitem.vue'
 
 const isLoading = ref(false)
 const showFileShare = ref<boolean>(false);
@@ -63,6 +64,7 @@ const showcopyfile = ref<boolean>(true)
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
 const mydata = ref()
+const noNetwork = ref(false)
 const listId = ref(0)
 const iconlists = ref(['star', 'share', 'remove'])
 
@@ -91,8 +93,10 @@ async function getUserdata() {
     try {
         const { data } = await user_api.GetDocumentsList() as any
         if (data == null) {
+            noNetwork.value = true
             ElMessage.error(t('home.failed_list_tips'))
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -101,11 +105,15 @@ async function getUserdata() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
     // unloading  
     isLoading.value = false;
+}
+const refreshDoc = () => {
+    getUserdata()
 }
 
 function sizeTostr(size: any) {

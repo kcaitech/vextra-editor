@@ -1,7 +1,7 @@
 
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" />
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
 
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
@@ -47,6 +47,7 @@ import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
+import listsitem from '@/components/AppHome/listsitem.vue'
 
 
 interface data {
@@ -74,6 +75,7 @@ const pageHeight = ref(0)
 const docId = ref('')
 const mydata = ref()
 const selectValue = ref(1)
+const noNetwork = ref(false)
 const lists = ref<any[]>([])
 const userInfo = ref<UserInfo | undefined>()
 const iconlists = ref(['star', 'share', 'delete'])
@@ -84,9 +86,11 @@ async function getDoucment() {
     try {
         const { data } = await share_api.getDoucmentListAPI() as any
         if (data == null) {
+            noNetwork.value = true
             ElMessage.closeAll('error')
             ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -95,10 +99,15 @@ async function getDoucment() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
     isLoading.value = false
+}
+
+const refreshDoc = () => {
+    getDoucment()
 }
 
 //转换文件大小格式

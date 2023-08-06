@@ -15,7 +15,9 @@
                         <div v-if="empty" class="flex items-center justify-center h-100%">
                             <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
                         </div>
-                        <div v-else></div>
+                        <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-100%">
+                            <NetworkError @refreshDoc="refreshDoc"></NetworkError>
+                        </div>
                     </template>
                 </el-table-v2>
             </template>
@@ -27,21 +29,41 @@ import { ref } from 'vue'
 import { Share, Delete, Remove, Loading as LoadingIcon } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { watch } from 'vue';
+import { watch, nextTick } from 'vue';
+import NetworkError from '@/components/NetworkError.vue'
+
 const { t } = useI18n()
 
 
 const loading = ref(true)
 const empty = ref(false)
+const net = ref<HTMLDivElement>()
 const props = defineProps<{
     data: any
     iconlist: any
+    noNetwork: boolean
 }>()
 
 watch(() => props.data, () => {
     loading.value = false
     empty.value = true
 });
+
+watch(() => props.noNetwork,(newV) => {
+    if(newV) {
+        nextTick(() => {
+            if(net.value) {
+                loading.value = false
+                const el = net.value.parentElement
+                nextTick(() => {
+                    if(el) {
+                        el.style.top = '50%'
+                    }
+                })
+            }
+        })
+    }
+})
 
 
 const emits = defineEmits([
@@ -54,10 +76,16 @@ const emits = defineEmits([
     'ndelete',
     'exit_share',
     'dbclickopen',
+    'refreshDoc'
 ])
 
 const selectedId = ref(-1)
 const scrolltop = ref(0)
+
+const refreshDoc = () => {
+    emits('refreshDoc')
+}
+
 const rightmenu = (e: any) => {
     const rightmenuElement = document.querySelector('.rightmenu') as HTMLElement;
     if (e.scrollTop >= scrolltop.value + 300 || scrolltop.value - e.scrollTop >= 300) {

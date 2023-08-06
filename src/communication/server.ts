@@ -227,14 +227,14 @@ export class Server {
     receiveHeartbeat(cmd: ServerCmd) {
         this._onNetworkOnline()
         if (cmd.cmd_type === ServerCmdType.Heartbeat) {
-            this.send({
+            this.send(JSON.stringify({
                 cmd_type: ClientCmdType.HeartbeatResponse,
                 cmd_id: uuid(),
                 data: {
                     time: Date.now(),
                     cmd_id: cmd.cmd_id,
                 },
-            })
+            }))
         }
     }
 

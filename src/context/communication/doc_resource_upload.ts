@@ -1,8 +1,8 @@
 import { Watchable } from "@kcdesign/data"
-import { DocResourceUpload } from "@/communication/modules/doc_resource_upload"
+import { DocResourceUpload as _DocResourceUpload } from "@/communication/modules/doc_resource_upload"
 
-export class ResourceUpload extends Watchable(Object) {
-    private docResourceUpload?: DocResourceUpload
+export class DocResourceUpload extends Watchable(Object) {
+    private docResourceUpload?: _DocResourceUpload
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
     private isClosed: boolean = false
@@ -10,7 +10,7 @@ export class ResourceUpload extends Watchable(Object) {
     public async start(token: string, documentId: string): Promise<boolean> {
         if (this.docResourceUpload) return true;
         if (this.startPromise) return await this.startPromise;
-        const docResourceUpload = DocResourceUpload.Make(token, documentId)
+        const docResourceUpload = _DocResourceUpload.Make(token, documentId)
         const startParams = [token, documentId]
         docResourceUpload.setOnClose(async () => {
             this.docResourceUpload = undefined
@@ -34,10 +34,6 @@ export class ResourceUpload extends Watchable(Object) {
         this.startResolve!(true)
         this.startPromise = undefined
         return true
-    }
-
-    public available(): boolean {
-        return this.docResourceUpload !== undefined
     }
 
     public async upload(name: string, data: ArrayBuffer): Promise<boolean> {

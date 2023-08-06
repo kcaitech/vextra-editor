@@ -1,13 +1,13 @@
 import { Communication } from "../index"
 import { TunnelType } from "@/communication/types"
-import { Document, CoopLocal, CoopRepository } from "@kcdesign/data"
+import { Document, CoopLocal, CoopRepository, Cmd } from "@kcdesign/data"
 
 export type Options = {
     coopLocal: CoopLocal,
     pendingSend: any[],
 }
 
-export class Ot extends Communication {
+export class DocOp extends Communication {
     private token: string = ""
     private document?: Document
     private repo?: CoopRepository
@@ -16,34 +16,38 @@ export class Ot extends Communication {
     private pendingSend: any[] = []
     private needStartOt: boolean = true
 
-    private constructor(documentId: string, versionId: string, lastCmdId?: string) {
+    private constructor(documentId: string, versionId: string, previousCmdId?: string) {
         super(TunnelType.DocOp, {
             document_id: documentId,
             version_id: versionId,
-            last_cmd_id: lastCmdId,
+            previous_cmd_id: previousCmdId,
         })
     }
 
-    public static Make(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): Ot {
-        const ot = new Ot(documentId, versionId, options?.coopLocal?.lastServerCmdId)
-        ot.token = token
-        ot.document = document
-        ot.repo = repo
-        ot.versionId = versionId
-        ot.onMessage = ot._onMessage.bind(ot)
+    public static Make(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options): DocOp {
+        const docOp = new DocOp(documentId, versionId, options?.coopLocal?.lastServerCmdId)
+        docOp.token = token
+        docOp.document = document
+        docOp.repo = repo
+        docOp.versionId = versionId
+        docOp.onMessage = docOp._onMessage.bind(docOp)
         if (!options?.coopLocal) {
-            ot.coopLocal = new CoopLocal(document, repo, versionId, ot.send.bind(ot))
+            docOp.coopLocal = new CoopLocal(document, repo, versionId, docOp.send.bind(docOp))
         } else {
-            ot.coopLocal = options.coopLocal
-            if (options.pendingSend) ot.pendingSend = options.pendingSend;
-            ot.needStartOt = false
+            docOp.coopLocal = options.coopLocal
+            if (options.pendingSend) docOp.pendingSend = options.pendingSend;
+            docOp.needStartOt = false
         }
-        ot.coopLocal.setOnClose(() => ot.close())
-        return ot
+        docOp.coopLocal.setOnClose(() => docOp.close())
+        return docOp
     }
 
     public hasPendingSyncCmd(): boolean {
         return this.coopLocal?.hasPendingSyncCmd?.() ?? false
+    }
+
+    public get lastServerCmdId(): string | undefined {
+        return this.coopLocal?.lastServerCmdId
     }
 
     private _onMessage(data: any) {
@@ -79,5 +83,13 @@ export class Ot extends Communication {
         }
         this.coopLocal!.commitToServer()
         return true
+    }
+
+    public addOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
+        this.coopLocal?.addOnLocalUpdate(onUpdate)
+    }
+
+    public removeOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
+        this.coopLocal?.removeOnLocalUpdate(onUpdate)
     }
 }

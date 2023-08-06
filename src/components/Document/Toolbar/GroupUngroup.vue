@@ -149,8 +149,6 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     const name = t(`bool.${n}`)
-    console.log(n,'name');
-    
     if (shapes.length && page) {
         if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const editor = props.context.editor4Shape(shapes[0])

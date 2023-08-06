@@ -1,5 +1,5 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" />
+    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
     
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
@@ -28,6 +28,7 @@ import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import listsitem from '@/components/AppHome/listsitem.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 const { t } = useI18n()
 
@@ -36,6 +37,7 @@ const dialogVisible = ref(false)
 const menu = ref<HTMLElement>()
 const docId = ref('')
 const mydata = ref()
+const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
 
@@ -59,8 +61,10 @@ async function GetrecycleLists() {
     try {
         const { data } = await user_api.GetrecycleList()
         if (data == null) {
+            noNetwork.value = true
             ElMessage.error(t('home.failed_list_tips'))
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size, deleted_at } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -69,11 +73,16 @@ async function GetrecycleLists() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.error(t('home.failed_list_tips'))
     }
 
     // unloading  
     isLoading.value = false;
+}
+
+const refreshDoc = () => {
+    GetrecycleLists()
 }
 
 //转换文件大小

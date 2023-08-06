@@ -94,18 +94,19 @@ onUpdated(() => {
       </DropSelect>
     </template>
   </div>
-  <Tooltip
-    :content="props.d === Action.AutoV ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`">
-    <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
-      @mouseleave.stop="onMouseleave">
-      <div class="svg-container">
-        <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
-      </div>
-      <div class="menu" @click="showMenu">
-        <svg-icon icon-class="down"></svg-icon>
-      </div>
-    </ToolButton>
-  </Tooltip>
+  <el-tooltip class="box-item" effect="dark"
+    :content="props.d === Action.AutoV ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
+    placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
+      <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
+        @mouseleave.stop="onMouseleave">
+        <div class="svg-container">
+          <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
+        </div>
+        <div class="menu" @click="showMenu">
+          <svg-icon icon-class="down"></svg-icon>
+        </div>
+      </ToolButton>
+    </el-tooltip>
 </template>
 
 <style scoped lang="scss">

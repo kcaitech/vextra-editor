@@ -3,9 +3,10 @@ import { message } from "./message";
 import { replace } from "./clipaboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { permIsEdit } from "./content";
+import { Action } from "@/context/tool";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
-    if (!permIsEdit(context)) return;
+    if (!permIsEdit(context) || context.workspace.action === Action.AddComment) return;
     const { target, shiftKey, ctrlKey, metaKey } = e;
     if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;

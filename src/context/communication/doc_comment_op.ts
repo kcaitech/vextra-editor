@@ -1,8 +1,8 @@
 import { Watchable } from "@kcdesign/data"
-import { DocCommentOp, DocCommentOpData } from "@/communication/modules/doc_comment_op"
+import { DocCommentOp as _DocCommentOp, DocCommentOpData } from "@/communication/modules/doc_comment_op"
 
-export class Comment extends Watchable(Object) {
-    private docCommentOp?: DocCommentOp
+export class DocCommentOp extends Watchable(Object) {
+    private docCommentOp?: _DocCommentOp
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
     private updateHandlerSet = new Set<(data: DocCommentOpData) => void>()
@@ -11,7 +11,7 @@ export class Comment extends Watchable(Object) {
     public async start(token: string, documentId: string): Promise<boolean> {
         if (this.docCommentOp) return true;
         if (this.startPromise) return await this.startPromise;
-        const docCommentOp = DocCommentOp.Make(token, documentId)
+        const docCommentOp = _DocCommentOp.Make(token, documentId)
         const startParams = [token, documentId]
         docCommentOp.setOnClose(async () => {
             this.docCommentOp = undefined
@@ -22,12 +22,12 @@ export class Comment extends Watchable(Object) {
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await docCommentOp.start()) {
-                console.log("DocCommentOp start失败")
+                console.log("Doc_comment_op start失败")
                 this.startResolve!(false)
                 return false
             }
         } catch (e) {
-            console.log("DocCommentOp start失败", e)
+            console.log("Doc_comment_op start失败", e)
             this.startResolve!(false)
             return false
         }
@@ -48,10 +48,6 @@ export class Comment extends Watchable(Object) {
 
     public removeUpdatedHandler(onUpdated: (docCommentOpData: DocCommentOpData) => void) {
         this.updateHandlerSet.delete(onUpdated)
-    }
-
-    public available(): boolean {
-        return this.docCommentOp !== undefined
     }
 
     public close() {
