@@ -530,6 +530,11 @@ networkStatus.addOnChange((status: any) => {
     }
 })
 
+function onBeforeUnload(event: any) {
+    if(context?.communication.docOp.hasPendingSyncCmd()) return event.returnValue = t('message.leave'); // 浏览器弹框提示
+    return event.preventDefault();
+}
+
 function onUnloadForCommunication() {
     try {
         context?.communication.docOp.close();
@@ -539,28 +544,26 @@ function onUnloadForCommunication() {
     } catch (err) { }
 }
 
-// 浏览器弹框提示
-const confirmClose = (e: any) => {
+function onUnload(event: any) {
     onUnloadForCommunication();
-    if(!context?.communication.docOp.hasPendingSyncCmd()) return;
-    e.preventDefault();
-    return e.returnValue = t('message.leave');
 }
 
-const closeNetMsg = () => {
-    insertNetworkInfo('saveSuccess', false, autosave)
-    insertNetworkInfo('networkError', false, network_error)
-    insertNetworkInfo('netError', false, network_anomaly)
-    insertNetworkInfo('networkSuccess', false, link_success)
+function closeNetMsg() {
+    insertNetworkInfo('saveSuccess', false, autosave);
+    insertNetworkInfo('networkError', false, network_error);
+    insertNetworkInfo('netError', false, network_anomaly);
+    insertNetworkInfo('networkSuccess', false, link_success);
 }
 
 onMounted(() => {
-    window.addEventListener('beforeunload', confirmClose);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('unload', onUnload);
     init_screen_size();
     init_doc();
 })
+
 onUnmounted(() => {
-    closeNetMsg()
+    closeNetMsg();
     onUnloadForCommunication();
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
@@ -572,10 +575,11 @@ onUnmounted(() => {
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
-    window.removeEventListener('beforeunload', confirmClose);
-    clearInterval(loopNet)
-    clearInterval(netErr)
-    networkStatus.close()
+    window.removeEventListener('beforeunload', onBeforeUnload);
+    window.removeEventListener('unload', onUnload);
+    clearInterval(loopNet);
+    clearInterval(netErr);
+    networkStatus.close();
 })
 </script>
 
