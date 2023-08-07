@@ -173,14 +173,15 @@ export function useController(context: Context) {
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         let update_type = 3;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
-        const stickness = context.assist.stickness + 1;
+        const stickness = context.assist.stickness;
         if (shapes.length === 1) {
             const shape = shapes[0];
             const target = context.assist.trans_match(shape);
             if (!target) return update_type;
             if (stickedX) {
-                if (Math.abs(pe.x - ps.x) > stickness) stickedX = false;
-                else {
+                if (Math.abs(pe.x - ps.x) > stickness) {
+                    stickedX = false;
+                } else {
                     pe.x = ps.x;
                     update_type = update_type - 1;
                 }
@@ -188,6 +189,9 @@ export function useController(context: Context) {
                 const distance = distance2apex(shape, target.alignX), trans_x = target.x - distance;
                 stick.dx = trans_x, stick.sticked_x = true;
                 if (!stickedY) stick.dy = pe.y - ps.y;
+                pe.x += trans_x;
+                const t = matrix.inverseCoord(pe);
+                startPosition.x = t.x;
                 update_type = update_type - 1;
                 stickedX = true;
             }
@@ -201,6 +205,9 @@ export function useController(context: Context) {
                 const distance = distance2apex(shape, target.alignY), trans_y = target.y - distance;
                 stick.dy = trans_y, stick.sticked_y = true;
                 if (!stick.sticked_x) stick.dx = pe.x - ps.x;
+                pe.y += trans_y;
+                const t = matrix.inverseCoord(pe);
+                startPosition.y = t.y;
                 update_type = update_type - 2;
                 stickedY = true;
             }

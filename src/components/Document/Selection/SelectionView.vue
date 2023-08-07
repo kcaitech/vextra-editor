@@ -217,8 +217,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <!-- 辅助 -->
-    <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
     <!-- 描边 -->
     <svg ref="traceEle" v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
@@ -233,5 +231,7 @@ onUnmounted(() => {
         :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
         :shape="context.selection.selectedShapes[0]">
     </component>
+    <!-- 辅助 -->
+    <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
 </template>
 <style lang="scss"></style>

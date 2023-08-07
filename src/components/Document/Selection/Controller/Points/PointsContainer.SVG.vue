@@ -37,7 +37,6 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
-const STICKNESS = Asssit.STICKNESS + 1;
 
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
@@ -154,7 +153,7 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
   } else return p2
 }
 function scale(asyncBaseAction: AsyncBaseAction, p1: PageXY, p2: PageXY) {
-  const stickness = props.context.assist.stickness + 1;
+  const stickness = props.context.assist.stickness;
   const target = props.context.assist.point_match(props.shape, pointType);
   if (target) {
     if (stickedX) {
