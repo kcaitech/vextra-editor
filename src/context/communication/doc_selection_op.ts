@@ -1,5 +1,5 @@
 import { Watchable, Cmd, cmdClone, cmdTransform, OpType } from "@kcdesign/data"
-import { TextCmdSelection } from "@kcdesign/data/coop/data/textcmd"
+import { MyTextCmdSelection } from "@kcdesign/data"
 import {
     DocSelectionOp as _DocSelectionOp,
     DocSelectionData,
@@ -42,7 +42,7 @@ export class DocSelectionOp extends Watchable(Object) {
         if (!this.docSelectionOpUpdate) this.docSelectionOpUpdate = throttle(this.update, 1000).bind(this);
         const originalCursorStart = this.context.selection.cursorStart
         const originalCursorEnd = this.context.selection.cursorEnd
-        const textSelectionCmd = TextCmdSelection.Make(
+        const textSelectionCmd = MyTextCmdSelection.Make(
             this.context.selection.selectedPage?.id ?? "",
             this.context.selection.selectedShapes[0].id,
             this.context.selection.cursorStart,
