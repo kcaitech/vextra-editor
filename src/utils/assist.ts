@@ -167,14 +167,12 @@ export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[],
         }
     }
 }
-export function get_tree(shape: Shape, init?: Map<string, Shape>) {
-    const result = init || new Map();
-    result.set(shape.id, shape);
+export function get_tree(shape: Shape, init: Map<string, Shape>) {
+    init.set(shape.id, shape);
     const cs = shape.childs
     if (cs && cs.length) {
-        for (let i = 0; i < cs.length; i++)  get_tree(cs[i], result);
+        for (let i = 0; i < cs.length; i++)  get_tree(cs[i], init);
     }
-    return result;
 }
 export const collect_once = debounce(_collect, 100);
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
@@ -193,5 +191,18 @@ export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], st
         if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
             pre_target2.delta = delta, pre_target2.y = y, pre_target2.sx = p.x;
         }
+    }
+}
+interface Point {
+    x: number
+    y: number
+}
+export function get_pg_by_frame(frame: Point[]): PointGroup {
+    const lt = frame[0], rt = frame[1], rb = frame[2], lb = frame[3];
+    const pivot = { x: (rb.x - lt.x) / 2, y: (rb.y - lt.y) / 2 };
+    return {
+        lt, rt, rb, lb, pivot,
+        apexX: [lt.x, rt.x, rb.x, lb.x, pivot.x],
+        apexY: [lt.y, rt.y, rb.y, lb.y, pivot.y]
     }
 }

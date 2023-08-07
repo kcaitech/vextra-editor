@@ -1,7 +1,7 @@
 import { GroupShape, Shape, Watchable } from "@kcdesign/data";
 import { PageXY, Selection } from "./selection";
 import { Context } from ".";
-import { _collect, finder, getClosestAB, get_tree, modify_pt_x, modify_pt_x4p, modify_pt_y, modify_pt_y4p, update_pg } from "@/utils/assist";
+import { _collect, finder, getClosestAB, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4p, modify_pt_y, modify_pt_y4p, update_pg } from "@/utils/assist";
 export interface PointGroup {
     lt: PageXY
     rt: PageXY
@@ -141,9 +141,11 @@ export class Asssit extends Watchable(Object) {
         this.m_except.clear();
         if (shapes.length === 1) {
             const s = shapes[0];
-            this.m_except = get_tree(s);
+            get_tree(s, this.m_except);
         } else if (shapes.length > 1) {
-            // todo
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                get_tree(shapes[i], this.m_except);
+            }
         }
     }
     trans_match(s: Shape) {
@@ -152,6 +154,36 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         this.m_current_pg = update_pg(s);
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
+        const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
+        const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const cs = this.m_shape_inner[i];
+            if (this.m_except.get(cs.id)) continue;
+            const c_pg = this.m_pg_inner.get(cs.id);
+            if (!c_pg) continue;
+            modify_pt_x(pre_target1, this.m_current_pg, c_pg.apexX, this.m_stickness);
+            modify_pt_y(pre_target2, this.m_current_pg, c_pg.apexY, this.m_stickness);
+        }
+        if (pre_target1.delta !== undefined) {
+            target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{ x: target.x, y: pre_target1.sy }]);
+        }
+        if (pre_target2.delta !== undefined) {
+            target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ x: pre_target2.sx, y: target.y }]);
+        }
+        this.notify(Asssit.UPDATE_ASSIST);
+        const e = Date.now();
+        // console.log('单次匹配用时(ms):', e - st);
+        return target;
+    }
+    trans_match_multi() {
+        const st = Date.now();
+        if (!this.m_except.size) return;
+        this.m_nodes_x = [];
+        this.m_nodes_y = [];
+        this.m_current_pg = get_pg_by_frame(this.m_context.workspace.controllerFrame);
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
         const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
         const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };

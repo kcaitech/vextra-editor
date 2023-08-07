@@ -143,6 +143,7 @@ function createController() { // 计算控件点位以及类型判定
             }
             const b = XYsBounding(points);
             controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
+            props.context.workspace.setCFrame(controllerFrame.value);
             rotate.value = 0;
             if (!permIsEdit(props.context) || props.context.workspace.action === Action.AddComment) {
                 controllerType.value = ControllerType.Readonly;

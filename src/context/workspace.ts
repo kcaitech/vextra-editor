@@ -4,6 +4,10 @@ import { Context } from "./index";
 import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipaboard";
 import { adapt_page } from "@/utils/content";
+interface Point {
+    x: number
+    y: number
+}
 export enum KeyboardKeys {
     Space = 'Space',
     A = 'KeyA',
@@ -103,6 +107,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_clipboard: Clipboard;
     private m_t: Function = () => { };
     private m_controller_path: string = '';
+    private m_controller_frame: Point[] = [];
     constructor(context: Context) {
         super();
         this.context = context;
@@ -187,6 +192,12 @@ export class WorkSpace extends Watchable(Object) {
     }
     setCtrlPath(val: string) {
         this.m_controller_path = val;
+    }
+    get controllerFrame() {
+        return this.m_controller_frame;
+    }
+    setCFrame(v: Point[]) {
+        this.m_controller_frame = v;
     }
     focusText() {
         this.notify(WorkSpace.TEXT_FORMAT)
