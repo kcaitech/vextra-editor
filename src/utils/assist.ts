@@ -108,7 +108,9 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
 }
 export function getClosestAB(shape: Shape) {
     let resust: GroupShape = shape.parent as GroupShape;
-    while (resust && resust.type !== ShapeType.Artboard) resust = shape.parent as GroupShape;
+    while (resust && resust.type !== ShapeType.Artboard) {
+        resust = resust.parent as GroupShape;
+    }
     return resust;
 }
 export function _collect(context: Context) {

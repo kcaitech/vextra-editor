@@ -1,7 +1,7 @@
-import { Shape, Watchable } from "@kcdesign/data";
-import { PageXY } from "./selection";
+import { GroupShape, Shape, Watchable } from "@kcdesign/data";
+import { PageXY, Selection } from "./selection";
 import { Context } from ".";
-import { _collect, finder, get_tree, modify_pt_x, modify_pt_x4p, modify_pt_y, modify_pt_y4p, update_pg } from "@/utils/assist";
+import { _collect, finder, getClosestAB, get_tree, modify_pt_x, modify_pt_x4p, modify_pt_y, modify_pt_y4p, update_pg } from "@/utils/assist";
 export interface PointGroup {
     lt: PageXY
     rt: PageXY
@@ -54,6 +54,7 @@ enum Align {
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
     static STICKNESS = 5;
+    private m_collect_target: GroupShape[] = [];
     private m_context: Context;
     private m_shape_inner: Shape[] = [];
     private m_pg_inner: Map<string, PointGroup> = new Map();
@@ -79,12 +80,24 @@ export class Asssit extends Watchable(Object) {
         const page = this.m_context.selection.selectedPage;
         if (!page) return;
         this.clear();
-        this.m_shape_inner = finder(this.m_context, page, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        let target: GroupShape = page;
+        if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
+        this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
         const e = Date.now();
         console.log('点位收集用时(ms):', e - s);
     }
     selection_watcher(t?: any) {
-        // todo
+        if (t === Selection.CHANGE_SHAPE) {
+            this.m_collect_target = [];
+            const shapes = this.m_context.selection.selectedShapes;
+            if (shapes.length === 1) {
+                this.m_collect_target = [getClosestAB(shapes[0])];
+            } else {
+                this.m_collect_target = [];
+            }
+        } else if (t === Selection.CHANGE_PAGE) {
+            this.m_collect_target = [];
+        }
     }
 
     match(s: Shape) {
