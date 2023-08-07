@@ -228,6 +228,24 @@ export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], st
         }
     }
 }
+export function modify_pt_x4create(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
+    for (let i = 0; i < apexX.length; i++) {
+        const x = apexX[i]
+        const delta = Math.abs(x - p.x);
+        if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
+            pre_target1.delta = delta, pre_target1.x = x, pre_target1.sy = p.y;
+        }
+    }
+}
+export function modify_pt_y4create(pre_target2: PT4P2, p: PageXY, apexY: number[], stickness: number) {
+    for (let i = 0; i < apexY.length; i++) {
+        const y = apexY[i]
+        const delta = Math.abs(y - p.y);
+        if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
+            pre_target2.delta = delta, pre_target2.y = y, pre_target2.sx = p.x;
+        }
+    }
+}
 interface Point {
     x: number
     y: number

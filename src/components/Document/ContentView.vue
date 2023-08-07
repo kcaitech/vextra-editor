@@ -81,6 +81,7 @@ let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 let stickness: number = Asssit.STICKNESS + 1;
+let matrix_inverse: Matrix = new Matrix();
 
 function page_watcher(...args: any) {
     if (args.includes('style')) {
@@ -99,14 +100,13 @@ function rootRegister(mount: boolean) {
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
     const { clientX, clientY } = e;
     const { x, y } = workspace.value.root;
-    const xy = matrix.inverseCoord(clientX - x, clientY - y);
+    const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x, mousedownOnPageXY.y = xy.y; //页面坐标系上的点
     mousedownOnClientXY.x = clientX - x, mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
 }
 function getMouseOnPageXY(e: MouseEvent): PageXY { // 获取鼠标在页面上的点击位置
-    const { clientX, clientY } = e;
     const { x, y } = workspace.value.root;
-    return matrix.inverseCoord(clientX - x, clientY - y);
+    return matrix_inverse.computeCoord2(e.clientX - x, e.clientY - y);
 }
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (contextMenu.value) return; //右键菜单已打开
@@ -192,7 +192,7 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
                     er_frame(asyncCreator, x, y);
                 } else {
                     const stickness = props.context.assist.stickness + 1;
-                    const target = props.context.assist.point_match(newShape, 'rb');
+                    const target = props.context.assist.create_match({ x, y });
                     if (target) {
                         if (stickedX) {
                             if (Math.abs(x - sticked_x_v) > stickness) stickedX = false;
@@ -218,11 +218,13 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
     } else {
         const isDrag = is_drag(props.context, e, mousedownOnClientXY, 2 * dragActiveDis);
         if (isDrag) {
+            matrix_inverse = new Matrix(matrix.inverse);
             const shapeFrame = new ShapeFrame(x, y, 1, 1);
             const result = init_shape(props.context, shapeFrame, mousedownOnPageXY, t);
             if (result) {
                 asyncCreator = result.asyncCreator;
                 newShape = result.new_shape;
+                props.context.assist.setTransTarget([newShape]);
             }
         }
     }
@@ -259,7 +261,7 @@ function insertFrame() {
 function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;
-    const xy: PageXY = matrix.inverseCoord(mx - x, my - y);
+    const xy: PageXY = matrix_inverse.computeCoord2(mx - x, my - y);
     const shapes = props.context.selection.getShapesByXY(xy, auto);
     selectShapes(props.context, shapes);
 }
@@ -267,7 +269,7 @@ function search(e: MouseEvent) { // 常规图形检索
     if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = workspace.value.root;
-    const xy = matrix.inverseCoord(clientX - x, clientY - y);
+    const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(props.context, shapes);
 }
@@ -696,7 +698,10 @@ function cursor_watcher(t?: number, type?: string) {
         cursor.value = type;
     }
 }
-function matrix_watcher(nm: Matrix) { collect_once(props.context, nm) }
+function matrix_watcher(nm: Matrix) {
+    matrix_inverse = new Matrix(nm.inverse);
+    collect_once(props.context, nm);
+}
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id);

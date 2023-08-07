@@ -1,7 +1,7 @@
 import { GroupShape, Shape, Watchable } from "@kcdesign/data";
 import { PageXY, Selection } from "./selection";
 import { Context } from ".";
-import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4p, modify_pt_y, modify_pt_y4p, update_pg } from "@/utils/assist";
+import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4create, modify_pt_x4p, modify_pt_y, modify_pt_y4create, modify_pt_y4p, update_pg } from "@/utils/assist";
 export interface PointGroup {
     lt: PageXY
     rt: PageXY
@@ -227,6 +227,35 @@ export class Asssit extends Watchable(Object) {
             const p = this.m_current_pg[t];
             modify_pt_x4p(pre_target1, p, c_pg.apexX, this.m_stickness);
             modify_pt_y4p(pre_target2, p, c_pg.apexY, this.m_stickness);
+        }
+        if (pre_target1.delta !== undefined) {
+            target.x = pre_target1.x, target.sticked_by_x = true;
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{ x: target.x, y: pre_target1.sy }]);
+        }
+        if (pre_target2.delta !== undefined) {
+            target.y = pre_target2.y, target.sticked_by_y = true;
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ x: pre_target2.sx, y: target.y }]);
+        }
+        this.notify(Asssit.UPDATE_ASSIST);
+        const e = Date.now();
+        // console.log('单次匹配用时(ms):', e - st);
+        return target;
+    }
+    create_match(p: PageXY) {
+        const st = Date.now();
+        if (!this.m_except.size) return;
+        this.m_nodes_x = [];
+        this.m_nodes_y = [];
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
+        for (let i = 0; i < this.m_shape_inner.length; i++) {
+            const cs = this.m_shape_inner[i];
+            if (this.m_except.get(cs.id)) continue;
+            const c_pg = this.m_pg_inner.get(cs.id);
+            if (!c_pg) continue;
+            modify_pt_x4create(pre_target1, p, c_pg.apexX, this.m_stickness);
+            modify_pt_y4create(pre_target2, p, c_pg.apexY, this.m_stickness);
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;
