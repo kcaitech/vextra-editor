@@ -189,15 +189,16 @@ export function useController(context: Context) {
                 const distance = distance2apex(shape, target.alignX), trans_x = target.x - distance;
                 stick.dx = trans_x, stick.sticked_x = true;
                 if (!stickedY) stick.dy = pe.y - ps.y;
-                pe.x += trans_x;
+                pe.x = ps.x + trans_x;
                 const t = matrix.inverseCoord(pe);
                 startPosition.x = t.x;
                 update_type = update_type - 1;
                 stickedX = true;
             }
             if (stickedY) {
-                if (Math.abs(pe.y - ps.y) > stickness) stickedY = false;
-                else {
+                if (Math.abs(pe.y - ps.y) > stickness) {
+                    stickedY = false;
+                } else {
                     pe.y = ps.y;
                     update_type = update_type - 2;
                 }
@@ -205,13 +206,15 @@ export function useController(context: Context) {
                 const distance = distance2apex(shape, target.alignY), trans_y = target.y - distance;
                 stick.dy = trans_y, stick.sticked_y = true;
                 if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-                pe.y += trans_y;
+                pe.y = ps.y + trans_y;
                 const t = matrix.inverseCoord(pe);
                 startPosition.y = t.y;
                 update_type = update_type - 2;
                 stickedY = true;
             }
-            if (stick.sticked_x || stick.sticked_y) asyncTransfer.stick(stick.dx, stick.dy); else asyncTransfer.trans(ps, pe);
+            if (stick.sticked_x || stick.sticked_y) {
+                asyncTransfer.stick(stick.dx, stick.dy);
+            } else asyncTransfer.trans(ps, pe);
         } else {
             asyncTransfer.trans(ps, pe);
         }
