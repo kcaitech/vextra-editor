@@ -1,7 +1,7 @@
 import { GroupShape, Shape, Watchable } from "@kcdesign/data";
 import { PageXY, Selection } from "./selection";
 import { Context } from ".";
-import { _collect, finder, getClosestAB, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4p, modify_pt_y, modify_pt_y4p, update_pg } from "@/utils/assist";
+import { _collect, finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4p, modify_pt_y, modify_pt_y4p, update_pg } from "@/utils/assist";
 export interface PointGroup {
     lt: PageXY
     rt: PageXY
@@ -178,12 +178,14 @@ export class Asssit extends Watchable(Object) {
         // console.log('单次匹配用时(ms):', e - st);
         return target;
     }
-    trans_match_multi() {
+    trans_match_multi(shapes: Shape[]) {
         const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        this.m_current_pg = get_pg_by_frame(this.m_context.workspace.controllerFrame);
+        const fs = get_frame(shapes);
+        this.m_context.workspace.setCFrame(fs);
+        this.m_current_pg = get_pg_by_frame(fs);
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
         const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
         const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };

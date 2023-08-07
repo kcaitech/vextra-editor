@@ -138,12 +138,13 @@ function createController() { // 计算控件点位以及类型判定
                 const m = s.matrix2Root();
                 m.multiAtLeft(matrix);
                 const f = s.frame;
-                const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+                const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord2(p.x, p.y));
                 points.push(...ps);
             }
             const b = XYsBounding(points);
             controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
-            props.context.workspace.setCFrame(controllerFrame.value);
+            const m2 = new Matrix(matrix.inverse);
+            props.context.workspace.setCFrame(controllerFrame.value.map(p => m2.computeCoord2(p.x, p.y)));
             rotate.value = 0;
             if (!permIsEdit(props.context) || props.context.workspace.action === Action.AddComment) {
                 controllerType.value = ControllerType.Readonly;

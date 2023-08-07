@@ -16,7 +16,7 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { distance2apex } from '@/utils/assist';
+import { distance2apex, distance2apex2 } from '@/utils/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -174,47 +174,63 @@ export function useController(context: Context) {
         let update_type = 3;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
         const stickness = context.assist.stickness;
-        if (shapes.length === 1) {
-            const shape = shapes[0];
-            const target = context.assist.trans_match(shape);
-            if (!target) return update_type;
-            if (stickedX) {
-                if (Math.abs(pe.x - ps.x) > stickness) {
-                    stickedX = false;
-                } else {
-                    pe.x = ps.x;
-                    update_type = update_type - 1;
-                }
-            } else if (target.sticked_by_x) {
-                const distance = distance2apex(shape, target.alignX), trans_x = target.x - distance;
-                stick.dx = trans_x, stick.sticked_x = true;
-                if (!stickedY) stick.dy = pe.y - ps.y;
-                pe.x = ps.x + trans_x;
-                const t = matrix.inverseCoord(pe);
-                startPosition.x = t.x;
+        let target: any;
+        const len = shapes.length;
+        const shape = shapes[0];
+        if (len === 1) {
+            target = context.assist.trans_match(shape);
+        } else {
+            target = context.assist.trans_match_multi(shapes);
+        }
+        if (!target) return update_type;
+        if (stickedX) {
+            if (Math.abs(pe.x - ps.x) > stickness) {
+                stickedX = false;
+            } else {
+                pe.x = ps.x;
                 update_type = update_type - 1;
-                stickedX = true;
             }
-            if (stickedY) {
-                if (Math.abs(pe.y - ps.y) > stickness) {
-                    stickedY = false;
-                } else {
-                    pe.y = ps.y;
-                    update_type = update_type - 2;
-                }
-            } else if (target.sticked_by_y) {
-                const distance = distance2apex(shape, target.alignY), trans_y = target.y - distance;
-                stick.dy = trans_y, stick.sticked_y = true;
-                if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-                pe.y = ps.y + trans_y;
-                const t = matrix.inverseCoord(pe);
-                startPosition.y = t.y;
+        } else if (target.sticked_by_x) {
+            let distance = 0;
+            if (len === 1) {
+                distance = distance2apex(shape, target.alignX);
+            } else {
+                distance = distance2apex2(context.workspace.controllerFrame, target.alignX);
+            }
+            const trans_x = target.x - distance;
+            stick.dx = trans_x, stick.sticked_x = true;
+            if (!stickedY) stick.dy = pe.y - ps.y;
+            pe.x = ps.x + trans_x;
+            const t = matrix.inverseCoord(pe);
+            startPosition.x = t.x;
+            update_type = update_type - 1;
+            stickedX = true;
+        }
+        if (stickedY) {
+            if (Math.abs(pe.y - ps.y) > stickness) {
+                stickedY = false;
+            } else {
+                pe.y = ps.y;
                 update_type = update_type - 2;
-                stickedY = true;
             }
-            if (stick.sticked_x || stick.sticked_y) {
-                asyncTransfer.stick(stick.dx, stick.dy);
-            } else asyncTransfer.trans(ps, pe);
+        } else if (target.sticked_by_y) {
+            let distance = 0;
+            if (len === 1) {
+                distance = distance2apex(shape, target.alignY);
+            } else {
+                distance = distance2apex2(context.workspace.controllerFrame, target.alignY);
+            }
+            const trans_y = target.y - distance;
+            stick.dy = trans_y, stick.sticked_y = true;
+            if (!stick.sticked_x) stick.dx = pe.x - ps.x;
+            pe.y = ps.y + trans_y;
+            const t = matrix.inverseCoord(pe);
+            startPosition.y = t.y;
+            update_type = update_type - 2;
+            stickedY = true;
+        }
+        if (stick.sticked_x || stick.sticked_y) {
+            asyncTransfer.stick(stick.dx, stick.dy);
         } else {
             asyncTransfer.trans(ps, pe);
         }

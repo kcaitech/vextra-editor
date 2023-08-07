@@ -3,6 +3,7 @@ import { Asssit, PT1, PT2, PT4P1, PT4P2, PointGroup } from "@/context/assist";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { debounce } from "lodash";
+import { XYsBounding } from "./common";
 
 enum Align {
     LT_X,
@@ -52,6 +53,40 @@ get_pos[Align.LB_Y] = function (shape: Shape) {
 
 export function distance2apex(shape: Shape, align: Align): number {
     return get_pos[align](shape);
+}
+const get_pos2: { [key: string]: (frame: Point[]) => number } = {};
+get_pos2[Align.LT_X] = function (frame: Point[]) {
+    return frame[0].x;
+}
+get_pos2[Align.RT_X] = function (frame: Point[]) {
+    return frame[1].x;
+}
+get_pos2[Align.C_X] = function (frame: Point[]) {
+    return (frame[0].x + frame[2].x) / 2;
+}
+get_pos2[Align.RB_X] = function (frame: Point[]) {
+    return frame[2].x;
+}
+get_pos2[Align.LB_X] = function (frame: Point[]) {
+    return frame[3].x;
+}
+get_pos2[Align.LT_Y] = function (frame: Point[]) {
+    return frame[0].y;
+}
+get_pos2[Align.RT_Y] = function (frame: Point[]) {
+    return frame[1].y;
+}
+get_pos2[Align.C_Y] = function (frame: Point[]) {
+    return (frame[0].y + frame[2].y) / 2;
+}
+get_pos2[Align.RB_Y] = function (frame: Point[]) {
+    return frame[2].y;
+}
+get_pos2[Align.LB_Y] = function (frame: Point[]) {
+    return frame[3].y;
+}
+export function distance2apex2(frame: Point[], align: Align): number {
+    return get_pos2[align](frame);
 }
 export function update_pg(host: Shape): PointGroup {
     const m = host.matrix2Root(), f = host.frame;
@@ -205,4 +240,16 @@ export function get_pg_by_frame(frame: Point[]): PointGroup {
         apexX: [lt.x, rt.x, rb.x, lb.x, pivot.x],
         apexY: [lt.y, rt.y, rb.y, lb.y, pivot.y]
     }
+}
+export function get_frame(selection: Shape[]): Point[] {
+    const points: { x: number, y: number }[] = [];
+    for (let i = 0; i < selection.length; i++) {
+        const s = selection[i];
+        const m = s.matrix2Root();
+        const f = s.frame;
+        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord2(p.x, p.y));
+        points.push(...ps);
+    }
+    const b = XYsBounding(points);
+    return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
