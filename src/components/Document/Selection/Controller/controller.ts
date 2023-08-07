@@ -16,13 +16,11 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { Asssit } from '@/context/assist';
 import { distance2apex } from '@/utils/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
     const dragActiveDis = 3;
-    const STICKNESS = Asssit.STICKNESS;
     let timer: any;
     const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
@@ -175,12 +173,13 @@ export function useController(context: Context) {
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         let update_type = 3;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
+        const stickness = context.assist.stickness + 1;
         if (shapes.length === 1) {
             const shape = shapes[0];
             const target = context.assist.trans_match(shape);
             if (!target) return update_type;
             if (stickedX) {
-                if (Math.abs(pe.x - ps.x) > STICKNESS) stickedX = false;
+                if (Math.abs(pe.x - ps.x) > stickness) stickedX = false;
                 else {
                     pe.x = ps.x;
                     update_type = update_type - 1;
@@ -193,7 +192,7 @@ export function useController(context: Context) {
                 stickedX = true;
             }
             if (stickedY) {
-                if (Math.abs(pe.y - ps.y) > STICKNESS) stickedY = false;
+                if (Math.abs(pe.y - ps.y) > stickness) stickedY = false;
                 else {
                     pe.y = ps.y;
                     update_type = update_type - 2;

@@ -64,9 +64,16 @@ export class Asssit extends Watchable(Object) {
     private m_current_pg: PointGroup | undefined;
     private m_nodes_x: PageXY[] = [];
     private m_nodes_y: PageXY[] = [];
+    private m_stickness: number = 5;
     constructor(context: Context) {
         super();
         this.m_context = context;
+    }
+    get stickness() {
+        return this.m_stickness;
+    }
+    setStickness(v: number) {
+        this.m_stickness = v;
     }
     get nodes_x() {
         return this.m_nodes_x;
@@ -80,9 +87,9 @@ export class Asssit extends Watchable(Object) {
         const page = this.m_context.selection.selectedPage;
         if (!page) return;
         this.clear();
-        let target: GroupShape = page;
-        if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
-        this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        // let target: GroupShape = page;
+        // if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
+        this.m_shape_inner = finder(this.m_context, page, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
         const e = Date.now();
         console.log('点位收集用时(ms):', e - s);
     }
@@ -114,8 +121,8 @@ export class Asssit extends Watchable(Object) {
             if (cs.id === s.id) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
             if (!c_pg) continue;
-            modify_pt_x(pre_target1, s_pg, c_pg.apexX);
-            modify_pt_y(pre_target2, s_pg, c_pg.apexY);
+            modify_pt_x(pre_target1, s_pg, c_pg.apexX, this.m_stickness);
+            modify_pt_y(pre_target2, s_pg, c_pg.apexY, this.m_stickness);
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
@@ -153,8 +160,8 @@ export class Asssit extends Watchable(Object) {
             if (this.m_except.get(cs.id)) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
             if (!c_pg) continue;
-            modify_pt_x(pre_target1, this.m_current_pg, c_pg.apexX);
-            modify_pt_y(pre_target2, this.m_current_pg, c_pg.apexY);
+            modify_pt_x(pre_target1, this.m_current_pg, c_pg.apexX, this.m_stickness);
+            modify_pt_y(pre_target2, this.m_current_pg, c_pg.apexY, this.m_stickness);
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
@@ -184,8 +191,8 @@ export class Asssit extends Watchable(Object) {
             const c_pg = this.m_pg_inner.get(cs.id);
             if (!c_pg) continue;
             const p = this.m_current_pg[t];
-            modify_pt_x4p(pre_target1, p, c_pg.apexX);
-            modify_pt_y4p(pre_target2, p, c_pg.apexY);
+            modify_pt_x4p(pre_target1, p, c_pg.apexX, this.m_stickness);
+            modify_pt_y4p(pre_target2, p, c_pg.apexY, this.m_stickness);
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;

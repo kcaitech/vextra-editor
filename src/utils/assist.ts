@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Asssit, PT1, PT2, PT4P1, PT4P2, PointGroup } from "@/context/assist";
 import { PageXY } from "@/context/selection";
-import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
+import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { debounce } from "lodash";
 
 enum Align {
@@ -113,55 +113,56 @@ export function getClosestAB(shape: Shape) {
     }
     return resust;
 }
-export function _collect(context: Context) {
+export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.collect();
+    context.assist.setStickness(Math.ceil(5 / new_matrix.m00));
 }
-export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[]) {
+export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[], stickness: number) {
     for (let i = 0; i < apexX.length; i++) {
         const x = apexX[i]
         const delta1 = Math.abs(x - s_pg.lt.x);
-        if (delta1 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta1 < pre_target1.delta)) {
+        if (delta1 < stickness && (pre_target1.delta === undefined || delta1 < pre_target1.delta)) {
             pre_target1.delta = delta1, pre_target1.x = x, pre_target1.sy = s_pg.lt.y, pre_target1.align = Align.LT_X;
         }
         const delta2 = Math.abs(x - s_pg.pivot.x);
-        if (delta2 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta2 < pre_target1.delta)) {
+        if (delta2 < stickness && (pre_target1.delta === undefined || delta2 < pre_target1.delta)) {
             pre_target1.delta = delta2, pre_target1.x = x, pre_target1.sy = s_pg.pivot.y, pre_target1.align = Align.C_X;
         }
         const delta3 = Math.abs(x - s_pg.rb.x)
-        if (delta3 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta3 < pre_target1.delta)) {
+        if (delta3 < stickness && (pre_target1.delta === undefined || delta3 < pre_target1.delta)) {
             pre_target1.delta = delta3, pre_target1.x = x, pre_target1.sy = s_pg.rb.y, pre_target1.align = Align.RB_X;
         }
         const delta4 = Math.abs(x - s_pg.lb.x);
-        if (delta4 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta4 < pre_target1.delta)) {
+        if (delta4 < stickness && (pre_target1.delta === undefined || delta4 < pre_target1.delta)) {
             pre_target1.delta = delta4, pre_target1.x = x, pre_target1.sy = s_pg.lb.y, pre_target1.align = Align.LB_X;
         }
         const delta5 = Math.abs(x - s_pg.rt.x);
-        if (delta5 < Asssit.STICKNESS && (pre_target1.delta === undefined || delta5 < pre_target1.delta)) {
+        if (delta5 < stickness && (pre_target1.delta === undefined || delta5 < pre_target1.delta)) {
             pre_target1.delta = delta5, pre_target1.x = x, pre_target1.sy = s_pg.rt.y, pre_target1.align = Align.RT_X;
         }
     }
 }
-export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[]) {
+export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[], stickness: number) {
     for (let i = 0; i < apexY.length; i++) {
         const y = apexY[i];
         const delta1 = Math.abs(y - s_pg.lt.y);
-        if (delta1 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta1 < pre_target2.delta)) {
+        if (delta1 < stickness && (pre_target2.delta === undefined || delta1 < pre_target2.delta)) {
             pre_target2.delta = delta1, pre_target2.y = y, pre_target2.sx = s_pg.lt.x, pre_target2.align = Align.LT_Y;
         }
         const delta2 = Math.abs(y - s_pg.pivot.y);
-        if (delta2 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta2 < pre_target2.delta)) {
+        if (delta2 < stickness && (pre_target2.delta === undefined || delta2 < pre_target2.delta)) {
             pre_target2.delta = delta2, pre_target2.y = y, pre_target2.sx = s_pg.pivot.x, pre_target2.align = Align.C_Y;
         }
         const delta3 = Math.abs(y - s_pg.rb.y);
-        if (delta3 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta3 < pre_target2.delta)) {
+        if (delta3 < stickness && (pre_target2.delta === undefined || delta3 < pre_target2.delta)) {
             pre_target2.delta = delta3, pre_target2.y = y, pre_target2.sx = s_pg.rb.x, pre_target2.align = Align.RB_Y;
         }
         const delta4 = Math.abs(y - s_pg.lb.y);
-        if (delta4 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta4 < pre_target2.delta)) {
+        if (delta4 < stickness && (pre_target2.delta === undefined || delta4 < pre_target2.delta)) {
             pre_target2.delta = delta4, pre_target2.y = y, pre_target2.sx = s_pg.lb.x, pre_target2.align = Align.LB_Y;
         }
         const delta5 = Math.abs(y - s_pg.rt.y);
-        if (delta5 < Asssit.STICKNESS && (pre_target2.delta === undefined || delta5 < pre_target2.delta)) {
+        if (delta5 < stickness && (pre_target2.delta === undefined || delta5 < pre_target2.delta)) {
             pre_target2.delta = delta5, pre_target2.y = y, pre_target2.sx = s_pg.rt.x, pre_target2.align = Align.RT_Y;
         }
     }
@@ -176,20 +177,20 @@ export function get_tree(shape: Shape, init?: Map<string, Shape>) {
     return result;
 }
 export const collect_once = debounce(_collect, 100);
-export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[]) {
+export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
     for (let i = 0; i < apexX.length; i++) {
         const x = apexX[i]
         const delta = Math.abs(x - p.x);
-        if (delta < Asssit.STICKNESS && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
+        if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
             pre_target1.delta = delta, pre_target1.x = x, pre_target1.sy = p.y;
         }
     }
 }
-export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[]) {
+export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], stickness: number) {
     for (let i = 0; i < apexY.length; i++) {
         const y = apexY[i]
         const delta = Math.abs(y - p.y);
-        if (delta < Asssit.STICKNESS && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
+        if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
             pre_target2.delta = delta, pre_target2.y = y, pre_target2.sx = p.x;
         }
     }

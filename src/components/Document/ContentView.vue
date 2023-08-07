@@ -80,7 +80,7 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
-const STICKNESS = Asssit.STICKNESS + 1;
+let stickness: number = Asssit.STICKNESS + 1;
 
 function page_watcher(...args: any) {
     if (args.includes('style')) {
@@ -191,23 +191,20 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
                 if (e.shiftKey) {
                     er_frame(asyncCreator, x, y);
                 } else {
+                    const stickness = props.context.assist.stickness + 1;
                     const target = props.context.assist.point_match(newShape, 'rb');
                     if (target) {
                         if (stickedX) {
-                            if (Math.abs(x - sticked_x_v) > STICKNESS) stickedX = false;
-                            else {
-                                x = sticked_x_v;
-                            }
+                            if (Math.abs(x - sticked_x_v) > stickness) stickedX = false;
+                            else x = sticked_x_v;
                         } else if (target.sticked_by_x) {
                             x = target.x;
                             sticked_x_v = x;
                             stickedX = true;
                         }
                         if (stickedY) {
-                            if (Math.abs(y - sticked_y_v) > STICKNESS) stickedY = false;
-                            else {
-                                y = sticked_y_v;
-                            }
+                            if (Math.abs(y - sticked_y_v) > stickness) stickedY = false;
+                            else y = sticked_y_v;
                         } else if (target.sticked_by_y) {
                             y = target.y;
                             sticked_y_v = y;
@@ -699,7 +696,7 @@ function cursor_watcher(t?: number, type?: string) {
         cursor.value = type;
     }
 }
-function matrix_watcher() { collect_once(props.context) }
+function matrix_watcher(nm: Matrix) { collect_once(props.context, nm) }
 // hooks
 function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id);

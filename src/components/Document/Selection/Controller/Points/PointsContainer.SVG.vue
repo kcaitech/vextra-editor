@@ -154,10 +154,12 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
   } else return p2
 }
 function scale(asyncBaseAction: AsyncBaseAction, p1: PageXY, p2: PageXY) {
+  const stickness = props.context.assist.stickness + 1;
+  console.log('stickness', stickness);
   const target = props.context.assist.point_match(props.shape, pointType);
   if (target) {
     if (stickedX) {
-      if (Math.abs(p2.x - sticked_x_v) > STICKNESS) stickedX = false;
+      if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX = false;
       else p2.x = sticked_x_v;
     } else if (target.sticked_by_x) {
       p2.x = target.x;
@@ -165,7 +167,7 @@ function scale(asyncBaseAction: AsyncBaseAction, p1: PageXY, p2: PageXY) {
       stickedX = true;
     }
     if (stickedY) {
-      if (Math.abs(p2.y - sticked_y_v) > STICKNESS) stickedY = false;
+      if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY = false;
       else p2.y = sticked_y_v;
     } else if (target.sticked_by_y) {
       p2.y = target.y;

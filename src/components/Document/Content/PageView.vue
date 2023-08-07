@@ -39,9 +39,9 @@ watchEffect(() => {
 })
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
-    old.unwatch(collect);
+    old.__collect.unwatch(collect);
     value.watch(watcher);
-    value.watch(collect);
+    value.__collect.watch(collect);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
@@ -53,14 +53,14 @@ function tool_watcher(t?: number) {
 }
 onMounted(() => {
     props.data.watch(watcher);
-    props.data.watch(collect);
+    props.data.__collect.watch(collect);
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
-    props.data.unwatch(collect);
+    props.data.__collect.unwatch(collect);
     props.context.tool.unwatch(tool_watcher);
     pageViewRegister(false);
     stopWatchPage();
