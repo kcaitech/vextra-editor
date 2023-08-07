@@ -1,4 +1,4 @@
-import { GroupShape, Shape, Watchable } from "@kcdesign/data";
+import { GroupShape, Shape, ShapeType, Watchable } from "@kcdesign/data";
 import { PageXY, Selection } from "./selection";
 import { Context } from ".";
 import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4create, modify_pt_x4p, modify_pt_y, modify_pt_y4create, modify_pt_y4p, update_pg } from "@/utils/assist";
@@ -87,9 +87,9 @@ export class Asssit extends Watchable(Object) {
         const page = this.m_context.selection.selectedPage;
         if (!page) return;
         this.clear();
-        // let target: GroupShape = page;
-        // if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
-        this.m_shape_inner = finder(this.m_context, page, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        let target: GroupShape = page;
+        if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
+        this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
         const e = Date.now();
         console.log('点位收集用时(ms):', e - s);
     }

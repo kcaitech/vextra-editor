@@ -122,6 +122,19 @@ export function isShapeOut(context: Context, shape: Shape) {
 }
 export function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, PageXY[]>, y_axis: Map<number, PageXY[]>) {
     let result: Shape[] = [];
+    if (scope.type === ShapeType.Artboard) {
+        result.push(scope);
+        const pg = update_pg(scope);
+        all_pg.set(scope.id, pg);
+        const pvs = Object.values(pg);
+        for (let i = 0; i < pvs.length; i++) {
+            const p = pvs[i];
+            const x = x_axis.get(p.x);
+            const y = y_axis.get(p.y);
+            if (x) x.push(p); else x_axis.set(p.x, [p]);
+            if (y) y.push(p); else y_axis.set(p.y, [p]);
+        }
+    }
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
         const c = cs[i];
@@ -150,7 +163,7 @@ export function getClosestAB(shape: Shape) {
 }
 export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.collect();
-    context.assist.setStickness(Math.ceil(5 / new_matrix.m00));
+    context.assist.setStickness(Math.ceil(3 / new_matrix.m00));
 }
 export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[], stickness: number) {
     for (let i = 0; i < apexX.length; i++) {
