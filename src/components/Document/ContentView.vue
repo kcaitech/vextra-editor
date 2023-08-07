@@ -80,7 +80,6 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
-let stickness: number = Asssit.STICKNESS + 1;
 let matrix_inverse: Matrix = new Matrix();
 
 function page_watcher(...args: any) {

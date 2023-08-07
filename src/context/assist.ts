@@ -280,5 +280,6 @@ export class Asssit extends Watchable(Object) {
         this.m_pg_inner.clear();
         this.m_x_axis.clear();
         this.m_y_axis.clear();
+        this.m_except.clear();
     }
 }
