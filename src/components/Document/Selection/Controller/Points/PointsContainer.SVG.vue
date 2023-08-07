@@ -155,7 +155,6 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
 }
 function scale(asyncBaseAction: AsyncBaseAction, p1: PageXY, p2: PageXY) {
   const stickness = props.context.assist.stickness + 1;
-  console.log('stickness', stickness);
   const target = props.context.assist.point_match(props.shape, pointType);
   if (target) {
     if (stickedX) {
