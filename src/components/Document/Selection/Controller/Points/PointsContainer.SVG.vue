@@ -100,9 +100,9 @@ function point_mousemove(event: MouseEvent) {
       let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
       if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
         p2 = get_t(cur_ctrl_type, p1, p2);
-        asyncBaseAction.executeScale(cur_ctrl_type, p1, p2);
+        asyncBaseAction.executeScale(cur_ctrl_type, p2);
       } else {
-        scale(asyncBaseAction, p1, p2);
+        scale(asyncBaseAction, p2);
       }
     }
     startPosition = { ...mouseOnClient };
@@ -152,7 +152,7 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
     return m.computeCoord(pre_delta.x, f.height - pre_delta.x * (1 / r));
   } else return p2
 }
-function scale(asyncBaseAction: AsyncBaseAction, p1: PageXY, p2: PageXY) {
+function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
   const stickness = props.context.assist.stickness;
   const target = props.context.assist.point_match(props.shape, pointType);
   if (target) {
@@ -173,7 +173,7 @@ function scale(asyncBaseAction: AsyncBaseAction, p1: PageXY, p2: PageXY) {
       stickedY = true;
     }
   }
-  asyncBaseAction.executeScale(cur_ctrl_type, p1, p2);
+  asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }
 function point_mouseup(event: MouseEvent) {
   if (event.button !== 0) return;
