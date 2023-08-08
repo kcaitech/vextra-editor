@@ -149,7 +149,7 @@ function createController() { // 计算控件点位以及类型判定
             } else if (shape.type === ShapeType.Text) {
                 controllerType.value = ControllerType.Text;
                 rotate.value = getHorizontalAngle(points[0], points[2]); // 线条的水平夹角与其他图形有区别
-            } else if (shape.type === ShapeType.Table) {
+            } else if (shape.type === ShapeType.Table || shape.type === ShapeType.TableCell) {
                 controllerType.value = ControllerType.Table;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             } else {

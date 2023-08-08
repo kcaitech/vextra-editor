@@ -84,9 +84,8 @@ function updateData() {
 function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
-    const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(v4(), true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
+    const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
     if (len.value === 1) {
         editor.value.addBorder(border);
     } else if (len.value > 1) {

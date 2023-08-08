@@ -84,7 +84,6 @@ watch(() => props.shape, (value, old) => {
 })
 
 onMounted(() => {
-    console.log("selection view mounted")
     const selection = props.context.selection;
     props.shape.watch(update);
     selection.watch(selectionWatcher);

@@ -26,12 +26,12 @@ export function textState(props: {
                 props.context.cursor.setType('scan-0');
             }
             if (!editing.value) return;
-            const selection = props.context.selection;
+            // const selection = props.context.selection;
             workspace.setCtrl('controller');
             const root = workspace.root
             matrix.reset(props.matrix); // parent坐标系？
             const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
-            downIndex = selection.locateText(xy.x, xy.y);
+            downIndex = props.shape.text!.locateText(xy.x, xy.y);
             e.stopPropagation();
             document.addEventListener("mousemove", onMouseMove);
             document.addEventListener("mouseup", onMouseUp);
@@ -63,7 +63,7 @@ export function textState(props: {
         const root = workspace.root;
         matrix.reset(props.matrix);
         const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-        const locate = selection.locateText(xy.x, xy.y);
+        const locate = props.shape.text!.locateText(xy.x, xy.y);
         if (downIndex.index === locate.index) {
             if (locate.placeholder) selection.setCursor(locate.index + 1, false);
             else selection.setCursor(locate.index, locate.before);
@@ -83,7 +83,7 @@ export function textState(props: {
         const root = workspace.root;
         matrix.reset(props.matrix);
         const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-        const locate = selection.locateText(xy.x, xy.y);
+        const locate = props.shape.text!.locateText(xy.x, xy.y);
         if (downIndex.index === locate.index) {
             if (locate.placeholder) selection.setCursor(locate.index + 1, false);
             else selection.setCursor(locate.index, locate.before);
@@ -112,7 +112,7 @@ export function textState(props: {
         onMouseEnter,
         onMouseLeave,
         dispose,
-        cellType: TableCellType.Text
+        props
     }
 }
 

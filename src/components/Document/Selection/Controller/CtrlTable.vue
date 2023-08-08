@@ -1,8 +1,8 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, TableCell, TableCellType, Text } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, ref, reactive, computed } from 'vue';
-import CellView from './Table/CtrlCell.vue';
+import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem } from '@kcdesign/data';
+import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
+import HoverCell from './Table/HoverCell.vue';
 import { genRectPath, throttle } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY } from '@/context/selection';
@@ -11,37 +11,33 @@ import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
 import { useController } from './controller';
 import TextInput from './Text/TextInput.vue';
+import SelectView from "./Text/SelectView.vue";
+import { FilePicker } from '@/components/common/filepicker';
+import { loadImage } from './Table/loadimage';
+import { v4 as uuid } from "uuid"
+import { useI18n } from 'vue-i18n';
+import { textState } from './Table/celltextstate';
 
 type TextShape = Shape & { text: Text };
-
 
 const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
     rotate: number,
     matrix: number[],
-    shape: Shape
+    shape: TableShape | TableCell
 }>();
 
-let editCell: TableCell | undefined;
-const editCellId = ref(""); // 用于更新
+let table: TableShape = props.shape instanceof TableShape ? props.shape : props.shape.parent as TableShape;
 
-function onEditCell(cell: TableCell) {
-    editCellId.value = cell.id;
-    editCell = cell;
-    editing.value = true;
-    console.log("editCell", editCell)
-}
-
-// let cells: { cell: TableCell, lt: { x: number, y: number }, rb: { x: number, y: number } }[] = [];
 const matrix = new Matrix();
 const update = throttle(_update, 5);
 function _update() {
-    const m2p = props.shape.matrix2Root();
+    const m2p = table.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
-    const frame = props.shape.frame;
+    const frame = table.frame;
     const points = [
         { x: 0, y: 0 }, // left top
         { x: frame.width, y: 0 }, //right top
@@ -71,28 +67,31 @@ watch(() => props.matrix, () => {
 })
 
 watch(() => props.shape, (value, old) => {
-    old.unwatch(update);
-    value.watch(update);
-    update();
+    const curTable = value instanceof TableShape ? value : value.parent as TableShape;
+    if (curTable.id !== table.id) {
+        table.unwatch(update);
+        curTable.watch(update);
+        table = curTable;
+        update();
+    }
 })
 
 onMounted(() => {
-    props.shape.watch(update);
+    table.watch(update);
     update();
 })
 
 onUnmounted(() => {
-    props.shape.unwatch(update);
+    table.unwatch(update);
 })
 
 const editing = ref<boolean>(false);
 const visible = ref<boolean>(true);
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-// const { t } = useI18n();
-// const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
-// let viewBox = '';
+const submatrixArray = computed(() => submatrix.toArray())
+
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
@@ -102,9 +101,111 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
 
+const editingCell = shallowRef<TableGridItem>();
+const hoveringCell = shallowRef<TableGridItem>();
+
+const editingCellMatrix = computed(() => {
+    matrix.reset(submatrix.toArray());
+    if (editingCell.value) {
+        matrix.preTrans(editingCell.value.frame.x, editingCell.value.frame.y);
+    }
+    return matrix.toArray();
+})
+
+const hoveringCellMatrix = computed(() => {
+    matrix.reset(submatrix.toArray());
+    if (hoveringCell.value) {
+        matrix.preTrans(hoveringCell.value.frame.x, hoveringCell.value.frame.y);
+    }
+    return matrix.toArray();
+})
+
+const { t } = useI18n();
+
+let cellState: {
+    onMouseDown: (e: MouseEvent) => void,
+    onMouseEnter: (e: MouseEvent) => void,
+    onMouseLeave: (e: MouseEvent) => void,
+    dispose: (e: MouseEvent) => void,
+    props: {
+        shape: TableCell,
+        matrix: number[],
+        context: Context
+    }
+} | undefined;
+function getCellState(cell: TableCell) {
+    if (!cellState) {
+        cellState = textState({
+            shape: cell,
+            matrix: editingCellMatrix.value,
+            context: props.context
+        }, t)
+    }
+    else {
+        cellState.props.shape = cell;
+        cellState.props.matrix = editingCellMatrix.value;
+    }
+    return cellState;
+}
+
+function isInCell(xy: { x: number, y: number }, cell: TableGridItem) {
+    return xy.x > cell.frame.x && xy.y > cell.frame.y && (xy.x - cell.frame.x) < cell.frame.width && (xy.y - cell.frame.y) < cell.frame.height;
+}
+
+function onLoadImage(name: string, buffer: ArrayBuffer, cell: TableCell) {
+    const data = loadImage(name, buffer);
+    const id = uuid();
+    props.context.data.mediasMgr.add(id, data);
+    const editor = props.context.editor4Table(table)
+    editor.setCellContentImage(cell, id);
+}
+
+let filePicker: FilePicker | undefined;
+const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 function mousedown(e: MouseEvent) {
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
+
+    // find cell
+    const workspace = props.context.workspace;
+    const { clientX, clientY } = e;
+    const root = workspace.root;
+    matrix.reset(submatrixArray.value);
+    const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+    if (editingCell.value && isInCell(xy, editingCell.value)) {
+        getCellState(editingCell.value.cell).onMouseDown(e);
+        return;
+    }
+
+    const cell = table.locateCell(xy.x, xy.y);
+    if (!cell) return;
+    if (cell.cell.cellType === TableCellType.Image) {
+        if (!filePicker) filePicker = new FilePicker(accept, (file: File) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const buffer = e.target?.result;
+                if (!buffer || !(buffer instanceof ArrayBuffer)) {
+                    console.log("read image fail")
+                    return;
+                }
+                const name = file.name;
+                onLoadImage(name, buffer, cell.cell);
+            }
+            reader.readAsArrayBuffer(file);
+        });
+        filePicker.invoke();
+        e.stopPropagation();
+        e.preventDefault();
+        return;
+    }
+    if ((cell.cell.cellType ?? TableCellType.None) === TableCellType.None) {
+        const editor = props.context.editor4Table(table as TableShape)
+        editor.setCellContentText(cell.cell)
+    }
+    // editing cell
+    props.context.selection.selectShape(cell.cell);
+    editingCell.value = cell;
+    getCellState(cell.cell).onMouseDown(e);
 }
 
 const { isDrag } = useController(props.context);
@@ -112,6 +213,25 @@ function mousemove(e: MouseEvent) {
     const isDragging = isDrag();
     if (isDragging) {
         visible.value = false; // 控件在移动过程中不可视
+        return;
+    }
+
+    const workspace = props.context.workspace;
+    const { clientX, clientY } = e;
+    const root = workspace.root;
+
+    matrix.reset(submatrixArray.value);
+
+    const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+    if (editingCell.value && isInCell(xy, editingCell.value)) {
+        // getCellState(editingCell.value.cell).onMouseDown(e);
+        return;
+    }
+
+    const cell = table.locateCell(xy.x, xy.y);
+    if (cell && (!hoveringCell.value || cell.cell.id !== hoveringCell.value.cell.id)) {
+        // hover cell
+        hoveringCell.value = cell;
     }
 }
 
@@ -126,8 +246,13 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 
-const submatrixArray = computed(() => submatrix.toArray())
+function isEditingText() {
+    return editingCell.value && editingCell.value.cell.cellType === TableCellType.Text && editingCell.value.cell.text;
+}
 
+function showHoverCell() {
+    return hoveringCell.value && (hoveringCell.value.cell.cellType ?? TableCellType.None) === TableCellType.None;
+}
 
 </script>
 <template>
@@ -135,22 +260,27 @@ const submatrixArray = computed(() => submatrix.toArray())
         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
         :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        :onmousedown="mousemove" :on-mouseup="mouseup" :on-mousemove="mousemove" overflow="visible"
+        @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible" @blur="windowBlur"
         :class="{ 'un-visible': !visible }">
 
-        <component v-for="c in props.shape.childs" :key="c.id" :is="CellView" :shape="c" :matrix="submatrixArray"
-            @editCell="onEditCell" :context="context" />
+        <!-- 插入图片icon -->
+        <HoverCell v-if="showHoverCell()" :shape="hoveringCell!.cell" :matrix="hoveringCellMatrix" :context="props.context"
+            :frame="hoveringCell!.frame"></HoverCell>
+
+        <!-- 文本选区 -->
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
+            :matrix="editingCellMatrix"></SelectView>
 
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape">
+        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="table">
         </BarsContainer>
-        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="table"
             :axle="axle">
         </PointsContainer>
 
     </svg>
-    <TextInput v-if="editCellId.length > 0 && editCell && editCell.cellType === TableCellType.Text && editCell.text"
-        :context="props.context" :shape="(editCell as TextShape)" :matrix="submatrixArray"></TextInput>
+    <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
+        :matrix="editingCellMatrix"></TextInput>
 </template>
 <style lang='scss' scoped>
 .un-visible {

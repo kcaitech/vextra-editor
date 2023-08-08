@@ -1,7 +1,7 @@
 import { ISave4Restore, SpanAttr, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape, TextShape } from "@kcdesign/data";
+import { Shape, Text } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
 import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
 import { Artboard } from "@kcdesign/data";
@@ -102,7 +102,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_cursorEnd;
     }
     get isSelectText() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape;
+        return this.selectedShapes.length === 1 && this.selectedShapes[0] && (this.selectedShapes[0] as any).text instanceof Text;
     }
     get commentId() {
         return this.m_comment_id;
@@ -323,30 +323,31 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @param y
      */
     locateText(x: number, y: number): TextLocate {
-        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+        if (!(this.isSelectText)) {
             return { index: -1, before: false, placeholder: false, attr: undefined };
         }
-        const shape = this.m_selectShapes[0] as TextShape;
+        const shape = this.m_selectShapes[0];
         // translate x,y
         const matrix = shape.matrix2Root();
         const xy = matrix.inverseCoord(x, y);
         x = xy.x;
         y = xy.y;
 
-        return shape.text.locateText(x, y);
+        return ((shape as any).text as Text).locateText(x, y);
     }
 
     setCursor(index: number, before: boolean) {
-        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+        if (!(this.isSelectText)) {
             return;
         }
         if (index < 0) index = 0;
         const shape = this.m_selectShapes[0];
+        const text = ((shape as any).text as Text);
 
-        const span = shape.text.spanAt(index);
+        const span = text.spanAt(index);
         if (span?.placeholder && span.length === 1) index++;
 
-        const length = shape.text.length;
+        const length = text.length;
         if (index >= length) {
             index = length - 1;
             before = false;
@@ -360,12 +361,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     selectText(start: number, end: number, before?: boolean) {
-        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
+        if (!(this.isSelectText)) {
             return;
         }
         // 不只选择'\n'
         const shape = this.m_selectShapes[0];
-        if (Math.abs(start - end) === 1 && shape.text.charAt(Math.min(start, end)) === '\n') {
+        const text = ((shape as any).text as Text);
+        if (Math.abs(start - end) === 1 && text.charAt(Math.min(start, end)) === '\n') {
             // this.setCursor(end, !!before);
             // return;
             if (end > start) {
@@ -378,7 +380,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             }
         }
 
-        const length = shape.text.length;
+        const length = text.length;
         if (start < 0) start = 0;
         else if (start >= length) {
             start = length - 1;
