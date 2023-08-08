@@ -27,6 +27,7 @@ let ax = 0, ay = 0;
 function assist_watcher(t: number, params?: number) {
     if (t === Asssit.UPDATE_ASSIST) render(params);
     if (t === Asssit.UPDATE_MAIN_LINE) update_main_line(1);
+    if (t === Asssit.CLEAR && assist.value) clear();
 }
 function update_main_line(direction: number) {
     // const s1 = Date.now();

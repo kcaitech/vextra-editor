@@ -78,6 +78,7 @@ export interface PageXY2 {
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
     static UPDATE_MAIN_LINE = 2;
+    static CLEAR = 3;
     static STICKNESS = 5;
     private m_collect_target: GroupShape[] = [];
     private m_context: Context;

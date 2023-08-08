@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
-import { keyboardHandle as handle } from "@/utils/controllerFn";
+import { get_speed, keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { groupPassthrough } from "@/utils/scout";
 import { WorkSpace } from "@/context/workspace";
@@ -35,6 +35,8 @@ export function useController(context: Context) {
     let need_update_comment: boolean = false;
     let stickedX: boolean = false;
     let stickedY: boolean = false;
+    let t_e: MouseEvent | undefined;
+    let speed: number = 0;
     const { t } = useI18n();
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
         if (shapes.length) {
@@ -145,12 +147,16 @@ export function useController(context: Context) {
         if (e.buttons !== 1) return;
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
         if (isDragging && !editing && wheel && asyncTransfer) {
+            speed = get_speed(t_e || e, e);
+            console.log('鼠标移动速度', speed);
+            t_e = e;
             let update_type = 0;
             const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
             if (!isOut) update_type = transform(startPosition, mousePosition);
             if (update_type === 3) startPosition = { ...mousePosition };
             else if (update_type === 2) startPosition.y = mousePosition.y;
             else if (update_type === 1) startPosition.x = mousePosition.x;
+
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
             if (e.altKey) shapes = paster_short(context, shapes);
             asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
@@ -173,6 +179,11 @@ export function useController(context: Context) {
     }
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         // const s1 = Date.now();
+        if (speed > 5) {
+            asyncTransfer.trans(ps, pe);
+            context.assist.notify(Asssit.CLEAR);
+            return 3;
+        }
         let need_multi = 0;
         let update_type = 3;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
