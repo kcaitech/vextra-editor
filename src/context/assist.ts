@@ -273,6 +273,7 @@ export class Asssit extends Watchable(Object) {
     reset() {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
+        this.m_except.clear();
         this.notify(Asssit.UPDATE_ASSIST);
     }
     clear() {
@@ -280,6 +281,5 @@ export class Asssit extends Watchable(Object) {
         this.m_pg_inner.clear();
         this.m_x_axis.clear();
         this.m_y_axis.clear();
-        this.m_except.clear();
     }
 }

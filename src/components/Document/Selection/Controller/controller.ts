@@ -173,7 +173,7 @@ export function useController(context: Context) {
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         let update_type = 3;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
-        const stickness = context.assist.stickness;
+        const stickness = context.assist.stickness + 1;
         const len = shapes.length;
         const shape = shapes[0];
         const target = len === 1 ? context.assist.trans_match(shape) : context.assist.trans_match_multi(shapes);
