@@ -93,6 +93,12 @@ export class Asssit extends Watchable(Object) {
         super();
         this.m_context = context;
     }
+    get CPG() {
+        return this.m_current_pg;
+    }
+    setCPG(pg: PointGroup) {
+        this.m_current_pg = pg;
+    }
     get except() {
         return this.m_except;
     }
@@ -101,6 +107,12 @@ export class Asssit extends Watchable(Object) {
     }
     setStickness(v: number) {
         this.m_stickness = v;
+    }
+    get xAxis() {
+        return this.m_x_axis;
+    }
+    get yAxis() {
+        return this.m_y_axis;
     }
     get nodes_x() {
         return this.m_nodes_x;

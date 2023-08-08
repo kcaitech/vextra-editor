@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Asssit, PT1, PT1_2, PT2, PT4P1, PT4P2, PageXY2, PointGroup } from "@/context/assist";
+import { PT1, PT2, PT4P1, PT4P2, PageXY2, PointGroup } from "@/context/assist";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { debounce } from "lodash";
@@ -108,7 +108,7 @@ export function update_pg(host: Shape, multi?: boolean): PointGroup {
         pg.th = th, pg.rh = rh, pg.bh = bh, pg.lh = lh;
     }
     if (multi) {
-        pg.top = Math.max(...apexX), pg.right = Math.max(...apexY), pg.bottom = Math.min(...apexX), pg.left = Math.min(...apexY), pg.cy = pivot.y, pg.cx = pivot.x;
+        pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
     }
     return pg;
 }
@@ -287,4 +287,22 @@ export function get_frame(selection: Shape[]): Point[] {
     }
     const b = XYsBounding(points);
     return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
+}
+export function get_p_form_pg_by_x(pg: PointGroup, x: number): PageXY[] {
+    const result: PageXY[] = [];
+    if (pg.lt.x === x) result.push(pg.lt);
+    if (pg.rt.x === x) result.push(pg.rt);
+    if (pg.rb.x === x) result.push(pg.rb);
+    if (pg.lb.x === x) result.push(pg.lb);
+    if (pg.pivot.x === x) result.push(pg.pivot);
+    return result;
+}
+export function get_p_form_pg_by_y(pg: PointGroup, y: number): PageXY[] {
+    const result: PageXY[] = [];
+    if (pg.lt.y === y) result.push(pg.lt);
+    if (pg.rt.y === y) result.push(pg.rt);
+    if (pg.rb.y === y) result.push(pg.rb);
+    if (pg.lb.y === y) result.push(pg.lb);
+    if (pg.pivot.y === y) result.push(pg.pivot);
+    return result;
 }

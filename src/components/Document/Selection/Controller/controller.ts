@@ -16,7 +16,8 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { distance2apex, distance2apex2 } from '@/utils/assist';
+import { distance2apex, distance2apex2, update_pg } from '@/utils/assist';
+import { Asssit } from '@/context/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -171,6 +172,7 @@ export function useController(context: Context) {
         return update_type;
     }
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
+        let need_multi = 0;
         let update_type = 3;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
         const stickness = context.assist.stickness + 1;
@@ -180,29 +182,37 @@ export function useController(context: Context) {
         if (!target) return update_type;
         if (stickedX) {
             if (Math.abs(pe.x - ps.x) > stickness) stickedX = false;
-            else pe.x = ps.x, update_type -= 1;
+            else {
+                pe.x = ps.x, update_type -= 1, need_multi += 1;
+            }
         } else if (target.sticked_by_x) {
             const distance = len === 1 ? distance2apex(shape, target.alignX) : distance2apex2(context.workspace.controllerFrame, target.alignX);
             const trans_x = target.x - distance;
             stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y, pe.x = ps.x + trans_x;
             const t = matrix.inverseCoord(pe);
-            startPosition.x = t.x, update_type -= 1, stickedX = true;
+            startPosition.x = t.x, update_type -= 1, stickedX = true, need_multi += 1;
         }
         if (stickedY) {
             if (Math.abs(pe.y - ps.y) > stickness) stickedY = false;
-            else pe.y = ps.y, stick.dy = 0, update_type -= 2;
+            else {
+                pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
+            }
         } else if (target.sticked_by_y) {
             const distance = len === 1 ? distance2apex(shape, target.alignY) : distance2apex2(context.workspace.controllerFrame, target.alignY);
             const trans_y = target.y - distance;
             stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;
             if (!stick.sticked_x) stick.dx = pe.x - ps.x;
             const t = matrix.inverseCoord(pe);
-            startPosition.y = t.y, update_type -= 2, stickedY = true;
+            startPosition.y = t.y, update_type -= 2, stickedY = true, need_multi += 2;
         }
         if (stick.sticked_x || stick.sticked_y) {
             asyncTransfer.stick(stick.dx, stick.dy);
         } else {
             asyncTransfer.trans(ps, pe);
+        }
+        if (need_multi && len === 1) {
+            context.assist.setCPG(update_pg(shape, true));
+            context.assist.notify(Asssit.UPDATE_ASSIST, need_multi);
         }
         return update_type;
     }
