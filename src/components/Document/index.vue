@@ -27,7 +27,7 @@ import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
 import { DocSelectionOp } from "@/context/communication/doc_selection_op";
 import { throttle } from "@/utils/timing_util";
-import { DocSelectionOpData, DocSelectionOpType, DocSelectionData } from "@/communication/modules/doc_selection_op"
+import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op"
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -578,13 +578,13 @@ const closeNetMsg = () => {
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
     if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
-        const addUset = context!.selection.getUserSelection
+        const addUset = context!.teamwork.getUserSelection
         if(docCommentOpData.type === DocSelectionOpType.Exit) {
             const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
-            context?.selection.userSelectionExit(index)
+            context?.teamwork.userSelectionExit(index)
         }else if (docCommentOpData.type === DocSelectionOpType.Update) {
             const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
-            context?.selection.userSelectionUpdate(data, index)
+            context?.teamwork.userSelectionUpdate(data, index)
         }
     }
 }

@@ -1,14 +1,13 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, watch, reactive, watchEffect } from 'vue'
+import { ref, onMounted, onUnmounted, reactive } from 'vue'
 import { Context } from '@/context'
 import { Matrix, Shape, TextShape } from "@kcdesign/data";
-import { Selection } from '@/context/selection'
 import { XYsBounding } from "@/utils/common";
 import { genRectPath } from '../common'
 import { WorkSpace } from '@/context/workspace'
 import ShapeAvatar from './ShapeAvatar.vue';
 import { DocSelectionData } from "@/communication/modules/doc_selection_op"
-import { Menu } from '@/context/menu';
+import { TeamWork } from "@/context/teamwork";
 interface Props {
     context: Context
     matrix: Matrix
@@ -26,9 +25,8 @@ type TextFillPath = {
 }
 const tracingPath = ref<BorderPath[]>([]);
 const selectPath = ref<TextFillPath[]>([]);
-const usersSelectionList = ref<DocSelectionData[]>(props.context.selection.getUserSelection);
+const usersSelectionList = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
 const matrix = new Matrix();
-const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const submatrix = reactive(new Matrix());
 const createShapeTracing = () => { // 描边 
     tracingPath.value = [];
@@ -101,11 +99,11 @@ function update_by_shapes() {
 }
 
 const selectionWatcher = (t?: any) => {
-    if (t === Selection.CHANGE_USER_STATE) {
-        usersSelectionList.value = props.context.selection.getUserSelection;
+    if (t === TeamWork.CHANGE_USER_STATE) {
+        usersSelectionList.value = props.context.teamwork.getUserSelection;
         update_by_shapes();
         createShapeTracing();
-        watchShapes()
+        watchShapes();
     }
 }
 
@@ -135,7 +133,6 @@ function watchShapes() { // 监听相关shape的变化
             if (shape) shapes.push(shape);
         }
     })
-    const selection = props.context.selection.selectedPage?.childs;
     if (shapes) {
         shapes.forEach((v) => {
             needWatchShapes.set(v.id, v);
@@ -153,33 +150,28 @@ function watchShapes() { // 监听相关shape的变化
     })
 }
 
-const menuUpdate = (t: number) => {
-    if(t === Menu.CHANGE_USER_CURSOR) {
-        avatarVisi.value = props.context.menu.isUserCursorVisible;
-    }
-}
 onMounted(() => {
     watchShapes();
+    update_by_shapes();
+    createShapeTracing();
     props.context.workspace.watch(workspaceUpdate);
-    props.context.selection.watch(selectionWatcher);
-    props.context.menu.watch(menuUpdate);
+    props.context.teamwork.watch(selectionWatcher)
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
-    props.context.selection.unwatch(selectionWatcher);
-    props.context.menu.unwatch(menuUpdate);
+    props.context.teamwork.unwatch(selectionWatcher)
 })
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" v-if="avatarVisi"
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="position: absolute">
         <path v-for="(p, i) in tracingPath" :key="i" :d="p.path" fill="transparent" :stroke="p.color" stroke-width="1.5px"
             opacity="0.8"></path>
         <!-- <path v-for="(p, i) in selectPath" :key="i" :d="p.path" :fill="p.color" fill-opacity="0.5" stroke='none'></path> -->
     </svg>
-    <ShapeAvatar :context="props.context" :matrix="props.matrix" v-if="avatarVisi"></ShapeAvatar>
+    <ShapeAvatar :context="props.context" :matrix="props.matrix"></ShapeAvatar>
 </template>
 
 <style lang="scss" scoped></style>

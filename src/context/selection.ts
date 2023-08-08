@@ -6,7 +6,7 @@ import { cloneDeep } from "lodash";
 import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
 import { Artboard } from "@kcdesign/data";
 import { Context } from ".";
-import { DocSelectionOpData, DocSelectionOpType, DocSelectionData } from "@/communication/modules/doc_selection_op"
+import { DocSelectionData } from "@/communication/modules/doc_selection_op"
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],

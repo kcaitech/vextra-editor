@@ -2,11 +2,11 @@
 import { watchEffect, onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix, Shape, ShapeType } from "@kcdesign/data";
-import { Selection } from '@/context/selection'
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection"
 import { XYsBounding } from "@/utils/common";
-import { DocSelectionData } from "@/communication/modules/doc_selection_op"
+import { DocSelectionData } from "@/communication/modules/doc_selection_op";
+import { TeamWork } from "@/context/teamwork";
 
 const props = defineProps<{
     context: Context
@@ -33,7 +33,7 @@ const matrix = new Matrix();
 const origin: ClientXY = { x: 0, y: 0 };
 const avatars = ref<Avatar[]>([])
 const multipShape = ref<MultipShape[]>([])
-const userSelectionInfo = ref<DocSelectionData[]>(props.context.selection.getUserSelection)
+const userSelectionInfo = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection)
 const groupedShapes = ref()
 const multipShapeGroup = ref<any>({})
 const setOrigin = () => {
@@ -42,7 +42,7 @@ const setOrigin = () => {
     origin.y = matrix.m12
 }
 const setPosition = () => {
-    // const userSelectShape = props.context.selection.getUserSelection
+    // const userSelectShape = props.context.teamwork.getUserSelection)
     avatars.value.length = 0
     multipShape.value.length = 0
     groupedShapes.value = []
@@ -131,8 +131,8 @@ const workspaceUpdate = (t: number) => {
     }
 }
 const updater = (t?: number) => {
-    if (t === Selection.CHANGE_USER_STATE) {        
-        userSelectionInfo.value = props.context.selection.getUserSelection;
+    if (t === TeamWork.CHANGE_USER_STATE) {        
+        userSelectionInfo.value = props.context.teamwork.getUserSelection;
         setOrigin();
         setPosition();
         watchShapes();
@@ -154,7 +154,6 @@ function watchShapes() { // 监听相关shape的变化
             if (shape) shapes.push(shape);
         }
     })
-    const selection = props.context.selection.selectedPage?.childs;
     if (shapes) {
         shapes.forEach((v) => {
             needWatchShapes.set(v.id, v);
@@ -174,13 +173,15 @@ function watchShapes() { // 监听相关shape的变化
 
 onMounted(() => {
     watchShapes();
+    setOrigin();
+    setPosition();
     props.context.workspace.watch(workspaceUpdate);
-    props.context.selection.watch(updater);
+    props.context.teamwork.watch(updater)
 })
 
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
-    props.context.selection.unwatch(updater);
+    props.context.teamwork.watch(updater)
 })
 </script>
 

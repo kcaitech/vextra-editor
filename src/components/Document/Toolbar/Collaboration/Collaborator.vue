@@ -2,11 +2,11 @@
 import { Context } from '@/context';
 import ColInfo from './ColInfo.vue';
 import { onMounted, onUnmounted, ref, nextTick } from 'vue';
-import { Selection } from '@/context/selection';
 import { Shape } from '@kcdesign/data';
 import { skipUserSelectShapes } from '@/utils/content';
 import { useI18n } from 'vue-i18n';
 import { DocSelectionData } from "@/communication/modules/doc_selection_op";
+import { TeamWork } from "@/context/teamwork";
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -30,8 +30,8 @@ const onShowUserList = (e: MouseEvent) => {
 }
 
 const selectionUpdate = (t: number) => {
-    if(t === Selection.CHANGE_USER_STATE) {
-        userInfoList.value =  props.context.selection.getUserSelection;
+    if(t === TeamWork.CHANGE_USER_STATE) {
+        userInfoList.value =  props.context.teamwork.getUserSelection;
         refresh.value++;
     }
 }
@@ -66,10 +66,12 @@ const filterPerm = (perm?: number) => {
 }
 
 onMounted(() => {
-    props.context.selection.watch(selectionUpdate);
+    // props.context.selection.watch(selectionUpdate);
+    props.context.teamwork.watch(selectionUpdate)
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(selectionUpdate);
+    // props.context.selection.unwatch(selectionUpdate);
+    props.context.teamwork.unwatch(selectionUpdate)
 })
 </script>
 
