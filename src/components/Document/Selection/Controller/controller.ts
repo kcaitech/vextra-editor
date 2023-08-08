@@ -179,46 +179,27 @@ export function useController(context: Context) {
         const target = len === 1 ? context.assist.trans_match(shape) : context.assist.trans_match_multi(shapes);
         if (!target) return update_type;
         if (stickedX) {
-            if (Math.abs(pe.x - ps.x) > stickness) {
-                stickedX = false;
-            } else {
-                pe.x = ps.x;
-                update_type -= 1;
-            }
+            if (Math.abs(pe.x - ps.x) > stickness) stickedX = false;
+            else pe.x = ps.x, update_type -= 1;
         } else if (target.sticked_by_x) {
             const distance = len === 1 ? distance2apex(shape, target.alignX) : distance2apex2(context.workspace.controllerFrame, target.alignX);
             const trans_x = target.x - distance;
-            stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y;
-            pe.x = ps.x + trans_x;
+            stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y, pe.x = ps.x + trans_x;
             const t = matrix.inverseCoord(pe);
-            startPosition.x = t.x;
-            update_type -= 1;
-            stickedX = true;
+            startPosition.x = t.x, update_type -= 1, stickedX = true;
         }
         if (stickedY) {
-            if (Math.abs(pe.y - ps.y) > stickness) {
-                stickedY = false;
-            } else {
-                pe.y = ps.y;
-                stick.dy = 0;
-                update_type -= 2;
-            }
+            if (Math.abs(pe.y - ps.y) > stickness) stickedY = false;
+            else pe.y = ps.y, stick.dy = 0, update_type -= 2;
         } else if (target.sticked_by_y) {
             const distance = len === 1 ? distance2apex(shape, target.alignY) : distance2apex2(context.workspace.controllerFrame, target.alignY);
             const trans_y = target.y - distance;
-            stick.dy = trans_y, stick.sticked_y = true;
+            stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;;
             if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-            pe.y = ps.y + trans_y;
             const t = matrix.inverseCoord(pe);
-            startPosition.y = t.y;
-            update_type -= 2;
-            stickedY = true;
+            startPosition.y = t.y, update_type -= 2, stickedY = true;
         }
-        if (stick.sticked_x || stick.sticked_y) {
-            asyncTransfer.stick(stick.dx, stick.dy);
-        } else {
-            asyncTransfer.trans(ps, pe);
-        }
+        (stick.sticked_x || stick.sticked_y) ? asyncTransfer.stick(stick.dx, stick.dy) : asyncTransfer.trans(ps, pe);
         return update_type;
     }
     function mouseup(e: MouseEvent) {
