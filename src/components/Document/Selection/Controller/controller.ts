@@ -199,7 +199,11 @@ export function useController(context: Context) {
             const t = matrix.inverseCoord(pe);
             startPosition.y = t.y, update_type -= 2, stickedY = true;
         }
-        (stick.sticked_x || stick.sticked_y) ? asyncTransfer.stick(stick.dx, stick.dy) : asyncTransfer.trans(ps, pe);
+        if (stick.sticked_x || stick.sticked_y) {
+            asyncTransfer.stick(stick.dx, stick.dy);
+        } else {
+            asyncTransfer.trans(ps, pe);
+        }
         return update_type;
     }
     function mouseup(e: MouseEvent) {

@@ -163,7 +163,7 @@ export function getClosestAB(shape: Shape) {
 }
 export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.collect();
-    context.assist.setStickness(Math.ceil(3 / new_matrix.m00));
+    context.assist.setStickness(Math.ceil(5 / new_matrix.m00));
 }
 export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[], stickness: number) {
     for (let i = 0; i < apexX.length; i++) {
