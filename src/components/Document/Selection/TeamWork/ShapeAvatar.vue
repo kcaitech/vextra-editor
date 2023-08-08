@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
@@ -8,7 +8,6 @@ import { XYsBounding } from "@/utils/common";
 import { DocSelectionData } from "@/communication/modules/doc_selection_op";
 import { TeamWork } from "@/context/teamwork";
 import { Selection } from '@/context/selection';
-
 const props = defineProps<{
     context: Context
     matrix: Matrix
@@ -43,7 +42,6 @@ const setOrigin = () => {
     origin.y = matrix.m12
 }
 const setPosition = () => {
-    // const userSelectShape = props.context.teamwork.getUserSelection)
     avatars.value.length = 0
     multipShape.value.length = 0
     groupedShapes.value = []
@@ -66,7 +64,6 @@ const setPosition = () => {
             const s = selection.find(v => v.id === shapes[0].id);
             if (s) continue;
             const shape = (shapes[0] as Shape)
-            // if (shape.parent?.type === ShapeType.Page && shape.isVisible) {
             const m = shape.matrix2Root()
             const frame = shape.frame;
             const matrix = props.context.workspace.matrix
@@ -163,17 +160,25 @@ const selectionWatcher = (t: number) => {
         setPosition();
     }
 }
-
-const watcher = () => {    
-    setOrigin();
-    setPosition();
+let isthrottle = true
+let timer: any = null
+const watcher = () => {
+    if(isthrottle) {
+        isthrottle = false
+        setOrigin();
+        setPosition();
+        timer = setTimeout(() => {
+            isthrottle = true
+            clearTimeout(timer)
+        }, 300)
+    }
 }
 const watchedShapes = new Map();
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
     const page = props.context.selection.selectedPage;
     const shapes: Shape[] = [];
-    userSelectionInfo.value.forEach(item  => {
+    props.context.teamwork.getUserSelection.forEach(item  => {
         for (let i = 0; i < item.select_shape_id_list.length; i++) {
             const shape = page!.shapes.get(item.select_shape_id_list[i]);
             if (shape) shapes.push(shape);

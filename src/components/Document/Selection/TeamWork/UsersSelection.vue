@@ -28,6 +28,7 @@ const tracingPath = ref<BorderPath[]>([]);
 const selectPath = ref<TextFillPath[]>([]);
 const usersSelectionList = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
 const matrix = new Matrix();
+const shapes = ref<Shape[]>([]);
 const submatrix = reactive(new Matrix());
 const createShapeTracing = () => { // 描边 
     tracingPath.value = [];
@@ -102,9 +103,16 @@ function update_by_shapes() {
 const teamworkWatcher = (t?: any) => {
     if (t === TeamWork.CHANGE_USER_STATE) {
         usersSelectionList.value = props.context.teamwork.getUserSelection;
+        const page = props.context.selection.selectedPage;
+        props.context.teamwork.getUserSelection.forEach(item  => {
+        for (let i = 0; i < item.select_shape_id_list.length; i++) {
+            const shape = page!.shapes.get(item.select_shape_id_list[i]);
+            if (shape) shapes.value.push(shape);
+        }
         update_by_shapes();
         createShapeTracing();
         watchShapes();
+    })
     }
 }
 
@@ -123,25 +131,25 @@ const selectionWatcher = (t: number) => {
         createShapeTracing();
     }
 }
-
+let throttle = true
+let timer: any = null
 const watcher = () => {
-    update_by_shapes();
-    createShapeTracing();
+    if(throttle) {
+        throttle = false
+        update_by_shapes();
+        createShapeTracing();
+        timer = setTimeout(() => {
+            throttle = true
+            clearTimeout(timer)
+        }, 300)
+    }
 }
 
 const watchedShapes = new Map();
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
-    const page = props.context.selection.selectedPage;
-    const shapes: Shape[] = [];
-    usersSelectionList.value.forEach(item  => {
-        for (let i = 0; i < item.select_shape_id_list.length; i++) {
-            const shape = page!.shapes.get(item.select_shape_id_list[i]);
-            if (shape) shapes.push(shape);
-        }
-    })
-    if (shapes) {
-        shapes.forEach((v) => {
+    if (shapes.value) {
+        shapes.value.forEach((v) => {
             needWatchShapes.set(v.id, v);
         })
     }

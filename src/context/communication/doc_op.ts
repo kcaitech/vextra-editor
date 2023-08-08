@@ -1,4 +1,4 @@
-import { Watchable, Document, CoopRepository } from "@kcdesign/data"
+import { Watchable, Document, CoopRepository, Cmd } from "@kcdesign/data"
 import { Options, DocOp as _DocOp } from "@/communication/modules/doc_op"
 
 export class DocOp extends Watchable(Object) {
@@ -21,12 +21,12 @@ export class DocOp extends Watchable(Object) {
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await docOp.start()) {
-                console.log("Doc_op start失败")
+                console.log("DocOp start失败")
                 this.startResolve!(false)
                 return false
             }
         } catch (e) {
-            console.log("Doc_op start失败", e)
+            console.log("DocOp start失败", e)
             this.startResolve!(false)
             return false
         }
@@ -40,8 +40,8 @@ export class DocOp extends Watchable(Object) {
         return this.docOp?.hasPendingSyncCmd?.() ?? false
     }
 
-    public available(): boolean {
-        return this.docOp !== undefined
+    public get lastServerCmdId(): string | undefined {
+        return this.docOp?.lastServerCmdId
     }
 
     public close() {
@@ -51,5 +51,13 @@ export class DocOp extends Watchable(Object) {
         this.docOp.close()
         this.docOp = undefined
         this.startPromise = undefined
+    }
+
+    public addOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
+        this.docOp?.addOnLocalUpdate(onUpdate)
+    }
+
+    public removeOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
+        this.docOp?.removeOnLocalUpdate(onUpdate)
     }
 }

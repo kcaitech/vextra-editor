@@ -66,11 +66,9 @@ const filterPerm = (perm?: number) => {
 }
 
 onMounted(() => {
-    // props.context.selection.watch(selectionUpdate);
     props.context.teamwork.watch(selectionUpdate)
 })
 onUnmounted(() => {
-    // props.context.selection.unwatch(selectionUpdate);
     props.context.teamwork.unwatch(selectionUpdate)
 })
 </script>

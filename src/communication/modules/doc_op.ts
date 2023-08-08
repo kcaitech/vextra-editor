@@ -1,6 +1,6 @@
 import { Communication } from "../index"
 import { TunnelType } from "@/communication/types"
-import { Document, CoopLocal, CoopRepository } from "@kcdesign/data"
+import { Document, CoopLocal, CoopRepository, Cmd } from "@kcdesign/data"
 
 export type Options = {
     coopLocal: CoopLocal,
@@ -16,11 +16,11 @@ export class DocOp extends Communication {
     private pendingSend: any[] = []
     private needStartOt: boolean = true
 
-    private constructor(documentId: string, versionId: string, lastCmdId?: string) {
+    private constructor(documentId: string, versionId: string, previousCmdId?: string) {
         super(TunnelType.DocOp, {
             document_id: documentId,
             version_id: versionId,
-            last_cmd_id: lastCmdId,
+            previous_cmd_id: previousCmdId,
         })
     }
 
@@ -44,6 +44,10 @@ export class DocOp extends Communication {
 
     public hasPendingSyncCmd(): boolean {
         return this.coopLocal?.hasPendingSyncCmd?.() ?? false
+    }
+
+    public get lastServerCmdId(): string | undefined {
+        return this.coopLocal?.lastServerCmdId
     }
 
     private _onMessage(data: any) {
@@ -79,5 +83,13 @@ export class DocOp extends Communication {
         }
         this.coopLocal!.commitToServer()
         return true
+    }
+
+    public addOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
+        this.coopLocal?.addOnLocalUpdate(onUpdate)
+    }
+
+    public removeOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
+        this.coopLocal?.removeOnLocalUpdate(onUpdate)
     }
 }

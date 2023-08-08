@@ -5,7 +5,7 @@ type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
 export function throttle<T extends (this: any, ...args: any[]) => any>(func: T, delay: number): (...funcArgs: Parameters<T>) => Promise<UnwrappedPromise<ReturnType<T>>> {
     let timer: ReturnType<typeof setTimeout> | undefined = undefined
     let cancel: (reason?: any) => void = () => {}
-    let previous: number = 0
+    let previousRunTime: number = 0
     return function (this: any, ...args: Parameters<T>) {
         if (timer) {
             clearTimeout(timer)
@@ -13,15 +13,16 @@ export function throttle<T extends (this: any, ...args: any[]) => any>(func: T, 
             cancel("cancel")
         }
         const now = Date.now()
-        const remaining = delay - (now - previous)
+        const remaining = delay - (now - previousRunTime)
         if (remaining <= 0) {
-            previous = now
-            return func.apply(this, args)
+            previousRunTime = now
+            return func.apply(this, args) // eslint-disable-line prefer-spread
         }
         return new Promise((resolve, reject) => {
             timer = setTimeout(() => {
-                previous = Date.now()
-                resolve(func.apply(this, args))
+                timer = undefined
+                previousRunTime = Date.now()
+                resolve(func.apply(this, args)) // eslint-disable-line prefer-spread
             }, remaining) as any
             cancel = reject
         })
@@ -41,7 +42,8 @@ export function debounce<T extends (this: any, ...args: any[]) => any>(func: T, 
         }
         return new Promise((resolve, reject) => {
             timer = setTimeout(() => {
-                resolve(func.apply(this, args))
+                timer = undefined
+                resolve(func.apply(this, args)) // eslint-disable-line prefer-spread
             }, delay) as any
             cancel = reject
         })

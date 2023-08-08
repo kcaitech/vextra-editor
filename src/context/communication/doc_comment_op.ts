@@ -50,10 +50,6 @@ export class DocCommentOp extends Watchable(Object) {
         this.updateHandlerSet.delete(onUpdated)
     }
 
-    public available(): boolean {
-        return this.docCommentOp !== undefined
-    }
-
     public close() {
         if (this.isClosed) return;
         this.isClosed = true
