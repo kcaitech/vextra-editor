@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Shape, TableShape } from "@kcdesign/data";
+import { Shape, TableCell, TableShape } from "@kcdesign/data";
 import { renderTable as r } from "@kcdesign/data";
-import comsMap from './comsmap';
 
 const props = defineProps<{ data: TableShape }>();
 const reflush = ref(0);
-const consumed: Array<Shape> = [];
+const consumed: Array<{shape: Shape, stopWatch: Function}> = [];
 
 const watcher = () => {
     reflush.value++;
@@ -15,7 +14,7 @@ const stopWatch = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
     for (let i = 0, len = consumed.length; i < len; i++) {
-        consumed[i].unwatch(watcher);
+        consumed[i].stopWatch();
     }
     consumed.length = 0;
 })
@@ -25,32 +24,44 @@ onMounted(() => {
 onUnmounted(() => {
     props.data.unwatch(watcher);
     for (let i = 0, len = consumed.length; i < len; i++) {
-        consumed[i].unwatch(watcher);
+        consumed[i].stopWatch();
     }
     consumed.length = 0;
     stopWatch();
 })
 
-function render() {
-    const consumed0: Array<Shape> = props.data.childs;
+function cellWatcher(shape: TableCell) {
+    return () => {
+        reflush.value++;
+        if (shape.isImageCell() && !shape.peekImage()) shape.loadImage().then(() => {
+            reflush.value++;
+        })
+    }
+}
 
-    const ret = r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined)
+function render() {
+    const consumed0: Array<TableCell> = props.data.childs as any;
+
+    const ret = r(h, props.data, reflush.value !== 0 ? reflush.value : undefined)
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
-            consumed[i].unwatch(watcher);
+            consumed[i].stopWatch();
         }
     }
     consumed.length = consumed0.length;
     for (let i = 0, len = consumed.length; i < len; i++) {
         const s0 = consumed0[i];
         const s = consumed[i];
-        if (s && s.id == s0.id) {
+        if (s && s.shape.id == s0.id) {
             continue;
         }
-        if (s) s.unwatch(watcher);
-        s0.watch(watcher);
-        consumed[i] = s0;
+        if (s) s.stopWatch();
+        const stopWatch = s0.watch(cellWatcher(s0));
+        consumed[i] = {
+            shape: s0, 
+            stopWatch
+        };
     }
     return ret;
 }
