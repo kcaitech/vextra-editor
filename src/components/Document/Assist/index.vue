@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Asssit } from '@/context/assist';
-import { ClientXY } from '@/context/selection';
+import { Asssit, PageXY2 } from '@/context/assist';
+import { ClientXY, PageXY } from '@/context/selection';
 import { Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 
@@ -14,34 +14,43 @@ interface Data {
     lineX: string
     lineY: string
 }
+enum Align {
+    LT_X,
+    RT_X,
+    C_X,
+    RB_X,
+    LB_X,
+    LT_Y,
+    RT_Y,
+    C_Y,
+    RB_Y,
+    LB_Y
+}
 const props = defineProps<Props>();
 const assist = ref<boolean>(false);
 const matrix = ref<Matrix>(props.context.workspace.matrix);
 const data = reactive<Data>({ nodesX: [], nodesY: [], lineX: '', lineY: '' });
 let { lineX, nodesX, lineY, nodesY } = data;
-function assist_watcher(t?: any) {
-    if (t === Asssit.UPDATE_ASSIST) render();
+function assist_watcher(t: number, multi?: Align[]) {
+    if (t === Asssit.UPDATE_ASSIST) render(multi);
 }
-function render() {
+function render(multi?: Align[]) {
     const s = Date.now();
     clear();
-    let ns_x = props.context.assist.nodes_x;
-    let ns_y = props.context.assist.nodes_y;
+    const ns_x = minus_nodes_x(props.context.assist.nodes_x);
+    const ns_y = minus_nodes_y(props.context.assist.nodes_y);
     if (ns_x.length) { // 绘制x轴线
-        ns_x = minus_nodes_x(ns_x);
-        if (ns_x.length) {
-            nodesX = ns_x.map(n => matrix.value.computeCoord(n.x, n.y));
-            lineX = render_line_x(nodesX);
-            assist.value = true;
-        }
+        nodesX = ns_x.map(n => matrix.value.computeCoord(n.x, n.y));
+        lineX = render_line_x(nodesX);
+        assist.value = true;
     }
     if (ns_y.length) { // 绘制y轴线
-        ns_y = minus_nodes_y(ns_y);
-        if (ns_y.length) {
-            nodesY = ns_y.map(n => matrix.value.computeCoord(n.x, n.y));
-            lineY = render_line_y(nodesY);
-            assist.value = true;
-        }
+        nodesY = ns_y.map(n => matrix.value.computeCoord(n.x, n.y));
+        lineY = render_line_y(nodesY);
+        assist.value = true;
+    }
+    if (multi) {
+        console.log('多线');
     }
     const e = Date.now();
     // console.log('辅助线绘制用时(ms):', e - s);
@@ -56,26 +65,28 @@ function clear() {
 /**
  * @description 去除重复的点
  */
-function minus_nodes_x(nodes: ClientXY[]): ClientXY[] {
-    let result: Map<number, ClientXY> = new Map();
+function minus_nodes_x(nodes: PageXY2[]): PageXY[] {
+    const except = props.context.assist.except;
+    let result: Map<number, PageXY> = new Map();
     for (let i = 0; i < nodes.length; i++) {
         const n = nodes[i];
-        result.set(n.y, n);
+        if (!except.get(n.id)) result.set(n.p.y, n.p);
     }
     return Array.from(result.values());
 }
-function minus_nodes_y(nodes: ClientXY[]): ClientXY[] {
-    let result: Map<number, ClientXY> = new Map();
+function minus_nodes_y(nodes: PageXY2[]): PageXY[] {
+    const except = props.context.assist.except;
+    let result: Map<number, PageXY> = new Map();
     for (let i = 0; i < nodes.length; i++) {
         const n = nodes[i];
-        result.set(n.x, n);
+        if (!except.get(n.id)) result.set(n.p.x, n.p);
     }
     return Array.from(result.values());
 }
 /**
  * @description 绘制x轴上的线
  */
-function render_line_x(nodes: ClientXY[]) {
+function render_line_x(nodes: PageXY[]) {
     nodes = sort_nodes_x(nodes);
     let d = `M ${nodes[0].x} ${nodes[0].y}`
     for (let i = 1; i < nodes.length; i++) {
@@ -88,7 +99,7 @@ function render_line_x(nodes: ClientXY[]) {
 /**
  * @description 绘制y轴上的线
  */
-function render_line_y(nodes: ClientXY[]) {
+function render_line_y(nodes: PageXY[]) {
     nodes = sort_nodes_y(nodes);
     let d = `M ${nodes[0].x} ${nodes[0].y}`
     for (let i = 1; i < nodes.length; i++) {
@@ -101,7 +112,7 @@ function render_line_y(nodes: ClientXY[]) {
 /**
  * @description 给x轴上的点排序
  */
-function sort_nodes_x(nodes: ClientXY[]): ClientXY[] {
+function sort_nodes_x(nodes: PageXY[]): PageXY[] {
     return nodes.sort((a, b) => {
         if (a.y > b.y) return -1;
         else if (a.y === b.y) return 0;
@@ -111,7 +122,7 @@ function sort_nodes_x(nodes: ClientXY[]): ClientXY[] {
 /**
  * @description 给y轴上的点排序
  */
-function sort_nodes_y(nodes: ClientXY[]): ClientXY[] {
+function sort_nodes_y(nodes: PageXY[]): PageXY[] {
     return nodes.sort((a, b) => {
         if (a.x > b.x) return -1;
         else if (a.x === b.x) return 0;

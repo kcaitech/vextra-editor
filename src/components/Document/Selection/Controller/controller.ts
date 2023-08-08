@@ -194,7 +194,7 @@ export function useController(context: Context) {
         } else if (target.sticked_by_y) {
             const distance = len === 1 ? distance2apex(shape, target.alignY) : distance2apex2(context.workspace.controllerFrame, target.alignY);
             const trans_y = target.y - distance;
-            stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;;
+            stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;
             if (!stick.sticked_x) stick.dx = pe.x - ps.x;
             const t = matrix.inverseCoord(pe);
             startPosition.y = t.y, update_type -= 2, stickedY = true;

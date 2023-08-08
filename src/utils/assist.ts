@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Asssit, PT1, PT2, PT4P1, PT4P2, PointGroup } from "@/context/assist";
+import { Asssit, PT1, PT1_2, PT2, PT4P1, PT4P2, PageXY2, PointGroup } from "@/context/assist";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { debounce } from "lodash";
@@ -88,7 +88,7 @@ get_pos2[Align.LB_Y] = function (frame: Point[]) {
 export function distance2apex2(frame: Point[], align: Align): number {
     return get_pos2[align](frame);
 }
-export function update_pg(host: Shape): PointGroup {
+export function update_pg(host: Shape, multi?: boolean): PointGroup {
     const m = host.matrix2Root(), f = host.frame;
     const lt = m.computeCoord2(0, 0);
     const rt = m.computeCoord2(f.width, 0);
@@ -97,6 +97,7 @@ export function update_pg(host: Shape): PointGroup {
     const pivot = m.computeCoord2(f.width / 2, f.height / 2);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
+    const pg: PointGroup = { lt, rt, rb, lb, pivot, apexX, apexY };
     if (host.type === ShapeType.Artboard) {
         const th = m.computeCoord2(f.width / 2, 0);
         const rh = m.computeCoord2(f.width, f.height / 2);
@@ -104,9 +105,12 @@ export function update_pg(host: Shape): PointGroup {
         const lh = m.computeCoord2(0, f.height / 2);
         apexX.push(th.x, rh.x, bh.x, lh.x);
         apexY.push(th.y, rh.y, bh.y, lh.y);
-        return { lt, rt, rb, lb, th, rh, bh, lh, pivot, apexX, apexY };
+        pg.th = th, pg.rh = rh, pg.bh = bh, pg.lh = lh;
     }
-    return { lt, rt, rb, lb, pivot, apexX, apexY };
+    if (multi) {
+        pg.top = Math.max(...apexX), pg.right = Math.max(...apexY), pg.bottom = Math.min(...apexX), pg.left = Math.min(...apexY), pg.cy = pivot.y, pg.cx = pivot.x;
+    }
+    return pg;
 }
 
 export function isShapeOut(context: Context, shape: Shape) {
@@ -120,7 +124,7 @@ export function isShapeOut(context: Context, shape: Shape) {
         Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
         Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
 }
-export function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, PageXY[]>, y_axis: Map<number, PageXY[]>) {
+export function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, PageXY2[]>, y_axis: Map<number, PageXY2[]>) {
     let result: Shape[] = [];
     if (scope.type === ShapeType.Artboard) {
         result.push(scope);
@@ -128,11 +132,11 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         all_pg.set(scope.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0; i < pvs.length; i++) {
-            const p = pvs[i];
-            const x = x_axis.get(p.x);
-            const y = y_axis.get(p.y);
-            if (x) x.push(p); else x_axis.set(p.x, [p]);
-            if (y) y.push(p); else y_axis.set(p.y, [p]);
+            const p2 = { id: scope.id, p: pvs[i] };
+            const x = x_axis.get(p2.p.x);
+            const y = y_axis.get(p2.p.y);
+            if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
+            if (y) y.push(p2); else y_axis.set(p2.p.y, [p2]);
         }
     }
     const cs = scope.childs;
@@ -144,11 +148,11 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         all_pg.set(c.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0; i < pvs.length; i++) {
-            const p = pvs[i];
-            const x = x_axis.get(p.x);
-            const y = y_axis.get(p.y);
-            if (x) x.push(p); else x_axis.set(p.x, [p]);
-            if (y) y.push(p); else y_axis.set(p.y, [p]);
+            const p2 = { id: c.id, p: pvs[i] };
+            const x = x_axis.get(p2.p.x);
+            const y = y_axis.get(p2.p.y);
+            if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
+            if (y) y.push(p2); else y_axis.set(p2.p.y, [p2]);
         }
         if (c instanceof GroupShape) result = [...result, ...finder(context, c, all_pg, x_axis, y_axis)];
     }
