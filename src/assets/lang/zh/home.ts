@@ -137,7 +137,9 @@ export const home = {
     'align_v_c': '上下居中对齐',
     'align_bottom': '底对齐',
     'distribute_h': '左右等距分布',
-    'distribute_v': '上下等距分布'
+    'distribute_v': '上下等距分布',
+    people_are_visiting: '正在访问的人:',
+    permissions: '权限:'
 }
 
 export const search = {

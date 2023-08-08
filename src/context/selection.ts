@@ -55,7 +55,7 @@ export type ActionType = 'translate' | 'scale' | 'rotate';
 export type UserSelection = {
     userInfo: UserInfo,
     avatar?: string,
-    selectPage?: Page,
+    selectPage?: Page | string,
     selectShapes: Shape[],
     hoverShape?: Shape,
     cursorStart: number,
@@ -78,12 +78,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
-
-
     static CHANGE_USER_STATE = 15;
-    private userSelectionList: UserSelection[] = []
-    // private userSelectionMap: Map<string, UserSelection> = new Map()
-
+    
+    private userSelectionList: DocSelectionData[] = []
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;
@@ -147,8 +144,18 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get getUserSelection() {
         return this.userSelectionList;
     }
-    setUsetSelection(list: UserSelection[]) {
-        this.userSelectionList = list
+    userSelectionUpdate(data: DocSelectionData, index: number) {
+        if(index != -1) {
+            this.userSelectionList[index] = data
+        } else {
+            this.userSelectionList.push(data)
+        }
+        this.notify(Selection.CHANGE_USER_STATE)
+    }
+    userSelectionExit(index: number) {
+        if(index >= 0) {
+            this.userSelectionList.splice(index, 1)
+        }
         this.notify(Selection.CHANGE_USER_STATE)
     }
 

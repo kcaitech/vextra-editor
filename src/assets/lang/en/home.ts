@@ -137,7 +137,9 @@ export const home = {
     'align_v_c': 'Align vertical centers',
     'align_bottom': 'Align bottom',
     'distribute_h': 'Distribute horizontal spacing',
-    'distribute_v': 'Distribute vertical spacing'
+    'distribute_v': 'Distribute vertical spacing',
+    people_are_visiting: 'People are visiting:',
+    permissions: 'Permissions:'
 }
 
 export const search = {

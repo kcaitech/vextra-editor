@@ -382,8 +382,6 @@ const getDocumentInfo = async () => {
             await context.communication.docSelectionOp.start(token, docId);
             context.selection.watch(selectionWatcherForOp);
             context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
-            const list = usetSelection(context)
-            context.selection.setUsetSelection(list)
         }
         getUserInfo()
     } catch (err) {
@@ -392,95 +390,6 @@ const getDocumentInfo = async () => {
         console.log(err)
         throw err;
     }
-}
-const usetSelection = (context: Context): UserSelection[]  => {
-    const arr:UserSelection[] = [
-        {
-            userInfo: {
-                name:'老六',
-                perm: '可编辑'
-            },
-            avatar: 'https://img1.baidu.com/it/u=4207603089,2458937640&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-            selectPage: context.selection.selectedPage,
-            selectShapes: [context.selection.selectedPage!.childs[0],context.selection.selectedPage!.childs[1],context.selection.selectedPage!.childs[2]] || [],
-            hoverShape: undefined,
-            cursorStart: -1,
-            cursorEnd: -1
-        },
-        {
-            userInfo: {
-                name:'张三',
-                perm: '可读'
-            },
-            avatar: 'https://img2.baidu.com/it/u=3618236253,1028428296&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-            selectPage: context.selection.selectedPage,
-            selectShapes: [context.selection.selectedPage!.childs[1]] || [],
-            hoverShape: undefined,
-            cursorStart: -1,
-            cursorEnd: -1
-        },
-        {
-            userInfo: {
-                name:'鸟人',
-                perm: '可评论'
-            },
-            avatar: 'https://img0.baidu.com/it/u=4278216090,542028317&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-            selectPage: context.selection.selectedPage,
-            selectShapes: [context.selection.selectedPage!.childs[0]] || [],
-            hoverShape: undefined,
-            cursorStart: -1,
-            cursorEnd: -1
-        },
-        {
-            userInfo: {
-                name:'雷猴',
-                perm: '可读'
-            },
-            avatar: 'https://img1.baidu.com/it/u=1389865980,20476010&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-            selectPage: context.selection.selectedPage,
-            selectShapes: [context.selection.selectedPage!.childs[2]] || [],
-            hoverShape: undefined,
-            cursorStart: -1,
-            cursorEnd: -1
-        },
-        {
-            userInfo: {
-                name:'合肥推拿',
-                perm: '可编辑'
-            },
-            avatar: 'https://img1.baidu.com/it/u=2172256658,108239306&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-            selectPage: context.selection.selectedPage,
-            selectShapes: [context.selection.selectedPage!.childs[0]] || [],
-            hoverShape: undefined,
-            cursorStart: -1,
-            cursorEnd: -1
-        },
-        {
-            userInfo: {
-                name:'精油护体',
-                perm: '可评论'
-            },
-            avatar: 'https://img2.baidu.com/it/u=1649279387,2871752923&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500',
-            selectPage: context.selection.selectedPage,
-            selectShapes: [context.selection.selectedPage!.childs[0]] || [],
-            hoverShape: undefined,
-            cursorStart: -1,
-            cursorEnd: -1
-        },
-        {
-            userInfo: {
-                name:'文本',
-                perm: '可评论'
-            },
-            avatar: 'https://img0.baidu.com/it/u=965332594,965381015&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=501',
-            selectPage: context.selection.selectedPage,
-            selectShapes: [context.selection.selectedPage!.childs[7]] || [],
-            hoverShape: undefined,
-            cursorStart: 0,
-            cursorEnd: 15
-        }
-    ]
-    return arr
 }
 
 async function upload() {
@@ -667,18 +576,15 @@ const closeNetMsg = () => {
 }
 //协作人员进入过操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
-    console.log(docCommentOpData, 'docCommentOpData');
     const data = docCommentOpData.data
     if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
         const addUset = context!.selection.getUserSelection
         if(docCommentOpData.type === DocSelectionOpType.Exit) {
-            // addUset.push(data)
-            context!.selection.setUsetSelection(addUset)
+            const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+            context?.selection.userSelectionExit(index)
         }else if (docCommentOpData.type === DocSelectionOpType.Update) {
-            // const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
-            // if(index != -1) {
-            //     addUset[index] = data
-            // }
+            const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+            context?.selection.userSelectionUpdate(data, index)
         }
     }
 }
