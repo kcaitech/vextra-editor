@@ -6,7 +6,6 @@ import { cloneDeep } from "lodash";
 import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
 import { Artboard } from "@kcdesign/data";
 import { Context } from ".";
-import { DocSelectionData } from "@/communication/modules/doc_selection_op"
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -78,9 +77,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
-    static CHANGE_USER_STATE = 15;
     
-    private userSelectionList: DocSelectionData[] = []
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;
@@ -140,23 +137,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     get commentAboutMe() { //评论显示关于我的
         return this.m_comment_about_me;
-    }
-    get getUserSelection() {
-        return this.userSelectionList;
-    }
-    userSelectionUpdate(data: DocSelectionData, index: number) {
-        if(index != -1) {
-            this.userSelectionList[index] = data
-        } else {
-            this.userSelectionList.push(data)
-        }
-        this.notify(Selection.CHANGE_USER_STATE)
-    }
-    userSelectionExit(index: number) {
-        if(index >= 0) {
-            this.userSelectionList.splice(index, 1)
-        }
-        this.notify(Selection.CHANGE_USER_STATE)
     }
 
     selectCommentPage(id: string) {

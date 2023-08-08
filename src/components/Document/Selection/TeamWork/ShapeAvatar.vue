@@ -7,6 +7,7 @@ import { ClientXY } from "@/context/selection"
 import { XYsBounding } from "@/utils/common";
 import { DocSelectionData } from "@/communication/modules/doc_selection_op";
 import { TeamWork } from "@/context/teamwork";
+import { Selection } from '@/context/selection';
 
 const props = defineProps<{
     context: Context
@@ -51,6 +52,8 @@ const setPosition = () => {
     if (!page) return;
     for (let i = 0; i < userSelectionInfo.value.length; i++) {
         const userSelectInfo = userSelectionInfo.value[i];
+        const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
+        const selection: Shape[] = props.context.selection.selectedShapes;
         if (page.id !== userSelectInfo.select_page_id) continue;
         const shapes: Shape[] = [];
         const len = userSelectInfo.select_shape_id_list.length
@@ -59,6 +62,9 @@ const setPosition = () => {
             if (shape) shapes.push(shape);
         }
         if (shapes.length === 1) {
+            if (hoveredShape && hoveredShape.id === shapes[0].id || selection.length > 0 && selection[0].id === shapes[0].id) continue
+            const s = selection.find(v => v.id === shapes[0].id);
+            if (s) continue;
             const shape = (shapes[0] as Shape)
             // if (shape.parent?.type === ShapeType.Page && shape.isVisible) {
             const m = shape.matrix2Root()
@@ -88,6 +94,7 @@ const setPosition = () => {
             const avatar = userSelectInfo.avatar
             avatars.value.push({ x: anchor.x, y: anchor.y, avatar, shape: shape, rotate, userSelectInfo })
         } else if (shapes.length > 1) {
+            if (arraysOfObjectsWithIdAreEqual(shapes, selection)) continue;
             const points: { x: number, y: number }[] = [];
             for (let index = 0; index < shapes.length; index++) {
                 const s = shapes[index];
@@ -120,6 +127,17 @@ const setPosition = () => {
         multipShapeGroup.value[shapesIds].push(item);
     });
 }
+function arraysOfObjectsWithIdAreEqual(arr1: any, arr2: any) {
+    const idsSet1 = new Set(arr1.map((obj: any) => obj.id));
+    const idsSet2 = new Set(arr2.map((obj: any) => obj.id));
+
+    for (const id of idsSet1) {
+        if (!idsSet2.has(id)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 const workspaceUpdate = (t: number) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
@@ -136,6 +154,13 @@ const updater = (t?: number) => {
         setOrigin();
         setPosition();
         watchShapes();
+    }
+}
+
+const selectionWatcher = (t: number) => {
+    if (t === Selection.CHANGE_SHAPE) {
+        setOrigin();
+        setPosition();
     }
 }
 
@@ -177,11 +202,13 @@ onMounted(() => {
     setPosition();
     props.context.workspace.watch(workspaceUpdate);
     props.context.teamwork.watch(updater)
+    props.context.selection.watch(selectionWatcher);
 })
 
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
     props.context.teamwork.watch(updater)
+    props.context.selection.unwatch(selectionWatcher);
 })
 </script>
 

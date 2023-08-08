@@ -8,6 +8,7 @@ import { WorkSpace } from '@/context/workspace'
 import ShapeAvatar from './ShapeAvatar.vue';
 import { DocSelectionData } from "@/communication/modules/doc_selection_op"
 import { TeamWork } from "@/context/teamwork";
+import { Selection } from '@/context/selection';
 interface Props {
     context: Context
     matrix: Matrix
@@ -98,7 +99,7 @@ function update_by_shapes() {
     matrix.reset(props.matrix);
 }
 
-const selectionWatcher = (t?: any) => {
+const teamworkWatcher = (t?: any) => {
     if (t === TeamWork.CHANGE_USER_STATE) {
         usersSelectionList.value = props.context.teamwork.getUserSelection;
         update_by_shapes();
@@ -110,9 +111,15 @@ const selectionWatcher = (t?: any) => {
 const workspaceUpdate = (t: number) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update_by_shapes();
-        createShapeTracing()
+        createShapeTracing();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         update_by_shapes();
+        createShapeTracing();
+    }
+}
+
+const selectionWatcher = (t: number) => {
+    if (t === Selection.CHANGE_SHAPE) {
         createShapeTracing();
     }
 }
@@ -155,11 +162,14 @@ onMounted(() => {
     update_by_shapes();
     createShapeTracing();
     props.context.workspace.watch(workspaceUpdate);
-    props.context.teamwork.watch(selectionWatcher)
+    props.context.teamwork.watch(teamworkWatcher);
+    props.context.selection.watch(selectionWatcher);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
-    props.context.teamwork.unwatch(selectionWatcher)
+    props.context.teamwork.unwatch(teamworkWatcher);
+    props.context.selection.unwatch(selectionWatcher);
+
 })
 </script>
 
