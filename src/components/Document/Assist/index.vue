@@ -24,11 +24,31 @@ const matrix = ref<Matrix>(props.context.workspace.matrix);
 const data = reactive<Data>({ nodesX: [], nodesY: [], lineX: '', lineY: '', exLineX: [], exLineY: [], exNodesX: [], exNodesY: [] });
 let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = data;
 let ax = 0, ay = 0;
-function assist_watcher(t: number, multi?: number) {
-    if (t === Asssit.UPDATE_ASSIST) render(multi);
+function assist_watcher(t: number, params?: number) {
+    if (t === Asssit.UPDATE_ASSIST) render(params);
+    if (t === Asssit.UPDATE_MAIN_LINE) update_main_line(1);
+}
+function update_main_line(direction: number) {
+    // const s1 = Date.now();
+    const cpg = props.context.assist.CPG;
+    if (!cpg) return;
+    clear4main_line();
+    const ns_x = minus_nodes_x(props.context.assist.nodes_x);
+    const ns_y = minus_nodes_y(props.context.assist.nodes_y);
+    if (ns_x.length) { // 绘制x轴线
+        ax = ns_x[0].x;
+        nodesX = ns_x.concat(get_p_form_pg_by_x(cpg, ax)).map(n => matrix.value.computeCoord2(n.x, n.y));
+        lineX = render_line_x(nodesX);
+    }
+    if (ns_y.length) { // 绘制y轴线
+        ay = ns_y[0].y;
+        nodesY = ns_y.concat(get_p_form_pg_by_y(cpg, ay)).map(n => matrix.value.computeCoord2(n.x, n.y));
+        lineY = render_line_y(nodesY);
+    }
+    // console.log('更新主辅助线:', Date.now() - s1);
 }
 function render(multi?: number) {
-    const s = Date.now();
+    // const s = Date.now();
     clear();
     const ns_x = minus_nodes_x(props.context.assist.nodes_x);
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);
@@ -52,8 +72,7 @@ function render(multi?: number) {
     } else if (multi === 1) {
         getExLineX();
     }
-    const e = Date.now();
-    // console.log('辅助线绘制用时(ms):', e - s);
+    // console.log('初次确定辅助线(ms):', Date.now() - s);
 }
 function getExLineX() {
     const cpg = props.context.assist.CPG;
@@ -135,6 +154,7 @@ function getExLineY() {
     }
 }
 function clear() {
+    ax = 0, ay = 0;
     nodesX.length = 0;
     nodesY.length = 0;
     exNodesY.length = 0;
@@ -144,6 +164,13 @@ function clear() {
     lineX = '';
     lineY = '';
     assist.value = false;
+}
+function clear4main_line() {
+    ax = 0, ay = 0;
+    nodesX.length = 0;
+    nodesY.length = 0;
+    lineX = '';
+    lineY = '';
 }
 /**
  * @description 去除重复的点
@@ -177,7 +204,7 @@ function render_line_x(nodes: PageXY[]) {
         const n = nodes[i];
         d += `L${n.x} ${n.y}`
     }
-    d += 'z';
+    d += ' z';
     return d;
 }
 /**
@@ -190,7 +217,7 @@ function render_line_y(nodes: PageXY[]) {
         const n = nodes[i];
         d += `L${n.x} ${n.y}`
     }
-    d += 'z';
+    d += ' z';
     return d;
 }
 /**

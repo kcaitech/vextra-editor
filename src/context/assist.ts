@@ -77,6 +77,7 @@ export interface PageXY2 {
 }
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
+    static UPDATE_MAIN_LINE = 2;
     static STICKNESS = 5;
     private m_collect_target: GroupShape[] = [];
     private m_context: Context;
@@ -157,7 +158,7 @@ export class Asssit extends Watchable(Object) {
         }
     }
     trans_match(s: Shape) {
-        const st = Date.now();
+        // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
@@ -175,15 +176,14 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{ p: { x: target.x, y: pre_target1.sy }, id: 'ex' }]);
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ p: { x: pre_target2.sx, y: target.y }, id: 'ex' }]);
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []);
         }
         this.notify(Asssit.UPDATE_ASSIST);
-        const e = Date.now();
-        // console.log('单次匹配用时(ms):', e - st);
+        // console.log('单次匹配辅助点位(ms):', Date.now() - st);
         return target;
     }
     trans_match_multi(shapes: Shape[]) {

@@ -172,6 +172,7 @@ export function useController(context: Context) {
         return update_type;
     }
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
+        // const s1 = Date.now();
         let need_multi = 0;
         let update_type = 3;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
@@ -213,7 +214,9 @@ export function useController(context: Context) {
         if (need_multi && len === 1) {
             context.assist.setCPG(update_pg(shape, true));
             context.assist.notify(Asssit.UPDATE_ASSIST, need_multi);
+            context.assist.notify(Asssit.UPDATE_MAIN_LINE);
         }
+        // console.log('一次辅助线从计算到渲染总共用时', Date.now() - s1); // < 3ms
         return update_type;
     }
     function mouseup(e: MouseEvent) {
