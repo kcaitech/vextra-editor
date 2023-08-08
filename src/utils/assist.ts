@@ -267,13 +267,23 @@ interface Point {
     x: number
     y: number
 }
-export function get_pg_by_frame(frame: Point[]): PointGroup {
+export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup { // 无旋转
     const lt = frame[0], rt = frame[1], rb = frame[2], lb = frame[3];
-    const pivot = { x: (rb.x - lt.x) / 2, y: (rb.y - lt.y) / 2 };
-    return {
-        lt, rt, rb, lb, pivot,
-        apexX: [lt.x, rt.x, rb.x, lb.x, pivot.x],
-        apexY: [lt.y, rt.y, rb.y, lb.y, pivot.y]
+    const pivot = { x: lt.x + (rb.x - lt.x) / 2, y: lt.y + (rb.y - lt.y) / 2 };
+    const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
+    const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
+    if (multi) {
+        return {
+            lt, rt, rb, lb, pivot, apexX, apexY,
+            top: Math.min(...apexY),
+            right: Math.max(...apexX),
+            bottom: Math.max(...apexY),
+            left: Math.min(...apexX),
+            cy: pivot.y,
+            cx: pivot.x
+        }
+    } else {
+        return { lt, rt, rb, lb, pivot, apexX, apexY };
     }
 }
 export function get_frame(selection: Shape[]): Point[] {

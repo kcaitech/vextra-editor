@@ -16,7 +16,7 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { distance2apex, distance2apex2, update_pg } from '@/utils/assist';
+import { distance2apex, distance2apex2, get_frame, update_pg, get_pg_by_frame } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
@@ -211,8 +211,14 @@ export function useController(context: Context) {
         } else {
             asyncTransfer.trans(ps, pe);
         }
-        if (need_multi && len === 1) {
-            context.assist.setCPG(update_pg(shape, true));
+        if (need_multi) {
+            if (len === 1) {
+                context.assist.setCPG(update_pg(shape, true));
+            } else {
+                const fs = get_frame(shapes);
+                context.workspace.setCFrame(fs);
+                context.assist.setCPG(get_pg_by_frame(fs, true));
+            }
             context.assist.notify(Asssit.UPDATE_ASSIST, need_multi);
             context.assist.notify(Asssit.UPDATE_MAIN_LINE);
         }

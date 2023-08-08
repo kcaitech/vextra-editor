@@ -207,11 +207,11 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{ p: { x: target.x, y: pre_target1.sy }, id: 'ex' }]);
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ p: { x: pre_target2.sx, y: target.y }, id: 'ex' }]);
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []);
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
