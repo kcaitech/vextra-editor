@@ -38,7 +38,12 @@ function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection;
     if (selection.hoveredShape) needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    if (selection.selectedShapes.length > 0) selection.selectedShapes.forEach((v) => { needWatchShapes.set(v.id, v) });
+    if (selection.selectedShapes.length > 0) {
+        for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
+            const v = selection.selectedShapes[i];
+            needWatchShapes.set(v.id, v)
+        }
+    }
     watchedShapes.forEach((v, k) => {
         if (!needWatchShapes.has(k)) {
             v.unwatch(shapesWatcher);
@@ -113,12 +118,14 @@ function createController() { // 计算控件点位以及类型判定
         controller.value = false;
     } else {
         if (selection.length === 1) {
-            const s = selection[0];
-            const m = s.matrix2Root();
-            const f = s.frame;
+            const s = selection[0], m = s.matrix2Root(), f = s.frame;
             const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
             m.multiAtLeft(matrix);
-            controllerFrame.value = points.map(p => m.computeCoord(p.x, p.y));
+            for (let i = 0; i < 4; i++) {
+                const p = points[i];
+                points[i] = m.computeCoord(p.x, p.y);
+            }
+            controllerFrame.value = points;
             if (!permIsEdit(props.context) || props.context.tool.action === Action.AddComment) {
                 controllerType.value = ControllerType.Readonly;
             } else if (s.type === ShapeType.Line) { // 控件类型判定
@@ -132,19 +139,19 @@ function createController() { // 计算控件点位以及类型判定
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             }
         } else {
-            const points: { x: number, y: number }[] = [];
+            let points: { x: number, y: number }[] = [];
             for (let i = 0; i < selection.length; i++) {
-                const s = selection[i];
-                const m = s.matrix2Root();
+                const s = selection[i], m = s.matrix2Root(), f = s.frame;
                 m.multiAtLeft(matrix);
-                const f = s.frame;
-                const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord2(p.x, p.y));
-                points.push(...ps);
+                const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
+                for (let j = 0; j < 4; j++) {
+                    const p = ps[j];
+                    ps[j] = m.computeCoord2(p.x, p.y);
+                }
+                points = points.concat(ps);
             }
             const b = XYsBounding(points);
             controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
-            const m2 = new Matrix(matrix.inverse);
-            props.context.workspace.setCFrame(controllerFrame.value.map(p => m2.computeCoord2(p.x, p.y)));
             rotate.value = 0;
             if (!permIsEdit(props.context) || props.context.tool.action === Action.AddComment) {
                 controllerType.value = ControllerType.Readonly;
@@ -155,8 +162,7 @@ function createController() { // 计算控件点位以及类型判定
         tracing.value = false;
         controller.value = true;
     }
-    // const e = Date.now();
-    // console.log('控件绘制用时(ms):', e - s);
+    // console.log('控件绘制用时(ms):', Date.now() - s);
 }
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
