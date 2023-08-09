@@ -1,4 +1,4 @@
-import { GroupShape, Shape, ShapeType, Watchable } from "@kcdesign/data";
+import { GroupShape, Shape, Watchable } from "@kcdesign/data";
 import { PageXY, Selection } from "./selection";
 import { Context } from ".";
 import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4create, modify_pt_x4p, modify_pt_y, modify_pt_y4create, modify_pt_y4p, update_pg } from "@/utils/assist";
