@@ -298,19 +298,19 @@ export function get_frame(selection: Shape[]): Point[] {
 }
 export function get_p_form_pg_by_x(pg: PointGroup, x: number): PageXY[] {
     const result: PageXY[] = [];
-    if (pg.lt.x === x) result.push(pg.lt);
-    if (pg.rt.x === x) result.push(pg.rt);
-    if (pg.rb.x === x) result.push(pg.rb);
-    if (pg.lb.x === x) result.push(pg.lb);
-    if (pg.pivot.x === x) result.push(pg.pivot);
+    if (Math.abs(pg.lt.x - x) < 0.001) result.push(pg.lt);
+    if (Math.abs(pg.rt.x - x) < 0.001) result.push(pg.rt);
+    if (Math.abs(pg.rb.x - x) < 0.001) result.push(pg.rb);
+    if (Math.abs(pg.lb.x - x) < 0.001) result.push(pg.lb);
+    if (Math.abs(pg.pivot.x - x) < 0.001) result.push(pg.pivot);
     return result;
 }
 export function get_p_form_pg_by_y(pg: PointGroup, y: number): PageXY[] {
     const result: PageXY[] = [];
-    if (pg.lt.y === y) result.push(pg.lt);
-    if (pg.rt.y === y) result.push(pg.rt);
-    if (pg.rb.y === y) result.push(pg.rb);
-    if (pg.lb.y === y) result.push(pg.lb);
-    if (pg.pivot.y === y) result.push(pg.pivot);
+    if (Math.abs(pg.lt.y - y) < 0.001) result.push(pg.lt);
+    if (Math.abs(pg.rt.y - y) < 0.001) result.push(pg.rt);
+    if (Math.abs(pg.rb.y - y) < 0.001) result.push(pg.rb);
+    if (Math.abs(pg.lb.y - y) < 0.001) result.push(pg.lb);
+    if (Math.abs(pg.pivot.y - y) < 0.001) result.push(pg.pivot);
     return result;
 }

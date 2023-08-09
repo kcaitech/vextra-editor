@@ -38,7 +38,6 @@ function update_main_line(direction: number) {
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);
     if (ns_x.length) { // 绘制x轴线
         ax = ns_x[0].x;
-        console.log('连接点', get_p_form_pg_by_x(cpg, ax));
         nodesX = ns_x.concat(get_p_form_pg_by_x(cpg, ax)).map(n => matrix.value.computeCoord2(n.x, n.y));
         lineX = render_line_x(nodesX);
     }

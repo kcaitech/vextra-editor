@@ -246,6 +246,7 @@ function shapeScrollToContentView_1(shape: Shape) {
     } else {
       workspace.matrix.trans(transX, transY);
     }
+    // eslint-disable-next-line
     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     props.context.navi.set_phase('');
   }
@@ -299,6 +300,7 @@ function shapeScrollToContentView(shape: Shape) {
     } else {
       workspace.matrix.trans(transX, transY);
     }
+    // eslint-disable-next-line
     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     props.context.navi.set_phase('');
   }
