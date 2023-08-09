@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { PT1, PT2, PT4P1, PT4P2, PageXY2, PointGroup } from "@/context/assist";
 import { PageXY } from "@/context/selection";
-import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { Artboard, GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { debounce } from "lodash";
 import { XYsBounding } from "./common";
 
@@ -154,7 +154,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
             if (y) y.push(p2); else y_axis.set(p2.p.y, [p2]);
         }
-        if (c instanceof GroupShape) result = result.concat(finder(context, c, all_pg, x_axis, y_axis));
+        if (c instanceof GroupShape && c.type === ShapeType.Group) result = result.concat(finder(context, c, all_pg, x_axis, y_axis));
     }
     return result;
 }
