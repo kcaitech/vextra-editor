@@ -178,11 +178,11 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true, target.alignX = pre_target1.align;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []);
+            this.m_nodes_x = this.m_x_axis.get(target.x) || [];
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true, target.alignY = pre_target2.align;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []);
+            this.m_nodes_y = this.m_y_axis.get(target.y) || [];
         }
         this.notify(Asssit.UPDATE_ASSIST);
         // console.log('单次匹配辅助点位(ms):', Date.now() - st);
