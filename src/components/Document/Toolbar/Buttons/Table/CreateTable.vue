@@ -1,7 +1,16 @@
 <script setup lang="ts"></script>
 
 <template>
-    <div class="table_container"></div>
+    <div class="table_container">
+        <div class="table-title">
+            <span>插入表格</span>
+            <span>3行5列</span>
+        </div>
+        <div class="table-cell"></div>
+        <div class="table-state"></div>
+        <div class="table-input"></div>
+        <div class="table-button"></div>
+    </div>
 </template>
 
 <style lang="scss" scoped>
@@ -16,5 +25,6 @@
     border: 1px solid #ccc;
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
     box-sizing: border-box;
+    font-size: var(--font-default-fontsize);
 }
 </style>

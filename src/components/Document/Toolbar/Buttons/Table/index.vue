@@ -67,8 +67,8 @@ const onMouseleave = () => {
 </script>
 
 <template>
-    <!-- <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible"> -->
-    <div ref="popover" class="popover" tabindex="-1">
+    <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+    <!-- <div ref="popover" class="popover" tabindex="-1"> -->
         <CreateTable></CreateTable>
     </div>
     <Tooltip :content="`${t('table.table')}`">
