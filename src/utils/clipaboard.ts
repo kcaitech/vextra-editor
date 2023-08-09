@@ -107,7 +107,7 @@ export async function paster_inner_shape(context: Context, editor: TextShapeEdit
                 const val = await _d.getType('text/plain');
                 const text = await val.text();
                 if (!(text && typeof text === 'string')) throw new Error('invalid text');
-                const selection = context.selection;
+                const selection = context.selection.getTextSelection(editor.shape);
                 const start = selection.cursorStart;
                 const end = selection.cursorEnd;
                 const s = Math.min(start, end);
@@ -142,7 +142,7 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
             paster_plain_inner_shape(_d, context, editor, only_text);
             return false;
         }
-        const selection = context.selection;
+        const selection = context.selection.getTextSelection(editor.shape);
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
@@ -154,7 +154,7 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
     return true;
 }
 async function paster_plain_inner_shape(_d: any, context: Context, editor: TextShapeEditor, only_text?: boolean) {
-    const selection = context.selection;
+    const selection = context.selection.getTextSelection(editor.shape);
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const s = Math.min(start, end);

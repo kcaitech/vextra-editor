@@ -199,7 +199,7 @@ function mousedown(e: MouseEvent) {
         editor.setCellContentText(cell.cell)
     }
     // editing cell
-    props.context.selection.selectShape(cell.cell);
+    props.context.selection.selectTableCell(cell.cell, cell.index.row, cell.index.col);
     editingCell.value = cell;
     getCellState(cell.cell).onMouseDown(e);
 }

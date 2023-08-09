@@ -43,13 +43,14 @@ function is_inner_textshape() {
 }
 function copy() {
   if (is_inner_textshape()) {
-    const selection = props.context.selection;
+    const shape = props.context.selection.selectedShapes[0] as TextShape;
+    const selection = props.context.selection.getTextSelection(shape);
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const s = Math.min(start, end);
     const len = Math.abs(start - end);
     if (s === end) return emit('close');
-    const text = selection.selectedShapes[0].text.getTextWithFormat(s, len);
+    const text = shape.text.getTextWithFormat(s, len);
     props.context.workspace.clipboard.write_html(text);
   } else {
     props.context.workspace.clipboard.write_html();
@@ -58,11 +59,12 @@ function copy() {
 }
 async function cut() {
   if (is_inner_textshape()) {
-    const selection = props.context.selection;
+    const shape = props.context.selection.selectedShapes[0] as TextShape;
+    const selection = props.context.selection.getTextSelection(shape);
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) return emit('close');
-    const shape = selection.selectedShapes[0];
+    // const shape = selection.selectedShapes[0];
     const text = shape.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
     const copy_result = await props.context.workspace.clipboard.write_html(text);
     if (copy_result) {
