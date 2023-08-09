@@ -44,22 +44,7 @@ interface TextLocate {
     attr: SpanAttr | undefined
 }
 
-type UserInfo = {
-    name: string
-    perm: string
-}
-
 export type ActionType = 'translate' | 'scale' | 'rotate';
-
-export type UserSelection = {
-    userInfo: UserInfo,
-    avatar?: string,
-    selectPage?: Page | string,
-    selectShapes: Shape[],
-    hoverShape?: Shape,
-    cursorStart: number,
-    cursorEnd: number,
-}
 
 export class Selection extends Watchable(Object) implements ISave4Restore {
 

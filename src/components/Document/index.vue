@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
-import { Selection, UserSelection } from '@/context/selection';
+import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
@@ -557,7 +557,7 @@ function closeNetMsg() {
     insertNetworkInfo('netError', false, network_anomaly);
     insertNetworkInfo('networkSuccess', false, link_success);
 }
-//协作人员进入过操作文档执行
+//协作人员操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
     if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
