@@ -119,7 +119,7 @@ function createController() { // 计算控件点位以及类型判定
             const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
             m.multiAtLeft(matrix);
             controllerFrame.value = points.map(p => m.computeCoord(p.x, p.y));
-            if (!permIsEdit(props.context) || props.context.workspace.action === Action.AddComment) {
+            if (!permIsEdit(props.context) || props.context.tool.action === Action.AddComment) {
                 controllerType.value = ControllerType.Readonly;
             } else if (s.type === ShapeType.Line) { // 控件类型判定
                 controllerType.value = ControllerType.Line;
@@ -146,7 +146,7 @@ function createController() { // 计算控件点位以及类型判定
             const m2 = new Matrix(matrix.inverse);
             props.context.workspace.setCFrame(controllerFrame.value.map(p => m2.computeCoord2(p.x, p.y)));
             rotate.value = 0;
-            if (!permIsEdit(props.context) || props.context.workspace.action === Action.AddComment) {
+            if (!permIsEdit(props.context) || props.context.tool.action === Action.AddComment) {
                 controllerType.value = ControllerType.Readonly;
             } else {
                 controllerType.value = ControllerType.RectMulti;

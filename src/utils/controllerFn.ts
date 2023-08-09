@@ -8,7 +8,7 @@ import { Shape } from "@kcdesign/data";
 import { PageXY } from "@/context/selection";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
-    if (!permIsEdit(context) || context.workspace.action === Action.AddComment) return;
+    if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
     const { target, shiftKey, ctrlKey, metaKey } = e;
     if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;

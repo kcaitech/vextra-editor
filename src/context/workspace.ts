@@ -113,12 +113,6 @@ export class WorkSpace extends Watchable(Object) {
         this.context = context;
         this.m_clipboard = new Clipboard(context);
     }
-    // position_test() {
-    //     const s = this.context.selection.selectedShapes[0];
-    //     if (!s) return '先选择图形';
-    //     const m2p = s.matrix2Parent();
-    //     console.log(m2p.computeCoord(0, 0));
-    // }
     get matrix() {
         return this.m_matrix;
     }
@@ -156,9 +150,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     get startPoint() {
         return this.m_mousedown_on_page;
-    }
-    get action() {
-        return this.m_current_action;
     }
     get frameSize() {
         return this.m_frame_size;
@@ -235,6 +226,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
+        this.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     setCtrl(v: 'page' | 'controller') {
         this.m_controller = v;
@@ -287,13 +279,8 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_x(ctrlKey, metaKey, shiftKey);
         } else if (event.code === KeyboardKeys.Digit1) {
             event.preventDefault();
-            if (ctrlKey || metaKey) {
-                adapt_page(this.context);
-            }
+            if (ctrlKey || metaKey) adapt_page(this.context);
         }
-    }
-    matrixTransformation() { // 页面坐标系发生变化
-        this.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     setFrameSize(size: { width: number, height: number }) {
         this.m_frame_size = size
@@ -384,7 +371,6 @@ export class WorkSpace extends Watchable(Object) {
         if ((ctrlKey || metaKey) && !shift) {
             this.notify(WorkSpace.COPY)
         } else if (!(ctrlKey || metaKey) && shift) {
-
             this.context.comment.setVisibleComment(!this.context.comment.isVisibleComment);
         }
     }

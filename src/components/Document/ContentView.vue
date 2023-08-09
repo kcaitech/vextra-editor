@@ -137,7 +137,6 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     }
     search_once(e) // 滚动过程进行常规图形检索
     workspace.value.pageDragging(true);
-    workspace.value.matrixTransformation();
     de_freeze();
 }
 const de_freeze = debounce(() => {
@@ -710,7 +709,7 @@ function initMatrix(cur: Page) {
         matrixMap.set(cur.id, info);
     }
     matrix.reset(info.m.toArray());
-    workspace.value.matrixTransformation();
+    workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 const stopWatch = watch(() => props.page, (cur, old) => {
     old.unwatch(page_watcher)

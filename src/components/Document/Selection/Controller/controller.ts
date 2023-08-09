@@ -38,18 +38,13 @@ export function useController(context: Context) {
     let t_e: MouseEvent | undefined;
     let speed: number = 0;
     const { t } = useI18n();
-    function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) { // 立马判断环境并迁移
+    function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
         if (shapes.length) {
             const ps: PageXY = matrix.computeCoord(start.x, start.y);
             const pe: PageXY = matrix.computeCoord(end.x, end.y);
             const selection = context.selection;
-            let targetParent;
-            const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes); // 点击位置处的容器
-            if (artboardOnStart && artboardOnStart.type !== ShapeType.Page) {
-                targetParent = selection.getClosetArtboard(pe, artboardOnStart);
-            } else {
-                targetParent = selection.getClosetArtboard(pe);
-            }
+            const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes);
+            const targetParent = (artboardOnStart && artboardOnStart.type !== ShapeType.Page) ? selection.getClosetArtboard(pe, artboardOnStart) : selection.getClosetArtboard(pe);
             const m = getCloesetContainer(shapes[0]).id !== targetParent.id;
             if (m && asyncTransfer) {
                 shapes = sort_by_layer(context, shapes);
@@ -57,16 +52,10 @@ export function useController(context: Context) {
             }
         }
     }
-    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100); // 停留100ms之后做环境判断和迁移
-    function downpoint() {
-        return startPosition;
-    }
-    function downpoint_page() {
-        return startPositionOnPage;
-    }
+    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
     function getCloesetContainer(shape: Shape): Shape {
         let result = context.selection.selectedPage!
-        let p = shape?.parent;
+        let p = shape.parent;
         while (p) {
             if (p.type == ShapeType.Artboard) {
                 result = p as any;
@@ -77,14 +66,14 @@ export function useController(context: Context) {
         return result
     }
     function preTodo(e: MouseEvent) { // 移动之前做的准备
-        if (!permIsEdit(context) || context.workspace.action === Action.AddComment) return;
+        const action = context.tool.action;
+        if (!permIsEdit(context) || action === Action.AddComment) return;
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
             context.cursor.cursor_freeze(true);
             context.menu.menuMount(); // 取消右键事件
             root = context.workspace.root;
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
-            const action = context.tool.action;
             if (action == Action.AutoV || action == Action.AutoK) {
                 workspace.value.setCtrl('controller');
                 wheel = fourWayWheel(context, undefined, startPositionOnPage);
@@ -95,17 +84,15 @@ export function useController(context: Context) {
     }
     function handleDblClick() {
         const selected = context.selection.selectedShapes;
-        if (selected.length === 1) {
-            const item = selected[0];
-            if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) {
-                const scope = (item as GroupShape).childs;
-                const scout = context.selection.scout;
-                const target = groupPassthrough(scout!, scope, startPositionOnPage);
-                if (target) context.selection.selectShape(target);
-            } else {
-                editing = !editing;
-            }
-        }
+        if (selected.length !== 1) return;
+        const shape = selected[0];
+        if ([ShapeType.Group, ShapeType.FlattenShape].includes(shape.type)) {
+            const scope = (shape as GroupShape).childs;
+            const scout = context.selection.scout;
+            if (!scout) return;
+            const target = groupPassthrough(scout, scope, startPositionOnPage);
+            if (target) context.selection.selectShape(target);
+        } else editing = !editing;
     }
     function isMouseOnContent(e: MouseEvent): boolean {
         return (e.target as Element)?.closest(`#content`) ? true : false;
@@ -137,11 +124,7 @@ export function useController(context: Context) {
             if (timer) handleDblClick();
             initTimer();
             preTodo(e);
-        } else {
-            if (isMouseOnContent(e)) {
-                if (!context.selection.hoveredShape) context.selection.resetSelectShapes();
-            }
-        }
+        } else if (isMouseOnContent(e) && !context.selection.hoveredShape) context.selection.resetSelectShapes();
     }
     function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) return;
@@ -154,7 +137,6 @@ export function useController(context: Context) {
             if (update_type === 3) startPosition = { ...mousePosition };
             else if (update_type === 2) startPosition.y = mousePosition.y;
             else if (update_type === 1) startPosition.x = mousePosition.x;
-
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
             if (e.altKey) shapes = paster_short(context, shapes);
             asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
@@ -235,7 +217,7 @@ export function useController(context: Context) {
         return update_type;
     }
     function mouseup(e: MouseEvent) {
-        if (e.button === 0) { // 只处理鼠标左键按下时的抬起
+        if (e.button === 0) {
             if (isDragging) {
                 if (asyncTransfer) {
                     const { clientX, clientY } = e;
@@ -245,13 +227,13 @@ export function useController(context: Context) {
                 }
                 workspace.value.translating(false);
                 workspace.value.setSelectionViewUpdater(true);
-                workspace.value.selectionViewUpdate();
+                workspace.value.notify(WorkSpace.SELECTION_VIEW_UPDATE);
                 context.assist.reset();
                 isDragging = false;
             } else {
                 pickerFromSelectedShapes(e);
             }
-            if (wheel) wheel = wheel.remove(); // 卸载滚轮
+            if (wheel) wheel = wheel.remove();
             document.removeEventListener('mousemove', mousemove);
             document.removeEventListener('mouseup', mouseup);
         }
@@ -267,20 +249,17 @@ export function useController(context: Context) {
         const selected = selection.selectedShapes;
         const hoveredShape = selection.hoveredShape;
         if (hoveredShape) {
-            if (e.shiftKey) {
-                selection.rangeSelectShape([...selected, hoveredShape]);
-            } else {
-                selection.selectShape(hoveredShape);
-            }
+            e.shiftKey ? selection.rangeSelectShape([...selected, hoveredShape]) : selection.selectShape(hoveredShape);
         } else {
             if (!selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).length) selection.resetSelectShapes();
         }
     }
-    function checkStatus() { // 检查是否可以直接开始移动
-        if (workspace.value.isPreToTranslating) { // 可以开始移动，该状态开启之后将跳过mousedown事件
+    function checkStatus() {
+        if (workspace.value.isPreToTranslating) {
             const start = workspace.value.startPoint;
-            setPosition(start!);
-            preTodo(start!);
+            if (!start) return;
+            setPosition(start);
+            preTodo(start);
             workspace.value.preToTranslating(false);
             need_update_comment = true;
         }
@@ -293,12 +272,12 @@ export function useController(context: Context) {
         startPositionOnPage = matrix.computeCoord(startPosition.x, startPosition.y);
     }
     function initController() {
-        initTimer(); // 控件生成之后立马开始进行双击预定，该预定将在duration(ms)之后取消
+        initTimer();
     }
     function initTimer() {
-        clearTimeout(timer); // 先取消原有的预定
-        timer = setTimeout(() => { // 设置新的预定
-            clearTimeout(timer); // 取消预定
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            clearTimeout(timer);
             timer = null;
         }, duration)
     }
@@ -365,5 +344,5 @@ export function useController(context: Context) {
         document.removeEventListener('mousedown', mousedown);
         timerClear();
     })
-    return { isDblClick, isEditing, isDrag, downpoint, downpoint_page };
+    return { isDblClick, isEditing, isDrag };
 }
