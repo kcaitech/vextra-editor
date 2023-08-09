@@ -134,9 +134,7 @@ export class Asssit extends Watchable(Object) {
             const shapes = this.m_context.selection.selectedShapes;
             if (shapes.length === 1) {
                 this.m_collect_target = [getClosestAB(shapes[0])];
-            } else {
-                this.m_collect_target = [];
-            }
+            } else this.m_collect_target = [];
         } else if (t === Selection.CHANGE_PAGE) {
             this.m_collect_target = [];
         }
@@ -156,12 +154,9 @@ export class Asssit extends Watchable(Object) {
     setTransTarget(shapes: Shape[]) {
         this.m_except.clear();
         if (shapes.length === 1) {
-            const s = shapes[0];
-            get_tree(s, this.m_except);
+            get_tree(shapes[0], this.m_except);
         } else if (shapes.length > 1) {
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                get_tree(shapes[i], this.m_except);
-            }
+            for (let i = 0, len = shapes.length; i < len; i++) get_tree(shapes[i], this.m_except);
         }
     }
     trans_match(s: Shape) {
@@ -173,7 +168,7 @@ export class Asssit extends Watchable(Object) {
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
         const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
         const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
-        for (let i = 0; i < this.m_shape_inner.length; i++) {
+        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
@@ -204,7 +199,7 @@ export class Asssit extends Watchable(Object) {
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
         const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
         const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
-        for (let i = 0; i < this.m_shape_inner.length; i++) {
+        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
@@ -234,7 +229,7 @@ export class Asssit extends Watchable(Object) {
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
         const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
         const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
-        for (let i = 0; i < this.m_shape_inner.length; i++) {
+        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
@@ -264,7 +259,7 @@ export class Asssit extends Watchable(Object) {
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
         const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
         const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
-        for (let i = 0; i < this.m_shape_inner.length; i++) {
+        for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
             const c_pg = this.m_pg_inner.get(cs.id);

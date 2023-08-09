@@ -131,7 +131,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         const pg = update_pg(scope);
         all_pg.set(scope.id, pg);
         const pvs = Object.values(pg);
-        for (let i = 0; i < pvs.length; i++) {
+        for (let i = 0, len = pvs.length; i < len; i++) {
             const p2 = { id: scope.id, p: pvs[i] };
             const x = x_axis.get(p2.p.x);
             const y = y_axis.get(p2.p.y);
@@ -142,19 +142,19 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
         const c = cs[i];
-        if (isShapeOut(context, cs[i])) continue;
+        if (isShapeOut(context, c)) continue;
         result.push(c);
         const pg = update_pg(c);
         all_pg.set(c.id, pg);
         const pvs = Object.values(pg);
-        for (let i = 0; i < pvs.length; i++) {
+        for (let i = 0, len = pvs.length; i < len; i++) {
             const p2 = { id: c.id, p: pvs[i] };
             const x = x_axis.get(p2.p.x);
             const y = y_axis.get(p2.p.y);
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
             if (y) y.push(p2); else y_axis.set(p2.p.y, [p2]);
         }
-        if (c instanceof GroupShape) result = [...result, ...finder(context, c, all_pg, x_axis, y_axis)];
+        if (c instanceof GroupShape) result = result.concat(finder(context, c, all_pg, x_axis, y_axis));
     }
     return result;
 }
@@ -170,7 +170,7 @@ export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.setStickness(Math.ceil(5 / new_matrix.m00));
 }
 export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[], stickness: number) {
-    for (let i = 0; i < apexX.length; i++) {
+    for (let i = 0, len = apexX.length; i < len; i++) {
         const x = apexX[i]
         const delta1 = Math.abs(x - s_pg.lt.x);
         if (delta1 < stickness && (pre_target1.delta === undefined || delta1 < pre_target1.delta)) {
@@ -195,7 +195,7 @@ export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[],
     }
 }
 export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[], stickness: number) {
-    for (let i = 0; i < apexY.length; i++) {
+    for (let i = 0, len = apexY.length; i < len; i++) {
         const y = apexY[i];
         const delta1 = Math.abs(y - s_pg.lt.y);
         if (delta1 < stickness && (pre_target2.delta === undefined || delta1 < pre_target2.delta)) {
@@ -222,11 +222,11 @@ export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[],
 export function get_tree(shape: Shape, init: Map<string, Shape>) {
     init.set(shape.id, shape);
     const cs = shape.childs
-    if (cs && cs.length) for (let i = 0; i < cs.length; i++) get_tree(cs[i], init);
+    if (cs && cs.length) for (let i = 0, len = cs.length; i < len; i++) get_tree(cs[i], init);
 }
 export const collect_once = debounce(_collect, 100);
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
-    for (let i = 0; i < apexX.length; i++) {
+    for (let i = 0, len = apexX.length; i < len; i++) {
         const x = apexX[i]
         const delta = Math.abs(x - p.x);
         if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
@@ -235,7 +235,7 @@ export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], st
     }
 }
 export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], stickness: number) {
-    for (let i = 0; i < apexY.length; i++) {
+    for (let i = 0, len = apexY.length; i < len; i++) {
         const y = apexY[i]
         const delta = Math.abs(y - p.y);
         if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
@@ -244,7 +244,7 @@ export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], st
     }
 }
 export function modify_pt_x4create(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
-    for (let i = 0; i < apexX.length; i++) {
+    for (let i = 0, len = apexX.length; i < len; i++) {
         const x = apexX[i]
         const delta = Math.abs(x - p.x);
         if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
@@ -253,7 +253,7 @@ export function modify_pt_x4create(pre_target1: PT4P1, p: PageXY, apexX: number[
     }
 }
 export function modify_pt_y4create(pre_target2: PT4P2, p: PageXY, apexY: number[], stickness: number) {
-    for (let i = 0; i < apexY.length; i++) {
+    for (let i = 0, len = apexY.length; i < len; i++) {
         const y = apexY[i]
         const delta = Math.abs(y - p.y);
         if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
@@ -286,7 +286,7 @@ export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup { /
 }
 export function get_frame(selection: Shape[]): Point[] {
     const points: { x: number, y: number }[] = [];
-    for (let i = 0; i < selection.length; i++) {
+    for (let i = 0, len = selection.length; i < len; i++) {
         const s = selection[i];
         const m = s.matrix2Root();
         const f = s.frame;
