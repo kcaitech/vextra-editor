@@ -517,7 +517,7 @@ export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
   return true
 }
 
-function skipUserSelectShapes(context: Context, shapes: Shape[],initPage = false) {
+function skipUserSelectShapes(context: Context, shapes: Shape[]) {
   if (!shapes.length) return new Matrix();
   const matrix = context.workspace.matrix;
   const points: ClientXY[] = [];
@@ -532,37 +532,12 @@ function skipUserSelectShapes(context: Context, shapes: Shape[],initPage = false
   const width = box.right - box.left;
   const height = box.bottom - box.top;
   const root = context.workspace.root;
-  const w_max = root.width;
-  const h_max = root.height;
-  const ratio_w = width / w_max * 1.06; // 两边留点空白
-  const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
-  const ratio = Math.max(ratio_h, ratio_w);
-  if (ratio !== 1) {
-    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+  const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+  const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+  if (del.x || del.y) {
     matrix.trans(del.x, del.y);
-    matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
-    const max = initPage ? 1 : 256;
-    if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) { // 不能小于2%,不能大于25600%
-      matrix.scale(1 / ratio);
-    } else {
-      if (matrix.m00 / ratio <= 0.02) {
-        matrix.scale(0.02 / matrix.m00);
-      } else if (matrix.m00 / ratio >= max) {
-        matrix.scale(max / matrix.m00);
-      }
-    }
-    matrix.trans(root.width / 2, root.height / 2);
     context.workspace.matrixTransformation();
-  } else {
-    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
-    if (del.x || del.y) {
-      matrix.trans(del.x, del.y);
-      context.workspace.matrixTransformation();
-    }
   }
-  return matrix;
 }
 
 export {
