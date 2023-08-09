@@ -12,8 +12,7 @@ import PointsContainer from "./Points/PointsContainer.SVG.vue";
 import { useController } from './controller';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
-import { FilePicker } from '@/components/common/filepicker';
-import { loadImage } from './Table/loadimage';
+import { useImagePicker } from './Table/loadimage';
 import { v4 as uuid } from "uuid"
 import { useI18n } from 'vue-i18n';
 import { textState } from './Table/celltextstate';
@@ -36,7 +35,9 @@ function _update() {
     const m2p = table.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
-    if (!submatrix.equals(matrix)) submatrix.reset(matrix)
+    if (!submatrix.equals(matrix)) {
+        submatrix.reset(matrix);
+    }
     const frame = table.frame;
     const points = [
         { x: 0, y: 0 }, // left top
@@ -60,6 +61,13 @@ function _update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
+
+    if (editingCell.value) {
+        editingCell.value = table.locateCell2(editingCell.value.cell);
+    }
+    if (hoveringCell.value) {
+        hoveringCell.value = table.locateCell2(hoveringCell.value.cell);
+    }
 }
 
 watch(() => props.matrix, () => {
@@ -152,16 +160,15 @@ function isInCell(xy: { x: number, y: number }, cell: TableGridItem) {
     return xy.x > cell.frame.x && xy.y > cell.frame.y && (xy.x - cell.frame.x) < cell.frame.width && (xy.y - cell.frame.y) < cell.frame.height;
 }
 
-function onLoadImage(name: string, buffer: ArrayBuffer, cell: TableCell) {
-    const data = loadImage(name, buffer);
+function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, cell: TableCell) {
+    // const data = loadImage(name, buffer);
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
     const editor = props.context.editor4Table(table)
     editor.setCellContentImage(cell, id);
 }
+const pickImage = useImagePicker();
 
-let filePicker: FilePicker | undefined;
-const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 function mousedown(e: MouseEvent) {
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
@@ -180,20 +187,9 @@ function mousedown(e: MouseEvent) {
     const cell = table.locateCell(xy.x, xy.y);
     if (!cell) return;
     if (cell.cell.cellType === TableCellType.Image) {
-        if (!filePicker) filePicker = new FilePicker(accept, (file: File) => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const buffer = e.target?.result;
-                if (!buffer || !(buffer instanceof ArrayBuffer)) {
-                    console.log("read image fail")
-                    return;
-                }
-                const name = file.name;
-                onLoadImage(name, buffer, cell.cell);
-            }
-            reader.readAsArrayBuffer(file);
+        pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
+            onLoadImage(name, data, cell.cell);
         });
-        filePicker.invoke();
         e.stopPropagation();
         e.preventDefault();
         return;
@@ -274,8 +270,7 @@ function showHoverCell() {
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="table">
         </BarsContainer>
-        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="table"
-            :axle="axle">
+        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="table" :axle="axle">
         </PointsContainer>
 
     </svg>

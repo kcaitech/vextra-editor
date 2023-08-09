@@ -1,11 +1,9 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { TableCell, TableShape, TableCellType, Matrix, ShapeFrame } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { throttle } from '../../common';
-import { FilePicker } from '@/components/common/filepicker';
+import { reactive, ref, watchEffect } from 'vue';
 import { v4 as uuid } from "uuid"
-import { loadImage } from './loadimage';
+import { useImagePicker } from './loadimage';
 
 const props = defineProps<{
     shape: TableCell,
@@ -17,8 +15,8 @@ const props = defineProps<{
 const cellType = ref(TableCellType.None);
 const matrix = new Matrix();
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-const update = throttle(_update, 5);
-function _update() {
+
+function update() {
     matrix.reset(props.matrix);
     cellType.value = props.shape.cellType ?? TableCellType.None;
 
@@ -46,52 +44,20 @@ function _update() {
     }, bounds)
 }
 
-watch(() => props.matrix, () => {
-    update();
-})
+watchEffect(update)
 
-watch(() => props.shape, (value, old) => {
-    old.unwatch(update);
-    value.watch(update);
-    update();
-})
-
-onMounted(() => {
-    props.shape.watch(update);
-    update();
-})
-
-onUnmounted(() => {
-    props.shape.unwatch(update);
-    if (filePicker) filePicker.unmount();
-})
-
-function onLoadImage(name: string, buffer: ArrayBuffer) {
-    const data = loadImage(name, buffer);
+function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
+    // const data = loadImage(name, buffer);
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
     const editor = props.context.editor4Table(props.shape.parent as TableShape)
     editor.setCellContentImage(props.shape, id);
 }
 
-let filePicker: FilePicker | undefined;
-const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
-function onImageClick(e: MouseEvent) {
+const pickImage = useImagePicker();
 
-    if (!filePicker) filePicker = new FilePicker(accept, (file: File) => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const buffer = e.target?.result;
-            if (!buffer || !(buffer instanceof ArrayBuffer)) {
-                console.log("read image fail")
-                return;
-            }
-            const name = file.name;
-            onLoadImage(name, buffer);
-        }
-        reader.readAsArrayBuffer(file);
-    });
-    filePicker.invoke();
+function onImageClick(e: MouseEvent) {
+    pickImage(onLoadImage);
     e.preventDefault();
     e.stopPropagation();
 }
@@ -132,6 +98,6 @@ function showImageIcon() {
 }
 
 .un-visible {
-    // opacity: 0;
+    opacity: 0;
 }
 </style>
