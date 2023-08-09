@@ -26,6 +26,7 @@ type TextFillPath = {
 }
 const tracingPath = ref<BorderPath[]>([]);
 const selectPath = ref<TextFillPath[]>([]);
+const multiSelect = ref<BorderPath[]>([]);
 const usersSelectionList = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
 const matrix = new Matrix();
 const shapes = ref<Shape[]>([]);
@@ -33,13 +34,14 @@ const submatrix = reactive(new Matrix());
 const createShapeTracing = () => { // 描边 
     tracingPath.value = [];
     selectPath.value = [];
+    multiSelect.value = [];
     const page = props.context.selection.selectedPage;
     if (!page) return;
     for (let i = 0; i < usersSelectionList.value.length; i++) {
         const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
         const selection: Shape[] = props.context.selection.selectedShapes;
         const userSelectInfo = usersSelectionList.value[i];
-        if(page.id !== userSelectInfo.select_page_id) continue;
+        if (page.id !== userSelectInfo.select_page_id) continue;
         const shapes: Shape[] = [];
         const len = userSelectInfo.select_shape_id_list.length;
         for (let i = 0; i < len; i++) {
@@ -47,14 +49,16 @@ const createShapeTracing = () => { // 描边
             if (shape) shapes.push(shape);
         }
         if (shapes.length === 1) {
-            if (hoveredShape && hoveredShape.id === shapes[0].id || selection.length > 0 && selection[0].id === shapes[0].id) continue
+            if (hoveredShape && hoveredShape.id === shapes[0].id || selection.length > 0 && selection[0].id === shapes[0].id) continue;
             const s = selection.find(v => v.id === shapes[0].id);
             if (s) continue;
+            const b = shapes[0].frame;
+            let framePoint = [{ x: 0, y: 0 }, { x: b.width, y: 0 }, { x: b.width, y: b.height }, { x: 0, y: b.height }];
             const m = shapes[0].matrix2Root();
             m.multiAtLeft(matrix);
-            const path = shapes[0].getPath();
-            path.transform(m);
-            const borPath = {path: path.toString(), color: userSelectColor[i]}
+            framePoint = framePoint.map(p => m.computeCoord(p.x, p.y));
+            const path = genRectPath(framePoint);
+            const borPath = { path, color: userSelectColor[i] }
             tracingPath.value.push(borPath);
             // if (shapes[0] instanceof TextShape) {
             //     const m2p = shapes[0].matrix2Root();
@@ -75,10 +79,15 @@ const createShapeTracing = () => { // 描边
                 const f = s.frame;
                 const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
                 points.push(...ps);
+                const _m = s.matrix2Root();
+                const path = s.getPath();
+                path.transform(m);
+                const borPath = {path: path.toString(), color: userSelectColor[i]}
+                multiSelect.value.push(borPath);
             }
             const b = XYsBounding(points);
             const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
-            const borPath = {path: genRectPath(framePoint), color: userSelectColor[i]}
+            const borPath = { path: genRectPath(framePoint), color: userSelectColor[i] }
             tracingPath.value.push(borPath);
         }
     }
@@ -104,15 +113,16 @@ const teamworkWatcher = (t?: any) => {
     if (t === TeamWork.CHANGE_USER_STATE) {
         usersSelectionList.value = props.context.teamwork.getUserSelection;
         const page = props.context.selection.selectedPage;
-        props.context.teamwork.getUserSelection.forEach(item  => {
-        for (let i = 0; i < item.select_shape_id_list.length; i++) {
-            const shape = page!.shapes.get(item.select_shape_id_list[i]);
-            if (shape) shapes.value.push(shape);
-        }
-        update_by_shapes();
-        createShapeTracing();
-        watchShapes();
-    })
+        props.context.teamwork.getUserSelection.forEach(item => {
+            for (let i = 0; i < item.select_shape_id_list.length; i++) {
+                const shape = page!.shapes.get(item.select_shape_id_list[i]);
+                if (shape) shapes.value.push(shape);
+            }
+            shapes.value = Array.from(new Set(shapes.value));
+            update_by_shapes();
+            createShapeTracing();
+            watchShapes();
+        })
     }
 }
 
@@ -131,16 +141,16 @@ const selectionWatcher = (t: number) => {
         createShapeTracing();
     }
 }
-let throttle = true
-let timer: any = null
+let throttle = true;
+let timer: any = null;
 const watcher = () => {
-    if(throttle) {
-        throttle = false
+    if (throttle) {
+        throttle = false;
         update_by_shapes();
         createShapeTracing();
         timer = setTimeout(() => {
-            throttle = true
-            clearTimeout(timer)
+            throttle = true;
+            clearTimeout(timer);
         }, 300)
     }
 }
@@ -187,6 +197,8 @@ onUnmounted(() => {
         :height="100" viewBox="0 0 100 100" style="position: absolute">
         <path v-for="(p, i) in tracingPath" :key="i" :d="p.path" fill="transparent" :stroke="p.color" stroke-width="1.5px"
             opacity="0.8"></path>
+        <path v-for="(p, i) in multiSelect" :key="i" :d="p.path" fill="transparent" :stroke="p.color" stroke-width="1px"
+            opacity="0.5"></path>
         <!-- <path v-for="(p, i) in selectPath" :key="i" :d="p.path" :fill="p.color" fill-opacity="0.5" stroke='none'></path> -->
     </svg>
     <ShapeAvatar :context="props.context" :matrix="props.matrix"></ShapeAvatar>

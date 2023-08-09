@@ -31,21 +31,22 @@ interface MultipShape {
 
 const matrix = new Matrix();
 const origin: ClientXY = { x: 0, y: 0 };
-const avatars = ref<Avatar[]>([])
-const multipShape = ref<MultipShape[]>([])
-const userSelectionInfo = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection)
-const groupedShapes = ref()
-const multipShapeGroup = ref<any>({})
+const avatars = ref<Avatar[]>([]);
+const multipShape = ref<MultipShape[]>([]);
+const shapes = ref<Shape[]>([]);
+const userSelectionInfo = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
+const groupedShapes = ref();
+const multipShapeGroup = ref<any>({});
 const setOrigin = () => {
-    matrix.reset(props.matrix)
-    origin.x = matrix.m02
-    origin.y = matrix.m12
+    matrix.reset(props.matrix);
+    origin.x = matrix.m02;
+    origin.y = matrix.m12;
 }
 const setPosition = () => {
-    avatars.value.length = 0
-    multipShape.value.length = 0
-    groupedShapes.value = []
-    multipShapeGroup.value = []
+    avatars.value.length = 0;
+    multipShape.value.length = 0;
+    groupedShapes.value = [];
+    multipShapeGroup.value = [];
     const page = props.context.selection.selectedPage;
     if (!page) return;
     for (let i = 0; i < userSelectionInfo.value.length; i++) {
@@ -54,7 +55,7 @@ const setPosition = () => {
         const selection: Shape[] = props.context.selection.selectedShapes;
         if (page.id !== userSelectInfo.select_page_id) continue;
         const shapes: Shape[] = [];
-        const len = userSelectInfo.select_shape_id_list.length
+        const len = userSelectInfo.select_shape_id_list.length;
         for (let i = 0; i < len; i++) {
             const shape = page.shapes.get(userSelectInfo.select_shape_id_list[i]);
             if (shape) shapes.push(shape);
@@ -148,6 +149,14 @@ const workspaceUpdate = (t: number) => {
 const updater = (t?: number) => {
     if (t === TeamWork.CHANGE_USER_STATE) {        
         userSelectionInfo.value = props.context.teamwork.getUserSelection;
+        const page = props.context.selection.selectedPage;
+        props.context.teamwork.getUserSelection.forEach(item  => {
+            for (let i = 0; i < item.select_shape_id_list.length; i++) {
+                const shape = page!.shapes.get(item.select_shape_id_list[i]);
+                if (shape) shapes.value.push(shape);
+            }
+        })
+        shapes.value = Array.from(new Set(shapes.value));
         setOrigin();
         setPosition();
         watchShapes();
@@ -160,32 +169,25 @@ const selectionWatcher = (t: number) => {
         setPosition();
     }
 }
-let isthrottle = true
-let timer: any = null
+let isthrottle = true;
+let timer: any = null;
 const watcher = () => {
     if(isthrottle) {
-        isthrottle = false
+        isthrottle = false;
         setOrigin();
         setPosition();
         timer = setTimeout(() => {
-            isthrottle = true
-            clearTimeout(timer)
-        }, 300)
+            isthrottle = true;
+            clearTimeout(timer);
+        }, 300);
     }
 }
+
 const watchedShapes = new Map();
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
-    const page = props.context.selection.selectedPage;
-    const shapes: Shape[] = [];
-    props.context.teamwork.getUserSelection.forEach(item  => {
-        for (let i = 0; i < item.select_shape_id_list.length; i++) {
-            const shape = page!.shapes.get(item.select_shape_id_list[i]);
-            if (shape) shapes.push(shape);
-        }
-    })
-    if (shapes) {
-        shapes.forEach((v) => {
+    if (shapes.value) {
+        shapes.value.forEach((v) => {
             needWatchShapes.set(v.id, v);
         })
     }
@@ -206,13 +208,13 @@ onMounted(() => {
     setOrigin();
     setPosition();
     props.context.workspace.watch(workspaceUpdate);
-    props.context.teamwork.watch(updater)
+    props.context.teamwork.watch(updater);
     props.context.selection.watch(selectionWatcher);
 })
 
 onUnmounted(() => {
     props.context.workspace.unwatch(workspaceUpdate);
-    props.context.teamwork.watch(updater)
+    props.context.teamwork.watch(updater);
     props.context.selection.unwatch(selectionWatcher);
 })
 </script>
