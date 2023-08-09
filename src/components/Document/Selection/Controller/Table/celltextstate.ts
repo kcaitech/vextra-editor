@@ -43,7 +43,7 @@ export function textState(props: {
     }
     function be_editor(index?: number) {
         const workspace = props.context.workspace;
-        const selection = props.context.selection;
+        const selection = props.context.selection.getTextSelection(props.shape as any);
         editing.value = true;
         workspace.contentEdit(editing.value);
         props.context.cursor.setType('scan-0');
@@ -57,7 +57,7 @@ export function textState(props: {
         if (!editing.value) return;
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
-        const selection = props.context.selection;
+        const selection = props.context.selection.getTextSelection(props.shape as any);
         const workspace = props.context.workspace;
         const { clientX, clientY } = e;
         const root = workspace.root;
@@ -78,7 +78,7 @@ export function textState(props: {
         e.stopPropagation();
         if (!editing.value) return;
         const workspace = props.context.workspace;
-        const selection = props.context.selection;
+        const selection = props.context.selection.getTextSelection(props.shape as any);
         const { clientX, clientY } = e;
         const root = workspace.root;
         matrix.reset(props.matrix);

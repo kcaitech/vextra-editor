@@ -24,21 +24,19 @@ const props = defineProps<{
     controllerFrame: Point[],
     rotate: number,
     matrix: number[],
-    shape: TableShape | TableCell
+    shape: TableShape
 }>();
-
-let table: TableShape = props.shape instanceof TableShape ? props.shape : props.shape.parent as TableShape;
 
 const matrix = new Matrix();
 const update = throttle(_update, 5);
 function _update() {
-    const m2p = table.matrix2Root();
+    const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) {
         submatrix.reset(matrix);
     }
-    const frame = table.frame;
+    const frame = props.shape.frame;
     const points = [
         { x: 0, y: 0 }, // left top
         { x: frame.width, y: 0 }, //right top
@@ -63,10 +61,10 @@ function _update() {
     }, bounds)
 
     if (editingCell.value) {
-        editingCell.value = table.locateCell2(editingCell.value.cell);
+        editingCell.value = props.shape.locateCell2(editingCell.value.cell);
     }
     if (hoveringCell.value) {
-        hoveringCell.value = table.locateCell2(hoveringCell.value.cell);
+        hoveringCell.value = props.shape.locateCell2(hoveringCell.value.cell);
     }
 }
 
@@ -75,22 +73,20 @@ watch(() => props.matrix, () => {
 })
 
 watch(() => props.shape, (value, old) => {
-    const curTable = value instanceof TableShape ? value : value.parent as TableShape;
-    if (curTable.id !== table.id) {
-        table.unwatch(update);
-        curTable.watch(update);
-        table = curTable;
-        update();
-    }
+
+    old.unwatch(update);
+    value.watch(update);
+    update();
+
 })
 
 onMounted(() => {
-    table.watch(update);
+    props.shape.watch(update);
     update();
 })
 
 onUnmounted(() => {
-    table.unwatch(update);
+    props.shape.unwatch(update);
 })
 
 const editing = ref<boolean>(false);
@@ -164,7 +160,7 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, c
     // const data = loadImage(name, buffer);
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
-    const editor = props.context.editor4Table(table)
+    const editor = props.context.editor4Table(props.shape)
     editor.setCellContentImage(cell, id);
 }
 const pickImage = useImagePicker();
@@ -184,7 +180,7 @@ function mousedown(e: MouseEvent) {
         return;
     }
 
-    const cell = table.locateCell(xy.x, xy.y);
+    const cell = props.shape.locateCell(xy.x, xy.y);
     if (!cell) return;
     if (cell.cell.cellType === TableCellType.Image) {
         pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
@@ -195,11 +191,12 @@ function mousedown(e: MouseEvent) {
         return;
     }
     if ((cell.cell.cellType ?? TableCellType.None) === TableCellType.None) {
-        const editor = props.context.editor4Table(table as TableShape)
+        const editor = props.context.editor4Table(props.shape)
         editor.setCellContentText(cell.cell)
     }
     // editing cell
-    props.context.selection.selectTableCell(cell.cell, cell.index.row, cell.index.col);
+    const selection = props.context.selection.getTableSelection(props.shape);
+    selection.selectTableCell(cell.cell, cell.index.row, cell.index.col);
     editingCell.value = cell;
     getCellState(cell.cell).onMouseDown(e);
 }
@@ -224,7 +221,7 @@ function mousemove(e: MouseEvent) {
         return;
     }
 
-    const cell = table.locateCell(xy.x, xy.y);
+    const cell = props.shape.locateCell(xy.x, xy.y);
     if (cell && (!hoveringCell.value || cell.cell.id !== hoveringCell.value.cell.id)) {
         // hover cell
         hoveringCell.value = cell;
@@ -268,9 +265,9 @@ function showHoverCell() {
             :matrix="editingCellMatrix"></SelectView>
 
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="table">
+        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape">
         </BarsContainer>
-        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="table" :axle="axle">
+        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape" :axle="axle">
         </PointsContainer>
 
     </svg>
