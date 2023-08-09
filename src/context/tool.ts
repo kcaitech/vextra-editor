@@ -12,7 +12,8 @@ export enum Action {
     AddFrame = 'add-frame',
     AddText = 'add-text',
     AddComment = 'add-comment',
-    AddImage = 'add-image'
+    AddImage = 'add-image',
+    AddTable = 'table'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
