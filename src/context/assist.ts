@@ -122,19 +122,13 @@ export class Asssit extends Watchable(Object) {
     get nodes_y() {
         return this.m_nodes_y;
     }
-    init() { this.m_context.selection.watch(this.selection_watcher.bind(this)) }
-    collect() {
-        const s = Date.now();
-        const page = this.m_context.selection.selectedPage;
-        if (!page) return;
-        this.clear();
-        let target: GroupShape = page;
-        if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
-        this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
-        const e = Date.now();
-        console.log('点位收集用时(ms):', e - s);
+    private clear() {
+        this.m_shape_inner.length = 0;
+        this.m_pg_inner.clear();
+        this.m_x_axis.clear();
+        this.m_y_axis.clear();
     }
-    selection_watcher(t?: any) {
+    private selection_watcher(t?: any) {
         if (t === Selection.CHANGE_SHAPE) {
             this.m_collect_target = [];
             const shapes = this.m_context.selection.selectedShapes;
@@ -146,6 +140,18 @@ export class Asssit extends Watchable(Object) {
         } else if (t === Selection.CHANGE_PAGE) {
             this.m_collect_target = [];
         }
+    }
+    init() { this.m_context.selection.watch(this.selection_watcher.bind(this)) }
+    collect() {
+        const s = Date.now();
+        const page = this.m_context.selection.selectedPage;
+        if (!page) return;
+        this.clear();
+        let target: GroupShape = page;
+        if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
+        this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        const e = Date.now();
+        console.log('点位收集用时(ms):', e - s);
     }
     setTransTarget(shapes: Shape[]) {
         this.m_except.clear();
@@ -284,11 +290,5 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_y = [];
         this.m_except.clear();
         this.notify(Asssit.UPDATE_ASSIST);
-    }
-    clear() {
-        this.m_shape_inner.length = 0;
-        this.m_pg_inner.clear();
-        this.m_x_axis.clear();
-        this.m_y_axis.clear();
     }
 }

@@ -261,10 +261,10 @@ onUnmounted(() => {
             <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"></use>
             <use v-for="(n, i) in exNodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"></use>
             <use v-for="(n, i) in exNodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"></use>
-            <path v-if="lineX" :d="lineX" stroke-width="1px" stroke="#ff2200" fill="none"></path>
-            <path v-if="lineY" :d="lineY" stroke-width="1px" stroke="#ff2200" fill="none"></path>
-            <path v-for="(el, i) in exLineX" :d="el" stroke-width="1px" stroke="#ff2200" fill="none" :key="i"></path>
-            <path v-for="(el, i) in exLineY" :d="el" stroke-width="1px" stroke="#ff2200" fill="none" :key="i"></path>
+            <path v-if="lineX" :d="lineX" stroke-width="0.5px" stroke="#ff2200" fill="none"></path>
+            <path v-if="lineY" :d="lineY" stroke-width="0.5px" stroke="#ff2200" fill="none"></path>
+            <path v-for="(el, i) in exLineX" :d="el" stroke-width="0.5px" stroke="#ff2200" fill="none" :key="i"></path>
+            <path v-for="(el, i) in exLineY" :d="el" stroke-width="0.5px" stroke="#ff2200" fill="none" :key="i"></path>
         </g>
     </svg>
 </template>

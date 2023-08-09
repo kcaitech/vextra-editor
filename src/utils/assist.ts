@@ -222,9 +222,7 @@ export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[],
 export function get_tree(shape: Shape, init: Map<string, Shape>) {
     init.set(shape.id, shape);
     const cs = shape.childs
-    if (cs && cs.length) {
-        for (let i = 0; i < cs.length; i++)  get_tree(cs[i], init);
-    }
+    if (cs && cs.length) for (let i = 0; i < cs.length; i++) get_tree(cs[i], init);
 }
 export const collect_once = debounce(_collect, 100);
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {

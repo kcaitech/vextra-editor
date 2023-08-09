@@ -147,9 +147,7 @@ export function useController(context: Context) {
         if (e.buttons !== 1) return;
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
         if (isDragging && !editing && wheel && asyncTransfer) {
-            speed = get_speed(t_e || e, e);
-            console.log('鼠标移动速度', speed);
-            t_e = e;
+            speed = get_speed(t_e || e, e), t_e = e;
             let update_type = 0;
             const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
             if (!isOut) update_type = transform(startPosition, mousePosition);
