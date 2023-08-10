@@ -40,11 +40,11 @@ const traceEle = ref<Element>();
 const altKey = ref<boolean>(false);
 const watchedShapes = new Map();
 const tracingFrame = ref<TracingFrame>({ path: '', viewBox: '', height: 0, width: 0 });
-let shape_hover: undefined | Shape;
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection;
-    if (selection.selectedShapes.length > 0) {
+    if (selection.hoveredShape) needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
+    if (selection.selectedShapes.length) {
         for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
             const v = selection.selectedShapes[i];
             needWatchShapes.set(v.id, v)
@@ -62,17 +62,6 @@ function watchShapes() { // 监听选区相关shape的变化
             watchedShapes.set(k, v);
         }
     })
-}
-function watchedShapes_hover() {
-    const selection = props.context.selection;
-    if (selection.hoveredShape && selection.hoveredShape.id !== shape_hover?.id) {
-        shape_hover?.unwatch(shapesWatcher);
-        shape_hover = selection.hoveredShape;
-        shape_hover.watch(shapesWatcher);
-    } else {
-        shape_hover?.unwatch(shapesWatcher);
-        shape_hover = undefined;
-    }
 }
 function shapesWatcher() {
     if (props.context.workspace.shouldSelectionViewUpdate) update_by_shapes();
@@ -98,7 +87,6 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
     if (t === Selection.CHANGE_PAGE) {
         watchedShapes.forEach(v => { v.unwatch(shapesWatcher) });
         watchedShapes.clear();
-        shape_hover = undefined;
         tracing.value = false;
         controller.value = false;
     } else if (t === Selection.CHANGE_SHAPE) {
@@ -108,7 +96,7 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
         matrix.reset(props.matrix);
         createShapeTracing();
-        watchedShapes_hover();
+        watchShapes();
     }
 }
 function createShapeTracing() { // 描边  
