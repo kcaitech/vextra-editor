@@ -104,6 +104,7 @@ declare module '@vue/runtime-core' {
     Placement: typeof import('./src/components/Document/Menu/Placement.vue')['default']
     'PointsContainer.SVG': typeof import('./src/components/Document/Selection/Controller/Points/PointsContainer.SVG.vue')['default']
     'PointsContainer.SVG.Multi': typeof import('./src/components/Document/Selection/Controller/Points/PointsContainer.SVG.Multi.vue')['default']
+    'PointsContainerForStraightLine.SVG': typeof import('./src/components/Document/Selection/Controller/Points/PointsContainerForStraightLine.SVG.vue')['default']
     Popover: typeof import('./src/components/common/Popover.vue')['default']
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
     Privacypolicy: typeof import('./src/components/Login/Privacypolicy.vue')['default']

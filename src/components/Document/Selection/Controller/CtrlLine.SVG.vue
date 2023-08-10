@@ -4,8 +4,8 @@ import { Context } from "@/context";
 import { CtrlElementType } from "@/context/workspace";
 import { ClientXY } from "@/context/selection";
 import { Point } from "../SelectionView.vue";
-import { createLine, getAxle } from "@/utils/common";
-import CtrlPoint from "./Points/CtrlPointForStraightLine.vue";
+import { getAxle } from "@/utils/common";
+import PointContainerForStraightLine from "./Points/PointsContainerForStraightLine.SVG.vue"
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
@@ -103,8 +103,9 @@ watchEffect(updateControllerView)
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-        <!-- <path :d="line_path" fill="none" stroke='#865dff' stroke-width="1.5px"></path> -->
-        <path :d="line_path" fill="none" stroke='green' stroke-width="1.5px"></path>
+        <path :d="line_path" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
+        <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame"></PointContainerForStraightLine>
     </svg>
 </template>
 <style lang='scss' scoped>
