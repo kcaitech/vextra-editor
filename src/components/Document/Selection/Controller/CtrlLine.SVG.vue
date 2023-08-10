@@ -1,39 +1,47 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
-import { WorkSpace } from "@/context/workspace";
+import { CtrlElementType } from "@/context/workspace";
+import { ClientXY } from "@/context/selection";
 import { Point } from "../SelectionView.vue";
-import { ClientXY, Selection } from "@/context/selection";
+import { createLine, getAxle } from "@/utils/common";
+import CtrlPoint from "./Points/CtrlPointForStraightLine.vue";
+import { Selection } from "@/context/selection";
+import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
+import { Matrix, Shape } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 import { genRectPath } from "../common";
-import { Shape } from "@kcdesign/data";
-import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
-import BarsContainer from "./Bars/BarsContainer.SVG.Multi.vue";
-import PointsContainer from "./Points/PointsContainer.SVG.Multi.vue";
-import { getAxle } from "@/utils/common";
 interface Props {
-    context: Context
-    controllerFrame: Point[]
-    rotate: number
-    matrix: Matrix
+    context: Context,
+    controllerFrame: Point[],
+    rotate: number,
+    matrix: number[],
     shape: Shape
 }
 const props = defineProps<Props>();
-const { isDrag } = useController(props.context);
+const { isDblClick, isDrag, isEditing } = useController(props.context);
 const workspace = computed(() => props.context.workspace);
-const visible = ref<boolean>(true);
-const editing = ref<boolean>(false); // 是否进入路径编辑状态
-const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
+const visible = ref<boolean>(true);
+let viewBox = '';
+const boundrectPath = ref("");
+const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
-let viewBox = '';
+const { t } = useI18n();
+// #region 绘制控件
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
-// #region 绘制控件
+
+// #endregion
+function updater(t?: number) {
+    if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
+        editing.value = isEditing();
+    }
+}
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
@@ -59,25 +67,32 @@ function updateControllerView() {
     }, bounds);
     viewBox = genViewBox(bounds);
 }
-// #endregion
-function workspace_watcher(t: number) {
+function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
 }
-function selection_watcher(t: number) {
-    if (t == Selection.CHANGE_SHAPE) editing.value = false;
-}
 function mousedown(e: MouseEvent) {
+    const isdblc = isDblClick();
+    if (isdblc) { //双击
+        // todo
+    }
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
 function mousemove(e: MouseEvent) {
-    if (isDrag()) visible.value = false;
+    const isDragging = isDrag();
+    if (isDragging) {
+        visible.value = false; // 控件在移动过程中不可视
+    }
 }
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_SHAPE) editing.value = false;
+}
 function windowBlur() {
+    // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
@@ -86,13 +101,14 @@ onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     window.addEventListener('blur', windowBlur);
 })
+
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
-    props.context.cursor.reset();
 })
-watchEffect(updateControllerView);
+
+watchEffect(updateControllerView)
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
@@ -101,12 +117,6 @@ watchEffect(updateControllerView);
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
         <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix">
-        </ShapesStrokeContainer>
-        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :frame="props.controllerFrame">
-        </BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :axle="axle" :frame="props.controllerFrame">
-        </PointsContainer>
     </svg>
 </template>
 <style lang='scss' scoped>

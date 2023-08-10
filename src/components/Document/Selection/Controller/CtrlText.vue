@@ -24,23 +24,20 @@ const props = defineProps<{
 }>();
 
 watch(() => props.shape, (value, old) => {
-    if (old.text.length === 1) {
-        clear_null_shape(old);
-    }
+    if (old.text.length === 1) clear_null_shape(old);
     old.unwatch(update);
     value.watch(update);
     update();
 })
 const { isDblClick } = useController(props.context);
 // const update = throttle(_update, 5);
-const update = _update;
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let editing: boolean = false;
 const visible = ref<boolean>(true);
-function _update() {
+function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
@@ -52,7 +49,6 @@ function _update() {
         { x: frame.width, y: frame.height }, // right bottom
         { x: 0, y: frame.height }, // left bottom
     ];
-
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
     boundrectPath.value = genRectPath(boundrect);
     props.context.workspace.setCtrlPath(boundrectPath.value);
@@ -158,9 +154,7 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 function mouseenter() {
-    if (editing) {
-        props.context.cursor.setType('scan-0');
-    }
+    if (editing) props.context.cursor.setType('scan-0');
 }
 function mouseleave() {
     props.context.cursor.reset();
@@ -169,22 +163,14 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
 }
 function workspace_watcher(t?: number) {
-    if (t === WorkSpace.TRANSLATING) {
-        if (props.context.workspace.isTranslating) {
-            visible.value = false;
-        } else {
-            visible.value = true;
-        }
-    } else if (t === WorkSpace.INIT_EDITOR) {
-        be_editor(0);
-    }
+    if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
+    else if (t === WorkSpace.INIT_EDITOR) be_editor(0);
 }
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
     if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) editing = false;
 }
 watch(() => props.matrix, update, { deep: true })
-
 onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
@@ -192,7 +178,6 @@ onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     update();
 })
-
 onUnmounted(() => {
     const selection = props.context.selection;
     props.shape.unwatch(update);
@@ -201,12 +186,9 @@ onUnmounted(() => {
     props.context.cursor.reset();
 })
 onBeforeUnmount(() => {
-    if (props.shape.text.length === 1) {
-        clear_null_shape(props.shape);
-    }
+    if (props.shape.text.length === 1) clear_null_shape(props.shape);
 })
 </script>
-
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
@@ -225,7 +207,6 @@ onBeforeUnmount(() => {
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>
-
 <style lang='scss' scoped>
 .un-visible {
     opacity: 0;

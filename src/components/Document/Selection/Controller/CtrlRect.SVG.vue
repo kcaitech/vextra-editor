@@ -60,11 +60,10 @@ function updateControllerView() {
   viewBox = genViewBox(bounds);
 }
 // #endregion
-function updater(t?: number) {
-  updateControllerView();
+function selection_watcher(t: number) {
   if (t == Selection.CHANGE_SHAPE) editing.value = false;
 }
-function workspace_watcher(t?: number) {
+function workspace_watcher(t: number) {
   if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
 }
 function mousedown(e: MouseEvent) {
@@ -83,17 +82,17 @@ function windowBlur() {
   document.removeEventListener('mouseup', mouseup);
 }
 onMounted(() => {
-  props.context.selection.watch(updater);
+  props.context.selection.watch(selection_watcher);
   props.context.workspace.watch(workspace_watcher);
   window.addEventListener('blur', windowBlur);
 })
 onUnmounted(() => {
-  props.context.selection.unwatch(updater);
+  props.context.selection.unwatch(selection_watcher);
   props.context.workspace.unwatch(workspace_watcher);
   window.removeEventListener('blur', windowBlur);
   props.context.cursor.reset();
 })
-watchEffect(() => { updater() });
+watchEffect(updateControllerView);
 </script>
 <template>
   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
