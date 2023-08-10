@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { Shape, ShapeType } from '@kcdesign/data';
+import { Matrix, Shape, ShapeType } from '@kcdesign/data';
 import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget } from '@/utils/common';
@@ -20,35 +20,26 @@ const props = defineProps<Props>();
 const selectedShapes: Map<string, Shape> = new Map();
 
 function select() {
-    const pageMatirx = props.context.workspace.matrix;
+    const pageMatirx = new Matrix(props.context.workspace.matrix.inverse);
     const page = props.context.selection.selectedPage;
     const selection = props.context.selection;
     if (page) {
         const { top, left, width, height } = props.selectorFrame;
-        const p1: XY = pageMatirx.inverseCoord(left, top); // lt
-        const p2: XY = pageMatirx.inverseCoord(left + width, top); // rt
-        const p3: XY = pageMatirx.inverseCoord(left + width, top + height); // rb
-        const p4: XY = pageMatirx.inverseCoord(left, top + height); //lb
+        const p1: XY = pageMatirx.computeCoord2(left, top); // lt
+        const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
+        const p3: XY = pageMatirx.computeCoord2(left + width, top + height); // rb
+        const p4: XY = pageMatirx.computeCoord2(left, top + height); //lb
         const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
         if (selectedShapes.size) remove(selectedShapes, ps); // 先剔除已经不再框选区的图形
         finder(page.childs, ps); // 再寻找框选区外的图形
         if (selectedShapes.size !== selection.selectedShapes.length) selection.rangeSelectShape(Array.from(selectedShapes.values()));
     }
-
 }
 // 加入
 function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
-    let ids = 0;
-    while (ids < childs.length) {
+    for (let ids = 0, len = childs.length; ids < len; ids++) {
         const shape = childs[ids];
-        if (selectedShapes.get(shape.id)) {
-            ids++;
-            continue;
-        }
-        if (shape.isLocked || !shape.isVisible) {
-            ids++;
-            continue;
-        }
+        if (selectedShapes.get(shape.id) || shape.isLocked || !shape.isVisible) continue;
         const m = childs[ids].matrix2Root();
         const { width, height } = shape.frame;
         const ps: XY[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }, { x: 0, y: 0 }];
@@ -68,7 +59,6 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             if (isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) selectedShapes.set(shape.id, shape);
         }
         else if (isTarget(Points, ps, props.selectorFrame.includes)) selectedShapes.set(shape.id, shape);
-        ids++;
     }
 }
 // 剔除
