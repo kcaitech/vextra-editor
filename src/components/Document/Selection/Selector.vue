@@ -50,14 +50,12 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             continue;
         }
         const m = childs[ids].matrix2Root();
-        const { width: w, height: h } = shape.frame;
-        const ps: XY[] = [
-            { x: 0, y: 0 },
-            { x: w, y: 0 },
-            { x: w, y: h },
-            { x: 0, y: h },
-            { x: 0, y: 0 },
-        ].map(p => m.computeCoord(p.x, p.y));
+        const { width, height } = shape.frame;
+        const ps: XY[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }, { x: 0, y: 0 }];
+        for (let i = 0; i < 5; i++) {
+            const p = ps[i];
+            ps[i] = m.computeCoord2(p.x, p.y);
+        }
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
             if (isTarget(Points, ps, true)) {
                 selectedShapes.set(shape.id, shape);
@@ -77,14 +75,12 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
 function remove(childs: Map<string, Shape>, Points: [XY, XY, XY, XY, XY]) {
     childs.forEach((value, key) => {
         const m = value.matrix2Root();
-        const { width: w, height: h } = value.frame;
-        const ps: XY[] = [
-            { x: 0, y: 0 },
-            { x: w, y: 0 },
-            { x: w, y: h },
-            { x: 0, y: h },
-            { x: 0, y: 0 },
-        ].map(p => m.computeCoord(p.x, p.y));
+        const { width, height } = value.frame;
+        const ps: XY[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }, { x: 0, y: 0 }];
+        for (let i = 0; i < 5; i++) {
+            const p = ps[i];
+            ps[i] = m.computeCoord2(p.x, p.y);
+        }
         if (value.type === ShapeType.Artboard) {
             if (!isTarget(Points, ps, true)) selectedShapes.delete(key);
         } else if (value.type === ShapeType.Line) {
