@@ -10,6 +10,7 @@ import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
 import { Comment } from "@/context/comment";
+import { WorkSpace } from "@/context/workspace";
 const { t } = useI18n()
 const props = defineProps<{
     commentItem: any,
@@ -124,7 +125,7 @@ const onReply = () => {
         
         if (transX || transY) {
             workspace.matrix.trans(transX, transY);
-            workspace.matrixTransformation();
+            workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }else {
         props.context.comment.commentMount(false)

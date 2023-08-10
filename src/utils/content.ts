@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
-import { Perm } from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipaboard";
@@ -317,13 +317,13 @@ function adapt_page(context: Context, initPage = false) {
       }
     }
     matrix.trans(root.width / 2, root.height / 2);
-    context.workspace.matrixTransformation();
+    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
   } else {
     const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     if (del.x || del.y) {
       matrix.trans(del.x, del.y);
-      context.workspace.matrixTransformation();
+      context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
   }
   return matrix;
@@ -337,7 +337,7 @@ function page_scale(context: Context, scale: number) {
   matrix.trans(-offsetX, -offsetY);
   matrix.scale(scale / matrix.m00);
   matrix.trans(offsetX, offsetY);
-  workspace.matrixTransformation();
+  workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 /**
  * 右键选择图形的规则
@@ -471,10 +471,10 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
   } else {
     if (permIsEdit(context)) {
       // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
-      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
+      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     } else {
       // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
-      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
+      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     }
   }
   return contextMenuItems;
@@ -517,6 +517,29 @@ export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
   return true
 }
 
+function skipUserSelectShapes(context: Context, shapes: Shape[]) {
+  if (!shapes.length) return new Matrix();
+  const matrix = context.workspace.matrix;
+  const points: ClientXY[] = [];
+  for (let i = 0; i < shapes.length; i++) {
+    const item = shapes[i];
+    const frame = item.frame;
+    const m = item.matrix2Root();
+    m.multiAtLeft(matrix);
+    points.push(...[[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => m.computeCoord(p[0], p[1])));
+  }
+  const box = XYsBounding(points);
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  const root = context.workspace.root;
+  const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+  const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+  if (del.x || del.y) {
+    matrix.trans(del.x, del.y);
+    context.workspace.matrixTransformation();
+  }
+}
+
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,
@@ -524,5 +547,5 @@ export {
   init_shape, init_insert_shape, init_insert_textshape,
   insert_imgs, drop, adapt_page, page_scale, right_select,
   list2Tree, flattenShapes,
-  get_menu_items, color2string, selectShapes
+  get_menu_items, color2string, selectShapes, skipUserSelectShapes
 };

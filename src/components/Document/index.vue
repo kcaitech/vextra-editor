@@ -27,6 +27,7 @@ import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
 import { DocSelectionOp } from "@/context/communication/doc_selection_op";
 import { throttle } from "@/utils/timing_util";
+import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op"
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -285,6 +286,8 @@ const hideNotification = (type?: number) => {
     }
 }
 const showNotification = (type?: number) => {
+    insertNetworkInfo('networkError', false, network_error);
+    window.removeEventListener('beforeunload', onBeforeUnload);
     showHint.value = true;
     startCountdown(type);
 }
@@ -365,6 +368,7 @@ const getDocumentInfo = async () => {
             await context.communication.docResourceUpload.start(token, docId);
             await context.communication.docCommentOp.start(token, docId);
             await context.communication.docSelectionOp.start(token, docId, context);
+            context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
         }
         getUserInfo()
     } catch (err) {
@@ -403,7 +407,8 @@ async function upload() {
     }
     context.communication.docResourceUpload.start(token, doc_id);
     context.communication.docCommentOp.start(token, doc_id);
-    context.communication.docSelectionOp.start(token, doc_id, context);
+    await context.communication.docSelectionOp.start(token, doc_id, context);
+    context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
     context.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
 let timer: any = null;
@@ -421,7 +426,7 @@ function init_doc() {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
-            getUserInfo()
+            getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             upload();
@@ -442,35 +447,35 @@ function workspaceWatcher(t: number) {
     }
 }
 
-const autosave = t('message.autosave')
-const link_success = t('message.link_success')
-const network_anomaly = t('message.network_anomaly')
-const network_error = t('message.network_error')
+const autosave = t('message.autosave');
+const link_success = t('message.link_success');
+const network_anomaly = t('message.network_anomaly');
+const network_error = t('message.network_error');
 
 // 保存文档成功message信息
 const autoSaveSuccess = () => {
-    insertNetworkInfo('saveSuccess', true, autosave)
+    insertNetworkInfo('saveSuccess', true, autosave);
     const timer = setTimeout(() => {
-        insertNetworkInfo('saveSuccess', false, autosave)
+        insertNetworkInfo('saveSuccess', false, autosave);
         clearTimeout(timer)
     }, 3000)
 }
 //网络连接成功message信息
 const networkLinkSuccess = () => {
-    insertNetworkInfo('netError', false, network_anomaly)
-    insertNetworkInfo('networkSuccess', true, link_success)
+    insertNetworkInfo('netError', false, network_anomaly);
+    insertNetworkInfo('networkSuccess', true, link_success);
     const timer = setTimeout(() => {
-        insertNetworkInfo('networkSuccess', false, link_success)
+        insertNetworkInfo('networkSuccess', false, link_success);
         clearTimeout(timer)
     }, 3000)
 }
 // 网络断开连接提示信息
 const networkLinkError = () => {
-    insertNetworkInfo('networkSuccess', false, link_success)
-    insertNetworkInfo('netError', true, network_anomaly)
+    insertNetworkInfo('networkSuccess', false, link_success);
+    insertNetworkInfo('netError', true, network_anomaly);
     const timer = setTimeout(() => {
-        insertNetworkInfo('netError', false, network_anomaly)
-        clearTimeout(timer)
+        insertNetworkInfo('netError', false, network_anomaly);
+        clearTimeout(timer);
     }, 3000)
 }
 
@@ -480,16 +485,16 @@ const refreshDoc = () => {
 }
 
 const hasPendingSync = () => {
-    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr){
-        insertNetworkInfo('networkError', true, network_error)
+    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr ){
+        insertNetworkInfo('networkError', true, network_error);
         netErr = setInterval(() => {
             if(context && !context.communication.docOp.hasPendingSyncCmd()) {
-                insertNetworkInfo('networkError', false, network_error)
-                autoSaveSuccess()
-                clearInterval(netErr)
-                netErr = null
+                insertNetworkInfo('networkError', false, network_error);
+                autoSaveSuccess();
+                clearInterval(netErr);
+                netErr = null;
             }
-        },1000)
+        },1000);
     }
 }
 // 检测是否有未上传的数据
@@ -553,6 +558,20 @@ function closeNetMsg() {
     insertNetworkInfo('networkError', false, network_error);
     insertNetworkInfo('netError', false, network_anomaly);
     insertNetworkInfo('networkSuccess', false, link_success);
+}
+//协作人员操作文档执行
+const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
+    const data = docCommentOpData.data
+    if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
+        const addUset = context!.teamwork.getUserSelection
+        if(docCommentOpData.type === DocSelectionOpType.Exit) {
+            const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+            context?.teamwork.userSelectionExit(index)
+        }else if (docCommentOpData.type === DocSelectionOpType.Update) {
+            const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+            context?.teamwork.userSelectionUpdate(data, index)
+        }
+    }
 }
 
 onMounted(() => {

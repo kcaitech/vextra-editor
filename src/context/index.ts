@@ -14,6 +14,7 @@ import { Communication } from "@/context/communication/communication";
 import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
 import { Asssit } from "./assist";
+import { TeamWork } from "./teamwork";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -58,6 +59,7 @@ export class Context extends Watchable(Object) {
     private m_communication: Communication;
     private m_escstack: EscStack;
     private m_assist: Asssit;
+    private m_teamwork: TeamWork;
 
     constructor(data: Document, repo: CoopRepository) {
         super();
@@ -77,6 +79,7 @@ export class Context extends Watchable(Object) {
         this.m_cursor = new Cursor(this);
         this.m_escstack = new EscStack();
         this.m_assist = new Asssit(this);
+        this.m_teamwork = new TeamWork();
         const pagelist = data.pagesList.slice(0);
         this.m_taskMgr.add(new class implements Task { // page auto loader
             isValid(): boolean {
@@ -175,5 +178,8 @@ export class Context extends Watchable(Object) {
     }
     get assist() {
         return this.m_assist;
+    }
+    get teamwork() {
+        return this.m_teamwork;
     }
 }

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, computed, reactive, ref, nextTick } from "vue";
+import { watchEffect, onMounted, onUnmounted, computed, reactive } from "vue";
 import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";

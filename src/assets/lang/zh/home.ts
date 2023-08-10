@@ -5,6 +5,7 @@ export const product = {
 }
 
 export const system = {
+    incorrect_input: '输入有误！',
     'illegal_input': '输入不合法！',
     select: '请选择！',
     space: '...',
@@ -137,7 +138,9 @@ export const home = {
     'align_v_c': '上下居中对齐',
     'align_bottom': '底对齐',
     'distribute_h': '左右等距分布',
-    'distribute_v': '上下等距分布'
+    'distribute_v': '上下等距分布',
+    people_are_visiting: '正在访问的人:',
+    permissions: '权限:'
 }
 
 export const search = {
@@ -304,7 +307,7 @@ export const message = {
     cancel: '取消',
     exit_document: '退出文档',
     back_home: '返回首页',
-    unuploaded_msg: '文档存在未上传资源，退出可能会造成丢失，是否退出?'
+    unuploaded_msg: '文档存在未上传资源，退出会造成内容丢失，是否退出?'
 }
 export const bool = {
     union: '联集',

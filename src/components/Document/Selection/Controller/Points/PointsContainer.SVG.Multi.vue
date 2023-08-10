@@ -7,6 +7,7 @@ import { Point } from '../../SelectionView.vue';
 import { update_dot } from './common';
 import { getAngle, getHorizontalAngle } from '@/utils/common';
 import { Action } from '@/context/tool';
+import { WorkSpace } from '@/context/workspace';
 interface Props {
     matrix: number[]
     context: Context
@@ -34,8 +35,7 @@ function update() {
     // const s = Date.now();
     matrix.reset(props.matrix);
     update_dot_path();
-    // const e = Date.now();
-    // console.log('绘制控点用时(ms):', e - s);
+    // console.log('绘制控点用时(ms):', Date.now() - s);
 }
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
@@ -78,14 +78,10 @@ function point_mousemove(event: MouseEvent) {
             props.context.cursor.setType(`rotate-${getHorizontalAngle(props.axle, { x: mx, y: my })}`, true);
         } else {
             const action = props.context.tool.action;
-            if (event.shiftKey || action === Action.AutoK) {
-                er_scale(asyncMultiAction, sx, sy, mx, my);
-            } else {
-                irregular_scale(asyncMultiAction, sx, sy, mx, my);
-            }
+            (event.shiftKey || action === Action.AutoK) ? er_scale(asyncMultiAction, sx, sy, mx, my) : irregular_scale(asyncMultiAction, sx, sy, mx, my);
         }
         startPosition = { x: mx, y: my };
-        workspace.selectionViewUpdate();
+        workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
         isDragging = true;
         const shapes = props.context.selection.selectedShapes;
@@ -281,7 +277,6 @@ function point_mouseleave() {
 function frame_watcher() { if (!props.context.workspace.shouldSelectionViewUpdate) passive_update() }
 watch(() => props.frame, frame_watcher);
 watch(() => props.matrix, update);
-
 onMounted(() => {
     window.addEventListener('blur', window_blur);
     update();

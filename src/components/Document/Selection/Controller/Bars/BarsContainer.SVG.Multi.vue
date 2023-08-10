@@ -5,6 +5,7 @@ import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { Action } from '@/context/tool';
+import { WorkSpace } from '@/context/workspace';
 interface Props {
     matrix: number[]
     context: Context
@@ -32,7 +33,7 @@ function update() {
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     bars.length = 0;
-    let apex = props.frame.map(p => { return { x: p.x, y: p.y } });
+    const apex = props.frame.map(p => { return { x: p.x, y: p.y } });
     apex.push(apex[0]);
     for (let i = 0; i < apex.length - 1; i++) {
         const p = get_bar_path(apex[i], apex[i + 1]);
@@ -42,7 +43,7 @@ function update_dot_path() {
 function passive_update() {
     matrix.reset(props.matrix);
     bars.length = 0;
-    let apex = props.frame.map(p => { return { x: p.x, y: p.y } });
+    const apex = props.frame.map(p => { return { x: p.x, y: p.y } });
     apex.push(apex[0]);
     for (let i = 0; i < apex.length - 1; i++) {
         const p = get_bar_path(apex[i], apex[i + 1]);
@@ -73,19 +74,14 @@ function bar_mousemove(event: MouseEvent) {
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = { x: event.clientX - root.x, y: event.clientY - root.y };
     if (isDragging && asyncMultiAction) {
-        const action = props.context.tool.action;
-        if (event.shiftKey || action === Action.AutoK) {
-            er_scale(asyncMultiAction, sx, sy, mx, my);
-        } else {
-            irregular_scale(asyncMultiAction, sx, sy, mx, my);
-        }
+        (event.shiftKey || props.context.tool.action === Action.AutoK) ? er_scale(asyncMultiAction, sx, sy, mx, my) : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+        workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
         startPosition = { x: mx, y: my };
-        workspace.selectionViewUpdate();
-
     } else {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
+            const selection = props.context.selection
             isDragging = true;
-            asyncMultiAction = props.context.editor.controller().asyncMultiEditor(props.context.selection.selectedShapes, props.context.selection.selectedPage!);
+            asyncMultiAction = props.context.editor.controller().asyncMultiEditor(selection.selectedShapes, selection.selectedPage!);
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type);
             workspace.scaling(true);
@@ -185,17 +181,17 @@ function irregular_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: num
 }
 function bar_mouseup(event: MouseEvent) {
     if (event.button === 0) {
+        const workspace = props.context.workspace;
         if (isDragging) {
             if (asyncMultiAction) {
                 asyncMultiAction.close();
                 asyncMultiAction = undefined;
             }
+            workspace.setSelectionViewUpdater(true);
             isDragging = false;
-            props.context.workspace.setSelectionViewUpdater(true);
         }
         document.removeEventListener('mousemove', bar_mousemove);
         document.removeEventListener('mouseup', bar_mouseup);
-        const workspace = props.context.workspace;
         workspace.scaling(false);
         workspace.setCtrl('page');
         props.context.cursor.reset();
@@ -212,7 +208,10 @@ function bar_mouseleave() {
 }
 function window_blur() {
     if (isDragging) isDragging = false;
-    if (asyncMultiAction) asyncMultiAction = undefined;
+    if (asyncMultiAction) {
+        asyncMultiAction.close();
+        asyncMultiAction = undefined;
+    }
     const workspace = props.context.workspace;
     workspace.scaling(false);
     workspace.setCtrl('page');

@@ -77,18 +77,19 @@ var configureWebpack = (config) => {
     )
 
     const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication-worker.js')
-    const communicationWorkerTargetFilename = `communication-worker.${
-        crypto.createHash('md5')
+    const communicationWorkerTargetFilename = `communication-worker.${crypto.createHash('md5')
             .update(fs.readFileSync(communicationWorkerSourcePath))
             .digest('hex')
             .slice(0, 8)
-    }.js`
+        }.js`
     config.plugins = [
-        AutoImport({resolvers: [ElementPlusResolver()]}),
-        Components({resolvers: [ElementPlusResolver()]}),
-        new CopyWebpackPlugin({patterns: [
-            { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
-        ]}),
+        AutoImport({ resolvers: [ElementPlusResolver()] }),
+        Components({ resolvers: [ElementPlusResolver()] }),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
+            ]
+        }),
         ...config.plugins,
         new CopyWebpackPlugin({
             patterns: [{
@@ -112,7 +113,8 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
+    // publicPath: './',
+    publicPath: '/tjs',
     configureWebpack,
 
     pluginOptions: {

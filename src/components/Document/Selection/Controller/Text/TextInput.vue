@@ -50,7 +50,6 @@ function _updateInputPos() {
     else if (end >= 0) {
         index = end;
     }
-
     const text = props.shape.text;
     const locatepoints = text.locateCursor(index, cursorAtBefore);
     if (!locatepoints) return;
@@ -60,12 +59,11 @@ function _updateInputPos() {
 
     const x = cursor[0].x;
     let y = cursor[0].y;
-
     if (cursor[1].y > y) y = cursor[1].y;
     y -= 10; // input 框高度
-
-    inputpos.value.left = x;
-    inputpos.value.top = y;
+    const root = props.context.workspace.root;
+    inputpos.value.left = x + root.x;
+    inputpos.value.top = y + root.y;
     inputel.value.focus();
 }
 
@@ -191,7 +189,6 @@ function onKeyPress(e: KeyboardEvent) {
     width: 1px;
     z-index: -1;
     position: fixed;
-    width: 100%;
     contain: strict;
 }
 </style>
