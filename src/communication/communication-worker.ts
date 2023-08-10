@@ -23,9 +23,7 @@ function sendNetworkStatusToClient(status: NetworkStatusType) {
             cmd_id: uuid(),
             data: {
                 data_type: DataType.Text,
-                data: {
-                    status: status,
-                },
+                data: status,
             }
         })
     }

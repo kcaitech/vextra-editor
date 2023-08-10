@@ -1,4 +1,4 @@
-import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority } from "@kcdesign/data";
+import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority, TableShape, TableEditor, Text } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, TextShape } from "@kcdesign/data";
@@ -126,12 +126,15 @@ export class Context extends Watchable(Object) {
         return this.editor.editor4Shape(shape);
     }
 
-    editor4TextShape(shape: TextShape): TextShapeEditor {
+    editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }
         this.m_textEditor = this.editor.editor4TextShape(shape);
         return this.m_textEditor;
+    }
+    editor4Table(shape: TableShape): TableEditor {
+        return this.editor.editor4Table(shape);
     }
 
     get data() {

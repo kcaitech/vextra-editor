@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2 } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
@@ -350,7 +350,7 @@ const RADIUS_SETTING = [
     ShapeType.Image, ShapeType.Group, 
     ShapeType.Path, ShapeType.Path2
 ];
-const MULTI_RADIUS = [ ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
+const MULTI_RADIUS = [ ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Artboard, ShapeType.Image];
 const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
 function layout() {
     const selected = props.context.selection.selectedShapes;

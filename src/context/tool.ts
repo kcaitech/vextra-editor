@@ -13,7 +13,7 @@ export enum Action {
     AddText = 'add-text',
     AddComment = 'add-comment',
     AddImage = 'add-image',
-    AddTable = 'table'
+    AddTable = 'add-table'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -47,7 +47,8 @@ const A2R = new Map([
     [Action.AddLine, ShapeType.Line],
     [Action.AddFrame, ShapeType.Artboard],
     [Action.AddText, ShapeType.Text],
-    [Action.AddImage, ShapeType.Image]
+    [Action.AddImage, ShapeType.Image],
+    [Action.AddTable, ShapeType.Table]
 ]);
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型

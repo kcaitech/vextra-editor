@@ -1,13 +1,13 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { TextShape } from '@kcdesign/data';
+import { Shape, Text } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { genRectPath, throttle } from '../../common';
 import { WorkSpace } from '@/context/workspace';
 const props = defineProps<{
-    shape: TextShape,
+    shape: Shape & { text: Text },
     matrix: number[],
     context: Context
 }>();
@@ -21,7 +21,7 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 
 const update = throttle(_update, 5);
 function _update() {
-    const selection = props.context.selection;
+    const selection = props.context.selection.getTextSelection(props.shape);
     // const m2p = props.shape.matrix2Root();
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
