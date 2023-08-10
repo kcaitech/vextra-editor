@@ -1,4 +1,4 @@
-import { Watchable, Cmd, cmdClone, cmdTransform, OpType } from "@kcdesign/data"
+import { Watchable, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder } from "@kcdesign/data"
 import { MyTextCmdSelection } from "@kcdesign/data"
 import {
     DocSelectionOp as _DocSelectionOp,
@@ -21,16 +21,29 @@ export class DocSelectionOp extends Watchable(Object) {
     private selectionWatcherForOp = this._selectionWatcherForOp.bind(this)
     private textSelectionTransform = this._textSelectionTransform.bind(this)
 
+    // 上一个变换后的文本选区数据
+    private previousTextSelectionAfterTransform: {
+        cursorStart: number,
+        cursorEnd: number,
+        cursorAtBefore: boolean,
+    } = { cursorStart: -1, cursorEnd: -1, cursorAtBefore: false }
+
     private _selectionWatcherForOp(type: number) {
         if (!this.context) return;
         if (![Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE, Selection.CHANGE_SHAPE_HOVER, Selection.CHANGE_TEXT].includes(type)) return;
         if (!this.docSelectionOpUpdate) this.docSelectionOpUpdate = throttle(this.update, 1000).bind(this);
+        if (type === Selection.CHANGE_TEXT
+            && this.context.selection.cursorStart === this.previousTextSelectionAfterTransform.cursorStart
+            && this.context.selection.cursorEnd === this.previousTextSelectionAfterTransform.cursorEnd
+            && this.context.selection.cursorAtBefore === this.previousTextSelectionAfterTransform.cursorAtBefore
+        ) return;
         this.docSelectionOpUpdate({
             select_page_id: this.context.selection.selectedPage?.id ?? "",
             select_shape_id_list: this.context.selection.selectedShapes.map((shape) => shape.id),
             hover_shape_id: this.context.selection.hoveredShape?.id,
             cursor_start: this.context.selection.cursorStart,
             cursor_end: this.context.selection.cursorEnd,
+            cursor_at_before: this.context.selection.cursorAtBefore,
             previous_cmd_id: this.context.communication.docOp.lastServerCmdId ?? this.context.data.lastCmdId,
         }).catch(err => {})
     }
@@ -46,9 +59,12 @@ export class DocSelectionOp extends Watchable(Object) {
             this.context.selection.selectedPage?.id ?? "",
             this.context.selection.selectedShapes[0].id,
             this.context.selection.cursorStart,
-            this.context.selection.cursorEnd,
+            this.context.selection.cursorEnd - this.context.selection.cursorStart,
         )
-        cmdTransform(cmdClone(cmd), textSelectionCmd)
+        const originalCmd = cmdClone(cmd)
+        setCmdServerIdAndOpsOrder(originalCmd, undefined, Number.MAX_VALUE - 1)
+        setCmdServerIdAndOpsOrder(textSelectionCmd, undefined, Number.MAX_VALUE)
+        cmdTransform(originalCmd, textSelectionCmd)
         const op = textSelectionCmd.ops?.[0]
         let cursorStart: number, cursorEnd: number
         if (op?.type !== OpType.ArraySelection) {
@@ -58,14 +74,9 @@ export class DocSelectionOp extends Watchable(Object) {
             cursorEnd = op.start + op.length
         }
         if (cursorStart === originalCursorStart && cursorEnd === originalCursorEnd) return;
-        this.docSelectionOpUpdate({
-            select_page_id: this.context.selection.selectedPage?.id ?? "",
-            select_shape_id_list: this.context.selection.selectedShapes.map((shape) => shape.id),
-            hover_shape_id: this.context.selection.hoveredShape?.id,
-            cursor_start: cursorStart,
-            cursor_end: cursorEnd,
-            previous_cmd_id: this.context.communication.docOp.lastServerCmdId ?? this.context.data.lastCmdId,
-        }).catch(err => {})
+        this.previousTextSelectionAfterTransform = { cursorStart: cursorStart, cursorEnd: cursorEnd, cursorAtBefore: this.context.selection.cursorAtBefore }
+        if (cursorStart === cursorEnd) this.context.selection.setCursor(cursorStart, this.context.selection.cursorAtBefore);
+        else this.context.selection.selectText(cursorStart, cursorEnd, this.context.selection.cursorAtBefore);
     }
 
     public async start(token: string, documentId: string, context: Context): Promise<boolean> {
