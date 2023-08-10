@@ -153,6 +153,7 @@ declare module '@vue/runtime-core' {
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
     Table: typeof import('./src/components/Document/Toolbar/Buttons/Table/index.vue')['default']
     Tablelist: typeof import('./src/components/AppHome/tablelist.vue')['default']
+    TableStyle: typeof import('./src/components/Document/Attribute/Table/TableStyle.vue')['default']
     Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']
     TextAdvancedSettings: typeof import('./src/components/Document/Attribute/Text/TextAdvancedSettings.vue')['default']
     TextInput: typeof import('./src/components/Document/Selection/Controller/Text/TextInput.vue')['default']

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { message } from "@/utils/message";
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+
 const grid = ref(Array.from({ length: 10 }, () => Array(10).fill(false)));
 const highlightedRow = ref(-1);
 const highlightedCol = ref(-1);
@@ -19,9 +23,17 @@ function isHighlighted(row: any, col: any) {
 }
 
 const createTable = (row?: number, col?: number) => {
-    console.log(row,'行', col,'列');
-    
+    if(!row || !col) return;
+    const r = Number(row).toFixed(0).trim();
+    const c = Number(col).toFixed(0).trim();
+    const rows = Number(r);
+    const cols = Number(c);
+    if(isNaN(rows) || isNaN(cols)) return message('danger', t('system.illegal_input'));
+    if(rows && rows > 0 && rows <= 50 && cols && cols > 0 && cols <= 50) {
+        console.log(rows,'行', cols,'列');
+    }else return message('danger', t('system.illegal_input'));
 }
+
 </script>
 
 <template>
@@ -63,15 +75,15 @@ const createTable = (row?: number, col?: number) => {
         <div class="table-input">
             <div class="row">
                 <span>行数:</span>
-                <input type="text" v-model="inputRow">
+                <input type="text" v-model="inputRow" placeholder="1~50">
             </div>
             <div class="col">
                 <span>列数:</span>
-                <input type="text" v-model="inputCol">
+                <input type="text" v-model="inputCol" placeholder="1~50">
             </div>
         </div>
         <div class="table-button">
-            <button @click="createTable(inputRow, inputCol)">确定</button>
+            <button @click="createTable(inputRow, inputCol)" :style="{opacity: inputRow && inputCol ? '1' : '.4'}">确定</button>
         </div>
     </div>
 </template>
@@ -143,9 +155,14 @@ const createTable = (row?: number, col?: number) => {
                 border-radius: 4px;
                 height: 20px;
                 border: 1px solid rgba(0, 0, 0, 0.3);
+                font-size: 10px;
+                padding-left: 5px;
             }
             input:focus {
                 outline: none;
+            }
+            input::placeholder {
+                color: rgba(0, 0, 0, 0.3);
             }
         }
         .col {
@@ -157,9 +174,14 @@ const createTable = (row?: number, col?: number) => {
                 border-radius: 4px;
                 height: 20px;
                 border: 1px solid rgba(0, 0, 0, 0.3);
+                font-size: 10px;
+                padding-left: 5px;
             }
             input:focus {
                 outline: none;
+            }
+            input::placeholder {
+                color: rgba(0, 0, 0, 0.3);
             }
         }
     }

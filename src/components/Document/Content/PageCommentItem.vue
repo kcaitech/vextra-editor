@@ -93,7 +93,8 @@ const showAboutMe = () => {
 const hoverComment = () => {
     if (!showScale.value) {
         props.context.comment.hoverComment(false);
-        commentScale.value = 1
+        if(props.context.workspace.isTranslating) return;
+        commentScale.value = 1;
         props.context.comment.hoverComment(true);
     }
     markScale.value = 1.1

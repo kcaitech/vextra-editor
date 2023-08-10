@@ -5,6 +5,7 @@ export const product = {
 }
 
 export const system = {
+    incorrect_input: '输入有误！',
     'illegal_input': '输入不合法！',
     select: '请选择！',
     space: '...',
