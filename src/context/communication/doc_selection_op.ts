@@ -21,7 +21,7 @@ export class DocSelectionOp extends Watchable(Object) {
     private selectionWatcherForOp = this._selectionWatcherForOp.bind(this)
     private textSelectionTransform = this._textSelectionTransform.bind(this)
 
-    // 上一个变换后的文本选区数据
+    // 上一次变换后的文本选区数据
     private previousTextSelectionAfterTransform: {
         cursorStart: number,
         cursorEnd: number,
