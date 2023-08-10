@@ -128,7 +128,7 @@ function cursor_tracking(p0: { x: number, y: number }, p1: { x: number, y: numbe
     }
     if (dx || dy) {
         matrix.trans(dx, dy);
-        props.context.workspace.matrixTransformation();
+        props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
 </script>

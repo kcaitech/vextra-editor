@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
-import { Perm } from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipaboard";
@@ -317,13 +317,13 @@ function adapt_page(context: Context, initPage = false) {
       }
     }
     matrix.trans(root.width / 2, root.height / 2);
-    context.workspace.matrixTransformation();
+    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
   } else {
     const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     if (del.x || del.y) {
       matrix.trans(del.x, del.y);
-      context.workspace.matrixTransformation();
+      context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
   }
   return matrix;
@@ -337,7 +337,7 @@ function page_scale(context: Context, scale: number) {
   matrix.trans(-offsetX, -offsetY);
   matrix.scale(scale / matrix.m00);
   matrix.trans(offsetX, offsetY);
-  workspace.matrixTransformation();
+  workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 /**
  * 右键选择图形的规则
