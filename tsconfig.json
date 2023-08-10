@@ -7,6 +7,7 @@
     "importHelpers": true,
     "moduleResolution": "node",
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -22,14 +23,16 @@
         "src/*"
       ],
       "@pal/*": [
-        "src/PAL/browser/*", "src/PAL/nodejs/*"
+        "src/PAL/browser/*",
+        "src/PAL/nodejs/*"
       ]
     },
     "lib": [
       "esnext",
       "dom",
       "dom.iterable",
-      "scripthost"
+      "scripthost",
+      "webworker"
     ]
   },
   "include": [
@@ -37,9 +40,11 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.tsx" ],
+    "tests/**/*.tsx",
+    "src/utils/dom-to-image.js"
+  ],
   "exclude": [
     "node_modules",
-    "src/**/*.js",
+    "src/**/*.js"
   ]
 }

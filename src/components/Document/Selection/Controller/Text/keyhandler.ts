@@ -1,0 +1,278 @@
+import { Context } from "@/context";
+import { TextShape } from "@kcdesign/data";
+import { TextShapeEditor } from "@kcdesign/data";
+import { paster_inner_shape } from "@/utils/clipaboard";
+
+const keydelays = 150;
+function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): T {
+    let timerId: number = 0;
+    return function (...args: any[]) {
+        const now = Date.now();
+        if (timerId + delay < now) {
+            func(...args);
+            timerId = now;
+        }
+    } as T;
+}
+
+const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    e.preventDefault();
+    const selection = context.selection;
+    let index = selection.cursorStart;
+    let end = selection.cursorEnd;
+    if (index > end) {
+        const t = index;
+        index = end;
+        end = t;
+    }
+
+    const count = editor.insertTextForNewLine(index, end - index);
+    if (count !== 0) {
+        selection.setCursor(index + count, false);
+    }
+}, keydelays);
+
+const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    e.preventDefault();
+    const selection = context.selection;
+    let start = selection.cursorStart;
+    let end = selection.cursorEnd;
+    if (e.shiftKey) {
+        if (start === end - 1) {
+            const span = shape.text.spanAt(start);
+            if (span?.placeholder && span.length === 1) start--;
+            selection.setCursor(start, false);
+        } else {
+            selection.selectText(start, end - 1);
+        }
+    } else {
+        const span = shape.text.spanAt(end - 1);
+        if (span?.placeholder && span.length === 1) {
+            if (end - 1 <= 0) end = 2;
+            else end--;
+        }
+        selection.setCursor(end - 1, false);
+    }
+}, keydelays);
+const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    e.preventDefault();
+    const selection = context.selection;
+    let start = selection.cursorStart;
+    let end = selection.cursorEnd;
+    if (e.shiftKey) {
+        if (start === end + 1) {
+            const span = shape.text.spanAt(start);
+            if (span?.placeholder && span.length === 1) start++;
+            selection.setCursor(start, false);
+        } else {
+            selection.selectText(start, end + 1);
+        }
+    } else {
+        const span = shape.text.spanAt(end + 1);
+        if (span?.placeholder && span.length === 1) end++;
+        selection.setCursor(end + 1, false);
+    }
+}, keydelays);
+const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    e.preventDefault();
+    const text = shape.text;
+    const selection = context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    const cursorAtBefore = start === end && selection.cursorAtBefore;
+    const cursor = text.locateCursor(end, cursorAtBefore);
+    if (!cursor || cursor.cursorPoints.length !== 2) return;
+    const x = cursor.cursorPoints[0].x;
+    const y = cursor.preLineY + (cursor.preLineHeight) / 2;
+    const locate = text.locateText(x, y);
+    if (e.shiftKey) {
+        selection.selectText(start, locate.index, locate.before);
+    }
+    else {
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
+    }
+}, keydelays);
+const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    e.preventDefault();
+    const text = shape.text;
+    const selection = context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    const cursorAtBefore = start === end && selection.cursorAtBefore;
+    const cursor = text.locateCursor(end, cursorAtBefore);
+    if (!cursor || cursor.cursorPoints.length !== 2) return;
+    const x = cursor.cursorPoints[0].x;
+    const y = cursor.nextLineY + (cursor.nextLineHeight) / 2;
+    const locate = text.locateText(x, y);
+    if (e.shiftKey) {
+        selection.selectText(start, locate.index, locate.before);
+    }
+    else {
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
+    }
+}, keydelays);
+
+const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    e.preventDefault();
+    const selection = context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    if (start === end) {
+        if (start === 0) {
+            const firstChar = shape.text.charAt(0);
+            if (firstChar === '\n') {
+                if (editor.deleteText(start, 1)) {
+                    const index = start;
+                    const preChar = shape.text.charAt(index - 1);
+                    selection.setCursor(index, preChar !== '\n');
+                }
+            }
+        }
+        else if (editor.deleteText(start - 1, 1)) {
+            const index = start - 1;
+            const preChar = shape.text.charAt(index - 1);
+            selection.setCursor(index, preChar !== '\n');
+        }
+    }
+    else {
+        if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+            const index = Math.min(start, end);
+            const preChar = shape.text.charAt(index - 1);
+            selection.setCursor(index, preChar !== '\n');
+        }
+    }
+}, keydelays);
+const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    e.preventDefault();
+    const selection = context.selection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    if (start === end) {
+        if (editor.deleteText(start, 1)) {
+            selection.setCursor(start, false);
+        }
+    }
+    else {
+        if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+            selection.setCursor(Math.min(start, end), false);
+        }
+    }
+}, keydelays);
+
+const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    e.preventDefault();
+    const selection = context.selection;
+    if (selection.cursorStart > -1) {
+        selection.resetSelectShapes();
+        const timer = setTimeout(() => {
+            selection.selectShape(shape);
+            clearTimeout(timer);
+        })
+        context.cursor.reset();
+        context.workspace.contentEdit(false);
+    }
+
+}, keydelays);
+function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const selection = context.selection;
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+        const s = Math.min(start, end);
+        const len = Math.abs(start - end)
+        const text = shape.text.getTextWithFormat(s, len);
+        context.workspace.clipboard.write_html(text);
+        context.menu.menuMount();
+    }
+}
+async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const selection = context.selection;
+        const start = selection.cursorStart;
+        const end = selection.cursorEnd;
+        if (start === end) return;
+        const text = shape.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
+        const copy_result = await context.workspace.clipboard.write_html(text);
+        if (copy_result) {
+            if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+                selection.setCursor(Math.min(start, end), false);
+            }
+        }
+        context.menu.menuMount();
+    }
+}
+function paster(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault(); // 阻止input的粘贴事件
+        paster_inner_shape(context, editor, e.altKey);
+        context.menu.menuMount();
+    }
+}
+function select_all(e: KeyboardEvent, context: Context, shape: TextShape) {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const selection = context.selection;
+        const end = shape.text.length;
+        selection.selectText(0, end);
+        context.menu.menuMount();
+    }
+}
+function undo_redo(e: KeyboardEvent, context: Context, shape: TextShape) {
+    const { ctrlKey, metaKey, shiftKey } = e;
+    if (ctrlKey || metaKey) {
+        e.preventDefault();
+        const repo = context.repo;
+        if (shiftKey) {
+            repo.canRedo() && repo.redo();
+        } else {
+            repo.canUndo() && repo.undo();
+        }
+        const selection = context.selection;
+        const len = shape.text.length;
+        if (selection.cursorEnd >= len) {
+            selection.setCursor(len - 1, false);
+        }
+    }
+}
+
+const enterTab = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
+    const selection = context.selection;
+    const start = Math.min(selection.cursorStart, selection.cursorEnd);
+    const end = Math.max(selection.cursorStart, selection.cursorEnd);
+    const offset = e.shiftKey ? -1 : 1;
+    editor.offsetParaIndent(offset, start, end - start);
+
+}, keydelays);
+
+const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => void } = {}
+handler['enter'] = enterNewLine;
+handler['arrowleft'] = enterArrowLeft;
+handler['arrowright'] = enterArrowRight;
+handler['arrowup'] = enterArrowUp;
+handler['arrowdown'] = enterArrowDown;
+handler['backspace'] = enterBackspace;
+handler['delete'] = enterDelete;
+handler['escape'] = escape;
+handler['c'] = copy;
+handler['x'] = cut;
+handler['v'] = paster;
+handler['√'] = paster;
+handler['a'] = select_all;
+handler['z'] = undo_redo;
+handler['tab'] = enterTab;
+
+
+export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
+    if (editor.isInComposingInput()) {
+        return;
+    }
+    const key = e.key.toLowerCase();
+    const h = handler[key];
+    if (h) {
+        h(e, context, shape, editor);
+    }
+}

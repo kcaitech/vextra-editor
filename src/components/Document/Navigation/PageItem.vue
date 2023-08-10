@@ -1,45 +1,110 @@
-<!--
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-08 09:53:56
- * @FilePath: \kcdesign\src\components\Document\Navigation\PageItem.vue
--->
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
-
+import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted } from "vue";
+import { Selection } from "@/context/selection";
+import { Context } from "@/context";
+import { Perm } from "@/context/workspace";
 export interface ItemData {
     name: string
     id: string
     selected: boolean
+    context: Context
+    rightTarget: boolean
 }
-
 const props = defineProps<{ data: ItemData }>();
 const emit = defineEmits<{
     (e: "switchpage", id: string): void;
+    (e: "rename", name: string, id: string): void;
+    (e: "onMouseDown", id: string, event: MouseEvent): void;
 }>();
-
-function onClick(e: MouseEvent) {
+const isInput = ref<boolean>(false)
+const nameInput = ref<HTMLInputElement>()
+const esc = ref<boolean>(false)
+const MOUSE_LEFT = 0;
+function onMouseDown(e: MouseEvent) {
     e.stopPropagation();
-    emit("switchpage", props.data.id);
+    if (e.button === MOUSE_LEFT) {
+        document.addEventListener("mouseup", function onMouseUp() {
+            e.stopPropagation();
+            emit("switchpage", props.data.id);
+            document.removeEventListener('mouseup', onMouseUp)
+        });
+    }
+    emit('onMouseDown', props.data.id, e)
 }
 
+const onRename = () => {
+    if(props.data.context.workspace.documentPerm !== Perm.isEdit) return
+    isInput.value = true
+    nextTick(() => {
+        if (nameInput.value) {
+            (nameInput.value as HTMLInputElement).value = props.data.name.trim();
+            nameInput.value.focus();
+            nameInput.value.select();
+            nameInput.value?.addEventListener('keydown', keySaveInput);
+            nameInput.value?.addEventListener('blur', saveInput);
+        }
+    })
+    document.addEventListener('click', onInputBlur);
+}
+const onChangeName = (e: Event) => {
+    const value = (e.target as InputHTMLAttributes).value
+    if (esc.value) return
+    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
+    emit('rename', value, props.data.id);
+}
+const saveInput = () => {
+    esc.value = false
+    isInput.value = false
+}
+const keySaveInput = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+        esc.value = false
+        isInput.value = false
+    } else if (e.code === 'Escape') {
+        esc.value = true
+        isInput.value = false
+    }
+}
+const onInputBlur = (e: MouseEvent) => {
+    if (e.target instanceof Element && !e.target.closest('.rename')) {
+        if (nameInput.value) {
+            nameInput.value.blur();
+        }
+        document.removeEventListener('click', onInputBlur);
+    }
+}
+
+function update(t: number, id?: string) {
+    if (t === Selection.CHANGE_RENAME && id === props.data.id) {
+        onRename();
+    }
+}
+onMounted(() => {
+    props.data.context.selection.watch(update)
+});
+onUnmounted(() => {
+    props.data.context.selection.unwatch(update)
+});
 </script>
 
 <template>
-    <div
-        :class="{ container: true, selected: props.data.selected }"
-        @click="onClick"
-    >
+    <!-- pageItem匹配listview拖拽线条 -->
+    <div class="pageItem"
+        :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected, selected: props.data.selected }"
+        @mousedown="onMouseDown">
         <div class="ph"></div>
         <div class="item">
-            <div class="title">{{props.data.name}}</div>
+            <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : '' }">{{ props.data.name }}</div>
+            <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput">
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .container {
-    width: 100%;
+    margin-left: 6px;
     height: 30px;
+    width: calc(100% - 12px);
     line-height: 30px;
     color: var(--left-navi-font-color);
     background-color: var(--left-navi-bg-color);
@@ -50,11 +115,14 @@ function onClick(e: MouseEvent) {
     display: flex;
     flex-direction: row;
     position: relative;
+    transition: 0.08s;
+
     .item {
-        line-height: 30px;
+        display: flex;
+        align-items: center;
         width: 100%;
         position: relative;
-        > .title {
+        >.title {
             width: 100%;
             height: 100%;
             font-size: 10px;
@@ -74,10 +142,35 @@ div.container.selected {
     background-color: var(--left-navi-button-select-color);
 }
 
+div.container.right-target {
+    background-color: var(--left-navi-button-hover-color);
+}
+
 .ph {
     width: 13px;
     min-width: 13px;
     height: 100%;
 }
 
+div .rename {
+    flex: 1;
+    width: 100%;
+    height: 22px;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    padding-left: 6px;
+    margin-right: 6px;
+    outline-style: none;
+    border: 1px solid var(--left-navi-button-select-color);
+}
+
+.items-wrap {
+    padding: 0 10px;
+
+    &:hover {
+        background-color: var(--active-color);
+    }
+}
 </style>

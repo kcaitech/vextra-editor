@@ -1,0 +1,355 @@
+<template>
+    <div class="table">
+        <el-auto-resizer>
+            <template #default="{ height, width }">
+                <el-table-v2 :columns="columns" :data=props.data :width="width" :height="height" :row-class="rowClass"
+                    :row-event-handlers="rowHandleClick" @scroll="rightmenu" class="{'111','222'}">
+                    <template #overlay v-if="loading">
+                        <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
+                            <el-icon class="is-loading" color="var(--active-color)" :size="26" style="display:block">
+                                <loading-icon />
+                            </el-icon>
+                        </div>
+                    </template>
+                    <template #empty>
+                        <div v-if="empty" class="flex items-center justify-center h-100%">
+                            <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
+                        </div>
+                        <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-100%">
+                            <NetworkError @refreshDoc="refreshDoc"></NetworkError>
+                        </div>
+                    </template>
+                </el-table-v2>
+            </template>
+        </el-auto-resizer>
+    </div>
+</template>
+<script setup lang="tsx">
+import { ref } from 'vue'
+import { Share, Delete, Remove, Loading as LoadingIcon } from '@element-plus/icons-vue'
+import type { Column, RowClassNameGetter } from 'element-plus'
+import { useI18n } from 'vue-i18n'
+import { watch, nextTick } from 'vue';
+import NetworkError from '@/components/NetworkError.vue'
+
+const { t } = useI18n()
+
+
+const loading = ref(true)
+const empty = ref(false)
+const net = ref<HTMLDivElement>()
+const props = defineProps<{
+    data: any
+    iconlist: any
+    noNetwork: boolean
+}>()
+
+watch(() => props.data, () => {
+    loading.value = false
+    empty.value = true
+});
+
+watch(() => props.noNetwork,(newV) => {
+    if(newV) {
+        nextTick(() => {
+            if(net.value) {
+                loading.value = false
+                const el = net.value.parentElement
+                nextTick(() => {
+                    if(el) {
+                        el.style.top = '50%'
+                    }
+                })
+            }
+        })
+    }
+})
+
+
+const emits = defineEmits([
+    'rightMeun',
+    'updatestar',
+    'share',
+    'deletefile',
+    'remove',
+    'restore',
+    'ndelete',
+    'exit_share',
+    'dbclickopen',
+    'refreshDoc'
+])
+
+const selectedId = ref(-1)
+const scrolltop = ref(0)
+
+const refreshDoc = () => {
+    emits('refreshDoc')
+}
+
+const rightmenu = (e: any) => {
+    const rightmenuElement = document.querySelector('.rightmenu') as HTMLElement;
+    if (e.scrollTop >= scrolltop.value + 300 || scrolltop.value - e.scrollTop >= 300) {
+        scrolltop.value = e.scrollTop;
+        if (rightmenuElement.style.display === 'block') {
+            rightmenuElement.style.display = 'none'
+        }
+    }
+}
+
+const rowHandleClick = ({
+    onclick: ({ rowData }: any) => {
+        selectedId.value = rowData.document.id
+    },
+    ondblclick: ({ rowData }: any) => {
+        emits('dbclickopen', rowData.document.id)
+    },
+    oncontextmenu: ({ event, rowData }: any) => {
+        selectedId.value = rowData.document.id
+        emits('rightMeun', event, rowData)
+    },
+})
+
+const rowClass = ({ rowData }: Parameters<RowClassNameGetter<any>>[0]) => {
+    if (selectedId.value === rowData.document.id) {
+        return 'selected'
+    }
+    return ''
+}
+
+const columns: Column<any>[] = [
+    {
+        key: 'name',
+        title: `${t('home.file_name')}`,
+        width: 500,
+        minWidth: 150,
+        dataKey: 'document',
+        align: 'left',
+        cellRenderer: ({ cellData: { name } }) => <span>{name}</span>
+    },
+
+    {
+        key: 'time',
+        title: `${props.iconlist.includes('restore') ? t('home.delete_file_time') : t('home.modification_time')}`,
+        dataKey: 'document',
+        width: 500,
+        minWidth: 150,
+        align: 'center',
+        cellRenderer: ({ rowData: { document: { deleted_at }, document_access_record: { last_access_time } } }) => {
+            let displayContent;
+            if (props.iconlist.includes('restore')) {
+                displayContent = <span>{deleted_at}</span>;
+            } else {
+                displayContent = <span>{last_access_time}</span>;
+            }
+
+            return (
+                <>
+                    {displayContent}
+                </>
+            );
+
+        }
+
+    },
+    {
+        key: 'size',
+        dataKey: 'document',
+        title: `${t('home.size')}`,
+        width: 500,
+        minWidth: 150,
+        align: 'center',
+        cellRenderer: ({ cellData: { size } }) => <span>{size}</span>,
+    },
+    {
+        key: 'operations',
+        title: `${t('home.operation')}`,
+        dataKey: 'document',
+        width: 500,
+        minWidth: 150,
+        align: 'left',
+        cellRenderer: ({ rowData }) => (
+            <>
+                {props.iconlist.includes('star') && !rowData.document_favorites.is_favorite && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('updatestar', rowData)
+                        }}>
+                        <el-tooltip content={t('home.star')} show-after={1000} hide-after={0}>
+                            <svg-icon class="svg star" icon-class="star" >
+                            </svg-icon>
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('star') && rowData.document_favorites.is_favorite && (
+                    <el-icon size={20} style={"display: inline-block"}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('updatestar', rowData)
+                        }}>
+                        <el-tooltip content={t('home.de_star')} show-after={1000} hide-after={0}>
+                            <svg-icon class="svg star" icon-class="stared" >
+                            </svg-icon>
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('share') && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('share', rowData)
+                        }}>
+                        <el-tooltip content={t('home.share')} show-after={1000} hide-after={0}>
+                            <Share />
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('delete') && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('deletefile', rowData)
+                        }}>
+                        <el-tooltip content={t('home.delete')} show-after={1000} hide-after={0}>
+                            <Delete />
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('remove') && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('remove', rowData)
+                        }}>
+                        <el-tooltip content={t('home.de_access_record')} show-after={1000} hide-after={0}>
+                            <Remove />
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('restore') && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('restore', rowData)
+                        }}>
+                        <el-tooltip content={t('home.restore')} show-after={1000} hide-after={0}>
+                            <svg-icon class="svg restore" icon-class="restore">
+                            </svg-icon>
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('Delete') && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('ndelete', rowData)
+                        }}>
+                        <el-tooltip content={t('home.completely_delete')} show-after={1000} hide-after={0}>
+                            <Delete />
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('EXshare') && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('exit_share', rowData)
+                        }}>
+                        <el-tooltip content={t('home.exit_share')} show-after={1000} hide-after={0}>
+                            <svg-icon class="svg star" icon-class="exitshar" >
+                            </svg-icon>
+                        </el-tooltip>
+                    </el-icon>
+                )}
+            </>
+        ),
+
+    },
+]
+
+</script>
+<style lang="scss" scoped>
+.table {
+    height: calc(100vh - 140px)
+}
+
+@media screen and (max-width: 1000px) {
+    .table {
+        height: calc(100vh - 125px);
+    }
+}
+
+:deep(.el-table-v2__row:hover) {
+    border-radius: 6px;
+    background-color: #f3f0ff;
+
+    // border: none;
+    .el-icon {
+        display: block;
+
+        &:hover {
+            animation: el-icon 0.3s ease;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        &:active {
+            color: #7950f2;
+        }
+    }
+}
+
+:deep(.el-icon) {
+    box-sizing: content-box;
+    margin-right: 6px;
+    padding: 2px;
+    display: none;
+    color: #9775fa;
+
+    &>:focus {
+        outline: none;
+    }
+}
+
+
+:deep(.el-table-v2__row.selected) {
+    background-color: #e5dbff;
+    border-radius: 6px;
+}
+
+:deep(span) {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #606266;
+}
+
+:deep(.action) {
+    background-color: red;
+}
+
+@keyframes el-icon {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.2);
+    }
+}
+</style>

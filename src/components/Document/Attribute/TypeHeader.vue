@@ -1,14 +1,7 @@
-<!--
- * @Author: Zrx georgezrx@163.com
- * @Date: 2023-03-03 14:52:04
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-03-03 16:00:46
- * @FilePath: \kcdesign\src\components\Document\Attribute\TypeHeader.vue
--->
 <script setup lang="ts">
-import { defineProps } from 'vue';
+import {} from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data/data/shape';
+import { Shape } from '@kcdesign/data';
 const props = defineProps<{
     context?: Context,
     shape?: Shape,
@@ -47,7 +40,7 @@ const props = defineProps<{
             flex-shrink: 0;
         }
         > .space {
-            width: 196px;
+            width: 228px;
         }
     }
     > .header + .line {

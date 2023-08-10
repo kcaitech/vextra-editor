@@ -6,30 +6,36 @@
  * @FilePath: \kcdesign\src\components\Document\Toolbar\UserAvatar.vue
 -->
 <script setup lang="ts">
-import avatar from '@/assets/avatar.png';
-import { defineProps } from "vue";
+import {} from "vue";
+import { Context } from '@/context';
 
-const props = defineProps<{ user: string }>();
+const props = defineProps<{ 
+    context: Context
+}>();
 
+const avatar = localStorage.getItem('avatar') || ''
+const name = localStorage.getItem('nickname') || ''
 </script>
 
 <template>
     <div class="user-avatar">
-        <img :src="avatar" :alt="props.user ? props.user : ''">
+        <img :src="avatar" :alt="name">
     </div>
 </template>
 
 <style scoped lang="scss">
-    .user-avatar {
-        cursor: pointer;
-        width: 28px;
-        height: 28px;
+.user-avatar {
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: #fff;
+    text-align: center;
+
+    >img {
+        width: 100%;
+        height: 100%;
         border-radius: 50%;
-        background-color: #fff;
-        text-align: center;
-        > img {
-            width: 90%;
-            height: 90%;
-        }
     }
+}
 </style>

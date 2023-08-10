@@ -1,25 +1,181 @@
-import { BorderPosition } from "@kcdesign/data/data/typesdefine"
+import { BorderPosition } from "@kcdesign/data"
+
+export const product = {
+    name: 'ProtoDesign'
+}
 
 export const system = {
     'illegal_input': '输入不合法！',
     select: '请选择！',
     space: '...',
-    empty: '暂无数据'
+    empty: '暂无数据',
+    paste: '粘贴',
+    'paste_here': '粘贴在这里',
+    'only_text': '只粘贴文本',
+    copy: '复制',
+    cut: '剪切',
+    replace: '替换',
+    failed: '操作失败',
+    'null_file_name': '文件名不能为空',
+    'replace_failed': '替换失败，请使用粘贴功能',
+    'select_layer': '图层选择',
+    'bring_forward': '上移一层',
+    'send_backward': '下移一层',
+    'bring_to_top': '置于顶层',
+    'send_to_bottom': '置于底层',
+    'visible': '显示/隐藏',
+    'hidden': '隐藏',
+    'Lock': '锁定/解锁',
+    'select_all': '选择全部',
+    'fit_canvas': '适应画布',
+    'show_many_cursor': '显示多人光标',
+    'show_comment': '显示评论',
+    'show_ruler': '显示标尺',
+    'show_pixel_network': '显示像素网络',
+    'hide_operation_interface': '隐藏操作界面',
+    'creating_groups': '创建编组',
+    'create_container': '创建容器',
+    'un_group': '取消编组',
+    'create_component': '创建组件',
+    'unbind_instance': '解绑实例',
+    'reset_instance_roperties': '重置实例属性',
+    'edit_component': '编辑组件',
+    'wx_login': '微信扫码登录',
+    'login_read': '扫码表示已阅读并同意',
+    'read_TOS': '服务协议',
+    'read_Privacy': '隐私协议',
+    'product_name': 'ProtoDesign',
+    'product_description': '一款支持原型设计、文档演示以及审批管理的高效率RPD书写工具。',
+    'login_footer': '© 2023 Kc.Design Inc.All rights reserved.',
+    'placeholder': '搜索文件',
+    'about': '关于',
+    'help_manual': '帮助手册',
+    'about_software': '关于软件',
+    'personal_center': '个人中心',
+    'login_out': '退出登录',
+    'new_file': '新文件',
+    'page1': '页面 1',
+    'dissolution': '取消容器',
+    'content_includes': '文本包含',
+    'title_includes': '标题包含',
+    'artboart_title_visible': '显示容器标题'
 }
 
 export const home = {
     open_local_file: "打开文件",
     open_remote_file: "打开远程文件",
-    new_file: "新建文档"
+    new_file: "新建文档",
+    object_selector: '选择对象',
+    scale: '等比缩放',
+    automatically_open: '自动打开',
+    search_file: '搜索文件',
+    about: '关于',
+    help_manual: '帮助手册',
+    about_software: '关于软件',
+    New_file: '新建文件',
+    recently_opened: '最近打开',
+    star_file: '标星文件',
+    file_shared: '我的文件',
+    shared_file_received: '收到的共享文件',
+    file_shared_with_me: '共享给我的文件',
+    recycling_station: '回收站',
+    file_name: '文件名称',
+    modification_time: '最近访问',
+    Creation_time: '创建时间',
+    delete_file_time: '删除时间',
+    size: '大小',
+    operation: '操作',
+    star_marking: '标星',
+    share: '分享',
+    delete: '删除',
+    delete_ok_tips: '文件已移至回收站',
+    delete_no_tips: '移除失败',
+    test: '测试',
+    file_star_marking: '文件已被标星，可在标星列表中查看！',
+    rect: '矩形',
+    picture: '图片',
+    comment: '评论',
+    groups: '编组',
+    ungroup: '解组',
+    search_layer: '搜索图层',
+    prompt: '创建者变更了文档权限，文档即将刷新',
+    visit: '创建者取消了文件的访问权限，文档即将退出',
+    delete_file: '创建者删除了该文档，文档即将退出',
+    star: '标星',
+    de_star: '取消标星',
+    star_ok: '已设为星标文档',
+    star_cancel: '已取消星标文档',
+    de_access_record: '移除记录',
+    access_record_ok: '移除成功',
+    access_record_no: '移除失败',
+    exit_share: '退出共享',
+    exit_share_success: '退出成功',
+    exit_share_fail: '退出失败',
+    restore: '还原',
+    completely_delete: '彻底删除',
+    delete_tips: '删除执行后，文件将无法恢复找回，确认要删除吗？',
+    delete_ok: '确定删除',
+    cancel: '取消',
+    failed_list_tips: '文件列表获取失败',
+    restore_ok: '还原成功',
+    restore_no: '还原失败',
+    delete_file_ok: '删除成功',
+    delete_file_no: '删除失败',
+    other_tips: '请确保网络连接正常',
+    addComment: '添加评论',
+    rename: '重命名',
+    rename_ok: '确定',
+    page_sort: '按页面排序',
+    login_failed: '登录失败',
+    login_refresh: '点击刷新二维码',
+    invitation_code_tips: '请输入试用邀请码',
+    table_empty_tips: '没有内容',
+    'align_left': '左对齐',
+    'align_h_c': '左右居中对齐',
+    'align_right': '右对齐',
+    'align_top': '顶对齐',
+    'align_v_c': '上下居中对齐',
+    'align_bottom': '底对齐',
+    'distribute_h': '左右等距分布',
+    'distribute_v': '上下等距分布'
+}
+
+export const search = {
+    search_results: '没有匹配的结果',
+    search_history: '没有搜索记录',
+    search_history_title: '历史记录',
+    search_history_clear: '清除',
+    result_count: '共xx条结果'
 }
 
 export const navi = {
     shape: '图层',
     comps: '组件',
     resource: '资源库',
-    page: '页面'
+    page: '页面',
+    add_page: '添加新页面',
+    copy: '副本',
+    development: '功能开发中…'
+
 }
 
+export const frame = {
+    custom: '自定义',
+    phone: '手机',
+    tablet: '平板',
+    deskdop: '桌面',
+    presentation: '预览',
+    watch: '手表',
+    paper: '纸张',
+    social_media: '社交媒体'
+}
+
+export const pageMenu = {
+    copy_link: '复制页面链接',
+    duplicate: '创建页面副本',
+    rename: '重命名',
+    delete: '删除页面'
+}
 
 export const attr: any = {
     design: '设计',
@@ -28,12 +184,13 @@ export const attr: any = {
     constraints: '相对容器位置',
     border: '边框',
     fill: '填充',
+    text: '文本',
     'follow_container_scaling': '跟随容器缩放',
     'advanced_stroke': '边框设置',
     position: '位置',
     'corner_smoothing': '平滑圆角',
     vertical: '垂直方向',
-    horizontal:'水平方向',
+    horizontal: '水平方向',
     fixedLeft: '左部固定',
     fixedRight: '右部固定',
     withContainer: '跟随容器缩放',
@@ -55,7 +212,106 @@ export const attr: any = {
     'follow_container': '跟随容器缩放',
     'fixed_bottom': '底部固定',
     'fixed_top': '顶部固定',
-    'fixed_top_bottom': '上下固定'
+    'fixed_top_bottom': '上下固定',
+    'adapt': '适应容器大小',
+    'mixed': '多值',
+    'mixed_lang': '存在对象设置不同，可点击 + 号统一设置',
+    text_advanced_settings: "文本高级设置",
+    word_space: '字间距',
+    row_height: '行高',
+    paragraph_space: '段落间距',
+    id_style: '编号样式',
+    letter_case: '字母大小写',
+    text_style: '文本样式',
+    auto: '自动',
+    search_for_fonts: '搜索字体…',
+    bold: '加粗',
+    tilt: '倾斜',
+    underline: '下划线',
+    deleteline: '删除线',
+    align_left: '左对齐',
+    align_center: '居中对齐',
+    align_right: '右对齐',
+    align_the_sides: '两边对齐',
+    align_top: '顶对齐',
+    align_middle: '居中对齐',
+    align_bottom: '底对齐',
+    none_list: '无',
+    unordered_list: '无序列表',
+    ordered_list: '有序列表',
+    as_typed: '无',
+    uppercase: '全大写',
+    lowercase: '全小写',
+    titlecase: '首字母大写',
+    autowidth: '单行模式',
+    autoheight: '自动高度',
+    fixedsize: '固定宽高',
+    more_value: '多值',
+    used_font: '已使用字体',
+    no_font_is_currently_in_use: '当前无已使用字体',
+    chinese_font: '中文字体',
+    english_font: '英文字体',
+    find_the_fonts: '查找不到相关字体',
+    font_is_not: '本地不存在该字体，使用默认字体效果替代显示',
+    font_color: '字体颜色',
+    highlight_color: '高亮颜色',
+    multiple_colors: '存在多种颜色值，点击+可统一设置',
+    unfold: '展开',
+    packup: '收起',
+    'flip_v': '垂直翻转',
+    'flip_h': '水平翻转'
+}
+
+export const login = {
+    login_failure: '登录失效，请重新登录'
+}
+
+export const comment = {
+    reply: '回复',
+    delete: '删除',
+    settled: '解决',
+    edit_content: '编辑内容',
+    quick_reply: '快速回复',
+    last: '上一条',
+    next: '下一条',
+    sort: '按页面排序',
+    show_about_me: '仅显示关于我的',
+    show_resolved_comments: '显示已解决评论',
+    comment_area: '评论区',
+    input_comments: '输入评论',
+    check: '查看',
+    a_few_reply: '条回复',
+    month: '月',
+    day: '日',
+    no_comment: '当前无评论',
+    leave_a_comment: '点击任意位置留下你的评论',
+    comments_hide: '评论已设置隐藏',
+    show_comments: '显示评论'
+}
+export const clipboard = {
+    'invalid_data': '该内容无法解析'
+}
+
+export const message = {
+    doc_notopen: '网络异常，文档无法打开，请检查网络后重试。',
+    list_for_failure: '网络异常，文件列表获取失败，请检查网络后重试。',
+    retry: '重试',
+    leave: '您的更改尚未保存，确定要离开吗？',
+    network_error: '网络异常，请勿刷新页面或关闭文档，以免内容丢失，文档尝试保存中…',
+    network_anomaly: '网络异常',
+    link_success: '网络连接成功',
+    autosave: '文档自动保存成功',
+    cancel: '取消',
+    exit_document: '退出文档',
+    back_home: '返回首页',
+    unuploaded_msg: '文档存在未上传资源，退出可能会造成丢失，是否退出?'
+}
+export const bool = {
+    union: '联集',
+    subtract: '减去顶层',
+    intersection: '交集',
+    difference: '差集',
+    cohere: '路径拼合'
 }
 
 attr[BorderPosition.Inner] = '内部';

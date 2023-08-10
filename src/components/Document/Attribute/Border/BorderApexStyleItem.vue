@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { defineProps, defineEmits, onMounted, computed } from 'vue'
+import { computed } from 'vue'
 import { SelectItem } from '@/components/common/Select.vue'
 const props = defineProps<{ data: SelectItem }>();
 const emit = defineEmits<{
@@ -12,13 +12,10 @@ function select() {
 const isEnd = computed<boolean>(() => {
     return props.data.content.startsWith('end');
 })
-
-// hooks
-onMounted(() => {})
 </script>
 <template>
     <div class="border-front-style-item-container" @click="select">
-       <svg-icon :class="{ isEnd }" :icon-class="props.data.value"></svg-icon>
+        <svg-icon :class="{ isEnd }" :icon-class="props.data.value"></svg-icon>
     </div>
 </template>
 <style scoped lang="scss">
@@ -31,11 +28,14 @@ onMounted(() => {})
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    > svg {
+
+    >svg {
         width: 100%;
         height: 100%;
+        color: black;
     }
-    > .isEnd {
+
+    >.isEnd {
         transform: rotate(180deg);
     }
 }

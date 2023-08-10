@@ -1,15 +1,11 @@
-<!--
- * @LastEditors: Zrx georgezrx@163.com
- * @LastEditTime: 2023-02-28 09:58:44
- * @FilePath: \kcdesign\src\components\Document\Toolbar\ToolButton.vue
--->
 <template>
-    <div ref="toolButtonEl" :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!selected }">
+    <div ref="toolButtonEl"
+        :class="{ 'tool-button': true, 'tool-button-invalid': invalid, 'tool-button-selected': !!props.selected }">
         <slot />
     </div>
 </template>
 <script setup lang="ts">
-import { computed, defineProps, ref, defineExpose, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 const props = defineProps<{ valid?: boolean, selected?: boolean }>();
 
 const toolButtonEl = ref<HTMLDivElement>();
@@ -25,28 +21,36 @@ const invalid = computed(() => {
 </script>
 <style scoped>
 .tool-button {
-    padding: 4px;
+    padding: 4px 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 80%;
+    margin: 0 2px;
+    border-radius: 2px;
     min-width: 28px;
     min-height: 28px;
     overflow: hidden;
     cursor: pointer;
     box-sizing: border-box;
     color: #ffffff;
+    transition: 0.06s;
 }
 
 .tool-button:hover,
 .tool-button:active {
-    background-color: #333333;
+    background-color: #000;
 }
 
 .tool-button-invalid {
-    color: gray;
+    color: var(--grey-light);
 }
 
 .tool-button-selected {
-    color: blue;
+    background-color: var(--active-color);
+}
+
+.tool-button-selected:hover {
+    background-color: var(--active-color);
 }
 </style>

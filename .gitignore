@@ -6,3 +6,7 @@ package-lock.json
 .VSCodeCounter
 .DS_Store
 yarn.lock
+.vscode
+.idea
+*.sql
+/src/communication/communication-worker.js

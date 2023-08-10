@@ -58,15 +58,15 @@ function onMenuBlur() {
 
 <style scoped lang="scss">
 .svg-container {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #ffffff;
   > svg {
-    width: 60%;
-    height: 60%;
+    width: 14px;
+    height: 14px;
   }
 }
 .menu {

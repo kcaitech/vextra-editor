@@ -1,0 +1,45 @@
+<script lang="ts" setup>
+interface Props {
+  size?: number
+  width?: number
+}
+defineProps<Props>();
+</script>
+<template>
+  <div class="container"
+    :style="{ width: size ? `${size}px` : '60px', height: size ? `${size}px` : '60px', 'border-width': width ? `${width}px` : '4px' }">
+    <div class="loader"></div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.container {
+  width: 60px;
+  height: 60px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  >.loader {
+    width: 100%;
+    height: 100%;
+    border: solid transparent;
+    border-top: solid grey;
+    border-left: solid grey;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-sizing: border-box;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+</style>

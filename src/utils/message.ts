@@ -1,10 +1,10 @@
 const toStyle = (obj: any) => {
     const keys = Object.keys(obj);
     return keys.reduce((pre, cur) => {
-        return pre += `${cur}:${obj[cur]};` 
+        return pre += `${cur}:${obj[cur]};`
     }, '')
 }
-type MessageType = "success" | "info" | "danger";
+type MessageType = "success" | "info" | "danger" | "feature";
 const C = {
     success: {
         backgroundColor: '#F0F9EB',
@@ -14,18 +14,23 @@ const C = {
     info: {
         backgroundColor: '#F4F4F5',
         color: '#909399',
-        border: '#EAEAEC',
+        border: '#AAAAAA',
     },
     danger: {
         backgroundColor: '#FEF0F0',
         color: '#F56C6C',
         border: '#FDE3E3',
+    },
+    feature: {
+        backgroundColor: '#000',
+        color: '#fff',
+        border: 'none',
     }
 }
 export const message = (type: MessageType, context: string) => {
-    const top = 100;
+    const top = 120;
     const duration: number = 2.5;
-    const fadeDur: number = 0.5;
+    const fadeDur: number = 0.8;
     const style = toStyle({
         position: 'absolute',
         top: '0px',
@@ -41,7 +46,8 @@ export const message = (type: MessageType, context: string) => {
         'font-size': '10px',
         padding: '0 8px',
         border: `1px solid ${C[type].border}`,
-        opacity: '0'
+        opacity: '0',
+        'text-align': 'center'
     });
 
     const el = document.createElement('div');
@@ -57,7 +63,7 @@ export const message = (type: MessageType, context: string) => {
     body.appendChild(el);
     dropIn(el, fadeDur);
 
-    const preToOut = setTimeout(() => {        
+    const preToOut = setTimeout(() => {
         fadeOut(el);
         clearTimeout(preToOut);
     }, duration * 1000);
@@ -75,8 +81,60 @@ export const message = (type: MessageType, context: string) => {
     function fadeOut(el: HTMLDivElement) {
         el.style.opacity = '0';
         const remove = setTimeout(() => {
-            body.removeChild(el);
+            el?.parentNode?.removeChild(el);
             clearTimeout(remove);
         }, fadeDur * 1000 + 10);
+    }
+}
+
+type NetworkMessage = 'networkError' | 'netError' | 'networkSuccess' | 'saveSuccess'
+
+export function insertNetworkInfo(msg: NetworkMessage, state: boolean, text: string) {
+    const container = document.createElement('div');
+    if (msg === 'networkError') {
+        container.innerHTML = `<div class="network_error_message" >
+            <span style="margin-right: 10px;">${text}</span>
+            <div class="loading-spinner"> <div></div></div>
+        </div>`
+        if(state) {
+            document.body.appendChild(container)
+            container.setAttribute('id', 'message1');
+        }else {
+            const message1 = document.getElementById('message1');  
+            message1?.parentNode?.removeChild(message1)
+        }
+    }else if(msg === 'netError') {
+        container.innerHTML = `<div class="network_error_message" v-if="netError">
+            <span>${text}</span>
+        </div>`
+        if(state) {
+            document.body.appendChild(container)
+            container.setAttribute('id', 'message2');
+        }else {
+            const message2 = document.getElementById('message2');
+            message2?.parentNode?.removeChild(message2)
+        }
+    }else if(msg === 'networkSuccess') {
+        container.innerHTML = `<div class="network_error_message" v-if="networkSuccess">
+            <span>${text}</span>
+        </div>`
+        if(state) {
+            document.body.appendChild(container)
+            container.setAttribute('id', 'message3');
+        }else {
+            const message3 = document.getElementById('message3');
+            message3?.parentNode?.removeChild(message3)
+        }
+    }else if(msg === 'saveSuccess') {
+        container.innerHTML = `<div class="network_error_message" v-else-if="saveSuccess">
+            <span>${text}</span>
+        </div>`
+        if(state) {
+            document.body.appendChild(container)
+            container.setAttribute('id', 'message4');
+        }else {
+            const message4 = document.getElementById('message4');
+            message4?.parentNode?.removeChild(message4)
+        }
     }
 }

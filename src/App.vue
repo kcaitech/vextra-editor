@@ -1,65 +1,26 @@
 <script setup lang="ts">
-import { defineProps, onMounted, onUnmounted, shallowRef } from 'vue';
-import { Document } from "@kcdesign/data/data/document";
-import DocumentVue from "@/components/Document/index.vue"
-import HomeVue from "@/components/Home/index.vue"
-import { Zip } from "@pal/zip";
-import { LzDataLocal } from './basic/lzdatalocal'; // todo
-import { importRemote, importSketch } from '@kcdesign/data/io';
-import { Repository } from '@kcdesign/data/data/transact';
-
-const props = defineProps<{}>();
-// const dataReady = ref<boolean>(false);
-const curDoc = shallowRef<Document | undefined>(undefined);
-const curRepo = shallowRef<Repository | undefined>(undefined);
-
-function openLocalFile(file?: File) {
-    if (!file) return;
-    const lzdata = new LzDataLocal(new Zip(file));
-    const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document) => {
-        curRepo.value = repo;
-        curDoc.value = document;
-        window.document.title = document.name;
-    })
-}
-
-function openRemoteFile(name: string, fid: string) {
-    const repo = new Repository();
-    importRemote('http://localhost:8000/', fid, "0", name, repo).then((document) => {
-        curRepo.value = repo;
-        curDoc.value = document;
-        window.document.title = document.name;
-    })
-}
-
-onMounted(() => {
-
-})
-
-onUnmounted(() => {
-
-})
-
+import { RouterView } from 'vue-router';
 </script>
 
 <template>
-    <HomeVue v-if="curDoc == undefined" @openlocalfile="openLocalFile" @openremotefile="openRemoteFile"/>
-    <DocumentVue v-if="curDoc != undefined && curRepo != undefined" :data="curDoc" :repo="curRepo" />
+    <RouterView></RouterView>
 </template>
 
 <style lang="scss">
 html {
     width: 100%;
     height: 100%;
-    > body {
+
+    >body {
         font-family: var(--font-family);
         overflow: hidden;
         margin: 0px;
         width: 100%;
         height: 100%;
         user-select: none;
-        > #app {
+
+        >#app {
+            position: absolute;
             display: flex;
             flex-flow: column nowrap;
             width: 100%;
@@ -67,5 +28,5 @@ html {
         }
     }
 }
-    
+
 </style>

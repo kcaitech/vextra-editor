@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, defineProps, nextTick, defineEmits, watch } from 'vue';
+import { ref, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n'; 
 import { cloneDeep } from 'lodash';
 export interface SelectItem {
@@ -46,7 +46,7 @@ function toggle() {
             }
             const top = optionsContainerTop - 40;
             if (top < 0) {
-                optionsContainer.value.style.top = `${-(selectedToTop + top - 4)}px`
+                optionsContainer.value.style.top = `${-(selectedToTop + top - 4)}px`;
             }
             optionsContainer.value.addEventListener('keydown', esc);
             optionsContainer.value.addEventListener('blur', onBlur);
@@ -55,6 +55,7 @@ function toggle() {
     })
 }
 function esc(e: KeyboardEvent) {
+    e.stopPropagation();    
     if (e.code === 'Escape') {
         optionsContainerVisible.value = false;
         optionsContainer.value?.removeEventListener('keydown', esc);

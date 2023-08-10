@@ -4,23 +4,19 @@
  * @FilePath: \kcdesign\src\components\Document\Navigation\index.vue
 -->
 <script setup lang="ts">
-import { defineProps } from "vue";
+import {} from "vue";
 import { Context } from "@/context";
 import Tabs from "@/components/Document/Navigation/LeftTabs.vue";
+import { Page } from "@kcdesign/data";
 
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
+const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
+const showHiddenLeft = () => {
+    emit('showNavigation')
+}
 </script>
 
 <template>
-    <section>
-        <Tabs :context="props.context" v-bind="$attrs"></Tabs>
-    </section>
+    <Tabs :context="props.context" v-bind="$attrs" :page="page" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></Tabs>
 </template>
-
-<style scoped lang="scss">
-section {
-    width: 100%;
-    height: 100%;
-}
-</style>

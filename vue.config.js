@@ -1,11 +1,15 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
+const fs = require('fs')
+const crypto = require('crypto')
 // 按需引入element ui
 const AutoImport = require('unplugin-auto-import/webpack')
 const Components = require('unplugin-vue-components/webpack')
 const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
+const CopyWebpackPlugin = require("copy-webpack-plugin")
+const webpack = require('webpack')
 
-var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs';
+var run_env = process.env.npm_lifecycle_event.indexOf(':web') !== -1 ? 'browser' : 'nodejs'
 // var run_env = 'nodejs'
 console.log('building for: ' + run_env)
 var configureWebpack = (config) => {
@@ -15,10 +19,10 @@ var configureWebpack = (config) => {
     //   // 为开发环境修改配置...
     // }
     if (run_env === 'browser') {
-        config.entry.app = [ './src/web.main.ts' ]
+        config.entry.app = ['./src/web.main.ts']
         config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/browser')
     } else {
-        config.entry.app = [ './src/electron.main.ts' ]
+        config.entry.app = ['./src/electron.main.ts']
         config.resolve.alias[`@pal`] = path.resolve(__dirname, 'src/PAL/nodejs')
     }
 
@@ -50,7 +54,7 @@ var configureWebpack = (config) => {
             test: /\.svg?$/,
             use: [
                 {
-                    loader: 'svg-sprite-loader', 
+                    loader: 'svg-sprite-loader',
                     options: {
                         symbolId: "icon-[name]",
                     },
@@ -59,10 +63,10 @@ var configureWebpack = (config) => {
                     loader: 'svgo-loader',
                     options: {
                         plugins: [
-                        {
-                            name: 'convertColors',
-                            params: { currentColor: true },
-                        },
+                            {
+                                name: 'convertColors',
+                                params: { currentColor: true },
+                            },
                         ],
                     },
                 }
@@ -72,11 +76,39 @@ var configureWebpack = (config) => {
         },
     )
 
+    const communicationWorkerSourcePath = path.resolve(__dirname, 'src/communication/communication-worker.js')
+    const communicationWorkerTargetFilename = `communication-worker.${crypto.createHash('md5')
+            .update(fs.readFileSync(communicationWorkerSourcePath))
+            .digest('hex')
+            .slice(0, 8)
+        }.js`
     config.plugins = [
-        AutoImport({resolvers: [ElementPlusResolver()]}),
-        Components({resolvers: [ElementPlusResolver()]}),
-        ...config.plugins
+        AutoImport({ resolvers: [ElementPlusResolver()] }),
+        Components({ resolvers: [ElementPlusResolver()] }),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
+            ]
+        }),
+        ...config.plugins,
+        new CopyWebpackPlugin({
+            patterns: [{
+                from: communicationWorkerSourcePath,
+                to: communicationWorkerTargetFilename,
+            }]
+        }),
+        new webpack.DefinePlugin({
+            COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
+        }),
     ]
+
+    config.watchOptions = {
+        ignored: [
+            "node_modules\\/(?!(@kcdesign)\\/)",
+            "communication\\/node_modules\\/)",
+        ],
+        poll: 1500,
+    }
 }
 
 var exports = defineConfig({
@@ -90,7 +122,25 @@ var exports = defineConfig({
             nodeIntegration: true,
             //contextIsolation: false
         }
-    }
-})
+    },
 
-module.exports = exports;
+    devServer: {
+        port: 8080,
+        https: true,
+        proxy: {
+            '/api': {
+                target: 'http://192.168.0.10:10000',
+                // target: 'http://mock.apifox.cn/m1/2612240-0-1d5a81b5',
+                changeOrigin: true,
+                disableHostCheck: true,
+                //ws: true,
+                pathRewrite: {
+                    '^/api': '/api'
+                    // '^/api/v1': '/' 
+                }
+            }
+        }
+    }
+
+})
+module.exports = exports
