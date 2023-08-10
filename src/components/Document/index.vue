@@ -405,7 +405,8 @@ async function upload() {
     }
     context.communication.docResourceUpload.start(token, doc_id);
     context.communication.docCommentOp.start(token, doc_id);
-    context.communication.docSelectionOp.start(token, doc_id, context);
+    await context.communication.docSelectionOp.start(token, doc_id, context);
+    context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
     context.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
 let timer: any = null;
@@ -429,7 +430,6 @@ function init_doc() {
             upload();
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
-            context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
         } else {
             router.push('/');
         }
@@ -560,6 +560,8 @@ function closeNetMsg() {
 //协作人员操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
+    console.log(data,'data');
+    
     if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
         const addUset = context!.teamwork.getUserSelection
         if(docCommentOpData.type === DocSelectionOpType.Exit) {

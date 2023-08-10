@@ -46,6 +46,7 @@ function onTableBlur(e: MouseEvent) {
   if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.svg-table')) {
     if (e.target.closest('.popover')) return;
     var timer = setTimeout(() => {
+      select(Action.AutoV);
       popoverVisible.value = false;
       clearTimeout(timer);
       document.removeEventListener('click', onTableBlur);
