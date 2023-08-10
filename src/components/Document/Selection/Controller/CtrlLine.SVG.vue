@@ -10,8 +10,6 @@ import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
 import { Matrix, Shape } from "@kcdesign/data";
-import { useI18n } from "vue-i18n";
-import { genRectPath } from "../common";
 interface Props {
     context: Context,
     controllerFrame: Point[],
@@ -20,16 +18,15 @@ interface Props {
     shape: Shape
 }
 const props = defineProps<Props>();
-const { isDblClick, isDrag, isEditing } = useController(props.context);
+const { isDblClick, isDrag } = useController(props.context);
 const workspace = computed(() => props.context.workspace);
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const visible = ref<boolean>(true);
 let viewBox = '';
-const boundrectPath = ref("");
+const line_path = ref("");
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
-const { t } = useI18n();
 // #region 绘制控件
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -46,8 +43,10 @@ function updateControllerView() {
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
-    boundrectPath.value = genRectPath(framePoint);
-    props.context.workspace.setCtrlPath(boundrectPath.value);
+    const path = props.shape.getPath();
+    path.transform(matrix);
+    line_path.value = path.toString();
+    props.context.workspace.setCtrlPath(line_path.value);
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -67,9 +66,7 @@ function workspace_watcher(t?: number) {
 }
 function mousedown(e: MouseEvent) {
     const isdblc = isDblClick();
-    if (isdblc) { //双击
-        // todo
-    }
+    if (isdblc) { }
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
@@ -98,7 +95,6 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
 })
-
 watchEffect(updateControllerView)
 </script>
 <template>
@@ -107,7 +103,8 @@ watchEffect(updateControllerView)
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-        <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
+        <!-- <path :d="line_path" fill="none" stroke='#865dff' stroke-width="1.5px"></path> -->
+        <path :d="line_path" fill="none" stroke='green' stroke-width="1.5px"></path>
     </svg>
 </template>
 <style lang='scss' scoped>

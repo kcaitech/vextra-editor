@@ -23,6 +23,12 @@ interface Props {
     context: Context
     matrix: Matrix
 }
+interface TracingFrame {
+    path: string,
+    viewBox: string,
+    height: number,
+    width: number
+}
 const props = defineProps<Props>();
 const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
@@ -31,9 +37,9 @@ const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 const tracing = ref<boolean>(false);
 const traceEle = ref<Element>();
-const tracingPath = ref<string>('');
 const altKey = ref<boolean>(false);
 const watchedShapes = new Map();
+const tracingFrame = ref<TracingFrame>({ path: '', viewBox: '', height: 0, width: 0 });
 let shape_hover: undefined | Shape;
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -115,7 +121,10 @@ function createShapeTracing() { // 描边
             m.multiAtLeft(matrix);
             const path = hoveredShape.getPath();
             path.transform(m);
-            tracingPath.value = path.toString();
+            const { x, y, right, bottom } = props.context.workspace.root;
+            const w = right - x;
+            const h = bottom - y;
+            tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
             tracing.value = true;
             if (altKey.value) nextTick(() => { if (traceEle.value) traceEle.value.classList.add('cursor-copy') });
         }
@@ -236,12 +245,11 @@ onUnmounted(() => {
 </script>
 <template>
     <!-- 描边 -->
-    <svg ref="traceEle" v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100" :height="100" viewBox="0 0 100 100"
-        style="position: absolute">
-        <path :d="tracingPath" fill="transparent" stroke="#865dff" stroke-width="1.5px"
-            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+    <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px)">
+        <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
         </path>
     </svg>
     <!-- 控制 -->
