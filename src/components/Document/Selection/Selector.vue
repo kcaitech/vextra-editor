@@ -50,15 +50,11 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
             if (isTarget(Points, ps, true)) {
                 selectedShapes.set(shape.id, shape);
-                for (let i = 0; i < shape.childs.length; i++) {
-                    selectedShapes.delete(shape.childs[i].id);
-                }
+                for (let i = 0; i < shape.childs.length; i++) selectedShapes.delete(shape.childs[i].id);
             } else finder(shape.childs, Points);
-        }
-        else if (shape.type === ShapeType.Line) {
+        } else if (shape.type === ShapeType.Line) {
             if (isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) selectedShapes.set(shape.id, shape);
-        }
-        else if (isTarget(Points, ps, props.selectorFrame.includes)) selectedShapes.set(shape.id, shape);
+        } else if (isTarget(Points, ps, props.selectorFrame.includes)) selectedShapes.set(shape.id, shape);
     }
 }
 // 剔除
