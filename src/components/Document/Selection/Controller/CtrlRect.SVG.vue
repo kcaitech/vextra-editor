@@ -38,6 +38,7 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
   return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
 function updateControllerView() {
+  console.log('update view');
   const m2p = props.shape.matrix2Root();
   matrix.reset(m2p);
   matrix.multiAtLeft(props.matrix);
