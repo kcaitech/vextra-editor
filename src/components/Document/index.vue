@@ -286,6 +286,8 @@ const hideNotification = (type?: number) => {
     }
 }
 const showNotification = (type?: number) => {
+    insertNetworkInfo('networkError', false, network_error);
+    window.removeEventListener('beforeunload', onBeforeUnload);
     showHint.value = true;
     startCountdown(type);
 }
@@ -483,7 +485,7 @@ const refreshDoc = () => {
 }
 
 const hasPendingSync = () => {
-    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr){
+    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr ){
         insertNetworkInfo('networkError', true, network_error);
         netErr = setInterval(() => {
             if(context && !context.communication.docOp.hasPendingSyncCmd()) {
