@@ -89,10 +89,21 @@ export function fit(context: Context, shape: Shape) {
     const root = context.workspace.root;
     const w_max = root.width;
     const h_max = root.height;
-    const ratio_w = width / w_max * 1.06; // 两边留点空白
-    const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
+    const ratio_w = width / w_max * 1.06;
+    const ratio_h = height / h_max * 1.12;
     const ratio = Math.max(ratio_h, ratio_w);
     if (ratio !== 1) {
+        const pageViewEl = context.workspace.pageView;
+        if (pageViewEl) {
+            pageViewEl.classList.add('transition-400');
+            context.selection.unHoverShape();
+            context.selection.selectShape();
+            const timer = setTimeout(() => {
+                context.selection.selectShape(shape);
+                pageViewEl.classList.remove('transition-400');
+                clearTimeout(timer);
+            }, 400);
+        }
         const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
         const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         matrix.trans(del.x, del.y);
@@ -109,6 +120,17 @@ export function fit(context: Context, shape: Shape) {
         matrix.trans(root.width / 2, root.height / 2);
         context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else {
+        const pageViewEl = context.workspace.pageView;
+        if (pageViewEl) {
+            pageViewEl.classList.add('transition-400');
+            context.selection.unHoverShape();
+            context.selection.selectShape();
+            const timer = setTimeout(() => {
+                context.selection.selectShape(shape);
+                pageViewEl.classList.remove('transition-400');
+                clearTimeout(timer);
+            }, 400);
+        }
         const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
         const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         if (del.x || del.y) {

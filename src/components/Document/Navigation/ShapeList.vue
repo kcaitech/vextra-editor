@@ -67,6 +67,7 @@ const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const search_wrap = ref<HTMLDivElement>();
 const accurate = ref<boolean>(false);
+let wait_fited = false;
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
@@ -278,11 +279,15 @@ const isRead = (read: boolean, shape: Shape) => {
 }
 function shapeScrollToContentView(shape: Shape) {
     const is_p2 = props.context.navi.isPhase2(shape);
-    if (is_p2) {
+    if (is_p2 && !wait_fited) {
+        wait_fited = true;
         fit(props.context, shape);
+        const timer = setTimeout(() => {
+            wait_fited = false;
+            clearTimeout(timer);
+        }, 450);
         return;
     }
-
     if (isInner(props.context, shape)) {
         props.context.selection.selectShape(shape);
         props.context.navi.set_phase(shape.id);
