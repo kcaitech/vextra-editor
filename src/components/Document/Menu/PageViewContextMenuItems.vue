@@ -157,7 +157,7 @@ function page_scale(e: MouseEvent, scale: number) {
   matrix.trans(-offsetX, -offsetY);
   matrix.scale(scale / matrix.m00);
   matrix.trans(offsetX, offsetY);
-  workspace.matrixTransformation();
+  workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 /**
  * 使整个page在可视区域

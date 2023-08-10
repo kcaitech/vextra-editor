@@ -11,6 +11,7 @@ import { isInner } from '@/utils/content';
 import { is_shape_in_selection, selection_types, fit } from '@/utils/shapelist';
 import { Navi } from '@/context/navigate';
 import { get_words_index_selection_sequence } from '@/utils/search';
+import { WorkSpace } from '@/context/workspace';
 interface Props {
   keywords: string
   context: Context
@@ -245,7 +246,8 @@ function shapeScrollToContentView_1(shape: Shape) {
     } else {
       workspace.matrix.trans(transX, transY);
     }
-    workspace.matrixTransformation();
+    // eslint-disable-next-line
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     props.context.navi.set_phase('');
   }
 
@@ -298,7 +300,8 @@ function shapeScrollToContentView(shape: Shape) {
     } else {
       workspace.matrix.trans(transX, transY);
     }
-    workspace.matrixTransformation();
+    // eslint-disable-next-line
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     props.context.navi.set_phase('');
   }
 

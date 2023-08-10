@@ -3,6 +3,7 @@ export enum TunnelType {
     DocResourceUpload,
     DocCommentOp,
     DocUpload,
+    DocSelectionOp,
     NetworkStatus = 255,
 }
 
@@ -11,6 +12,7 @@ export const TunnelTypeStr: Record<TunnelType, string> = {
     [TunnelType.DocResourceUpload]: "文档资源上传",
     [TunnelType.DocCommentOp]: "文档评论操作",
     [TunnelType.DocUpload]: "文档上传",
+    [TunnelType.DocSelectionOp]: "文档选区操作",
     [TunnelType.NetworkStatus]: "监听网络状态",
 }
 
@@ -62,6 +64,10 @@ export type TunnelCmdData = {
     data?: any,
 }
 
+export enum CmdMessage {
+    TunnelIdError = "tunnel_id错误",
+}
+
 export type ClientCmd = {
     cmd_type: ClientCmdType,
     cmd_id: string,
@@ -92,6 +98,7 @@ export type WorkerPostData = {
     isListened?: boolean,
     dataType?: DataType,
     data: any,
+    close?: boolean,
 }
 
 export type CmdResult = {

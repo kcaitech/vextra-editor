@@ -1,15 +1,23 @@
 import { Watchable } from "@kcdesign/data"
-import { DocResourceUpload } from "@/communication/modules/doc_resource_upload"
+import { DocResourceUpload as _DocResourceUpload } from "@/communication/modules/doc_resource_upload"
 
-export class ResourceUpload extends Watchable(Object) {
-    private docResourceUpload?: DocResourceUpload
+export class DocResourceUpload extends Watchable(Object) {
+    private docResourceUpload?: _DocResourceUpload
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
+    private isClosed: boolean = false
 
-    public async start(documentId: string, token: string): Promise<boolean> {
+    public async start(token: string, documentId: string): Promise<boolean> {
         if (this.docResourceUpload) return true;
         if (this.startPromise) return await this.startPromise;
-        const docResourceUpload = DocResourceUpload.Make(documentId, token)
+        const docResourceUpload = _DocResourceUpload.Make(token, documentId)
+        const startParams = [token, documentId]
+        docResourceUpload.setOnClose(async () => {
+            this.docResourceUpload = undefined
+            while (!this.isClosed && !await this.start.apply(this, startParams as any)) { // eslint-disable-line prefer-spread
+                await new Promise(resolve => setTimeout(resolve, 1000))
+            }
+        })
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await docResourceUpload.start()) {
@@ -28,20 +36,21 @@ export class ResourceUpload extends Watchable(Object) {
         return true
     }
 
-    public available(): boolean {
-        return this.docResourceUpload !== undefined
-    }
-
     public async upload(name: string, data: ArrayBuffer): Promise<boolean> {
         if (!this.docResourceUpload) {
             console.error("DocResourceUpload未启动")
             return false
         }
-        await this.docResourceUpload.uploadResource(name, data)
+        let count = 0
+        while (count++ < 3 && !await this.docResourceUpload.uploadResource(name, data)) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+        }
         return true
     }
 
     public close() {
+        if (this.isClosed) return;
+        this.isClosed = true
         if (!this.docResourceUpload) return;
         this.docResourceUpload.close()
         this.docResourceUpload = undefined

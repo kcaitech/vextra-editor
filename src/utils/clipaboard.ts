@@ -5,8 +5,7 @@ import {
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
-import { Media } from '@/context/workspace';
-import { getName } from '@/utils/content';
+import { Media, getName } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
 interface SystemClipboardItem {
@@ -483,7 +482,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
     if (asyncCreator && new_shape) {
         asyncCreator = asyncCreator.close();
         selection.selectShape(new_shape);
-        context.communication.resourceUpload.upload(new_shape.imageRef, media.buff.buffer.slice(0));
+        context.communication.docResourceUpload.upload(new_shape.imageRef, media.buff.buffer.slice(0));
     }
     context.tool.setAction(Action.AutoV);
     workspace.creating(false);

@@ -21,10 +21,10 @@
     "generate-package-prod": "node generate-package.js prod && npm install"
   },
   "dependencies": {
-    "@kcdesign/data": "^0.1.81",
+    "@kcdesign/data": "^0.1.91",
     "aws-sdk": "2.1420.0",
     "axios": "^1.3.6",
-    "element-plus": "^2.3.0",
+    "element-plus": "2.3.0",
     "express": "^4.18.2",
     "express-ws": "^5.0.2",
     "jszip": "^3.10.1",
@@ -103,7 +103,8 @@
       "no-unused-vars": 0,
       "vue/multi-word-component-names": "off",
       "no-debugger": "off",
-      "no-empty": "off"
+      "no-empty": "off",
+      "prefer-const": "off"
     }
   },
   "eslintIgnore": [

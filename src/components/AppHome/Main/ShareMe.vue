@@ -1,6 +1,6 @@
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" />
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
 
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu">
@@ -56,6 +56,7 @@ const isshow = ref<HTMLElement>()
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
 const mydata = ref()
+const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['star', 'share', 'EXshare'])
 
@@ -67,9 +68,11 @@ async function ShareLists() {
     try {
         const { data } = await user_api.ShareLists()
         if (data == null) {
+            noNetwork.value = true
             ElMessage.closeAll('error')
             ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -78,12 +81,17 @@ async function ShareLists() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
 
     // // unloading  
     isLoading.value = false;
+}
+
+const refreshDoc = () => {
+    ShareLists()
 }
 
 function sizeTostr(size: any) {

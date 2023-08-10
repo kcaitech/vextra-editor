@@ -315,10 +315,11 @@ const imageIconTrans = () => {
             :matrix="editingCellMatrix"></SelectView>
 
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape">
+        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+            :c-frame="props.controllerFrame">
         </BarsContainer>
         <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-            :axle="axle">
+            :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
 
     </svg>

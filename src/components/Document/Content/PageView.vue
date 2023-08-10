@@ -4,8 +4,9 @@ import { Context } from '@/context';
 import { Tool } from '@/context/tool';
 import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
-import { v4 as uuid } from "uuid";
+import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
+import { debounce } from 'lodash';
 const props = defineProps<{
     context: Context,
     data: Page,
@@ -21,20 +22,26 @@ const watcher = () => {
 }
 function pageViewRegister(mount: boolean) {
     if (mount) {
-        const id = (uuid().split('-').at(-1)) || 'pageview';
+        const id = (v4().split('-').at(-1)) || 'pageview';
         rootId.value = id;
     } else {
         rootId.value = 'pageview';
     }
     props.context.workspace.setPageViewId(rootId.value);
 }
+function _collect(t?: any) {
+    if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
+}
+const collect = debounce(_collect, 15);
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
 })
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
+    old.__collect.unwatch(collect);
     value.watch(watcher);
+    value.__collect.watch(collect);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
@@ -46,12 +53,14 @@ function tool_watcher(t?: number) {
 }
 onMounted(() => {
     props.data.watch(watcher);
+    props.data.__collect.watch(collect);
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
+    props.data.__collect.unwatch(collect);
     props.context.tool.unwatch(tool_watcher);
     pageViewRegister(false);
     stopWatchPage();

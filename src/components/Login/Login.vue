@@ -142,8 +142,6 @@ function wxcode() {
 }
 
 const handleOpenNewWindow = (routeName:string) => {
-    console.log('1111');
-    
   const routeLocation = router.resolve({
     name: routeName
   })

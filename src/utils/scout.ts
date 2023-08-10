@@ -61,8 +61,6 @@ function createSVGGeometryElement(id: string): SVGElement {
 function createPath(path: string, id: string): SVGPathElement {
     const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     p.setAttributeNS(null, 'd', path);
-    p.setAttributeNS(null, 'fill', 'red');
-    p.setAttribute('id', id);
     return p;
 }
 function getPathOnPageString(shape: Shape): string { // path坐标系：页面
@@ -84,7 +82,7 @@ function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     for (let i = 0; i < groupshape.childs.length; i++) {
         const item = groupshape.childs[i];
         if (item.type === ShapeType.Group) {
-            f = [...f, ...delayering(item, f)];
+            f = f.concat(delayering(item, f));
         } else {
             f.push(item);
         }

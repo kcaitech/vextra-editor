@@ -12,6 +12,7 @@ import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
 import BooleanObject from "./Buttons/BooleanObject.vue"
 import { Tool } from '@/context/tool';
+import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const NOGROUP = 0;
@@ -24,7 +25,6 @@ function _updater(t?: number) {
         state.value = 0;
         const selection = props.selection;
         const shapes = selection.selectedShapes;
-        // console.log(shapes[0],'shapes');
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
             isBoolGroup.value = false
@@ -55,11 +55,8 @@ function _updater(t?: number) {
 }
 const updater = debounce(_updater, 50);
 function tool_watcher(t?: number, alt?: boolean) {
-    if (t === Tool.GROUP) {
-        groupClick(alt);
-    } else if (t === Tool.UNGROUP) {
-        ungroupClick();
-    }
+    if (t === Tool.GROUP) groupClick(alt);
+    else if (t === Tool.UNGROUP) ungroupClick();
 }
 onMounted(() => {
     props.context.tool.watch(tool_watcher)
@@ -106,7 +103,7 @@ const groupClick = (alt?: boolean) => {
             }
         }
         props.context.workspace.setSelectionViewUpdater(true);
-        props.context.workspace.selectionViewUpdate();
+        props.context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     }
 }
 const ungroupClick = () => {
@@ -150,8 +147,6 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     const name = t(`bool.${n}`)
-    console.log(n,'name');
-    
     if (shapes.length && page) {
         if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const editor = props.context.editor4Shape(shapes[0])
@@ -176,13 +171,13 @@ const flattenShape = () => {
         const editor = props.context.editor4Page(page)
         if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const flatten = editor.flattenBoolShape(shapes[0])
-            if(flatten) {
+            if (flatten) {
                 props.context.selection.selectShape(flatten)
             }
         } else if (shapes.length > 1) {
             const shapessorted = sort_by_layer(props.context, shapes);
             const flatten = editor.flattenShapes(shapessorted)
-            if(flatten) {
+            if (flatten) {
                 props.context.selection.selectShape(flatten)
             }
         }

@@ -1,5 +1,14 @@
 import { v4 as uuid } from "uuid"
-import { ClientCmdType, CmdStatus, DataType, NetworkStatusType, ServerCmd, ServerCmdType } from "@/communication/types"
+import {
+    ClientCmd,
+    ClientCmdType,
+    CmdMessage,
+    CmdStatus,
+    DataType,
+    NetworkStatusType,
+    ServerCmd,
+    ServerCmdType
+} from "@/communication/types"
 import { COMMUNICATION_URL } from "@/utils/setting"
 import { Tunnel } from "@/communication/tunnel"
 
@@ -23,9 +32,11 @@ export class Server {
     isFirstConnect: boolean = true // 首次连接成功后置为false
     id: string = ""
     lastReceiveHeartbeatTime: number = 0
+    lastSendHeartbeatTime: number = 0
     sendHeartbeatInterval?: number
     receiveHeartbeatInterval?: number
     networkStatus: NetworkStatusType = NetworkStatusType.Offline
+    onConnected: () => void = () => {}
 
     constructor(token: string, tunnelMap: Map<string, Tunnel>, cmdIdToTunnel: Map<string, Tunnel>,) {
         this.token = token
@@ -89,13 +100,15 @@ export class Server {
             this.isConnecting = false
             return false
         }
-        this.ws.onmessage = this.onmessage.bind(this)
+        this.ws.onmessage = this.onMessage.bind(this)
         resolve(true)
         this.isConnecting = false
         this.isConnected = true
         this.ws.onclose = event => {
-            this.onNetworkOffline()
             this.isConnected = false
+            if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
+            this.networkStatus = NetworkStatusType.Offline
+            this.onNetworkOffline()
         }
         if (this.isFirstConnect) {
             this.isFirstConnect = false
@@ -109,8 +122,9 @@ export class Server {
                 this.onNetworkOffline()
             }, 3000) as any
         } else {
-            this.onNetworkOnline()
+            this._onNetworkOnline()
         }
+        this.onConnected()
         return true
     }
 
@@ -126,7 +140,7 @@ export class Server {
         return true
     }
 
-    onmessage(event: MessageEvent) {
+    onMessage(event: MessageEvent) {
         const isBinary = event.data instanceof ArrayBuffer
         const data = (isBinary ? event.data : JSON.parse(event.data)) as ServerCmd
         if (isBinary && (this.receivingTunnel === undefined || this.receivingTunnelCmd === undefined)) {
@@ -155,26 +169,39 @@ export class Server {
             this.receiveHeartbeat(data)
             return
         }
-        const originCmdId = data.data?.cmd_id
         const tunnelId = data.data?.tunnel_id
         const isTunnelDataCmd = data.cmd_type === ServerCmdType.TunnelData
-        const tunnel = isTunnelDataCmd ? this.tunnelMap.get(tunnelId): (() => {
-            const tunnel = this.cmdIdToTunnel.get(originCmdId)
-            this.cmdIdToTunnel.delete(originCmdId)
-            return tunnel
-        })()
-        if (!tunnel) return;
+        let tunnel = this.tunnelMap.get(tunnelId)
+        if (isTunnelDataCmd && !tunnel) {
+            this.send(JSON.stringify({
+                cmd_type: ClientCmdType.Return,
+                cmd_id: uuid(),
+                status: CmdStatus.Fail,
+                message: CmdMessage.TunnelIdError,
+                data: {
+                    cmd_id: cmdId,
+                    tunnel_id: tunnelId,
+                }
+            } as ClientCmd))
+            return
+        }
         if (isTunnelDataCmd && data.data?.data_type === DataType.Binary) {
             this.receivingTunnel = tunnel
             this.receivingTunnelCmd = data
             return
         }
-        tunnel.receiveFromServer(data)
+        if (!tunnel) {
+            const originCmdId = data.data?.cmd_id
+            tunnel = this.cmdIdToTunnel.get(originCmdId)
+            this.cmdIdToTunnel.delete(originCmdId)
+        }
+        tunnel?.receiveFromServer(data)
         console.log("receiveFromServer", data)
     }
 
-    async sendHeartbeat(): Promise<boolean> {
-        return this.send(JSON.stringify({
+    sendHeartbeat() {
+        this.lastSendHeartbeatTime = Date.now()
+        this.send(JSON.stringify({
             cmd_type: ClientCmdType.Heartbeat,
             cmd_id: uuid(),
             data: {
@@ -183,7 +210,7 @@ export class Server {
         }))
     }
 
-    receiveHeartbeat(cmd: ServerCmd) {
+    _onNetworkOnline() {
         if (this.receiveHeartbeatInterval !== undefined) clearTimeout(this.receiveHeartbeatInterval);
         this.receiveHeartbeatInterval = setTimeout(() => {
             if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
@@ -195,15 +222,19 @@ export class Server {
             this.onNetworkOnline()
         }
         this.lastReceiveHeartbeatTime = Date.now()
+    }
+
+    receiveHeartbeat(cmd: ServerCmd) {
+        this._onNetworkOnline()
         if (cmd.cmd_type === ServerCmdType.Heartbeat) {
-            this.send({
+            this.send(JSON.stringify({
                 cmd_type: ClientCmdType.HeartbeatResponse,
                 cmd_id: uuid(),
                 data: {
                     time: Date.now(),
                     cmd_id: cmd.cmd_id,
                 },
-            })
+            }))
         }
     }
 

@@ -4,6 +4,10 @@ import { Context } from "./index";
 import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipaboard";
 import { adapt_page } from "@/utils/content";
+interface Point {
+    x: number
+    y: number
+}
 export enum KeyboardKeys {
     Space = 'Space',
     A = 'KeyA',
@@ -53,12 +57,6 @@ export enum Perm {
     isComment = 2,
     isEdit = 3
 }
-export interface Media {
-    name: string
-    frame: { width: number, height: number }
-    buff: Uint8Array
-    base64: string
-}
 export class WorkSpace extends Watchable(Object) {
     static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
     static INSERT_FRAME = 1; // notify类型：插入容器模版、更新光标、重置光标、矩阵变换
@@ -74,7 +72,6 @@ export class WorkSpace extends Watchable(Object) {
     static CTRL_APPEAR = 16;
     static PASTE = 17;
     static PASTE_RIGHT = 18;
-    static INSERT_IMGS = 19;
     static FREEZE = 20;
     static THAW = 21;
     static CLAC_ATTRI = 22;
@@ -106,11 +103,11 @@ export class WorkSpace extends Watchable(Object) {
     private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
     private m_document_perm: number = 3;
     private m_should_selection_view_update: boolean = true;
-    private m_image: Media[] | undefined = undefined;
     private m_freeze: boolean = false;
     private m_clipboard: Clipboard;
     private m_t: Function = () => { };
     private m_controller_path: string = '';
+    private m_controller_frame: Point[] = [];
     constructor(context: Context) {
         super();
         this.context = context;
@@ -154,9 +151,6 @@ export class WorkSpace extends Watchable(Object) {
     get startPoint() {
         return this.m_mousedown_on_page;
     }
-    get action() {
-        return this.m_current_action;
-    }
     get frameSize() {
         return this.m_frame_size;
     }
@@ -190,6 +184,12 @@ export class WorkSpace extends Watchable(Object) {
     setCtrlPath(val: string) {
         this.m_controller_path = val;
     }
+    get controllerFrame() {
+        return this.m_controller_frame;
+    }
+    setCFrame(v: Point[]) {
+        this.m_controller_frame = v;
+    }
     focusText() {
         this.notify(WorkSpace.TEXT_FORMAT)
     }
@@ -212,13 +212,6 @@ export class WorkSpace extends Watchable(Object) {
         this.m_freeze = isFreeze;
         this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
     }
-    setImage(files: Media[]) {
-        this.m_image = [...files];
-        this.notify(WorkSpace.INSERT_IMGS);
-    }
-    getImageFromDoc() {
-        return this.m_image;
-    }
     selectionViewUpdate() {
         this.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     }
@@ -233,6 +226,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
+        this.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     setCtrl(v: 'page' | 'controller') {
         this.m_controller = v;
@@ -285,13 +279,8 @@ export class WorkSpace extends Watchable(Object) {
             this.keydown_x(ctrlKey, metaKey, shiftKey);
         } else if (event.code === KeyboardKeys.Digit1) {
             event.preventDefault();
-            if (ctrlKey || metaKey) {
-                adapt_page(this.context);
-            }
+            if (ctrlKey || metaKey) adapt_page(this.context);
         }
-    }
-    matrixTransformation() { // 页面坐标系发生变化
-        this.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     setFrameSize(size: { width: number, height: number }) {
         this.m_frame_size = size
@@ -330,19 +319,12 @@ export class WorkSpace extends Watchable(Object) {
             const selection = this.context.selection;
             if (selection.selectedShapes.length) {
                 const p_map = new Map();
-                selection.selectedShapes.forEach(s => {
-                    if (s.parent) {
-                        p_map.set(s.parent.id, s.parent);
-                    }
-                })
+                selection.selectedShapes.forEach(s => { if (s.parent) p_map.set(s.parent.id, s.parent) });
                 if (p_map.size > 1) {
                     const page = selection.selectedPage;
-                    if (page) {
-                        selection.rangeSelectShape(page.childs);
-                    }
+                    if (page) selection.rangeSelectShape(page.childs);
                 } else {
-                    const childs = Array.from(p_map.values())[0].childs;
-                    selection.rangeSelectShape(childs);
+                    selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
                 }
             } else {
                 const page = selection.selectedPage;
@@ -389,7 +371,6 @@ export class WorkSpace extends Watchable(Object) {
         if ((ctrlKey || metaKey) && !shift) {
             this.notify(WorkSpace.COPY)
         } else if (!(ctrlKey || metaKey) && shift) {
-
             this.context.comment.setVisibleComment(!this.context.comment.isVisibleComment);
         }
     }

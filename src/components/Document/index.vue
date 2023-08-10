@@ -19,8 +19,14 @@ import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
 import { Perm, WorkSpace } from '@/context/workspace';
+import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
+import { insertNetworkInfo } from "@/utils/message"
 import { S3Storage, StorageOptions } from "@/utils/storage";
+import { NetworkStatus } from '@/communication/modules/network_status'
+import { Comment } from '@/context/comment';
+import { DocSelectionOp } from "@/context/communication/doc_selection_op";
+import { throttle } from "@/utils/timing_util";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -38,6 +44,7 @@ const permType = ref<number>();
 const docInfo: any = ref({});
 const showHint = ref(false);
 const countdown = ref(10);
+const noNetwork = ref(false)
 const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
@@ -122,6 +129,7 @@ function selectionWatcher(t: number) {
         }
     }
 }
+
 function keyboardEventHandler(event: KeyboardEvent) {
     const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
@@ -294,6 +302,7 @@ const getUserInfo = async () => {
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
+        noNetwork.value = false
         const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
         docInfo.value = dataInfo.data;
         if (dataInfo.code === 400) {
@@ -309,7 +318,7 @@ const getDocumentInfo = async () => {
             return
         }
         permType.value = dataInfo.data.document_permission.perm_type;
-        //获取文档类型是否为私有文档且有无权限   
+        //获取文档类型是否为私有文档且有无权限
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -346,19 +355,21 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            context.communication.docOt.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "").then(() => {
+            if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
                 switchPage(context!.data.pagesList[0]?.id);
                 loading.value = false;
-            }).catch((err) => {
+            } else {
                 router.push("/");
-                console.error(err);
-            });
-            await context.communication.resourceUpload.start(docId, token);
-            await context.communication.comment.start(docId, token);
+                return;
+            }
+            await context.communication.docResourceUpload.start(token, docId);
+            await context.communication.docCommentOp.start(token, docId);
+            await context.communication.docSelectionOp.start(token, docId, context);
         }
         getUserInfo()
     } catch (err) {
         loading.value = false;
+        noNetwork.value = true
         console.log(err)
         throw err;
     }
@@ -368,7 +379,7 @@ async function upload() {
     const token = localStorage.getItem("token");
     if (!token || !context || !context.data) return;
     if (!await context.communication.docUpload.start(token)) {
-        // todo 上传失败处理
+        // todo 上传通道开启失败处理
         return;
     }
     let result;
@@ -387,12 +398,13 @@ async function upload() {
         path: '/document',
         query: { id: doc_id },
     });
-    context.communication.docOt.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "").catch((err) => {
-        console.error(err);
-    });
-    context!.communication.resourceUpload.start(doc_id, token);
-    context!.communication.comment.start(doc_id, token);
-    context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
+    if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
+        // todo 文档操作通道开启失败处理
+    }
+    context.communication.docResourceUpload.start(token, doc_id);
+    context.communication.docCommentOp.start(token, doc_id);
+    context.communication.docSelectionOp.start(token, doc_id, context);
+    context.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
 let timer: any = null;
 function init_screen_size() {
@@ -429,16 +441,130 @@ function workspaceWatcher(t: number) {
         keyToggleTB();
     }
 }
+
+const autosave = t('message.autosave')
+const link_success = t('message.link_success')
+const network_anomaly = t('message.network_anomaly')
+const network_error = t('message.network_error')
+
+// 保存文档成功message信息
+const autoSaveSuccess = () => {
+    insertNetworkInfo('saveSuccess', true, autosave)
+    const timer = setTimeout(() => {
+        insertNetworkInfo('saveSuccess', false, autosave)
+        clearTimeout(timer)
+    }, 3000)
+}
+//网络连接成功message信息
+const networkLinkSuccess = () => {
+    insertNetworkInfo('netError', false, network_anomaly)
+    insertNetworkInfo('networkSuccess', true, link_success)
+    const timer = setTimeout(() => {
+        insertNetworkInfo('networkSuccess', false, link_success)
+        clearTimeout(timer)
+    }, 3000)
+}
+// 网络断开连接提示信息
+const networkLinkError = () => {
+    insertNetworkInfo('networkSuccess', false, link_success)
+    insertNetworkInfo('netError', true, network_anomaly)
+    const timer = setTimeout(() => {
+        insertNetworkInfo('netError', false, network_anomaly)
+        clearTimeout(timer)
+    }, 3000)
+}
+
+//文档获取失败 重试刷新页面
+const refreshDoc = () => {
+    location.reload();
+}
+
+const hasPendingSync = () => {
+    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr){
+        insertNetworkInfo('networkError', true, network_error)
+        netErr = setInterval(() => {
+            if(context && !context.communication.docOp.hasPendingSyncCmd()) {
+                insertNetworkInfo('networkError', false, network_error)
+                autoSaveSuccess()
+                clearInterval(netErr)
+                netErr = null
+            }
+        },1000)
+    }
+}
+// 检测是否有未上传的数据
+let loopNet: any = null
+//监听网络状态
+let netErr: any = null
+const token = localStorage.getItem("token") || "";
+const networkStatus = NetworkStatus.Make(token);
+networkStatus.addOnChange((status: any) => {
+    const s = (status.status)as any
+    if(s === 1) {
+        // 网络断开连接
+        if(context) {
+            clearInterval(loopNet);
+            loopNet = null;
+            loopNet = setInterval(() => {
+                hasPendingSync()
+            },1000)
+            if(context.communication.docOp.hasPendingSyncCmd() || netErr) {
+                //有未上传资源
+                hasPendingSync()
+            }else {
+                networkLinkError()
+            }
+        }
+    }else {
+        //网络连接成功
+        if(context) {
+            if(context.communication.docOp.hasPendingSyncCmd() || netErr) {
+                //有未上传资源
+                hasPendingSync()
+            }else {
+                networkLinkSuccess()
+            }
+            context.comment.notify(Comment.EDIT_COMMENT)
+            clearInterval(loopNet)
+        }
+    }
+})
+
+function onBeforeUnload(event: any) {
+    if(context?.communication.docOp.hasPendingSyncCmd()) return event.returnValue = t('message.leave'); // 浏览器弹框提示
+    return event.preventDefault();
+}
+
+function onUnloadForCommunication() {
+    try {
+        context?.communication.docOp.close();
+        context?.communication.docResourceUpload.close();
+        context?.communication.docCommentOp.close();
+        context?.communication.docSelectionOp.close();
+    } catch (err) { }
+}
+
+function onUnload(event: any) {
+    onUnloadForCommunication();
+}
+
+function closeNetMsg() {
+    insertNetworkInfo('saveSuccess', false, autosave);
+    insertNetworkInfo('networkError', false, network_error);
+    insertNetworkInfo('netError', false, network_anomaly);
+    insertNetworkInfo('networkSuccess', false, link_success);
+}
+
 onMounted(() => {
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('unload', onUnload);
     init_screen_size();
     init_doc();
 })
+
 onUnmounted(() => {
-    try {
-        context?.communication.docOt.close();
-        context?.communication.resourceUpload.close();
-        context?.communication.comment.close();
-    } catch (err) { }
+    closeNetMsg();
+    onUnloadForCommunication();
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
@@ -449,6 +575,11 @@ onUnmounted(() => {
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
+    window.removeEventListener('beforeunload', onBeforeUnload);
+    window.removeEventListener('unload', onUnload);
+    clearInterval(loopNet);
+    clearInterval(netErr);
+    networkStatus.close();
 })
 </script>
 
@@ -485,6 +616,9 @@ onUnmounted(() => {
         </template>
     </ColSplitView>
     <SubLoading v-if="sub_loading"></SubLoading>
+    <div class="network" v-if="noNetwork">
+        <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
+    </div>
     <div v-if="showHint" class="notification">
         <el-icon :size="13">
             <Warning />
@@ -521,6 +655,13 @@ onUnmounted(() => {
     background-color: var(--top-toolbar-bg-color);
     z-index: 10;
     min-height: 40px;
+}
+
+.network {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
 }
 
 #visit {
@@ -564,7 +705,7 @@ onUnmounted(() => {
     font-size: var(--font-default-fontsize);
     display: flex;
     align-items: center;
-    top: 50px;
+    top: 60px;
     left: 50%;
     transform: translateX(-50%);
     color: red;
@@ -575,6 +716,36 @@ onUnmounted(() => {
 
     .text {
         margin: 0 15px 0 10px;
+    }
+}
+.network_error {
+    position: fixed;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f1f1f1;
+    background-color: var(--active-color-beta);
+    padding: 7px 30px;
+    border: 1px solid var(--active-color-beta);
+    border-radius: 4px;
+    .loading-spinner {
+        >svg {
+            width: 15px;
+            height: 15px;
+            color: #000;
+        }
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
     }
 }
 </style>

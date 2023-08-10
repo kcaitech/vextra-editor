@@ -1,19 +1,20 @@
 import { Watchable, Document } from "@kcdesign/data"
 import {
-    DocUpload as DocumentUpload,
+    DocUpload as _DocUpload,
     Response,
     ResponseStatus
 } from "@/communication/modules/doc_upload"
 
 export class DocUpload extends Watchable(Object) {
-    private docUpload?: DocumentUpload
+    private docUpload?: _DocUpload
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void
+    private isClosed: boolean = false
 
     public async start(token: string): Promise<boolean> {
         if (this.docUpload) return true;
         if (this.startPromise) return await this.startPromise;
-        const documentUpload = DocumentUpload.Make(token)
+        const documentUpload = _DocUpload.Make(token)
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await documentUpload.start()) {
@@ -32,10 +33,6 @@ export class DocUpload extends Watchable(Object) {
         return true
     }
 
-    public available(): boolean {
-        return this.docUpload !== undefined
-    }
-
     public async upload(document: Document): Promise<Response> {
         if (!this.docUpload) {
             console.error("DocUpload未启动")
@@ -48,6 +45,8 @@ export class DocUpload extends Watchable(Object) {
     }
 
     public close() {
+        if (this.isClosed) return;
+        this.isClosed = true
         if (!this.docUpload) return;
         this.docUpload.close()
         this.docUpload = undefined

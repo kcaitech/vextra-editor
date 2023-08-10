@@ -17,7 +17,7 @@ import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types, fit } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
-import { Perm } from "@/context/workspace"
+import { Perm, WorkSpace } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -67,7 +67,6 @@ const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const search_wrap = ref<HTMLDivElement>();
 const accurate = ref<boolean>(false);
-const show_accrate_btn = ref<boolean>(false);
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
@@ -123,7 +122,6 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
-
 const notifySourceChange = debounce(_notifySourceChange, 48);
 const stopWatch = watch(() => props.page, () => {
     let source = shapeListMap.get(props.page.id)
@@ -313,7 +311,7 @@ function shapeScrollToContentView(shape: Shape) {
         } else {
             workspace.matrix.trans(transX, transY);
         }
-        workspace.matrixTransformation();
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         props.context.navi.set_phase('');
     }
 }

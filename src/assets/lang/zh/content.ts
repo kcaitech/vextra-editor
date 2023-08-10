@@ -16,5 +16,7 @@ shape[ShapeType.Rectangle] = '矩形';
 export const color = {
     solid: '纯色',
     esc: '按ESC退出',
-    recently: '最近使用'
+    recently: '最近使用',
+    documentc: '文档使用',
+    times: '使用xx次'
 }

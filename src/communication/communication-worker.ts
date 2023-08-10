@@ -51,6 +51,11 @@ ctx.onconnect = (event) => {
         if (server === undefined) {
             token = data.token
             server = new Server(token, tunnelMap, cmdIdToTunnel)
+            server.onConnected = () => {
+                for (const tunnel of tunnelMap.values()) tunnel.close();
+                tunnelMap.clear()
+                networkStatusTunnelMap.clear()
+            }
             server.onNetworkOnline = () => {
                 sendNetworkStatusToClient(NetworkStatusType.Online)
             }
