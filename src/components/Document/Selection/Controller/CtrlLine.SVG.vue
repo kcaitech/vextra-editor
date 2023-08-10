@@ -16,7 +16,7 @@ interface Props {
     context: Context,
     controllerFrame: Point[],
     rotate: number,
-    matrix: number[],
+    matrix: Matrix,
     shape: Shape
 }
 const props = defineProps<Props>();
@@ -37,11 +37,6 @@ const axle = computed<ClientXY>(() => {
 });
 
 // #endregion
-function updater(t?: number) {
-    if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
-        editing.value = isEditing();
-    }
-}
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
@@ -79,10 +74,7 @@ function mousedown(e: MouseEvent) {
     document.addEventListener('mouseup', mouseup);
 }
 function mousemove(e: MouseEvent) {
-    const isDragging = isDrag();
-    if (isDragging) {
-        visible.value = false; // 控件在移动过程中不可视
-    }
+    if (isDrag()) visible.value = false;
 }
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
@@ -92,7 +84,6 @@ function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) editing.value = false;
 }
 function windowBlur() {
-    // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
