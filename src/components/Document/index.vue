@@ -560,8 +560,6 @@ function closeNetMsg() {
 //协作人员操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
-    console.log(data,'data');
-    
     if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
         const addUset = context!.teamwork.getUserSelection
         if(docCommentOpData.type === DocSelectionOpType.Exit) {
