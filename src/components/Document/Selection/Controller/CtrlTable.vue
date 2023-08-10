@@ -157,7 +157,6 @@ function isInCell(xy: { x: number, y: number }, cell: TableGridItem) {
 }
 
 function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, cell: TableCell) {
-    console.log("pick2", cell.id)
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
     const editor = props.context.editor4Table(props.shape)
@@ -192,7 +191,6 @@ function mousedown(e: MouseEvent) {
             (x - iconX) < imageIconSize && (y - iconY) < imageIconSize) {
             const cell = hoveringCell.value.cell;
             pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
-                console.log("pick", cell.id)
                 onLoadImage(name, data, cell);
             });
             e.stopPropagation();
@@ -249,7 +247,6 @@ function mousemove(e: MouseEvent) {
     const cell = props.shape.locateCell(xy.x, xy.y);
     if (cell && (!hoveringCell.value || cell.cell.id !== hoveringCell.value.cell.id)) {
         // hover cell
-        console.log("hover", cell.cell.id)
         hoveringCell.value = cell;
     }
 }
