@@ -1,4 +1,3 @@
-import { Context } from "@/context";
 import { Shape } from "@kcdesign/data";
 import { PositonAdjust } from "@kcdesign/data";
 // 群的最左端
@@ -8,14 +7,9 @@ export function get_colony_left(shapes: Shape[]) {
         const shape = shapes[i];
         const frame = shape.frame;
         const m = shape.matrix2Root();
-        let xs: [number, number][] = [
-            [0, 0],
-            [frame.width, 0],
-            [frame.width, frame.height],
-            [0, frame.height]
-        ];
+        let xs: [number, number][] = [[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]];
         xs = xs.map(p => {
-            const _s = m.computeCoord(p[0], p[1]);
+            const _s = m.computeCoord2(p[0], p[1]);
             return [_s.x, _s.y];
         });
         _xs.push(xs[0][0], xs[1][0], xs[2][0], xs[3][0]);
