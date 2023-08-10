@@ -31,6 +31,8 @@ declare module '@vue/runtime-core' {
     BorderPositionItem: typeof import('./src/components/Document/Attribute/Border/BorderPositionItem.vue')['default']
     BorderStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderStyleItem.vue')['default']
     BorderStyleSelected: typeof import('./src/components/Document/Attribute/Border/BorderStyleSelected.vue')['default']
+    ColInfo: typeof import('./src/components/Document/Toolbar/Collaboration/ColInfo.vue')['default']
+    Collaborator: typeof import('./src/components/Document/Toolbar/Collaboration/Collaborator.vue')['default']
     ColorPicker: typeof import('./src/components/common/ColorPicker/index.vue')['default']
     ColSplitView: typeof import('./src/components/common/ColSplitView.vue')['default']
     Comment: typeof import('./src/components/Document/Toolbar/Buttons/Comment.vue')['default']
@@ -130,6 +132,7 @@ declare module '@vue/runtime-core' {
     SelectView: typeof import('./src/components/Document/Selection/Controller/Text/SelectView.vue')['default']
     Serviceagreement: typeof import('./src/components/Login/Serviceagreement.vue')['default']
     Shadow: typeof import('./src/components/Document/Attribute/Shadow.vue')['default']
+    ShapeAvatar: typeof import('./src/components/Document/Selection/TeamWork/ShapeAvatar.vue')['default']
     ShapeGroup: typeof import('./src/components/Document/Content/ShapeGroup.vue')['default']
     ShapeGroupShape: typeof import('./src/components/Document/Content/ShapeGroupShape.vue')['default']
     ShapeItem: typeof import('./src/components/Document/Navigation/ShapeItem.vue')['default']
@@ -161,5 +164,6 @@ declare module '@vue/runtime-core' {
     UndoRedo: typeof import('./src/components/Document/Toolbar/UndoRedo.vue')['default']
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
+    UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
   }
 }

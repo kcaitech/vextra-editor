@@ -29,6 +29,7 @@ const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isTitle = ref<boolean>(props.context.tool.isShowTitle);
+const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const invalid_items = ref<string[]>([]);
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
@@ -164,7 +165,12 @@ function canvas() {
   adapt_page(props.context);
   emit('close');
 }
-function cursor() { }
+function cursor() { 
+  const status = props.context.menu.isUserCursorVisible;
+  isCursor.value = !status;
+  props.context.menu.setVisibleCursor(isCursor.value);
+  emit('close');
+}
 function comment() {
   const status = props.context.comment.isVisibleComment;
   isComment.value = !status;
@@ -444,9 +450,9 @@ onUnmounted(() => {
       </span>
     </div>
     <!-- 协作 -->
-    <div class="line" v-if="props.items.includes('comment')"></div>
+    <div class="line" v-if="props.items.includes('cursor')"></div>
     <div class="item" v-if="props.items.includes('cursor')" @click="cursor">
-      <div class="choose"></div>
+      <div class="choose" v-show="isCursor"></div>
       <span>{{ t('system.show_many_cursor') }}</span>
     </div>
     <div class="item" v-if="props.items.includes('comment')" @click="comment">

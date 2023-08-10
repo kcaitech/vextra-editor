@@ -137,7 +137,9 @@ export const home = {
     'align_v_c': 'Align vertical centers',
     'align_bottom': 'Align bottom',
     'distribute_h': 'Distribute horizontal spacing',
-    'distribute_v': 'Distribute vertical spacing'
+    'distribute_v': 'Distribute vertical spacing',
+    people_are_visiting: 'People are visiting:',
+    permissions: 'Permissions:'
 }
 
 export const search = {
@@ -304,7 +306,7 @@ export const message = {
     cancel: 'Cancel',
     exit_document: 'Exit document',
     back_home: 'Back to home',
-    unuploaded_msg: 'The document is not upload resources，Exit may cause lost，Quit or not?'
+    unuploaded_msg: 'The document has unuploaded resources. If you exit, content will be lost. Do you want to exit?'
 }
 export const bool = {
     union: 'Union',
