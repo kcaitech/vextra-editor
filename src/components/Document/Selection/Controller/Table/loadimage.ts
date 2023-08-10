@@ -28,26 +28,34 @@ export function loadImage(name: string, buffer: ArrayBuffer) {
 }
 
 
+const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 export function useImagePicker() {
     let filePicker: FilePicker | undefined;
-    const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
+    let cb: (name: string, data: { buff: Uint8Array, base64: string }) => void | undefined;
+
+    function onFilePick(file: File) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const buffer = e.target?.result;
+            if (!buffer || !(buffer instanceof ArrayBuffer)) {
+                console.log("read image fail")
+                return;
+            }
+            const name = file.name;
+            const data = loadImage(name, buffer);
+            if (cb) cb(name, data);
+        }
+        reader.readAsArrayBuffer(file);
+    }
+
+    function initpicker() {
+        if (!filePicker) filePicker = new FilePicker(accept, onFilePick);
+        return filePicker;
+    }
 
     function pickImage(onPickImage: (name: string, data: { buff: Uint8Array, base64: string }) => void) {
-        if (!filePicker) filePicker = new FilePicker(accept, (file: File) => {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const buffer = e.target?.result;
-                if (!buffer || !(buffer instanceof ArrayBuffer)) {
-                    console.log("read image fail")
-                    return;
-                }
-                const name = file.name;
-                const data = loadImage(name, buffer);
-                onPickImage(name, data);
-            }
-            reader.readAsArrayBuffer(file);
-        });
-        filePicker.invoke();
+        cb = onPickImage;
+        initpicker().invoke();
     }
 
     onUnmounted(() => {

@@ -116,13 +116,13 @@ const editingCellMatrix = computed(() => {
     return matrix.toArray();
 })
 
-const hoveringCellMatrix = computed(() => {
-    matrix.reset(submatrix.toArray());
-    if (hoveringCell.value) {
-        matrix.preTrans(hoveringCell.value.frame.x, hoveringCell.value.frame.y);
-    }
-    return matrix.toArray();
-})
+// const hoveringCellMatrix = computed(() => {
+//     matrix.reset(submatrix.toArray());
+//     if (hoveringCell.value) {
+//         matrix.preTrans(hoveringCell.value.frame.x, hoveringCell.value.frame.y);
+//     }
+//     return matrix.toArray();
+// })
 
 const { t } = useI18n();
 
@@ -157,7 +157,7 @@ function isInCell(xy: { x: number, y: number }, cell: TableGridItem) {
 }
 
 function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, cell: TableCell) {
-    // const data = loadImage(name, buffer);
+    console.log("pick2", cell.id)
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
     const editor = props.context.editor4Table(props.shape)
@@ -174,15 +174,36 @@ function mousedown(e: MouseEvent) {
     const { clientX, clientY } = e;
     const root = workspace.root;
     matrix.reset(submatrixArray.value);
+
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     if (editingCell.value && isInCell(xy, editingCell.value)) {
         getCellState(editingCell.value.cell).onMouseDown(e);
         return;
     }
+    if (hoveringCell.value && isInCell(xy, hoveringCell.value) && showImageIcon()) {
+        // 是否点击了图标
+        const x = clientX - root.x;
+        const y = clientY - root.y;
+        const bounds = hoverCellBounds.value;
+        const iconX = bounds.x + (bounds.w - imageIconSize) / 2;
+        const iconY = bounds.y + (bounds.h - imageIconSize) / 2;
+
+        if (x > iconX && y > iconY &&
+            (x - iconX) < imageIconSize && (y - iconY) < imageIconSize) {
+            const cell = hoveringCell.value.cell;
+            pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
+                console.log("pick", cell.id)
+                onLoadImage(name, data, cell);
+            });
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+    }
 
     const cell = props.shape.locateCell(xy.x, xy.y);
     if (!cell) return;
-    if (cell.cell.cellType === TableCellType.Image) {
+    if (cell.cell.cellType === TableCellType.Image) { // todo 应该是查看大图？
         pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
             onLoadImage(name, data, cell.cell);
         });
@@ -209,6 +230,10 @@ function mousemove(e: MouseEvent) {
         return;
     }
 
+    if (e.buttons > 0) {
+        return;
+    }
+
     const workspace = props.context.workspace;
     const { clientX, clientY } = e;
     const root = workspace.root;
@@ -224,6 +249,7 @@ function mousemove(e: MouseEvent) {
     const cell = props.shape.locateCell(xy.x, xy.y);
     if (cell && (!hoveringCell.value || cell.cell.id !== hoveringCell.value.cell.id)) {
         // hover cell
+        console.log("hover", cell.cell.id)
         hoveringCell.value = cell;
     }
 }
@@ -243,8 +269,33 @@ function isEditingText() {
     return editingCell.value && editingCell.value.cell.cellType === TableCellType.Text && editingCell.value.cell.text;
 }
 
-function showHoverCell() {
-    return hoveringCell.value && (hoveringCell.value.cell.cellType ?? TableCellType.None) === TableCellType.None;
+const imageIconSize = 20; // px
+const hoverCellBounds = computed(() => {
+    if (!hoveringCell.value) return { x: 0, y: 0, w: 0, h: 0 };
+    const frame = hoveringCell.value.frame;
+    matrix.reset(submatrix.toArray());
+    matrix.preTrans(frame.x, frame.y);
+    const xy = matrix.computeCoord(0, 0);
+    const xy1 = matrix.computeCoord(frame.width, frame.height);
+    const x = xy.x;
+    const y = xy.y;
+    const w = xy1.x - x;
+    const h = xy1.y - y;
+    return { x, y, w, h }
+})
+function showImageIcon() {
+    const imageIconVisibleSize = imageIconSize << 1;
+    const bounds = hoverCellBounds.value;
+    return hoveringCell.value &&
+        (hoveringCell.value.cell.cellType ?? TableCellType.None) === TableCellType.None &&
+        bounds.w > imageIconVisibleSize &&
+        bounds.h > imageIconVisibleSize;
+}
+const imageIconTrans = () => {
+    const bounds = hoverCellBounds.value;
+    const x = bounds.x + (bounds.w - imageIconSize) / 2;
+    const y = bounds.y + (bounds.h - imageIconSize) / 2;
+    return `translate(${x}, ${y})`
 }
 
 </script>
@@ -257,8 +308,10 @@ function showHoverCell() {
         :class="{ 'un-visible': !visible }">
 
         <!-- 插入图片icon -->
-        <HoverCell v-if="showHoverCell()" :shape="hoveringCell!.cell" :matrix="hoveringCellMatrix" :context="props.context"
-            :frame="hoveringCell!.frame"></HoverCell>
+        <g v-if="showImageIcon()" :transform="imageIconTrans()">
+            <svg-icon class="cell-image" icon-class="pattern-image" :width="`${imageIconSize}px`"
+                :height="`${imageIconSize}px`"></svg-icon>
+        </g>
 
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
@@ -267,7 +320,8 @@ function showHoverCell() {
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape">
         </BarsContainer>
-        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape" :axle="axle">
+        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+            :axle="axle">
         </PointsContainer>
 
     </svg>

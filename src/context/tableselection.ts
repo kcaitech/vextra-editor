@@ -9,7 +9,6 @@ export class TableSelection implements Notifiable {
     private m_tableRowEnd: number = -1;
     private m_tableColStart: number = -1;
     private m_tableColEnd: number = -1;
-    private m_tableSelectCell?: TableCell; // 仅选中一个单元格时
 
     constructor(shape: TableShape, notify: Notifiable) {
         this.m_shape = shape;
@@ -29,7 +28,6 @@ export class TableSelection implements Notifiable {
         this.m_tableRowEnd = -1;
         this.m_tableColStart = -1;
         this.m_tableColEnd = -1;
-        this.m_tableSelectCell = undefined;
     }
 
     get tableRowStart() {
@@ -44,8 +42,12 @@ export class TableSelection implements Notifiable {
     get tableColEnd() {
         return this.m_tableColEnd;
     }
-    get tableSelectCell() {
-        return this.m_tableSelectCell;
+    getSelectedCells(visible: boolean = true): TableCell[] {
+        return this.m_shape.getTableCells(this.m_tableRowStart,
+            this.m_tableRowEnd,
+            this.m_tableColStart,
+            this.m_tableColEnd,
+            visible);
     }
 
     // table
@@ -59,19 +61,15 @@ export class TableSelection implements Notifiable {
             this.m_tableRowEnd = rowEnd;
             this.m_tableColStart = colStart;
             this.m_tableColEnd = colEnd;
-            this.m_tableSelectCell = undefined;
 
             this.notify(Selection.CHANGE_TABLE_CELL);
         }
     }
     selectTableCell(cell: TableCell, rowIdx: number, colIdx: number) {
-        if (!this.m_tableSelectCell ||
-            this.m_tableSelectCell.id !== cell.id ||
-            this.m_tableRowStart !== this.m_tableRowEnd ||
+        if (this.m_tableRowStart !== this.m_tableRowEnd ||
             this.m_tableRowStart !== rowIdx ||
             this.m_tableColStart !== this.m_tableColEnd ||
             this.m_tableColStart !== colIdx) {
-            this.m_tableSelectCell = cell;
             this.m_tableRowStart = this.m_tableRowEnd = rowIdx;
             this.m_tableColStart = this.m_tableColEnd = colIdx;
             this.notify(Selection.CHANGE_TABLE_CELL);
