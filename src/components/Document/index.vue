@@ -286,6 +286,8 @@ const hideNotification = (type?: number) => {
     }
 }
 const showNotification = (type?: number) => {
+    insertNetworkInfo('networkError', false, network_error);
+    window.removeEventListener('beforeunload', onBeforeUnload);
     showHint.value = true;
     startCountdown(type);
 }
@@ -424,7 +426,7 @@ function init_doc() {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
-            getUserInfo()
+            getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             upload();
@@ -445,35 +447,35 @@ function workspaceWatcher(t: number) {
     }
 }
 
-const autosave = t('message.autosave')
-const link_success = t('message.link_success')
-const network_anomaly = t('message.network_anomaly')
-const network_error = t('message.network_error')
+const autosave = t('message.autosave');
+const link_success = t('message.link_success');
+const network_anomaly = t('message.network_anomaly');
+const network_error = t('message.network_error');
 
 // 保存文档成功message信息
 const autoSaveSuccess = () => {
-    insertNetworkInfo('saveSuccess', true, autosave)
+    insertNetworkInfo('saveSuccess', true, autosave);
     const timer = setTimeout(() => {
-        insertNetworkInfo('saveSuccess', false, autosave)
+        insertNetworkInfo('saveSuccess', false, autosave);
         clearTimeout(timer)
     }, 3000)
 }
 //网络连接成功message信息
 const networkLinkSuccess = () => {
-    insertNetworkInfo('netError', false, network_anomaly)
-    insertNetworkInfo('networkSuccess', true, link_success)
+    insertNetworkInfo('netError', false, network_anomaly);
+    insertNetworkInfo('networkSuccess', true, link_success);
     const timer = setTimeout(() => {
-        insertNetworkInfo('networkSuccess', false, link_success)
+        insertNetworkInfo('networkSuccess', false, link_success);
         clearTimeout(timer)
     }, 3000)
 }
 // 网络断开连接提示信息
 const networkLinkError = () => {
-    insertNetworkInfo('networkSuccess', false, link_success)
-    insertNetworkInfo('netError', true, network_anomaly)
+    insertNetworkInfo('networkSuccess', false, link_success);
+    insertNetworkInfo('netError', true, network_anomaly);
     const timer = setTimeout(() => {
-        insertNetworkInfo('netError', false, network_anomaly)
-        clearTimeout(timer)
+        insertNetworkInfo('netError', false, network_anomaly);
+        clearTimeout(timer);
     }, 3000)
 }
 
@@ -483,16 +485,16 @@ const refreshDoc = () => {
 }
 
 const hasPendingSync = () => {
-    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr){
-        insertNetworkInfo('networkError', true, network_error)
+    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr ){
+        insertNetworkInfo('networkError', true, network_error);
         netErr = setInterval(() => {
             if(context && !context.communication.docOp.hasPendingSyncCmd()) {
-                insertNetworkInfo('networkError', false, network_error)
-                autoSaveSuccess()
-                clearInterval(netErr)
-                netErr = null
+                insertNetworkInfo('networkError', false, network_error);
+                autoSaveSuccess();
+                clearInterval(netErr);
+                netErr = null;
             }
-        },1000)
+        },1000);
     }
 }
 // 检测是否有未上传的数据

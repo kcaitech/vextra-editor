@@ -2,6 +2,7 @@ import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
 import { Shape, ShapeType } from "@kcdesign/data";
 import { createHorizontalBox } from "./common";
+import { WorkSpace } from "@/context/workspace";
 export type Area = number | 'artboard' | 'group' | 'normal'; // number 说明在选区内
 export function is_shape_in_selection(shapes: Shape[], shape: Shape): boolean {
     const map: Map<string, Shape> = new Map();
@@ -106,13 +107,13 @@ export function fit(context: Context, shape: Shape) {
             }
         }
         matrix.trans(root.width / 2, root.height / 2);
-        context.workspace.matrixTransformation();
+        context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else {
         const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
         const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         if (del.x || del.y) {
             matrix.trans(del.x, del.y);
-            context.workspace.matrixTransformation();
+            context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }
 }

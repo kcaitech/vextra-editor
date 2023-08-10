@@ -45,10 +45,10 @@ const filterPerm = (perm?: number) => {
         <div class="popup" v-if="showInfo">
             <div>
                 <div class="avatar"><img :src="info.avatar" alt=""></div>
-                <div class="name">{{ info.nickname }}</div>
+                <div class="name"> {{ info.nickname }}</div>
             </div>
             <div>
-                <div class="author">{{t('home.permissions')}}:</div>
+                <div class="author">{{t('home.permissions')}}</div>
                 <div class="perm">{{ context.comment.isDocumentInfo?.user.id === info.user_id ? t('share.founder') : filterPerm(info.permission) }}</div>
             </div>
         </div>
@@ -101,7 +101,9 @@ const filterPerm = (perm?: number) => {
             width: 60%;   
             white-space: nowrap; /* 禁止换行 */
             overflow: hidden;    /* 超出部分隐藏 */
-            text-overflow: ellipsis;         
+            text-overflow: ellipsis;     
+            text-align: left;
+            margin-left: 10px;    
         }
         .author {
             width: 40%;

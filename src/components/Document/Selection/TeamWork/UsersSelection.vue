@@ -79,7 +79,6 @@ const createShapeTracing = () => { // 描边
                 const f = s.frame;
                 const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
                 points.push(...ps);
-                const _m = s.matrix2Root();
                 const path = s.getPath();
                 path.transform(m);
                 const borPath = {path: path.toString(), color: userSelectColor[i]}
@@ -118,10 +117,9 @@ const teamworkWatcher = (t?: any) => {
                 const shape = page!.shapes.get(item.select_shape_id_list[i]);
                 if (shape) shapes.value.push(shape);
             }
-            shapes.value = Array.from(new Set(shapes.value));
-            update_by_shapes();
-            createShapeTracing();
-            watchShapes();
+        update_by_shapes();
+        createShapeTracing();
+        watchShapes();
         })
     }
 }

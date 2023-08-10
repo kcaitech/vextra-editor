@@ -118,10 +118,10 @@ const showComment = (e: MouseEvent) => {
     const commentCenter = workspace.matrix.computeCoord(commentX, commentY) //评论在视图上的位置
     if (bottom - commentCenter.y < 75) {
         props.context.workspace.matrix.trans(0, -80);
-        props.context.workspace.matrixTransformation();
+        props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else if (right - commentCenter.x < 330) {
         props.context.workspace.matrix.trans(-80, 0);
-        props.context.workspace.matrixTransformation();
+        props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     props.context.comment.commentMount(false)
     const { x, y } = props.context.workspace.root
@@ -222,7 +222,7 @@ const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) 
     props.context.selection.selectComment(reply.value ? commentItem.id : id)
     if (transX || transY) {
         workspace.matrix.trans(transX, transY);
-        workspace.matrixTransformation();
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
 
@@ -324,7 +324,7 @@ const pageSkipComment = () => {
     props.context.selection.selectComment(commentId)
     if (transX || transY) {
         workspace.matrix.trans(transX, transY);
-        workspace.matrixTransformation();
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
 

@@ -4,9 +4,11 @@ import { replace } from "./clipaboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { permIsEdit } from "./content";
 import { Action } from "@/context/tool";
+import { Shape } from "@kcdesign/data";
+import { PageXY } from "@/context/selection";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
-    if (!permIsEdit(context) || context.workspace.action === Action.AddComment) return;
+    if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
     const { target, shiftKey, ctrlKey, metaKey } = e;
     if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;
@@ -137,4 +139,11 @@ export function d(s: { x: number, y: number }, e: { x: number, y: number }): num
         d = d ^ 4;
     }
     return d;
+}
+export function getDelta(s: Shape, p: PageXY) {
+    const f2r = s.frame2Root();
+    return { dx: p.x - f2r.x, dy: p.y - f2r.y };
+}
+export function get_speed(e1: MouseEvent, e2: MouseEvent) {
+    return Math.hypot(Math.abs(e2.clientX - e1.clientX), Math.abs(e2.clientY - e1.clientY));
 }

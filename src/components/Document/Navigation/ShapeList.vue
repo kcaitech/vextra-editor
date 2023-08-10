@@ -17,7 +17,7 @@ import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
 import { is_shape_in_selection, selection_types, fit } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
-import { Perm } from "@/context/workspace"
+import { Perm, WorkSpace } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -311,7 +311,7 @@ function shapeScrollToContentView(shape: Shape) {
         } else {
             workspace.matrix.trans(transX, transY);
         }
-        workspace.matrixTransformation();
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         props.context.navi.set_phase('');
     }
 }

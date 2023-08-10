@@ -60,35 +60,25 @@ function updateControllerView() {
   viewBox = genViewBox(bounds);
 }
 // #endregion
-
 function updater(t?: number) {
   updateControllerView();
-  if (t == Selection.CHANGE_SHAPE) {
-    editing.value = false;
-  }
+  if (t == Selection.CHANGE_SHAPE) editing.value = false;
 }
 function workspace_watcher(t?: number) {
-  if (t === WorkSpace.TRANSLATING) {
-    visible.value = !workspace.value.isTranslating;
-  }
+  if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
 }
 function mousedown(e: MouseEvent) {
   document.addEventListener('mousemove', mousemove);
   document.addEventListener('mouseup', mouseup);
 }
 function mousemove(e: MouseEvent) {
-  const isDragging = isDrag();
-  if (isDragging) {
-    visible.value = false; // 控件在移动过程中不可视
-  }
+  if (isDrag()) visible.value = false;
 }
 function mouseup(e: MouseEvent) {
   document.removeEventListener('mousemove', mousemove);
   document.removeEventListener('mouseup', mouseup);
 }
-
 function windowBlur() {
-  // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
   document.removeEventListener('mousemove', mousemove);
   document.removeEventListener('mouseup', mouseup);
 }
