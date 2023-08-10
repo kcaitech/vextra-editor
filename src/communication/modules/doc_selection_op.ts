@@ -12,6 +12,7 @@ export type DocSelectionData = {
     hover_shape_id?: string,
     cursor_start?: number,
     cursor_end?: number,
+    cursor_at_before?: boolean,
     previous_cmd_id: string,
     // 以下字段仅读取时有效
     user_id?: string,
