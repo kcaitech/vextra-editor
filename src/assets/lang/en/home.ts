@@ -5,6 +5,7 @@ export const product = {
 }
 
 export const system = {
+    incorrect_input: 'Incorrect input!',
     'illegal_input': 'illegal input!',
     select: 'Select',
     space: '...',
