@@ -248,7 +248,7 @@ onUnmounted(() => {
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px)">
+        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px); position: absolute;">
         <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
         </path>
     </svg>
