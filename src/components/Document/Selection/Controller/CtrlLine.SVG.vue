@@ -1,7 +1,6 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { CtrlElementType } from "@/context/workspace";
 import { ClientXY } from "@/context/selection";
 import { Point } from "../SelectionView.vue";
 import { getAxle } from "@/utils/common";
@@ -20,11 +19,11 @@ interface Props {
 const props = defineProps<Props>();
 const { isDblClick, isDrag } = useController(props.context);
 const workspace = computed(() => props.context.workspace);
-const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const visible = ref<boolean>(true);
 let viewBox = '';
 const line_path = ref("");
-const editing = ref<boolean>(false); // 是否进入路径编辑状态
+const editing = ref<boolean>(false);
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 // #region 绘制控件
@@ -32,10 +31,17 @@ const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
-
+const width = computed(() => {
+    const w = bounds.right - bounds.left;
+    return w < 10 ? 10 : w;
+})
+const height = computed(() => {
+    const h = bounds.bottom - bounds.top;
+    return h < 10 ? 10 : h;
+})
 // #endregion
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
-    return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
+    return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
 }
 function updateControllerView() {
     const m2p = props.shape.matrix2Root();
@@ -99,8 +105,8 @@ watchEffect(updateControllerView)
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
-        :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
+        :height="height"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
         <path :d="line_path" fill="none" stroke='#865dff' stroke-width="1.5px"></path>

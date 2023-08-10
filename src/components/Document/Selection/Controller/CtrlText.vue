@@ -73,6 +73,14 @@ const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
+const width = computed(() => {
+    const w = bounds.right - bounds.left;
+    return w < 10 ? 10 : w;
+})
+const height = computed(() => {
+    const h = bounds.bottom - bounds.top;
+    return h < 10 ? 10 : h;
+})
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
@@ -160,7 +168,7 @@ function mouseleave() {
     props.context.cursor.reset();
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
-    return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
+    return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
