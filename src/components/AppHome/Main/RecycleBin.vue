@@ -1,14 +1,8 @@
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" />
-    
     <!-- 右键菜单 -->
-    <div class="rightmenu" ref="menu">
-        <ul>
-            <li @click="rRestorefile">{{ t('homerightmenu.restore') }}</li>
-            <li @click="rDeletefile">{{ t('homerightmenu.completely_delete') }}</li>
-        </ul>
-    </div>
-
+    <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
+        @r-restorefile="Restorefile" />
     <!-- 确认删除弹框 -->
     <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
         @keyup.enter="Qdeletefile(docId)">
@@ -29,16 +23,16 @@ import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import tablelist from '@/components/AppHome/tablelist.vue'
-const { t } = useI18n()
+import listrightmenu from "../listrightmenu.vue"
 
+const items = ['restore', 'completely_delete']
+const { t } = useI18n()
 const isLoading = ref(false)
 const dialogVisible = ref(false)
-const menu = ref<HTMLElement>()
 const docId = ref('')
 const mydata = ref()
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-
 const emits = defineEmits(['data-update'])
 
 interface data {
@@ -151,34 +145,9 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
+    
     docId.value = id
     mydata.value = data
-}
-
-//右键还原对应文件
-const rRestorefile = async () => {
-    Restorefile(mydata.value)
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
-//右键删除对应文件
-const rDeletefile = () => {
-    dialogVisible.value = true
-    const { document: { id } } = mydata.value
-    docId.value = id
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
-const handleClickOutside = (event: MouseEvent) => {
-    if (event.target instanceof Element && event.target.closest('.rightmenu') == null) {
-        if (menu.value) {
-            menu.value.style.display = 'none'
-        }
-    }
 }
 
 watch(lists, (Nlist) => {
@@ -187,90 +156,16 @@ watch(lists, (Nlist) => {
 
 onMounted(() => {
     GetrecycleLists()
-    document.addEventListener('mousedown', handleClickOutside)
 })
 
 onUnmounted(() => {
-    document.removeEventListener('mousedown', handleClickOutside)
+
 })
 </script>
 
 <style lang="scss" scoped>
 main {
     height: auto;
-}
-
-.item {
-    height: calc(100vh - 194px);
-}
-
-@media screen and (max-width: 1000px) {
-    .item {
-        height: calc(100vh - 154px);
-    }
-}
-
-.title {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 10px 6px 10px;
-    color: #606266;
-    font-size: 14px;
-    font-weight: 600;
-    overflow: hidden;
-
-    span {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        margin-right: 10px;
-    }
-
-    span:nth-child(1) {
-        flex: 2;
-    }
-
-    span:not(:nth-child(1)) {
-        flex: 1;
-
-    }
-
-    div {
-        flex: 1;
-        padding: 0 10px 6px 0;
-        display: flex;
-
-    }
-}
-
-.rightmenu {
-    display: none;
-    min-width: 200px;
-    z-index: 999;
-    position: absolute;
-    background-color: white;
-    padding: 10px 0;
-    border-radius: 5px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-
-    ul {
-        margin: 0;
-        padding: 0 10px;
-
-        li {
-            display: block;
-            padding: 10px 10px;
-            font-size: 14px;
-            text-decoration: none;
-            color: rgba(13, 13, 13, 0.9);
-            border-radius: 2px;
-            cursor: pointer;
-
-            &:hover {
-                background-color: #f3f0ff;
-            }
-        }
-    }
 }
 
 .dialog-footer>.el-button {
@@ -301,52 +196,5 @@ main {
         background: #e5dbff;
         border: 1px #e5dbff solid;
     }
-}
-
-
-.el-icon {
-    display: none;
-    position: relative;
-    top: 5px;
-
-    &:hover {
-        color: #6395f9;
-    }
-
-    &:active {
-        color: #145ff6;
-
-    }
-
-    &:focus-visible {
-        outline: none;
-    }
-}
-
-:deep(.el-icon) {
-    &>:focus {
-        outline: none;
-    }
-
-    &>:focus-visible {
-        outline: none;
-    }
-}
-
-:deep(.el-table__row:hover .el-icon) {
-    display: inline-block;
-}
-
-:deep(.el-table__row) {
-    height: 56px;
-    font-weight: 18px;
-}
-
-:deep(.el-table__cell) {
-    padding: 0;
-}
-
-:deep(.el-table__cell .cell) {
-    line-height: 56px;
 }
 </style>

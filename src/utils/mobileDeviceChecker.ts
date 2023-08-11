@@ -16,7 +16,6 @@ function isMobileDevice(): boolean {
             return true;
         }
     }
-
     return false;
 }
 

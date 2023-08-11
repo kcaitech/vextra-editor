@@ -168,8 +168,8 @@ function closePersonalCenter() {
 
 </script>
 <style lang="scss" scoped>
-.el-avatar{
-    --el-avatar-bg-color:#9775fa;
+.el-avatar {
+    --el-avatar-bg-color: #9775fa;
     font-weight: 700;
 }
 

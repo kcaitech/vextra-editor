@@ -1,54 +1,34 @@
 <template>
-        <div class="main-content">
-            <div class="container" id="container1">
-                <div class="box-content" id="box-content1"></div>
-               
-            </div>
-            <div class="container" id="container2">
-                <div class="box-content" id="box-content2"></div>
-                
-            </div>
-            <div class="container" id="container3">
-                <div class="box-content" id="box-content3"></div>
-                
-            </div>
-            <div class="container" id="container4">
-                <div class="box-content" id="box-content4"></div>
-                    
-            </div>
-            <div class="container" id="container5">
-                <div class="box-content" id="box-content5"></div>
-                             
-            </div>
+    <div class="main-content">
+        <div v-for="index in 5" :key="index" :class="'container'" :id="'container' + index">
+            <div class="box-content" :id="'box-content' + index"></div>
         </div>
-        <div class="meun">
-            <ul class="meunlist">
-                <li :class="{ select: selectid === '#container1' }" @click="scrollToSection('#container1')"></li>
-                <li :class="{ select: selectid === '#container2' }" @click="scrollToSection('#container2')"></li>
-                <li :class="{ select: selectid === '#container3' }" @click="scrollToSection('#container3')"></li>
-                <li :class="{ select: selectid === '#container4' }" @click="scrollToSection('#container4')"></li>
-                <li :class="{ select: selectid === '#container5' }" @click="scrollToSection('#container5')"></li>
-            </ul>
-        </div>
+    </div>
+    <div class="meun">
+        <ul class="meunlist">
+            <li v-for=" index in 5" :key="index" :class="{ select: selectid === ('#container' + index) }"
+                @click="scrollToSection('#container' + index)"></li>
+        </ul>
+    </div>
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+
 const selectid = ref('')
+const Elements = ref<any>()
+
 const scrollToSection = (selector: string) => {
     const targetElement = document.querySelector(selector)
     if (targetElement) {
-        disconnectObserver()
-        targetElement.scrollIntoView({ behavior: 'smooth', block:'center' });
+        observer.disconnect() //停止观察，避免手动点击小圆点和观察回调命中小圆点的方法冲突，导致小圆点选中状态异常
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
         selectid.value = selector
     }
     setTimeout(() => {
-        startObserving();
+        startObserving(Elements.value) //延迟0.5秒后重启观察
     }, 500);
 }
 
-const disconnectObserver = () => {
-    observer.disconnect();
-}
 
 let thresholdSets = [];
 
@@ -56,6 +36,32 @@ for (let i = 0; i <= 1.0; i += 0.01) {
     thresholdSets.push(i);
 }
 
+const RatioNumber = (num: number) => {
+    switch (true) {
+        case num >= 0.95:
+            return 1;
+        case num >= 0.85:
+            return 0.9;
+        case num >= 0.75:
+            return 0.8;
+        case num >= 0.65:
+            return 0.7;
+        case num >= 0.55:
+            return 0.6;
+        case num >= 0.45:
+            return 0.5;
+        case num >= 0.35:
+            return 0.4;
+        case num >= 0.25:
+            return 0.3;
+        case num >= 0.15:
+            return 0.2;
+        case num >= 0.05:
+            return 0.1;
+        default:
+            return 0;
+    }
+}
 
 const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -67,34 +73,34 @@ const observer = new IntersectionObserver((entries) => {
         if (entry.target.id === 'container1') {
             if (entry.isIntersecting) {
                 if (entry.intersectionRatio === 0) return
-                el1.style.transform = `translateY(-50%) scale(${Number(entry.intersectionRatio.toFixed(2)) + 0.2})`
+                el1.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
             }
         }
         if (entry.target.id === 'container2') {
             if (entry.isIntersecting) {
                 if (entry.intersectionRatio === 0) return
-                el2.style.transform = `translateY(-50%) scale(${Number(entry.intersectionRatio.toFixed(2)) + 0.2})`
+                el2.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
 
             }
         }
         if (entry.target.id === 'container3') {
             if (entry.isIntersecting) {
                 if (entry.intersectionRatio === 0) return
-                el3.style.transform = `translateY(-50%) scale(${Number(entry.intersectionRatio.toFixed(2)) + 0.2})`
+                el3.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
 
             }
         }
         if (entry.target.id === 'container4') {
             if (entry.isIntersecting) {
                 if (entry.intersectionRatio === 0) return
-                el4.style.transform = `translateY(-50%) scale(${Number(entry.intersectionRatio.toFixed(2)) + 0.2})`
+                el4.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
 
             }
         }
         if (entry.target.id === 'container5') {
             if (entry.isIntersecting) {
                 if (entry.intersectionRatio === 0) return
-                el5.style.transform = `translateY(-50%) scale(${Number(entry.intersectionRatio.toFixed(2)) + (0.2)})`
+                el5.style.transform = `translateY(-50%) scale(${RatioNumber(Number(entry.intersectionRatio.toFixed(2))) + 1})`
             }
         }
         if (entry.intersectionRatio >= 0.5) {
@@ -104,18 +110,18 @@ const observer = new IntersectionObserver((entries) => {
 
 }, { root: null, threshold: thresholdSets });
 
-const startObserving = () => {
-    document.querySelectorAll('.container').forEach((el) => {
-        if (el) {
+const startObserving = (elements: any) => {
+    elements.forEach((el: any) => {
+        if (el as HTMLElement) {
             observer.observe(el);
         }
     })
 }
 
 onMounted(() => {
-    setTimeout(() => {
-        startObserving()
-    }, 1000);
+    const containerElements = document.querySelectorAll('.container')
+    startObserving(containerElements)
+    Elements.value = containerElements
 })
 </script>
 <style lang="scss" scoped>
@@ -126,75 +132,76 @@ onMounted(() => {
 
 
 
-    .main-content {
-        background-color: #99999976;
-        overflow: hidden;
-        width: 100%;
-        .container {
-            min-height: 100vh;
-            display: flex;
+.main-content {
+    background-color: #99999976;
+    overflow: hidden;
+    width: 100%;
 
-            button {
-                height: 40px;
-                width: 80px;
-                border: 1px solid black;
-                border-radius: 4px;
-                background-color: transparent;
-                cursor: pointer;
+    .container {
+        min-height: calc(100vh - 80px);
+        display: flex;
 
-                &:hover {
-                    border: 1px solid #9775fa;
-                    color: #9775fa;
-                }
-            }
+        button {
+            height: 40px;
+            width: 80px;
+            border: 1px solid black;
+            border-radius: 4px;
+            background-color: transparent;
+            cursor: pointer;
 
-            &:nth-child(1) {
-                // background-color: olive;
-                align-items: center;
-                position: relative;
-            }
-
-            &:nth-child(2) {
-                // background-color: sandybrown;
-                justify-content: center;
-                position: relative;
-            }
-
-            &:nth-child(3) {
-                // background-color: seagreen;
-                align-items: center;
-                justify-content: space-around;
-                position: relative;
-            }
-
-            &:nth-child(4) {
-                // background-color: aqua;
-                align-items: center;
-                justify-content: space-evenly;
-                flex-direction: column;
-                position: relative;
-            }
-
-            &:nth-child(5) {
-                // background-color: blue;
-                justify-content: center;
-                align-items: flex-end;
-                position: relative;
+            &:hover {
+                border: 1px solid #9775fa;
+                color: #9775fa;
             }
         }
+
+        &:nth-child(1) {
+            // background-color: olive;
+            align-items: center;
+            position: relative;
+        }
+
+        &:nth-child(2) {
+            // background-color: sandybrown;
+            justify-content: center;
+            position: relative;
+        }
+
+        &:nth-child(3) {
+            // background-color: seagreen;
+            align-items: center;
+            justify-content: space-around;
+            position: relative;
+        }
+
+        &:nth-child(4) {
+            // background-color: aqua;
+            align-items: center;
+            justify-content: space-evenly;
+            flex-direction: column;
+            position: relative;
+        }
+
+        &:nth-child(5) {
+            // background-color: blue;
+            justify-content: center;
+            align-items: flex-end;
+            position: relative;
+        }
     }
+}
 
 
-    .box-content {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        left: 10%;
-        width: 20%;
-        height: 20%;
-        background-color: #e0e0e07c;
-        transition: transform 0.3s ease-in-out;
-    }
+.box-content {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 10%;
+    width: 20%;
+    height: 20%;
+    background-color: #e0e0e07c;
+    transition: transform 0.5s ease-in-out;
+}
 
 
 .meun {

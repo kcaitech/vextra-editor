@@ -414,6 +414,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <div class="main" style="height: 100vh;">
     <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context!" v-if="!loading && !null_context" />
@@ -455,6 +456,7 @@ onUnmounted(() => {
         <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
         <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
+</div>
 </template>
 <style>
 :root {
@@ -496,7 +498,7 @@ onUnmounted(() => {
     flex-flow: row nowrap;
     flex: 1 1 auto;
     width: 100%;
-    height: auto;
+    height: calc(100% - 40px);
     overflow: hidden;
     position: relative;
 

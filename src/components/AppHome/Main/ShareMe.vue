@@ -1,19 +1,11 @@
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar" @dbclickopen="openDocument"
         @updatestar="Starfile" @rightMeun="rightmenu" />
-
-    <!-- 右键菜单 -->
-    <div class="rightmenu" ref="menu">
-        <ul>
-            <li @click="openDocument(docId)">{{ t('homerightmenu.open') }}</li>
-            <li @click="openNewWindowDocument">{{ t('homerightmenu.newtabopen') }}</li>
-            <div></div>
-            <li @click.stop="rSharefile">{{ t('homerightmenu.share') }}</li>
-            <li @click="rStarfile" ref="isshow">{{ t('homerightmenu.target_star') }}</li>
-        </ul>
-    </div>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :docUserId="docUserId" :userInfo="userInfo"
-        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
+    <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"
+        @r-exitshare="Exitshar" />
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :docUserId="docUserId"
+        :userInfo="userInfo" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+        :pageHeight="pageHeight">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
 </template>
@@ -26,6 +18,7 @@ import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { useI18n } from 'vue-i18n'
 import { UserInfo } from '@/context/user';
+import listrightmenu from "../listrightmenu.vue"
 
 interface data {
     document: {
@@ -44,6 +37,9 @@ interface data {
     }
 }
 
+const items = ['open', 'newtabopen', 'share', 'exit_share', 'target_star']
+const iconlists = ref(['star', 'share', 'EXshare'])
+const emits = defineEmits(['data-update'])
 const { t } = useI18n()
 const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);
@@ -51,15 +47,16 @@ const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docUserId = ref('')
 const selectValue = ref(1)
-const menu = ref<HTMLElement>()
-const isshow = ref<HTMLElement>()
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
 const mydata = ref()
 let lists = ref<any[]>([])
-const iconlists = ref(['star', 'share', 'EXshare'])
 
-const emits = defineEmits(['data-update'])
+const userData = ref({
+    avatar: localStorage.getItem('avatar') || '',
+    id: localStorage.getItem('userId') || '',
+    nickname: localStorage.getItem('nickname') || ''
+})
 
 async function ShareLists() {
     // loading
@@ -99,6 +96,16 @@ function sizeTostr(size: any) {
     return size
 }
 
+//右键打开或双击打开
+const openDocument = (id: string) => {
+    router.push({
+        name: 'document',
+        query: {
+            id: id
+        }
+    })
+}
+
 //标星入口
 const Starfile = async (data: data) => {
     const { document: { id } } = data
@@ -117,12 +124,6 @@ const Starfile = async (data: data) => {
         }
     }
 }
-
-const userData = ref({
-    avatar: localStorage.getItem('avatar') || '',
-    id: localStorage.getItem('userId') || '',
-    nickname: localStorage.getItem('nickname') || ''
-})
 
 //分享入口
 const Sharefile = (data: data) => {
@@ -152,12 +153,11 @@ const Exitshar = async (data: data) => {
     } catch (error) {
         ElMessage.error(t('home.other_tips'))
     }
-
-
 }
 
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
+    const elstar = document.querySelector('.target_star')! as HTMLElement
     const { document: { id }, document_favorites: { is_favorite } } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
@@ -177,63 +177,14 @@ const rightmenu = (e: MouseEvent, data: data) => {
     }
 
     nextTick(() => {
-        if (isshow.value) {
-            if (is_favorite == true) {
-                isshow.value.innerHTML = t('homerightmenu.unstar')
-            } else {
-                isshow.value.innerHTML = t('homerightmenu.target_star')
-            }
+        if (is_favorite == true) {
+            elstar.innerHTML = t('homerightmenu.unstar')
+        } else {
+            elstar.innerHTML = t('homerightmenu.target_star')
         }
     })
     docId.value = id
     mydata.value = data
-}
-
-//右键打开
-const openDocument = (id: string) => {
-    router.push({
-        name: 'document',
-        query: {
-            id: id
-        }
-    })
-}
-
-
-//右键新窗口打开
-const openNewWindowDocument = () => {
-    const Name = 'document'
-    const query = { id: docId.value }
-    const url = router.resolve({ name: Name, query: query }).href
-    window.open(url, '_blank')
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
-//右键标星
-const rStarfile = () => {
-    Starfile(mydata.value)
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
-//右键分享
-const rSharefile = () => {
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-    Sharefile(mydata.value)
-
-}
-
-const handleClickOutside = (event: MouseEvent) => {
-    if (event.target instanceof Element && event.target.closest('.rightmenu') == null) {
-        if (menu.value) {
-            menu.value.style.display = 'none'
-        }
-    }
 }
 
 const closeShare = () => {
@@ -257,147 +208,13 @@ onMounted(() => {
     ShareLists()
     getPageHeight()
     window.addEventListener('resize', getPageHeight)
-    document.addEventListener('mousedown', handleClickOutside)
 })
 
 onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
-    document.removeEventListener('mousedown', handleClickOutside)
 })
 </script>
 <style lang="scss" scoped>
-.item {
-    height: calc(100vh - 194px);
-}
-
-@media screen and (max-width: 1000px) {
-    .item {
-        height: calc(100vh - 154px);
-    }
-}
-
-.title {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 10px 6px 10px;
-    color: #606266;
-    font-size: 14px;
-    font-weight: 600;
-    overflow: hidden;
-
-    span {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        margin-right: 10px;
-    }
-
-    span:nth-child(1) {
-        flex: 2;
-    }
-
-    span:not(:nth-child(1)) {
-        flex: 1;
-
-    }
-
-    div {
-        flex: 1;
-        padding: 0 10px 6px 0;
-        display: flex;
-
-    }
-}
-
-.rightmenu {
-    display: none;
-    min-width: 200px;
-    min-height: 100px;
-    z-index: 999;
-    position: absolute;
-    background-color: white;
-    padding: 10px 0;
-    border-radius: 5px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-
-    ul {
-        margin: 0;
-        padding: 0 10px;
-
-        li {
-            display: block;
-            padding: 10px 10px;
-            font-size: 14px;
-            text-decoration: none;
-            color: rgba(13, 13, 13, 0.9);
-            border-radius: 2px;
-            cursor: pointer;
-
-            &:hover {
-                background-color: #f3f0ff;
-            }
-        }
-
-        div {
-            height: 1px;
-            width: auto;
-            background: #f3f0ff;
-        }
-
-
-    }
-}
-
-.el-icon {
-    display: none;
-    position: relative;
-    top: 5px;
-
-    &:hover {
-        color: #6395f9;
-    }
-
-    &:active {
-        color: #145ff6;
-
-    }
-
-    &:focus-visible {
-        outline: none;
-    }
-}
-
-:deep(.el-icon) {
-    &>:focus {
-        outline: none;
-    }
-
-    &>:focus-visible {
-        outline: none;
-    }
-}
-
-.el-table__row:hover .el-icon {
-    display: inline-block;
-}
-
-:deep(.el-table_2_column_7) {
-    text-align: center;
-}
-
-:deep(.el-table__row) {
-    height: 56px;
-    font-weight: 18px;
-}
-
-:deep(.el-table__cell) {
-    padding: 0;
-}
-
-:deep(.el-table__cell .cell) {
-    line-height: 56px;
-}
-
 .overlay {
     position: absolute;
     top: 0;
