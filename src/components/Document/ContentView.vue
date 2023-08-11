@@ -30,7 +30,6 @@ import { Cursor } from "@/context/cursor";
 import { Action } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
-import { Asssit } from '@/context/assist';
 
 interface Props {
     context: Context

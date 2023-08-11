@@ -96,7 +96,12 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     const editor = context.editor.controller();
     const name = getName(type, parent.childs, t);
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+    if (action === Action.AddArrow) {
+      new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
+    } else {
+      new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+    }
+
   }
   if (asyncCreator && new_shape) {
     selection.selectShape(new_shape);
