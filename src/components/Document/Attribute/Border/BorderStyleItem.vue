@@ -23,7 +23,7 @@ onMounted(() => {})
 .border-style-item-container {
     height: 32px;
     width: 100%;
-    color: var(--theme-color-anti);
+    color: var(--theme-color);
     padding: 0 var(--default-padding);
     margin-left: var(--default-margin-half);
     box-sizing: border-box;

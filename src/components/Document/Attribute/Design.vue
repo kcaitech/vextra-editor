@@ -15,7 +15,7 @@ const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
 const WITH_FILL = [ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard, ShapeType.Group, ShapeType.Path2];
 const WITH_TEXT = [ShapeType.Text];
-const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Artboard, ShapeType.Group, ShapeType.Path2];
+const WITH_BORDER = [ShapeType.Image, ShapeType.Rectangle, ShapeType.Oval, ShapeType.Star, ShapeType.Polygon, ShapeType.Path, ShapeType.Line, ShapeType.Artboard, ShapeType.Group, ShapeType.Path2];
 const shapeType = ref();
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
@@ -55,7 +55,8 @@ onUnmounted(() => {
 <template>
     <section>
         <div v-if="len === 0">
-            <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage" :page="props.context.selection.selectedPage"></PageBackgorund>
+            <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
+                :page="props.context.selection.selectedPage"></PageBackgorund>
         </div>
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len">

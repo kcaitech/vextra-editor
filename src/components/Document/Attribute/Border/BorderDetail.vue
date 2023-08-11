@@ -53,11 +53,8 @@ const borderFrontStyleOptionsSource: SelectSource[] = genOptions([
   [MarkerType.Line, MarkerType.Line],
   [MarkerType.OpenArrow, MarkerType.OpenArrow],
   [MarkerType.FilledArrow, MarkerType.FilledArrow],
-  [MarkerType.OpenCircle, MarkerType.OpenCircle],
   [MarkerType.FilledCircle, MarkerType.FilledCircle],
-  [MarkerType.OpenSquare, MarkerType.OpenSquare],
   [MarkerType.FilledSquare, MarkerType.FilledSquare],
-  [MarkerType.FallT, MarkerType.FallT],
 ]);
 
 const borderEndStyle = ref<SelectItem>({ value: MarkerType.Line, content: `end-${MarkerType.Line}` });
@@ -65,11 +62,8 @@ const borderEndStyleOptionsSource: SelectSource[] = genOptions([
   [MarkerType.Line, `end-${MarkerType.Line}`],
   [MarkerType.OpenArrow, `end-${MarkerType.OpenArrow}`],
   [MarkerType.FilledArrow, `end-${MarkerType.FilledArrow}`],
-  [MarkerType.OpenCircle, `end-${MarkerType.OpenCircle}`],
   [MarkerType.FilledCircle, `end-${MarkerType.FilledCircle}`],
-  [MarkerType.OpenSquare, `end-${MarkerType.OpenSquare}`],
-  [MarkerType.FilledSquare, `end-${MarkerType.FilledSquare}`],
-  [MarkerType.FallT, `end-${MarkerType.FallT}`],
+  [MarkerType.FilledSquare, `end-${MarkerType.FilledSquare}`]
 ]);
 
 function showMenu() {
@@ -158,13 +152,12 @@ const augment = (e: Event) => {
 }
 const decrease = (e: Event) => {
   if (borderThickness.value) {
-    if(Number(borderThickness.value.value) === 0) return
+    if (Number(borderThickness.value.value) === 0) return
     const thickness = Number(borderThickness.value.value) - 1
     editor.value.setBorderThickness(props.index, thickness);
     borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
   }
 }
-
 function borderApexStyleSelect(selected: SelectItem) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   if (selected.content.startsWith('end')) {
@@ -228,23 +221,19 @@ const onMouseUp = (e: MouseEvent) => {
   document.removeEventListener('mouseup', onMouseUp)
 }
 function layout() {
+  showStartStyle.value = false;
+  showEndStyle.value = false;
   if (len.value === 1) {
     const shape = props.shapes[0];
     if (shape.type === ShapeType.Line) {
       showStartStyle.value = true;
       showEndStyle.value = true;
-    } else {
-      showStartStyle.value = false;
-      showEndStyle.value = false;
     }
   } else if (len.value > 1) {
     const _idx = props.shapes.findIndex(i => i.type === ShapeType.Line);
     if (_idx > -1) {
       showStartStyle.value = true;
       showEndStyle.value = true;
-    } else {
-      showStartStyle.value = false;
-      showEndStyle.value = false;
     }
   }
 }
@@ -277,7 +266,7 @@ onUnmounted(() => {
       <template #body>
         <div class="options-container">
           <!-- 边框位置 -->
-          <div>
+          <div v-if="!showStartStyle">
             <label>{{ t('attr.position') }}</label>
             <Select :selected="position" :item-view="BorderPositonItem" :item-height="32" :source="positonOptionsSource"
               @select="positionSelect"></Select>
@@ -287,7 +276,8 @@ onUnmounted(() => {
             <label>{{ t('attr.thickness') }}</label>
             <div class="thickness-container">
               <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
-              <input ref="borderThickness" type="text" :value="border.thickness" @change="e => setThickness(e)" @focus="selectBorderThicknes">
+              <input ref="borderThickness" type="text" :value="border.thickness" @change="e => setThickness(e)"
+                @focus="selectBorderThicknes">
               <div class="up_down">
                 <svg-icon icon-class="down" style="transform: rotate(180deg);" @click="augment"></svg-icon>
                 <svg-icon icon-class="down" @click="decrease"></svg-icon>
@@ -390,6 +380,7 @@ onUnmounted(() => {
           .up_down {
             width: 10px;
             height: 100%;
+
             >svg {
               width: 10px;
               height: 10px;

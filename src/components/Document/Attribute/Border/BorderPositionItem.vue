@@ -22,7 +22,7 @@ onMounted(() => {})
 .border-position-item-container {
     height: 32px;
     width: 100%;
-    color: var(--theme-color-anti);
+    color: var(--theme-color);
     text-align: left;
     line-height: 32px;
     padding: 0 var(--default-padding);
