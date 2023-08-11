@@ -45,6 +45,7 @@ interface TextLocate {
 }
 
 export type ActionType = 'translate' | 'scale' | 'rotate';
+
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -61,7 +62,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
-
+    
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;

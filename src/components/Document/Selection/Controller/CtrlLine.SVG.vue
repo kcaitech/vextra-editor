@@ -1,34 +1,32 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
-import { WorkSpace } from "@/context/workspace";
+import { ClientXY } from "@/context/selection";
 import { Point } from "../SelectionView.vue";
-import { ClientXY, Selection } from "@/context/selection";
-import { useController } from "./controller";
-import { genRectPath } from "../common";
-import { Shape } from "@kcdesign/data";
-import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
-import BarsContainer from "./Bars/BarsContainer.SVG.Multi.vue";
-import PointsContainer from "./Points/PointsContainer.SVG.Multi.vue";
 import { getAxle } from "@/utils/common";
+import PointContainerForStraightLine from "./Points/PointsContainerForStraightLine.SVG.vue"
+import { Selection } from "@/context/selection";
+import { WorkSpace } from "@/context/workspace";
+import { useController } from "./controller";
+import { Matrix, Shape } from "@kcdesign/data";
 interface Props {
-    context: Context
-    controllerFrame: Point[]
-    rotate: number
-    matrix: Matrix
+    context: Context,
+    controllerFrame: Point[],
+    rotate: number,
+    matrix: Matrix,
     shape: Shape
 }
 const props = defineProps<Props>();
-const { isDrag } = useController(props.context);
+const { isDblClick, isDrag } = useController(props.context);
 const workspace = computed(() => props.context.workspace);
-const visible = ref<boolean>(true);
-const editing = ref<boolean>(false);
-const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
+const visible = ref<boolean>(true);
+let viewBox = '';
+const line_path = ref("");
+const editing = ref<boolean>(false);
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
-let viewBox = '';
+// #region 绘制控件
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
@@ -41,7 +39,7 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 })
-// #region 绘制控件
+// #endregion
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
 }
@@ -51,8 +49,10 @@ function updateControllerView() {
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
-    boundrectPath.value = genRectPath(framePoint);
-    props.context.workspace.setCtrlPath(boundrectPath.value);
+    const path = props.shape.getPath();
+    path.transform(matrix);
+    line_path.value = path.toString();
+    props.context.workspace.setCtrlPath(line_path.value);
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -67,14 +67,12 @@ function updateControllerView() {
     }, bounds);
     viewBox = genViewBox(bounds);
 }
-// #endregion
-function workspace_watcher(t: number) {
+function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
 }
-function selection_watcher(t: number) {
-    if (t == Selection.CHANGE_SHAPE) editing.value = false;
-}
 function mousedown(e: MouseEvent) {
+    const isdblc = isDblClick();
+    if (isdblc) { }
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
@@ -85,6 +83,9 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_SHAPE) editing.value = false;
+}
 function windowBlur() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
@@ -94,26 +95,23 @@ onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     window.addEventListener('blur', windowBlur);
 })
+
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
-    props.context.cursor.reset();
 })
-watchEffect(updateControllerView);
+watchEffect(updateControllerView)
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
-        :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
-        <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix">
-        </ShapesStrokeContainer>
-        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :frame="props.controllerFrame">
-        </BarsContainer>
-        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :axle="axle" :frame="props.controllerFrame">
-        </PointsContainer>
+        :height="height"
+        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
+        :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
+        <path :d="line_path" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
+        <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame"></PointContainerForStraightLine>
     </svg>
 </template>
 <style lang='scss' scoped>

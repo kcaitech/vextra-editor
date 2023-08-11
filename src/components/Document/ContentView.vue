@@ -29,6 +29,7 @@ import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
 import { Action } from "@/context/tool";
 import { initpal } from './initpal';
+import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import { Asssit } from '@/context/assist';
 
 interface Props {
@@ -76,6 +77,7 @@ let isMouseLeftPress: boolean = false; // 针对在contentview里面
 const commentInput = ref(false);
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>('rgba(239,239,239,1)');
+const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -250,6 +252,9 @@ function comment_watcher(type?: number) {
 }
 function menu_watcher(type?: number) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
+    if(type === Menu.CHANGE_USER_CURSOR) {
+        avatarVisi.value = props.context.menu.isUserCursorVisible;
+    }
 }
 function insertFrame() {
     const brothers = props.context.selection.selectedPage?.childs || [];
@@ -768,6 +773,7 @@ onUnmounted(() => {
         :style="{ 'background-color': background_color }">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
+        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
         <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
