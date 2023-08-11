@@ -15,4 +15,3 @@ export const API_PATH = production ? "/api/v1" : "/api_test/v1";
 export const API_URL = `${BASE_PATH}${API_PATH}`;
 export const STORAGE_URL = `${BASE_SCHEME}://storage.${BASE_HOST}`;
 export const COMMUNICATION_URL = `wss://${BASE_HOST}${API_PATH}/communication`;
-export const DOC_UPLOAD_URL = `wss://${BASE_HOST}${API_PATH}`;

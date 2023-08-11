@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import ToolButton from '../ToolButton.vue';
 import {} from 'vue';
-import { Action } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
+import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
 const props = defineProps<{
     active: boolean,
@@ -15,21 +16,13 @@ function select(action: Action) {
 }
 </script>
 <template>
-  <el-tooltip
-    class="box-item"
-    effect="dark"
-    :content="`${t('shape.oval')} &nbsp;&nbsp; O`"
-    placement="bottom"
-    :show-after="500"
-    :offset="10"
-    :hide-after="0"
-  >
-  <ToolButton ref="button" @click="() => {select(Action.AddEllipse)}" :selected="props.active">
-    <div class="svg-container">
-      <svg-icon icon-class="pattern-ellipse"></svg-icon>
-    </div>
-  </ToolButton>
-</el-tooltip>
+  <Tooltip :content="`${t('shape.oval')} &nbsp;&nbsp; O`">
+    <ToolButton ref="button" @click="() => {select(Action.AddEllipse)}" :selected="props.active">
+      <div class="svg-container">
+        <svg-icon icon-class="pattern-ellipse"></svg-icon>
+      </div>
+    </ToolButton>
+  </Tooltip>
 </template>
 <style scoped lang="scss">
 .svg-container {

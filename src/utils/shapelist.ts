@@ -1,6 +1,8 @@
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
 import { Shape, ShapeType } from "@kcdesign/data";
+import { createHorizontalBox } from "./common";
+import { WorkSpace } from "@/context/workspace";
 export type Area = number | 'artboard' | 'group' | 'normal'; // number 说明在选区内
 export function is_shape_in_selection(shapes: Shape[], shape: Shape): boolean {
     const map: Map<string, Shape> = new Map();
@@ -63,4 +65,55 @@ export function is_valid_data(context: Context, shape: Shape) {
         return false;
     }
     return true;
+}
+
+export function fit(context: Context, shape: Shape) {
+    const m = shape.matrix2Root();
+    const frame = shape.frame;
+    const matrix = context.workspace.matrix;
+    const points: [number, number][] = [];
+    const _points: [number, number][] = [
+        [0, 0],
+        [frame.width, 0],
+        [frame.width, frame.height],
+        [0, frame.height]
+    ]
+    points.push(..._points.map(p => {
+        const r = m.computeCoord(p[0], p[1]);
+        const _r = matrix.computeCoord(r.x, r.y);
+        return [_r.x, _r.y] as [number, number];
+    }))
+    const box = createHorizontalBox(points);
+    const width = box.right - box.left;
+    const height = box.bottom - box.top;
+    const root = context.workspace.root;
+    const w_max = root.width;
+    const h_max = root.height;
+    const ratio_w = width / w_max * 1.06; // 两边留点空白
+    const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
+    const ratio = Math.max(ratio_h, ratio_w);
+    if (ratio !== 1) {
+        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+        matrix.trans(del.x, del.y);
+        matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
+        if (matrix.m00 * 1 / ratio > 0.02 && matrix.m00 * 1 / ratio < 7.2) { // 不能小于2%,不能大于720%
+            matrix.scale(1 / ratio);
+        } else {
+            if (matrix.m00 * 1 / ratio <= 0.02) {
+                matrix.scale(0.02 / matrix.m00);
+            } else if (matrix.m00 * 1 / ratio >= 7.2) {
+                matrix.scale(7.2 / matrix.m00);
+            }
+        }
+        matrix.trans(root.width / 2, root.height / 2);
+        context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    } else {
+        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+        if (del.x || del.y) {
+            matrix.trans(del.x, del.y);
+            context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+        }
+    }
 }

@@ -7,8 +7,9 @@ import * as share_api from '@/apis/share';
 import { nextTick, ref, onMounted, onUnmounted } from 'vue';
 import Saving from './Saving.vue';
 import { useRoute } from 'vue-router';
-import { WorkSpace } from '@/context/workspace';
+import { WorkSpace, Perm } from '@/context/workspace';
 import { message } from '@/utils/message';
+import { ElMessage, ElMessageBox } from 'element-plus'
 const route = useRoute();
 interface Props {
     context: Context
@@ -19,13 +20,37 @@ const input = ref<HTMLInputElement>();
 const name = ref<string>('');
 const { t } = useI18n();
 function home() {
+    if(props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd()
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     router.push({ name: 'recently' });
     sessionStorage.setItem('index','1')
 }
+
+const hasPendingSyncCmd = () => {
+    ElMessageBox.confirm(
+        `${t('message.unuploaded_msg')}`,
+        `${t('message.back_home')}`,
+        {
+        confirmButtonText: `${t('message.exit_document')}`,
+        cancelButtonText: `${t('message.cancel')}`,
+        }
+    )
+    .then(() => {
+        window.document.title = t('product.name');
+        (window as any).sketchDocument = undefined;
+        (window as any).skrepo = undefined;
+        router.push({ name: 'recently' });
+        sessionStorage.setItem('index','1')
+    })
+    .catch(() => {
+        return
+    })
+}
+
 function rename() {
+    if(props.context.workspace.documentPerm !== Perm.isEdit) return
     ele.value = 2;
     nextTick(() => {
         if (input.value) {
@@ -148,4 +173,5 @@ onUnmounted(() => {
         height: 8px;
     }
 }
+
 </style>

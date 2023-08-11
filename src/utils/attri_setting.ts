@@ -1,4 +1,4 @@
-import { Shape, ShapeType } from "@kcdesign/data";
+import { RectShape, Shape, ShapeType } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 
@@ -28,11 +28,39 @@ export function is_mixed(shapes: Shape[]) {
     if (frame_i.y !== result.y) result.y = 'mixed';
     if (frame.width !== result.w) result.w = 'mixed';
     if (frame.height !== result.h) result.h = 'mixed';
-    if (shape.rotation !== result.rotate) result.rotate = 'mixed';
+    if ((shape.rotation || 0) !== result.rotate) result.rotate = 'mixed';
     if (shape.constrainerProportions !== result.constrainerProportions) result.constrainerProportions = 'mixed';
     if (Object.values(result).every(v => v === 'mixed')) return result;
   }
+  if (result.rotate !== 'mixed') result.rotate = Number((result.rotate as number).toFixed(2));
   return result;
+}
+export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
+  shapes = shapes.filter(i => i instanceof RectShape);
+  if (shapes.length === 1) {
+    const s = shapes[0];
+    const rs = Object.values((s as RectShape).getRadius());
+    if (cor) {
+      if (rs.every(v => v === rs[0])) return rs;
+      else return 'mixed'
+    } else {
+      return rs;
+    }
+  } else if (shapes.length > 1) {
+    const res: any[] = Object.values((shapes[0] as RectShape).getRadius());
+    for (let i = 1; i < shapes.length; i++) {
+      const s = shapes[i];
+      const rs = Object.values((s as RectShape).getRadius());
+      if (cor) {
+        if (!rs.every(v => v === rs[0])) return 'mixed';
+      } else {
+        for (let i = 0; i < rs.length; i++) {
+          if (rs[i] !== res[i]) res[i] = 'mixed';
+        }
+        return res;
+      }
+    }
+  }
 }
 export function get_actions_constrainer_proportions(shapes: Shape[], value: boolean): ConstrainerProportionsAction[] {
   const actions: ConstrainerProportionsAction[] = [];
@@ -116,7 +144,7 @@ export function get_actions_flip_h(shapes: Shape[]) {
 export function get_rotation(shape: Shape) {
   let rotation: number = Number(shape.rotation?.toFixed(2)) || 0;
   if (shape.type === ShapeType.Line) {
-    if (shape.getPath(true).length === 3) {
+    if (shape.getPath().length === 3) { // todo 用points判断？
       const m = shape.matrix2Page();
       const lt = m.computeCoord(0, 0);
       const rb = m.computeCoord(shape.frame.width, shape.frame.height);

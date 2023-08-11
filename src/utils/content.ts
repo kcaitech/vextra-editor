@@ -1,10 +1,18 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix } from "@kcdesign/data";
-import { Action, Media, ResultByAction } from '@/context/workspace';
-import { createHorizontalBox } from '@/utils/common';
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color } from "@kcdesign/data";
+import { Action, ResultByAction } from "@/context/tool";
+import { Perm, WorkSpace } from '@/context/workspace';
+import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
+import { paster_image } from "./clipaboard";
+export interface Media {
+  name: string
+  frame: { width: number, height: number }
+  buff: Uint8Array
+  base64: string
+}
 interface SystemClipboardItem {
   type: ShapeType
   contentType: string
@@ -56,12 +64,7 @@ function isInner(context: Context, shape: Shape) {
   const { x: rx, y: ry, bottom, right } = context.workspace.root;
   const s2pMatirx = shape.matrix2Root();
   const { width, height } = shape.frame;
-  let point = [
-    [0, 0],
-    [width, 0],
-    [width, height],
-    [0, height]
-  ]
+  let point = [[0, 0], [width, 0], [width, height], [0, height]]
   point = point.map(p => {
     const _s = s2pMatirx.computeCoord(p[0], p[1]);
     const _p = pMatrix.computeCoord(_s.x, _s.y);
@@ -83,7 +86,8 @@ function isInner(context: Context, shape: Shape) {
 function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
   const selection = context.selection;
   const workspace = context.workspace;
-  const type = ResultByAction(workspace.action);
+  const action = context.tool.action;
+  const type = ResultByAction(action);
   const page = selection.selectedPage;
   const parent = selection.getClosetArtboard(mousedownOnPageXY);
   let asyncCreator: AsyncCreator | undefined;
@@ -92,24 +96,7 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     const editor = context.editor.controller();
     const name = getName(type, parent.childs, t);
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    if (type === ShapeType.Image) {
-      const media = workspace.getImageFromDoc();
-      if (media && media.length) {
-        const _m = media[0];
-        let _name: any = _m.name.split('.');
-        if (_name.length > 1) {
-          _name.pop();
-          if (_name[0]) {
-            _name = get_image_name(parent.childs, _name[0]);
-          } else {
-            _name = name;
-          }
-        }
-        new_shape = asyncCreator.init_media(page, (parent as GroupShape), _name as string, frame, _m);
-      }
-    } else {
-      new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
-    }
+    new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
   }
   if (asyncCreator && new_shape) {
     selection.selectShape(new_shape);
@@ -119,9 +106,12 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
 }
 // 普通图形从init到inset一气呵成
 function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
+  const tool = context.tool;
+  const action = tool.action;
+  if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
   const selection = context.selection;
   const workspace = context.workspace;
-  const type = _t || ResultByAction(workspace.action);
+  const type = _t || ResultByAction(action);
   const page = selection.selectedPage;
   const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
   let asyncCreator: AsyncCreator | undefined;
@@ -137,14 +127,15 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
     asyncCreator = asyncCreator.close();
     selection.selectShape(page!.getShape(new_shape.id));
   }
-  workspace.setAction(Action.AutoV);
   workspace.creating(false);
+  tool.setAction(Action.AutoV);
+  context.cursor.setType('auto-0');
 }
 // 插入文本框
-function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: Function, content: string, land?: Shape, _t?: ShapeType) {
+function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
   const selection = context.selection;
   const workspace = context.workspace;
-  const type = _t || ResultByAction(workspace.action);
+  const type = _t || ResultByAction(context.tool.action);
   const page = selection.selectedPage;
   const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
   let asyncCreator: AsyncCreator | undefined;
@@ -160,8 +151,9 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, t: F
     selection.selectShape(page!.getShape(new_shape.id));
     selection.selectText(0, (new_shape as TextShape).text.length);
   }
-  workspace.setAction(Action.AutoV);
   workspace.creating(false);
+  context.tool.setAction(Action.AutoV);
+  context.cursor.setType('auto-0');
 }
 // 图片从init到inset一气呵成
 function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
@@ -194,16 +186,15 @@ function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Funct
     return new_shape;
   }
 }
-async function insert_imgs(context: Context, t: Function) {
+async function insert_imgs(context: Context, t: Function, media: Media[]) {
   const selection = context.selection;
-  const media = context.workspace.getImageFromDoc();
   const new_shapes: Shape[] = [];
   if (media && media.length) {
     const xy = adjust_content_xy(context, media[0]);
     for (let i = 0; i < media.length; i++) {
       if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
       const img = init_insert_image(context, xy, t, media[i]);
-      if (img && await context.upload.uploadResource(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
+      if (img && await context.communication.docResourceUpload.upload(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
     }
   }
   if (new_shapes.length) {
@@ -216,32 +207,6 @@ function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: n
   const dragActiveDis = threshold || 4;
   const diff = Math.hypot(e.clientX - root.x - start.x, e.clientY - root.y - start.y);
   return Boolean(diff > dragActiveDis);
-}
-function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
-  const selection = context.selection;
-  const workspace = context.workspace;
-  const type = ShapeType.Image;
-  const page = selection.selectedPage;
-  const parent = selection.selectedPage;
-  let asyncCreator: AsyncCreator | undefined;
-  let new_shape: Shape | undefined;
-  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-  if (page && parent && type) {
-    const editor = context.editor.controller();
-    const name = getName(type, parent.childs, t);
-    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    if (type === ShapeType.Image) {
-      frame.height = media.frame.height;
-      frame.width = media.frame.width;
-      new_shape = asyncCreator.init_media(page, (parent as GroupShape), name, frame, media);
-    }
-  }
-  if (asyncCreator && new_shape) {
-    asyncCreator = asyncCreator.close();
-    selection.selectShape(page!.getShape(new_shape.id));
-  }
-  workspace.setAction(Action.AutoV);
-  workspace.creating(false);
 }
 function adjust_content_xy(context: Context, m: Media) {
   const workspace = context.workspace;
@@ -315,61 +280,50 @@ function drop(e: DragEvent, context: Context, t: Function) {
  * 使page全部内容都在可视区，并居中
  * @param context 
  */
-function adapt_page(context: Context, r?: Root) {
+function adapt_page(context: Context, initPage = false) {
   const childs = context.selection.selectedPage?.childs || [];
   if (!childs.length) return new Matrix();
   const matrix = context.workspace.matrix;
-  const points: [number, number][] = [];
+  const points: ClientXY[] = [];
   for (let i = 0; i < childs.length; i++) {
     const item = childs[i];
     const frame = item.frame;
     const m = item.matrix2Root();
-    const _points: [number, number][] = [
-      [0, 0],
-      [frame.width, 0],
-      [frame.width, frame.height],
-      [0, frame.height]
-    ]
-    points.push(..._points.map(p => {
-      const r = m.computeCoord(p[0], p[1]);
-      const _r = matrix.computeCoord(r.x, r.y);
-      return [_r.x, _r.y] as [number, number];
-    }))
+    m.multiAtLeft(matrix);
+    points.push(...[[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => m.computeCoord(p[0], p[1])));
   }
-  const box = createHorizontalBox(points);
+  const box = XYsBounding(points);
   const width = box.right - box.left;
   const height = box.bottom - box.top;
-  const root = r || context.workspace.root;
+  const root = context.workspace.root;
   const w_max = root.width;
   const h_max = root.height;
-
   const ratio_w = width / w_max * 1.06; // 两边留点空白
   const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
-
   const ratio = Math.max(ratio_h, ratio_w);
-
-  if (ratio != 1) {
+  if (ratio !== 1) {
     const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     matrix.trans(del.x, del.y);
     matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
-    if (matrix.m00 * 1 / ratio > 0.02 && matrix.m00 * 1 / ratio < 256) { // 不能小于2%,不能大于25600%
+    const max = initPage ? 1 : 256;
+    if (matrix.m00 / ratio > 0.02 && matrix.m00 / ratio < max) { // 不能小于2%,不能大于25600%
       matrix.scale(1 / ratio);
     } else {
-      if (matrix.m00 * 1 / ratio <= 0.02) {
+      if (matrix.m00 / ratio <= 0.02) {
         matrix.scale(0.02 / matrix.m00);
-      } else if (matrix.m00 * 1 / ratio >= 256) {
-        matrix.scale(256 / matrix.m00);
+      } else if (matrix.m00 / ratio >= max) {
+        matrix.scale(max / matrix.m00);
       }
     }
     matrix.trans(root.width / 2, root.height / 2);
-    context.workspace.matrixTransformation();
+    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
   } else {
     const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     if (del.x || del.y) {
       matrix.trans(del.x, del.y);
-      context.workspace.matrixTransformation();
+      context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
   }
   return matrix;
@@ -383,7 +337,7 @@ function page_scale(context: Context, scale: number) {
   matrix.trans(-offsetX, -offsetY);
   matrix.scale(scale / matrix.m00);
   matrix.trans(offsetX, offsetY);
-  workspace.matrixTransformation();
+  workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 /**
  * 右键选择图形的规则
@@ -469,30 +423,123 @@ function flattenShapes(shapes: any) {
 function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal"): string[] {
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
-    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
   } else if (area === 'group') { // 点击在编组上
-    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
   } else if (area === 'controller') { // 点击在选区上
-    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
     const types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
     if (types & 1) { // 存在容器
-      contextMenuItems.push('dissolution');
+      if (permIsEdit(context)) {
+        contextMenuItems.push('dissolution');
+      }
     }
     if (types & 2) { // 存在编组
-      contextMenuItems.push('un_group');
+      if (permIsEdit(context)) {
+        contextMenuItems.push('un_group');
+      }
     }
     if (context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
-      contextMenuItems.push('forward', 'back', 'top', 'bottom');
+      if (permIsEdit(context)) {
+        contextMenuItems.push('forward', 'back', 'top', 'bottom');
+      }
     }
   } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
-    contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
   } else if (area === 'text-selection') {
-    contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
   } else {
-    contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment'];
+    if (permIsEdit(context)) {
+      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
+      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
+    } else {
+      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
+      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
+    }
   }
   return contextMenuItems;
 }
+function color2string(color: Color, t?: number) {
+  const { red, green, blue, alpha } = color;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+function selectShapes(context: Context, shapes: Shape[]) {
+  const hoveredShape = shapes[0], selection = context.selection;
+  if (hoveredShape) {
+    const selected = selection.selectedShapes;
+    if (selected.length) {
+      const isSelected = selected.find((s: Shape) => s.id == hoveredShape.id);
+      if (!isSelected) {
+        selection.hoverShape(hoveredShape);
+      } else {
+        selection.unHoverShape();
+      }
+    } else {
+      selection.hoverShape(hoveredShape);
+    }
+  } else {
+    selection.unHoverShape();
+  }
+}
+
+export const permIsEdit = (context: Context) => {
+  return Boolean(context.workspace.documentPerm === Perm.isEdit);
+}
+
+export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
+  const shapeType = shape.type
+  if (shapeType === ShapeType.Group) {
+    if (!(shape as GroupShape).isBoolOpShape) return false
+  }
+
+  if (!type.includes(shapeType)) return false
+
+  return true
+}
+
+function skipUserSelectShapes(context: Context, shapes: Shape[]) {
+  if (!shapes.length) return new Matrix();
+  const matrix = context.workspace.matrix;
+  const points: ClientXY[] = [];
+  for (let i = 0; i < shapes.length; i++) {
+    const item = shapes[i];
+    const frame = item.frame;
+    const m = item.matrix2Root();
+    m.multiAtLeft(matrix);
+    points.push(...[[0, 0], [frame.width, 0], [frame.width, frame.height], [0, frame.height]].map(p => m.computeCoord(p[0], p[1])));
+  }
+  const box = XYsBounding(points);
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  const root = context.workspace.root;
+  const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+  const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+  if (del.x || del.y) {
+    matrix.trans(del.x, del.y);
+    context.workspace.matrixTransformation();
+  }
+}
+
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,
@@ -500,5 +547,5 @@ export {
   init_shape, init_insert_shape, init_insert_textshape,
   insert_imgs, drop, adapt_page, page_scale, right_select,
   list2Tree, flattenShapes,
-  get_menu_items
+  get_menu_items, color2string, selectShapes, skipUserSelectShapes
 };

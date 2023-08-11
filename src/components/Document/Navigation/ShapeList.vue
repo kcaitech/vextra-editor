@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { Menu } from "@/context/menu";
-import { onMounted, onUnmounted, ref, watch, computed, nextTick } from "vue";
+import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
 import { Page } from "@kcdesign/data";
@@ -15,8 +15,9 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import SearchPanel from "./Search/SearchPanel.vue";
 import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
-import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
+import { is_shape_in_selection, selection_types, fit } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
+import { Perm, WorkSpace } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -66,7 +67,6 @@ const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const search_wrap = ref<HTMLDivElement>();
 const accurate = ref<boolean>(false);
-const show_accrate_btn = ref<boolean>(false);
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
@@ -87,6 +87,8 @@ const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
 const list_h = ref<number>(0)
 function _notifySourceChange(t?: number | string, shape?: Shape) {
+    const is_freeze = props.context.navi.is_shapelist_freeze;
+    if (is_freeze) return;
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
@@ -120,7 +122,6 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
-
 const notifySourceChange = debounce(_notifySourceChange, 48);
 const stopWatch = watch(() => props.page, () => {
     let source = shapeListMap.get(props.page.id)
@@ -276,8 +277,15 @@ const isRead = (read: boolean, shape: Shape) => {
     }
 }
 function shapeScrollToContentView(shape: Shape) {
+    const is_p2 = props.context.navi.isPhase2(shape);
+    if (is_p2) {
+        fit(props.context, shape);
+        return;
+    }
+
     if (isInner(props.context, shape)) {
         props.context.selection.selectShape(shape);
+        props.context.navi.set_phase(shape.id);
         return;
     }
     const workspace = props.context.workspace;
@@ -303,9 +311,9 @@ function shapeScrollToContentView(shape: Shape) {
         } else {
             workspace.matrix.trans(transX, transY);
         }
-        workspace.matrixTransformation();
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+        props.context.navi.set_phase('');
     }
-
 }
 function selectshape_right(shape: Shape, shiftKey: boolean) {
     const selection = props.context.selection;
@@ -333,6 +341,9 @@ const list_mousedown = (e: MouseEvent, shape: Shape) => {
         const types = selection_types(selected);
         if (types & 1) chartMenuItems.push('un_group');
         if (types & 2) chartMenuItems.push('dissolution');
+        if (props.context.workspace.documentPerm !== Perm.isEdit) {
+            chartMenuItems = ['all', 'copy'];
+        }
         chartMenuMount(e);
     }
 }
@@ -413,10 +424,13 @@ function navi_watcher(t: number) {
         if (search_el.value) {
             search_el.value.select();
         }
+    } else if (t === Navi.SHAPELIST_UPDATE) {
+        listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
 function clear_text() {
     keywords.value = '';
+    props.context.navi.set_focus_text();
     if (search_el.value) {
         search_el.value.select();
     }
@@ -501,14 +515,8 @@ function accurate_shift() {
         search_el.value.focus();
     }
     popoverVisible.value = false;
-    props.context.menu.setMode(accurate.value);
+    props.context.navi.setMode(accurate.value);
     props.context.navi.notify(Navi.SEARCHING);
-}
-function search_el_mouseenter() {
-    show_accrate_btn.value = true;
-}
-function search_el_mouseleave() {
-    show_accrate_btn.value = false;
 }
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
@@ -532,7 +540,7 @@ onUnmounted(() => {
     <div class="shapelist-wrap" ref="shapeList">
         <div class="header" @click.stop="reset_selection">
             <div class="title">{{ t('navi.shape') }}</div>
-            <div class="search" ref="search_wrap" @mouseenter="search_el_mouseenter" @mouseleave="search_el_mouseleave">
+            <div class="search" ref="search_wrap">
                 <div class="tool-container" @click="preto_search">
                     <svg-icon icon-class="search"></svg-icon>
                 </div>
@@ -540,12 +548,12 @@ onUnmounted(() => {
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <input ref="search_el" type="text" id="xpxp" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
-                    @blur="leave_search" @click="preto_search" @change="search" @input="inputing" @focus="input_focus">
+                    @blur="leave_search" @click.stop="preto_search" @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close"
-                    :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }">
+                    :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
                     <svg-icon icon-class="close-x"></svg-icon>
                 </div>
-                <div :style="{ opacity: (show_accrate_btn && keywords) ? 1 : 0, cursor: (show_accrate_btn && keywords) ? 'pointer' : 'auto' }"
+                <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
                     :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
                     Aa
                 </div>
@@ -621,7 +629,6 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             background-color: var(--grey-light);
-            padding: 4px var(--default-padding-half);
             border-radius: 4px;
             box-sizing: border-box;
             overflow: hidden;
@@ -631,6 +638,7 @@ onUnmounted(() => {
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
+                margin-left: 8px;
 
                 >svg {
                     width: 12px;
@@ -701,6 +709,8 @@ onUnmounted(() => {
                 transition: 0.15s;
                 margin-left: 4px;
                 line-height: 18px;
+                height: 18px;
+                margin-right: 4px;
             }
 
             .accurate-active {

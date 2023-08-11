@@ -5,12 +5,12 @@ import { Context } from "@/context";
 import { useI18n } from 'vue-i18n'
 import { Page } from '@kcdesign/data';
 import { Selection } from '@/context/selection'
-import { WorkSpace } from "@/context/workspace";
 import * as comment_api from '@/apis/comment';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
 import { Comment } from "@/context/comment";
+import { WorkSpace } from "@/context/workspace";
 const { t } = useI18n()
 const props = defineProps<{
     commentItem: any,
@@ -26,11 +26,11 @@ const emit = defineEmits<{
 }>()
 const hoverIcon = ref(false)
 const hoverComment = ref(false)
-const workspace = computed(() => props.context.workspace);
 const comment = computed(() => props.context.comment);
 const reply = ref(props.context.selection.commentStatus)
 const myComment = ref(props.context.selection.commentAboutMe)
 const aboutMe = ref(false)
+const pageName = ref()
 const resolve = computed(() => {
     return props.commentItem.status === 0 ? true : false
 })
@@ -102,7 +102,6 @@ const hoverShape = (e: MouseEvent) => {
     hoverIcon.value = true
     hoverComment.value = true
 }
-const page = ref<Page>()
 const unHoverShape = (e: MouseEvent) => {
     hoverIcon.value = false
     hoverComment.value = false
@@ -126,7 +125,7 @@ const onReply = () => {
         
         if (transX || transY) {
             workspace.matrix.trans(transX, transY);
-            workspace.matrixTransformation();
+            workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }else {
         props.context.comment.commentMount(false)
@@ -162,7 +161,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControlsDel.value) return
+    if(!isControls.value) return
     props.context.comment.editTabComment()
     props.context.comment.commentInput(false);
     deleteComment()
@@ -200,13 +199,12 @@ const filterDate = (time: string) => {
   return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-const getPage = () => {
-    const p = props.context.data
-    p.pagesMgr.get(props.pageId).then((p: Page | undefined) => {
-        if(!p) return
-            page.value = p
-    })
+const getPageName = () => {
+    const pages = props.context.data.pagesList
+    const name = pages.find(item => item.id === props.pageId)?.name
+    pageName.value = name
 }
+getPageName()
 
 const selectionUpdate = (t: number) => {
     if(t === Selection.SOLVE_MENU_STATUS) {
@@ -230,7 +228,6 @@ const commentUpdate = (t: number) => {
     }
 }
 
-getPage()
 onMounted(() => {
     props.context.selection.watch(selectionUpdate);
     props.context.comment.watch(commentUpdate);
@@ -258,8 +255,8 @@ onUnmounted(() => {
                             <el-button plain :icon="ChatDotSquare" @click.stop="onReply" style="margin-right: 5px;"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
-                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControlsDel"/>
+                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
@@ -275,7 +272,7 @@ onUnmounted(() => {
             <div class="text" v-html="commentItem.content"></div>
             <div class="bottom-info">
                 <div class="reply" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">{{replyNum}} {{ t('comment.a_few_reply') }}</div>
-                <div class="page">{{ page?.name }}</div>
+                <div class="page">{{ pageName }}</div>
             </div>
         </div>
     </div>

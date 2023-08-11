@@ -86,3 +86,55 @@ export const message = (type: MessageType, context: string) => {
         }, fadeDur * 1000 + 10);
     }
 }
+
+type NetworkMessage = 'networkError' | 'netError' | 'networkSuccess' | 'saveSuccess'
+
+export function insertNetworkInfo(msg: NetworkMessage, state: boolean, text: string) {
+    const container = document.createElement('div');
+    if (msg === 'networkError') {
+        container.innerHTML = `<div class="network_error_message" >
+            <span style="margin-right: 10px;">${text}</span>
+            <div class="loading-spinner"> <div></div></div>
+        </div>`
+        if(state) {
+            document.body.appendChild(container)
+            container.setAttribute('id', 'message1');
+        }else {
+            const message1 = document.getElementById('message1');  
+            message1?.parentNode?.removeChild(message1)
+        }
+    }else if(msg === 'netError') {
+        container.innerHTML = `<div class="network_error_message" v-if="netError">
+            <span>${text}</span>
+        </div>`
+        if(state) {
+            document.body.appendChild(container)
+            container.setAttribute('id', 'message2');
+        }else {
+            const message2 = document.getElementById('message2');
+            message2?.parentNode?.removeChild(message2)
+        }
+    }else if(msg === 'networkSuccess') {
+        container.innerHTML = `<div class="network_error_message" v-if="networkSuccess">
+            <span>${text}</span>
+        </div>`
+        if(state) {
+            document.body.appendChild(container)
+            container.setAttribute('id', 'message3');
+        }else {
+            const message3 = document.getElementById('message3');
+            message3?.parentNode?.removeChild(message3)
+        }
+    }else if(msg === 'saveSuccess') {
+        container.innerHTML = `<div class="network_error_message" v-else-if="saveSuccess">
+            <span>${text}</span>
+        </div>`
+        if(state) {
+            document.body.appendChild(container)
+            container.setAttribute('id', 'message4');
+        }else {
+            const message4 = document.getElementById('message4');
+            message4?.parentNode?.removeChild(message4)
+        }
+    }
+}

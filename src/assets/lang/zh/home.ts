@@ -60,7 +60,8 @@ export const system = {
     'title_includes': '标题包含',
     'license_key':'粤ICP备2023042416号',
     'phonetips':'移动端暂不支持登录，请在电脑端进行登录！',
-    'btn_login':'登录'
+    'btn_login':'登录',
+    'artboart_title_visible': '显示容器标题'
 }
 
 export const home = {
@@ -83,8 +84,8 @@ export const home = {
     recycling_station: '回收站',
     file_name: '文件名称',
     modification_time: '最近访问',
-    Creation_time:'创建时间',
-    delete_file_time:'删除时间',
+    Creation_time: '创建时间',
+    delete_file_time: '删除时间',
     size: '大小',
     operation: '操作',
     star_marking: '标星',
@@ -131,14 +132,24 @@ export const home = {
     login_failed: '登录失败',
     login_refresh: '点击刷新二维码',
     invitation_code_tips: '请输入试用邀请码',
-    table_empty_tips:'没有内容'
+    table_empty_tips: '没有内容',
+    'align_left': '左对齐',
+    'align_h_c': '左右居中对齐',
+    'align_right': '右对齐',
+    'align_top': '顶对齐',
+    'align_v_c': '上下居中对齐',
+    'align_bottom': '底对齐',
+    'distribute_h': '左右等距分布',
+    'distribute_v': '上下等距分布',
+    people_are_visiting: '正在访问的人:',
+    permissions: '权限:'
 }
 
 export const search = {
     search_results: '没有匹配的结果',
     search_history: '没有搜索记录',
-    search_history_title:'历史记录',
-    search_history_clear:'清除',
+    search_history_title: '历史记录',
+    search_history_clear: '清除',
     result_count: '共xx条结果'
 }
 
@@ -251,7 +262,9 @@ export const attr: any = {
     highlight_color: '高亮颜色',
     multiple_colors: '存在多种颜色值，点击+可统一设置',
     unfold: '展开',
-    packup: '收起'
+    packup: '收起',
+    'flip_v': '垂直翻转',
+    'flip_h': '水平翻转'
 }
 
 export const login = {
@@ -283,6 +296,29 @@ export const comment = {
 export const clipboard = {
     'invalid_data': '该内容无法解析'
 }
+
+export const message = {
+    doc_notopen: '网络异常，文档无法打开，请检查网络后重试。',
+    list_for_failure: '网络异常，文件列表获取失败，请检查网络后重试。',
+    retry: '重试',
+    leave: '您的更改尚未保存，确定要离开吗？',
+    network_error: '网络异常，请勿刷新页面或关闭文档，以免内容丢失，文档尝试保存中…',
+    network_anomaly: '网络异常',
+    link_success: '网络连接成功',
+    autosave: '文档自动保存成功',
+    cancel: '取消',
+    exit_document: '退出文档',
+    back_home: '返回首页',
+    unuploaded_msg: '文档存在未上传资源，退出会造成内容丢失，是否退出?'
+}
+export const bool = {
+    union: '联集',
+    subtract: '减去顶层',
+    intersection: '交集',
+    difference: '差集',
+    cohere: '路径拼合'
+}
+
 attr[BorderPosition.Inner] = '内部';
 attr[BorderPosition.Center] = '居中';
 attr[BorderPosition.Outer] = '外部';

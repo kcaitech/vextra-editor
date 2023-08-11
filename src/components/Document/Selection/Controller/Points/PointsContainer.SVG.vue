@@ -1,22 +1,42 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { getAngle } from '@/utils/common';
+import { update_dot } from './common';
+import { Point } from "../../SelectionView.vue";
+import { Action } from '@/context/tool';
+import { Asssit, PointType } from '@/context/assist';
+
 interface Props {
   matrix: number[]
   context: Context
   shape: Shape
   axle: { x: number, y: number }
+  cFrame: Point[]
+}
+interface Dot {
+  point: { x: number, y: number }
+  extra: { x: number, y: number }
+  r: { p: string, transform: string }
+  type: CtrlElementType
+  type2: CtrlElementType
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const data: { dots: { point: { x: number, y: number }, extra: { x: number, y: number }, r: { p: string, transform: string }, type: CtrlElementType, type2: CtrlElementType }[] } = reactive({ dots: [] });
+const submatrix = new Matrix();
+const data: { dots: Dot[] } = reactive({ dots: [] });
 const { dots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
+let pointType: PointType = 'lt';
+let stickedX: boolean = false;
+let stickedY: boolean = false;
+let sticked_x_v: number = 0;
+let sticked_y_v: number = 0;
+
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 function update() {
@@ -24,122 +44,213 @@ function update() {
   update_dot_path();
 }
 function update_dot_path() {
-  const valve = props.context.workspace.shouldSelectionViewUpdate;
-  if (!valve) return;
+  if (!props.context.workspace.shouldSelectionViewUpdate) return;
   dots.length = 0;
   const frame = props.shape.frame;
-  // const bit_v = 4 / props.context.workspace.matrix.m00;
-  const bit_v = 4;
-  const bit_v_d = 7;
   const s_r = props.shape.rotation || 0;
-
-  // lt
-  let lt = { x: 0, y: 0 };
-  lt = matrix.computeCoord(lt.x, lt.y);
-  const r1 = get_r_path(lt, CtrlElementType.RectLT);
-  const transform1 = `translate(${lt.x}px, ${lt.y}px) rotate(${-180 + s_r}deg) translate(-${lt.x}px, -${lt.y}px)`;
-  const path_obj_1 = { point: { x: lt.x - bit_v, y: lt.y - bit_v }, extra: { x: lt.x - bit_v_d, y: lt.y - bit_v_d }, r: { p: r1, transform: transform1 }, type: CtrlElementType.RectLT, type2: CtrlElementType.RectLTR };
-  //rt
-  let rt = { x: frame.width, y: 0 };
-  rt = matrix.computeCoord(rt.x, rt.y);
-  const r2 = get_r_path(rt, CtrlElementType.RectRT);
-  const transform2 = `translate(${rt.x}px, ${rt.y}px) rotate(${-90 + s_r}deg) translate(-${rt.x}px, -${rt.y}px)`;
-  const path_obj_2 = { point: { x: rt.x - bit_v, y: rt.y - bit_v }, extra: { x: rt.x - bit_v_d, y: rt.y - bit_v_d }, r: { p: r2, transform: transform2 }, type: CtrlElementType.RectRT, type2: CtrlElementType.RectRTR };
-
-  //rb
-  let rb = { x: frame.width, y: frame.height };
-  rb = matrix.computeCoord(rb.x, rb.y);
-  const r3 = get_r_path(rb, CtrlElementType.RectRB);
-  const transform3 = `translate(${rb.x}px, ${rb.y}px) rotate(${0 + s_r}deg) translate(-${rb.x}px, -${rb.y}px)`;
-  const path_obj_3 = { point: { x: rb.x - bit_v, y: rb.y - bit_v }, extra: { x: rb.x - bit_v_d, y: rb.y - bit_v_d }, r: { p: r3, transform: transform3 }, type: CtrlElementType.RectRB, type2: CtrlElementType.RectRBR };
-  //lb
-  let lb = { x: 0, y: frame.height };
-  lb = matrix.computeCoord(lb.x, lb.y)
-  const r4 = get_r_path(lb, CtrlElementType.RectLB);
-  const transform4 = `translate(${lb.x}px, ${lb.y}px) rotate(${90 + s_r}deg) translate(-${lb.x}px, -${lb.y}px)`;
-  const path_obj_4 = { point: { x: lb.x - bit_v, y: lb.y - bit_v }, extra: { x: lb.x - bit_v_d, y: lb.y - bit_v_d }, r: { p: r4, transform: transform4 }, type: CtrlElementType.RectLB, type2: CtrlElementType.RectLBR };
-  dots.push(path_obj_1, path_obj_2, path_obj_3, path_obj_4);
+  let lt = matrix.computeCoord(0, 0);
+  let rt = matrix.computeCoord(frame.width, 0);
+  let rb = matrix.computeCoord(frame.width, frame.height);
+  let lb = matrix.computeCoord(0, frame.height);
+  dots.push(...update_dot([lt, rt, rb, lb], s_r, props.shape));
 }
-function get_r_path(ps: { x: number, y: number }, type: CtrlElementType) {
-  const bit_v_r = 14;
-  return `M${ps.x} ${ps.y} h${bit_v_r} a${bit_v_r} ${bit_v_r} 0 0 1 ${-bit_v_r} ${bit_v_r} z`;
+function ct2pt(ct: CtrlElementType) {
+  if (ct === CtrlElementType.RectLT) return 'lt';
+  else if (ct === CtrlElementType.RectRT) return 'rt';
+  else if (ct === CtrlElementType.RectRB) return 'rb';
+  else if (ct === CtrlElementType.RectLB) return 'lb';
+  else return 'lt';
 }
-
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-  if (event.button === 0) {
-    props.context.menu.menuMount()
-    const workspace = props.context.workspace;
-    event.stopPropagation();
-    workspace.setCtrl('controller');
-    const { clientX, clientY } = event;
-    matrix.reset(workspace.matrix);
-    const root = workspace.root;
-    startPosition = { x: clientX - root.x, y: clientY - root.y };
-    cur_ctrl_type = ele;
-    document.addEventListener('mousemove', point_mousemove);
-    document.addEventListener('mouseup', point_mouseup);
-  }
+  if (event.button !== 0) return;
+  props.context.menu.menuMount();
+  const workspace = props.context.workspace;
+  event.stopPropagation();
+  workspace.setCtrl('controller');
+  const { clientX, clientY } = event;
+  matrix.reset(workspace.matrix);
+  const root = workspace.root;
+  startPosition = { x: clientX - root.x, y: clientY - root.y };
+  cur_ctrl_type = ele;
+  pointType = ct2pt(cur_ctrl_type);
+  document.addEventListener('mousemove', point_mousemove);
+  document.addEventListener('mouseup', point_mouseup);
 }
 function point_mousemove(event: MouseEvent) {
   const { clientX, clientY } = event;
   const workspace = props.context.workspace;
   const root = workspace.root;
   const mouseOnClient: ClientXY = { x: clientX - root.x, y: clientY - root.y };
-  let aType: 'scale' | 'rotate' = 'scale';
-  if (isDragging) {
-    let deg = 0;
+  const { x: sx, y: sy } = startPosition;
+  const { x: mx, y: my } = mouseOnClient;
+  if (isDragging && asyncBaseAction) {
     if (cur_ctrl_type.endsWith('rotate')) {
-      const { x: sx, y: sy } = startPosition;
-      const { x: mx, y: my } = mouseOnClient;
+      let deg = 0;
       const { x: ax, y: ay } = props.axle;
       deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-      aType = 'rotate';
-    }
-    if (asyncBaseAction) {
-      const selection = props.context.selection;
-      workspace.scaling(true);
-      matrix.reset(workspace.matrix);
-      const shapes = selection.selectedShapes;
-      const len = shapes.length;
-      if (len === 1) {
-        const p1OnPage: PageXY = matrix.inverseCoord(startPosition.x, startPosition.y);
-        const p2Onpage: PageXY = matrix.inverseCoord(mouseOnClient.x, mouseOnClient.y);
-        asyncBaseAction.execute(cur_ctrl_type, p1OnPage, p2Onpage, deg, aType);
-      } else if (len > 1) {
-        props.context.workspace.setSelectionViewUpdater(false);
+      if (props.shape.isFlippedHorizontal) deg = -deg;
+      if (props.shape.isFlippedVertical) deg = -deg
+      asyncBaseAction.executeRotate(deg);
+    } else {
+      const action = props.context.tool.action;
+      const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
+      let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
+      if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
+        p2 = get_t(cur_ctrl_type, p1, p2);
+        asyncBaseAction.executeScale(cur_ctrl_type, p2);
+      } else {
+        scale(asyncBaseAction, p2);
       }
     }
-    props.context.workspace.setSelectionViewUpdater(true);
-    props.context.workspace.selectionViewUpdate();
     startPosition = { ...mouseOnClient };
+    setCursor(cur_ctrl_type, true);
   } else {
-    if (Math.hypot(mouseOnClient.x - startPosition.x, mouseOnClient.y - startPosition.y) > dragActiveDis) {
+    if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
       isDragging = true;
-      const shapes: Shape[] = props.context.selection.selectedShapes;
-      asyncBaseAction = props.context.editor.controller().asyncRectEditor(shapes, props.context.selection.selectedPage!);
+      submatrix.reset(workspace.matrix.inverse);
+      cur_ctrl_type.endsWith('rotate') ? workspace.rotating(true) : workspace.scaling(true);
+      asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
+      props.context.assist.setTransTarget([props.shape]);
     }
   }
+}
+function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
+  if (cct === CtrlElementType.RectLT) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(pre_delta.x, pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectRT) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(f.width + pre_delta.x, -pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectRB) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
+  } else if (cct === CtrlElementType.RectLB) {
+    const m = props.shape.matrix2Root();
+    p1 = m.inverseCoord(p1.x, p1.y);
+    p2 = m.inverseCoord(p2.x, p2.y);
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
+    return m.computeCoord(pre_delta.x, f.height - pre_delta.x * (1 / r));
+  } else return p2
+}
+function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
+  const stickness = props.context.assist.stickness;
+  const target = props.context.assist.point_match(props.shape, pointType);
+  if (target) {
+    if (stickedX) {
+      if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX = false;
+      else p2.x = sticked_x_v;
+    } else if (target.sticked_by_x) {
+      p2.x = target.x;
+      sticked_x_v = p2.x;
+      stickedX = true;
+    }
+    if (stickedY) {
+      if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY = false;
+      else p2.y = sticked_y_v;
+    } else if (target.sticked_by_y) {
+      p2.y = target.y;
+      sticked_y_v = p2.y;
+      stickedY = true;
+    }
+  }
+  asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }
 function point_mouseup(event: MouseEvent) {
-  if (event.button === 0) {
-    const workspace = props.context.workspace;
-    if (isDragging) {
-      if (asyncBaseAction) {
-        asyncBaseAction = asyncBaseAction.close();
-      }
-      isDragging = false;
-    }
-    document.removeEventListener('mousemove', point_mousemove);
-    document.removeEventListener('mouseup', point_mouseup);
-    workspace.scaling(false);
-    workspace.setCtrl('page');
+  if (event.button !== 0) return;
+  if (isDragging) {
+    props.context.assist.reset();
+    isDragging = false;
+  }
+  if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
+  document.removeEventListener('mousemove', point_mousemove);
+  document.removeEventListener('mouseup', point_mouseup);
+  const workspace = props.context.workspace;
+  workspace.scaling(false);
+  workspace.rotating(false);
+  workspace.setCtrl('page');
+  props.context.cursor.reset();
+}
+function setCursor(t: CtrlElementType, force?: boolean) {
+  const cursor = props.context.cursor;
+  let deg = props.shape.rotation || 0;
+  if (t === CtrlElementType.RectLT) {
+    deg = deg + 45;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`scale-${deg}`, force);
+  } else if (t === CtrlElementType.RectRT) {
+    deg = deg + 135;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`scale-${deg}`, force);
+  } else if (t === CtrlElementType.RectRB) {
+    deg = deg + 45;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`scale-${deg}`, force);
+  } else if (t === CtrlElementType.RectLB) {
+    deg = deg + 135;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`scale-${deg}`, force);
+  } else if (t === CtrlElementType.RectLTR) {
+    deg = deg + 225;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`rotate-${deg}`, force);
+  } else if (t === CtrlElementType.RectRTR) {
+    deg = deg + 315;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`rotate-${deg}`, force);
+  } else if (t === CtrlElementType.RectRBR) {
+    deg = deg + 45;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`rotate-${deg}`, force);
+  } else if (t === CtrlElementType.RectLBR) {
+    deg = deg + 135;
+    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    cursor.setType(`rotate-${deg}`, force);
   }
 }
+function point_mouseleave() {
+  props.context.cursor.setType('auto-0');
+}
+function window_blur() {
+  const workspace = props.context.workspace;
+  if (isDragging) {
+    props.context.assist.reset();
+    isDragging = false;
+  }
+  if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
+  workspace.scaling(false);
+  workspace.rotating(false);
+  workspace.setCtrl('page');
+  props.context.cursor.reset();
+  document.removeEventListener('mousemove', point_mousemove);
+  document.removeEventListener('mouseup', point_mouseup);
+}
 
-function selection_watcher(t?: number) { }
-watch(() => props.matrix, () => {
-  update();
-})
+watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
   old.unwatch(update);
   value.watch(update);
@@ -147,24 +258,27 @@ watch(() => props.shape, (value, old) => {
 })
 onMounted(() => {
   props.shape.watch(update);
-  props.context.selection.watch(selection_watcher);
+  window.addEventListener('blur', window_blur);
   update();
 })
 onUnmounted(() => {
   props.shape.unwatch(update);
-  props.context.selection.unwatch(selection_watcher);
+  window.removeEventListener('blur', window_blur);
 })
 </script>
 <template>
-  <g>
-    <g v-for="(p, i) in dots" :key="i">
+  <g >
+    <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
       <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-        :style="`transform: ${p.r.transform}; cursor: pointer`">
+        @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
       </path>
       <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'
-        @mousedown.stop="(e) => point_mousedown(e, p.type)"></rect>
+        @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
+        @mouseleave="point_mouseleave">
+      </rect>
       <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#865dff' stroke-width="1.5px"
-        @mousedown.stop="(e) => point_mousedown(e, p.type)"></rect>
+        @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
+        @mouseleave="point_mouseleave"></rect>
     </g>
   </g>
 </template>

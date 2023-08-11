@@ -1,7 +1,7 @@
 
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" />
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
     <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removehistory="Removefile" @ropen="openDocument"/>
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"
@@ -32,6 +32,7 @@ const selectValue = ref(1)
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
 const mydata = ref()
+const noNetwork = ref(false)
 const iconlists = ref(['star', 'share', 'remove'])
 const emits = defineEmits(['data-update'])
 
@@ -57,8 +58,10 @@ async function getUserdata() {
     try {
         const { data } = await user_api.GetDocumentsList() as any
         if (data == null) {
+            noNetwork.value = true
             ElMessage.error(t('home.failed_list_tips'))
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -67,11 +70,15 @@ async function getUserdata() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
     // unloading  
     isLoading.value = false;
+}
+const refreshDoc = () => {
+    getUserdata()
 }
 
 function sizeTostr(size: any) {

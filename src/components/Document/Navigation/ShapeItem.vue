@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, InputHTMLAttributes, watch, onUnmounted, onMounted } from "vue";
-import { Shape, GroupShape, ShapeType } from '@kcdesign/data';
+import { Shape, GroupShape, ShapeType, PathShape, RectShape, Matrix } from '@kcdesign/data';
 import { Context } from "@/context";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import Abbrevition from "./Abbreviation.vue";
+import { Perm } from "@/context/workspace";
+import { XYsBounding } from "@/utils/common";
 export interface ItemData {
     id: string
     shape: Shape
@@ -21,7 +24,11 @@ const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
 const props = defineProps<Props>();
 const esc = ref<boolean>(false)
+const isread = ref(false)
+const canComment = ref(false)
+const isEdit = ref(false)
 const ph_width = computed(() => (props.data.level - 1) * 10);
+const d = ref<string>('');
 const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
     (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
@@ -65,18 +72,12 @@ function updater(t?: any) {
     showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0;
     lock_status.value = props.data.shape.isLocked ? 1 : 0;
     visible_status.value = props.data.shape.isVisible ? 0 : 1;
-    if (is_parent_locked(props.data.shape)) {
-        lock_status.value = 2;
-    }
-    if (is_parent_unvisible(props.data.shape)) {
-        visible_status.value = 2;
-    }
+    if (is_parent_locked(props.data.shape)) lock_status.value = 2;
+    if (is_parent_unvisible(props.data.shape)) visible_status.value = 2;
 }
 
 function toggleExpand(e: Event) {
-    if (!showTriangle.value) {
-        return;
-    }
+    if (!showTriangle.value) return;
     e.stopPropagation();
     emit("toggleexpand", props.data.shape);
 }
@@ -115,6 +116,7 @@ const setVisible = (e: MouseEvent) => {
     emit('set-visible', Boolean(visible_status.value < 0), props.data.shape)
 }
 const onRename = () => {
+    if (!isEdit.value) return
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
@@ -177,8 +179,44 @@ const mousedown = (e: MouseEvent) => {
     selectedChild();
 }
 
+//获取文档权限
+const hangdlePerm = () => {
+    const perm = props.data.context.workspace.documentPerm
+    if (perm === Perm.isRead) {
+        isread.value = true
+    } else if (perm === Perm.isComment) {
+        isread.value = false
+        canComment.value = true
+    } else {
+        isread.value = false
+        canComment.value = false
+        isEdit.value = true
+    }
+}
+function init_d() {
+    d.value = '';
+    const s = props.data.shape;
+    if (![ShapeType.Rectangle, ShapeType.Oval, ShapeType.Line].includes(s.type)) return;
+    const m = s.matrix2Root();
+    m.multiAtLeft(props.data.context.workspace.matrix);
+    const f = s.frame;
+    const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
+    const b = XYsBounding(points);
+    const w = b.right - b.left, h = b.bottom - b.top;
+    m.trans(-w / 2, -h / 2);
+    const max = Math.max(h, w);
+    const ratio = max / 10;
+    const m_composite = new Matrix();
+    m_composite.scale(1 / ratio); // 获取缩放矩阵
+    m_composite.trans(5 - (w / ratio) / 2, 5 - (h / ratio) / 2); // 偏移矩阵
+    const path = s.getPath();
+    path.transform(m_composite);
+    d.value = path.toString();
+}
 onMounted(() => {
+    hangdlePerm()
     updater();
+    // init_d();
 })
 onUnmounted(() => {
     stop();
@@ -194,13 +232,16 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="container-svg" @dblclick="toggleContainer">
+            <!-- <Abbrevition v-if="d" :d="d"></Abbrevition>
+            <svg-icon v-else class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon> -->
             <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
         </div>
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
             <div class="tool_icon"
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
-                <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)">
+                <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
+                    v-if="isEdit">
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
                     <div class="dot" v-else-if="lock_status === 2"></div>
@@ -208,7 +249,8 @@ onUnmounted(() => {
                 <div class="tool_lock tool" @click="toggleContainer">
                     <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
-                <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)">
+                <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)"
+                    v-if="isEdit">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
                     <div class="dot" v-else-if="visible_status === 2"></div>
@@ -274,6 +316,7 @@ onUnmounted(() => {
     >.container-svg {
         display: flex;
         width: 10px;
+        height: 10px;
         justify-content: center;
         align-items: center;
         margin-left: 2px;

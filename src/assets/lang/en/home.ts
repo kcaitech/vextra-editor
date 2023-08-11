@@ -60,7 +60,8 @@ export const system = {
     'title_includes': 'Title includes',
     'license_key':'粤ICP备2023042416号',
     'phonetips':'Mobile terminal does not support login, please login on the computer side!',
-    'btn_login':'Login'
+    'btn_login':'Login',
+    'artboart_title_visible': 'Show artboard title'
 }
 
 export const home = {
@@ -83,8 +84,8 @@ export const home = {
     recycling_station: 'Recycling station',
     file_name: 'File name',
     modification_time: 'Recently visited',
-    Creation_time:'Creation time',
-    delete_file_time:'Deletion time',
+    Creation_time: 'Creation time',
+    delete_file_time: 'Deletion time',
     size: 'Size',
     operation: 'Operation',
     star_marking: 'Star marking',
@@ -131,14 +132,24 @@ export const home = {
     login_failed: 'Login failure',
     login_refresh: 'Click refresh QR code',
     invitation_code_tips: 'Please enter the trial invitation code',
-    table_empty_tips:'No content'
+    table_empty_tips: 'No content',
+    'align_left': 'Align left',
+    'align_h_c': 'Align horizontal centers',
+    'align_right': 'Align right',
+    'align_top': 'Align top',
+    'align_v_c': 'Align vertical centers',
+    'align_bottom': 'Align bottom',
+    'distribute_h': 'Distribute horizontal spacing',
+    'distribute_v': 'Distribute vertical spacing',
+    people_are_visiting: 'People are visiting:',
+    permissions: 'Permissions:'
 }
 
 export const search = {
     search_results: 'No matching results',
     search_history: 'No search history',
-    search_history_title:'Historical record',
-    search_history_clear:'Clear',
+    search_history_title: 'Historical record',
+    search_history_clear: 'Clear',
     result_count: 'xx results'
 }
 
@@ -251,7 +262,9 @@ export const attr: any = {
     highlight_color: 'Highlight color',
     multiple_colors: 'There are many color values, click + can be unified set',
     unfold: 'Unfold',
-    packup: 'Pack up'
+    packup: 'Pack up',
+    'flip_v': '垂直翻转',
+    'flip_h': '水平翻转'
 }
 
 export const login = {
@@ -283,6 +296,29 @@ export const comment = {
 export const clipboard = {
     'invalid_data': 'invalid data'
 }
+
+export const message = {
+    doc_notopen: "Network anomalies, the document can't open, please try again after checking the network.",
+    list_for_failure: 'Network exception, file list acquisition failed, please check the network and try again.',
+    retry: 'Retry',
+    leave: 'Your changes have not been saved, are you sure you want to leave?',
+    network_error: 'Please do not refresh the page or close the document to avoid content loss. The document is trying to save...',
+    network_anomaly: 'Network anomaly',
+    link_success: 'Network connection successful',
+    autosave: 'Automatic document saving',
+    cancel: 'Cancel',
+    exit_document: 'Exit document',
+    back_home: 'Back to home',
+    unuploaded_msg: 'The document has unuploaded resources. If you exit, content will be lost. Do you want to exit?'
+}
+export const bool = {
+    union: 'Union',
+    subtract: 'Subtract',
+    intersection: 'Intersect',
+    difference: 'Exclude',
+    cohere: 'Vector'
+}
+
 attr[BorderPosition.Inner] = 'Inner';
 attr[BorderPosition.Center] = 'Center';
 attr[BorderPosition.Outer] = 'Outer';

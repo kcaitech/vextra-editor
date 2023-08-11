@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import comsMap from './comsmap'
-import { Shape, GroupShape } from "@kcdesign/data";
-import { render as r } from "@/render/group";
+import { GroupShape } from "@kcdesign/data";
+import { renderGroup as r } from "@kcdesign/data";
 
 const props = defineProps<{ data: GroupShape }>();
 const reflush = ref(0);

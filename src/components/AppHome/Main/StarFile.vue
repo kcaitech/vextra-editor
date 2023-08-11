@@ -1,6 +1,6 @@
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile"
-        @rightMeun="rightmenu" />
+        @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"/>
     <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo"
         @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
@@ -29,6 +29,7 @@ const userInfo = ref<UserInfo | undefined>()
 let lists = ref<any[]>([])
 const docId = ref('')
 const mydata = ref()
+const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
 const emits = defineEmits(['data-update'])
 
@@ -56,8 +57,10 @@ async function getUserdata() {
     try {
         const { data } = await user_api.GetfavoritesList()
         if (data == null) {
+            noNetwork.value = true
             ElMessage.error(t('home.failed_list_tips'))
         } else {
+            noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
@@ -66,10 +69,15 @@ async function getUserdata() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        noNetwork.value = true
         ElMessage.error(t('home.failed_list_tips'))
     }
     // unloading  
     isLoading.value = false;
+}
+
+const refreshDoc = () => {
+    getUserdata()
 }
 
 function sizeTostr(size: any) {

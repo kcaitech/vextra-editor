@@ -6,7 +6,7 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 const watchedShapes = new Map();
 interface Props {
-    matrix: number[]
+    matrix: Matrix
     context: Context
 }
 const props = defineProps<Props>();
@@ -15,9 +15,6 @@ const paths = ref<string[]>([]);
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
     if (selection.selectedShapes.length > 0) {
         selection.selectedShapes.forEach((v) => {
             needWatchShapes.set(v.id, v);
@@ -45,26 +42,37 @@ function selection_watcher(t?: number) {
     }
 }
 function update_paths(shapes: Shape[]) {
-    const valve = props.context.workspace.shouldSelectionViewUpdate;
-    if (!valve) return;
+    // const s = Date.now();
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const path = shape.getPath(true);
+        const path = shape.getPath();
+        const m2r = shape.matrix2Root();
+        m2r.multiAtLeft(props.matrix);
+        path.transform(m2r);
+        paths.value.push(path.toString());
+    }
+    // const e = Date.now();
+    // console.log('描边绘制用时(ms):', e - s);
+}
+function workspace_watcher(t?: number) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) passive_update();
+}
+function passive_update() {
+    matrix.reset(props.matrix);
+    paths.value.length = 0;
+    const shapes = props.context.selection.selectedShapes;
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        const path = shape.getPath();
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(props.matrix);
         path.transform(m2r);
         paths.value.push(path.toString());
     }
 }
-function workspace_watcher(t?: number) {
-    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
-        update();
-    }
-}
-watch(() => props.matrix, () => {
-    update();
-})
+watch(() => props.matrix, update, { deep: true })
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);

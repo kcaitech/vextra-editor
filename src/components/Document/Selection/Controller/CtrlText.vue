@@ -19,32 +19,25 @@ const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
     rotate: number,
-    matrix: number[],
+    matrix: Matrix,
     shape: Shape
 }>();
 
 watch(() => props.shape, (value, old) => {
-    if (old.text.length === 1) {
-        clear_null_shape(old);
-    }
+    if (old.text.length === 1) clear_null_shape(old);
     old.unwatch(update);
     value.watch(update);
     update();
 })
-
-watch(() => props.matrix, () => {
-    update();
-})
 const { isDblClick } = useController(props.context);
 // const update = throttle(_update, 5);
-const update = _update;
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let editing: boolean = false;
 const visible = ref<boolean>(true);
-function _update() {
+function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
@@ -56,11 +49,9 @@ function _update() {
         { x: frame.width, y: frame.height }, // right bottom
         { x: 0, y: frame.height }, // left bottom
     ];
-
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
-    if (editing) {
-        boundrectPath.value = genRectPath(boundrect);
-    }
+    boundrectPath.value = genRectPath(boundrect);
+    props.context.workspace.setCtrlPath(boundrectPath.value);
     const p0 = boundrect[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -82,15 +73,26 @@ const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
+const width = computed(() => {
+    const w = bounds.right - bounds.left;
+    return w < 10 ? 10 : w;
+})
+const height = computed(() => {
+    const h = bounds.bottom - bounds.top;
+    return h < 10 ? 10 : h;
+})
 let downIndex: { index: number, before: boolean };
 function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
         const workspace = props.context.workspace;
         props.context.menu.menuMount();
         if (!editing && isDblClick()) {
+            if (props.context.navi.focusText) {
+                props.context.navi.set_focus_text();
+            }
             editing = true;
             workspace.contentEdit(editing);
-            workspace.setCursorStyle('text', 0);
+            props.context.cursor.setType('scan-0');
         }
         if (!editing) return;
         const selection = props.context.selection;
@@ -113,7 +115,7 @@ function be_editor(index?: number) {
     const selection = props.context.selection;
     editing = true;
     workspace.contentEdit(editing);
-    workspace.setCursorStyle('text', 0);
+    props.context.cursor.setType('scan-0');
     if (index !== undefined) {
         downIndex = { index, before: true };
         selection.setCursor(index, true);
@@ -160,33 +162,23 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 function mouseenter() {
-    if (editing) {
-        props.context.workspace.setCursorStyle('text', 0);
-    }
+    if (editing) props.context.cursor.setType('scan-0');
 }
 function mouseleave() {
-    props.context.workspace.resetCursor();
+    props.context.cursor.reset();
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
-    return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top)
+    return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value
 }
 function workspace_watcher(t?: number) {
-    if (t === WorkSpace.TRANSLATING) {
-        if (props.context.workspace.isTranslating) {
-            visible.value = false;
-        } else {
-            visible.value = true;
-        }
-    } else if (t === WorkSpace.INIT_EDITOR) {
-        be_editor(0);
-    }
+    if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
+    else if (t === WorkSpace.INIT_EDITOR) be_editor(0);
 }
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
-    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
-        editing = false;
-    }
+    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) editing = false;
 }
+watch(() => props.matrix, update, { deep: true })
 onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
@@ -194,20 +186,17 @@ onMounted(() => {
     props.context.workspace.watch(workspace_watcher);
     update();
 })
-
 onUnmounted(() => {
     const selection = props.context.selection;
     props.shape.unwatch(update);
     selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.cursor.reset();
 })
 onBeforeUnmount(() => {
-    if (props.shape.text.length === 1) {
-        clear_null_shape(props.shape);
-    }
+    if (props.shape.text.length === 1) clear_null_shape(props.shape);
 })
 </script>
-
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
@@ -217,15 +206,15 @@ onBeforeUnmount(() => {
         @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></SelectView>
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape">
+        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :c-frame="props.controllerFrame">
         </BarsContainer>
         <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :axle="axle">
+            :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"></TextInput>
 </template>
-
 <style lang='scss' scoped>
 .un-visible {
     opacity: 0;

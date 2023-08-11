@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
+import { ref, nextTick, reactive, onMounted, onUnmounted, computed, watch } from 'vue';
 import { Color } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -7,10 +7,11 @@ import { WorkSpace } from '@/context/workspace';
 import { ClientXY, Selection } from '@/context/selection';
 import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
-import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, RGB2H, validate, getHRGB, HSB2RGB, RGB2HSL, HSL2RGB } from './utils';
+import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, RGB2H, validate, getHRGB, HSB2RGB, RGB2HSL, HSL2RGB, getColorsFromDoc } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
+import { Menu } from "@/context/menu";
 type RgbMeta = number[];
 interface Props {
   context: Context
@@ -85,6 +86,7 @@ const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
 const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
 const recent = ref<Color[]>([]);
+const document_colors = ref<{ times: number, color: Color }[]>([]);
 let inputTarget: HTMLInputElement;
 let handleIndex = 0;
 const mousedownPositon: ClientXY = { x: 0, y: 0 };
@@ -99,7 +101,7 @@ const data = reactive<Data>({
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
 const h_rgb = computed<HRGB>(() => {
   const color = new Color(1, rgba.R, rgba.G, rgba.B);
-  return getHRGB(RGB2H(color));
+  return getHRGB(RGB2H(color, hueIndicatorAttr.x / (lineAttribute.length - INDICATOR_WIDTH)));
 })
 const hsba = computed<HSBA>(() => {
   const { R, G, B, alpha } = rgba;
@@ -146,43 +148,52 @@ const hueIndicator = ref<HTMLDivElement>();
 const alphaIndicator = ref<HTMLDivElement>();
 const popoverVisible = ref<boolean>(false);
 const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
+const need_update_recent = ref<boolean>(false);
 
 function triggle() {
-  const workspace = props.context.workspace;
-  const exsit = workspace.isColorPickerMount;
+  const menu = props.context.menu;
+  const exsit = menu.isColorPickerMount;
   if (exsit) {
-    if (exsit === blockId) {
-      workspace.removeColorPicker();
-    } else {
-      workspace.removeColorPicker();
-      colorPickerMount();
-    }
+    menu.removeColorPicker();
+    if (exsit !== blockId) colorPickerMount();
   } else {
     colorPickerMount();
   }
 }
 function colorPickerMount() {
   popoverVisible.value = true;
-  props.context.workspace.colorPickerSetup(blockId);
+  props.context.menu.setupColorPicker(blockId);
   nextTick(() => {
     if (popoverEl.value && block.value) {
       let el = popoverEl.value
       let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
       el.style.top = top + 'px';
-      if(props.late) {
+      if (props.late) {
         el.style.left = -(36 + el.offsetWidth + props.late) + 'px';
-      }else {
+      } else {
         el.style.left = -(36 + el.offsetWidth) + 'px';
       }
       init();
+      document_colors.value = getColorsFromDoc(props.context);
     }
   })
+  document.addEventListener('mousedown', quit);
 }
-function removeColorPicker() {
+function removeCurColorPicker() {
+  if (need_update_recent.value) {
+    update_recent_color();
+    need_update_recent.value = false;
+  }
   popoverVisible.value = false;
-  update_recent_color()
+  props.context.menu.clearColorPickerId();
 }
-
+function quit(e: MouseEvent) {
+  if (e.target instanceof Element && !e.target.closest('.color-block')) {
+    popoverVisible.value = false;
+    blockUnmount();
+    document.removeEventListener('mousedown', quit);
+  }
+}
 // 16进制色彩转10进制
 function hexToX(hex: string): RgbMeta {
   hex = hex.slice(1);
@@ -199,14 +210,6 @@ function hexToX(hex: string): RgbMeta {
     }
   }
   return result
-}
-//  10进制色彩转16进制
-function xTohex(rgb: [number, number, number]): string {
-  let str: string = '#';
-  rgb.forEach(i => {
-    str = str + (rgb[i].toString(16).length === 1 ? `0${rgb[i].toString(16).length === 1}` : rgb[i].toString(16).length === 1)
-  })
-  return str
 }
 function setMousedownPosition(e: MouseEvent) {
   mousedownPositon.x = e.clientX;
@@ -232,6 +235,7 @@ function setHueIndicatorPosition(e: MouseEvent) {
     setRGB(hueIndicatorAttr.x);
     document.addEventListener('mousemove', mousemove4Hue);
     document.addEventListener('mouseup', mouseup);
+    need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   }
 }
@@ -250,19 +254,20 @@ function mousemove4Hue(e: MouseEvent) {
   }
 }
 function wheel(e: WheelEvent) {
-  const wheel_step = 3;
+  const wheel_step = 2;
   e.preventDefault();
-  const { shiftKey, deltaX, deltaY } = e;
+  const { deltaX, deltaY } = e;
   if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
     // todo
   } else {
     const delta = deltaY > 0 ? wheel_step : -wheel_step;
-    if (shiftKey) {
-      // const val = (alphaIndicatorAttr.x + delta) > (lineAttribute.length - INDICATOR_WIDTH) ? alphaIndicatorAttr.x + delta - (lineAttribute.length - INDICATOR_WIDTH) : alphaIndicatorAttr.x + delta;
-      // alphaIndicatorAttr.x = alphaIndicatorAttr.x + val;
-      // setAlpha(alphaIndicatorAttr.x);
+    const critical_len = lineAttribute.length - INDICATOR_WIDTH
+    if (delta > 0) {
+      const val = (hueIndicatorAttr.x + delta) > critical_len ? hueIndicatorAttr.x + delta - critical_len : hueIndicatorAttr.x + delta;
+      hueIndicatorAttr.x = val;
+      setRGB(hueIndicatorAttr.x);
     } else {
-      const val = (hueIndicatorAttr.x + delta) > (lineAttribute.length - INDICATOR_WIDTH) ? hueIndicatorAttr.x + delta - (lineAttribute.length - INDICATOR_WIDTH) : hueIndicatorAttr.x + delta;
+      const val = (hueIndicatorAttr.x + delta) < 0 ? hueIndicatorAttr.x + delta + critical_len : hueIndicatorAttr.x + delta;
       hueIndicatorAttr.x = val;
       setRGB(hueIndicatorAttr.x);
     }
@@ -285,6 +290,7 @@ function setAlphaIndicatorPosition(e: MouseEvent) {
     setAlpha(alphaIndicatorAttr.x);
     document.addEventListener('mousemove', mousemove4Alpha);
     document.addEventListener('mouseup', mouseup);
+    need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   }
 }
@@ -358,11 +364,13 @@ function setRGB(indicator: number) {
   const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
   emit('change', color);
   update(R, G, B);
+  need_update_recent.value = true;
 }
 function setAlpha(indicator: number) {
   rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
   const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
   emit('change', color);
+  need_update_recent.value = true;
 }
 function setColor(color: Color) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
@@ -372,6 +380,7 @@ function setColor(color: Color) {
   rgba.alpha = color.alpha;
   emit('change', color);
   update_dot_indicator_position(color);
+  need_update_recent.value = true;
   props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 // 鼠标抬起
@@ -380,6 +389,7 @@ function mouseup() {
   document.removeEventListener('mousemove', mousemove4Alpha)
   document.removeEventListener('mousemove', mousemove4Hue)
   document.removeEventListener('mouseup', mouseup)
+  need_update_recent.value = true;
   props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
   isDrag = false;
 }
@@ -392,12 +402,11 @@ function eyedropper() {
     systemEyeDropper();
   }
 }
-
 function blockUnmount() {
-  const workspace = props.context.workspace;
-  const exsit = workspace.isColorPickerMount;
+  const menu = props.context.menu;
+  const exsit = menu.isColorPickerMount;
   if (exsit === blockId) {
-    workspace.removeColorPicker();
+    menu.clearColorPickerId();
   }
 }
 // 系统自带的取色器
@@ -433,14 +442,10 @@ function eyeDropperInit(): Eyedropper {
         rgba.B = rgb[2];
         const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
         emit('change', c);
+        update_dot_indicator_position(c);
       }
     }
   });
-}
-function workspaceWatcher(t: any) {
-  if (t === WorkSpace.REMOVE_COLOR_PICKER) {
-    removeColorPicker();
-  }
 }
 function switchModel(item: SelectItem) {
   model.value = item;
@@ -472,6 +477,7 @@ function keyboardWatcher(e: KeyboardEvent) {
       const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
       emit('change', color);
       update_dot_indicator_position(color);
+      need_update_recent.value = true;
       props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     }
   } else if (e.code === 'ArrowDown') {
@@ -491,6 +497,7 @@ function keyboardWatcher(e: KeyboardEvent) {
       const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
       emit('change', color);
       update_dot_indicator_position(color);
+      need_update_recent.value = true;
       props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     }
   }
@@ -551,6 +558,7 @@ function enter() {
     emit('change', color);
     update_dot_indicator_position(color);
     update_alpha_indicator(color);
+    need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
   } else {
     reflush.value++;
@@ -593,18 +601,15 @@ function init() {
   rgba.G = green;
   rgba.B = blue;
   rgba.alpha = alpha;
-  let r = localStorage.getItem(key_storage);
-  r = JSON.parse(r || '[]');
-  if (r) {
-    if (r.length) {
-      recent.value = [];
-      for (let i = 0; i < r.length; i++) {
-        recent.value.push(parseColorFormStorage(r[i]));
-      }
-    }
-  }
   update_dot_indicator_position(props.color);
   update_alpha_indicator(props.color);
+  let r = localStorage.getItem(key_storage);
+  r = JSON.parse(r || '[]');
+  if (!r || !r.length) return;
+  recent.value = [];
+  for (let i = 0; i < r.length; i++) {
+    recent.value.push(parseColorFormStorage(r[i]));
+  }
 }
 function update_alpha_indicator(color: Color) {
   const { alpha } = color;
@@ -612,34 +617,39 @@ function update_alpha_indicator(color: Color) {
 }
 function selectionWatcher(t: any) {
   if (t === Selection.CHANGE_SHAPE) {
-    props.context.workspace.removeColorPicker();
+    props.context.menu.removeColorPicker();
+  }
+}
+function menu_watcher(t?: any, id?: string) {
+  if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
+    removeCurColorPicker();
   }
 }
 function window_blur() {
   isDrag = false;
 }
 onMounted(() => {
-  props.context.workspace.watch(workspaceWatcher);
   props.context.selection.watch(selectionWatcher);
+  props.context.menu.watch(menu_watcher);
   init();
   window.addEventListener('blur', window_blur);
 });
 onUnmounted(() => {
   eyeDropper.destroy();
   blockUnmount();
-  props.context.workspace.unwatch(workspaceWatcher);
   props.context.selection.unwatch(selectionWatcher);
+  props.context.menu.unwatch(menu_watcher);
   window.removeEventListener('blur', window_blur)
 })
 </script>
 
 <template>
   <div class="color-block" :style="{ backgroundColor: toRGBA(color) }" ref="block" @click="triggle">
-    <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel">
+    <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
       <!-- 头部 -->
       <div class="header">
         <div class="color-type">{{ t('color.solid') }}</div>
-        <div @click="removeColorPicker" class="close">
+        <div @click="removeCurColorPicker" class="close">
           <svg-icon icon-class="close"></svg-icon>
         </div>
       </div>
@@ -657,7 +667,7 @@ onUnmounted(() => {
       </div>
       <div class="controller">
         <div class="eyedropper">
-          <svg-icon icon-class="eyedropper" @click="eyedropper"></svg-icon>
+          <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
         </div>
         <div class="sliders-container" ref="sliders">
           <!-- 色相 -->
@@ -698,6 +708,18 @@ onUnmounted(() => {
           <div class="typical-container">
             <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
               :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+          </div>
+        </div>
+      </div>
+      <!-- 文档使用 -->
+      <div class="dc-container" v-if="recent.length">
+        <div class="inner">
+          <div class="header">{{ t('color.documentc') }}</div>
+          <div class="documentc-container" @wheel.stop>
+            <div class="block" v-for="(c, idx) in document_colors" :key="idx" @click="() => setColor(c.color as any)"
+              :title="t('color.times').replace('xx', c.times.toString())"
+              :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+            </div>
           </div>
         </div>
       </div>
@@ -1001,6 +1023,65 @@ onUnmounted(() => {
 
           >.block:not(:first-child) {
             margin-left: 6.2px;
+          }
+        }
+      }
+    }
+
+    >.dc-container {
+      width: 100%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px 4px 10px;
+      box-sizing: border-box;
+
+      .inner {
+        border-top: 1px solid #cecece;
+        width: 100%;
+
+        .header {
+          padding: 4px 0 8px 0;
+        }
+
+        >.documentc-container {
+          width: 100%;
+          max-height: 56px;
+          padding: 2px 0px;
+          overflow: scroll;
+          display: grid;
+          grid-row-gap: 4px;
+          grid-column-gap: 6.5px;
+          grid-template-columns: repeat(auto-fill, 16px);
+
+          &::-webkit-scrollbar {
+            width: 0px;
+          }
+
+          &::-webkit-scrollbar-track {
+            background-color: none;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: none;
+          }
+
+          &::-webkit-scrollbar-thumb:hover {
+            background-color: none;
+          }
+
+          &::-webkit-scrollbar-thumb:active {
+            background-color: none;
+          }
+
+          >.block {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            border: 1px solid var(--grey-dark);
+            cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
           }
         }
       }

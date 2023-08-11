@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import ToolButton from '../ToolButton.vue';
-import { Action, WorkSpace } from '@/context/workspace';
+import { WorkSpace, Perm } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
+import Tooltip from '@/components/common/Tooltip.vue';
 const { t } = useI18n()
 const props = defineProps<{
   active: boolean,
@@ -11,20 +13,19 @@ const emit = defineEmits<{
   (e: "select", action: Action): void;
 }>();
 function select(action: Action) {
-  if(props.workspace.documentPerm === 1) return
+  if (props.workspace.documentPerm === Perm.isRead) return;
   props.workspace.keydown_c()
   emit('select', action);
 }
 </script>
 <template>
-  <el-tooltip class="box-item" effect="dark" :content="`${t('home.addComment')} &nbsp;&nbsp; C`" placement="bottom"
-    :show-after="500" :offset="10" :hide-after="0">
+  <Tooltip :content="`${t('home.addComment')} &nbsp;&nbsp; C`">
     <ToolButton ref="button" @click="() => { select(Action.AddComment) }" :selected="props.active">
       <div class="svg-container">
         <svg-icon icon-class="comment"></svg-icon>
       </div>
     </ToolButton>
-  </el-tooltip>
+  </Tooltip>
 </template>
 <style scoped lang="scss">
 .svg-container {

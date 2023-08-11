@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection';
-import { onMounted, onUnmounted, ref, watch, watchEffect, nextTick } from 'vue';
+import { Tool } from '@/context/tool';
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
-import { v4 as uuid } from "uuid";
-import { setToolGroup } from "@/utils/pageview";
+import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
+import { debounce } from 'lodash';
 const props = defineProps<{
     context: Context,
     data: Page,
@@ -15,66 +15,53 @@ const props = defineProps<{
 const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
+const show_t = ref<boolean>(true);
 let renderItems: Shape[] = []; // 渲染数据，里面除了真实的data数据之外，还有工具对象
 const watcher = () => {
     reflush.value++;
 }
 function pageViewRegister(mount: boolean) {
     if (mount) {
-        const id = (uuid().split('-').at(-1)) || 'pageview';
+        const id = (v4().split('-').at(-1)) || 'pageview';
         rootId.value = id;
     } else {
         rootId.value = 'pageview';
     }
     props.context.workspace.setPageViewId(rootId.value);
 }
-function updateRenderItems(t?: number) {
-    if (t === Selection.CHANGE_SHAPE) {
-        updateItems();
-    }
+function _collect(t?: any) {
+    if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
 }
-function updateItems() {
-    // const selection = props.context.selection;
-    // const workspace = props.context.workspace;
-    // const shapes = selection.selectedShapes;
-    // const len = shapes.length;
-    // if (len > 1) {
-    //     const editor = props.context.editor.editor4Page(props.data);
-    //     const toolGroup = editor.createGroup();
-    //     toolGroup.childs.push(...shapes);
-    //     toolGroup.id = 'tool-group';
-    //     renderItems = [toolGroup, ...props.data.childs.filter(i => !shapes.includes(i))];
-    //     nextTick(() => { setToolGroup(props.context) });
-    // } else {
-    //     if (renderItems.length) {
-    //         if (renderItems[0].id === 'tool-group') {
-    //             workspace.toolGroupUnmount();
-    //         }
-    //     }
-    //     renderItems = props.data.childs;
-    // }
-    renderItems = props.data.childs;
-    reflush.value++;
-}
+const collect = debounce(_collect, 15);
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix)
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
 })
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
+    old.__collect.unwatch(collect);
     value.watch(watcher);
-    pageViewRegister(true);    
+    value.__collect.watch(collect);
+    pageViewRegister(true);
     renderItems = props.data.childs;
 })
+function tool_watcher(t?: number) {
+    if (t === Tool.TITILE_VISIBLE) {
+        const v = props.context.tool.isShowTitle;
+        show_t.value = v;
+    }
+}
 onMounted(() => {
     props.data.watch(watcher);
-    props.context.selection.watch(updateRenderItems);
+    props.data.__collect.watch(collect);
+    props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     renderItems = props.data.childs;
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
-    props.context.selection.unwatch(updateRenderItems);
+    props.data.__collect.unwatch(collect);
+    props.context.tool.unwatch(tool_watcher);
     pageViewRegister(false);
     stopWatchPage();
     renderItems = [];
@@ -90,13 +77,12 @@ onUnmounted(() => {
         <component v-for="c in renderItems" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>
-    <ShapeTitles :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
+    <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>
 
 <style scoped>
 svg {
     position: absolute;
     transform-origin: top left;
-    background-color: var(--center-content-bg-color);
 }
 </style>

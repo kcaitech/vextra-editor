@@ -1,11 +1,24 @@
 export enum TunnelType {
     DocOp = 0,
-    DocResourceUpload
+    DocResourceUpload,
+    DocCommentOp,
+    DocUpload,
+    DocSelectionOp,
+    NetworkStatus = 255,
 }
 
 export const TunnelTypeStr: Record<TunnelType, string> = {
     [TunnelType.DocOp]: "文档操作",
     [TunnelType.DocResourceUpload]: "文档资源上传",
+    [TunnelType.DocCommentOp]: "文档评论操作",
+    [TunnelType.DocUpload]: "文档上传",
+    [TunnelType.DocSelectionOp]: "文档选区操作",
+    [TunnelType.NetworkStatus]: "监听网络状态",
+}
+
+export enum NetworkStatusType {
+    Online = 0,
+    Offline,
 }
 
 export type CommunicationInfo = {
@@ -21,6 +34,8 @@ export enum ClientCmdType {
     OpenTunnel, // 打开一条虚拟通道
     CloseTunnel, // 关闭一条虚拟通道
     TunnelData, // 虚拟通道数据
+    Heartbeat = 255, // 心跳包
+    HeartbeatResponse = 254, // 心跳包响应
 }
 
 export enum ServerCmdType {
@@ -28,6 +43,8 @@ export enum ServerCmdType {
     CmdReturn, // 返回cmd执行结果
     CloseTunnel, // 关闭一条虚拟通道
     TunnelData, // 虚拟通道数据
+    Heartbeat = 255, // 心跳包
+    HeartbeatResponse = 254, // 心跳包响应
 }
 
 export enum CmdStatus {
@@ -40,15 +57,25 @@ export enum DataType {
     Binary = 2,
 }
 
-export type TunnelCmd = {
+export type TunnelCmdData = {
+    cmd_id: string,
     tunnel_id?: string,
     data_type?: DataType,
     data?: any,
 }
 
-export type SendToServerCmd = {
+export enum CmdMessage {
+    TunnelIdError = "tunnel_id错误",
+}
+
+export type ClientCmd = {
+    cmd_type: ClientCmdType,
     cmd_id: string,
-} & TunnelCmd
+    tunnel_type?: TunnelType,
+    status?: CmdStatus,
+    message?: string,
+    data?: any,
+}
 
 export type ServerCmd = {
     cmd_type: ServerCmdType,
@@ -71,6 +98,7 @@ export type WorkerPostData = {
     isListened?: boolean,
     dataType?: DataType,
     data: any,
+    close?: boolean,
 }
 
 export type CmdResult = {

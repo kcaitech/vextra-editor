@@ -3,9 +3,8 @@ import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick, watch } f
 import { Context } from '@/context';
 import { Close, Delete, CircleCheck, Back, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
-import { Action } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import { Matrix } from "@kcdesign/data";
-import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n'
 import * as comment_api from '@/apis/comment';
 import { v4 } from 'uuid';
@@ -170,7 +169,7 @@ const handleInput = () => {
 
 function handleClickOutside(event: MouseEvent) {
     event.stopPropagation()
-    const action = workspace.value.action === Action.AddComment
+    const action = props.context.tool.action === Action.AddComment
     const length = textarea.value.trim().length < 4
     if (event.target instanceof Element && !event.target.closest('.container-popup') && length) {
         emit('close', event);
@@ -212,7 +211,7 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if (!isControlsDel.value) return
+    if (!isControls.value) return
     props.context.comment.commentInput(false);
     deleteComment(props.commentInfo.id)
     emit('delete', props.index)
@@ -461,8 +460,8 @@ onUnmounted(() => {
             <div class="comment-commands">
                 <el-button-group class="ml-4">
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControlsDel">
-                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControlsDel" />
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
@@ -493,7 +492,7 @@ onUnmounted(() => {
                 <el-input ref="inputPopup" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }"
                     type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
                     :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
-                    @input="handleInput"/>
+                    @input="handleInput" />
                 <div class="send" :style="{ opacity: sendBright ? '1' : '0.5' }" @click="addComment"><svg-icon
                         icon-class="send"></svg-icon></div>
             </div>

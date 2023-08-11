@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick, onUpdated } from 'vue';
 import { Context } from '@/context';
 import PageCommentItem from '@/components/Document/Content/PageCommentItem.vue'
 import * as comment_api from '@/apis/comment';
@@ -10,6 +10,7 @@ import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
 import { Page, Shape, ShapeType } from "@kcdesign/data";
 import { Comment } from '@/context/comment';
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 
 type CommentView = InstanceType<typeof PageCommentItem>;
 
@@ -90,7 +91,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
         if (diff < 4) {
             props.context.comment.showCommentPopup(commentIndex.value, e)
         } else {
-            if (documentCommentList.value[index].user.id !== userId) return
+            // if (documentCommentList.value[index].user.id !== userId) return
             const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
             const shape_frame = documentCommentList.value[index].shape_frame
             const commentxy = { x: shape_frame.x1, y: shape_frame.y1 }
@@ -129,28 +130,32 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
         }
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("mouseup", handleMouseUp);
-
     };
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
 };
 const commentReflush = ref(0)
+const isControls = (index: number) => {
+    if(userId === documentCommentList.value[index].user.id  || userId === comment.value.isDocumentInfo?.user.id) return true
+    else return false
+}
 const moveCommentPopup = (e: MouseEvent, index: number) => {
-    if (documentCommentList.value[index].user.id !== userId) return
-    commentReflush.value++
     const { x, y } = workspace.value.root;
     const xy = matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const deltaX = Math.abs(xy.x - downOnPageXY.x);
     const deltaY = Math.abs(xy.y - downOnPageXY.y);
     const diff = Math.hypot(deltaX, deltaY);
-    if (diff > 3) {
-        props.context.comment.commentMove(true)
+    if (isControls(index)) {
+        commentReflush.value++
+        if (diff > 3) {
+            props.context.comment.commentMove(true)
+        }
+        const shape_frame = documentCommentList.value[index].shape_frame
+        shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
+        shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
+        setMousedownXY(e);
     }
-    const shape_frame = documentCommentList.value[index].shape_frame
-    shape_frame.x1 = shape_frame.x1 + (xy.x - mousedownOnPageXY.x)
-    shape_frame.y1 = shape_frame.y1 + (xy.y - mousedownOnPageXY.y)
-    setMousedownXY(e);
 };
 
 const updateShapeComment = (index: number) => {
@@ -345,17 +350,41 @@ function commentWatcher(type?: number) { // 更新编辑器状态，包括光标
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
-let timeComment: any = null
+
+const docComment = (comment: DocCommentOpData) => {
+    if(comment.comment.content) {
+        comment.comment.content = comment.comment.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+    }
+    const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
+    if(comment.type === DocCommentOpType.Update) {
+        if(index !== -1) {
+            documentCommentList.value[index] = {
+                ...documentCommentList.value[index],
+                ...comment.comment
+            }
+        }
+    }else if (comment.type === DocCommentOpType.Del) {
+        if(index !== -1) {
+            documentCommentList.value.splice(index, 1)
+        }
+    }else if (comment.type === DocCommentOpType.Add) {
+        if(!comment.comment.root_id) {
+            documentCommentList.value.unshift(comment.comment)
+        }
+    }
+    props.context.comment.onUpdateComment(comment)
+}
 onMounted(() => {
+    const updateComment = props.context.communication.docCommentOp
+    updateComment.addUpdatedHandler(docComment)
     getDocumentComment()
-    timeComment = setInterval(() => {
-        getDocumentComment()
-    }, 20000)
     props.context.comment.watch(commentWatcher);
 })
+
 onUnmounted(() => {
+    const updateComment = props.context.communication.docCommentOp
+    updateComment.removeUpdatedHandler(docComment)
     props.context.comment.unwatch(commentWatcher);
-    clearInterval(timeComment)
 })
 </script>
 

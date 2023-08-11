@@ -8,7 +8,7 @@ import { Navi } from '@/context/navigate';
 
 interface Props {
   context: Context
-  matrix: number[]
+  matrix: Matrix
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
@@ -17,7 +17,7 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const focus_shape = ref<Shape>();
 const visible = ref<boolean>(true);
 function update() {
-  const shape = props.context.navi.focusText;
+  const shape = props.context.navi.focusText?.shape;
   if (shape) {
     shape.watch(update);
   } else {
@@ -66,13 +66,9 @@ function workspace_watcher(t?: number) {
   }
 }
 function navi_watcher(t?: number) {
-  if (t === Navi.TEXT_SELECTION_CHANGE) {
-    update();
-  }
+  if (t === Navi.TEXT_SELECTION_CHANGE) update();
 }
-watch(() => props.matrix, () => {
-  update();
-})
+watch(() => props.matrix, update, { deep: true })
 onMounted(() => {
   props.context.workspace.watch(workspace_watcher);
   props.context.navi.watch(navi_watcher);

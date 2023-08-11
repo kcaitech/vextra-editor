@@ -1,32 +1,52 @@
 <script setup lang="ts">
 import {} from 'vue';
 import { useI18n } from 'vue-i18n'
-import { Action } from '@/context/workspace';
+import { BoolOp } from '@kcdesign/data';
+import { Action } from "@/context/tool";
 const { t } = useI18n()
 const props = defineProps<{
     lg: string,
-    quick: string,
-    select: Action,
-    d: Action
+    quick?: string,
+    select?: any,
+    d?: any,
+    type: string,
+    bool?: BoolOp,
+    state?: boolean
 }>();
 const emit = defineEmits<{
     (e: "selector", select: Action): void;
+    (e: "selectBool", select: Action, bool: BoolOp): void;
 }>();
 const selector = (active: Action) => {
     emit('selector', active);
 }
+const handleBoolean = (e: MouseEvent) => {
+  e.stopPropagation()
+  emit('selectBool',props.select, props.bool!)
+}
 
 </script>
 <template>
-  <div class="container-change" @click="selector(props.select)">
+  <!-- cursor -->
+  <div class="container-change" @click="selector(props.select!)" v-if="props.type === 'cursor'">
       <div style="display: flex; align-items: center;">
         <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>
-        <div class="svg-container" title="Cursor">
+        <div class="svg-container">
           <svg-icon :icon-class="select"></svg-icon>
         </div>
         <div class="select">{{ t(`home.${props.lg}`) }}</div>
       </div>
       <span class="quick">{{ props.quick }}</span>
+    </div>
+    <!-- 布尔对象下拉菜单 -->
+    <div class="container-change" v-if="props.type === 'bool'" @mousedown="handleBoolean">
+      <div style="display: flex; align-items: center;">
+        <div class="choose" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden'  }"></div>
+        <div class="svg-container">
+          <svg-icon :icon-class="select"></svg-icon>
+        </div>
+        <div class="select">{{ t(`bool.${props.lg}`) }}</div>
+      </div>
     </div>
 </template>
 <style scoped lang="scss">

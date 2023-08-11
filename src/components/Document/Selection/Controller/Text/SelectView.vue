@@ -5,6 +5,7 @@ import { Matrix } from '@kcdesign/data';
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { genRectPath, throttle } from '../../common';
+import { WorkSpace } from '@/context/workspace';
 const props = defineProps<{
     shape: TextShape,
     matrix: number[],
@@ -67,12 +68,14 @@ function _update() {
 }
 
 function selectionWatcher(...args: any[]) {
-    if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
+    if (args.indexOf(Selection.CHANGE_TEXT) >= 0 || args.indexOf(Selection.CHANGE_SHAPE) >= 0) update();
 }
-
-watch(() => props.matrix, () => {
-    update();
-})
+function workspace_watcher(t?: any) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) update();
+}
+// watch(() => props.matrix, () => {
+//     update();
+// })
 
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -84,6 +87,7 @@ onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
     selection.watch(selectionWatcher);
+    props.context.workspace.watch(workspace_watcher);
     update();
 })
 
@@ -91,18 +95,45 @@ onUnmounted(() => {
     const selection = props.context.selection;
     props.shape.unwatch(update);
     selection.unwatch(selectionWatcher);
+    props.context.workspace.unwatch(workspace_watcher);
 })
 
 function genCursorPath(cursor: { x: number, y: number }[]): string {
     if (cursor.length !== 2) return "";
     const p0 = cursor[0];
     const p1 = cursor[1];
+    cursor_tracking(p0, p1);
     return "M " + p0.x + " " + p0.y + " L " + p1.x + " " + p1.y;
 }
-
+/**
+ * @description 光标跟踪，移动页面以使焦点处于视口
+ * @param p 光标上的一点
+ */
+function cursor_tracking(p0: { x: number, y: number }, p1: { x: number, y: number }) {
+    const workspace = props.context.workspace;
+    if (workspace.isPageDragging) return;
+    const root = props.context.workspace.root;
+    const matrix = props.context.workspace.matrix;
+    let dx = 0, dy = 0;
+    if (p0.x > root.right - root.x) {
+        dx = -(p0.x - (root.right - root.x)) - 24;
+    } else if (p0.x < 0) {
+        dx = -p0.x + 24;
+    }
+    if (p1.y > root.bottom - root.y) {
+        dy = -(p1.y - (root.bottom - root.y)) - 24;
+    }
+    if (p0.y < 0) {
+        dy = -p0.y + 24;
+    }
+    if (dx || dy) {
+        matrix.trans(dx, dy);
+        props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    }
+}
 </script>
 <template>
-    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#865dff' stroke-width="2px" class="scan">
+    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#865dff' stroke-width="2.5px" class="scan">
     </path>
     <path v-if="!isCursor" :d="selectPath" fill="#865dff" fill-opacity="0.35" stroke='none'></path>
 </template>

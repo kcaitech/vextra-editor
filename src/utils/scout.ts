@@ -1,11 +1,14 @@
 import { Context } from "@/context";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
+import { bool } from "aws-sdk/clients/signer";
 import { v4 as uuid } from "uuid";
 interface Scout {
     path: SVGPathElement
     remove: () => void
     isPointInShape: (shape: Shape, point: PageXY) => boolean
+    isPointInPath: (d: string, point: PageXY) => boolean
+    isPointInStroke: (d: string, point: PageXY) => boolean
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -37,11 +40,22 @@ function scout(context: Context): Scout {
         return result;
     }
 
+    function isPointInPath(d: string, point: PageXY): boolean {
+        SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        path.setAttributeNS(null, 'd', d);
+        return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+    }
+    function isPointInStroke(d: string, point: PageXY): boolean {
+        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        path.setAttributeNS(null, 'd', d);
+        path.setAttributeNS(null, 'stroke-width', '14');
+        return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+    }
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
         if (s) document.body.removeChild(s);
     }
-    return { path, isPointInShape, remove }
+    return { path, isPointInShape, remove, isPointInPath, isPointInStroke }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {
@@ -54,12 +68,10 @@ function createSVGGeometryElement(id: string): SVGElement {
 function createPath(path: string, id: string): SVGPathElement {
     const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     p.setAttributeNS(null, 'd', path);
-    p.setAttributeNS(null, 'fill', 'red');
-    p.setAttribute('id', id);
     return p;
 }
 function getPathOnPageString(shape: Shape): string { // path坐标系：页面
-    const path = shape.getPath(true);
+    const path = shape.getPath();
     const m2page = shape.matrix2Root();
     path.transform(m2page);
     const d = path.toString();
@@ -77,7 +89,7 @@ function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     for (let i = 0; i < groupshape.childs.length; i++) {
         const item = groupshape.childs[i];
         if (item.type === ShapeType.Group) {
-            f = [...f, ...delayering(item, f)];
+            f = f.concat(delayering(item, f));
         } else {
             f.push(item);
         }
@@ -122,40 +134,39 @@ function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isC
     // O(n + dk)
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
-        if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
-            const item = g[i];
-            // 特殊处理的三类图形：容器、编组、flatten
-            if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
-                const isItemIsTarget = isTarget(scout, item, position);
-                if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
-                const c = item.childs as Shape[];
-                if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
-                    if (c.length) {
-                        result.push(...finder(scout, c, position, selected, isCtrl, result));
-                        if (result.length) {
+        if (!canBeTarget(g[i])) continue;
+        const item = g[i];
+        // 特殊处理的三类图形：容器、编组、flatten
+        if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
+            const isItemIsTarget = isTarget(scout, item, position);
+            if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
+            const c = item.childs as Shape[];
+            if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
+                if (c.length) {
+                    result.push(...finder(scout, c, position, selected, isCtrl, result));
+                    if (result.length) {
+                        return result;
+                    } else { // 在一个容器拥有子元素的情况下，需要isCtrl才可以被hover
+                        if (isCtrl) {
+                            result.push(item);
                             return result;
-                        } else { // 在一个容器拥有子元素的情况下，需要isCtrl才可以被hover
-                            if (isCtrl) {
-                                result.push(item);
-                                return result;
-                            }
                         }
-                    } else {
-                        result.push(item);
-                        return result;
                     }
-                } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
-                    const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
-                    if (g) {
-                        result.push(g);
-                        return result;
-                    }
-                }
-            } else {
-                if (isTarget(scout, item, position)) {
+                } else {
                     result.push(item);
                     return result;
                 }
+            } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
+                const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
+                if (g) {
+                    result.push(g);
+                    return result;
+                }
+            }
+        } else {
+            if (isTarget(scout, item, position)) {
+                result.push(item);
+                return result;
             }
         }
     }
@@ -195,33 +206,25 @@ function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
 function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
     let result: Shape | undefined;
     for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
-        if (g[j].isVisible) {
-            const childIsTarget = isTarget(scout, g[j], position);
-            if (childIsTarget) {
-                if ([ShapeType.Group, ShapeType.FlattenShape].includes(g[j].type)) {
-                    const c: Shape[] = (g[j] as GroupShape).childs;
-                    return forGroupHover(scout, c, position, selected, isCtrl);
-                } else {
-                    let target = g[j];
-                    if (isCtrl) { //如果shift键被按下，不冒泡
-                        return g[j];
-                    }
-                    let max = 0;
-                    while (target?.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target?.parent?.type) && max <= 10000) {
-                        if (selected) {
-                            const isBroSelected: boolean = isPartSelect(target?.parent, selected);
-                            if (isBroSelected) break;
-                        }
-                        target = target.parent;
-                        max++;
-                    }
-                    if (max == 10000) {
-                        throw new Error('overflow');
-                    }
-                    result = target!;
-                    break;
+        const shape = g[j];
+        if (!shape.isVisible || !isTarget(scout, shape, position)) continue;
+        if ([ShapeType.Group, ShapeType.FlattenShape].includes(shape.type)) {
+            const c: Shape[] = (shape as GroupShape).childs;
+            const res = forGroupHover(scout, c, position, selected, isCtrl);
+            if (res) return res;
+        } else {
+            //如果Ctrl键被按下，不冒泡
+            if (isCtrl) return shape;
+            let target = shape;
+            while (target.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target.parent?.type)) {
+                if (selected) {
+                    const isBroSelected: boolean = isPartSelect(target.parent, selected);
+                    if (isBroSelected) break;
                 }
+                target = target.parent;
             }
+            result = target!;
+            break;
         }
     }
     return result;

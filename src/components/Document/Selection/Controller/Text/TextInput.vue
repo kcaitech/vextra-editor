@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix } from '@kcdesign/data';
-import { TextShape, AttrGetter } from '@kcdesign/data';
+import { TextShape } from '@kcdesign/data';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
 import { throttle } from '../../common';
@@ -50,7 +50,6 @@ function _updateInputPos() {
     else if (end >= 0) {
         index = end;
     }
-
     const text = props.shape.text;
     const locatepoints = text.locateCursor(index, cursorAtBefore);
     if (!locatepoints) return;
@@ -60,12 +59,11 @@ function _updateInputPos() {
 
     const x = cursor[0].x;
     let y = cursor[0].y;
-
     if (cursor[1].y > y) y = cursor[1].y;
     y -= 10; // input 框高度
-
-    inputpos.value.left = x;
-    inputpos.value.top = y;
+    const root = props.context.workspace.root;
+    inputpos.value.left = x + root.x;
+    inputpos.value.top = y + root.y;
     inputel.value.focus();
 }
 
@@ -179,21 +177,18 @@ function onKeyPress(e: KeyboardEvent) {
 }
 </script>
 <template>
-    <input type="text" class="input" @focusout="onfocusout" @input="oninput" @compositionstart="compositionstart"
-        @compositionend="compositionend" @compositionupdate="compositionupdate" @keydown="onKeyDown" @keypress="onKeyPress"
-        @keyup="onKeyUp" :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel" />
+    <input type="text" :tabindex="-1" class="input" @focusout="onfocusout" @input="oninput"
+        @compositionstart="compositionstart" @compositionend="compositionend" @compositionupdate="compositionupdate"
+        @keydown="onKeyDown" @keypress="onKeyPress" @keyup="onKeyUp"
+        :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel" />
 </template>
 <style lang='scss' scoped>
 .input {
-    z-index: -999;
-    background-color: transparent;
-    position: absolute;
-    color: transparent;
-    border: none;
-    box-shadow: none;
-    outline: none;
-    caret-color: transparent;
+    opacity: 0;
     height: 10px;
     width: 1px;
+    z-index: -1;
+    position: fixed;
+    contain: strict;
 }
 </style>

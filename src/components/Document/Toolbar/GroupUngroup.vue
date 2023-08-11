@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
-import { WorkSpace } from '@/context/workspace';
-import { Shape, ShapeType, GroupShape, Artboard } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, Artboard, BoolOp } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
@@ -10,11 +9,16 @@ import { getName } from '@/utils/content';
 import { debounce } from 'lodash';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { string_by_sys } from '@/utils/common';
+import Tooltip from '@/components/common/Tooltip.vue';
+import BooleanObject from "./Buttons/BooleanObject.vue"
+import { Tool } from '@/context/tool';
+import { WorkSpace } from '@/context/workspace';
 const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const NOGROUP = 0;
 const GROUP = 1;
 const UNGROUP = 2;
+const isBoolGroup = ref(false)
 const state = ref(0);
 function _updater(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
@@ -23,8 +27,14 @@ function _updater(t?: number) {
         const shapes = selection.selectedShapes;
         if (shapes.length === 0) {
             state.value = state.value ^ NOGROUP;
+            isBoolGroup.value = false
         } else if (shapes.length === 1) {
             const type = shapes[0].type;
+            if (type === ShapeType.FlattenShape || type === ShapeType.Group) {
+                isBoolGroup.value = true
+            } else {
+                isBoolGroup.value = false
+            }
             if (type === ShapeType.Group || type === ShapeType.Artboard) {
                 state.value = state.value ^ UNGROUP;
                 state.value = state.value ^ GROUP;
@@ -32,6 +42,7 @@ function _updater(t?: number) {
                 state.value = state.value ^ GROUP;
             }
         } else {
+            isBoolGroup.value = true
             const groups = shapes.filter(s => s.type === ShapeType.Group || s.type === ShapeType.Artboard);
             if (groups.length) {
                 state.value = state.value ^ UNGROUP;
@@ -43,21 +54,18 @@ function _updater(t?: number) {
     }
 }
 const updater = debounce(_updater, 50);
-function workspaceUpdate(t?: number, alt?: boolean) {
-    if (t === WorkSpace.GROUP) {
-        groupClick(alt);
-    } else if (t === WorkSpace.UNGROUP) {
-        ungroupClick();
-    }
+function tool_watcher(t?: number, alt?: boolean) {
+    if (t === Tool.GROUP) groupClick(alt);
+    else if (t === Tool.UNGROUP) ungroupClick();
 }
 onMounted(() => {
-    props.context.workspace.watch(workspaceUpdate)
+    props.context.tool.watch(tool_watcher)
     props.selection.watch(updater);
     updater();
 })
 onUnmounted(() => {
     props.selection.unwatch(updater);
-    props.context.workspace.unwatch(workspaceUpdate)
+    props.context.tool.unwatch(tool_watcher)
 })
 
 const groupClick = (alt?: boolean) => {
@@ -69,7 +77,6 @@ const groupClick = (alt?: boolean) => {
         if (page) {
             if (shapes.length) {
                 const bro = Array.from(page.shapes.values());
-
                 const editor = props.context.editor4Page(page);
                 const shapes = sort_by_layer(props.context, props.context.selection.selectedShapes);
                 if (alt) {
@@ -96,8 +103,7 @@ const groupClick = (alt?: boolean) => {
             }
         }
         props.context.workspace.setSelectionViewUpdater(true);
-        props.context.workspace.selectionViewUpdate();
-
+        props.context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     }
 }
 const ungroupClick = () => {
@@ -135,35 +141,78 @@ const ungroupClick = () => {
         }
     }
 }
+
+const changeBoolgroup = (type: BoolOp, n: string) => {
+    const selection = props.selection;
+    const shapes = selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    const name = t(`bool.${n}`)
+    if (shapes.length && page) {
+        if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
+            const editor = props.context.editor4Shape(shapes[0])
+            editor.setBoolOp(type, name)
+            props.context.selection.notify(Selection.CHANGE_SHAPE)
+        } else if (shapes.length > 1) {
+            const shapessorted = sort_by_layer(props.context, shapes);
+            const editor = props.context.editor4Page(page)
+            const g = editor.boolgroup(shapessorted, name, type)
+            if (g) {
+                props.context.selection.selectShape(g)
+            }
+        }
+    }
+}
+
+const flattenShape = () => {
+    const page = props.context.selection.selectedPage;
+    const selection = props.selection;
+    const shapes = selection.selectedShapes;
+    if (page && shapes.length) {
+        const editor = props.context.editor4Page(page)
+        if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
+            const flatten = editor.flattenBoolShape(shapes[0])
+            if (flatten) {
+                props.context.selection.selectShape(flatten)
+            }
+        } else if (shapes.length > 1) {
+            const shapessorted = sort_by_layer(props.context, shapes);
+            const flatten = editor.flattenShapes(shapessorted)
+            if (flatten) {
+                props.context.selection.selectShape(flatten)
+            }
+        }
+    }
+}
+
 </script>
 
 <template>
     <div class="container">
         <div class="vertical-line"></div>
-        <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)"
-            placement="bottom" :show-after="500" :offset="5" :hide-after="0">
+        <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5">
             <div class="group">
                 <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
                     :class="{ active: state & GROUP }">
                     <svg-icon icon-class="group"></svg-icon>
                 </ToolButton>
             </div>
-        </el-tooltip>
-        <el-tooltip class="box-item" effect="dark"
-            :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" placement="bottom" :show-after="500"
-            :offset="5" :hide-after="0">
+        </Tooltip>
+
+        <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"
+            @flatten-shape="flattenShape"></BooleanObject>
+
+        <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
             <div class="group">
                 <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
                     <svg-icon icon-class="ungroup"></svg-icon>
                 </ToolButton>
             </div>
-        </el-tooltip>
+        </Tooltip>
     </div>
 </template>
 
 <style scoped lang="scss">
 .container {
-    width: 80px;
     height: 40px;
     display: flex;
     justify-content: center;
@@ -174,7 +223,7 @@ const ungroupClick = () => {
         flex-direction: row;
         align-items: center;
         height: 100%;
-        width: 40px;
+        width: 34.5px;
 
         >div {
             height: 100%;

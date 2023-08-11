@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import ToolButton from '../ToolButton.vue';
-import { Media } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { string_by_sys } from '@/utils/common';
+import Tooltip from '@/components/common/Tooltip.vue';
+import { insert_imgs, Media } from '@/utils/content';
 const { t } = useI18n();
 interface Porps {
     active: boolean
@@ -17,6 +18,7 @@ function key(e: KeyboardEvent) {
     if (props.context.workspace.isFreeze) return;
     const { shiftKey, ctrlKey, metaKey, code } = e;
     if (shiftKey && (ctrlKey || metaKey) && code === 'KeyK') {
+        e.preventDefault();
         const filepicker = document.getElementById('filepicker');
         if (filepicker) {
             filepicker.click();
@@ -51,10 +53,8 @@ function change(e: Event) {
                                         base64 = evt.target.result;
                                         if (buff && base64) {
                                             const media = { name: file.name, frame, buff: new Uint8Array(buff), base64 };
-                                            props.context.workspace.setImage([media]);
-                                            if (picker.value) {
-                                                (picker.value as HTMLInputElement).value = '';
-                                            }
+                                            insert_imgs(props.context, t, [media]);
+                                            if (picker.value) (picker.value as HTMLInputElement).value = '';
                                         }
                                     }
                                 }
@@ -79,6 +79,7 @@ function multiple(files: any) {
     try {
         iteration();
     } catch (error) {
+        console.log(error);
         props.context.workspace.setFreezeStatus(false);
     }
     // 挨个加载，遇到错误资源跳一步
@@ -105,10 +106,8 @@ function multiple(files: any) {
                                         iteration();
                                     } else {
                                         media.push({ name: file.name, frame, buff: new Uint8Array(buff), base64 });
-                                        props.context.workspace.setImage(media);
-                                        if (picker.value) {
-                                            (picker.value as HTMLInputElement).value = '';
-                                        }
+                                        insert_imgs(props.context, t, media);
+                                        if (picker.value) (picker.value as HTMLInputElement).value = '';
                                     }
                                 } else {
                                     index++;
@@ -142,14 +141,13 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)"
-        placement="bottom" :show-after="500" :offset="10" :hide-after="0">
+    <Tooltip :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)">
         <ToolButton ref="button" @click="select" :selected="props.active">
             <div class="svg-container">
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
         </ToolButton>
-    </el-tooltip>
+    </Tooltip>
     <input type="file" ref="picker" :accept="accept" :multiple="true" id="filepicker" @change="(e: Event) => { change(e) }">
 </template>
 <style scoped lang="scss">

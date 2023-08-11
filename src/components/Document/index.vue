@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -8,26 +8,32 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, uploadExForm, Repository, Page, CoopRepository } from '@kcdesign/data';
-import { Ot } from "@/communication/modules/ot";
-import { STORAGE_URL, DOC_UPLOAD_URL, SCREEN_SIZE } from '@/utils/setting';
+import { Document, importDocument, Repository, Page, CoopRepository } from '@kcdesign/data';
+import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus';
 import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import { WorkSpace } from '@/context/workspace';
-import { measure } from '@/layout/text/measure';
-import Home from "@/components/Document/Toolbar/BackToHome.vue";
+import { Perm, WorkSpace } from '@/context/workspace';
+import NetWorkError from '@/components/NetworkError.vue'
+import { ResponseStatus } from "@/communication/modules/doc_upload";
+import { insertNetworkInfo } from "@/utils/message"
+import { S3Storage, StorageOptions } from "@/utils/storage";
+import { NetworkStatus } from '@/communication/modules/network_status'
+import { Comment } from '@/context/comment';
+import { DocSelectionOp } from "@/context/communication/doc_selection_op";
+import { throttle } from "@/utils/timing_util";
+import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op"
+import { debounce } from '@/utils/timing_util';
+import { NetworkStatusType } from "@/communication/types";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
-(window as any).__context = context;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
@@ -41,6 +47,7 @@ const permType = ref<number>();
 const docInfo: any = ref({});
 const showHint = ref(false);
 const countdown = ref(10);
+const noNetwork = ref(false)
 const leftTriggleVisible = ref<boolean>(false);
 const rightTriggleVisible = ref<boolean>(false);
 let timerForLeft: any;
@@ -48,6 +55,9 @@ let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
+const isRead = ref(false)
+const canComment = ref(false)
+const isEdit = ref(true)
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -103,7 +113,6 @@ function switchPage(id?: string) {
                 curPage.value = undefined;
                 ctx.comment.commentMount(false)
                 ctx.selection.selectPage(page);
-                (window as any).__context = ctx;
                 curPage.value = page;
             }
         })
@@ -123,18 +132,32 @@ function selectionWatcher(t: number) {
         }
     }
 }
-function keyboardEventHandler(evevt: KeyboardEvent) {
-    const { target, code, ctrlKey, metaKey, shiftKey } = evevt;
+
+function keyboardEventHandler(event: KeyboardEvent) {
+    const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
     if (context) {
-        context.workspace.keyboardHandle(evevt); // 编辑器相关的键盘事件
         if (code === 'Backslash') {
             if (ctrlKey || metaKey) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
+        if (context && context.workspace.documentPerm !== Perm.isEdit) {
+            if (permKeyBoard(event)) {
+                context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
+            }
+        } else {
+            context.workspace.keyboardHandle(event); // 编辑器相关的键盘事件
+            context.tool.keyhandle(event);
+        }
     }
 }
+const permKeyBoard = (e: KeyboardEvent) => {
+    const { code, ctrlKey, metaKey, shiftKey } = e;
+    if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
+    else false
+}
+
 const showHiddenRight = () => {
     if (showRight.value) {
         Right.value.rightMin = 0
@@ -189,6 +212,17 @@ function keyToggleTB() {
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
 }
+
+//只读权限隐藏右侧属性栏
+watchEffect(() => {
+    if (isRead.value || canComment.value) {
+        Right.value.rightMin = 0
+        Right.value.rightWidth = 0
+        Right.value.rightMinWidth = 0
+        middleWidth.value = middleWidth.value + 0.1
+    }
+})
+
 enum PermissionChange {
     update,
     close,
@@ -215,6 +249,16 @@ const getDocumentAuthority = async () => {
                 permissionChange.value = PermissionChange.close
                 showNotification(data.data.perm_type)
             }
+        }
+        if (data.data.perm_type === 1) {
+            isRead.value = true
+        } else if (data.data.perm_type === 2) {
+            isRead.value = false
+            canComment.value = true
+        } else if (data.data.perm_type === 3) {
+            isRead.value = false
+            canComment.value = false
+            isEdit.value = true
         }
         permType.value = data.data.perm_type
         context && context.workspace.setDocumentPerm(data.data.perm_type)
@@ -244,6 +288,8 @@ const hideNotification = (type?: number) => {
     }
 }
 const showNotification = (type?: number) => {
+    insertNetworkInfo('networkError', false, network_error);
+    window.removeEventListener('beforeunload', onBeforeUnload);
     showHint.value = true;
     startCountdown(type);
 }
@@ -258,10 +304,10 @@ const getUserInfo = async () => {
 }
 
 //获取文档信息
-let ot: Ot | undefined;
 const getDocumentInfo = async () => {
     try {
         loading.value = true;
+        noNetwork.value = false
         const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
         docInfo.value = dataInfo.data;
         if (dataInfo.code === 400) {
@@ -277,7 +323,7 @@ const getDocumentInfo = async () => {
             return
         }
         permType.value = dataInfo.data.document_permission.perm_type;
-        //获取文档类型是否为私有文档且有无权限   
+        //获取文档类型是否为私有文档且有无权限
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -291,7 +337,7 @@ const getDocumentInfo = async () => {
         // documentKey.value = data
 
         const repo = new Repository();
-        const importDocumentParams = {
+        const importDocumentParams: StorageOptions = {
             endPoint: STORAGE_URL,
             region: "zhuhai-1",
             accessKey: data.access_key,
@@ -300,12 +346,13 @@ const getDocumentInfo = async () => {
             bucketName: "document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(importDocumentParams, path, "", "", repo, measure)
+        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
+            getDocumentAuthority();
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
@@ -313,48 +360,58 @@ const getDocumentInfo = async () => {
 
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
-            ot = Ot.Make(docId, token, document, context.coopRepo, "0");
-            ot.start()
-                .catch((e) => {
-                    if (!context) {
-                        router.push('/');
-                        throw new Error(e);
-                    }
-                }).finally(() => {
-                    if (!context) {
-                        router.push('/');
-                        return;
-                    }
-                    switchPage(context.data.pagesList[0]?.id);
-                    loading.value = false;
-                });
-            await context.upload.start(docId, token);
+            if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
+                switchPage(context!.data.pagesList[0]?.id);
+                loading.value = false;
+            } else {
+                router.push("/");
+                return;
+            }
+            await context.communication.docResourceUpload.start(token, docId);
+            await context.communication.docCommentOp.start(token, docId);
+            await context.communication.docSelectionOp.start(token, docId, context);
+            context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
         }
         getUserInfo()
     } catch (err) {
         loading.value = false;
+        noNetwork.value = true
         console.log(err)
         throw err;
     }
 }
 
-function upload() {
-    const token = localStorage.getItem('token');
-    if (!token || !context || !context.data) {
-        return
+async function upload() {
+    const token = localStorage.getItem("token");
+    if (!token || !context || !context.data) return;
+    if (!await context.communication.docUpload.start(token)) {
+        // todo 上传通道开启失败处理
+        return;
     }
-    uploadExForm(context.data, DOC_UPLOAD_URL, token, '', (isSuccess, doc_id) => {
-        if (isSuccess) {
-            router.replace({
-                path: '/document',
-                query: { id: doc_id }
-            });
-            ot = Ot.Make(doc_id, localStorage.getItem('token') || "", context!.data, context!.coopRepo, "0");
-            ot.start();
-            context!.upload.start(doc_id, token);
-            context!.workspace.notify(WorkSpace.INIT_DOC_NAME);
-        }
-    })
+    let result;
+    try {
+        result = await context.communication.docUpload.upload(context.data);
+    } catch (e) {
+        // todo 上传失败处理
+        return;
+    }
+    if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
+        // todo 上传失败处理
+        return;
+    }
+    const doc_id = result!.data.doc_id;
+    router.replace({
+        path: '/document',
+        query: { id: doc_id },
+    });
+    if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
+        // todo 文档操作通道开启失败处理
+    }
+    context.communication.docResourceUpload.start(token, doc_id);
+    context.communication.docCommentOp.start(token, doc_id);
+    await context.communication.docSelectionOp.start(token, doc_id, context);
+    context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
+    context.workspace.notify(WorkSpace.INIT_DOC_NAME);
 }
 let timer: any = null;
 function init_screen_size() {
@@ -371,7 +428,7 @@ function init_doc() {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
-            getUserInfo()
+            getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
             upload();
@@ -391,15 +448,155 @@ function workspaceWatcher(t: number) {
         keyToggleTB();
     }
 }
+
+const autosave = t('message.autosave');
+const link_success = t('message.link_success');
+const network_anomaly = t('message.network_anomaly');
+const network_error = t('message.network_error');
+
+// 保存文档成功message信息
+const autoSaveSuccess = () => {
+    insertNetworkInfo('saveSuccess', true, autosave);
+    const timer = setTimeout(() => {
+        insertNetworkInfo('saveSuccess', false, autosave);
+        clearTimeout(timer)
+    }, 3000)
+}
+//网络连接成功message信息
+const networkLinkSuccess = () => {
+    insertNetworkInfo('netError', false, network_anomaly);
+    insertNetworkInfo('networkSuccess', true, link_success);
+    const timer = setTimeout(() => {
+        insertNetworkInfo('networkSuccess', false, link_success);
+        clearTimeout(timer)
+    }, 3000)
+}
+// 网络断开连接提示信息
+const networkLinkError = () => {
+    insertNetworkInfo('networkSuccess', false, link_success);
+    insertNetworkInfo('netError', true, network_anomaly);
+    const timer = setTimeout(() => {
+        insertNetworkInfo('netError', false, network_anomaly);
+        clearTimeout(timer);
+    }, 3000)
+}
+
+let previousStatus: NetworkStatusType = NetworkStatusType.Online
+const networkMessage = (status: NetworkStatusType) => {
+    if (status === previousStatus) return;
+    previousStatus = status
+    if(status === NetworkStatusType.Offline) {
+        networkLinkError()
+    } else {
+        networkLinkSuccess()
+    }
+}
+const networkDebounce = debounce(networkMessage, 1000)
+
+//文档获取失败 重试刷新页面
+const refreshDoc = () => {
+    location.reload();
+}
+
+const hasPendingSync = () => {
+    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr ){
+        insertNetworkInfo('networkError', true, network_error);
+        netErr = setInterval(() => {
+            if(context && !context.communication.docOp.hasPendingSyncCmd()) {
+                insertNetworkInfo('networkError', false, network_error);
+                autoSaveSuccess();
+                clearInterval(netErr);
+                netErr = null;
+            }
+        },1000);
+    }
+}
+// 检测是否有未上传的数据
+let loopNet: any = null
+//监听网络状态
+let netErr: any = null
+const token = localStorage.getItem("token") || "";
+const networkStatus = NetworkStatus.Make(token);
+networkStatus.addOnChange((status: NetworkStatusType) => {
+    if(status === NetworkStatusType.Offline) {
+        // 网络断开连接
+        if(context) {
+            clearInterval(loopNet);
+            loopNet = null;
+            loopNet = setInterval(() => {
+                hasPendingSync()
+            },1000)
+            if(context.communication.docOp.hasPendingSyncCmd() || netErr) {
+                //有未上传资源
+                hasPendingSync()
+            }else {
+                networkDebounce(status)
+            }
+        }
+    }else {
+        //网络连接成功
+        if(context) {
+            if(context.communication.docOp.hasPendingSyncCmd() || netErr) {
+                //有未上传资源
+                hasPendingSync()
+            }else {
+                networkDebounce(status)
+            }
+            context.comment.notify(Comment.EDIT_COMMENT)
+            clearInterval(loopNet)
+        }
+    }
+})
+
+function onBeforeUnload(event: any) {
+    if(context?.communication.docOp.hasPendingSyncCmd()) return event.returnValue = t('message.leave'); // 浏览器弹框提示
+    return event.preventDefault();
+}
+
+function onUnloadForCommunication() {
+    try {
+        context?.communication.docOp.close();
+        context?.communication.docResourceUpload.close();
+        context?.communication.docCommentOp.close();
+        context?.communication.docSelectionOp.close();
+    } catch (err) { }
+}
+
+function onUnload(event: any) {
+    onUnloadForCommunication();
+}
+
+function closeNetMsg() {
+    insertNetworkInfo('saveSuccess', false, autosave);
+    insertNetworkInfo('networkError', false, network_error);
+    insertNetworkInfo('netError', false, network_anomaly);
+    insertNetworkInfo('networkSuccess', false, link_success);
+}
+//协作人员操作文档执行
+const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
+    const data = docCommentOpData.data
+    if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
+        const addUset = context!.teamwork.getUserSelection
+        if(docCommentOpData.type === DocSelectionOpType.Exit) {
+            const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+            context?.teamwork.userSelectionExit(index)
+        }else if (docCommentOpData.type === DocSelectionOpType.Update) {
+            const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+            context?.teamwork.userSelectionUpdate(data, index)
+        }
+    }
+}
+
 onMounted(() => {
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('unload', onUnload);
     init_screen_size();
     init_doc();
 })
+
 onUnmounted(() => {
-    try {
-        ot?.close();
-        context?.upload.close();
-    } catch (err) { }
+    closeNetMsg();
+    onUnloadForCommunication();
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
@@ -410,6 +607,11 @@ onUnmounted(() => {
     localStorage.removeItem('docId')
     showHint.value = false;
     countdown.value = 10;
+    window.removeEventListener('beforeunload', onBeforeUnload);
+    window.removeEventListener('unload', onUnload);
+    clearInterval(loopNet);
+    clearInterval(netErr);
+    networkStatus.close();
 })
 </script>
 
@@ -440,13 +642,16 @@ onUnmounted(() => {
             </ContentView>
         </template>
         <template #slot3>
-            <Attribute id="attributes" v-if="!null_context" :context="context!"
+            <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
                 @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
                 :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
             </Attribute>
         </template>
     </ColSplitView>
     <SubLoading v-if="sub_loading"></SubLoading>
+    <div class="network" v-if="noNetwork">
+        <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
+    </div>
     <div v-if="showHint" class="notification">
         <el-icon :size="13">
             <Warning />
@@ -482,8 +687,15 @@ onUnmounted(() => {
     width: 100%;
     height: 40px;
     background-color: var(--top-toolbar-bg-color);
-    z-index: 2;
+    z-index: 10;
     min-height: 40px;
+}
+
+.network {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
 }
 
 #visit {
@@ -527,7 +739,7 @@ onUnmounted(() => {
     font-size: var(--font-default-fontsize);
     display: flex;
     align-items: center;
-    top: 50px;
+    top: 60px;
     left: 50%;
     transform: translateX(-50%);
     color: red;
@@ -538,6 +750,36 @@ onUnmounted(() => {
 
     .text {
         margin: 0 15px 0 10px;
+    }
+}
+.network_error {
+    position: fixed;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f1f1f1;
+    background-color: var(--active-color-beta);
+    padding: 7px 30px;
+    border: 1px solid var(--active-color-beta);
+    border-radius: 4px;
+    .loading-spinner {
+        >svg {
+            width: 15px;
+            height: 15px;
+            color: #000;
+        }
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
     }
 }
 </style>

@@ -8,7 +8,7 @@ import { router } from '@/router'
 import avatar from '@/assets/pd-logo-svg.svg';
 interface Props {
     items: Array<object>
-    title: string
+    title: string | undefined
 }
 const props = defineProps<Props>()
 

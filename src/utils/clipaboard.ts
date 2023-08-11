@@ -5,9 +5,9 @@ import {
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
-import { Media, Action } from '@/context/workspace';
-import { getName } from '@/utils/content';
+import { Media, getName } from '@/utils/content';
 import { message } from './message';
+import { Action } from '@/context/tool';
 interface SystemClipboardItem {
     type: ShapeType
     contentType: string
@@ -463,7 +463,7 @@ function adjust_content_xy(context: Context, m: { width: number, height: number 
 /** 
  * 将图片插入文档
 */
-function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
+export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
     const selection = context.selection;
     const workspace = context.workspace;
     const page = selection.selectedPage;
@@ -482,8 +482,9 @@ function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Function, 
     if (asyncCreator && new_shape) {
         asyncCreator = asyncCreator.close();
         selection.selectShape(new_shape);
+        context.communication.docResourceUpload.upload(new_shape.imageRef, media.buff.buffer.slice(0));
     }
-    workspace.setAction(Action.AutoV);
+    context.tool.setAction(Action.AutoV);
     workspace.creating(false);
 }
 /**
@@ -506,7 +507,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
         asyncCreator = asyncCreator.close();
         selection.selectShape(new_shape);
     }
-    workspace.setAction(Action.AutoV);
+    context.tool.setAction(Action.AutoV);
     workspace.creating(false);
 }
 // 不经过剪切板，直接复制(Shape[])

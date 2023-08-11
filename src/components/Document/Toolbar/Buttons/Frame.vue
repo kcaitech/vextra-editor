@@ -3,7 +3,9 @@ import { ref, nextTick } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { useI18n } from 'vue-i18n';
 import FrameChild from './FrameChild.vue'
-import { Action, WorkSpace } from "@/context/workspace";
+import { WorkSpace } from "@/context/workspace";
+import { Action } from "@/context/tool";
+import Tooltip from '@/components/common/Tooltip.vue';
 type Button = InstanceType<typeof ToolButton>
 
 const { t } = useI18n();
@@ -117,18 +119,17 @@ const customFrame = () => {
       </div>
     </div>
   </div>
-  <el-tooltip class="box-item" effect="dark" :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" placement="bottom"
-    :show-after="500" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" @click="isSelect" :selected="props.active" @mouseenter.stop="onMouseenter"
-      @mouseleave.stop="onMouseleave">
-      <div class="svg-container">
-        <svg-icon icon-class="frame"></svg-icon>
-      </div>
-      <div class="menu-f" @click.stop="showMenu">
-        <svg-icon icon-class="down"></svg-icon>
-      </div>
-    </ToolButton>
-  </el-tooltip>
+    <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`">
+      <ToolButton ref="button" @click="isSelect" :selected="props.active" @mouseenter.stop="onMouseenter"
+        @mouseleave.stop="onMouseleave">
+        <div class="svg-container">
+          <svg-icon icon-class="frame"></svg-icon>
+        </div>
+        <div class="menu-f" @click.stop="showMenu">
+          <svg-icon icon-class="down"></svg-icon>
+        </div>
+      </ToolButton>
+    </Tooltip>
 </template>
 
 <style scoped lang="scss">

@@ -145,7 +145,6 @@ const handleOpenNewWindow = (routeName: string) => {
     const routeLocation = router.resolve({
         name: routeName
     })
-
     const newWindow = window.open(routeLocation.href, '_blank');
     if (newWindow) {
         setTimeout(() => {

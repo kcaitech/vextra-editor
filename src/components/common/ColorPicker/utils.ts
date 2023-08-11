@@ -1,6 +1,7 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Color } from '@kcdesign/data';
+import { Border, Color, Fill, GroupShape, ShapeType, TextShape } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
+import { Context } from '@/context';
 export interface HSB {
   h: number
   s: number
@@ -333,13 +334,13 @@ function setLocalStorageForColors(si: string[]) {
 }
 
 // RGB => H
-export function RGB2H(color: Color) {
+export function RGB2H(color: Color, sub?: number) {
   const { red, green, blue } = color;
   const max = Math.max(red, green, blue);
   const min = Math.min(red, green, blue);
   let h = 0;
   if (max === min) {
-    h = 0;
+    h = sub ? sub * 360 : 0;
   } else if (max === red && green >= blue) {
     h = 60 * ((green - blue) / (max - min)) + 0;
   } else if (max === red && green < blue) {
@@ -532,4 +533,48 @@ export function HSL2RGB(hsl: HSL): RGB {
   function withLight(r: number, g: number, b: number) {
     return { R: (r + m) * 255, G: (g + m) * 255, B: (b + m) * 255 };
   }
+}
+export function getColorsFromDoc(context: Context) {
+  const s = Date.now();
+  const page = context.selection.selectedPage;
+  if (!page) return [];
+  let dcs = Array.from(finder(context, page).values());
+  dcs = dcs.sort((a, b) => {
+    if (a.length > b.length) return -1;
+    else if (a.length === b.length) return 0;
+    else return 1;
+  });
+  const result: { times: number, color: Color }[] = [];
+  for (let i = 0; i < dcs.length; i++)  result.push({ times: dcs[i].length, color: dcs[i][0] });
+  const e = Date.now();
+  // console.log(e - s);
+  return result;
+}
+
+function finder(context: Context, shape: GroupShape, init?: Map<string, Color[]>) {
+  const cs = shape.childs;
+  const result: Map<string, Color[]> = init || new Map();
+  for (let i = 0; i < cs.length; i++) {
+    const s = cs[i];
+    const fbs: Array<Fill | Border> = [...s.style.fills, ...s.style.borders];
+    for (let j = 0; j < fbs.length; j++) {
+      const r = result.get(c2s(fbs[j].color));
+      if (r) r.push(fbs[j].color);
+      else result.set(c2s(fbs[j].color), [fbs[j].color]);
+    }
+    if (s.type === ShapeType.Text) {
+      const editor = context.editor4TextShape(s as TextShape);
+      const format = s.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+      const c = format.color;
+      if (format.colorIsMulti || !c) continue;
+      const r = result.get(c2s(c));
+      if (r) r.push(c);
+      else result.set(c2s(c), [c]);
+    }
+    if (s.childs && s.childs.length) finder(context, s as GroupShape, result);
+  }
+  return result;
+}
+function c2s(c: Color) {
+  return `${c.alpha}|${c.red}|${c.green}|${c.blue}`;
 }

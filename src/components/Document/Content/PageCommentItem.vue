@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
-import { WorkSpace, Action } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
+import { Action } from "@/context/tool";
 import HoverComment from './HoverComment.vue'
 import CommentPopup from './CommentPopup.vue'
 import { Matrix, Shape, ShapeType } from "@kcdesign/data";
 import * as comment_api from '@/apis/comment';
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 type CommentViewEl = InstanceType<typeof CommentPopup>;
 const props = defineProps<{
     context: Context
@@ -23,7 +25,7 @@ const emit = defineEmits<{
     (e: 'resolve', status: number, index: number): void
     (e: 'recover'): void
     (e: 'editComment', index: number, text: string): void
-    (e: 'updateShapeComment', index: number): void
+    (e: 'updateShapeComment', index: number): void,
 }>()
 const commentPopupEl = ref<CommentViewEl>()
 const workspace = computed(() => props.context.workspace);
@@ -115,10 +117,10 @@ const showComment = (e: MouseEvent) => {
     const commentCenter = workspace.matrix.computeCoord(commentX, commentY) //评论在视图上的位置
     if (bottom - commentCenter.y < 75) {
         props.context.workspace.matrix.trans(0, -80);
-        props.context.workspace.matrixTransformation();
+        props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else if (right - commentCenter.x < 330) {
         props.context.workspace.matrix.trans(-80, 0);
-        props.context.workspace.matrixTransformation();
+        props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     props.context.comment.commentMount(false)
     const { x, y } = props.context.workspace.root
@@ -219,7 +221,7 @@ const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) 
     props.context.selection.selectComment(reply.value ? commentItem.id : id)
     if (transX || transY) {
         workspace.matrix.trans(transX, transY);
-        workspace.matrixTransformation();
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
 
@@ -259,7 +261,7 @@ const workspaceUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin()
     }
-    action.value = workspace.value.action;
+    action.value = props.context.tool.action;
 }
 
 const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
@@ -276,7 +278,35 @@ const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
     if (t === Comment.VISIBLE_COMMENT) {
         visibleComment.value = props.context.comment.isVisibleComment
     }
-    action.value = workspace.value.action;
+    if (t === Comment.WATCH_COMMENT_CHANGE) {
+        const comment = props.context.comment.isUpdateComment
+        docComment(comment!)
+    }
+}
+
+const docComment = (comment: DocCommentOpData) => {
+    const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
+    if (comment.type === DocCommentOpType.Update) {
+        if (index != -1) {
+            documentCommentList.value[index] = {
+                ...documentCommentList.value[index],
+                ...comment.comment
+            }
+            props.context.comment.sendComment()
+        }
+    } else if (comment.type === DocCommentOpType.Del) {
+        if (index != -1) {
+            documentCommentList.value.splice(index, 1)
+            props.context.comment.sendComment()
+        }
+    } else if (comment.type === DocCommentOpType.Add) {
+        if (comment.comment.root_id) {
+            documentCommentList.value.push(comment.comment)
+            props.context.comment.sendComment()
+            documentCommentList.value = [...documentCommentList.value]
+        }
+    }
+    props.context.comment.notify(Comment.COMMENT_HANDLE_INPUT)
 }
 
 const pageSkipComment = () => {
@@ -293,7 +323,7 @@ const pageSkipComment = () => {
     props.context.selection.selectComment(commentId)
     if (transX || transY) {
         workspace.matrix.trans(transX, transY);
-        workspace.matrixTransformation();
+        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
 
@@ -363,7 +393,7 @@ function watchShapes() { // 监听评论相关shape的变化
 
 const update = (shape?: Shape) => {
     watcher()
-    if(!shape) return
+    if (!shape) return
     emit('updateShapeComment', props.index)
     props.context.comment.editShapeComment(true, [shape])
 }
