@@ -28,6 +28,8 @@ import { Comment } from '@/context/comment';
 import { DocSelectionOp } from "@/context/communication/doc_selection_op";
 import { throttle } from "@/utils/timing_util";
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op"
+import { debounce } from '@/utils/timing_util';
+import { NetworkStatusType } from "@/communication/types";
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -479,6 +481,18 @@ const networkLinkError = () => {
     }, 3000)
 }
 
+let previousStatus: NetworkStatusType = NetworkStatusType.Online
+const networkMessage = (status: NetworkStatusType) => {
+    if (status === previousStatus) return;
+    previousStatus = status
+    if(status === NetworkStatusType.Offline) {
+        networkLinkError()
+    } else {
+        networkLinkSuccess()
+    }
+}
+const networkDebounce = debounce(networkMessage, 1000)
+
 //文档获取失败 重试刷新页面
 const refreshDoc = () => {
     location.reload();
@@ -503,9 +517,8 @@ let loopNet: any = null
 let netErr: any = null
 const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
-networkStatus.addOnChange((status: any) => {
-    const s = (status.status)as any
-    if(s === 1) {
+networkStatus.addOnChange((status: NetworkStatusType) => {
+    if(status === NetworkStatusType.Offline) {
         // 网络断开连接
         if(context) {
             clearInterval(loopNet);
@@ -517,7 +530,7 @@ networkStatus.addOnChange((status: any) => {
                 //有未上传资源
                 hasPendingSync()
             }else {
-                networkLinkError()
+                networkDebounce(status)
             }
         }
     }else {
@@ -527,7 +540,7 @@ networkStatus.addOnChange((status: any) => {
                 //有未上传资源
                 hasPendingSync()
             }else {
-                networkLinkSuccess()
+                networkDebounce(status)
             }
             context.comment.notify(Comment.EDIT_COMMENT)
             clearInterval(loopNet)
