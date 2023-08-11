@@ -45,6 +45,7 @@ const multiRadius = ref(false)
 const shwoAdapt = ref<boolean>(false)
 const multipleValues = ref<boolean>(false)
 const mixed = t('attr.mixed');
+const flip = ref(false)
 const watchedShapes = new Map();
 // 得到需要监听的shape，事实上永远最多只监听一个元素
 function watch_shapes() {
@@ -360,6 +361,7 @@ function layout() {
         showRadius.value = hasRadiusShape(shape, RADIUS_SETTING)
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
+        flip.value = shape.type === ShapeType.Table;
         if(hasRadiusShape(shape, RADIUS_SETTING)) {
             multiRadius.value = MULTI_RADIUS.includes(shape.type)
             getRectShapeAttr(shape);
@@ -420,12 +422,12 @@ onUnmounted(() => {
         <div class="tr">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
-            <Tooltip :content="t('attr.flip_h')" :offset="15">
+            <Tooltip :content="t('attr.flip_h')" :offset="15" v-if="!flip">
                 <div class="flip ml-24" @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
-            <Tooltip :content="t('attr.flip_v')" :offset="15">
+            <Tooltip :content="t('attr.flip_v')" :offset="15" v-if="!flip">
                 <div class="flip ml-12" @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>
                 </div>

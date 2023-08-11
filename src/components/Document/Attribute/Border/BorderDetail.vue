@@ -47,6 +47,11 @@ const positonOptionsSource: SelectSource[] = genOptions([
   [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
   [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
 ]);
+const borderPositonOptionsSource: SelectSource[] = genOptions([
+  [BorderPosition.Outer, t(`attr.full_border`)],
+  [BorderPosition.Center, t(`attr.outer_border`)],
+  [BorderPosition.Inner, t(`attr.inner_border`)],
+]);
 
 const borderFrontStyle = ref<SelectItem>({ value: MarkerType.Line, content: MarkerType.Line });
 const borderFrontStyleOptionsSource: SelectSource[] = genOptions([
@@ -279,7 +284,7 @@ onUnmounted(() => {
           <!-- 边框位置 -->
           <div>
             <label>{{ t('attr.position') }}</label>
-            <Select :selected="position" :item-view="BorderPositonItem" :item-height="32" :source="positonOptionsSource"
+            <Select :selected="position" :item-view="BorderPositonItem" :item-height="32" :source="shapes[0].type === ShapeType.Table ? borderPositonOptionsSource : positonOptionsSource"
               @select="positionSelect"></Select>
           </div>
           <!-- 边框厚度 -->

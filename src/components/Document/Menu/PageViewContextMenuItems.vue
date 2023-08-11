@@ -14,6 +14,7 @@ import { message } from '@/utils/message';
 import { paster, paster_inner_shape, replace, identity, paras } from '@/utils/clipaboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
+import TableMenu from "./TableMenu/TableMenu.vue"
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -562,6 +563,7 @@ onUnmounted(() => {
       <div class="choose" v-show="isTitle"></div>
       <span>{{ t('system.artboart_title_visible') }}</span>
     </div>
+    <TableMenu :context="context" :layers="layers" :items="items" :site="site"></TableMenu>
   </div>
 </template>
 <style lang='scss' scoped>

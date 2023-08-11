@@ -31,6 +31,7 @@ import { Action } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import { Asssit } from '@/context/assist';
+import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 
 interface Props {
     context: Context
@@ -78,6 +79,8 @@ const commentInput = ref(false);
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>('rgba(239,239,239,1)');
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
+const cellSetting = ref(false);
+
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -254,6 +257,8 @@ function menu_watcher(type?: number) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
     if(type === Menu.CHANGE_USER_CURSOR) {
         avatarVisi.value = props.context.menu.isUserCursorVisible;
+    }else if (type === Menu.OPEN_SPLIT_CELL) {
+        cellSetting.value = true
     }
 }
 function insertFrame() {
@@ -692,6 +697,11 @@ const getDocumentComment = async () => {
         console.log(err);
     }
 }
+//表格
+const closeModal = () => {
+    cellSetting.value = false
+}
+
 function frame_watcher() {
     if (!root.value) return;
     _updateRoot(props.context, root.value);
@@ -781,6 +791,7 @@ onUnmounted(() => {
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
+        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="'split'"></CellSetting>
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>

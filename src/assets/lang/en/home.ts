@@ -262,7 +262,10 @@ export const attr: any = {
     unfold: 'Unfold',
     packup: 'Pack up',
     'flip_v': '垂直翻转',
-    'flip_h': '水平翻转'
+    'flip_h': '水平翻转',
+    full_border: 'Full border',
+    outer_border: 'border',
+    inner_border: 'Inner border'
 }
 
 export const login = {

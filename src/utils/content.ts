@@ -344,10 +344,16 @@ function page_scale(context: Context, scale: number) {
  * @param p 点击位置在页面中所处的位置
  * @param context 
  * @param pre_shapes 预选图形
- * @param { 'text-selection' | 'controller' | 'group'| 'artboard'| 'null' | 'normal' } area
+ * @param { 'text-selection' | 'controller' | 'group'| 'artboard'| 'null' | 'normal' | 'table' | 'table_cell' } area
  */
-function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' {
+function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' {
   const is_edting = context.workspace.isEditing;
+  const area_0 = finder(context, p);
+  if (area_0.length) {
+    if ((e.target as Element).closest('#text-selection') && is_edting && area_0[0].type === ShapeType.Table) {
+      return 'table';
+    }
+  }
   if ((e.target as Element).closest('#text-selection') && is_edting) {
     return 'text-selection';
   }
@@ -417,10 +423,10 @@ function flattenShapes(shapes: any) {
 }
 /**
  * 右键菜单打开之前根据点击的区域整理应该显示的菜单项
- * @param { "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" } area 点击的区域
+ * @param { "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" | "table" | "table_cell"  } area 点击的区域
  * @returns 
  */
-function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal"): string[] {
+function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" | "table" | "table_cell" ): string[] {
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
     if (permIsEdit(context)) {
@@ -465,6 +471,18 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
   } else if (area === 'text-selection') {
     if (permIsEdit(context)) {
       contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
+  } else if (area === 'table') {
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell', 'merge_cell'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
+  } else if (area === 'table_cell') {
+    if (permIsEdit(context)) {
+      contextMenuItems = ['insert_column', 'delete_column', 'split_cell', 'merge_cell'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }

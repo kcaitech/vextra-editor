@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, shallowRef, ref, computed, watchEffect } from 'vue';
-import { ShapeType, Shape, TextShape } from "@kcdesign/data"
+import { ShapeType, Shape, TextShape, TableShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
@@ -26,7 +26,7 @@ const WITH_FILL = [
     ShapeType.Table,
     ShapeType.TableCell
 ];
-const WITH_TEXT = [ShapeType.Text];
+const WITH_TEXT = [ShapeType.Text, ShapeType.Table];
 const WITH_BORDER = [
     ShapeType.Image,
     ShapeType.Rectangle,
@@ -40,6 +40,7 @@ const WITH_BORDER = [
     ShapeType.Table,
     ShapeType.TableCell
 ];
+const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
@@ -88,7 +89,7 @@ onUnmounted(() => {
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-            <TableStyle :shapes="shapes" :context="props.context"></TableStyle>
+            <TableStyle v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context"></TableStyle>
         </div>
     </section>
 </template>
