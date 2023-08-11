@@ -23,6 +23,12 @@ interface Props {
     context: Context
     matrix: Matrix
 }
+interface TracingFrame {
+    path: string,
+    viewBox: string,
+    height: number,
+    width: number
+}
 const props = defineProps<Props>();
 const controllerType = ref<ControllerType>(ControllerType.Rect);
 const matrix = new Matrix();
@@ -31,14 +37,14 @@ const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 const tracing = ref<boolean>(false);
 const traceEle = ref<Element>();
-const tracingPath = ref<string>('');
 const altKey = ref<boolean>(false);
 const watchedShapes = new Map();
-let shape_hover: undefined | Shape;
+const tracingFrame = ref<TracingFrame>({ path: '', viewBox: '', height: 0, width: 0 });
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection;
-    if (selection.selectedShapes.length > 0) {
+    if (selection.hoveredShape) needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
+    if (selection.selectedShapes.length) {
         for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
             const v = selection.selectedShapes[i];
             needWatchShapes.set(v.id, v)
@@ -56,17 +62,6 @@ function watchShapes() { // 监听选区相关shape的变化
             watchedShapes.set(k, v);
         }
     })
-}
-function watchedShapes_hover() {
-    const selection = props.context.selection;
-    if (selection.hoveredShape && selection.hoveredShape.id !== shape_hover?.id) {
-        shape_hover?.unwatch(shapesWatcher);
-        shape_hover = selection.hoveredShape;
-        shape_hover.watch(shapesWatcher);
-    } else {
-        shape_hover?.unwatch(shapesWatcher);
-        shape_hover = undefined;
-    }
 }
 function shapesWatcher() {
     if (props.context.workspace.shouldSelectionViewUpdate) update_by_shapes();
@@ -92,7 +87,6 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
     if (t === Selection.CHANGE_PAGE) {
         watchedShapes.forEach(v => { v.unwatch(shapesWatcher) });
         watchedShapes.clear();
-        shape_hover = undefined;
         tracing.value = false;
         controller.value = false;
     } else if (t === Selection.CHANGE_SHAPE) {
@@ -102,7 +96,7 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
         matrix.reset(props.matrix);
         createShapeTracing();
-        watchedShapes_hover();
+        watchShapes();
     }
 }
 function createShapeTracing() { // 描边  
@@ -115,7 +109,10 @@ function createShapeTracing() { // 描边
             m.multiAtLeft(matrix);
             const path = hoveredShape.getPath();
             path.transform(m);
-            tracingPath.value = path.toString();
+            const { x, y, right, bottom } = props.context.workspace.root;
+            const w = right - x;
+            const h = bottom - y;
+            tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
             tracing.value = true;
             if (altKey.value) nextTick(() => { if (traceEle.value) traceEle.value.classList.add('cursor-copy') });
         }
@@ -239,12 +236,11 @@ onUnmounted(() => {
 </script>
 <template>
     <!-- 描边 -->
-    <svg ref="traceEle" v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100" :height="100" viewBox="0 0 100 100"
-        style="position: absolute">
-        <path :d="tracingPath" fill="transparent" stroke="#865dff" stroke-width="1.5px"
-            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+    <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px); position: absolute;">
+        <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
         </path>
     </svg>
     <!-- 控制 -->

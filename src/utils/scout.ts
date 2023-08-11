@@ -1,12 +1,14 @@
 import { Context } from "@/context";
 import { PageXY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
+import { bool } from "aws-sdk/clients/signer";
 import { v4 as uuid } from "uuid";
 interface Scout {
     path: SVGPathElement
     remove: () => void
     isPointInShape: (shape: Shape, point: PageXY) => boolean
     isPointInPath: (d: string, point: PageXY) => boolean
+    isPointInStroke: (d: string, point: PageXY) => boolean
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -43,12 +45,17 @@ function scout(context: Context): Scout {
         path.setAttributeNS(null, 'd', d);
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
-
+    function isPointInStroke(d: string, point: PageXY): boolean {
+        SVGPoint.x = point.x, SVGPoint.y = point.y;
+        path.setAttributeNS(null, 'd', d);
+        path.setAttributeNS(null, 'stroke-width', '14');
+        return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+    }
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
         if (s) document.body.removeChild(s);
     }
-    return { path, isPointInShape, remove, isPointInPath }
+    return { path, isPointInShape, remove, isPointInPath, isPointInStroke }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {

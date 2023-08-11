@@ -299,7 +299,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
     function isElement(e: MouseEvent): boolean {
         const root = context.workspace.root;
-        return Boolean(context.selection.scout?.isPointInPath(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
+        const selected = context.selection.selectedShapes;
+        if (selected.length === 1 && selected[0].type === ShapeType.Line) {
+            return Boolean(context.selection.scout?.isPointInStroke(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
+        } else {
+            return Boolean(context.selection.scout?.isPointInPath(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
+        }
     }
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context, i18nT);

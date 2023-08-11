@@ -1,8 +1,7 @@
-// import CtrlRect from "./CtrlRect.vue";
-import CtrlLine from "./CtrlLine.vue";
 import CtrlRect from "./CtrlRect.SVG.vue";
 import CtrlRectMulti from "./CtrlRect.SVG.Multi.vue";
 import CtrlText from "./CtrlText.vue"
+import CtrlLine from "./CtrlLine.SVG.vue"
 import Readonly from "./Readonly.vue"
 import CtrlTable from "./CtrlTable.vue"
 export enum ControllerType { // 控件类型
