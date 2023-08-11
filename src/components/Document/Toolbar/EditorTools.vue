@@ -82,7 +82,7 @@ onUnmounted(() => {
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table  @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
-        <CreateTable @select="select" :active="selected === Action.AddTable" :context="props.context"></CreateTable>
+        <!-- <CreateTable @select="select" :active="selected === Action.AddTable" :context="props.context"></CreateTable> -->
         <div class="vertical-line" />
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
             placement="bottom" :show-after="500" :offset="10" :hide-after="0">
