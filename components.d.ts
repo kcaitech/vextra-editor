@@ -151,6 +151,7 @@ declare module '@vue/runtime-core' {
     SubLoading: typeof import('./src/components/common/SubLoading.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
+    TableHeader: typeof import('./src/components/Document/Selection/Controller/Table/TableHeader.vue')['default']
     Tablelist: typeof import('./src/components/AppHome/tablelist.vue')['default']
     Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']
     TextAdvancedSettings: typeof import('./src/components/Document/Attribute/Text/TextAdvancedSettings.vue')['default']

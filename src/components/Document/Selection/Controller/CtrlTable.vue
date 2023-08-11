@@ -2,7 +2,6 @@
 import { Context } from '@/context';
 import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
-import HoverCell from './Table/HoverCell.vue';
 import { genRectPath, throttle } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY } from '@/context/selection';
@@ -23,7 +22,7 @@ const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
     rotate: number,
-    matrix: number[],
+    matrix: Matrix, // root->屏幕 变换矩阵
     shape: TableShape
 }>();
 
@@ -32,7 +31,7 @@ const update = throttle(_update, 5);
 function _update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
-    matrix.multiAtLeft(props.matrix);
+    matrix.multiAtLeft(props.matrix); // table -> 屏幕
     if (!submatrix.equals(matrix)) {
         submatrix.reset(matrix);
     }
