@@ -33,6 +33,7 @@ const _curpt: { x: number } = { x: 0 }
 const scale = ref<{ axleX: number }>({
   axleX: 0
 })
+const show_position = ref<boolean>(true);
 const showStartStyle = ref<boolean>(true)
 const showEndStyle = ref<boolean>(true)
 const borderThickness = ref<HTMLInputElement>();
@@ -223,24 +224,26 @@ const onMouseUp = (e: MouseEvent) => {
 function layout() {
   showStartStyle.value = false;
   showEndStyle.value = false;
+  show_position.value = true;
   if (len.value === 1) {
     const shape = props.shapes[0];
     if (shape.type === ShapeType.Line) {
-      showStartStyle.value = true;
-      showEndStyle.value = true;
+      show_position.value = false;
+      if (props.index === 0) {
+        showStartStyle.value = true;
+        showEndStyle.value = true;
+      }
     }
   } else if (len.value > 1) {
     const _idx = props.shapes.findIndex(i => i.type === ShapeType.Line);
-    if (_idx > -1) {
+    if (_idx > -1 && props.index === 0) {
       showStartStyle.value = true;
       showEndStyle.value = true;
     }
   }
 }
 function selection_wather(t?: any) {
-  if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
-    layout();
-  }
+  if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) layout();
 }
 const selectBorderThicknes = () => {
   borderThickness.value?.select()
@@ -266,7 +269,7 @@ onUnmounted(() => {
       <template #body>
         <div class="options-container">
           <!-- 边框位置 -->
-          <div v-if="!showStartStyle">
+          <div v-if="show_position">
             <label>{{ t('attr.position') }}</label>
             <Select :selected="position" :item-view="BorderPositonItem" :item-height="32" :source="positonOptionsSource"
               @select="positionSelect"></Select>
