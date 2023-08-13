@@ -262,7 +262,7 @@ watchEffect(initSizeBounds);
     display: flex;
     flex-direction: row;
     width: 100%;
-    height: auto;
+    height: 100%;
     position: relative;
     .column1 {
         position: relative;

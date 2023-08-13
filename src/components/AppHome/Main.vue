@@ -11,8 +11,9 @@ const emits = defineEmits(['data-update'])
 
 
 //===>Apphome组件接收
-const update = (data: any,title:string) => {
-    emits('data-update', data,title)
+const update = (data: any,searchtitle:string) => {
+    //main目录下传过来的lists和title
+    emits('data-update', data,searchtitle)
 }
 
 </script>

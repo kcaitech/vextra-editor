@@ -9,7 +9,6 @@ import '@/style/constant.scss'
 import '@/style/app.scss'
 import { router } from "./router"
 import '@/utils/permission'
-
 const app = createApp(App)
 app.use(i18n)
 app.component('svg-icon', SvgIcon)

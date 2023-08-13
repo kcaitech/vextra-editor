@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch } from 'vue'
-import { Search, User, SwitchButton, Close, InfoFilled, Bell, Loading } from '@element-plus/icons-vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
+import { Search, User, SwitchButton, Close, Bell, Loading } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share'
 import { useI18n } from 'vue-i18n'
@@ -46,7 +46,6 @@ const getApplyList = async () => {
         console.log(err)
     }
 }
-
 
 const handleClickOutside = (event: MouseEvent) => {
     const e = event.target as HTMLElement
@@ -96,6 +95,7 @@ const reviewed = () => {
 }
 
 const toDocument = (row: any, column: any) => {
+    if (row.document.deleted_at != null) return
     if (column.label === t('home.file_name')) {
         const x = { keyword: search.value }
         const maxLength = 15
@@ -110,8 +110,8 @@ const toDocument = (row: any, column: any) => {
         const query = { id: docId }
         const url = router.resolve({ name: Name, query: query }).href
         window.open(url, '_blank')
-    }
 
+    }
 }
 
 const prpotitle = computed(() => {
@@ -149,25 +149,15 @@ onUnmounted(() => {
 
 })
 
-const cellStyle = (row: any) => {
-    if (row.column.label === t('home.file_name')) {
-        return {
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            cursor: 'Pointer'
-        }
-    }
-}
 
-const mouseEnter = (row: any, column: any, cell: any) => {
+const mouseenter = (_: any, column: any, cell: any) => {
     if (column.label === t('home.file_name')) {
         cell.style.color = '#b197fc'
+        cell.style.cursor = 'pointer'
     }
-
 }
 
-const mouseleave = (row: any, column: any, cell: any) => {
+const mouseleave = (_: any, column: any, cell: any) => {
     if (column.label === t('home.file_name')) {
         cell.style.color = ''
     }
@@ -207,9 +197,9 @@ const textHighLight = (text: string) => {
             <transition name="el-zoom-in-top">
                 <div v-if="showSearchHistory" class="searchhistory" @click="inputRef?.focus()">
                     <div class="tabledata" v-if="search != ''">
-                        <el-table :data="SearchList" max-height="600" :cell-style=cellStyle @row-click="toDocument"
-                            @cell-mouse-enter="mouseEnter" @cell-mouse-leave="mouseleave">
-                            <el-table-column :label="t('home.file_name')" header-align="left" align="left"
+                        <el-table :data="SearchList" max-height="600" @row-click="toDocument" @cell-mouse-enter="mouseenter"
+                            @cell-mouse-leave="mouseleave">
+                            <el-table-column :label="t('home.file_name')" header-align="left" align="left" :min-width="150"
                                 show-overflow-tooltip>
                                 <template #default="{ row: { document: { name } } }">
                                     <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -218,7 +208,7 @@ const textHighLight = (text: string) => {
                                 </template>
                             </el-table-column>
                             <el-table-column :prop=prpotitle :label=props.title header-align="center" align="center"
-                                width="140" />
+                                show-overflow-tooltip />
                             <template #empty>
                                 <el-skeleton v-if="isLoading" style="width: 100%" :count="6" animated>
                                     <template #template>
@@ -361,7 +351,7 @@ const textHighLight = (text: string) => {
             max-width: 480px;
             min-width: 160px;
             font-size: 12px;
-            --el-input-height:32px;
+            --el-input-height: 32px;
             --el-input-border-color: #f3f0ff;
             --el-input-hover-border-color: #e5dbff;
             --el-input-focus-border-color: #9775fa;

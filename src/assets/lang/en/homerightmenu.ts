@@ -2,6 +2,7 @@ export const homerightmenu = {
     open: 'Open',
     newtabopen: 'Opens in a new TAB',
     share: 'Share',
+    exit_share:'Exit share',
     target_star: 'Target star',
     unstar: 'Unstar',
     rename: 'Rename',

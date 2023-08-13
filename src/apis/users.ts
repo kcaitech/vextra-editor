@@ -166,3 +166,13 @@ export function Copyfile(data = {}, ops = {}) {
         ...ops
     })
 }
+
+//创建团队
+export function CreateTeam(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team',
+        method: 'post',
+        data:data,
+        ...ops
+    })
+}
