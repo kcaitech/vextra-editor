@@ -100,33 +100,33 @@ function check_mixed() {
 }
 
 function radiusValuesMixed(radius: any) {
-  const referenceValue = Object.values(radius)[0];
-  for (const value of Object.values(radius)) {
-    if (value !== referenceValue) {
-      return false;
+    const referenceValue = Object.values(radius)[0];
+    for (const value of Object.values(radius)) {
+        if (value !== referenceValue) {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
     if (shape instanceof RectShape) {
         radius.value = (shape as RectShape).getRectRadius();
-        if(!radiusValuesMixed(radius.value) && !isMoreForRadius.value) {
+        if (!radiusValuesMixed(radius.value) && !isMoreForRadius.value) {
             multipleValues.value = true
             radius.value.lt = mixed
         }
-    } else if(shape instanceof GroupShape) {
+    } else if (shape instanceof GroupShape) {
         radius.value.lt = (shape as GroupShape).fixedRadius || 0
         radius.value.lb = (shape as GroupShape).fixedRadius || 0
         radius.value.rt = (shape as GroupShape).fixedRadius || 0
         radius.value.rb = (shape as GroupShape).fixedRadius || 0
-    } else if( shape instanceof PathShape) {
+    } else if (shape instanceof PathShape) {
         radius.value.lt = (shape as PathShape).fixedRadius || 0
         radius.value.lb = (shape as PathShape).fixedRadius || 0
         radius.value.rt = (shape as PathShape).fixedRadius || 0
         radius.value.rb = (shape as PathShape).fixedRadius || 0
-    } else if(shape instanceof PathShape2) {
+    } else if (shape instanceof PathShape2) {
         radius.value.lt = (shape as PathShape2).fixedRadius || 0
         radius.value.lb = (shape as PathShape2).fixedRadius || 0
         radius.value.rt = (shape as PathShape2).fixedRadius || 0
@@ -238,7 +238,7 @@ function radiusToggle() {
                 multipleValues.value = false
             } else {
                 multipleValues.value = true
-                if(!radiusValuesMixed(radius.value)) {
+                if (!radiusValuesMixed(radius.value)) {
                     radius.value.lt = mixed
                 }
             }
@@ -346,11 +346,11 @@ function adapt() {
     }
 }
 const RADIUS_SETTING = [
-    ShapeType.Rectangle, ShapeType.Artboard, 
-    ShapeType.Image, ShapeType.Group, 
+    ShapeType.Rectangle, ShapeType.Artboard,
+    ShapeType.Image, ShapeType.Group,
     ShapeType.Path, ShapeType.Path2
 ];
-const MULTI_RADIUS = [ ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
+const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
 const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
 function layout() {
     const selected = props.context.selection.selectedShapes;
@@ -360,7 +360,7 @@ function layout() {
         showRadius.value = hasRadiusShape(shape, RADIUS_SETTING)
         showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
         shwoAdapt.value = shape.type === ShapeType.Artboard;
-        if(hasRadiusShape(shape, RADIUS_SETTING)) {
+        if (hasRadiusShape(shape, RADIUS_SETTING)) {
             multiRadius.value = MULTI_RADIUS.includes(shape.type)
             getRectShapeAttr(shape);
         }
