@@ -3,8 +3,8 @@ import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
-import { getAngle } from '@/utils/common';
-import { update_dot2 } from './common';
+import { getAngle, getHorizontalAngle } from '@/utils/common';
+import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { PointType } from '@/context/assist';
@@ -38,7 +38,6 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
-
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 function update() {
@@ -49,8 +48,8 @@ function update() {
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     dots.length = 0;
-    const frame = props.shape.frame;
-    dots = dots.concat(update_dot2([matrix.computeCoord2(0, 0), matrix.computeCoord2(frame.width, frame.height)], props.shape.rotation || 0, props.shape));
+    const f = props.shape.frame;
+    dots = dots.concat(update_dot3([matrix.computeCoord2(0, 0), matrix.computeCoord2(f.width, f.height)]));
 }
 function ct2pt(ct: CtrlElementType) {
     if (ct === CtrlElementType.RectLT) return 'lt';
@@ -183,20 +182,19 @@ function point_mouseup(event: MouseEvent) {
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    let deg = props.shape.rotation || 0;
+    const shape = props.shape;
+    const m = shape.matrix2Parent();
+    const lt = m.computeCoord(0, 0);
+    const rb = m.computeCoord(shape.frame.width, shape.frame.height);
+    let deg = Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
     if (t === CtrlElementType.RectLT) {
         cursor.setType('extend-0', force);
     } else if (t === CtrlElementType.RectRB) {
         cursor.setType('extend-0', force);
     } else if (t === CtrlElementType.RectLTR) {
-        deg = deg + 225;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
+        deg = deg - 180;
         cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectRBR) {
-        deg = deg + 45;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
         cursor.setType(`rotate-${deg}`, force);
     }
 }
@@ -236,7 +234,7 @@ onUnmounted(() => {
 <template>
     <g :reflush="reflush">
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-            <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+            <path :d="p.r.p" fill="red" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
                 @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
             </path>
             <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'

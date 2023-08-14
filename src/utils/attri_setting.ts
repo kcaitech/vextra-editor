@@ -144,12 +144,10 @@ export function get_actions_flip_h(shapes: Shape[]) {
 export function get_rotation(shape: Shape) {
   let rotation: number = Number(shape.rotation?.toFixed(2)) || 0;
   if (shape.type === ShapeType.Line) {
-    if (shape.getPath().length === 3) { // todo 用points判断？
-      const m = shape.matrix2Page();
-      const lt = m.computeCoord(0, 0);
-      const rb = m.computeCoord(shape.frame.width, shape.frame.height);
-      rotation = Number(getHorizontalAngle(lt, rb).toFixed(2));
-    }
+    const m = shape.matrix2Parent();
+    const lt = m.computeCoord(0, 0);
+    const rb = m.computeCoord(shape.frame.width, shape.frame.height);
+    rotation = Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
   }
   return rotation;
 }
