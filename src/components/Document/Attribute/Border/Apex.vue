@@ -90,6 +90,7 @@ onUnmounted(stop);
 .wrap {
     width: 100%;
     margin: 8px 0px;
+    padding: 0 30px 0 22px;
     box-sizing: border-box;
 
     .apex-select-wrap {

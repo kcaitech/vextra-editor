@@ -477,18 +477,19 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0px 10px 12px 10px;
+    padding: 2px 10px 12px 10px;
     box-sizing: border-box;
     visibility: visible;
 
     .tr {
         position: relative;
         width: 100%;
+        height: 30px;
         align-items: center;
         justify-content: space-between;
         display: flex;
         flex-direction: row;
-        margin: 8px 0;
+        margin: 4px 0;
 
         .space {
             width: 18px;
@@ -501,13 +502,13 @@ onUnmounted(() => {
         .positon {
             width: 95px;
             height: 30px;
-            border-radius: 8px;
+            border-radius: var(--default-radius);
         }
 
         .frame {
             width: 95px;
             height: 30px;
-            border-radius: 8px;
+            border-radius: var(--default-radius);
         }
 
         .lock {
@@ -545,7 +546,7 @@ onUnmounted(() => {
         .angle {
             height: 30px;
             width: 95px;
-            border-radius: 8px;
+            border-radius: var(--default-radius);
 
             >svg {
                 width: 12px;
@@ -560,7 +561,7 @@ onUnmounted(() => {
             align-items: center;
             width: 45px;
             height: 30px;
-            border-radius: 8px;
+            border-radius: var(--default-radius);
 
             >svg {
                 color: var(--coco-grey);

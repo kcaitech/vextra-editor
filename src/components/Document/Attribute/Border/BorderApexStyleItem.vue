@@ -21,18 +21,18 @@ const isEnd = computed<boolean>(() => {
 <style scoped lang="scss">
 .border-front-style-item-container {
     height: 32px;
-    width: 100%;
+    width: 64%;
+    padding: 0 12px;
     color: var(--theme-color);
-    padding: 0 var(--default-padding);
     margin-left: var(--default-margin-half);
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    justify-content: center;
 
     >svg {
-        width: 100%;
-        height: 100%;
-        color: black;
+        width: 60%;
+        height: 60%;
     }
 
     >.isEnd {

@@ -320,7 +320,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 10px;
+    padding: 0 10px 12px 10px;
     box-sizing: border-box;
 
     .add {
@@ -367,7 +367,7 @@ onUnmounted(() => {
                 height: 18px;
                 width: 18px;
                 background-color: var(--active-color);
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;
                 color: #ffffff;
@@ -385,7 +385,7 @@ onUnmounted(() => {
                 flex: 0 0 18px;
                 height: 18px;
                 background-color: transparent;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;
             }
@@ -396,7 +396,7 @@ onUnmounted(() => {
                 height: 100%;
                 padding: 0px 5px;
                 margin-left: 5px;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
@@ -418,7 +418,7 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-left: 9px;
+                margin-left: 2px;
 
                 .delete {
                     flex: 0 0 16px;

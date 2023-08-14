@@ -301,7 +301,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 10px;
+    padding: 0 10px 12px 10px;
     box-sizing: border-box;
 
     .add {
@@ -338,7 +338,7 @@ onUnmounted(() => {
                 width: 18px;
                 height: 18px;
                 background-color: var(--active-color);
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 border: 1px solid #d8d8d8;
                 box-sizing: border-box;
                 color: #ffffff;
@@ -357,7 +357,7 @@ onUnmounted(() => {
                 width: 18px;
                 height: 18px;
                 background-color: transparent;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 border: 1px solid #d8d8d8;
                 box-sizing: border-box;
             }
@@ -367,7 +367,7 @@ onUnmounted(() => {
                 height: 100%;
                 padding: 0px 5px;
                 margin-left: 5px;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;

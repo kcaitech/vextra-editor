@@ -4,15 +4,15 @@ import { computed } from 'vue'
 const props = defineProps<{
     data: SelectItem
 }>();
-const isEnd = computed(() => {     
+const isEnd = computed(() => {
     return props.data.content.startsWith('end');
 })
 </script>
 
 <template>
-<div class="item-container">
-    <svg-icon :class="{ isEnd }" :icon-class="props.data?.value || ''"></svg-icon>
-</div>
+    <div class="item-container">
+        <svg-icon :class="{ isEnd }" :icon-class="props.data?.value || ''"></svg-icon>
+    </div>
 </template>
 
 <style scoped lang="scss">
@@ -21,11 +21,14 @@ const isEnd = computed(() => {
     height: 100%;
     display: flex;
     align-items: center;
-    > svg {
-        width: 100%;
-        height: 100%;
+    justify-content: center;
+
+    >svg {
+        width: 60%;
+        height: 60%;
     }
-    > .isEnd {
+
+    >.isEnd {
         transform: rotate(180deg);
     }
 }
