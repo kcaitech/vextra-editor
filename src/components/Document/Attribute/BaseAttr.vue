@@ -298,15 +298,11 @@ function onChangeRotate(value: string) {
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return;
     const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
-        e.rotate(newRotate);
-    } else if (selected.length > 1) {
-        const actions = get_actions_rotate(props.context.selection.selectedShapes, newRotate);
+    if (selected.length) {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setShapesRotate(actions);
+            editor.setShapesRotate(selected, newRotate);
             check_mixed();
         }
     }

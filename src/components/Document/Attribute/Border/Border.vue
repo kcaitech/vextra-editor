@@ -16,7 +16,7 @@ import { WorkSpace } from '@/context/workspace';
 import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 interface BorderItem {
-    id: number,
+    id: number
     border: Border
 }
 interface Props {
@@ -86,7 +86,7 @@ function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const contextSettings = new ContextSettings(BlendMode.Normal, 1);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(v4(), true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
+    const border = new Border(v4(), true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle);
     if (len.value === 1) {
         editor.value.addBorder(border);
     } else if (len.value > 1) {
@@ -245,12 +245,12 @@ function selection_wather(t: any) {
 }
 
 const selectColor = (i: number) => {
-    if(colorBorder.value) {
+    if (colorBorder.value) {
         colorBorder.value[i].select()
     }
 }
 const selectAlpha = (i: number) => {
-    if(alphaBorder.value) {
+    if (alphaBorder.value) {
         alphaBorder.value[i].select();
     }
 }
@@ -258,7 +258,7 @@ const filterAlpha = (a: number) => {
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
         return alpha.toFixed(0); // 返回整数形式
-    }else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
         return alpha.toFixed(1); // 保留一位小数
     } else {
         return alpha.toFixed(2); // 保留两位小数
@@ -298,8 +298,9 @@ watchEffect(updateData);
                         @change="(c: Color) => getColorFromPicker(c, idx)" />
                     <input ref="colorBorder" :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
                         @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" />
-                    <input ref="alphaBorder" style="text-align: center;" :value="filterAlpha(b.border.color.alpha * 100) + '%'"
-                        @change="e => onAlphaChange(e, idx)" @focus="selectAlpha(idx)" />
+                    <input ref="alphaBorder" style="text-align: center;"
+                        :value="filterAlpha(b.border.color.alpha * 100) + '%'" @change="e => onAlphaChange(e, idx)"
+                        @focus="selectAlpha(idx)" />
                 </div>
                 <div class="extra-action">
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"

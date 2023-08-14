@@ -80,14 +80,6 @@ function updater() {
   const bs = ((s: BorderStyle) => s.length > 0 ? 'dash' : 'solid')(props.border.borderStyle);
   const borderStyleSelected = borderStyleOptionsSource.find(i => i.data.value === bs)?.data;
   borderStyleSelected && (borderStyle.value = borderStyleSelected);
-
-  // border front apex init
-  const borderFrontApex = borderFrontStyleOptionsSource.find(i => i.data.value === props.border.startMarkerType)?.data;
-  borderFrontApex && (borderFrontStyle.value = borderFrontApex);
-
-  // border end apex init
-  const borderEndApex = borderEndStyleOptionsSource.find(i => i.data.value === props.border.endMarkerType)?.data;
-  borderEndApex && (borderEndStyle.value = borderEndApex);
 }
 function borderStyleSelect(selected: SelectItem) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
@@ -294,18 +286,18 @@ onUnmounted(() => {
               :item-height="32" @select="borderStyleSelect" :source="borderStyleOptionsSource"></Select>
           </div>
           <!-- 起点样式 -->
-          <div v-if="showStartStyle">
+          <!-- <div v-if="showStartStyle">
             <label>{{ t('attr.startMarkerType') }}</label>
             <Select :selected="borderFrontStyle" :item-view="BorderApexStyleItem"
               :value-view="BorderApexStyleSelectedItem" :item-height="32" :source="borderFrontStyleOptionsSource"
               @select="borderApexStyleSelect"></Select>
-          </div>
+          </div> -->
           <!-- 终点样式 -->
-          <div v-if="showEndStyle">
+          <!-- <div v-if="showEndStyle">
             <label>{{ t('attr.endMarkerType') }}</label>
             <Select :selected="borderEndStyle" :item-view="BorderApexStyleItem" :value-view="BorderApexStyleSelectedItem"
               :item-height="32" :source="borderEndStyleOptionsSource" @select="borderApexStyleSelect"></Select>
-          </div>
+          </div> -->
         </div>
       </template>
     </Popover>
