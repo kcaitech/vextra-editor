@@ -162,7 +162,7 @@ function onMouseMove(e: MouseEvent) {
     }
 }
 function mouseenter() {
-    if (editing) props.context.cursor.setType('scan-0');
+    if (editing.value) props.context.cursor.setType('scan-0');
 }
 function mouseleave() {
     props.context.cursor.reset();
