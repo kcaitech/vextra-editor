@@ -153,3 +153,8 @@ export function get_rotation(shape: Shape) {
   }
   return rotation;
 }
+export function get_straight_line_length(shape: Shape) {
+  const f = shape.frame, m = shape.matrix2Root();
+  const lt = m.computeCoord2(0, 0), rb = m.computeCoord2(f.width, f.height);
+  return Math.hypot(rb.x - lt.x, rb.y - lt.y);
+}

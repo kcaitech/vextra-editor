@@ -514,12 +514,10 @@ export const permIsEdit = (context: Context) => {
 export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
   const shapeType = shape.type
   if (shapeType === ShapeType.Group) {
-    if (!(shape as GroupShape).isBoolOpShape) return false
+    if (!(shape as GroupShape).isBoolOpShape) return false;
   }
-
-  if (!type.includes(shapeType)) return false
-
-  return true
+  if (!type.includes(shapeType)) return false;
+  return true;
 }
 
 function skipUserSelectShapes(context: Context, shapes: Shape[]) {
