@@ -234,7 +234,7 @@ onUnmounted(() => {
 <template>
     <g :reflush="reflush">
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-            <path :d="p.r.p" fill="red" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+            <path :d="p.r.p" fill="none" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
                 @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
             </path>
             <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'

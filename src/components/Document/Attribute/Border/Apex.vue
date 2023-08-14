@@ -19,6 +19,8 @@ const borderFrontStyleOptionsSource: SelectSource[] = genOptions([
     [MarkerType.FilledArrow, MarkerType.FilledArrow],
     [MarkerType.FilledCircle, MarkerType.FilledCircle],
     [MarkerType.FilledSquare, MarkerType.FilledSquare],
+    [MarkerType.Square, MarkerType.Square],
+    [MarkerType.Round, MarkerType.Round]
 ]);
 const borderEndStyle = ref<SelectItem>({ value: MarkerType.Line, content: `end-${MarkerType.Line}` });
 const borderEndStyleOptionsSource: SelectSource[] = genOptions([
@@ -26,7 +28,9 @@ const borderEndStyleOptionsSource: SelectSource[] = genOptions([
     [MarkerType.OpenArrow, `end-${MarkerType.OpenArrow}`],
     [MarkerType.FilledArrow, `end-${MarkerType.FilledArrow}`],
     [MarkerType.FilledCircle, `end-${MarkerType.FilledCircle}`],
-    [MarkerType.FilledSquare, `end-${MarkerType.FilledSquare}`]
+    [MarkerType.FilledSquare, `end-${MarkerType.FilledSquare}`],
+    [MarkerType.Square, `end-${MarkerType.Square}`],
+    [MarkerType.Round, `end-${MarkerType.Round}`]
 ]);
 function borderApexStyleSelect(selected: SelectItem) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
