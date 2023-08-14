@@ -58,6 +58,9 @@ export const system = {
     'dissolution': 'Dissolution',
     'content_includes': 'Content includes',
     'title_includes': 'Title includes',
+    'license_key':'粤ICP备2023042416号',
+    'phonetips':'Mobile terminal does not support login, please login on the computer side!',
+    'btn_login':'Login',
     'artboart_title_visible': 'Show artboard title'
 }
 
@@ -137,7 +140,9 @@ export const home = {
     'align_v_c': 'Align vertical centers',
     'align_bottom': 'Align bottom',
     'distribute_h': 'Distribute horizontal spacing',
-    'distribute_v': 'Distribute vertical spacing'
+    'distribute_v': 'Distribute vertical spacing',
+    people_are_visiting: 'People are visiting:',
+    permissions: 'Permissions:'
 }
 
 export const search = {
@@ -304,7 +309,7 @@ export const message = {
     cancel: 'Cancel',
     exit_document: 'Exit document',
     back_home: 'Back to home',
-    unuploaded_msg: 'The document is not upload resources，Exit may cause lost，Quit or not?'
+    unuploaded_msg: 'The document has unuploaded resources. If you exit, content will be lost. Do you want to exit?'
 }
 export const bool = {
     union: 'Union',

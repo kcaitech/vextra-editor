@@ -40,6 +40,7 @@ export interface ShapeXY { // 图形自身坐标系的xy
 }
 type TextShapeLike = Shape & { text: Text }
 export type ActionType = 'translate' | 'scale' | 'rotate';
+
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
