@@ -6,8 +6,8 @@ import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { useI18n } from 'vue-i18n';
-import { Color, Border, ContextSettings, BorderStyle, MarkerType } from '@kcdesign/data';
-import { FillType, BlendMode, BorderPosition } from '@kcdesign/data';
+import { Color, Border, BorderStyle, MarkerType } from '@kcdesign/data';
+import { FillType, BorderPosition } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
 import { toHex } from "@/utils/color";
@@ -84,9 +84,10 @@ function updateData() {
 function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
-    const contextSettings = new ContextSettings(BlendMode.Normal, 1);
+
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(v4(), true, FillType.SolidColor, color, contextSettings, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
+    const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
+
     if (len.value === 1) {
         editor.value.addBorder(border);
     } else if (len.value > 1) {
