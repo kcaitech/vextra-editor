@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data';
+import { Shape, ShapeType } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { useI18n } from 'vue-i18n';
-import { Color, Border, ContextSettings, BorderStyle, MarkerType } from '@kcdesign/data';
+import { Color, Border, ContextSettings, BorderStyle } from '@kcdesign/data';
 import { FillType, BlendMode, BorderPosition } from '@kcdesign/data';
 import { Reg_HEX } from "@/utils/RegExp";
 import { message } from "@/utils/message";
@@ -15,6 +15,7 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
 import { v4 } from 'uuid';
+import Apex from './Apex.vue';
 interface BorderItem {
     id: number
     border: Border
@@ -33,15 +34,12 @@ const mixed = ref<boolean>(false);
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const watchedShapes = new Map();
 const len = computed<number>(() => props.shapes.length);
-
+const show_apex = ref<boolean>(false);
 function watchShapes() {
     const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
-    if (selection.selectedShapes.length > 0) {
-        selection.selectedShapes.forEach((v) => {
+    const selection = props.shapes;
+    if (selection.length > 0) {
+        selection.forEach((v) => {
             needWatchShapes.set(v.id, v);
         })
     }
@@ -62,7 +60,7 @@ function watcher(...args: any[]) {
 function updateData() {
     borders.length = 0;
     mixed.value = false;
-    if (len.value === 1) {
+    if (props.shapes.length === 1) {
         const style = props.shapes[0].style;
         for (let i = 0, l = style.borders.length; i < l; i++) {
             const border = style.borders[i];
@@ -72,7 +70,7 @@ function updateData() {
             }
             borders.unshift(b);
         }
-    } else if (len.value > 1) {
+    } else if (props.shapes.length > 1) {
         const _bs = get_borders(props.shapes);
         if (_bs === 'mixed') {
             mixed.value = true;
@@ -109,9 +107,7 @@ function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function first() {
-    if (borders.length === 0 && !mixed.value) {
-        addBorder()
-    }
+    if (borders.length === 0 && !mixed.value) addBorder();
 }
 function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
@@ -237,12 +233,6 @@ function getColorFromPicker(color: Color, idx: number) {
         }
     }
 }
-function selection_wather(t: any) {
-    if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
-        watchShapes();
-        updateData();
-    }
-}
 
 const selectColor = (i: number) => {
     if (colorBorder.value) {
@@ -264,16 +254,25 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
-// hooks
-onMounted(() => {
-    props.context.selection.watch(selection_wather);
+function layout() {
+    show_apex.value = false;
+    if (props.shapes.length === 1) {
+        if (props.shapes[0].type === ShapeType.Line) show_apex.value = true;
+    }
+}
+function update_by_shapes() {
     watchShapes();
     updateData();
+    layout();
+}
+// hooks
+const stop = watch(() => props.shapes, update_by_shapes);
+onMounted(() => {
+    update_by_shapes();
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_wather);
+    stop();
 })
-watchEffect(updateData);
 </script>
 
 <template>
@@ -312,6 +311,7 @@ watchEffect(updateData);
                 </div>
             </div>
         </div>
+        <Apex v-if="show_apex" :context="props.context" :shapes="props.shapes"></Apex>
     </div>
 </template>
 
