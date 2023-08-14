@@ -109,7 +109,7 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     return { asyncCreator, new_shape };
   }
 }
-// 普通图形从init到inset一气呵成
+// 图形从init到insert
 function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
   const tool = context.tool;
   const action = tool.action;
