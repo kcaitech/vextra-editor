@@ -53,11 +53,7 @@ function closeLayerSubMenu() {
 
 </script>
 <template>
-    <div class="line" v-if="props.items.includes('insert_column') && props.items.includes('only_text')"></div>
-    <div class="item" v-if="props.items.includes('insert_column')" @click="openInsertCell('insert')">
-      <span>插入行列</span>
-      <span></span>
-    </div>
+    <div class="line" v-if="props.items.includes('delete_column') && props.items.includes('only_text')"></div>
     <div v-if="props.items.includes('delete_column')" class="item layer-select"
       @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
       <span>删除行列</span>
@@ -77,6 +73,10 @@ function closeLayerSubMenu() {
           <span></span>
         </div>
       </ContextMenu>
+    </div>
+    <div class="item" v-if="props.items.includes('insert_column')" @click="openInsertCell('insert')">
+      <span>插入行列</span>
+      <span></span>
     </div>
     <div class="item" v-if="props.items.includes('merge_cell')">
       <span>合并单元格</span>

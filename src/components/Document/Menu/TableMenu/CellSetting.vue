@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import { defineComponent, ref, onMounted, onUnmounted } from 'vue';
+import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue';
 import { Context } from '@/context';
 import { Close } from '@element-plus/icons-vue'
+import { TableShape } from '@kcdesign/data';
 interface Props {
     context: Context,
     addOrDivision: string
@@ -11,12 +12,11 @@ const emit = defineEmits<{
     (e: 'close'): void;
 }>();
 const dialogVisible = ref(true);
-const rowNum = ref(2);
+const rowNum = ref(1);
 const radioRanks = ref('top');
-const colNum = ref(2);
-const rowBotom = ref(2);
-const colRight = ref(2);
-
+const colNum = ref(1);
+const rowBotom = ref(1);
+const colRight = ref(1);
 const handleChangeRow = (value: number) => {
   console.log(value);
 }
@@ -33,6 +33,18 @@ const escClose = (e: KeyboardEvent) => {
     e.stopPropagation();
     emit('close');
 }
+if(props.addOrDivision === 'split') {
+    colNum.value = colNum.value * 2
+}
+const splitCell = () => {
+    const shape = props.context.selection.selectedShapes[0]
+    const table = props.context.selection.getTableSelection(shape as TableShape);
+    if(table.tableColEnd !== -1 || table.tableRowEnd !== -1) {
+        const cell = (Array.from(table.getSelectedCells()))[0]
+        const editor = props.context.editor4Table(shape as TableShape)
+        editor.horSplitCell(cell)
+    }
+}
 onMounted(() => {
     document.addEventListener('keydown', escClose);
 })
@@ -44,7 +56,7 @@ onUnmounted(() => {
 <template>
     <div class="container" @mousedown.stop>
         <el-dialog v-model="dialogVisible" title="拆分单元格" width="180px" draggable align-center :modal="false" v-if="addOrDivision === 'split'"
-        :close-on-click-modal="false" :close-on-press-escape="false" :show-close="false">
+        :close-on-click-modal="false" :close-on-press-escape="false" :show-close="false" :lock-scroll="false">
             <div class="close" @click="emit('close')"><el-icon><Close /></el-icon></div>
             <div class="body">
                 <div class="row">
@@ -73,11 +85,11 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="save">
-                <div>确定</div>
+                <div @click="splitCell">确定</div>
             </div>
         </el-dialog>
         <el-dialog v-model="dialogVisible" title="插入行列" width="200px" draggable align-center :modal="false" v-if="addOrDivision === 'insert'"
-        :close-on-click-modal="false" :close-on-press-escape="false" :show-close="false">
+        :close-on-click-modal="false" :close-on-press-escape="false" :show-close="false" :lock-scroll="false">
             <div class="close" @click="emit('close')"><el-icon><Close /></el-icon></div>
             <div class="body">
                 <div class="addcol">
