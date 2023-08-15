@@ -126,7 +126,16 @@ export function useController(context: Context) {
             if (timer) handleDblClick();
             initTimer();
             preTodo(e);
-        } else if (isMouseOnContent(e) && !context.selection.hoveredShape) context.selection.resetSelectShapes();
+        } else if (isMouseOnContent(e)) {
+            const selection = context.selection;
+            const selected = selection.selectedShapes;
+            const h = selection.hoveredShape;
+            if (!h) {
+                selection.resetSelectShapes();
+            } else {
+                e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
+            }
+        }
     }
     function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) return;
