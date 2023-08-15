@@ -7,6 +7,7 @@ import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipaboard";
+import { landFinderOnPage, scrollToContentView } from './artboardFn'
 export interface Media {
   name: string
   frame: { width: number, height: number }
@@ -130,7 +131,44 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
   workspace.creating(false);
   tool.setAction(Action.AutoV);
   context.cursor.setType('auto-0');
-}
+} 
+//插入表格
+function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
+  const tool = context.tool;
+  const action = tool.action;
+  const table = context.workspace.tableSize;
+  const matrix = context.workspace.matrix;
+  const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
+  const { x, y } = landFinderOnPage(matrix, context, frame)
+  frame.x = x, frame.y = y;
+  const PageXY = {x: x, y: y};
+  const selection = context.selection;
+  const workspace = context.workspace;
+  const type = _t || ResultByAction(action);
+  const page = selection.selectedPage;
+  const parent = land || selection.getClosetArtboard(PageXY);
+  let asyncCreator: AsyncCreator | undefined;
+  let new_shape: Shape | undefined;
+  if (page && parent && type) {
+    const editor = context.editor.controller();
+    const name = getName(type, parent.childs, t);
+    asyncCreator = editor.asyncCreator(PageXY);
+    new_shape = asyncCreator.init_table(page, (parent as GroupShape), type, name, frame, table.row, table.col);
+    if (new_shape) {
+      const timer = setTimeout(() => {
+        new_shape && scrollToContentView(new_shape, context);
+          clearTimeout(timer);
+      }, 100)
+    }
+  }
+  if (asyncCreator && new_shape) {
+    asyncCreator = asyncCreator.close();
+    selection.selectShape(page!.getShape(new_shape.id));
+  }
+  workspace.creating(false);
+  tool.setAction(Action.AutoV);
+  context.cursor.setType('auto-0');
+} 
 // 插入文本框
 function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
   const selection = context.selection;
@@ -560,7 +598,7 @@ function skipUserSelectShapes(context: Context, shapes: Shape[]) {
 
 export {
   Root, updateRoot, _updateRoot,
-  getName, get_image_name, get_selected_types,
+  getName, get_image_name, get_selected_types,init_insert_table,
   isInner, is_drag,
   init_shape, init_insert_shape, init_insert_textshape,
   insert_imgs, drop, adapt_page, page_scale, right_select,

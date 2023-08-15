@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -245,6 +245,7 @@ function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     else if (type === WorkSpace.PASTE_RIGHT) paster(props.context, t, mousedownOnPageXY);
     else if (type === WorkSpace.COPY) props.context.workspace.clipboard.write_html();
     else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) contextMenuMount((param as MouseEvent));
+    else if (type === WorkSpace.INSERT_TABLE) init_insert_table(props.context, t);
 }
 function comment_watcher(type?: number) {
     if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
@@ -268,6 +269,7 @@ function insertFrame() {
     const name = getName(ShapeType.Artboard, brothers, t);
     insertFrameTemplate(props.context, name);
 }
+
 function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;

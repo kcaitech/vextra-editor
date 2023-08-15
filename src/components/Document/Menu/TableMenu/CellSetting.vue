@@ -39,7 +39,7 @@ if(props.addOrDivision === 'split') {
 const splitCell = () => {
     const shape = props.context.selection.selectedShapes[0]
     const table = props.context.selection.getTableSelection(shape as TableShape);
-    if(table.tableColEnd !== -1 || table.tableRowEnd !== -1) {
+    if(table.tableColEnd === table.tableRowEnd) {
         const cell = (Array.from(table.getSelectedCells()))[0]
         const editor = props.context.editor4Table(shape as TableShape)
         editor.horSplitCell(cell)
@@ -92,7 +92,7 @@ onUnmounted(() => {
         :close-on-click-modal="false" :close-on-press-escape="false" :show-close="false" :lock-scroll="false">
             <div class="close" @click="emit('close')"><el-icon><Close /></el-icon></div>
             <div class="body">
-                <div class="addcol">
+                <div class="addcol" :style="{opacity: radioRanks === 'top' ? 1 : .5}">
                     <el-radio-group v-model="radioRanks">
                         <el-radio label="top"></el-radio>
                     </el-radio-group>
@@ -107,7 +107,7 @@ onUnmounted(() => {
                         @change="handleChangeRow"
                     />
                 </div>
-                <div class="addcol">
+                <div class="addcol" :style="{opacity: radioRanks === 'bottom' ? 1 : .5}">
                     <el-radio-group v-model="radioRanks">
                         <el-radio label="bottom"></el-radio>
                     </el-radio-group>
@@ -122,7 +122,7 @@ onUnmounted(() => {
                         @change="handleChangeBottom"
                     />
                 </div>
-                <div class="addcol">
+                <div class="addcol" :style="{opacity: radioRanks === 'left' ? 1 : .5}">
                     <el-radio-group v-model="radioRanks">
                         <el-radio label="left"></el-radio>
                     </el-radio-group>
@@ -137,7 +137,7 @@ onUnmounted(() => {
                         @change="handleChangeCol"
                     />
                 </div>
-                <div class="addcol">
+                <div class="addcol" :style="{opacity: radioRanks === 'right' ? 1 : .5}">
                     <el-radio-group v-model="radioRanks">
                         <el-radio label="right"></el-radio>
                     </el-radio-group>

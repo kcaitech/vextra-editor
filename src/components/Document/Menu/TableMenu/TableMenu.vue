@@ -24,8 +24,6 @@ const emit = defineEmits<{
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 const splitCellOpen = ref(false);
-const modalTop = ref(100);
-const modalLeft = ref(100);
 function showLayerSubMenu(e: MouseEvent) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
@@ -43,6 +41,18 @@ const openInsertCell = (value: string) => {
   props.context.menu.setSplitCell(value);
   emit('close');
 };
+
+const mergeCell = () => {
+  const shape = props.context.selection.selectedShapes[0]
+  const table = props.context.selection.getTableSelection(shape as TableShape);
+  if(table.tableColEnd === table.tableRowEnd) {
+      const cell = (Array.from(table.getSelectedCells()))[0]
+      const editor = props.context.editor4Table(shape as TableShape)
+      console.log(cell);
+      
+      editor.mergeCells(0,2,0,2)
+  }
+}
 
 // /**
 //  * 关闭图层菜单 
@@ -78,8 +88,9 @@ function closeLayerSubMenu() {
       <span>插入行列</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('merge_cell')">
-      <span>合并单元格</span>
+    <!-- <div class="item" v-if="props.items.includes('merge_cell')"> -->
+    <div class="item" v-if="props.items.includes('insert_column')">
+      <span @click="mergeCell">合并单元格</span>
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('split_cell')" @click="openSplitCell('split')">

@@ -50,7 +50,7 @@ declare module '@vue/runtime-core' {
     ContentView: typeof import('./src/components/Document/ContentView.vue')['default']
     ContextMenu: typeof import('./src/components/common/ContextMenu.vue')['default']
     CreateImage: typeof import('./src/components/Document/Toolbar/Buttons/CreateImage.vue')['default']
-    CreateTable: typeof import('./src/components/Document/Toolbar/Buttons/CreateTable.vue')['default']
+    CreateTable: typeof import('./src/components/Document/Toolbar/Buttons/Table/CreateTable.vue')['default']
     CreateText: typeof import('./src/components/Document/Toolbar/Buttons/CreateText.vue')['default']
     CtrlBar: typeof import('./src/components/Document/Selection/Controller/Bars/CtrlBar.vue')['default']
     CtrlLine: typeof import('./src/components/Document/Selection/Controller/CtrlLine.vue')['default']

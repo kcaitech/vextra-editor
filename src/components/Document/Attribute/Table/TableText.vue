@@ -235,7 +235,7 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 // 获取当前文字格式
 const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape);
-    if(table.tableColEnd !== -1 || table.tableRowEnd !== -1) {
+    if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
         // 拿到某个单元格
         shape.value = (Array.from(table.getSelectedCells()))[0]
         if(!shape.value || !shape.value.text) return;

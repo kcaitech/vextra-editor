@@ -2,13 +2,21 @@
 import { computed, ref, watch } from 'vue';
 import { message } from "@/utils/message";
 import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 const { t } = useI18n();
 
+interface Props {
+    context: Context
+}
+const props = defineProps<Props>();
+const emit = defineEmits<{
+    (e: 'close'): void;
+}>()
 const grid = ref(Array.from({ length: 10 }, () => Array(10).fill(false)));
 const highlightedRow = ref(-1);
 const highlightedCol = ref(-1);
-const inputRow = ref<number>()
-const inputCol = ref<number>()
+const inputRow = ref<number>();
+const inputCol = ref<number>();
 
 function highlightCells(row: number, col: number) {
     highlightedRow.value = row;
@@ -30,7 +38,8 @@ const createTable = (row?: number, col?: number) => {
     const cols = Number(c);
     if(isNaN(rows) || isNaN(cols)) return message('danger', t('system.illegal_input'));
     if(rows && rows > 0 && rows <= 50 && cols && cols > 0 && cols <= 50) {
-        console.log(rows,'行', cols,'列');
+        props.context.workspace.setTable({row: rows, col: cols});
+        emit('close');
     }else return message('danger', t('system.illegal_input'));
 }
 

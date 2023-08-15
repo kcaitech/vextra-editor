@@ -27,8 +27,8 @@ const props = defineProps<{
 }>();
 useController(props.context);
 const matrix = new Matrix();
-const update = throttle(_update, 5);
-function _update() {
+// const update = throttle(_update, 5);
+function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix); // table -> 屏幕
@@ -67,9 +67,7 @@ function _update() {
     }
 }
 
-watch(() => props.matrix, () => {
-    update();
-})
+watch(() => props.matrix, update, { deep: true })
 
 watch(() => props.shape, (value, old) => {
 
