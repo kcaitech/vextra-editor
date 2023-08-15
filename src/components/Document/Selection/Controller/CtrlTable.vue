@@ -22,11 +22,7 @@ const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
     rotate: number,
-<<<<<<< HEAD
-    matrix: Matrix,
-=======
     matrix: Matrix, // root->屏幕 变换矩阵
->>>>>>> 589e5395f973513874df0fca098230d3524379af
     shape: TableShape
 }>();
 useController(props.context);
