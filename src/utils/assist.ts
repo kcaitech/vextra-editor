@@ -1,7 +1,7 @@
 import { Context } from "@/context";
-import { PT1, PT2, PT4P1, PT4P2, PageXY2, PointGroup } from "@/context/assist";
+import { PT1, PT2, PT4P1, PT4P2, PageXY2, PointGroup1, PointGroup2 } from "@/context/assist";
 import { PageXY } from "@/context/selection";
-import { Artboard, GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { debounce } from "lodash";
 import { XYsBounding } from "./common";
 
@@ -88,16 +88,24 @@ get_pos2[Align.LB_Y] = function (frame: Point[]) {
 export function distance2apex2(frame: Point[], align: Align): number {
     return get_pos2[align](frame);
 }
-export function update_pg(host: Shape, multi?: boolean): PointGroup {
+/**
+ * @description 收集时使用
+ */
+export function update_pg_1(host: Shape): PointGroup1 {
     const m = host.matrix2Root(), f = host.frame;
     const lt = m.computeCoord2(0, 0);
-    const rt = m.computeCoord2(f.width, 0);
     const rb = m.computeCoord2(f.width, f.height);
-    const lb = m.computeCoord2(0, f.height);
     const pivot = m.computeCoord2(f.width / 2, f.height / 2);
+    if (host.type === ShapeType.Line) {
+        const apexX = [lt.x, rb.x, pivot.x];
+        const apexY = [lt.y, rb.y, pivot.y];
+        return { lt, rb, pivot, apexX, apexY };
+    }
+    const rt = m.computeCoord2(f.width, 0);
+    const lb = m.computeCoord2(0, f.height);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup = { lt, rt, rb, lb, pivot, apexX, apexY };
+    const pg: PointGroup1 = { lt, rt, rb, lb, pivot, apexX, apexY };
     if (host.type === ShapeType.Artboard) {
         const th = m.computeCoord2(f.width / 2, 0);
         const rh = m.computeCoord2(f.width, f.height / 2);
@@ -107,6 +115,21 @@ export function update_pg(host: Shape, multi?: boolean): PointGroup {
         apexY.push(th.y, rh.y, bh.y, lh.y);
         pg.th = th, pg.rh = rh, pg.bh = bh, pg.lh = lh;
     }
+    return pg;
+}
+/**
+ * @description 比对时使用
+ */
+export function update_pg_2(host: Shape, multi?: boolean): PointGroup2 {
+    const m = host.matrix2Root(), f = host.frame;
+    const lt = m.computeCoord2(0, 0);
+    const rb = m.computeCoord2(f.width, f.height);
+    const pivot = m.computeCoord2(f.width / 2, f.height / 2);
+    const rt = m.computeCoord2(f.width, 0);
+    const lb = m.computeCoord2(0, f.height);
+    const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
+    const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
     if (multi) {
         pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
     }
@@ -124,11 +147,11 @@ export function isShapeOut(context: Context, shape: Shape) {
         Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
         Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
 }
-export function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup>, x_axis: Map<number, PageXY2[]>, y_axis: Map<number, PageXY2[]>) {
+export function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup1>, x_axis: Map<number, PageXY2[]>, y_axis: Map<number, PageXY2[]>) {
     let result: Shape[] = [];
     if (scope.type === ShapeType.Artboard) {
         result.push(scope);
-        const pg = update_pg(scope);
+        const pg = update_pg_1(scope);
         all_pg.set(scope.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
@@ -144,7 +167,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         const c = cs[i];
         if (isShapeOut(context, c)) continue;
         result.push(c);
-        const pg = update_pg(c);
+        const pg = update_pg_1(c);
         all_pg.set(c.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
@@ -169,7 +192,8 @@ export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.collect();
     context.assist.setStickness(Math.ceil(5 / new_matrix.m00));
 }
-export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[], stickness: number) {
+
+export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup2, apexX: number[], stickness: number) {
     for (let i = 0, len = apexX.length; i < len; i++) {
         const x = apexX[i]
         const delta1 = Math.abs(x - s_pg.lt.x);
@@ -194,7 +218,7 @@ export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup, apexX: number[],
         }
     }
 }
-export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[], stickness: number) {
+export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup2, apexY: number[], stickness: number) {
     for (let i = 0, len = apexY.length; i < len; i++) {
         const y = apexY[i];
         const delta1 = Math.abs(y - s_pg.lt.y);
@@ -219,12 +243,6 @@ export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup, apexY: number[],
         }
     }
 }
-export function get_tree(shape: Shape, init: Map<string, Shape>) {
-    init.set(shape.id, shape);
-    const cs = shape.childs
-    if (cs && cs.length) for (let i = 0, len = cs.length; i < len; i++) get_tree(cs[i], init);
-}
-export const collect_once = debounce(_collect, 100);
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
     for (let i = 0, len = apexX.length; i < len; i++) {
         const x = apexX[i]
@@ -261,18 +279,25 @@ export function modify_pt_y4create(pre_target2: PT4P2, p: PageXY, apexY: number[
         }
     }
 }
+
+export function get_tree(shape: Shape, init: Map<string, Shape>) {
+    init.set(shape.id, shape);
+    const cs = shape.childs
+    if (cs && cs.length) for (let i = 0, len = cs.length; i < len; i++) get_tree(cs[i], init);
+}
+export const collect_once = debounce(_collect, 100);
 interface Point {
     x: number
     y: number
 }
-export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup { // 无旋转
+export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { // 无旋转
     const lt = frame[0], rt = frame[1], rb = frame[2], lb = frame[3];
     const pivot = { x: lt.x + (rb.x - lt.x) / 2, y: lt.y + (rb.y - lt.y) / 2 };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
     if (multi) {
         return {
-            lt, rt, rb, lb, pivot, apexX, apexY,
+            lt, rt, rb, lb, pivot,
             top: Math.min(...apexY),
             right: Math.max(...apexX),
             bottom: Math.max(...apexY),
@@ -281,7 +306,7 @@ export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup { /
             cx: pivot.x
         }
     } else {
-        return { lt, rt, rb, lb, pivot, apexX, apexY };
+        return { lt, rt, rb, lb, pivot };
     }
 }
 export function get_frame(selection: Shape[]): Point[] {
@@ -296,7 +321,7 @@ export function get_frame(selection: Shape[]): Point[] {
     const b = XYsBounding(points);
     return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
-export function get_p_form_pg_by_x(pg: PointGroup, x: number): PageXY[] {
+export function get_p_form_pg_by_x(pg: PointGroup2, x: number): PageXY[] {
     const result: PageXY[] = [];
     if (Math.abs(pg.lt.x - x) < 0.001) result.push(pg.lt);
     if (Math.abs(pg.rt.x - x) < 0.001) result.push(pg.rt);
@@ -305,7 +330,7 @@ export function get_p_form_pg_by_x(pg: PointGroup, x: number): PageXY[] {
     if (Math.abs(pg.pivot.x - x) < 0.001) result.push(pg.pivot);
     return result;
 }
-export function get_p_form_pg_by_y(pg: PointGroup, y: number): PageXY[] {
+export function get_p_form_pg_by_y(pg: PointGroup2, y: number): PageXY[] {
     const result: PageXY[] = [];
     if (Math.abs(pg.lt.y - y) < 0.001) result.push(pg.lt);
     if (Math.abs(pg.rt.y - y) < 0.001) result.push(pg.rt);

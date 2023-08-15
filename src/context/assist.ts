@@ -1,19 +1,26 @@
 import { GroupShape, Shape, Watchable } from "@kcdesign/data";
 import { PageXY, Selection } from "./selection";
 import { Context } from ".";
-import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4create, modify_pt_x4p, modify_pt_y, modify_pt_y4create, modify_pt_y4p, update_pg } from "@/utils/assist";
-export interface PointGroup {
+import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4create, modify_pt_x4p, modify_pt_y, modify_pt_y4create, modify_pt_y4p, update_pg_1, update_pg_2 } from "@/utils/assist";
+export interface PointGroup1 {
+    lt: PageXY
+    rb: PageXY
+    pivot: PageXY
+    apexX: number[]
+    apexY: number[]
+    lb?: PageXY
+    rt?: PageXY
+    th?: PageXY
+    rh?: PageXY
+    bh?: PageXY
+    lh?: PageXY
+}
+export interface PointGroup2 {
     lt: PageXY
     rt: PageXY
     rb: PageXY
     lb: PageXY
     pivot: PageXY
-    apexX: number[]
-    apexY: number[]
-    th?: PageXY
-    rh?: PageXY
-    bh?: PageXY
-    lh?: PageXY
     top?: number
     cx?: number
     bottom?: number
@@ -83,11 +90,11 @@ export class Asssit extends Watchable(Object) {
     private m_collect_target: GroupShape[] = [];
     private m_context: Context;
     private m_shape_inner: Shape[] = [];
-    private m_pg_inner: Map<string, PointGroup> = new Map();
+    private m_pg_inner: Map<string, PointGroup1> = new Map();
     private m_x_axis: Map<number, PageXY2[]> = new Map();
     private m_y_axis: Map<number, PageXY2[]> = new Map();
     private m_except: Map<string, Shape> = new Map();
-    private m_current_pg: PointGroup | undefined;
+    private m_current_pg: PointGroup2 | undefined;
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
     private m_stickness: number = 5;
@@ -98,7 +105,7 @@ export class Asssit extends Watchable(Object) {
     get CPG() {
         return this.m_current_pg;
     }
-    setCPG(pg: PointGroup) {
+    setCPG(pg: PointGroup2) {
         this.m_current_pg = pg;
     }
     get except() {
@@ -164,7 +171,7 @@ export class Asssit extends Watchable(Object) {
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        this.m_current_pg = update_pg(s);
+        this.m_current_pg = update_pg_2(s);
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
         const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
         const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
@@ -189,7 +196,7 @@ export class Asssit extends Watchable(Object) {
         return target;
     }
     trans_match_multi(shapes: Shape[]) {
-        const st = Date.now();
+        // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
@@ -225,7 +232,7 @@ export class Asssit extends Watchable(Object) {
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        this.m_current_pg = update_pg(s);
+        this.m_current_pg = update_pg_2(s);
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
         const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
         const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
