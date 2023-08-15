@@ -14,10 +14,7 @@ const stopWatch = watch(() => props.data, (value, old) => {
     value.watch(watcher);
 })
 onMounted(() => {
-    props.data.loadImage().then((val) => {
-        console.log('val', val);
-        url.value = val;
-    })
+    props.data.loadImage().then((val) => { url.value = val });
     props.data.watch(watcher);
 })
 onUnmounted(() => {
