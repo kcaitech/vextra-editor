@@ -251,7 +251,7 @@ function comment_watcher(type?: number) {
 }
 function menu_watcher(type?: number) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
-    if(type === Menu.CHANGE_USER_CURSOR) {
+    if (type === Menu.CHANGE_USER_CURSOR) {
         avatarVisi.value = props.context.menu.isUserCursorVisible;
     }
 }
@@ -335,7 +335,6 @@ function contextMenuMount(e: MouseEvent) {
             const el = contextMenuEl.value.menu;
             surplusY.value = document.documentElement.clientHeight - site.y;
             const root_height = props.context.workspace.root.height;
-
             if (el) {
                 let height = el.offsetHeight;
                 if (height > root_height * 0.98) {
@@ -361,10 +360,7 @@ function select(e: MouseEvent) {
     if (props.context.workspace.select) {
         createSelector(e);
     } else {
-        const isDrag = is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis);
-        if (isDrag) {
-            props.context.workspace.selecting(true);
-        }
+        if (is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis)) props.context.workspace.selecting(true);
     }
 }
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
@@ -772,7 +768,7 @@ onUnmounted(() => {
         :style="{ 'background-color': background_color }">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
-        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
+        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">

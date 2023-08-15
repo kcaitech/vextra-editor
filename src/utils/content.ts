@@ -546,7 +546,6 @@ function skipUserSelectShapes(context: Context, shapes: Shape[]) {
     context.workspace.matrixTransformation();
   }
 }
-
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,

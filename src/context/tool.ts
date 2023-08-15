@@ -119,7 +119,6 @@ export class Tool extends Watchable(Object) {
         this.setAction(Action.AutoV);
     }
     keydown_l(shiftKey: boolean) {
-        if (shiftKey) return; // 暂时停止使用箭头图形
         this.setAction(shiftKey ? Action.AddArrow : Action.AddLine);
     }
     keydown_k(ctrl: boolean, shift: boolean, meta: boolean) {
