@@ -232,7 +232,7 @@ onUnmounted(() => {
           <!-- 边框位置 -->
           <div v-if="show_position">
             <label>{{ t('attr.position') }}</label>
-            <Select :selected="position" :item-view="BorderPositonItem" :item-height="32" :source="positonOptionsSource"
+            <Select :selected="position" :item-view="BorderPositonItem" :item-height="30" :source="positonOptionsSource"
               @select="positionSelect"></Select>
           </div>
           <!-- 边框厚度 -->
@@ -252,7 +252,7 @@ onUnmounted(() => {
           <div>
             <label>{{ t('attr.borderStyle') }}</label>
             <Select :selected="borderStyle" :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-              :item-height="32" @select="borderStyleSelect" :source="borderStyleOptionsSource"></Select>
+              :item-height="30" @select="borderStyleSelect" :source="borderStyleOptionsSource"></Select>
           </div>
         </div>
       </template>
@@ -309,7 +309,7 @@ onUnmounted(() => {
           padding: 0 14px;
           background-color: var(--input-background);
           width: calc(100% - 72px);
-          height: 32px;
+          height:  var(--default-input-height);
           border-radius: var(--default-radius);
           display: flex;
           align-items: center;

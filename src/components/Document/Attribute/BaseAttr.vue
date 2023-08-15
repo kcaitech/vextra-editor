@@ -79,7 +79,6 @@ function calc_attri() {
         y.value = lt.y;
         rotate.value = get_rotation(shape);
         isLock.value = Boolean(shape.constrainerProportions);
-
     } else if (len > 1) {
         const shape = props.context.selection.selectedShapes[0];
         const lt = shape.matrix2Root().computeCoord2(0, 0);
@@ -303,7 +302,7 @@ function onChangeRotate(value: string) {
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.setShapesRotate(selected, newRotate);
-            check_mixed();
+            if (selected.length > 1) check_mixed();
         }
     }
 }

@@ -20,7 +20,7 @@ const isEnd = computed<boolean>(() => {
 </template>
 <style scoped lang="scss">
 .border-front-style-item-container {
-    height: 32px;
+    height: var(--default-input-height);
     width: 64%;
     padding: 0 12px;
     color: var(--theme-color);

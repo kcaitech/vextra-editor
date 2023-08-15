@@ -33,7 +33,7 @@ function toggle() {
     optionsContainerVisible.value = !optionsContainerVisible.value;
     nextTick(() => {
         if (optionsContainer.value && selectContainer.value) {
-            const selectedToTop = curValueIndex.value * (props.itemHeight || 32);
+            const selectedToTop = curValueIndex.value * (props.itemHeight || 30);
             optionsContainer.value.style.top = `${-selectedToTop}px`;
             const selectContainerRect = selectContainer.value.getBoundingClientRect();
             const optionsContainerRect = optionsContainer.value.getBoundingClientRect();
@@ -131,7 +131,7 @@ watch(() => props.selected, () => {
         display: flex;
         align-items: center;
         width: 100%;
-        height: 32px;
+        height: var(--default-input-height);
         background-color: var(--input-background);
         border-radius: var(--default-radius);
 
@@ -139,7 +139,7 @@ watch(() => props.selected, () => {
             flex: 1 1 auto;
             height: 100%;
             text-align: left;
-            line-height: 32px;
+            line-height: var(--default-input-height);
             box-sizing: border-box;
             padding: 0 var(--default-padding);
         }
@@ -175,15 +175,15 @@ watch(() => props.selected, () => {
         z-index: 1;
 
         .no-data {
-            height: 32px;
+            height: var(--default-input-height);
             color: var(--theme-color);
-            line-height: 32px;
+            line-height: var(--default-input-height);
         }
 
         .item-default {
-            height: 32px;
+            height: var(--default-input-height);
             color: var(--theme-color);
-            line-height: 32px;
+            line-height: var(--default-input-height);
             padding: 0 var(--default-padding);
             text-align: left;
         }

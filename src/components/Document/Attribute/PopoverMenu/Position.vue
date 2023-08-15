@@ -189,11 +189,11 @@ onBeforeUpdate(() => {
           <div class="options">
             <div>
               <label>{{ t('attr.horizontal') }}</label>
-              <Select :item-height="32" :width="136" :source="widthOptions"></Select>
+              <Select :item-height="30" :width="136" :source="widthOptions"></Select>
             </div>
             <div>
               <label>{{ t('attr.vertical') }}</label>
-              <Select :item-height="32" :width="136" :source="heightOptions"></Select>
+              <Select :item-height="30" :width="136" :source="heightOptions"></Select>
             </div>
           </div>
           <div class="control">

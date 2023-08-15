@@ -21,7 +21,7 @@ onMounted(() => {})
 </template>
 <style scoped lang="scss">
 .border-style-item-container {
-    height: 32px;
+    height:  var(--default-input-height);
     width: 100%;
     color: var(--theme-color);
     padding: 0 var(--default-padding);
@@ -31,7 +31,7 @@ onMounted(() => {})
     align-items: center;
     > span {
         text-align: left;
-        line-height: 32px;
+        line-height: var(--default-input-height);
         flex: 0 0 40px;
     }
     > svg {

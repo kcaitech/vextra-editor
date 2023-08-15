@@ -11,7 +11,7 @@ function select() {
 }
 
 // hooks
-onMounted(() => {})
+onMounted(() => { })
 </script>
 <template>
     <div class="border-position-item-container" @click="select">
@@ -20,11 +20,11 @@ onMounted(() => {})
 </template>
 <style scoped lang="scss">
 .border-position-item-container {
-    height: 32px;
+    height: var(--default-input-height);
     width: 100%;
     color: var(--theme-color);
     text-align: left;
-    line-height: 32px;
+    line-height: var(--default-input-height);
     padding: 0 var(--default-padding);
     margin-left: var(--default-margin-half);
     box-sizing: border-box;
