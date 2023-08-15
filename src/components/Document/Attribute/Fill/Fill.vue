@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, ShapeType } from "@kcdesign/data";
+import { Color, Fill, Shape, FillType } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';

@@ -25,8 +25,8 @@ const WITH_FILL = [
     ShapeType.Group,
     ShapeType.Path2,
     ShapeType.Table,
-    ShapeType.TableCell
-];
+    ShapeType.TableCell,
+    ShapeType.Text];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
     ShapeType.Image,
@@ -39,8 +39,8 @@ const WITH_BORDER = [
     ShapeType.Group,
     ShapeType.Path2,
     ShapeType.Table,
-    ShapeType.TableCell
-];
+    ShapeType.TableCell,
+    ShapeType.Text];
 const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
 function _change(t: number) {
@@ -87,10 +87,10 @@ onUnmounted(() => {
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len">
             <ShapeBaseAttr :context="props.context"></ShapeBaseAttr>
-            <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
-            <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context"></TableText>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
+            <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
+            <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context"></TableText>
             <TableStyle v-if="WITH_TABLE.includes(shapeType)" :shape="shapes[0]" :context="props.context"></TableStyle>
         </div>
     </section>
