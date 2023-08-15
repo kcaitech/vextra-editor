@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, shallowRef, ref, computed, watchEffect } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape } from "@kcdesign/data"
+import { ShapeType, Shape, TextShape, TableShape, TableCell } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
@@ -11,6 +11,7 @@ import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
 import TableStyle from './Table/TableStyle.vue'
+import TableText from './Table/TableText.vue'
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -26,7 +27,7 @@ const WITH_FILL = [
     ShapeType.Table,
     ShapeType.TableCell
 ];
-const WITH_TEXT = [ShapeType.Text, ShapeType.Table];
+const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
     ShapeType.Image,
     ShapeType.Rectangle,
@@ -60,7 +61,7 @@ const change = throttle(_change, 200);
 function selectionChange(t: number) {
     change(t);
 }
-watchEffect(() => {
+watchEffect(() => {    
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = [props.context.selection.selectedShapes[0]];
         shapeType.value = shapes.value[0].type;
@@ -87,9 +88,10 @@ onUnmounted(() => {
         <div v-if="len">
             <ShapeBaseAttr :context="props.context"></ShapeBaseAttr>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
+            <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context"></TableText>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-            <TableStyle v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context"></TableStyle>
+            <TableStyle v-if="WITH_TABLE.includes(shapeType)" :shape="shapes[0]" :context="props.context"></TableStyle>
         </div>
     </section>
 </template>

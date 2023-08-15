@@ -476,7 +476,7 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else if (area === 'table') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell', 'merge_cell'];
+      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -487,7 +487,7 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
       contextMenuItems = ['all', 'copy'];
     }
   } else {
-    if (permIsEdit(context)) {
+    if (permIsEdit(context)) {      
       // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
       contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     } else {

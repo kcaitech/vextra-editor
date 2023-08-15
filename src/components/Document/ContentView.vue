@@ -80,6 +80,7 @@ const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>('rgba(239,239,239,1)');
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
+const cellStatus = ref()
 
 let stickedX: boolean = false;
 let stickedY: boolean = false;
@@ -253,12 +254,13 @@ function comment_watcher(type?: number) {
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
-function menu_watcher(type?: number) {
+function menu_watcher(type?: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
     if(type === Menu.CHANGE_USER_CURSOR) {
         avatarVisi.value = props.context.menu.isUserCursorVisible;
     }else if (type === Menu.OPEN_SPLIT_CELL) {
-        cellSetting.value = true
+        cellStatus.value = mount;
+        cellSetting.value = true;
     }
 }
 function insertFrame() {
@@ -791,7 +793,7 @@ onUnmounted(() => {
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
-        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="'split'"></CellSetting>
+        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus"></CellSetting>
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>

@@ -563,7 +563,7 @@ onUnmounted(() => {
       <div class="choose" v-show="isTitle"></div>
       <span>{{ t('system.artboart_title_visible') }}</span>
     </div>
-    <TableMenu :context="context" :layers="layers" :items="items" :site="site"></TableMenu>
+    <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
   </div>
 </template>
 <style lang='scss' scoped>

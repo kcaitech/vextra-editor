@@ -50,10 +50,10 @@ export class Menu extends Watchable(Object) {
     this.m_user_cursor_visible = visible;
     this.notify(Menu.CHANGE_USER_CURSOR);
   }
-  setSplitCell (visible: boolean) {
-    this.m_split_cell = visible;
-    if(visible) {
-      this.notify(Menu.OPEN_SPLIT_CELL);
+  setSplitCell (mount?: string) {
+    this.m_split_cell = mount || '';
+    if(mount) {
+      this.notify(Menu.OPEN_SPLIT_CELL, mount);
     }
   }
 }

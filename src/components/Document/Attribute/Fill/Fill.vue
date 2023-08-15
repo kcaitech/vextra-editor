@@ -79,8 +79,7 @@ function watcher(...args: any[]) {
 }
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
-    const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const fill = new Fill(v4(), true, FillType.SolidColor, color, contextSettings);
+    const fill = new Fill(v4(), true, FillType.SolidColor, color);
     if (len.value === 1) {
         const s = props.context.selection.selectedShapes[0];
         const e = props.context.editor4Shape(s);

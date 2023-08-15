@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix } from '@kcdesign/data';
+import { Matrix, TableShape } from '@kcdesign/data';
 import { Shape, Text} from '@kcdesign/data';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
@@ -126,7 +126,7 @@ function oninput(e: Event) {
         const text = inputel.value.value;
         if (editor.composingInputUpdate(text)) {
             const selection = props.context.selection.getTextSelection(props.shape);
-            selection.setCursor(composingStartIndex + text.length, true);
+            selection.setCursor(composingStartIndex + text.length, true);             
         }
     } else {
         committext();

@@ -6,7 +6,7 @@ import { Context } from '@/context';
 const { t } = useI18n();
 interface Props {
     context: Context
-    shape: TableShape
+    shape: Shape 
 }
 const props = defineProps<Props>();
 </script>

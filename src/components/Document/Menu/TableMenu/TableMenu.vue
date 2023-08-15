@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
 import { XY } from '@/context/selection';
-import { Artboard, GroupShape, Shape, ShapeType, TextShape } from "@kcdesign/data";
+import { Artboard, GroupShape, Shape, ShapeType, TableShape, TextShape } from "@kcdesign/data";
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
@@ -33,9 +33,14 @@ function showLayerSubMenu(e: MouseEvent) {
   layerSubMenuVisiable.value = true;
 }
 
-const openSplitCell = () => {
+const openSplitCell = (value: string) => {
   splitCellOpen.value = true;
-  props.context.menu.setSplitCell(true);
+  props.context.menu.setSplitCell(value);
+  emit('close');
+};
+const openInsertCell = (value: string) => {
+  splitCellOpen.value = true;
+  props.context.menu.setSplitCell(value);
   emit('close');
 };
 
@@ -49,7 +54,7 @@ function closeLayerSubMenu() {
 </script>
 <template>
     <div class="line" v-if="props.items.includes('insert_column') && props.items.includes('only_text')"></div>
-    <div class="item" v-if="props.items.includes('insert_column')">
+    <div class="item" v-if="props.items.includes('insert_column')" @click="openInsertCell('insert')">
       <span>插入行列</span>
       <span></span>
     </div>
@@ -77,7 +82,7 @@ function closeLayerSubMenu() {
       <span>合并单元格</span>
       <span></span>
     </div>
-    <div class="item" v-if="props.items.includes('split_cell')" @click="openSplitCell">
+    <div class="item" v-if="props.items.includes('split_cell')" @click="openSplitCell('split')">
       <span>拆分单元格</span>
       <span></span>
     </div>

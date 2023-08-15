@@ -33,6 +33,10 @@
       "dom.iterable",
       "scripthost",
       "webworker"
+    ],
+    "typeRoots": [
+      "./src",
+      "./node_modules/@types"
     ]
   },
   "include": [
