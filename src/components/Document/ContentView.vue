@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_shape2 } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -178,7 +178,13 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     if (isDrag && newShape) shapeCreateEnd();
     else {
         if (newShape) shapeCreateEnd();
-        else if (action.startsWith('add')) init_insert_shape(props.context, mousedownOnPageXY, t);
+        else if (action.startsWith('add')) {
+            if (action === Action.AddArrow || action === Action.AddLine) {
+                init_insert_shape2(props.context, mousedownOnPageXY, t);
+            } else {
+                init_insert_shape(props.context, mousedownOnPageXY, t);
+            }
+        }
     }
 }
 function contentEditOnMoving(e: MouseEvent) { // 编辑page内容    
