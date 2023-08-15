@@ -19,14 +19,11 @@ export class Menu extends Watchable(Object) {
   get ispopover() {
     return this.m_popover;
   }
-  get isUserCursorVisible () {
+  get isUserCursorVisible() {
     return this.m_user_cursor_visible;
   }
-  popoverVisible(visible: boolean) {
-    this.m_popover = visible;
-    if (!visible) {
-      this.notify(Menu.SHUTDOWN_POPOVER);
-    }
+  setPopoverVisible(v: boolean) {
+    this.m_popover = v;
   }
   menuMount(mount?: string) {
     this.m_menu_mounted = mount || '';
@@ -46,7 +43,7 @@ export class Menu extends Watchable(Object) {
     this.notify(Menu.REMOVE_COLOR_PICKER, this.m_color_picker);
     this.m_color_picker = undefined;
   }
-  setVisibleCursor (visible: boolean) {
+  setVisibleCursor(visible: boolean) {
     this.m_user_cursor_visible = visible;
     this.notify(Menu.CHANGE_USER_CURSOR);
   }

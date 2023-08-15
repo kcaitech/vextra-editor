@@ -6,10 +6,8 @@ import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue
 import BorderPositonItem from './BorderPositionItem.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
-import BorderApexStyleItem from './BorderApexStyleItem.vue';
-import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue'
 import { Context } from '@/context';
-import { Border, BorderPosition, BorderStyle, MarkerType, Shape, ShapeType } from "@kcdesign/data";
+import { Border, BorderPosition, BorderStyle, Shape, ShapeType } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
@@ -33,6 +31,7 @@ const _curpt: { x: number } = { x: 0 }
 const scale = ref<{ axleX: number }>({
   axleX: 0
 })
+const show_position = ref<boolean>(true);
 const showStartStyle = ref<boolean>(true)
 const showEndStyle = ref<boolean>(true)
 const borderThickness = ref<HTMLInputElement>();
@@ -53,30 +52,6 @@ const borderPositonOptionsSource: SelectSource[] = genOptions([
   [BorderPosition.Inner, t(`attr.inner_border`)],
 ]);
 
-const borderFrontStyle = ref<SelectItem>({ value: MarkerType.Line, content: MarkerType.Line });
-const borderFrontStyleOptionsSource: SelectSource[] = genOptions([
-  [MarkerType.Line, MarkerType.Line],
-  [MarkerType.OpenArrow, MarkerType.OpenArrow],
-  [MarkerType.FilledArrow, MarkerType.FilledArrow],
-  [MarkerType.OpenCircle, MarkerType.OpenCircle],
-  [MarkerType.FilledCircle, MarkerType.FilledCircle],
-  [MarkerType.OpenSquare, MarkerType.OpenSquare],
-  [MarkerType.FilledSquare, MarkerType.FilledSquare],
-  [MarkerType.FallT, MarkerType.FallT],
-]);
-
-const borderEndStyle = ref<SelectItem>({ value: MarkerType.Line, content: `end-${MarkerType.Line}` });
-const borderEndStyleOptionsSource: SelectSource[] = genOptions([
-  [MarkerType.Line, `end-${MarkerType.Line}`],
-  [MarkerType.OpenArrow, `end-${MarkerType.OpenArrow}`],
-  [MarkerType.FilledArrow, `end-${MarkerType.FilledArrow}`],
-  [MarkerType.OpenCircle, `end-${MarkerType.OpenCircle}`],
-  [MarkerType.FilledCircle, `end-${MarkerType.FilledCircle}`],
-  [MarkerType.OpenSquare, `end-${MarkerType.OpenSquare}`],
-  [MarkerType.FilledSquare, `end-${MarkerType.FilledSquare}`],
-  [MarkerType.FallT, `end-${MarkerType.FallT}`],
-]);
-
 function showMenu() {
   updater();
   popover.value.show();
@@ -90,14 +65,6 @@ function updater() {
   const bs = ((s: BorderStyle) => s.length > 0 ? 'dash' : 'solid')(props.border.borderStyle);
   const borderStyleSelected = borderStyleOptionsSource.find(i => i.data.value === bs)?.data;
   borderStyleSelected && (borderStyle.value = borderStyleSelected);
-
-  // border front apex init
-  const borderFrontApex = borderFrontStyleOptionsSource.find(i => i.data.value === props.border.startMarkerType)?.data;
-  borderFrontApex && (borderFrontStyle.value = borderFrontApex);
-
-  // border end apex init
-  const borderEndApex = borderEndStyleOptionsSource.find(i => i.data.value === props.border.endMarkerType)?.data;
-  borderEndApex && (borderEndStyle.value = borderEndApex);
 }
 function borderStyleSelect(selected: SelectItem) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
@@ -163,25 +130,13 @@ const augment = (e: Event) => {
 }
 const decrease = (e: Event) => {
   if (borderThickness.value) {
-    if(Number(borderThickness.value.value) === 0) return
+    if (Number(borderThickness.value.value) === 0) return
     const thickness = Number(borderThickness.value.value) - 1
     editor.value.setBorderThickness(props.index, thickness);
     borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
   }
 }
 
-function borderApexStyleSelect(selected: SelectItem) {
-  props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-  if (selected.content.startsWith('end')) {
-    borderEndStyle.value = selected;
-    editor.value.setBorderApexStyle(props.index, selected.value as MarkerType, true);
-  } else {
-    borderFrontStyle.value = selected;
-    editor.value.setBorderApexStyle(props.index, selected.value as MarkerType, false);
-  }
-  popover.value.focus();
-  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
-}
 watch(() => props.border, () => {
   updater();
 }, { deep: true })
@@ -233,30 +188,28 @@ const onMouseUp = (e: MouseEvent) => {
   document.removeEventListener('mouseup', onMouseUp)
 }
 function layout() {
-  if (len.value === 1) {
+  showStartStyle.value = false;
+  showEndStyle.value = false;
+  show_position.value = true;
+  if (props.shapes.length === 1) {
     const shape = props.shapes[0];
     if (shape.type === ShapeType.Line) {
-      showStartStyle.value = true;
-      showEndStyle.value = true;
-    } else {
-      showStartStyle.value = false;
-      showEndStyle.value = false;
+      show_position.value = false;
+      if (props.index === 0) {
+        showStartStyle.value = true;
+        showEndStyle.value = true;
+      }
     }
-  } else if (len.value > 1) {
+  } else if (props.shapes.length > 1) {
     const _idx = props.shapes.findIndex(i => i.type === ShapeType.Line);
-    if (_idx > -1) {
+    if (_idx > -1 && props.index === 0) {
       showStartStyle.value = true;
       showEndStyle.value = true;
-    } else {
-      showStartStyle.value = false;
-      showEndStyle.value = false;
     }
   }
 }
 function selection_wather(t?: any) {
-  if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
-    layout();
-  }
+  if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) layout();
 }
 const selectBorderThicknes = () => {
   borderThickness.value?.select()
@@ -282,9 +235,9 @@ onUnmounted(() => {
       <template #body>
         <div class="options-container">
           <!-- 边框位置 -->
-          <div>
+          <div v-if="show_position">
             <label>{{ t('attr.position') }}</label>
-            <Select :selected="position" :item-view="BorderPositonItem" :item-height="32" :source="shapes[0].type === ShapeType.Table ? borderPositonOptionsSource : positonOptionsSource"
+            <Select :selected="position" :item-view="BorderPositonItem" :item-height="30" :source="positonOptionsSource"
               @select="positionSelect"></Select>
           </div>
           <!-- 边框厚度 -->
@@ -292,7 +245,8 @@ onUnmounted(() => {
             <label>{{ t('attr.thickness') }}</label>
             <div class="thickness-container">
               <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
-              <input ref="borderThickness" type="text" :value="border.thickness" @change="e => setThickness(e)" @focus="selectBorderThicknes">
+              <input ref="borderThickness" type="text" :value="border.thickness" @change="e => setThickness(e)"
+                @focus="selectBorderThicknes">
               <div class="up_down">
                 <svg-icon icon-class="down" style="transform: rotate(180deg);" @click="augment"></svg-icon>
                 <svg-icon icon-class="down" @click="decrease"></svg-icon>
@@ -303,20 +257,7 @@ onUnmounted(() => {
           <div>
             <label>{{ t('attr.borderStyle') }}</label>
             <Select :selected="borderStyle" :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-              :item-height="32" @select="borderStyleSelect" :source="borderStyleOptionsSource"></Select>
-          </div>
-          <!-- 起点样式 -->
-          <div v-if="showStartStyle">
-            <label>{{ t('attr.startMarkerType') }}</label>
-            <Select :selected="borderFrontStyle" :item-view="BorderApexStyleItem"
-              :value-view="BorderApexStyleSelectedItem" :item-height="32" :source="borderFrontStyleOptionsSource"
-              @select="borderApexStyleSelect"></Select>
-          </div>
-          <!-- 终点样式 -->
-          <div v-if="showEndStyle">
-            <label>{{ t('attr.endMarkerType') }}</label>
-            <Select :selected="borderEndStyle" :item-view="BorderApexStyleItem" :value-view="BorderApexStyleSelectedItem"
-              :item-height="32" :source="borderEndStyleOptionsSource" @select="borderApexStyleSelect"></Select>
+              :item-height="30" @select="borderStyleSelect" :source="borderStyleOptionsSource"></Select>
           </div>
         </div>
       </template>
@@ -373,7 +314,7 @@ onUnmounted(() => {
           padding: 0 14px;
           background-color: var(--input-background);
           width: calc(100% - 72px);
-          height: 32px;
+          height:  var(--default-input-height);
           border-radius: var(--default-radius);
           display: flex;
           align-items: center;
@@ -395,6 +336,7 @@ onUnmounted(() => {
           .up_down {
             width: 10px;
             height: 100%;
+
             >svg {
               width: 10px;
               height: 10px;

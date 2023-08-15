@@ -77,7 +77,7 @@ onUnmounted(() => {
         <Rect @select="select" :active="selected === Action.AddRect"></Rect>
         <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
         <Line @select="select" :active="selected === Action.AddLine"></Line>
-        <!-- <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow> -->
+        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table  @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>

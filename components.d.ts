@@ -12,6 +12,7 @@ declare module '@vue/runtime-core' {
     Abbreviation: typeof import('./src/components/Document/Navigation/Abbreviation.vue')['default']
     AddTeam: typeof import('./src/components/TeamProject/addTeam.vue')['default']
     AgreementBaseComponent: typeof import('./src/components/Login/AgreementBaseComponent.vue')['default']
+    Apex: typeof import('./src/components/Document/Attribute/Border/Apex.vue')['default']
     Apphome: typeof import('./src/components/AppHome/Apphome.vue')['default']
     Apply: typeof import('./src/components/Apply/index.vue')['default']
     ApplyFor: typeof import('./src/components/Document/Toolbar/Share/ApplyFor.vue')['default']

@@ -97,7 +97,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         })
 
     } else if (e.code === 'KeyH') {
-        if (shiftKey) {
+        if (shiftKey && (ctrlKey || metaKey)) {
             let shapes = context.selection.selectedShapes;
             const page = context.selection.selectedPage;
             shapes = shapes.filter(s => !is_parent_unvisible(s));
@@ -107,7 +107,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             context.selection.resetSelectShapes();
         }
     } else if (e.code === 'KeyL') {
-        if (shiftKey) {
+        if (shiftKey && (ctrlKey || metaKey)) {
             let shapes = context.selection.selectedShapes;
             const page = context.selection.selectedPage;
             shapes = shapes.filter(s => !is_parent_locked(s));

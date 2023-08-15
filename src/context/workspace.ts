@@ -63,7 +63,6 @@ export class WorkSpace extends Watchable(Object) {
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
     static TEXT_FORMAT = 6;
-    static SHUTDOWN_POPOVER = 7;
     static TRANSLATING = 8;
     static CHECKSTATUS = 9;
     static SELECTION_VIEW_UPDATE = 12;

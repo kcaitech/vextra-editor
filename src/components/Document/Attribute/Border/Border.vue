@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data';
+import { Shape, ShapeType } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -15,8 +15,9 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
 import { v4 } from 'uuid';
+import Apex from './Apex.vue';
 interface BorderItem {
-    id: number,
+    id: number
     border: Border
 }
 interface Props {
@@ -33,15 +34,12 @@ const mixed = ref<boolean>(false);
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const watchedShapes = new Map();
 const len = computed<number>(() => props.shapes.length);
-
+const show_apex = ref<boolean>(false);
 function watchShapes() {
     const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
-    if (selection.selectedShapes.length > 0) {
-        selection.selectedShapes.forEach((v) => {
+    const selection = props.shapes;
+    if (selection.length > 0) {
+        selection.forEach((v) => {
             needWatchShapes.set(v.id, v);
         })
     }
@@ -62,7 +60,7 @@ function watcher(...args: any[]) {
 function updateData() {
     borders.length = 0;
     mixed.value = false;
-    if (len.value === 1) {
+    if (props.shapes.length === 1) {
         const style = props.shapes[0].style;
         for (let i = 0, l = style.borders.length; i < l; i++) {
             const border = style.borders[i];
@@ -72,7 +70,7 @@ function updateData() {
             }
             borders.unshift(b);
         }
-    } else if (len.value > 1) {
+    } else if (props.shapes.length > 1) {
         const _bs = get_borders(props.shapes);
         if (_bs === 'mixed') {
             mixed.value = true;
@@ -86,8 +84,7 @@ function addBorder() {
     const color = new Color(1, 0, 0, 0);
 
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle, MarkerType.Line, MarkerType.Line);
-
+    const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
     if (len.value === 1) {
         editor.value.addBorder(border);
     } else if (len.value > 1) {
@@ -110,9 +107,7 @@ function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 function first() {
-    if (borders.length === 0 && !mixed.value) {
-        addBorder()
-    }
+    if (borders.length === 0 && !mixed.value) addBorder();
 }
 function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
@@ -238,20 +233,14 @@ function getColorFromPicker(color: Color, idx: number) {
         }
     }
 }
-function selection_wather(t: any) {
-    if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
-        watchShapes();
-        updateData();
-    }
-}
 
 const selectColor = (i: number) => {
-    if(colorBorder.value) {
+    if (colorBorder.value) {
         colorBorder.value[i].select()
     }
 }
 const selectAlpha = (i: number) => {
-    if(alphaBorder.value) {
+    if (alphaBorder.value) {
         alphaBorder.value[i].select();
     }
 }
@@ -259,22 +248,31 @@ const filterAlpha = (a: number) => {
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
         return alpha.toFixed(0); // 返回整数形式
-    }else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
         return alpha.toFixed(1); // 保留一位小数
     } else {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
-// hooks
-onMounted(() => {
-    props.context.selection.watch(selection_wather);
+function layout() {
+    show_apex.value = false;
+    if (props.shapes.length === 1) {
+        if (props.shapes[0].type === ShapeType.Line) show_apex.value = true;
+    }
+}
+function update_by_shapes() {
     watchShapes();
     updateData();
+    layout();
+}
+// hooks
+const stop = watch(() => props.shapes, update_by_shapes);
+onMounted(() => {
+    update_by_shapes();
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_wather);
+    stop();
 })
-watchEffect(updateData);
 </script>
 
 <template>
@@ -299,8 +297,9 @@ watchEffect(updateData);
                         @change="(c: Color) => getColorFromPicker(c, idx)" />
                     <input ref="colorBorder" :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
                         @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" />
-                    <input ref="alphaBorder" style="text-align: center;" :value="filterAlpha(b.border.color.alpha * 100) + '%'"
-                        @change="e => onAlphaChange(e, idx)" @focus="selectAlpha(idx)" />
+                    <input ref="alphaBorder" style="text-align: center;"
+                        :value="filterAlpha(b.border.color.alpha * 100) + '%'" @change="e => onAlphaChange(e, idx)"
+                        @focus="selectAlpha(idx)" />
                 </div>
                 <div class="extra-action">
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
@@ -312,6 +311,7 @@ watchEffect(updateData);
                 </div>
             </div>
         </div>
+        <Apex v-if="show_apex" :context="props.context" :shapes="props.shapes"></Apex>
     </div>
 </template>
 
@@ -320,7 +320,7 @@ watchEffect(updateData);
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 10px;
+    padding: 0 10px 12px 10px;
     box-sizing: border-box;
 
     .add {
@@ -367,7 +367,7 @@ watchEffect(updateData);
                 height: 18px;
                 width: 18px;
                 background-color: var(--active-color);
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;
                 color: #ffffff;
@@ -385,7 +385,7 @@ watchEffect(updateData);
                 flex: 0 0 18px;
                 height: 18px;
                 background-color: transparent;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;
             }
@@ -396,7 +396,7 @@ watchEffect(updateData);
                 height: 100%;
                 padding: 0px 5px;
                 margin-left: 5px;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
@@ -418,7 +418,7 @@ watchEffect(updateData);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-left: 9px;
+                margin-left: 2px;
 
                 .delete {
                     flex: 0 0 16px;

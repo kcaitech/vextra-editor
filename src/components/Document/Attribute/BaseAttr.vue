@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2 } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';
@@ -19,35 +19,39 @@ import {
     get_actions_frame_w, get_actions_frame_h,
     get_actions_rotate,
     get_actions_flip_h,
-    get_actions_flip_v
+    get_actions_flip_v,
+    get_straight_line_length
 } from '@/utils/attri_setting';
 interface Props {
     context: Context
 }
+interface LayoutOptions {
+    s_adapt: boolean
+    s_flip: boolean
+    s_radius: boolean
+    s_length: boolean
+}
 const props = defineProps<Props>();
 const { t } = useI18n();
-const shapeType = ref<ShapeType>();
 const x = ref<number | string>(0);
 const y = ref<number | string>(0);
 const w = ref<number | string>(0);
 const h = ref<number | string>(0);
+const line_length = ref<number | string>(0);
 const rotate = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
 const points = ref<number>(0);
-const radius = ref<{ lt: number | string, rt: number, rb: number, lb: number }>({
-    lt: 0, rt: 0, rb: 0, lb: 0
-});
-const showRadius = ref<boolean>(false)
-const showRadian = ref<boolean>(false)
+const radius = ref<{ lt: number | string, rt: number, rb: number, lb: number }>({ lt: 0, rt: 0, rb: 0, lb: 0 });
 const multiRadius = ref(false)
-const shwoAdapt = ref<boolean>(false)
 const multipleValues = ref<boolean>(false)
 const mixed = t('attr.mixed');
 const flip = ref(false)
 const watchedShapes = new Map();
-// 得到需要监听的shape，事实上永远最多只监听一个元素
+const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
+let { s_flip, s_adapt, s_radius, s_length } = layout_options;
+const reflush = ref<number>(0);
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
         v.unwatch(calc_attri);
@@ -55,37 +59,40 @@ function watch_shapes() {
     })
     const selectedShapes = props.context.selection.selectedShapes;
     if (selectedShapes.length > 0) {
-        const first = selectedShapes[0]; // 多选时只监听一个元素就好了，因为一个元素的变化与其他所选元素的变化是相关的
+        const first = selectedShapes[0];
         watchedShapes.set(first.id, first);
-        watchedShapes.forEach((v) => {
-            v.watch(calc_attri);
-        })
+        watchedShapes.forEach((v) => { v.watch(calc_attri); });
     }
 }
 function calc_attri() {
     const len = props.context.selection.selectedShapes.length;
     if (len === 1) {
         const shape = props.context.selection.selectedShapes[0];
-        const xy = shape.frame2Root();
-        const frame = shape.frame;
-        x.value = xy.x;
-        y.value = xy.y;
-        w.value = Math.max(frame.width, 1);
-        h.value = Math.max(frame.height, 1);
+        if (shape.type === ShapeType.Line) {
+            w.value = Math.max(get_straight_line_length(shape), 1);
+            h.value = 0;
+        } else {
+            const frame = shape.frame;
+            w.value = Math.max(frame.width, 1);
+            h.value = Math.max(frame.height, 1);
+        }
+        const lt = shape.matrix2Root().computeCoord2(0, 0);
+        x.value = lt.x;
+        y.value = lt.y;
         rotate.value = get_rotation(shape);
         isLock.value = Boolean(shape.constrainerProportions);
     } else if (len > 1) {
         const shape = props.context.selection.selectedShapes[0];
-        const xy = shape.frame2Root();
+        const lt = shape.matrix2Root().computeCoord2(0, 0);
         const frame = shape.frame;
-        if (x.value !== mixed) x.value = xy.x;
-        if (y.value !== mixed) y.value = xy.y;
+        if (x.value !== mixed) x.value = lt.x;
+        if (y.value !== mixed) y.value = lt.y;
         if (w.value !== mixed) w.value = Math.max(frame.width, 1);
         if (h.value !== mixed) h.value = Math.max(frame.height, 1);
     }
 }
 function _update_view() {
-    layout();
+    if (props.context.selection.selectedShapes.length) layout();
     if (props.context.selection.selectedShapes.length > 1) check_mixed();
 }
 const update_view = debounce(_update_view, 200);
@@ -101,33 +108,31 @@ function check_mixed() {
 }
 
 function radiusValuesMixed(radius: any) {
-  const referenceValue = Object.values(radius)[0];
-  for (const value of Object.values(radius)) {
-    if (value !== referenceValue) {
-      return false;
+    const referenceValue = Object.values(radius)[0];
+    for (const value of Object.values(radius)) {
+        if (value !== referenceValue) return false;
     }
-  }
-  return true;
+    return true;
 }
 function getRectShapeAttr(shape: Shape) {
     points.value = (shape as RectShape).pointsCount || 0;
     if (shape instanceof RectShape) {
         radius.value = (shape as RectShape).getRectRadius();
-        if(!radiusValuesMixed(radius.value) && !isMoreForRadius.value) {
+        if (!radiusValuesMixed(radius.value) && !isMoreForRadius.value) {
             multipleValues.value = true
             radius.value.lt = mixed
         }
-    } else if(shape instanceof GroupShape) {
+    } else if (shape instanceof GroupShape) {
         radius.value.lt = (shape as GroupShape).fixedRadius || 0
         radius.value.lb = (shape as GroupShape).fixedRadius || 0
         radius.value.rt = (shape as GroupShape).fixedRadius || 0
         radius.value.rb = (shape as GroupShape).fixedRadius || 0
-    } else if( shape instanceof PathShape) {
+    } else if (shape instanceof PathShape) {
         radius.value.lt = (shape as PathShape).fixedRadius || 0
         radius.value.lb = (shape as PathShape).fixedRadius || 0
         radius.value.rt = (shape as PathShape).fixedRadius || 0
         radius.value.rb = (shape as PathShape).fixedRadius || 0
-    } else if(shape instanceof PathShape2) {
+    } else if (shape instanceof PathShape2) {
         radius.value.lt = (shape as PathShape2).fixedRadius || 0
         radius.value.lb = (shape as PathShape2).fixedRadius || 0
         radius.value.rt = (shape as PathShape2).fixedRadius || 0
@@ -175,6 +180,10 @@ function onChangeY(value: string) {
     }
 }
 function onChangeW(value: string) {
+    if (s_length) {
+        set_lines_length(value);
+        return;
+    }
     value = Number.parseFloat(value).toFixed(fix);
     const _w: number = Number.parseFloat(value);
     if (isNaN(_w)) return;
@@ -221,6 +230,7 @@ function onChangeH(value: string) {
     }
 }
 function lockToggle() {
+    if (s_length) return;
     const val = !isLock.value;
     const actions = get_actions_constrainer_proportions(props.context.selection.selectedShapes, val);
     const page = props.context.selection.selectedPage;
@@ -239,7 +249,7 @@ function radiusToggle() {
                 multipleValues.value = false
             } else {
                 multipleValues.value = true
-                if(!radiusValuesMixed(radius.value)) {
+                if (!radiusValuesMixed(radius.value)) {
                     radius.value.lt = mixed
                 }
             }
@@ -278,21 +288,28 @@ function flipv() {
         }
     }
 }
+function set_lines_length(value: string) {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    value = Number.parseFloat(value).toFixed(fix);
+    const _l: number = Number.parseFloat(value);
+    if (isNaN(_l)) return;
+    if (page) {
+        const editor = props.context.editor4Page(page);
+        editor.setLinesLength(selected, _l);
+    }
+}
 function onChangeRotate(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return;
     const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
-        e.rotate(newRotate);
-    } else if (selected.length > 1) {
-        const actions = get_actions_rotate(props.context.selection.selectedShapes, newRotate);
+    if (selected.length) {
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
-            editor.setShapesRotate(actions);
-            check_mixed();
+            editor.setShapesRotate(selected, newRotate);
+            if (selected.length > 1) check_mixed();
         }
     }
 }
@@ -319,7 +336,6 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             }
         }
     } else if (selected.length > 1) {
-        // todo
         const page = props.context.selection.selectedPage;
         if (page) {
             const e = props.context.editor4Page(page);
@@ -341,52 +357,48 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
 }
 function adapt() {
     const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
-        e.adapt();
-    }
+    if (selected.length === 1 && selected[0].type === ShapeType.Artboard) props.context.editor4Shape(selected[0]).adapt();
 }
 const RADIUS_SETTING = [
-    ShapeType.Rectangle, ShapeType.Artboard, 
-    ShapeType.Image, ShapeType.Group, 
+    ShapeType.Rectangle, ShapeType.Artboard,
+    ShapeType.Image, ShapeType.Group,
     ShapeType.Path, ShapeType.Path2
 ];
-const MULTI_RADIUS = [ ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image, ShapeType.Artboard, ShapeType.Image];
-const DE_RADIAN_SETTING = [ShapeType.Line, ShapeType.Oval];
+const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
 function layout() {
+    s_adapt = false, s_flip = true, s_radius = false, s_length = false;
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const shape = selected[0];
-        shapeType.value = shape.type;
-        showRadius.value = hasRadiusShape(shape, RADIUS_SETTING)
-        showRadian.value = DE_RADIAN_SETTING.includes(shape.type);
-        shwoAdapt.value = shape.type === ShapeType.Artboard;
-        flip.value = shape.type === ShapeType.Table;
-        if(hasRadiusShape(shape, RADIUS_SETTING)) {
-            multiRadius.value = MULTI_RADIUS.includes(shape.type)
+        s_radius = hasRadiusShape(shape, RADIUS_SETTING), s_adapt = shape.type === ShapeType.Artboard;
+        if (s_radius) {
+            multiRadius.value = MULTI_RADIUS.includes(shape.type);
             getRectShapeAttr(shape);
         }
-        if (selected.length > 1) {
-            if (selected.find(i => i instanceof RectShape)) showRadius.value = true;
-        }
+        if (shape.type === ShapeType.Table) s_flip = false;
+        if (shape.type === ShapeType.Line) s_length = true;
+    } else {
+        if (selected.find(i => i instanceof RectShape)) s_radius = true;
     }
+    reflush.value++;
 }
 function workspace_watcher(t?: any) {
     if (t === WorkSpace.CLAC_ATTRI) check_mixed();
 }
 function selection_wather(t: any) {
-    if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
+    if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
         watch_shapes();
         update_view();
         calc_attri();
     }
 }
+
 // hooks
 onMounted(() => {
-    watch_shapes(); // 组件挂载之后，第一次整理需要监听的shape（得到watchedShapes）
-    if (props.context.selection.selectedShapes.length > 1) check_mixed(); // 检查是否多值
-    layout(); // 属性栏布局
-    calc_attri(); // 第一次计算frame属性
+    watch_shapes();
+    if (props.context.selection.selectedShapes.length > 1) check_mixed();
+    layout();
+    calc_attri();
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_watcher);
 })
@@ -406,41 +418,42 @@ onUnmounted(() => {
                 @onchange="onChangeY" />
             <Position :context="props.context" :shape="props.context.selection.selectedShapes[0]"></Position>
         </div>
-        <div class="tr">
+        <div class="tr" :reflush="reflush">
             <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w"
                 @onchange="onChangeW" />
             <div class="lock" @click="lockToggle">
-                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
+                <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
-            <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h"
-                @onchange="onChangeH" />
-            <div class="adapt" v-if="shwoAdapt" :title="t('attr.adapt')" @click="adapt">
+            <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
+                :disabled="s_length" />
+            <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
             <div style="width: 22px;height: 22px;" v-else></div>
         </div>
-        <div class="tr">
+        <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
-            <Tooltip :content="t('attr.flip_h')" :offset="15" v-if="!flip">
+            <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
+
                 <div class="flip ml-24" @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
-            <Tooltip :content="t('attr.flip_v')" :offset="15" v-if="!flip">
+            <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
                 <div class="flip ml-12" @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>
                 </div>
             </Tooltip>
             <div style="width: 22px;height: 22px;"></div>
         </div>
-        <div class="tr" v-if="showRadius">
+        <div class="tr" v-if="s_radius" :reflush="reflush">
             <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.lt || 0"
                 :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
                 :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')" />
-            <div class="more-for-radius" @click="radiusToggle" v-if="showRadius && multiRadius">
+            <div class="more-for-radius" @click="radiusToggle" v-if="s_radius && multiRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
@@ -467,18 +480,19 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0px 10px 12px 10px;
+    padding: 2px 10px 12px 10px;
     box-sizing: border-box;
     visibility: visible;
 
     .tr {
         position: relative;
         width: 100%;
+        height: 30px;
         align-items: center;
         justify-content: space-between;
         display: flex;
         flex-direction: row;
-        margin: 8px 0;
+        margin: 4px 0;
 
         .space {
             width: 18px;
@@ -491,13 +505,13 @@ onUnmounted(() => {
         .positon {
             width: 95px;
             height: 30px;
-            border-radius: 8px;
+            border-radius: var(--default-radius);
         }
 
         .frame {
             width: 95px;
             height: 30px;
-            border-radius: 8px;
+            border-radius: var(--default-radius);
         }
 
         .lock {
@@ -523,19 +537,19 @@ onUnmounted(() => {
 
             >svg {
                 transition: 0.3s;
-                width: 50%;
-                height: 50%;
+                width: 60%;
+                height: 60%;
             }
 
             >svg:hover {
-                transform: scale(1.25);
+                transform: scale(0.8);
             }
         }
 
         .angle {
             height: 30px;
             width: 95px;
-            border-radius: 8px;
+            border-radius: var(--default-radius);
 
             >svg {
                 width: 12px;
@@ -550,7 +564,7 @@ onUnmounted(() => {
             align-items: center;
             width: 45px;
             height: 30px;
-            border-radius: 8px;
+            border-radius: var(--default-radius);
 
             >svg {
                 color: var(--coco-grey);

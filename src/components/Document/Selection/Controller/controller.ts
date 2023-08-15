@@ -19,6 +19,7 @@ import { permIsEdit } from '@/utils/content';
 import { distance2apex, distance2apex2, get_frame, update_pg, get_pg_by_frame } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 
+import { Menu } from '@/context/menu';
 export function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -72,6 +73,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
             context.cursor.cursor_freeze(true);
             context.menu.menuMount(); // 取消右键事件
+            context.menu.notify(Menu.SHUTDOWN_POPOVER);
             root = context.workspace.root;
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;

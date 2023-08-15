@@ -40,42 +40,33 @@ const WITH_BORDER = [
     ShapeType.Path2,
     ShapeType.Table,
     ShapeType.TableCell,
-    ShapeType.Text];
+    ShapeType.Text,
+    ShapeType.Line];
 const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
+const reflush = ref<number>(0);
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
-        shapes.value = [];
+        shapes.value = new Array();
     } else if (t === Selection.CHANGE_SHAPE) {
         if (props.context.selection.selectedShapes.length === 1) {
-            shapes.value = [props.context.selection.selectedShapes[0]];
+            shapes.value = new Array(...props.context.selection.selectedShapes);
             shapeType.value = shapes.value[0].type;
         } else if (props.context.selection.selectedShapes.length > 1) {
-            shapes.value = [...props.context.selection.selectedShapes];
+            shapes.value = new Array(...props.context.selection.selectedShapes);
         } else {
-            shapes.value = [];
+            shapes.value = new Array();
         }
     }
 }
 const change = throttle(_change, 200);
-function selectionChange(t: number) {
-    change(t);
-}
-watchEffect(() => {    
-    if (props.context.selection.selectedShapes.length === 1) {
-        shapes.value = [props.context.selection.selectedShapes[0]];
-        shapeType.value = shapes.value[0].type;
-    } else if (props.context.selection.selectedShapes.length > 1) {
-        shapes.value = [...props.context.selection.selectedShapes];
-    } else {
-        shapes.value = [];
-    }
-})
+function selection_watcher(t: number) { change(t) }
 onMounted(() => {
-    props.context.selection.watch(selectionChange);
+    props.context.selection.watch(selection_watcher);
+    _change(Selection.CHANGE_SHAPE);
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(selectionChange);
+    props.context.selection.unwatch(selection_watcher);
 })
 </script>
 <template>
@@ -85,7 +76,7 @@ onUnmounted(() => {
                 :page="props.context.selection.selectedPage"></PageBackgorund>
         </div>
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
-        <div v-if="len">
+        <div v-if="len" :reflush="reflush">
             <ShapeBaseAttr :context="props.context"></ShapeBaseAttr>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>

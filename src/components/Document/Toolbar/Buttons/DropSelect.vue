@@ -69,12 +69,12 @@ const handleBoolean = (e: MouseEvent) => {
   display: flex;
   color: var(--theme-color-anti);
   width: 100%;
-  height: 32px;
+  height:  var(--default-input-height);
   align-items: center;
   justify-content: space-between;
   .svg-container {
     width: 32px;
-    height: 32px;
+    height:  var(--default-input-height);
     display: flex;
     justify-content: center;
     align-items: center;

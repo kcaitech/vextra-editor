@@ -550,13 +550,13 @@ onUnmounted(() => {
     <div class="item" v-if="props.items.includes('visible')" @click="visible">
       <span>{{ t('system.visible') }}</span>
       <span class="shortkey">
-        <Key code="Shift H"></Key>
+        <Key code="Ctrl Shift H"></Key>
       </span>
     </div>
     <div class="item" v-if="props.items.includes('lock')" @click="lock">
       <span>{{ t('system.Lock') }}</span>
       <span class="shortkey">
-        <Key code="Shift L"></Key>
+        <Key code="Ctrl Shift L"></Key>
       </span>
     </div>
     <div class="item" v-if="props.items.includes('title')" @click="toggle_title">

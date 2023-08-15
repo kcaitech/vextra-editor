@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
 import { Color, Fill, Shape, FillType } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
@@ -57,7 +57,7 @@ function watchShapes() {
 function updateData() {
     fills.length = 0;
     mixed.value = false;
-    if (len.value === 1) {
+    if (props.shapes.length === 1) {
         const shape = props.shapes[0];
         const style = shape.style;
         for (let i = 0, len = style.fills.length; i < len; i++) {
@@ -65,7 +65,7 @@ function updateData() {
             const f = { id: i, fill };
             fills.unshift(f);
         }
-    } else if (len.value > 1) {
+    } else if (props.shapes.length > 1) {
         const _fs = get_fills(props.shapes);
         if (_fs === 'mixed') {
             mixed.value = true;
@@ -226,13 +226,6 @@ function getColorFromPicker(idx: number, color: Color) {
     }
 }
 
-function selection_wather(t: any) {
-    if ([Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE].includes(t)) {
-        watchShapes();
-        updateData();
-    }
-}
-
 const selectColor = (id: number) => {
     if (colorFill.value) {
         colorFill.value[id].select()
@@ -253,16 +246,18 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
-// hooks
-onMounted(() => {
-    props.context.selection.watch(selection_wather); // 有问题，等会再收拾你
+function update_by_shapes() {
     watchShapes();
     updateData();
+}
+// hooks
+const stop = watch(() => props.shapes, update_by_shapes);
+onMounted(() => {
+    update_by_shapes();
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_wather);
+    stop();
 })
-watchEffect(updateData);
 </script>
 
 <template>
@@ -287,8 +282,6 @@ watchEffect(updateData);
                     </ColorPicker>
                     <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
                         :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" />
-                    <!-- <input ref="alphaFill" style="text-align: center;" :value="(f.fill.color.alpha * 100).toFixed(0) + '%'"
-                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" /> -->
                     <input ref="alphaFill" style="text-align: center;" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
                         @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" />
                 </div>
@@ -307,7 +300,7 @@ watchEffect(updateData);
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 10px;
+    padding: 0 10px 12px 10px;
     box-sizing: border-box;
 
     .add {
@@ -344,7 +337,7 @@ watchEffect(updateData);
                 width: 18px;
                 height: 18px;
                 background-color: var(--active-color);
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 border: 1px solid #d8d8d8;
                 box-sizing: border-box;
                 color: #ffffff;
@@ -363,7 +356,7 @@ watchEffect(updateData);
                 width: 18px;
                 height: 18px;
                 background-color: transparent;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 border: 1px solid #d8d8d8;
                 box-sizing: border-box;
             }
@@ -373,7 +366,7 @@ watchEffect(updateData);
                 height: 100%;
                 padding: 0px 5px;
                 margin-left: 5px;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;

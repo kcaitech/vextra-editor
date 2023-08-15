@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="105px" height="9px" viewBox="0 0 105 9" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <title>直线</title>
-    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <path id="直线" d="M4.5,0 C6.81637876,0 8.72398135,1.7501788 8.97256844,4.00029704 L105,4 L105,5 L8.97245735,5.00070744 C8.7234136,7.25034205 6.81603406,9 4.5,9 C2.01471863,9 0,6.98528137 0,4.5 C0,2.01471863 2.01471863,0 4.5,0 Z" fill="#979797" fill-rule="nonzero"></path>
-    </g>
+<svg width="50" height="24" viewBox="0 0 50 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="12" fill="#141414"/>
+<line x1="12" y1="12.5" x2="50" y2="12.5" stroke="black" stroke-width="5"/>
 </svg>

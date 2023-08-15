@@ -100,8 +100,6 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
             border.color.blue,
             border.borderStyle.gap,
             border.borderStyle.length,
-            border.endMarkerType,
-            border.startMarkerType,
             border.thickness,
             border.position
         ].join('-');
@@ -122,8 +120,6 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
                 border.color.blue,
                 border.borderStyle.gap,
                 border.borderStyle.length,
-                border.endMarkerType,
-                border.startMarkerType,
                 border.thickness,
                 border.position
             ].join('-');
@@ -135,9 +131,8 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
 export function get_actions_add_boder(shapes: Shape[], border: Border) {
     const actions: BorderAddAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType } = border;
-        const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle, startMarkerType, endMarkerType);
-        new_border.contextSettings = contextSettings;
+        const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
+        const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle);
         actions.push({ target: shapes[i], value: new_border });
     }
     return actions;
@@ -156,9 +151,8 @@ export function get_actions_border_unify(shapes: Shape[]) {
         const new_borders: Border[] = [];
         for (let i = 0; i < borders.length; i++) {
             const border = borders[i];
-            const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle, startMarkerType, endMarkerType } = border;
-            const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle, startMarkerType, endMarkerType);
-            new_border.contextSettings = contextSettings;
+            const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
+            const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle);
             new_borders.push(new_border);
         }
         actions.push({ target: shapes[i], value: new_borders });
