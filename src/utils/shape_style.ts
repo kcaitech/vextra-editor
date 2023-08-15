@@ -59,7 +59,8 @@ export function get_actions_fill_unify(shapes: Shape[]) {
         for (let i = 0; i < fills.length; i++) {
             const fill = fills[i];
             const { isEnabled, fillType, color, contextSettings } = fill;
-            const new_fill = new Fill(v4(), isEnabled, fillType, color, contextSettings);
+            const new_fill = new Fill(v4(), isEnabled, fillType, color);
+            new_fill.contextSettings = contextSettings;
             new_fills.push(new_fill);
         }
         actions.push({ target: shapes[i], value: new_fills });
@@ -130,8 +131,8 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
 export function get_actions_add_boder(shapes: Shape[], border: Border) {
     const actions: BorderAddAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle } = border;
-        const new_border = new Border(v4(), isEnabled, fillType, color, contextSettings, position, thickness, borderStyle);
+        const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
+        const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle);
         actions.push({ target: shapes[i], value: new_border });
     }
     return actions;
@@ -150,8 +151,8 @@ export function get_actions_border_unify(shapes: Shape[]) {
         const new_borders: Border[] = [];
         for (let i = 0; i < borders.length; i++) {
             const border = borders[i];
-            const { isEnabled, fillType, color, contextSettings, position, thickness, borderStyle } = border;
-            const new_border = new Border(v4(), isEnabled, fillType, color, contextSettings, position, thickness, borderStyle);
+            const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
+            const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle);
             new_borders.push(new_border);
         }
         actions.push({ target: shapes[i], value: new_borders });

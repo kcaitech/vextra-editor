@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, ContextSettings, Shape, BlendMode, FillType, ShapeType } from "@kcdesign/data";
+import { Color, Fill, Shape, FillType } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -79,8 +79,7 @@ function watcher(...args: any[]) {
 }
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
-    const contextSettings = new ContextSettings(BlendMode.Normal, 1);
-    const fill = new Fill(v4(), true, FillType.SolidColor, color, contextSettings);
+    const fill = new Fill(v4(), true, FillType.SolidColor, color);
     if (len.value === 1) {
         const s = props.context.selection.selectedShapes[0];
         const e = props.context.editor4Shape(s);

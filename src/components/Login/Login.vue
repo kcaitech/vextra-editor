@@ -9,7 +9,6 @@ import { ElMessage } from 'element-plus'
 import avatar from '@/assets/pd-logo-svg.svg';
 import { User } from '@/context/user'
 
-
 const { t } = useI18n()
 const isLoading = ref(false)
 const codeinput = ref()
@@ -19,6 +18,7 @@ const loginshow = ref<boolean>(true)
 const affirm = ref()
 const userid = ref('')
 const Wxcode = ref('')
+const isShow = ref(true)
 
 function onmessage(e: any) {
     if (e.data?.type !== "GetWxCode") {
@@ -41,7 +41,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 localStorage.setItem('userId', linfo.data.id)
                 isLoading.value = false
                 const perRoute = localStorage.getItem('perRoute') || ''
-                if(perRoute) {
+                if (perRoute) {
                     const params = new URLSearchParams(perRoute.split('?')[1]);
                     const path = perRoute.split('?')[0].replace('/', '');
                     const id = params.get('id');
@@ -51,7 +51,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                             id: id
                         }
                     })
-                }else {
+                } else {
                     router.push({ name: 'apphome' })
                 }
             } else if (linfo.code === 400) {
@@ -91,7 +91,7 @@ function clickaffirm() {
                 localStorage.setItem('userId', result.data.id)
                 isLoading.value = false
                 const perRoute = localStorage.getItem('perRoute') || ''
-                if(perRoute) {
+                if (perRoute) {
                     const params = new URLSearchParams(perRoute.split('?')[1]);
                     const path = perRoute.split('?')[0].replace('/', '');
                     const id = params.get('id');
@@ -101,7 +101,7 @@ function clickaffirm() {
                             id: id
                         }
                     })
-                }else {
+                } else {
                     router.push({ name: 'apphome' })
                 }
             } else if (result.code === 400) {
@@ -137,18 +137,22 @@ function wxcode() {
         redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
         state: "STATE",
         style: "",
-        href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAzMDBweDtoZWlnaHQ6IDMwMHB4O30=',
+        href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7Ym9yZGVyLXJhZGl1czo2cHh9Ci5zdGF0dXNfaWNvbiB7ZGlzcGxheTogbm9uZTt9Ci5pbXBvd2VyQm94IC5zdGF0dXMge2Rpc3BsYXk6IG5vbmU7fQoud2ViX3FyY29kZV90eXBlX2lmcmFtZSB7d2lkdGg6IDMwMHB4O2hlaWdodDogMzAwcHg7fQ==',
     })
 }
 
-const handleOpenNewWindow = (routeName:string) => {
-  const routeLocation = router.resolve({
-    name: routeName
-  })
+const handleOpenNewWindow = (routeName: string) => {
+    const routeLocation = router.resolve({
+        name: routeName
+    })
+    const newWindow = window.open(routeLocation.href, '_blank');
+    if (newWindow) {
+        setTimeout(() => {
+            newWindow.document.title = routeName === 'privacypolicy' ? '隐私协议' : '服务协议'
+        }, 100);
 
-  window.open(routeLocation.href, '_blank');
+    }
 }
-
 
 onMounted(() => {
     setTimeout(() => {
@@ -160,20 +164,41 @@ onMounted(() => {
         })
     }, 500);
     window.addEventListener('message', onmessage, false)
-
+    const userAgent = navigator.userAgent
+    for (const keyword of mobileKeywords) {
+        if (userAgent.includes(keyword)) {
+            const el = document.querySelector('.login')
+            el?.classList.add('loginmin')
+            return isShow.value = false
+        } else {
+            isShow.value = true
+        }
+    }
 })
-
 onUnmounted(() => {
     window.removeEventListener('message', onmessage)
 })
+
+const mobileKeywords = [
+    "Android",
+    "webOS",
+    "iPhone",
+    "iPad",
+    "iPod",
+    "BlackBerry",
+    "Windows Phone",
+]
 
 </script>
 
 <template>
     <div class="main">
         <div class="all" v-if="loginshow">
-            <Describes />
+            <Describes v-if="isShow" />
             <div class="login">
+                <div class="img-logo" v-if="!isShow">
+                    <img :src="avatar" alt="ProtoDesign">
+                </div>
                 <span>{{ t('system.wx_login') }}</span>
                 <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
                 <p>{{ t('system.login_read') }}
@@ -181,13 +206,13 @@ onUnmounted(() => {
                     <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy') }}</a>
                 </p>
             </div>
-            <Footer @Privacypolicy="handleOpenNewWindow" @Serviceagreement="handleOpenNewWindow"/>
+            <Footer v-if="isShow" @Privacypolicy="handleOpenNewWindow" @Serviceagreement="handleOpenNewWindow" />
         </div>
         <div class="code_input" v-else>
             <div class="top">
                 <div class="img">
                     <img :src="avatar" alt="ProtoDesign" />
-                    <span>{{t('system.product_name')}}</span>
+                    <span>{{ t('system.product_name') }}</span>
                 </div>
             </div>
             <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
@@ -200,6 +225,22 @@ onUnmounted(() => {
 </template>
 
 <style lang='scss' scoped>
+.loginmin {
+    margin: 0px !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0.00) -113deg, #542FDB 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0.00) 247deg, #542FDB 453deg) !important;
+    background-blend-mode: color-dodge !important;
+    color: white;
+}
+
+.img-logo {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
 .main {
     width: 100vw;
     height: 100vh;
@@ -237,21 +278,24 @@ onUnmounted(() => {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    animation: moveup 1.5s;
+    animation: moveup .5s;
 
     .top {
         position: absolute;
         left: 0;
         top: 0;
-        .img{
+
+        .img {
             display: flex;
             align-items: center;
-            span{
+
+            span {
                 font-size: 48px;
                 font-weight: 600;
                 color: white;
             }
-            img{
+
+            img {
                 height: 160px;
                 width: 160px;
             }
@@ -317,17 +361,17 @@ onUnmounted(() => {
         flex-wrap: nowrap;
         justify-content: center;
         align-items: center;
-        margin: 0 100px;
-        width: 420px;
-        height: 500px;
+        margin: 0 0 160px 100px;
+        width: 400px;
+        height: 480px;
         text-align: center;
-        background: #FFFFFF;
-        border-radius: 5px;
+        background: white;
+        border-radius: 6px;
         z-index: 2;
-        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
-        animation: moveleft 1.5s;
+        box-shadow: rgba(17, 17, 26, 0.1) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 48px;
+        animation: moveleft .5s;
 
-        div {
+        #login_container {
             width: 300px;
             height: 300px;
         }
@@ -345,13 +389,15 @@ onUnmounted(() => {
             font-size: 12px;
             font-weight: bold;
             letter-spacing: 2px;
-            color: rgb(152, 148, 148);
+            color: rgb(146 146 146);
             margin-top: 20px;
 
         }
 
     }
 }
+
+
 
 @keyframes moveleft {
     0% {
