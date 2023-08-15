@@ -68,7 +68,8 @@ function calc_attri() {
     if (len === 1) {
         const shape = props.context.selection.selectedShapes[0];
         if (shape.type === ShapeType.Line) {
-            line_length.value = Math.max(get_straight_line_length(shape), 1);
+            w.value = Math.max(get_straight_line_length(shape), 1);
+            h.value = 0;
         } else {
             const frame = shape.frame;
             w.value = Math.max(frame.width, 1);
@@ -178,6 +179,10 @@ function onChangeY(value: string) {
     }
 }
 function onChangeW(value: string) {
+    if (s_length) {
+        set_lines_length(value);
+        return;
+    }
     value = Number.parseFloat(value).toFixed(fix);
     const _w: number = Number.parseFloat(value);
     if (isNaN(_w)) return;
@@ -224,6 +229,7 @@ function onChangeH(value: string) {
     }
 }
 function lockToggle() {
+    if (s_length) return;
     const val = !isLock.value;
     const actions = get_actions_constrainer_proportions(props.context.selection.selectedShapes, val);
     const page = props.context.selection.selectedPage;
@@ -411,22 +417,17 @@ onUnmounted(() => {
             <Position :context="props.context" :shape="props.context.selection.selectedShapes[0]"></Position>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="td frame" ticon="L" v-if="s_length"
-                :text="typeof line_length === 'number' ? line_length.toFixed(fix) : line_length"
-                @onchange="set_lines_length" />
-            <div class="tr" v-else>
-                <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w"
-                    @onchange="onChangeW" />
-                <div class="lock" @click="lockToggle">
-                    <svg-icon :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
-                </div>
-                <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h"
-                    @onchange="onChangeH" />
-                <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
-                    <svg-icon icon-class="adapt"></svg-icon>
-                </div>
-                <div style="width: 22px;height: 22px;" v-else></div>
+            <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w"
+                @onchange="onChangeW" />
+            <div class="lock" @click="lockToggle">
+                <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
+            <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
+                :disabled="s_length" />
+            <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
+                <svg-icon icon-class="adapt"></svg-icon>
+            </div>
+            <div style="width: 22px;height: 22px;" v-else></div>
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
