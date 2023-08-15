@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "@kcdesign/data": "file:../kcdesign-data/dist"
+    "@kcdesign/data": "file:../kcdesign-data/"
   }
 }
