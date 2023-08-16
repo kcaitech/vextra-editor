@@ -45,23 +45,35 @@ const openInsertCell = (value: string) => {
 const mergeCell = () => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.selection.getTableSelection(shape as TableShape);
-  if(table.tableColEnd === table.tableRowEnd) {
+  if(table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
       const cell = (Array.from(table.getSelectedCells()))[0]
       const editor = props.context.editor4Table(shape as TableShape)
       console.log(cell, 'merge');
       
       editor.mergeCells(0,2,0,2)
   }
+  emit('close');
 }
 const spliceRow = () => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.selection.getTableSelection(shape as TableShape);
-  if(table.tableColEnd === table.tableRowEnd) {
-      const cell = (Array.from(table.getSelectedCells()))[0]
+  if(table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
       const editor = props.context.editor4Table(shape as TableShape)
-      console.log(cell, 'merge');
-      editor.removeRow()
+      console.log(table, 'spliceRow');
+      editor.removeRow(table.tableRowStart)
   }
+  emit('close');
+}
+
+const spliceCol = () => {
+  const shape = props.context.selection.selectedShapes[0]
+  const table = props.context.selection.getTableSelection(shape as TableShape);
+  if(table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
+      const editor = props.context.editor4Table(shape as TableShape)
+      console.log(table, 'spliceCol');
+      editor.removeCol(table.tableColEnd)
+  }
+  emit('close');
 }
 
 // /**
@@ -84,7 +96,7 @@ function closeLayerSubMenu() {
           <span>删除选中行</span>
           <span></span>
         </div>
-        <div class="item" v-if="props.items.includes('split_cell')">
+        <div class="item" v-if="props.items.includes('split_cell')" @click="spliceCol">
           <span>删除选中列</span>
           <span></span>
         </div>
@@ -99,8 +111,8 @@ function closeLayerSubMenu() {
       <span></span>
     </div>
     <!-- <div class="item" v-if="props.items.includes('merge_cell')"> -->
-    <div class="item" v-if="props.items.includes('insert_column')">
-      <span @click="mergeCell">合并单元格</span>
+    <div class="item" v-if="props.items.includes('insert_column')" @click="mergeCell">
+      <span>合并单元格</span>
       <span></span>
     </div>
     <div class="item" v-if="props.items.includes('split_cell')" @click="openSplitCell('split')">

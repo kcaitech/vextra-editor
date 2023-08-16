@@ -39,7 +39,7 @@ if(props.addOrDivision === 'split') {
 const splitCell = () => {
     const shape = props.context.selection.selectedShapes[0]
     const table = props.context.selection.getTableSelection(shape as TableShape);
-    if(table.tableColEnd === table.tableRowEnd) {
+    if(table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const cell = (Array.from(table.getSelectedCells()))[0]
         console.log(cell,'splitCell');
         
@@ -49,6 +49,20 @@ const splitCell = () => {
     }
     emit('close');
 }
+
+const InsertCell = () => {
+    const shape = props.context.selection.selectedShapes[0]
+    const table = props.context.selection.getTableSelection(shape as TableShape);
+    if(table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+        const cell = (Array.from(table.getSelectedCells()))[0]
+        console.log(table,'splitCell');
+        
+        const editor = props.context.editor4Table(shape as TableShape)
+        editor.insertRow(table.tableRowEnd, 80)
+    }
+    emit('close');
+}
+
 onMounted(() => {
     document.addEventListener('keydown', escClose);
 })
@@ -158,7 +172,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="save">
-                <div>确定</div>
+                <div @click="InsertCell">确定</div>
             </div>
         </el-dialog>
     </div>

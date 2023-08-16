@@ -279,7 +279,6 @@ const textFormat = () => {
             }
         }
         let format:any = {}
-        console.log(formats);
         if(formats.length > 0) {
             const referenceKeys = Object.keys(formats[0]);
             for (const key of referenceKeys) {
