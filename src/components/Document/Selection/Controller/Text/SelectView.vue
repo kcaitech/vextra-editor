@@ -78,9 +78,7 @@ function selectionWatcher(...args: any[]) {
     }
     if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) update();
 }
-function workspace_watcher(t?: any) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) update();
-}
+watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
     value.watch(update);
@@ -91,7 +89,6 @@ onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
     selection.watch(selectionWatcher);
-    props.context.workspace.watch(workspace_watcher);
     update();
 })
 
@@ -99,7 +96,6 @@ onUnmounted(() => {
     const selection = props.context.selection;
     props.shape.unwatch(update);
     selection.unwatch(selectionWatcher);
-    props.context.workspace.unwatch(workspace_watcher);
 })
 
 function genCursorPath(cursor: { x: number, y: number }[]): string {

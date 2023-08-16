@@ -136,6 +136,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
             }
         }
     }
+    workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     search_once(e) // 滚动过程进行常规图形检索
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
