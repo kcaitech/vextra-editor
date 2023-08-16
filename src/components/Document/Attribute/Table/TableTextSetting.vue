@@ -50,6 +50,11 @@ const onSelectId = (icon: BulletNumbersType) => {
         editor.setTextBulletNumbers(icon, textIndex, selectLength)
       }
   }
+  // else {
+  //   const table = props.textShape;
+  //   const editor = props.context.editor4Table(table);
+  //   editor.setTextBulletNumbers(icon);
+  // }
 }
 
 const onSelectText = (icon: TextBehaviour) => {
@@ -58,6 +63,11 @@ const onSelectText = (icon: TextBehaviour) => {
       const editor = props.context.editor4TextShape(shape.value)
       editor.setTextBehaviour(icon)
   }
+  // else {
+  //   const table = props.textShape;
+  //   const editor = props.context.editor4Table(table);
+  //   editor.setTextBehaviour(icon);
+  // }
 }
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon
@@ -69,68 +79,94 @@ const onSelectCase = (icon: TextTransformType) => {
       } else {
         editor.setTextTransform(icon, textIndex, selectLength)
       }
-      props.context.workspace.focusText()
+  }else {
+    const table = props.textShape;
+    const editor = props.context.editor4Table(table);
+    editor.setTextTransform(icon);
   }
+  props.context.workspace.focusText();
 }
 
 const setRowHeight = () => {
-    if(shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
-        rowHeight.value = rowHeight.value.trim()
-        if (rowHeight.value.length < 1) {
-          rowHeight.value = 1
-        }
-        if (!isNaN(Number(rowHeight.value))) {
-          if (isSelectText()) {
-            editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
-          } else {
-            editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
-          }
+  rowHeight.value = rowHeight.value.trim()
+  if (rowHeight.value.length < 1) {
+    rowHeight.value = 1
+  }
+  if(shape.value) {
+      const { textIndex, selectLength } = getTextIndexAndLen();
+      const editor = props.context.editor4TextShape(shape.value)
+      if (!isNaN(Number(rowHeight.value))) {
+        if (isSelectText()) {
+          editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
         } else {
-          textFormat()
+          editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
         }
+      } else {
+        textFormat();
+      }
+  }else {
+    if (!isNaN(Number(rowHeight.value))) {
+      const table = props.textShape;
+      const editor = props.context.editor4Table(table);
+      editor.setLineHeight(Number(rowHeight.value));
+    }else {
+      textFormat();
     }
+  }
 }
 
 const setWordSpace = () => {
-    if(shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
-        wordSpace.value = wordSpace.value.trim()
-        // if (wordSpace.value.slice(-1) === '%') {
-        //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
-        // }
-        if (wordSpace.value.length < 1) {
-          wordSpace.value = 0
-        }
-        if (!isNaN(Number(wordSpace.value))) {
-          if (isSelectText()) {
-            editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
-          } else {
-            editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
-          }
+  wordSpace.value = wordSpace.value.trim()
+  if (wordSpace.value.length < 1) { wordSpace.value = 0 }
+  if(shape.value) {
+      const { textIndex, selectLength } = getTextIndexAndLen();
+      const editor = props.context.editor4TextShape(shape.value)
+      // if (wordSpace.value.slice(-1) === '%') {
+      //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
+      // }
+      if (!isNaN(Number(wordSpace.value))) {
+        if (isSelectText()) {
+          editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
         } else {
-          textFormat()
+          editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
         }
+      } else {
+        textFormat()
+      }
+  }else {
+    if (!isNaN(Number(wordSpace.value))) {
+      const table = props.textShape;
+      const editor = props.context.editor4Table(table);
+      editor.setCharSpacing(Number(wordSpace.value));
+    }else {
+      textFormat();
     }
+  }
 }
 
 const setParagraphSpace = () => {
-    if(shape.value) {
-        const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
-        paragraphSpace.value = paragraphSpace.value.trim()
-        if (!isNaN(Number(paragraphSpace.value))) {
-          if (isSelectText()) {
-            editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
-          } else {
-            editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
-          }
+  paragraphSpace.value = paragraphSpace.value.trim()
+  if(shape.value) {
+      const { textIndex, selectLength } = getTextIndexAndLen();
+      const editor = props.context.editor4TextShape(shape.value)
+      if (!isNaN(Number(paragraphSpace.value))) {
+        if (isSelectText()) {
+          editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
         } else {
-          textFormat()
+          editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
         }
+      } else {
+        textFormat();
+      }
+  }else {
+    if (!isNaN(Number(paragraphSpace.value))) {
+      const table = props.textShape;
+      const editor = props.context.editor4Table(table);
+      editor.setParaSpacing(Number(paragraphSpace.value));
+    }else {
+      textFormat();
     }
+  }
 }
 
 //判断是否选择文本框还是光标聚焦了
