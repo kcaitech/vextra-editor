@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table, init_insert_shape2 } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -140,13 +140,9 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
             }
         }
     }
+    workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     search_once(e) // 滚动过程进行常规图形检索
-    workspace.value.pageDragging(true);
-    de_freeze();
 }
-const de_freeze = debounce(() => {
-    workspace.value.pageDragging(false);
-}, 50)
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
@@ -182,7 +178,13 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     if (isDrag && newShape) shapeCreateEnd();
     else {
         if (newShape) shapeCreateEnd();
-        else if (action.startsWith('add')) init_insert_shape(props.context, mousedownOnPageXY, t);
+        else if (action.startsWith('add')) {
+            if (action === Action.AddArrow || action === Action.AddLine) {
+                init_insert_shape2(props.context, mousedownOnPageXY, t);
+            } else {
+                init_insert_shape(props.context, mousedownOnPageXY, t);
+            }
+        }
     }
 }
 function contentEditOnMoving(e: MouseEvent) { // 编辑page内容    
@@ -258,7 +260,7 @@ function menu_watcher(type?: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
     if (type === Menu.CHANGE_USER_CURSOR) {
         avatarVisi.value = props.context.menu.isUserCursorVisible;
-    }else if (type === Menu.OPEN_SPLIT_CELL) {
+    } else if (type === Menu.OPEN_SPLIT_CELL) {
         cellStatus.value = mount;
         cellSetting.value = true;
     }
@@ -401,7 +403,7 @@ function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button == 0) { // 左键按下
         const action = props.context.tool.action;
-        if(action === Action.AddTable) return;
+        if (action === Action.AddTable) return;
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
         if (spacePressed.value) {
             pageViewDragStart(e); // 空格键press，准备拖动页面

@@ -82,7 +82,6 @@ function updateData() {
 function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
-
     const borderStyle = new BorderStyle(0, 0);
     const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
     if (len.value === 1) {

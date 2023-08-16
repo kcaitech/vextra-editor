@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2 } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from './PopoverMenu/Position.vue';

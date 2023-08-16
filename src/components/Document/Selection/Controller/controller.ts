@@ -16,10 +16,10 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { distance2apex, distance2apex2, get_frame, update_pg, get_pg_by_frame } from '@/utils/assist';
+import { distance2apex, distance2apex2, get_frame, get_pg_by_frame, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
-
 import { Menu } from '@/context/menu';
+
 export function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -127,7 +127,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (timer) handleDblClick();
             initTimer();
             preTodo(e);
-        } else if (isMouseOnContent(e) && !context.selection.hoveredShape) context.selection.resetSelectShapes();
+        } else if (isMouseOnContent(e)) {
+            const selection = context.selection;
+            const selected = selection.selectedShapes;
+            const h = selection.hoveredShape;
+            if (!h) {
+                selection.resetSelectShapes();
+            } else {
+                e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
+            }
+        }
     }
     function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) return;
@@ -207,7 +216,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
         if (need_multi) {
             if (len === 1) {
-                context.assist.setCPG(update_pg(shape, true));
+                context.assist.setCPG(update_pg_2(shape, true));
             } else {
                 const fs = get_frame(shapes);
                 context.workspace.setCFrame(fs);

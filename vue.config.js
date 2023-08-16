@@ -124,8 +124,7 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-    // publicPath: './',
-    publicPath: '/tjs',
+    publicPath: './',
     configureWebpack,
 
     pluginOptions: {

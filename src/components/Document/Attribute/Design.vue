@@ -24,9 +24,10 @@ const WITH_FILL = [
     ShapeType.Artboard,
     ShapeType.Group,
     ShapeType.Path2,
+    ShapeType.Text,
     ShapeType.Table,
-    ShapeType.TableCell,
-    ShapeType.Text];
+    ShapeType.TableCell
+];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
     ShapeType.Image,
@@ -81,7 +82,8 @@ onUnmounted(() => {
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
-            <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context"></TableText>
+            <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
+            </TableText>
             <TableStyle v-if="WITH_TABLE.includes(shapeType)" :shape="shapes[0]" :context="props.context"></TableStyle>
         </div>
     </section>

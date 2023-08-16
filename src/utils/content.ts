@@ -141,6 +141,30 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
   tool.setAction(Action.AutoV);
   context.cursor.setType('auto-0');
 }
+// 图形从init到insert
+export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
+  const tool = context.tool;
+  const action = tool.action;
+  if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
+  const selection = context.selection;
+  const type = _t || ResultByAction(action);
+  const page = selection.selectedPage;
+  const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+  let new_shape: Shape | undefined | false;
+  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+  if (page && parent && type) {
+    const editor = context.editor.editor4Page(page);
+    const name = getName(type, parent.childs, t);
+    if (action === Action.AddArrow || action === Action.AddLine) {
+      const r = 0.25 * Math.PI;
+      frame.width = 100 * Math.cos(r), frame.height = 100 * Math.sin(r);
+      new_shape = editor.create2(page, parent as GroupShape, type, name, frame, { rotation: -45, is_arrow: Boolean(action === Action.AddArrow), target_xy: mousedownOnPageXY });
+    }
+  }
+  if (new_shape) { selection.selectShape(page!.getShape(new_shape.id)) }
+  tool.setAction(Action.AutoV);
+  context.cursor.setType('auto-0');
+}
 //插入表格
 function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
   const tool = context.tool;
