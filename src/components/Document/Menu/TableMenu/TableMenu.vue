@@ -48,9 +48,19 @@ const mergeCell = () => {
   if(table.tableColEnd === table.tableRowEnd) {
       const cell = (Array.from(table.getSelectedCells()))[0]
       const editor = props.context.editor4Table(shape as TableShape)
-      console.log(cell);
+      console.log(cell, 'merge');
       
       editor.mergeCells(0,2,0,2)
+  }
+}
+const spliceRow = () => {
+  const shape = props.context.selection.selectedShapes[0]
+  const table = props.context.selection.getTableSelection(shape as TableShape);
+  if(table.tableColEnd === table.tableRowEnd) {
+      const cell = (Array.from(table.getSelectedCells()))[0]
+      const editor = props.context.editor4Table(shape as TableShape)
+      console.log(cell, 'merge');
+      editor.removeRow()
   }
 }
 
@@ -70,7 +80,7 @@ function closeLayerSubMenu() {
       <div class="triangle"></div>
       <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
         :site="site" :context="props.context">
-        <div class="item" v-if="props.items.includes('split_cell')">
+        <div class="item" v-if="props.items.includes('split_cell')" @click="spliceRow">
           <span>删除选中行</span>
           <span></span>
         </div>

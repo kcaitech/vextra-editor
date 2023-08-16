@@ -41,9 +41,13 @@ const splitCell = () => {
     const table = props.context.selection.getTableSelection(shape as TableShape);
     if(table.tableColEnd === table.tableRowEnd) {
         const cell = (Array.from(table.getSelectedCells()))[0]
+        console.log(cell,'splitCell');
+        
         const editor = props.context.editor4Table(shape as TableShape)
         editor.horSplitCell(cell)
+        editor.verSplitCell(cell)
     }
+    emit('close');
 }
 onMounted(() => {
     document.addEventListener('keydown', escClose);
