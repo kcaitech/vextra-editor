@@ -831,16 +831,6 @@ onUnmounted(() => {
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 5px;
-                .color_border {
-                    flex: 1;
-                    background-color: rgba(216, 216, 216, 0.4);
-                    height: 25px;
-                    padding: 0px 3px;
-                    margin-left: 3px;
-                    margin-right: 3px;
-                    border-radius: 3px;
-                    box-sizing: border-box;
-                }
                 .add {
                     width: 22px;
                     height: 22px;
