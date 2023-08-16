@@ -52,7 +52,7 @@ export class DocSelectionOp extends Watchable(Object) {
         if (!this.context) return;
         if (this.context.selection.selectedShapes.length !== 1) return;
         if (this.context.selection.cursorStart === -1 || this.context.selection.cursorEnd === -1) return;
-        if (cmd.serverId === undefined) return;
+        if (cmd.serverId === undefined && !(cmd as any).isUndo) return;
         if (!this.docSelectionOpUpdate) this.docSelectionOpUpdate = throttle(this.update, 1000).bind(this);
         const originalCursorStart = this.context.selection.cursorStart
         const originalCursorEnd = this.context.selection.cursorEnd
