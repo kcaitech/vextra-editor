@@ -137,12 +137,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
         }
     }
     search_once(e) // 滚动过程进行常规图形检索
-    workspace.value.pageDragging(true);
-    de_freeze();
 }
-const de_freeze = debounce(() => {
-    workspace.value.pageDragging(false);
-}, 50)
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
