@@ -2,7 +2,7 @@
 import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
-import { onMounted, onUnmounted, onUpdated, ref, watch, watchEffect } from 'vue';
+import { onMounted, onUnmounted, ref, watch, watchEffect, computed } from 'vue';
 import comsMap from './comsmap';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
@@ -20,6 +20,8 @@ let renderItems: Shape[] = []; // 渲染数据，里面除了真实的data数据
 const watcher = () => {
     reflush.value++;
 }
+const width = computed(() => Math.max(props.data.frame.width, 100));
+const height = computed(() => Math.max(props.data.frame.height, 100));
 function pageViewRegister(mount: boolean) {
     if (mount) {
         const id = (v4().split('-').at(-1)) || 'pageview';
@@ -71,9 +73,8 @@ onUnmounted(() => {
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-        :viewBox='"0 0 " + data.frame.width + " " + data.frame.height' :width="data.frame.width" :height="data.frame.height"
-        :style="{ transform: matrixWithFrame.toString() }" overflow="visible" :reflush="reflush !== 0 ? reflush : undefined"
-        :data-area="rootId">
+        :viewBox='"0 0 " + width + " " + height' :width="width" :height="height" overflow="visible"
+        :reflush="reflush !== 0 ? reflush : undefined" :transform="matrixWithFrame.toString()" :data-area="rootId">
         <component v-for="c in renderItems" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
     </svg>

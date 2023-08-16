@@ -76,7 +76,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         super();
         this.m_document = document;
     }
-
     get scout(): Scout | undefined {
         return this.m_scout;
     }
