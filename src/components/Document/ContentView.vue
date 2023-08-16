@@ -400,13 +400,14 @@ function updateMouse(e: MouseEvent) {
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button == 0) { // 左键按下
+        const action = props.context.tool.action;
+        if(action === Action.AddTable) return;
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
         if (spacePressed.value) {
             pageViewDragStart(e); // 空格键press，准备拖动页面
         } else {
             wheelSetup();
             isMouseLeftPress = true;
-            const action = props.context.tool.action;
             if (action !== Action.AddComment) {
                 if (commentInput.value) {
                     commentInput.value = false;

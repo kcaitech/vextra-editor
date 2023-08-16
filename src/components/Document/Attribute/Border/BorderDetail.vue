@@ -46,11 +46,6 @@ const positonOptionsSource: SelectSource[] = genOptions([
   [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
   [BorderPosition.Inner, t(`attr.${BorderPosition.Inner}`)],
 ]);
-const borderPositonOptionsSource: SelectSource[] = genOptions([
-  [BorderPosition.Outer, t(`attr.full_border`)],
-  [BorderPosition.Center, t(`attr.outer_border`)],
-  [BorderPosition.Inner, t(`attr.inner_border`)],
-]);
 
 function showMenu() {
   updater();
