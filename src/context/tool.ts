@@ -46,7 +46,8 @@ const A2R = new Map([
     [Action.AddLine, ShapeType.Line],
     [Action.AddFrame, ShapeType.Artboard],
     [Action.AddText, ShapeType.Text],
-    [Action.AddImage, ShapeType.Image]
+    [Action.AddImage, ShapeType.Image],
+    [Action.AddArrow, ShapeType.Line]
 ]);
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
@@ -118,7 +119,6 @@ export class Tool extends Watchable(Object) {
         this.setAction(Action.AutoV);
     }
     keydown_l(shiftKey: boolean) {
-        if (shiftKey) return; // 暂时停止使用箭头图形
         this.setAction(shiftKey ? Action.AddArrow : Action.AddLine);
     }
     keydown_k(ctrl: boolean, shift: boolean, meta: boolean) {

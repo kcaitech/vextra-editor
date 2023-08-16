@@ -56,8 +56,12 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
 // 使容器滚动到可视区域
 export function scrollToContentView(shape: Shape, context: Context) {
     const selection = context.selection, workspace = context.workspace;
-    const { x: sx, y: sy, height, width } = shape.frame2Root();
-    const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2);
+    const m2r = shape.matrix2Root(), f = shape.frame;
+    m2r.multiAtLeft(workspace.matrix);
+    const lt = m2r.computeCoord2(0, 0);
+    const rb = m2r.computeCoord2(f.width, f.height);
+    const w = rb.x - lt.x, h = rb.y - lt.y;
+    const shapeCenter = { x: lt.x + w / 2, y: lt.y + h / 2 };
     const contentViewCenter = workspace.root.center;
     const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
     if (transX || transY) {
@@ -66,7 +70,20 @@ export function scrollToContentView(shape: Shape, context: Context) {
         const pageViewEl = workspace.pageView;
         if (pageViewEl) {
             pageViewEl.classList.add('transition-400');
-            workspace.matrix.trans(transX, transY);
+            const m = new Matrix(workspace.matrix);
+            m.trans(transX, transY);
+            const root = workspace.root;
+            const w_max = root.width;
+            const h_max = root.height;
+            const ratio_w = w / w_max * 1.06; // 两边留点空白
+            const ratio_h = h / h_max * 1.12;
+            const ratio = Math.max(ratio_h, ratio_w);
+            if (ratio > 1) {
+                m.trans(-root.width / 2, -root.height / 2);
+                m.scale(1 / ratio);
+                m.trans(root.width / 2, root.height / 2);
+            }
+            workspace.matrix.reset(m);
             const timer = setTimeout(() => {
                 selection.selectShape(shape);
                 pageViewEl.classList.remove('transition-400');

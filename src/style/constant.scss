@@ -6,6 +6,7 @@
     --default-margin: 16px;
     --default-margin-half: 8px;
     --default-margin-quarter: 4px;
+    --default-input-height: 30px;
 
     // font
     --font-family: BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, PingFang SC, Microsoft Yahei, Hiragino Sans GB, sans-serif, apple color emoji, Noto Color Emoji, segoe ui emoji, segoe ui symbol;
@@ -18,7 +19,7 @@
     --el-component-size-large: 32px;
     --el-component-size: 24px;
     --el-component-size-small: 16px;
-    --default-radius: 8px;
+    --default-radius: 3px;
 
     // color
     color-scheme: light;
@@ -113,6 +114,3 @@
     --el-border: var(--el-border-width) var(--el-border-style) var(--el-border-color);
     --el-svg-monochrome-grey: var(--el-border-color);
 }
-
-
-

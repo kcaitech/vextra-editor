@@ -20,19 +20,19 @@ const isEnd = computed<boolean>(() => {
 </template>
 <style scoped lang="scss">
 .border-front-style-item-container {
-    height: 32px;
-    width: 100%;
-    color: var(--theme-color-anti);
-    padding: 0 var(--default-padding);
+    height: var(--default-input-height);
+    width: 64%;
+    padding: 0 12px;
+    color: var(--theme-color);
     margin-left: var(--default-margin-half);
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    justify-content: center;
 
     >svg {
-        width: 100%;
-        height: 100%;
-        color: black;
+        width: 60%;
+        height: 60%;
     }
 
     >.isEnd {

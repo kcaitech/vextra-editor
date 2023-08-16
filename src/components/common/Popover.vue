@@ -2,6 +2,8 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
+import { Tool } from '@/context/tool';
+import { Menu } from '@/context/menu';
 const props = defineProps<{
   title?: string,
   top?: number,
@@ -24,9 +26,13 @@ function focus() {
   container.value?.focus();
 }
 function show() {
-  if (popoverVisible.value) return popoverClose();
+  if (props.context.menu.ispopover) {
+    props.context.menu.notify(Menu.SHUTDOWN_POPOVER);
+    popoverClose();
+  }
   if (container.value) {
     popoverVisible.value = true;
+    props.context.menu.setPopoverVisible(true);
     container.value.focus();
     container.value.addEventListener('keyup', esc);
     document.addEventListener('mousedown', handleClickOutside);
@@ -52,20 +58,18 @@ function esc(e: KeyboardEvent) {
 }
 function popoverClose() {
   popoverVisible.value = false;
-  props.context.workspace.focusText()
+  props.context.workspace.focusText();
   container.value?.removeEventListener('keyup', esc);
   document.removeEventListener('click', handleClickOutside);
 }
-function workspaceUpdate(t?: number) {
-  if (t === WorkSpace.SHUTDOWN_POPOVER) {
-    popoverClose();
-  }
+function menu_watcher(t?: number) {
+  if (t === Menu.SHUTDOWN_POPOVER) popoverClose();
 }
 onMounted(() => {
-  props.context.workspace.watch(workspaceUpdate);
+  props.context.menu.watch(menu_watcher);
 })
 onUnmounted(() => {
-  props.context.workspace.unwatch(workspaceUpdate);
+  props.context.menu.unwatch(menu_watcher);
 })
 </script>
 
@@ -94,6 +98,7 @@ onUnmounted(() => {
   position: relative;
   outline: none;
   z-index: 99;
+
   >.popover {
     position: absolute;
     outline: none;
