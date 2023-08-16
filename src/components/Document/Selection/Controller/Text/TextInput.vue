@@ -33,7 +33,7 @@ const matrix = new Matrix();
 const updateInputPos = throttle(_updateInputPos, 5);
 
 function _updateInputPos() {
-    if (!inputel.value) return;
+    if (!inputel.value || !props.shape.text) return;
     // inputel.value.hidden = false;
     const selection = props.context.selection.getTextSelection(props.shape);
     // const m2p = props.shape.matrix2Root();
