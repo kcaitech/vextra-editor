@@ -7,6 +7,7 @@ import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipaboard";
+import { landFinderOnPage, scrollToContentView } from './artboardFn'
 export interface Media {
   name: string
   frame: { width: number, height: number }
@@ -161,6 +162,43 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
     }
   }
   if (new_shape) { selection.selectShape(page!.getShape(new_shape.id)) }
+  tool.setAction(Action.AutoV);
+  context.cursor.setType('auto-0');
+}
+//插入表格
+function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
+  const tool = context.tool;
+  const action = tool.action;
+  const table = context.workspace.tableSize;
+  const matrix = context.workspace.matrix;
+  const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
+  const { x, y } = landFinderOnPage(matrix, context, frame)
+  frame.x = x, frame.y = y;
+  const PageXY = { x: x, y: y };
+  const selection = context.selection;
+  const workspace = context.workspace;
+  const type = _t || ResultByAction(action);
+  const page = selection.selectedPage;
+  const parent = land || selection.getClosetArtboard(PageXY);
+  let asyncCreator: AsyncCreator | undefined;
+  let new_shape: Shape | undefined;
+  if (page && parent && type) {
+    const editor = context.editor.controller();
+    const name = getName(type, parent.childs, t);
+    asyncCreator = editor.asyncCreator(PageXY);
+    new_shape = asyncCreator.init_table(page, (parent as GroupShape), name, frame, table.row, table.col);
+    if (new_shape) {
+      const timer = setTimeout(() => {
+        new_shape && scrollToContentView(new_shape, context);
+        clearTimeout(timer);
+      }, 100)
+    }
+  }
+  if (asyncCreator && new_shape) {
+    asyncCreator = asyncCreator.close();
+    selection.selectShape(page!.getShape(new_shape.id));
+  }
+  workspace.creating(false);
   tool.setAction(Action.AutoV);
   context.cursor.setType('auto-0');
 }
@@ -377,10 +415,16 @@ function page_scale(context: Context, scale: number) {
  * @param p 点击位置在页面中所处的位置
  * @param context 
  * @param pre_shapes 预选图形
- * @param { 'text-selection' | 'controller' | 'group'| 'artboard'| 'null' | 'normal' } area
+ * @param { 'text-selection' | 'controller' | 'group'| 'artboard'| 'null' | 'normal' | 'table' | 'table_cell' } area
  */
-function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' {
+function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' {
   const is_edting = context.workspace.isEditing;
+  const area_0 = finder(context, p);
+  if (area_0.length) {
+    if ((e.target as Element).closest('#text-selection') && is_edting && area_0[0].type === ShapeType.Table) {
+      return 'table';
+    }
+  }
   if ((e.target as Element).closest('#text-selection') && is_edting) {
     return 'text-selection';
   }
@@ -450,10 +494,10 @@ function flattenShapes(shapes: any) {
 }
 /**
  * 右键菜单打开之前根据点击的区域整理应该显示的菜单项
- * @param { "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" } area 点击的区域
+ * @param { "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" | "table" | "table_cell"  } area 点击的区域
  * @returns 
  */
-function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal"): string[] {
+function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" | "table" | "table_cell"): string[] {
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
     if (permIsEdit(context)) {
@@ -498,6 +542,18 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
   } else if (area === 'text-selection') {
     if (permIsEdit(context)) {
       contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
+  } else if (area === 'table') {
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
+  } else if (area === 'table_cell') {
+    if (permIsEdit(context)) {
+      contextMenuItems = ['insert_column', 'delete_column', 'split_cell', 'merge_cell'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -572,7 +628,7 @@ function skipUserSelectShapes(context: Context, shapes: Shape[]) {
 }
 export {
   Root, updateRoot, _updateRoot,
-  getName, get_image_name, get_selected_types,
+  getName, get_image_name, get_selected_types, init_insert_table,
   isInner, is_drag,
   init_shape, init_insert_shape, init_insert_textshape,
   insert_imgs, drop, adapt_page, page_scale, right_select,

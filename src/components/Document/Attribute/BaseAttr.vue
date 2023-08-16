@@ -47,6 +47,7 @@ const radius = ref<{ lt: number | string, rt: number, rb: number, lb: number }>(
 const multiRadius = ref(false)
 const multipleValues = ref<boolean>(false)
 const mixed = t('attr.mixed');
+const flip = ref(false)
 const watchedShapes = new Map();
 const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
 let { s_flip, s_adapt, s_radius, s_length } = layout_options;
@@ -374,6 +375,7 @@ function layout() {
             multiRadius.value = MULTI_RADIUS.includes(shape.type);
             getRectShapeAttr(shape);
         }
+        if (shape.type === ShapeType.Table) s_flip = false;
         if (shape.type === ShapeType.Line) s_length = true;
     } else {
         if (selected.find(i => i instanceof RectShape)) s_radius = true;
@@ -433,6 +435,7 @@ onUnmounted(() => {
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" />
             <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
+
                 <div class="flip ml-24" @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>

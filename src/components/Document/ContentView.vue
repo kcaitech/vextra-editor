@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_shape2 } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table, init_insert_shape2 } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -30,6 +30,7 @@ import { Cursor } from "@/context/cursor";
 import { Action } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
+import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 
 interface Props {
     context: Context
@@ -77,6 +78,9 @@ const commentInput = ref(false);
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>('rgba(239,239,239,1)');
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
+const cellSetting = ref(false);
+const cellStatus = ref()
+
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -242,6 +246,7 @@ function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     else if (type === WorkSpace.PASTE_RIGHT) paster(props.context, t, mousedownOnPageXY);
     else if (type === WorkSpace.COPY) props.context.workspace.clipboard.write_html();
     else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) contextMenuMount((param as MouseEvent));
+    else if (type === WorkSpace.INSERT_TABLE) init_insert_table(props.context, t);
 }
 function comment_watcher(type?: number) {
     if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
@@ -251,10 +256,13 @@ function comment_watcher(type?: number) {
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
-function menu_watcher(type?: number) {
+function menu_watcher(type?: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
     if (type === Menu.CHANGE_USER_CURSOR) {
         avatarVisi.value = props.context.menu.isUserCursorVisible;
+    } else if (type === Menu.OPEN_SPLIT_CELL) {
+        cellStatus.value = mount;
+        cellSetting.value = true;
     }
 }
 function insertFrame() {
@@ -262,6 +270,7 @@ function insertFrame() {
     const name = getName(ShapeType.Artboard, brothers, t);
     insertFrameTemplate(props.context, name);
 }
+
 function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;
@@ -393,13 +402,14 @@ function updateMouse(e: MouseEvent) {
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button == 0) { // 左键按下
+        const action = props.context.tool.action;
+        if (action === Action.AddTable) return;
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
         if (spacePressed.value) {
             pageViewDragStart(e); // 空格键press，准备拖动页面
         } else {
             wheelSetup();
             isMouseLeftPress = true;
-            const action = props.context.tool.action;
             if (action !== Action.AddComment) {
                 if (commentInput.value) {
                     commentInput.value = false;
@@ -689,6 +699,11 @@ const getDocumentComment = async () => {
         console.log(err);
     }
 }
+//表格
+const closeModal = () => {
+    cellSetting.value = false
+}
+
 function frame_watcher() {
     if (!root.value) return;
     _updateRoot(props.context, root.value);
@@ -778,6 +793,7 @@ onUnmounted(() => {
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
+        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus"></CellSetting>
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
-import { ShapeType, Shape, TextShape } from "@kcdesign/data"
+import { onMounted, onUnmounted, shallowRef, ref, computed, watchEffect } from 'vue';
+import { ShapeType, Shape, TextShape, TableShape, TableCell } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
@@ -10,6 +10,8 @@ import Border from './Border/Border.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
+import TableStyle from './Table/TableStyle.vue'
+import TableText from './Table/TableText.vue'
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -37,11 +39,11 @@ const WITH_BORDER = [
     ShapeType.Artboard,
     ShapeType.Group,
     ShapeType.Path2,
-    ShapeType.Text,
-    ShapeType.Line,
     ShapeType.Table,
-    ShapeType.TableCell
-];
+    ShapeType.TableCell,
+    ShapeType.Text,
+    ShapeType.Line];
+const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
 const reflush = ref<number>(0);
 function _change(t: number) {
@@ -80,6 +82,9 @@ onUnmounted(() => {
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
+            <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
+            </TableText>
+            <TableStyle v-if="WITH_TABLE.includes(shapeType)" :shape="shapes[0]" :context="props.context"></TableStyle>
         </div>
     </section>
 </template>

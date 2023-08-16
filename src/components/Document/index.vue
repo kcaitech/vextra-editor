@@ -29,7 +29,7 @@ import { DocSelectionOp } from "@/context/communication/doc_selection_op";
 import { throttle } from "@/utils/timing_util";
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op"
 import { debounce } from '@/utils/timing_util';
-import { NetworkStatusType } from "@/communication/types";
+import { NetworkStatusType } from "@/communication/types"
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -533,7 +533,7 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
                 networkDebounce(status)
             }
         }
-    }else {
+    } else {
         //网络连接成功
         if(context) {
             if(context.communication.docOp.hasPendingSyncCmd() || netErr) {

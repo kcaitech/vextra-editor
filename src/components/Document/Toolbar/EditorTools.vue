@@ -12,13 +12,13 @@ import Line from "./Buttons/Path.vue";
 import Arrow from "./Buttons/Arrow.vue";
 import CreateText from "./Buttons/CreateText.vue";
 import CreateImage from "./Buttons/CreateImage.vue";
+import Table from "./Buttons/Table/index.vue"
 import Comment from "./Buttons/Comment.vue"
 import { WorkSpace,Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
-import CreateTable from "./Buttons/CreateTable.vue";
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -80,7 +80,7 @@ onUnmounted(() => {
         <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
-        <CreateTable @select="select" :active="selected === Action.AddTable" :context="props.context"></CreateTable>
+        <Table  @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <div class="vertical-line" />
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
             placement="bottom" :show-after="500" :offset="10" :hide-after="0">

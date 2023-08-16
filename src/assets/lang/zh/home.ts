@@ -5,6 +5,7 @@ export const product = {
 }
 
 export const system = {
+    incorrect_input: '输入有误！',
     'illegal_input': '输入不合法！',
     select: '请选择！',
     space: '...',
@@ -264,7 +265,10 @@ export const attr: any = {
     unfold: '展开',
     packup: '收起',
     'flip_v': '垂直翻转',
-    'flip_h': '水平翻转'
+    'flip_h': '水平翻转',
+    full_border: '全边框',
+    outer_border: '外边框',
+    inner_border: '内边框'
 }
 
 export const login = {
