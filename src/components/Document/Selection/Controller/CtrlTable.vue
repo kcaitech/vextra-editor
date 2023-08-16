@@ -2,12 +2,12 @@
 import { Context } from '@/context';
 import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
-import { genRectPath, throttle } from '../common';
+import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY } from '@/context/selection';
 import { getAxle } from '@/utils/common';
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
-import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import PointsContainer from "./Points/PointsContainerForTable.vue";
 import { useController } from './controller';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
@@ -25,9 +25,7 @@ const props = defineProps<{
     matrix: Matrix, // root->屏幕 变换矩阵
     shape: TableShape
 }>();
-useController(props.context);
 const matrix = new Matrix();
-// const update = throttle(_update, 5);
 function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
@@ -42,7 +40,6 @@ function update() {
         { x: frame.width, y: frame.height }, // right bottom
         { x: 0, y: frame.height }, // left bottom
     ];
-
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
     boundrectPath.value = genRectPath(boundrect);
     props.context.workspace.setCtrlPath(boundrectPath.value);
@@ -58,7 +55,6 @@ function update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
-
     if (editingCell.value) {
         editingCell.value = props.shape.locateCell2(editingCell.value.cell);
     }
@@ -300,25 +296,22 @@ const imageIconTrans = () => {
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible" @blur="windowBlur"
         :class="{ 'un-visible': !visible }">
-
         <!-- 插入图片icon -->
         <g v-if="showImageIcon()" :transform="imageIconTrans()">
             <svg-icon class="cell-image" icon-class="pattern-image" :width="`${imageIconSize}px`"
                 :height="`${imageIconSize}px`"></svg-icon>
         </g>
-
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
             :matrix="editingCellMatrix"></SelectView>
-
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </BarsContainer>
+
         <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
-
     </svg>
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>
