@@ -286,7 +286,7 @@ const textFormat = () => {
         fonstSize.value = format.fontSize || 14;
         isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
-        textColor.value = format.color ;
+        textColor.value = format.color;
         highlight.value = format.highlight;
         isBold.value = format.bold || false;
         isTilt.value = format.italic || false;
@@ -316,9 +316,15 @@ const textFormat = () => {
             for (const key of referenceKeys) {
                 const referenceValue = formats[0][key];
                 let foundEqual = true;
-    
                 for (let i = 1; i < formats.length; i++) {
-                    if (formats[i][key] !== referenceValue) {
+                    if(key === 'color' || key === 'highlight' && formats[i][key] && referenceValue) {
+                        const { alpha: alpha1, blue: blue1, green: green1, red: red1 } = formats[i][key];
+                        const { alpha: alpha2, blue: blue2, green: green2, red: red2 } = referenceValue;
+                        if(alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {
+                            foundEqual = false;
+                            break;
+                        }
+                    }else if (formats[i][key] !== referenceValue) {
                         foundEqual = false;
                         break;
                     }
@@ -341,6 +347,7 @@ const textFormat = () => {
         highlight.value = format.highlight;
         isBold.value = format.bold || false;
         isTilt.value = format.italic || false;
+        textColor.value = format.color;
         if(format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
         if(format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if(format.alignment === 'unlikeness') selectLevel.value = '';
@@ -351,7 +358,8 @@ const textFormat = () => {
         if(format.italic === 'unlikeness') isTilt.value = false;
         if(format.underline === 'unlikeness') isUnderline.value = false;
         if(format.strikethrough === 'unlikeness') isDeleteline.value = false;
-        if(format.textColor === 'unlikeness') textColor.value = undefined;
+        if(format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
+        if(format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
     }
 }
 
@@ -579,7 +587,6 @@ const addTextColor = () => {
         const editor = props.context.editor4Table(table)
         editor.setTextColor(new Color(1, 6, 6, 6))
     }
-    textFormat();
 }
 const selectSizeValue = () => {
     textSize.value && textSize.value.select();

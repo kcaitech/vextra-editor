@@ -10,7 +10,6 @@ import Border from './Border/Border.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
-import TableStyle from './Table/TableStyle.vue'
 import TableText from './Table/TableText.vue'
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
@@ -84,7 +83,6 @@ onUnmounted(() => {
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
             </TableText>
-            <TableStyle v-if="WITH_TABLE.includes(shapeType)" :shape="shapes[0]" :context="props.context"></TableStyle>
         </div>
     </section>
 </template>
