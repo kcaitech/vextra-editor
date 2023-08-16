@@ -21,6 +21,7 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let cursor_points: { x: number, y: number }[] = [];
 
 function update() {
+    if (!props.shape.text) return;
     const selection = props.context.selection;
     // const m2p = props.shape.matrix2Root();
     // matrix.reset(m2p);
