@@ -28,7 +28,7 @@ const emits = defineEmits<Emits>();
 const { t } = useI18n();
 const showoverlay = ref(false)
 
-const picker = new FilePicker((file) => {
+const picker = new FilePicker('.sketch', (file) => {
     if (!file) return;
     const lzdata = new LzDataLocal(new Zip(file));
     const repo = new Repository();

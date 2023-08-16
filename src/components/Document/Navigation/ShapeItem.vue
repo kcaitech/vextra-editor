@@ -69,7 +69,7 @@ const stop = watch(() => props.data.shape, (value, old) => {
 function updater(t?: any) {
     if (t === 'shape-frame') return;
     let shape = props.data.shape;
-    showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0;
+    showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0 && shape.childsVisible;
     lock_status.value = props.data.shape.isLocked ? 1 : 0;
     visible_status.value = props.data.shape.isVisible ? 0 : 1;
     if (is_parent_locked(props.data.shape)) lock_status.value = 2;

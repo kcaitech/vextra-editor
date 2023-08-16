@@ -1,28 +1,15 @@
 <script setup lang="ts">
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { h } from 'vue';
 import comsMap from './comsmap'
 import { GroupShape } from "@kcdesign/data";
 import { renderGroup as r } from "@kcdesign/data";
+import { makeReflush } from "./common";
 
 const props = defineProps<{ data: GroupShape }>();
-const reflush = ref(0);
+const reflush = makeReflush(props);
 
-const watcher = () => {
-    reflush.value++;
-}
-const stopWatch = watch(() => props.data, (value, old) => {
-    old.unwatch(watcher);
-    value.watch(watcher);
-})
-onMounted(() => {
-    props.data.watch(watcher);
-})
-onUnmounted(() => {
-    props.data.unwatch(watcher);
-    stopWatch();
-})
 function render() {
-    const ret = r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined);
+    const ret = r(h, props.data, comsMap, reflush.value ? reflush.value : undefined);
     return ret;
 }
 

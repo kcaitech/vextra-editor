@@ -22,7 +22,10 @@ const WITH_FILL = [
     ShapeType.Artboard,
     ShapeType.Group,
     ShapeType.Path2,
-    ShapeType.Text];
+    ShapeType.Text,
+    ShapeType.Table,
+    ShapeType.TableCell
+];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
     ShapeType.Image,
@@ -35,7 +38,10 @@ const WITH_BORDER = [
     ShapeType.Group,
     ShapeType.Path2,
     ShapeType.Text,
-    ShapeType.Line];
+    ShapeType.Line,
+    ShapeType.Table,
+    ShapeType.TableCell
+];
 const shapeType = ref();
 const reflush = ref<number>(0);
 function _change(t: number) {

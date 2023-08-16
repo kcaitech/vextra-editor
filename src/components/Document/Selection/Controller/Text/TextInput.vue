@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix } from '@kcdesign/data';
-import { TextShape } from '@kcdesign/data';
+import { Shape, Text} from '@kcdesign/data';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
 import { throttle } from '../../common';
@@ -9,7 +9,7 @@ import { handleKeyEvent } from './keyhandler';
 import { WorkSpace } from '@/context/workspace';
 
 const props = defineProps<{
-    shape: TextShape,
+    shape: Shape & { text: Text },
     context: Context,
     matrix: number[],
 }>();
@@ -35,7 +35,7 @@ const updateInputPos = throttle(_updateInputPos, 5);
 function _updateInputPos() {
     if (!inputel.value) return;
     // inputel.value.hidden = false;
-    const selection = props.context.selection;
+    const selection = props.context.selection.getTextSelection(props.shape);
     // const m2p = props.shape.matrix2Root();
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
@@ -96,7 +96,7 @@ function committext() {
     const text = inputel.value.value;
     if (text.length === 0) return;
 
-    const selection = props.context.selection;
+    const selection = props.context.selection.getTextSelection(props.shape);
 
     if (editor.isInComposingInput()) {
         if (editor.composingInputEnd(text)) {
@@ -125,7 +125,7 @@ function oninput(e: Event) {
         if (!inputel.value) return;
         const text = inputel.value.value;
         if (editor.composingInputUpdate(text)) {
-            const selection = props.context.selection;
+            const selection = props.context.selection.getTextSelection(props.shape);
             selection.setCursor(composingStartIndex + text.length, true);
         }
     } else {
@@ -136,7 +136,7 @@ function oninput(e: Event) {
 let composingStartIndex = 0;
 function compositionstart(e: Event) {
     if (!inputel.value) return;
-    const selection = props.context.selection;
+    const selection = props.context.selection.getTextSelection(props.shape);
     let index = selection.cursorStart;
     let end = selection.cursorEnd;
     if (index > end) {
@@ -152,7 +152,7 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        const selection = props.context.selection;
+        const selection = props.context.selection.getTextSelection(props.shape);
         selection.setCursor(composingStartIndex + text.length, true);
     }
     inputel.value.value = ''
