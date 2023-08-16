@@ -2,7 +2,7 @@
 import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
-import { onMounted, onUnmounted, ref, watch, watchEffect, computed } from 'vue';
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
@@ -16,12 +16,12 @@ const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
+const width = ref<number>(100);
+const height = ref<number>(100);
 let renderItems: Shape[] = []; // 渲染数据，里面除了真实的data数据之外，还有工具对象
 const watcher = () => {
     reflush.value++;
 }
-const width = computed(() => Math.max(props.data.frame.width, 100));
-const height = computed(() => Math.max(props.data.frame.height, 100));
 function pageViewRegister(mount: boolean) {
     if (mount) {
         const id = (v4().split('-').at(-1)) || 'pageview';
@@ -36,8 +36,11 @@ function _collect(t?: any) {
 }
 const collect = debounce(_collect, 15);
 watchEffect(() => {
-    matrixWithFrame.reset(props.matrix)
-    matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y)
+    matrixWithFrame.reset(props.matrix);
+    matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
+    width.value = Math.ceil(Math.max(100, props.data.frame.width)), height.value = Math.ceil(Math.max(100, props.data.frame.height));
+    if (width.value % 2) width.value++;
+    if (height.value % 2) height.value++;
 })
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
@@ -72,8 +75,8 @@ onUnmounted(() => {
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-        :viewBox='"0 0 " + width + " " + height' :width="width" :height="height" overflow="visible"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width + 'px'"
+        :height="height + 'px'" :viewBox='"0 0 " + width + " " + height' overflow="visible"
         :reflush="reflush !== 0 ? reflush : undefined" :transform="matrixWithFrame.toString()" :data-area="rootId">
         <component v-for="c in renderItems" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
             :data="c" />
