@@ -45,7 +45,7 @@ const splitCell = () => {
         
         const editor = props.context.editor4Table(shape as TableShape)
         editor.horSplitCell(cell)
-        editor.verSplitCell(cell)
+        // editor.verSplitCell(cell)
     }
     emit('close');
 }

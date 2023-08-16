@@ -93,9 +93,13 @@ const onBold = () => {
             editor.setTextBold(isBold.value, 0, Infinity)
         }else {
             editor.setTextBold(isBold.value, textIndex,selectLength)
-            textFormat()
         }
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextBold(isBold.value);
     }
+    textFormat();
 }
 // 设置文本倾斜
 const onTilt = () => {
@@ -107,9 +111,13 @@ const onTilt = () => {
             editor.setTextItalic(isTilt.value, 0, Infinity)
         }else {
             editor.setTextItalic(isTilt.value, textIndex,selectLength)
-            textFormat()
         }
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextItalic(isTilt.value);
     }
+    textFormat();
 }
 //设置下划线
 const onUnderlint = () => {
@@ -121,9 +129,13 @@ const onUnderlint = () => {
             editor.setTextUnderline(isUnderline.value, 0, Infinity)
         }else {
             editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
-            textFormat()
         }
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextUnderline(isUnderline.value);
     }
+    textFormat();
 }
 // 设置删除线
 const onDeleteline = () => {
@@ -135,9 +147,13 @@ const onDeleteline = () => {
             editor.setTextStrikethrough(isDeleteline.value, 0,Infinity)
         }else {
             editor.setTextStrikethrough(isDeleteline.value, textIndex,selectLength)
-            textFormat()
         }
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextStrikethrough(isDeleteline.value);
     }
+    textFormat();
 }
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
@@ -149,9 +165,13 @@ const onSelectLevel = (icon: TextHorAlign) => {
             editor.setTextHorAlign(icon, 0, Infinity)
         } else {
             editor.setTextHorAlign(icon, textIndex, selectLength)
-            textFormat()
         }
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextHorAlign(icon);
     }
+    textFormat();
 }
 //设置垂直对齐
 const onSelectVertical = (icon: TextVerAlign) => {
@@ -159,8 +179,12 @@ const onSelectVertical = (icon: TextVerAlign) => {
     if(shape.value) {
         const editor = props.context.editor4TextShape(shape.value)
         editor.setTextVerAlign(icon)
-        textFormat()
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextVerAlign(icon);
     }
+    textFormat();
 }
 //设置字体大小
 const changeTextSize = (size: number) => {
@@ -173,9 +197,13 @@ const changeTextSize = (size: number) => {
             editor.setTextFontSize(0, Infinity, size)
         }else {
             editor.setTextFontSize(textIndex, selectLength, size)
-            textFormat()
         }
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextFontSize(size);
     }
+    textFormat();
 }
 //设置字体
 const setFont = (font: string) => {
@@ -188,9 +216,13 @@ const setFont = (font: string) => {
             editor.setTextFontName(0, Infinity, font)
         }else {
             editor.setTextFontName(textIndex, selectLength, font)
-            textFormat()
         }
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextFontName(font)
     }
+    textFormat();
 }
 
 //获取选中字体的长度和开始下标
@@ -219,12 +251,11 @@ const setTextSize = () => {
         fonstSize.value = 1
     }
     if (!isNaN(Number(fonstSize.value))) {
-        changeTextSize(fonstSize.value)
-        textFormat()
+        changeTextSize(fonstSize.value);
+        textFormat();
     }else {
-        textFormat()
+        textFormat();
     }
-
 }
 
 const shapeWatch = watch(() => props.shape, (value, old) => {
@@ -237,56 +268,63 @@ const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape);
     if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
         // 拿到某个单元格
-        shape.value = (Array.from(table.getSelectedCells()))[0]
+        shape.value = (Array.from(table.getSelectedCells()))[0];
         if(!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
-        let format: AttrGetter
+        const editor = props.context.editor4TextShape(shape.value);
+        let format: AttrGetter;
         if (textIndex === -1) {
-            format = shape.value.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+            format = shape.value.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
         }else {
-            format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+            format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
         }
-        colorIsMulti.value = format.colorIsMulti
-        highlightIsMulti.value = format.highlightIsMulti
-        selectLevel.value = format.alignment || 'left'
-        selectVertical.value = format.verAlign || 'top'
-        fontName.value = format.fontName || 'PingFangSC-Regular'
-        fonstSize.value = format.fontSize || 14
+        colorIsMulti.value = format.colorIsMulti;
+        highlightIsMulti.value = format.highlightIsMulti;
+        selectLevel.value = format.alignment || 'left';
+        selectVertical.value = format.verAlign || 'top';
+        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fonstSize.value = format.fontSize || 14;
         isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
-        textColor.value = format.color 
-        highlight.value = format.highlight
-        isBold.value = format.bold || false
-        isTilt.value = format.italic || false
-        if(format.italicIsMulti) isTilt.value = false
-        if(format.boldIsMulti) isBold.value= false
-        if(format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
-        if(format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
-        if(format.underlineIsMulti) isUnderline.value = false
-        if(format.strikethroughIsMulti) isDeleteline.value = false
-        props.context.workspace.focusText()
+        textColor.value = format.color;
+        highlight.value = format.highlight;
+        isBold.value = format.bold || false;
+        isTilt.value = format.italic || false;
+        if(format.italicIsMulti) isTilt.value = false;
+        if(format.boldIsMulti) isBold.value= false;
+        if(format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`;
+        if(format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`;
+        if(format.underlineIsMulti) isUnderline.value = false;
+        if(format.strikethroughIsMulti) isDeleteline.value = false;
+        props.context.workspace.focusText();
     }else {
-        const shape = props.shape;
-        const cells = Array.from(shape.childs)
-        const formats: any[] = []
+        shape.value = undefined
+        const shapeTable = props.shape;
+        const cells = Array.from(shapeTable.childs);
+        const formats: any[] = [];
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
             if(cell.text) {
-                const editor = props.context.editor4TextShape(cell as any)
-                const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-                formats.push(forma)
+                const editor = props.context.editor4TextShape(cell as any);
+                const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+                formats.push(forma);
             }
         }
-        let format:any = {}
+        let format:any = {};
         if(formats.length > 0) {
             const referenceKeys = Object.keys(formats[0]);
             for (const key of referenceKeys) {
                 const referenceValue = formats[0][key];
                 let foundEqual = true;
-    
                 for (let i = 1; i < formats.length; i++) {
-                    if (formats[i][key] !== referenceValue) {
+                    if(key === 'color' || key === 'highlight' && formats[i][key] && referenceValue) {
+                        const { alpha: alpha1, blue: blue1, green: green1, red: red1 } = formats[i][key];
+                        const { alpha: alpha2, blue: blue2, green: green2, red: red2 } = referenceValue;
+                        if(alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {
+                            foundEqual = false;
+                            break;
+                        }
+                    }else if (formats[i][key] !== referenceValue) {
                         foundEqual = false;
                         break;
                     }
@@ -298,49 +336,51 @@ const textFormat = () => {
                 }
             }
         }
-        colorIsMulti.value = format.colorIsMulti
-        highlightIsMulti.value = format.highlightIsMulti
-        selectLevel.value = format.alignment || 'left'
-        selectVertical.value = format.verAlign || 'top'
-        fontName.value = format.fontName || 'PingFangSC-Regular'
-        fonstSize.value = format.fontSize || 14
+        colorIsMulti.value = format.colorIsMulti;
+        highlightIsMulti.value = format.highlightIsMulti;
+        selectLevel.value = format.alignment || 'left';
+        selectVertical.value = format.verAlign || 'top';
+        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fonstSize.value = format.fontSize || 14;
         isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
         isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
-        highlight.value = format.highlight
-        isBold.value = format.bold || false
-        isTilt.value = format.italic || false
-        if(format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`
-        if(format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`
-        if(format.alignment === 'unlikeness') selectLevel.value = ''
-        if(format.verAlign === 'unlikeness') selectVertical.value = ''
+        highlight.value = format.highlight;
+        isBold.value = format.bold || false;
+        isTilt.value = format.italic || false;
+        textColor.value = format.color;
+        if(format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
+        if(format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
+        if(format.alignment === 'unlikeness') selectLevel.value = '';
+        if(format.verAlign === 'unlikeness') selectVertical.value = '';
         if(format.color === 'unlikeness') colorIsMulti.value = true;
         if(format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if(format.bold === 'unlikeness') isBold.value= false
-        if(format.italic === 'unlikeness') isTilt.value = false
-        if(format.underline === 'unlikeness') isUnderline.value = false
-        if(format.strikethrough === 'unlikeness') isDeleteline.value = false
-        if(format.textColor === 'unlikeness') textColor.value = undefined
+        if(format.bold === 'unlikeness') isBold.value= false;
+        if(format.italic === 'unlikeness') isTilt.value = false;
+        if(format.underline === 'unlikeness') isUnderline.value = false;
+        if(format.strikethrough === 'unlikeness') isDeleteline.value = false;
+        if(format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
+        if(format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
     }
 }
 
 function selection_wather(t: number) {
     if(t === Selection.CHANGE_TEXT) {
-        textFormat()
+        textFormat();
     }else if(t === Selection.CHANGE_SHAPE) {
-        textFormat()
+        textFormat();
     }
 }
 function workspace_wather(t: number) {
     if(t === WorkSpace.BOLD) {
-        onBold()
+        onBold();
     }else if(t === WorkSpace.UNDER_LINE) {
-        onUnderlint()
+        onUnderlint();
     }else if(t === WorkSpace.DELETE_LINE) {
-        onDeleteline()
+        onDeleteline();
     }else if(t === WorkSpace.ITALIC) {
-        onTilt()
+        onTilt();
     }else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
-        textFormat()
+        textFormat();
     }
 }
 function onAlphaChange(e: Event, type: string) {
@@ -436,23 +476,31 @@ function onColorChange(e: Event, type: string) {
 }
 function getColorFromPicker(color: Color, type: string) {
     if(shape.value) {
-        const editor = props.context.editor4TextShape(shape.value)
+        const editor = props.context.editor4TextShape(shape.value);
         const { textIndex, selectLength } = getTextIndexAndLen();
         if(isSelectText()) {
             if(type === 'color') {
-                editor.setTextColor(0, Infinity, color)
+                editor.setTextColor(0, Infinity, color);
             }else {
-                editor.setTextHighlightColor(0, Infinity, color)
+                editor.setTextHighlightColor(0, Infinity, color);
             }
         }else {
             if(type === 'color') {
-                editor.setTextColor(textIndex, selectLength, color)
+                editor.setTextColor(textIndex, selectLength, color);
             }else {
-                editor.setTextHighlightColor(textIndex, selectLength, color)
+                editor.setTextHighlightColor(textIndex, selectLength, color);
             }
         }
-        textFormat()
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        if(type === 'color') {
+            editor.setTextColor(color);
+        }else {
+            editor.setTextHighlightColor(color);
+        }
     }
+    textFormat();
 }
 
 function setColor(idx: number, clr: string, alpha: number, type: string) {
@@ -466,90 +514,108 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     const b = Number.parseInt(res[3], 16);
     if(shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
+        const editor = props.context.editor4TextShape(shape.value);
         if(isSelectText()) {
             if(type === 'color') {
-                editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
+                editor.setTextColor(0, Infinity, new Color(alpha, r, g, b));
             }else {
-                editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b))
+                editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b));
             }
         }else {
             if(type === 'color') {
-                editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
+                editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b));
             }else {
-                editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
+                editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b));
             }
         }
-        textFormat()
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        if(type === 'color') {
+            editor.setTextColor(new Color(alpha, r, g, b))
+        }else {
+            editor.setTextHighlightColor(new Color(alpha, r, g, b));
+        }
     }
-
+    textFormat();
 }
 
 const deleteHighlight = () => {
     if(shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
+        const editor = props.context.editor4TextShape(shape.value);
         if(isSelectText()) {
-            editor.setTextHighlightColor(0, Infinity, undefined)
+            editor.setTextHighlightColor(0, Infinity, undefined);
         }else {
-            editor.setTextHighlightColor(textIndex, selectLength, undefined)
+            editor.setTextHighlightColor(textIndex, selectLength, undefined);
         }
-        textFormat()
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextHighlightColor(undefined)
     }
+    textFormat();
 }
 
 const addHighlight = () => {
     if(shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
+        const editor = props.context.editor4TextShape(shape.value);
         if(isSelectText()) {
-            editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216))
+            editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216));
         }else {
-            editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216))
+            editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216));
         }
-        textFormat()
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextHighlightColor(new Color(1, 216, 216, 216))
     }
+    textFormat();
 }
 const addTextColor = () => {
     if(shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
+        const editor = props.context.editor4TextShape(shape.value);
         if(isSelectText()) {
-            editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6))
+            editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6));
         }else {
-            editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6))
+            editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6));
         }
-        textFormat()
+    }else {
+        const table = props.shape;
+        const editor = props.context.editor4Table(table)
+        editor.setTextColor(new Color(1, 6, 6, 6))
     }
 }
 const selectSizeValue = () => {
-    textSize.value && textSize.value.select()
+    textSize.value && textSize.value.select();
 }
 const selectColorValue = () => {
-    sizeColor.value && sizeColor.value.select()
+    sizeColor.value && sizeColor.value.select();
 }
 const selectAlphaValue = () => {
-    alphaFill.value && alphaFill.value.select()
+    alphaFill.value && alphaFill.value.select();
 }
 const selectHiglightColor = () => {
-    higlightColor.value && higlightColor.value.select()
+    higlightColor.value && higlightColor.value.select();
 }
 const selectHiglighAlpha = () => {
-    higlighAlpha.value && higlighAlpha.value.select()
+    higlighAlpha.value && higlighAlpha.value.select();
 }
 watchEffect(() => {
-    textFormat()
+    textFormat();
 })
 onMounted(() => {
-    props.shape.watch(textFormat)
+    props.shape.watch(textFormat);
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_wather);
-    props.shape.unwatch(textFormat)
-    shapeWatch()
+    props.shape.unwatch(textFormat);
+    shapeWatch();
 })
 </script>
 
