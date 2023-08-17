@@ -27,7 +27,6 @@ const props = defineProps<{
 }>();
 const { t } = useI18n();
 const matrix = new Matrix();
-const visible = ref<boolean>(true);
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const submatrix = reactive(new Matrix());
@@ -137,11 +136,8 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, c
     editor.setCellContentImage(cell, id);
 }
 const pickImage = useImagePicker();
-
+const { isDrag } = useController(props.context);
 function mousedown(e: MouseEvent) {
-    // document.addEventListener('mousemove', mousemove);
-    // document.addEventListener('mouseup', mouseup);
-
     // // find cell
     // const workspace = props.context.workspace;
     // const { clientX, clientY } = e;
@@ -192,8 +188,10 @@ function mousedown(e: MouseEvent) {
     // selection.selectTableCell(cell.cell, cell.index.row, cell.index.col);
     // editingCell.value = cell;
     // getCellState(cell.cell).onMouseDown(e);
+
+    // document.addEventListener('mousemove', mousemove);
+    // document.addEventListener('mouseup', mouseup);
 }
-// const { isDrag } = useController(props.context);
 function mousemove(e: MouseEvent) {
     // const isDragging = isDrag();
     // if (isDragging) {
@@ -270,8 +268,7 @@ onUnmounted(() => {
         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
         :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible"
-        :class="{ 'un-visible': !visible }">
+        @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible">
         <!-- 插入图片icon -->
         <g v-if="showImageIcon()" :transform="imageIconTrans()">
             <svg-icon icon-class="pattern-image" :width="imageIconSize" :height="imageIconSize"></svg-icon>
@@ -291,8 +288,4 @@ onUnmounted(() => {
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>
 </template>
-<style lang='scss' scoped>
-.un-visible {
-    opacity: 0;
-}
-</style>
+<style lang='scss' scoped></style>

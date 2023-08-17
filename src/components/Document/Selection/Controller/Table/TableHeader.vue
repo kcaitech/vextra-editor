@@ -3,6 +3,7 @@ import { Context } from '@/context';
 import { Matrix, Shape, TableShape } from '@kcdesign/data';
 import { Point } from '../../SelectionView.vue';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { WorkSpace } from '@/context/workspace';
 const props = defineProps<{
     matrix: number[]
     context: Context
@@ -14,7 +15,6 @@ interface FrameParams {
     y: number
     width: number
     height: number
-
 }
 const data: {
     frame_params: FrameParams
@@ -27,25 +27,30 @@ const show_add_x = ref<boolean>(false);
 let add_x: number = 0, ids_x = 0;
 const show_add_y = ref<boolean>(false);
 let add_y: number = 0, ids_y = 0;
+const hidden = ref<boolean>(false);
 let frame_params = data.frame_params, xbars = data.xbars, ybars = data.ybars, xs = data.xs, ys = data.ys;
 function update_position() {
-    xbars = [], ybars = [], xs = [], ys = [];
-    const m = new Matrix(props.matrix), f = props.shape.frame;
-    const lt = m.computeCoord2(0, 0), rb = m.computeCoord2(f.width, f.height);
-    let width = rb.x - lt.x, height = rb.y - lt.y;
-    frame_params = { x: lt.x, y: lt.y, width, height };
-    const table: TableShape = props.shape as TableShape;
-    const cols = table.colWidths, rows = table.rowHeights;
-    let growx = 0, growy = 0;
-    for (let i = 0, len = cols.length; i < len; i++) {
-        const tx = width * cols[i], x = growx + tx;
-        xs.push(x), xbars.push({ s: growx + 4, length: tx - 8 });
-        growx += tx;
-    }
-    for (let i = 0, len = rows.length; i < len; i++) {
-        const ty = height * rows[i], y = growy + ty;
-        ys.push(y), ybars.push({ s: growy + 4, length: ty - 8 });
-        growy += ty;
+    if (props.context.workspace.shouldSelectionViewUpdate) {
+        xbars = [], ybars = [], xs = [], ys = [];
+        const m = new Matrix(props.matrix), f = props.shape.frame;
+        const lt = m.computeCoord2(0, 0);
+        const table: TableShape = props.shape as TableShape;
+        const layout = table.getLayout();
+        frame_params = { x: lt.x, y: lt.y, width: layout.width, height: layout.height };
+        const cols = layout.colWidths, rows = layout.rowHeights;
+        let growx = 0, growy = 0;
+        for (let i = 0, len = cols.length; i < len; i++) {
+            const tx = cols[i], x = growx + tx;
+            xs.push(x), xbars.push({ s: growx + 4, length: tx - 8 });
+            growx += tx;
+        }
+        for (let i = 0, len = rows.length; i < len; i++) {
+            const ty = rows[i], y = growy + ty;
+            ys.push(y), ybars.push({ s: growy + 4, length: ty - 8 });
+            growy += ty;
+        }
+    } else {
+        hidden.value = true;
     }
 }
 function x_dot_mouseennter(x: number, ids: number) {
@@ -74,18 +79,27 @@ function select_col() {
 function select_row() {
     console.log('选择行');
 }
+function workspace_watcher(t?: number) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        hidden.value = false;
+        update_position();
+    }
+}
 watch(() => props.matrix, update_position, { deep: true });
+
 onMounted(() => {
     update_position();
     props.shape.watch(update_position);
+    props.context.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     props.shape.unwatch(update_position);
+    props.context.workspace.unwatch(workspace_watcher);
 })
 </script>
 
 <template>
-    <g :transform="`translate(${frame_params.x}, ${frame_params.y})`">
+    <g :transform="`translate(${frame_params.x}, ${frame_params.y})`" :class="{ hidden }">
         <circle v-for="(d, ids) in xs" :key="ids" :cx="d" cy="-5.5" r="3" stroke="none" class="dot"
             @mouseenter="() => x_dot_mouseennter(d, ids)" />
         <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-9" :width="b.length" height="7" stroke="none" rx="2.5"
@@ -116,7 +130,7 @@ onUnmounted(() => {
                     fill="#865dff" p-id="9400"></path>
             </svg>
         </g>
-        
+
     </g>
 </template>
 <style lang='scss' scoped>
@@ -138,5 +152,9 @@ onUnmounted(() => {
     stroke: #865dff;
     stroke-width: 3px;
     stroke-linecap: round;
+}
+
+.hidden {
+    opacity: 0;
 }
 </style>

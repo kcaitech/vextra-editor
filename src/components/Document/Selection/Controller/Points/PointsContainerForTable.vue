@@ -6,6 +6,7 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { PointType } from '@/context/assist';
+import { WorkSpace } from '@/context/workspace';
 
 interface Props {
     matrix: number[]
@@ -27,19 +28,21 @@ let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 const scale_btn_transform = ref<string>('translate(0, 0)');
 const trans_btn_transform = ref<string>('translate(0, 0)');
-
+const hidden = ref<boolean>(false);
 const dragActiveDis = 3;
 function update() {
     matrix.reset(props.matrix);
     update_transform();
 }
 function update_transform() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const frame = props.shape.frame;
-    let lt = matrix.computeCoord(0, 0);
-    let rb = matrix.computeCoord(frame.width, frame.height);
+    let lt = matrix.computeCoord2(0, 0);
+    let rb = matrix.computeCoord2(frame.width, frame.height);
     trans_btn_transform.value = `translate(${lt.x - 20}, ${lt.y - 20})`
     scale_btn_transform.value = `translate(${rb.x + 1}, ${rb.y + 1})`;
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        hidden.value = true;
+    }
 }
 
 function point_mousedown(event: MouseEvent) {
@@ -133,6 +136,12 @@ function window_blur() {
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
+function workspace_watcher(t?: number) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        hidden.value = false;
+        update();
+    }
+}
 watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -142,11 +151,13 @@ watch(() => props.shape, (value, old) => {
 onMounted(() => {
     props.shape.watch(update);
     window.addEventListener('blur', window_blur);
+    props.context.workspace.watch(workspace_watcher);
     update();
 })
 onUnmounted(() => {
     props.shape.unwatch(update);
     window.removeEventListener('blur', window_blur);
+    props.context.workspace.unwatch(workspace_watcher);
 })
 </script>
 <template>
@@ -159,7 +170,7 @@ onUnmounted(() => {
                 fill="#865dff" p-id="10181"></path>
         </svg>
     </g>
-    <g :transform="scale_btn_transform" @mousedown.stop>
+    <g :transform="scale_btn_transform" @mousedown.stop :class="{ hidden }">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.25" stroke="none"></rect>
         <svg t="1692177601146" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4010"
             width="12" height="12" x="3px" y="3px">
@@ -170,4 +181,8 @@ onUnmounted(() => {
         </svg>
     </g>
 </template>
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.hidden {
+    opacity: 0;
+}
+</style>
