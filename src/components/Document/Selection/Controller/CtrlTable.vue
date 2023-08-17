@@ -6,7 +6,7 @@ import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY } from '@/context/selection';
 import { getAxle } from '@/utils/common';
-import BarsContainer from "./Bars/BarsContainer.SVG.vue";
+import BarsContainer from "./Bars/BarsContainerForTable.vue";
 import PointsContainer from "./Points/PointsContainerForTable.vue";
 import { useController } from './controller';
 import TextInput from './Text/TextInput.vue';
@@ -15,9 +15,9 @@ import { useImagePicker } from './Table/loadimage';
 import { v4 as uuid } from "uuid"
 import { useI18n } from 'vue-i18n';
 import { textState } from './Table/celltextstate';
+import TableHeader from './Table/TableHeader.vue';
 
 type TextShape = Shape & { text: Text };
-
 const props = defineProps<{
     context: Context,
     controllerFrame: Point[],
@@ -25,7 +25,42 @@ const props = defineProps<{
     matrix: Matrix, // root->屏幕 变换矩阵
     shape: TableShape
 }>();
+const { t } = useI18n();
 const matrix = new Matrix();
+const visible = ref<boolean>(true);
+const boundrectPath = ref("");
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
+const submatrix = reactive(new Matrix());
+const submatrixArray = computed(() => submatrix.toArray());
+const imageIconSize = 20; // px
+const hoverCellBounds = computed(() => {
+    if (!hoveringCell.value) return { x: 0, y: 0, w: 0, h: 0 };
+    const frame = hoveringCell.value.frame;
+    matrix.reset(submatrix.toArray());
+    matrix.preTrans(frame.x, frame.y);
+    const xy = matrix.computeCoord2(0, 0);
+    const xy1 = matrix.computeCoord2(frame.width, frame.height);
+    const x = xy.x;
+    const y = xy.y;
+    const w = xy1.x - x;
+    const h = xy1.y - y;
+    return { x, y, w, h }
+})
+const axle = computed<ClientXY>(() => {
+    const [lt, rt, rb, lb] = props.controllerFrame;
+    return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
+});
+const editingCell = shallowRef<TableGridItem>();
+const hoveringCell = shallowRef<TableGridItem>();
+
+const editingCellMatrix = computed(() => {
+    matrix.reset(submatrix.toArray());
+    if (editingCell.value) {
+        matrix.preTrans(editingCell.value.frame.x, editingCell.value.frame.y);
+    }
+    return matrix.toArray();
+})
+
 function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
@@ -62,63 +97,9 @@ function update() {
         hoveringCell.value = props.shape.locateCell2(hoveringCell.value.cell);
     }
 }
-
-watch(() => props.matrix, update, { deep: true })
-
-watch(() => props.shape, (value, old) => {
-
-    old.unwatch(update);
-    value.watch(update);
-    update();
-
-})
-
-onMounted(() => {
-    props.shape.watch(update);
-    update();
-})
-
-onUnmounted(() => {
-    props.shape.unwatch(update);
-})
-
-const editing = ref<boolean>(false);
-const visible = ref<boolean>(true);
-const boundrectPath = ref("");
-const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-const submatrix = reactive(new Matrix());
-const submatrixArray = computed(() => submatrix.toArray())
-
-const axle = computed<ClientXY>(() => {
-    const [lt, rt, rb, lb] = props.controllerFrame;
-    return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
-});
-// #region 绘制控件
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
-
-const editingCell = shallowRef<TableGridItem>();
-const hoveringCell = shallowRef<TableGridItem>();
-
-const editingCellMatrix = computed(() => {
-    matrix.reset(submatrix.toArray());
-    if (editingCell.value) {
-        matrix.preTrans(editingCell.value.frame.x, editingCell.value.frame.y);
-    }
-    return matrix.toArray();
-})
-
-// const hoveringCellMatrix = computed(() => {
-//     matrix.reset(submatrix.toArray());
-//     if (hoveringCell.value) {
-//         matrix.preTrans(hoveringCell.value.frame.x, hoveringCell.value.frame.y);
-//     }
-//     return matrix.toArray();
-// })
-
-const { t } = useI18n();
-
 let cellState: {
     onMouseDown: (e: MouseEvent) => void,
     onMouseEnter: (e: MouseEvent) => void,
@@ -212,7 +193,6 @@ function mousedown(e: MouseEvent) {
     editingCell.value = cell;
     getCellState(cell.cell).onMouseDown(e);
 }
-
 const { isDrag } = useController(props.context);
 function mousemove(e: MouseEvent) {
     const isDragging = isDrag();
@@ -254,25 +234,9 @@ function windowBlur() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
-
 function isEditingText() {
     return editingCell.value && editingCell.value.cell.cellType === TableCellType.Text && editingCell.value.cell.text;
 }
-
-const imageIconSize = 20; // px
-const hoverCellBounds = computed(() => {
-    if (!hoveringCell.value) return { x: 0, y: 0, w: 0, h: 0 };
-    const frame = hoveringCell.value.frame;
-    matrix.reset(submatrix.toArray());
-    matrix.preTrans(frame.x, frame.y);
-    const xy = matrix.computeCoord(0, 0);
-    const xy1 = matrix.computeCoord(frame.width, frame.height);
-    const x = xy.x;
-    const y = xy.y;
-    const w = xy1.x - x;
-    const h = xy1.y - y;
-    return { x, y, w, h }
-})
 function showImageIcon() {
     const imageIconVisibleSize = imageIconSize << 1;
     const bounds = hoverCellBounds.value;
@@ -287,14 +251,26 @@ const imageIconTrans = () => {
     const y = bounds.y + (bounds.h - imageIconSize) / 2;
     return `translate(${x}, ${y})`
 }
-
+watch(() => props.matrix, update, { deep: true })
+watch(() => props.shape, (value, old) => {
+    old.unwatch(update);
+    value.watch(update);
+    update();
+})
+onMounted(() => {
+    props.shape.watch(update);
+    update();
+})
+onUnmounted(() => {
+    props.shape.unwatch(update);
+})
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
         :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible" @blur="windowBlur"
+        @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible"
         :class="{ 'un-visible': !visible }">
         <!-- 插入图片icon -->
         <g v-if="showImageIcon()" :transform="imageIconTrans()">
@@ -304,12 +280,13 @@ const imageIconTrans = () => {
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
             :matrix="editingCellMatrix"></SelectView>
-        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+        <!-- <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path> -->
+        <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </BarsContainer>
-
-        <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+        <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+            :c-frame="props.controllerFrame"></TableHeader>
+        <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
     </svg>
