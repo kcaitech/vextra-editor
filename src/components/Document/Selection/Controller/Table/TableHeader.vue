@@ -68,6 +68,12 @@ function add_rows() {
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertRow(ids_y + 1, 30);
 }
+function select_col() {
+    console.log('选择列');
+}
+function select_row() {
+    console.log('选择行');
+}
 watch(() => props.matrix, update_position, { deep: true });
 onMounted(() => {
     update_position();
@@ -83,16 +89,15 @@ onUnmounted(() => {
         <circle v-for="(d, ids) in xs" :key="ids" :cx="d" cy="-5.5" r="3" stroke="none" class="dot"
             @mouseenter="() => x_dot_mouseennter(d, ids)" />
         <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-9" :width="b.length" height="7" stroke="none" rx="2.5"
-            ry="2.5" class="bar" />
+            ry="2.5" class="bar" @mousedown.stop="select_col" />
         <circle v-for="(d, ids) in ys" :key="ids" cx="-5.5" :cy="d" r="3" stroke="none" class="dot"
             @mouseenter="() => y_dot_mouseennter(d, ids)" />
-
         <rect v-for="(b, ids) in ybars" :key="ids" x="-9" :y="b.s" :height="b.length" width="7" stroke="none" rx="2.5"
-            ry="2.5" class="bar" />
+            ry="2.5" class="bar" @mousedown.stop="select_row" />
         <g v-if="show_add_x">
             <line :x1="add_x" y1="0" :x2="add_x" :y2="frame_params.height" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
-                :x="add_x - 10" y="-18" width="20" height="20" @mouseleave="x_dot_mouseleave" @mousedown.stop="add_cols"
+                :x="add_x - 10" y="-15" width="20" height="20" @mouseleave="x_dot_mouseleave" @mousedown.stop="add_cols"
                 style="cursor:pointer;">
                 <circle cx="512" cy="512" r="512" stroke="none" fill="#ffffff" />
                 <path
@@ -103,7 +108,7 @@ onUnmounted(() => {
         <g v-if="show_add_y">
             <line x1="0" :y1="add_y" :x2="frame_params.width" :y2="add_y" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
-                x="-18" :y="add_y - 10" width="20" height="20" @mouseleave="y_dot_mouseleave" @mousedown.stop="add_rows"
+                x="-15" :y="add_y - 10" width="20" height="20" @mouseleave="y_dot_mouseleave" @mousedown.stop="add_rows"
                 style="cursor:pointer;">
                 <circle cx="512" cy="512" r="512" stroke="none" fill="#ffffff" />
                 <path
@@ -111,6 +116,7 @@ onUnmounted(() => {
                     fill="#865dff" p-id="9400"></path>
             </svg>
         </g>
+        
     </g>
 </template>
 <style lang='scss' scoped>

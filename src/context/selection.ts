@@ -1,4 +1,4 @@
-import { ISave4Restore, TableShape, Watchable } from "@kcdesign/data";
+import { ISave4Restore, TableCell, TableShape, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
@@ -210,7 +210,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     selectShape(shape?: Shape) {
-        if (!shape) { // 取消所有已经选择的图形
+        if (!shape) {
             this.resetSelectShapes();
         } else {
             if (shape.isLocked) return;
@@ -300,13 +300,18 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     // table
     private m_tableSelection?: TableSelection;
+    private m_tablecell: TableCell[] = [];
     getTableSelection(shape: TableShape) {
         if (!this.m_tableSelection || this.m_tableSelection.shape.id !== shape.id) {
             this.m_tableSelection = new TableSelection(shape, this);
         }
         return this.m_tableSelection;
     }
-
+    selectTableCell(cell: TableCell | TableCell[]) {
+        this.m_tablecell = [];
+        this.m_tablecell.concat(cell);
+        this.notify(Selection.CHANGE_TABLE_CELL);
+    }
     save() {
         throw new Error("Method not implemented.");
     }
