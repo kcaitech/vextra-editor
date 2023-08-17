@@ -8,7 +8,7 @@ import { ClientXY } from '@/context/selection';
 import { getAxle } from '@/utils/common';
 import BarsContainer from "./Bars/BarsContainerForTable.vue";
 import PointsContainer from "./Points/PointsContainerForTable.vue";
-import { useController } from './controller';
+import { useController } from './controller2';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
 import { useImagePicker } from './Table/loadimage';
@@ -139,94 +139,94 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, c
 const pickImage = useImagePicker();
 
 function mousedown(e: MouseEvent) {
-    document.addEventListener('mousemove', mousemove);
-    document.addEventListener('mouseup', mouseup);
+    // document.addEventListener('mousemove', mousemove);
+    // document.addEventListener('mouseup', mouseup);
 
-    // find cell
-    const workspace = props.context.workspace;
-    const { clientX, clientY } = e;
-    const root = workspace.root;
-    matrix.reset(submatrixArray.value);
+    // // find cell
+    // const workspace = props.context.workspace;
+    // const { clientX, clientY } = e;
+    // const root = workspace.root;
+    // matrix.reset(submatrixArray.value);
 
-    const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    if (editingCell.value && isInCell(xy, editingCell.value)) {
-        getCellState(editingCell.value.cell).onMouseDown(e);
-        return;
-    }
-    if (hoveringCell.value && isInCell(xy, hoveringCell.value) && showImageIcon()) {
-        // 是否点击了图标
-        const x = clientX - root.x;
-        const y = clientY - root.y;
-        const bounds = hoverCellBounds.value;
-        const iconX = bounds.x + (bounds.w - imageIconSize) / 2;
-        const iconY = bounds.y + (bounds.h - imageIconSize) / 2;
+    // const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+    // if (editingCell.value && isInCell(xy, editingCell.value)) {
+    //     getCellState(editingCell.value.cell).onMouseDown(e);
+    //     return;
+    // }
+    // if (hoveringCell.value && isInCell(xy, hoveringCell.value) && showImageIcon()) {
+    //     // 是否点击了图标
+    //     const x = clientX - root.x;
+    //     const y = clientY - root.y;
+    //     const bounds = hoverCellBounds.value;
+    //     const iconX = bounds.x + (bounds.w - imageIconSize) / 2;
+    //     const iconY = bounds.y + (bounds.h - imageIconSize) / 2;
 
-        if (x > iconX && y > iconY &&
-            (x - iconX) < imageIconSize && (y - iconY) < imageIconSize) {
-            const cell = hoveringCell.value.cell;
-            pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
-                onLoadImage(name, data, cell);
-            });
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-        }
-    }
+    //     if (x > iconX && y > iconY &&
+    //         (x - iconX) < imageIconSize && (y - iconY) < imageIconSize) {
+    //         const cell = hoveringCell.value.cell;
+    //         pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
+    //             onLoadImage(name, data, cell);
+    //         });
+    //         e.stopPropagation();
+    //         e.preventDefault();
+    //         return;
+    //     }
+    // }
 
-    const cell = props.shape.locateCell(xy.x, xy.y);
-    if (!cell) return;
-    if (cell.cell.cellType === TableCellType.Image) { // todo 应该是查看大图？
-        pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
-            onLoadImage(name, data, cell.cell);
-        });
-        e.stopPropagation();
-        e.preventDefault();
-        return;
-    }
-    if ((cell.cell.cellType ?? TableCellType.None) === TableCellType.None) {
-        const editor = props.context.editor4Table(props.shape)
-        editor.setCellContentText(cell.cell)
-    }
-    // editing cell
-    const selection = props.context.selection.getTableSelection(props.shape);
-    selection.selectTableCell(cell.cell, cell.index.row, cell.index.col);
-    editingCell.value = cell;
-    getCellState(cell.cell).onMouseDown(e);
+    // const cell = props.shape.locateCell(xy.x, xy.y);
+    // if (!cell) return;
+    // if (cell.cell.cellType === TableCellType.Image) { // todo 应该是查看大图？
+    //     pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
+    //         onLoadImage(name, data, cell.cell);
+    //     });
+    //     e.stopPropagation();
+    //     e.preventDefault();
+    //     return;
+    // }
+    // if ((cell.cell.cellType ?? TableCellType.None) === TableCellType.None) {
+    //     const editor = props.context.editor4Table(props.shape)
+    //     editor.setCellContentText(cell.cell)
+    // }
+    // // editing cell
+    // const selection = props.context.selection.getTableSelection(props.shape);
+    // selection.selectTableCell(cell.cell, cell.index.row, cell.index.col);
+    // editingCell.value = cell;
+    // getCellState(cell.cell).onMouseDown(e);
 }
-const { isDrag } = useController(props.context);
+// const { isDrag } = useController(props.context);
 function mousemove(e: MouseEvent) {
-    const isDragging = isDrag();
-    if (isDragging) {
-        visible.value = false; // 控件在移动过程中不可视
-        return;
-    }
+    // const isDragging = isDrag();
+    // if (isDragging) {
+    //     visible.value = false; // 控件在移动过程中不可视
+    //     return;
+    // }
 
-    if (e.buttons > 0) {
-        return;
-    }
+    // if (e.buttons > 0) {
+    //     return;
+    // }
 
-    const workspace = props.context.workspace;
-    const { clientX, clientY } = e;
-    const root = workspace.root;
+    // const workspace = props.context.workspace;
+    // const { clientX, clientY } = e;
+    // const root = workspace.root;
 
-    matrix.reset(submatrixArray.value);
+    // matrix.reset(submatrixArray.value);
 
-    const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    if (editingCell.value && isInCell(xy, editingCell.value)) {
-        // getCellState(editingCell.value.cell).onMouseDown(e);
-        return;
-    }
+    // const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+    // if (editingCell.value && isInCell(xy, editingCell.value)) {
+    //     // getCellState(editingCell.value.cell).onMouseDown(e);
+    //     return;
+    // }
 
-    const cell = props.shape.locateCell(xy.x, xy.y);
-    if (cell && (!hoveringCell.value || cell.cell.id !== hoveringCell.value.cell.id)) {
-        // hover cell
-        hoveringCell.value = cell;
-    }
+    // const cell = props.shape.locateCell(xy.x, xy.y);
+    // if (cell && (!hoveringCell.value || cell.cell.id !== hoveringCell.value.cell.id)) {
+    //     // hover cell
+    //     hoveringCell.value = cell;
+    // }
 }
 
 function mouseup(e: MouseEvent) {
-    document.removeEventListener('mousemove', mousemove);
-    document.removeEventListener('mouseup', mouseup);
+    // document.removeEventListener('mousemove', mousemove);
+    // document.removeEventListener('mouseup', mouseup);
 }
 
 function windowBlur() {
@@ -274,13 +274,11 @@ onUnmounted(() => {
         :class="{ 'un-visible': !visible }">
         <!-- 插入图片icon -->
         <g v-if="showImageIcon()" :transform="imageIconTrans()">
-            <svg-icon class="cell-image" icon-class="pattern-image" :width="`${imageIconSize}px`"
-                :height="`${imageIconSize}px`"></svg-icon>
+            <svg-icon icon-class="pattern-image" :width="imageIconSize" :height="imageIconSize"></svg-icon>
         </g>
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
             :matrix="editingCellMatrix"></SelectView>
-        <!-- <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path> -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </BarsContainer>

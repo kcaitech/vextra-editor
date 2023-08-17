@@ -133,7 +133,6 @@ function window_blur() {
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
-
 watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -169,7 +168,6 @@ onUnmounted(() => {
                 p-id="4011">
             </path>
         </svg>
-
     </g>
 </template>
 <style lang='scss' scoped></style>
