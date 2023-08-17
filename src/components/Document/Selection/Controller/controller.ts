@@ -16,8 +16,9 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { distance2apex, distance2apex2, get_frame, update_pg, get_pg_by_frame } from '@/utils/assist';
+import { distance2apex, distance2apex2, get_frame, update_pg_1, get_pg_by_frame, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
+import { Menu } from '@/context/menu';
 export function useController(context: Context) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
@@ -71,6 +72,7 @@ export function useController(context: Context) {
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
             context.cursor.cursor_freeze(true);
             context.menu.menuMount(); // 取消右键事件
+            context.menu.notify(Menu.SHUTDOWN_POPOVER);
             root = context.workspace.root;
             shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
@@ -124,7 +126,16 @@ export function useController(context: Context) {
             if (timer) handleDblClick();
             initTimer();
             preTodo(e);
-        } else if (isMouseOnContent(e) && !context.selection.hoveredShape) context.selection.resetSelectShapes();
+        } else if (isMouseOnContent(e)) {
+            const selection = context.selection;
+            const selected = selection.selectedShapes;
+            const h = selection.hoveredShape;
+            if (!h) {
+                selection.resetSelectShapes();
+            } else {
+                e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
+            }
+        }
     }
     function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) return;
@@ -204,7 +215,7 @@ export function useController(context: Context) {
         }
         if (need_multi) {
             if (len === 1) {
-                context.assist.setCPG(update_pg(shape, true));
+                context.assist.setCPG(update_pg_2(shape, true));
             } else {
                 const fs = get_frame(shapes);
                 context.workspace.setCFrame(fs);
@@ -298,7 +309,12 @@ export function useController(context: Context) {
     }
     function isElement(e: MouseEvent): boolean {
         const root = context.workspace.root;
-        return Boolean(context.selection.scout?.isPointInPath(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
+        const selected = context.selection.selectedShapes;
+        if (selected.length === 1 && selected[0].type === ShapeType.Line) {
+            return Boolean(context.selection.scout?.isPointInStroke(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
+        } else {
+            return Boolean(context.selection.scout?.isPointInPath(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
+        }
     }
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context, t);

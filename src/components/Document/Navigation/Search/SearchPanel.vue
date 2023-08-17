@@ -80,6 +80,7 @@ const height_shpae = ref<string>('50%');
 let chartMenuItems: string[] = [];
 const fold1 = ref<boolean>(false);
 const fold2 = ref<boolean>(false);
+let wait_fited = false;
 // 针对图形的搜索结果
 let source_by_shape = new class implements IDataSource<ItemData> {
 
@@ -214,8 +215,13 @@ function unHovershape() {
 }
 function shapeScrollToContentView_1(shape: Shape) {
   const is_p2 = props.context.navi.isPhase2(shape);
-  if (is_p2) {
+  if (is_p2 && !wait_fited) {
+    wait_fited = true;
     fit(props.context, shape);
+    const timer = setTimeout(() => {
+      wait_fited = false;
+      clearTimeout(timer);
+    }, 450);
     return;
   }
   if (isInner(props.context, shape)) {
@@ -260,8 +266,13 @@ function set_focus(shape: Shape) {
 }
 function shapeScrollToContentView(shape: Shape) {
   const is_p2 = props.context.navi.isPhase2(shape);
-  if (is_p2) {
+  if (is_p2 && !wait_fited) {
+    wait_fited = true;
     fit(props.context, shape);
+    const timer = setTimeout(() => {
+      wait_fited = false;
+      clearTimeout(timer);
+    }, 450);
     return;
   }
   if (isInner(props.context, shape)) {

@@ -3,37 +3,12 @@
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument"
         @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
 
-    <!-- 右键菜单 -->
-    <div class="rightmenu" ref="menu">
-        <ul>
-            <li @click="openDocument(docId)">{{ t('homerightmenu.open') }}</li>
-            <li @click="openNewWindowDocument">{{ t('homerightmenu.newtabopen') }}</li>
-            <div></div>
-            <li @click.stop="rSharefile">{{ t('homerightmenu.share') }}</li>
-            <li @click="rStarfile" ref="isshow">{{ t('homerightmenu.target_star') }}</li>
-            <div></div>
-            <li @click="rrename">{{ t('homerightmenu.rename') }}</li>
-            <li @click="rcopyfile">{{ t('homerightmenu.copyfile') }}</li>
-            <li @click="rDeletefile">{{ t('homerightmenu.deletefile') }}</li>
-        </ul>
-    </div>
+    <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
+        @r-removefile="Deletefile" @ropen="openDocument"/>
 
-    <!-- 重命名弹框 -->
-    <el-dialog v-model="dialogVisible" :title="t('home.rename')" width="500" align-center>
-        <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click="rename1"
-                    :disabled="newname == '' ? true : false">
-                    {{ t('home.rename_ok') }}
-                </el-button>
-                <el-button @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
-            </span>
-        </template>
-    </el-dialog>
-    <div v-if=" showFileShare " class="overlay"></div>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo"
-        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
+    <div v-if="showFileShare" class="overlay"></div>
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
+        @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
     </FileShare>
 </template>
 
@@ -41,14 +16,13 @@
 import * as share_api from "@/apis/share"
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, computed, watch } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, watch } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
-import listsitem from '@/components/AppHome/listsitem.vue'
-
+import listrightmenu from "../listrightmenu.vue"
 
 interface data {
     document: {
@@ -61,14 +35,10 @@ interface data {
     }
 }
 
+const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'deletefile']
 const emits = defineEmits(['data-update'])
 const { t } = useI18n()
 const isLoading = ref(false)
-const dialogVisible = ref(false)
-const menu = ref<HTMLElement>()
-const renameinput = ref()
-const newname = ref()
-const isshow = ref<HTMLElement>()
 const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
@@ -124,6 +94,16 @@ function sizeTostr(size: any) {
     return size
 }
 
+//右键打开或双击列表打开
+const openDocument = (id: string) => {
+    router.push({
+        name: 'document',
+        query: {
+            id: id
+        }
+    })
+}
+
 //标星入口
 const Starfile = async (data: data) => {
     const { document: { id } } = data
@@ -143,6 +123,19 @@ const Starfile = async (data: data) => {
     }
 }
 
+//分享入口
+const Sharefile = (data: data) => {
+    if (showFileShare.value) {
+        showFileShare.value = false
+        return
+    }
+    docId.value = data.document.id
+    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
+    userInfo.value = userData.value
+    showFileShare.value = true
+}
+
+
 //删除文件入口
 const Deletefile = async (data: data) => {
     const { document: { id } } = data
@@ -157,9 +150,9 @@ const Deletefile = async (data: data) => {
     }
 }
 
-
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
+    const el = document.querySelector('.target_star')!
     const { document: { id }, document_favorites: { is_favorite } } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
@@ -178,37 +171,14 @@ const rightmenu = (e: MouseEvent, data: data) => {
     }
 
     nextTick(() => {
-        if (isshow.value) {
-            if (is_favorite == true) {
-                isshow.value.innerHTML = t('homerightmenu.unstar')
-            } else {
-                isshow.value.innerHTML = t('homerightmenu.target_star')
-            }
+        if (is_favorite == true) {
+            el.innerHTML = t('homerightmenu.unstar')
+        } else {
+            el.innerHTML = t('homerightmenu.target_star')
         }
     })
     docId.value = id
     mydata.value = data
-}
-
-//右键打开
-const openDocument = (id: string) => {
-    router.push({
-        name: 'document',
-        query: {
-            id: id
-        }
-    })
-}
-
-//右键新窗口打开
-const openNewWindowDocument = () => {
-    const Name = 'document'
-    const query = { id: docId.value }
-    const url = router.resolve({ name: Name, query: query }).href
-    window.open(url, '_blank')
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
 }
 
 const userData = ref({
@@ -216,36 +186,6 @@ const userData = ref({
     id: localStorage.getItem('userId') || '',
     nickname: localStorage.getItem('nickname') || ''
 })
-
-//右键标星
-const rStarfile = () => {
-    Starfile(mydata.value)
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
-
-//分享入口
-const Sharefile = (data: data) => {
-    if (showFileShare.value) {
-        showFileShare.value = false
-        return
-    }
-    docId.value = data.document.id
-    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
-    userInfo.value = userData.value
-    showFileShare.value = true
-}
-
-//右键分享
-const rSharefile = () => {
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-    Sharefile(mydata.value)
-}
-
 
 const closeShare = () => {
     showFileShare.value = false
@@ -260,83 +200,6 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
-
-//右键重命名
-//弹框
-const rrename = () => {
-    newname.value = mydata.value.document.name
-    if (dialogVisible.value) {
-        dialogVisible.value = false
-    } else {
-        dialogVisible.value = true
-        setTimeout(() => {
-            renameinput.value.focus()
-            renameinput.value.select()
-        }, 100)
-    }
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-
-}
-
-//重命名
-const rename1 = async () => {
-    const { document: { id, name } } = mydata.value
-    newname.value = renameinput.value.value
-    if (newname.value == '') return
-    if (newname.value != name)
-        try {
-            const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
-            if (code === 0) {
-                ElMessage.closeAll('success')
-                ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
-                getDoucment()
-            } else {
-                ElMessage.closeAll('error')
-                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
-            }
-        } catch (error) {
-            ElMessage.closeAll('error')
-            ElMessage.error({ duration: 1500, message: t('home.other_tips') })
-        }
-    dialogVisible.value = false
-}
-
-//右键创建副本
-const rcopyfile = async () => {
-    const { code } = await user_api.Copyfile({ doc_id: docId.value })
-    if (code === 0) {
-        ElMessage.closeAll('success')
-        ElMessage.success({ duration: 1500, message: t('homerightmenu.copyfile_ok') })
-        getDoucment()
-    } else {
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('homerightmenu.copyfile_no') })
-    }
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
-//右键删除
-const rDeletefile = async () => {
-    Deletefile(mydata.value)
-    if (menu.value) {
-        menu.value.style.display = 'none'
-    }
-}
-
-//监听页面点击事件，
-const handleClickOutside = (event: MouseEvent) => {
-    if (event.target instanceof Element && event.target.closest('.rightmenu') == null) {
-        if (menu.value) {
-            menu.value.style.display = 'none'
-        }
-    }
-}
-
-
 watch(lists, (Nlist) => {
     emits('data-update', Nlist, t('home.modification_time'))
 }, { deep: true })
@@ -345,12 +208,10 @@ onMounted(() => {
     getDoucment()
     getPageHeight()
     window.addEventListener('resize', getPageHeight)
-    document.addEventListener('mousedown', handleClickOutside)
 })
 
 onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
-    document.removeEventListener('mousedown', handleClickOutside)
 })
 
 function emit(arg0: string) {
@@ -361,96 +222,6 @@ function emit(arg0: string) {
 <style lang="scss" scoped>
 main {
     height: auto;
-}
-
-.newname {
-    outline: none;
-    height: 30px;
-    width: 460px;
-    box-sizing: border-box;
-
-    &:hover {
-        border-radius: 2px;
-        border: 2px #f3f0ff solid;
-
-    }
-
-    &:focus {
-        border-radius: 2px;
-        border: 2px #9775fa solid;
-    }
-
-}
-
-
-.dialog-footer>.el-button {
-    &:hover {
-        background-color: rgba(208, 208, 208, 0.167);
-    }
-
-    &:active {
-        background-color: white;
-    }
-}
-
-.dialog-footer>.el-button--primary {
-    background-color: #9775fa;
-    color: white;
-    border-color: #9775fa;
-
-    &:hover {
-        background: #9675fa91;
-        border-color: #9675fa91;
-    }
-
-    &:active {
-        background-color: #9775fa;
-    }
-
-    &[disabled] {
-        background: #e5dbff;
-        border: 1px #e5dbff solid;
-    }
-}
-
-
-.rightmenu {
-    display: none;
-    min-width: 200px;
-    min-height: 100px;
-    z-index: 999;
-    position: absolute;
-    background-color: white;
-    padding: 10px 0;
-    border-radius: 5px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-
-    ul {
-        margin: 0;
-        padding: 0 10px;
-
-        li {
-            display: block;
-            padding: 10px 10px;
-            font-size: 14px;
-            text-decoration: none;
-            color: rgba(13, 13, 13, 0.9);
-            border-radius: 2px;
-            cursor: pointer;
-
-            &:hover {
-                background-color: #f3f0ff;
-            }
-        }
-
-        div {
-            height: 1px;
-            width: auto;
-            background: #f3f0ff;
-        }
-
-
-    }
 }
 
 .overlay {

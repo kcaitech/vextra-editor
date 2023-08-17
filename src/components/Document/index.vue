@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect, nextTick } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -353,6 +353,7 @@ const getDocumentInfo = async () => {
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
             getDocumentAuthority();
+            getUserInfo()
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
@@ -372,7 +373,6 @@ const getDocumentInfo = async () => {
             await context.communication.docSelectionOp.start(token, docId, context);
             context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
         }
-        getUserInfo()
     } catch (err) {
         loading.value = false;
         noNetwork.value = true
@@ -575,7 +575,7 @@ function closeNetMsg() {
 //协作人员操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
-    if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
+    if (context && (docCommentOpData.user_id !== context.comment.isUserInfo?.id) && context.comment.isUserInfo?.id) {
         const addUset = context!.teamwork.getUserSelection
         if(docCommentOpData.type === DocSelectionOpType.Exit) {
             const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
@@ -616,6 +616,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <div class="main" style="height: 100vh;">
     <Loading v-if="loading || null_context"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
         <Toolbar :context="context!" v-if="!loading && !null_context" />
@@ -660,6 +661,7 @@ onUnmounted(() => {
         <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
         <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
+</div>
 </template>
 <style>
 :root {
@@ -708,7 +710,7 @@ onUnmounted(() => {
     flex-flow: row nowrap;
     flex: 1 1 auto;
     width: 100%;
-    height: auto;
+    height: calc(100% - 40px);
     overflow: hidden;
     position: relative;
 

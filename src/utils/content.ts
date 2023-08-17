@@ -96,7 +96,12 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     const editor = context.editor.controller();
     const name = getName(type, parent.childs, t);
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+    if (action === Action.AddArrow) {
+      new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
+    } else {
+      new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+    }
+
   }
   if (asyncCreator && new_shape) {
     selection.selectShape(new_shape);
@@ -104,7 +109,7 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     return { asyncCreator, new_shape };
   }
 }
-// 普通图形从init到inset一气呵成
+// 图形从init到insert
 function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
   const tool = context.tool;
   const action = tool.action;
@@ -121,13 +126,41 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
     const editor = context.editor.controller();
     const name = getName(type, parent.childs, t);
     asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+    if (action === Action.AddArrow) {
+      new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
+    } else {
+      new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+    }
   }
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
     selection.selectShape(page!.getShape(new_shape.id));
   }
   workspace.creating(false);
+  tool.setAction(Action.AutoV);
+  context.cursor.setType('auto-0');
+}
+// 图形从init到insert
+export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
+  const tool = context.tool;
+  const action = tool.action;
+  if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
+  const selection = context.selection;
+  const type = _t || ResultByAction(action);
+  const page = selection.selectedPage;
+  const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+  let new_shape: Shape | undefined | false;
+  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+  if (page && parent && type) {
+    const editor = context.editor.editor4Page(page);
+    const name = getName(type, parent.childs, t);
+    if (action === Action.AddArrow || action === Action.AddLine) {
+      const r = 0.25 * Math.PI;
+      frame.width = 100 * Math.cos(r), frame.height = 100 * Math.sin(r);
+      new_shape = editor.create2(page, parent as GroupShape, type, name, frame, { rotation: -45, is_arrow: Boolean(action === Action.AddArrow), target_xy: mousedownOnPageXY });
+    }
+  }
+  if (new_shape) { selection.selectShape(page!.getShape(new_shape.id)) }
   tool.setAction(Action.AutoV);
   context.cursor.setType('auto-0');
 }
@@ -509,12 +542,10 @@ export const permIsEdit = (context: Context) => {
 export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
   const shapeType = shape.type
   if (shapeType === ShapeType.Group) {
-    if (!(shape as GroupShape).isBoolOpShape) return false
+    if (!(shape as GroupShape).isBoolOpShape) return false;
   }
-
-  if (!type.includes(shapeType)) return false
-
-  return true
+  if (!type.includes(shapeType)) return false;
+  return true;
 }
 
 function skipUserSelectShapes(context: Context, shapes: Shape[]) {
@@ -539,7 +570,6 @@ function skipUserSelectShapes(context: Context, shapes: Shape[]) {
     context.workspace.matrixTransformation();
   }
 }
-
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types,

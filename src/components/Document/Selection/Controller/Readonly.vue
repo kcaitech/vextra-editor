@@ -4,18 +4,16 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
-import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
-import { useI18n } from "vue-i18n";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 interface Props {
     context: Context
     controllerFrame: Point[]
     rotate: number
-    matrix: number[]
+    matrix: Matrix
     shape: Shape
 }
 const props = defineProps<Props>();
@@ -25,7 +23,6 @@ const visible = ref<boolean>(true);
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-const { t } = useI18n();
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 let viewBox = '';
@@ -55,53 +52,39 @@ function updateControllerView() {
     viewBox = genViewBox(bounds);
 }
 // #endregion
-
-function updater(t?: number) {
-    updateControllerView();
-    if (t == Selection.CHANGE_SHAPE) {
-        editing.value = false;
-    }
-}
 function workspace_watcher(t?: number) {
-    if (t === WorkSpace.TRANSLATING) {
-        visible.value = !workspace.value.isTranslating;
-    }
+    if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
 }
 function mousedown(e: MouseEvent) {
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
 function mousemove(e: MouseEvent) {
-    const isDragging = isDrag();
-    if (isDragging) {
-        visible.value = false; // 控件在移动过程中不可视
-    }
+    if (isDrag()) visible.value = false;
 }
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
-}
-function keyboardHandle(e: KeyboardEvent) {
-    handle(e, props.context, t);
 }
 function windowBlur() {
     // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
+function selection_watcher(t: number) {
+    if (t == Selection.CHANGE_SHAPE) editing.value = false;
+}
 onMounted(() => {
-    props.context.selection.watch(updater);
+    props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
     window.addEventListener('blur', windowBlur);
-    document.addEventListener('keydown', keyboardHandle);
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(updater);
+    props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
-    document.removeEventListener('keydown', keyboardHandle);
 })
-watchEffect(() => { updater() });
+watchEffect(updateControllerView);
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"

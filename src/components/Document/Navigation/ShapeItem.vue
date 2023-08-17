@@ -193,26 +193,6 @@ const hangdlePerm = () => {
         isEdit.value = true
     }
 }
-function init_d() {
-    d.value = '';
-    const s = props.data.shape;
-    if (![ShapeType.Rectangle, ShapeType.Oval, ShapeType.Line].includes(s.type)) return;
-    const m = s.matrix2Root();
-    m.multiAtLeft(props.data.context.workspace.matrix);
-    const f = s.frame;
-    const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
-    const b = XYsBounding(points);
-    const w = b.right - b.left, h = b.bottom - b.top;
-    m.trans(-w / 2, -h / 2);
-    const max = Math.max(h, w);
-    const ratio = max / 10;
-    const m_composite = new Matrix();
-    m_composite.scale(1 / ratio); // 获取缩放矩阵
-    m_composite.trans(5 - (w / ratio) / 2, 5 - (h / ratio) / 2); // 偏移矩阵
-    const path = s.getPath();
-    path.transform(m_composite);
-    d.value = path.toString();
-}
 onMounted(() => {
     hangdlePerm()
     updater();

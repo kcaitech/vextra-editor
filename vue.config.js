@@ -73,6 +73,17 @@ var configureWebpack = (config) => {
             ],
             include: [iconspath],
             exclude: /node_modules/,
+        }
+    )
+
+    config.module.rules.push(
+        {
+            test: /\.md?$/,
+            use: [
+                {
+                    loader: 'raw-loader',
+                },
+            ],
         },
     )
 
@@ -90,7 +101,6 @@ var configureWebpack = (config) => {
                 { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
             ]
         }),
-        ...config.plugins,
         new CopyWebpackPlugin({
             patterns: [{
                 from: communicationWorkerSourcePath,
@@ -100,6 +110,7 @@ var configureWebpack = (config) => {
         new webpack.DefinePlugin({
             COMMUNICATION_WORKER_URL: JSON.stringify(communicationWorkerTargetFilename),
         }),
+        ...config.plugins,
     ]
 
     config.watchOptions = {
@@ -113,8 +124,7 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-    // publicPath: './',
-    publicPath: '/tjs',
+    publicPath: './',
     configureWebpack,
 
     pluginOptions: {
@@ -141,7 +151,11 @@ var exports = defineConfig({
                 }
             }
         }
-    }
+    },
 
-})
+
+}
+
+
+)
 module.exports = exports

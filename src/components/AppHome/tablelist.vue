@@ -3,7 +3,7 @@
         <el-auto-resizer>
             <template #default="{ height, width }">
                 <el-table-v2 :columns="columns" :data=props.data :width="width" :height="height" :row-class="rowClass"
-                    :row-event-handlers="rowHandleClick" @scroll="rightmenu" class="{'111','222'}">
+                    :row-event-handlers="rowHandleClick" @scroll="rightmenu">
                     <template #overlay v-if="loading">
                         <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
                             <el-icon class="is-loading" color="var(--active-color)" :size="26" style="display:block">

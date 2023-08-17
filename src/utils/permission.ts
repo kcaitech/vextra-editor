@@ -1,28 +1,33 @@
-import {router} from "@/router";
+import { router } from "@/router";
 
 //守卫白名单
-const whiteList = ['/login', '/404','/privacypolicy','/serviceagreement']
+const whiteList = ['/', '/login', '/404', '/privacypolicy', '/serviceagreement']
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token')
     if (token) {
         if (to.path === '/login') {
-            next('/')
+            next('/apphome') //有token且有效，在指向登录页时跳转到首页列表
         } else {
             next(); // 继续路由跳转
         }
     } else {
-        if (whiteList.find(function (item) { 
+        if (whiteList.find(function (item) {
             return item === to.path
         })) {
+            if(to.name==='privacypolicy'){
+                document.title='隐私协议'
+            }
+            if(to.name==='serviceagreement'){
+                document.title='服务协议'
+            }
             next()
-        } else {      
-            if(to.meta.requireAuth) {
-                localStorage.setItem('perRoute', to.fullPath) 
-            }else {
-                localStorage.setItem('perRoute', '') 
+        } else {
+            if (to.meta.requireAuth) {
+                localStorage.setItem('perRoute', to.fullPath)
+            } else {
+                localStorage.setItem('perRoute', '')
             }
             next('/login')
         }
     }
-    
 })

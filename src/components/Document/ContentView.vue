@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string } from '@/utils/content';
+import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_shape2 } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -30,7 +30,6 @@ import { Cursor } from "@/context/cursor";
 import { Action } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
-import { Asssit } from '@/context/assist';
 
 interface Props {
     context: Context
@@ -137,13 +136,9 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
             }
         }
     }
+    workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     search_once(e) // 滚动过程进行常规图形检索
-    workspace.value.pageDragging(true);
-    de_freeze();
 }
-const de_freeze = debounce(() => {
-    workspace.value.pageDragging(false);
-}, 50)
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
@@ -179,7 +174,13 @@ function pageEditorOnMoveEnd(e: MouseEvent) {
     if (isDrag && newShape) shapeCreateEnd();
     else {
         if (newShape) shapeCreateEnd();
-        else if (action.startsWith('add')) init_insert_shape(props.context, mousedownOnPageXY, t);
+        else if (action.startsWith('add')) {
+            if (action === Action.AddArrow || action === Action.AddLine) {
+                init_insert_shape2(props.context, mousedownOnPageXY, t);
+            } else {
+                init_insert_shape(props.context, mousedownOnPageXY, t);
+            }
+        }
     }
 }
 function contentEditOnMoving(e: MouseEvent) { // 编辑page内容    
@@ -252,7 +253,7 @@ function comment_watcher(type?: number) {
 }
 function menu_watcher(type?: number) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
-    if(type === Menu.CHANGE_USER_CURSOR) {
+    if (type === Menu.CHANGE_USER_CURSOR) {
         avatarVisi.value = props.context.menu.isUserCursorVisible;
     }
 }
@@ -336,7 +337,6 @@ function contextMenuMount(e: MouseEvent) {
             const el = contextMenuEl.value.menu;
             surplusY.value = document.documentElement.clientHeight - site.y;
             const root_height = props.context.workspace.root.height;
-
             if (el) {
                 let height = el.offsetHeight;
                 if (height > root_height * 0.98) {
@@ -362,10 +362,7 @@ function select(e: MouseEvent) {
     if (props.context.workspace.select) {
         createSelector(e);
     } else {
-        const isDrag = is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis);
-        if (isDrag) {
-            props.context.workspace.selecting(true);
-        }
+        if (is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis)) props.context.workspace.selecting(true);
     }
 }
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
@@ -773,7 +770,7 @@ onUnmounted(() => {
         :style="{ 'background-color': background_color }">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
-        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
+        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">

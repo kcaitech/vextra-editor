@@ -8,6 +8,7 @@ const props = defineProps<{
     text: string | number,
     frame?: { width: number, height: number, rotate?: number },
     multipleValues?: boolean
+    disabled?: boolean
 }>();
 const emit = defineEmits<{
     (e: "onchange", value: string): void;
@@ -24,15 +25,16 @@ const isDrag = ref(false)
 const input = ref<HTMLInputElement>();
 
 function onChange(e: Event) {
+    if (props.disabled) return;
     let value = (e.currentTarget as any)['value']
     try {
-        if(props.svgicon == 'angle' && input.value!.value.slice(-1) === '°') {
+        if (props.svgicon == 'angle' && input.value!.value.slice(-1) === '°') {
             const raduis = input.value!.value.slice(0, -1)
-            value = eval(raduis);   
-            input.value!.value = value   
-        }else {
-            value = eval(value);   
-            input.value!.value = value   
+            value = eval(raduis);
+            input.value!.value = value
+        } else {
+            value = eval(value);
+            input.value!.value = value
         }
     } catch (error) {
         return input.value!.value = String(props.text)
@@ -59,6 +61,7 @@ function onChange(e: Event) {
     emit("onchange", value);
 }
 const onBlur = (e: MouseEvent) => {
+    if (props.disabled) return;
     document.addEventListener('click', onBlur)
     if (e.target instanceof Element && !e.target.closest('.icontext')) {
         var timer = setTimeout(() => {
@@ -71,6 +74,7 @@ const onBlur = (e: MouseEvent) => {
     }
 }
 const onKeyBlur = (e: KeyboardEvent) => {
+    if (props.disabled) return;
     if (e.key === 'Enter') {
         if (input.value) {
             (e.currentTarget as HTMLInputElement).blur()
@@ -78,6 +82,7 @@ const onKeyBlur = (e: KeyboardEvent) => {
     }
 }
 const onMouseDown = (e: MouseEvent) => {
+    if (props.disabled) return;
     if (props.svgicon === 'radius' && props.multipleValues === true) {
         return
     }
@@ -143,7 +148,7 @@ const onMouseUp = (e: MouseEvent) => {
 }
 
 const selectValue = () => {
-    if(input.value) {
+    if (input.value) {
         input.value.select()
     }
 }
@@ -189,17 +194,19 @@ onMounted(() => {
 </script>
 
 <template>
-    <label class="icontext">
+    <div :class="{ icontext: true, disabled: props.disabled }">
         <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
             width: `${props.frame ? frame?.width : 18}px`,
             height: `${props.frame ? frame?.height : 18}px`,
             transform: `rotate(${props.frame ? frame?.rotate : 0}deg)`,
-            cursor: props.svgicon === 'radius' && props.multipleValues === true ? 'auto' : 'ew-resize'
+            cursor: (props.svgicon === 'radius' && props.multipleValues === true && !props.disabled) ? 'auto' : 'ew-resize'
         }"></svg-icon>
-        <img class="icon" v-if="props.icon" :src="props.icon" />
-        <span @mousedown="onMouseDown" class="icon" v-if="!props.icon && props.ticon">{{ props.ticon }}</span>
-        <input ref="input" @click="onBlur" @focus="selectValue" :value="props.text" @keydown="onKeyBlur" v-on:change="onChange" />
-    </label>
+        <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon" />
+        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{
+            props.ticon }}</span>
+        <input ref="input" @click="onBlur" @focus="selectValue" :value="props.text" @keydown="onKeyBlur"
+            :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange" />
+    </div>
 </template>
 
 <style scoped lang="scss">
@@ -222,6 +229,14 @@ onMounted(() => {
         text-align: center;
     }
 
+    >.deicon {
+        color: grey;
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        text-align: center;
+    }
+
     >span {
         line-height: 14px;
     }
@@ -239,5 +254,9 @@ onMounted(() => {
         font-size: var(--font-default-fontsize);
         outline: none;
     }
+}
+
+.disabled {
+    opacity: 0.4;
 }
 </style>

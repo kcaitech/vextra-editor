@@ -17,14 +17,16 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-
-import { onUnmounted } from 'vue';
+import { measure } from '@/layout/text/measure';
+import { nextTick, onUnmounted, ref } from 'vue';
+import addTeam from '@/components/TeamProject/addTeam.vue'
 
 interface Emits {
     (e: 'settitle', title: string): void;
 }
 const emits = defineEmits<Emits>();
 const { t } = useI18n();
+const showoverlay = ref(false)
 
 const picker = new FilePicker((file) => {
     if (!file) return;
@@ -36,6 +38,8 @@ const picker = new FilePicker((file) => {
         (window as any).skrepo = coopRepo;
         (window as any).sketchDocument = document;
         router.push({ name: 'document' });
+        console.log(window);
+
     })
 });
 
@@ -57,6 +61,14 @@ function Setindex(a: any, b: any) {
     sessionStorage.setItem('index', a)
 }
 const x = sessionStorage.getItem('index')
+
+const showteamcard = () => {
+    showoverlay.value = true
+    nextTick(() => {
+        const input = document.querySelector(".team-name input") as HTMLInputElement
+        input?.focus()
+    })
+}
 
 onUnmounted(() => {
     picker.unmount();
@@ -108,10 +120,20 @@ onUnmounted(() => {
                         </el-icon>
                         <span>{{ t('home.recycling_station') }}</span>
                     </el-menu-item></router-link>
-
             </el-menu>
+            <div class="team-container">
+                <button class="newteam" @click.stop="showteamcard">
+                    <svg-icon icon-class="close" />
+                    <span>{{t('Createteam.add_team')}}</span>
+                </button>
+            </div>
         </el-col>
     </el-row>
+    <transition name="nested" :duration="550">
+        <div v-if="showoverlay" class="overlay">
+            <addTeam class="inner" @close="showoverlay = false" />
+        </div>
+    </transition>
 </template>
 
 <style lang="scss" scoped>
@@ -119,10 +141,97 @@ a {
     text-decoration: none;
 }
 
+.nested-enter-active,
+.nested-leave-active {
+    transition: all 0.3s ease-in-out;
+}
 
+.nested-leave-active {
+    transition-delay: 0.25s;
+}
+
+.nested-enter-from,
+.nested-leave-to {
+    transform: translateY(400px);
+    opacity: 0;
+}
+
+.nested-enter-active .inner,
+.nested-leave-active .inner {
+    transition: all 0.3s ease-in-out;
+}
+
+.nested-enter-active .inner {
+    transition-delay: 0.25s;
+}
+
+.nested-enter-from .inner,
+.nested-leave-to .inner {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.001;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.team-container {
+    position: absolute;
+    bottom: 8px;
+    width: 100%;
+    text-align: center;
+
+    .newteam {
+        cursor: pointer;
+        border: none;
+        width: calc(100% - 16px);
+        height: 32px;
+        margin: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        background-color: #9775fa;
+        box-shadow: 1px 1px 3px rgb(0, 0, 0);
+        box-sizing: border-box;
+        transition: all 0.5s ease-out;
+
+        &:hover {
+            background-color: rgba(150, 117, 250, 0.862745098);
+        }
+
+        &:active {
+            background-color: #9775fa;
+        }
+
+        span {
+            color: #ffffff;
+            letter-spacing: 2px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        svg {
+            margin-right: 4px;
+            margin-top: 2px;
+            width: 16px;
+            height: 16px;
+            fill: white;
+            transform: rotate(45deg);
+        }
+    }
+}
 
 .el-row {
-    height: 100vh;
+    height: calc(100vh - 56px);
     overflow: hidden;
     overflow-y: auto;
     background-color: white;
@@ -193,12 +302,13 @@ a {
         .el-menu {
             border: none;
             background: none;
-            
+
 
             .el-menu-item {
                 border-radius: 4px;
                 margin: 10px;
                 height: 32px;
+
                 &:hover {
                     background-color: #f3f0ff;
                     color: #9775fa;
@@ -225,9 +335,10 @@ a {
     .el-row .el-col .new button .el-icon {
         padding: 0;
         margin: 0;
-        font-size:24px;
+        font-size: 24px;
     }
-    .el-menu-item{
+
+    .el-menu-item {
         justify-content: center;
     }
 
