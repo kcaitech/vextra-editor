@@ -42,6 +42,9 @@ const WITH_SHADOW = [
     ShapeType.Oval,
     ShapeType.Path,
     ShapeType.Artboard,
+    ShapeType.Image,
+    ShapeType.Text,
+    ShapeType.Path
 ]
 const shapeType = ref();
 const reflush = ref<number>(0);
