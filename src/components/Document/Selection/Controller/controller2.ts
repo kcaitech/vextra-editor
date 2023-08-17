@@ -208,8 +208,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 workspace.value.notify(WorkSpace.SELECTION_VIEW_UPDATE);
                 context.assist.reset();
                 isDragging = false;
-            } else {
-                pickerFromSelectedShapes(e);
             }
             if (wheel) wheel = wheel.remove();
             document.removeEventListener('mousemove', mousemove);
@@ -221,16 +219,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
         }
         context.cursor.cursor_freeze(false);
         workspace.value.setCtrl('page');
-    }
-    function pickerFromSelectedShapes(e: MouseEvent) {
-        const selection = context.selection;
-        const selected = selection.selectedShapes;
-        const hoveredShape = selection.hoveredShape;
-        if (hoveredShape) {
-            e.shiftKey ? selection.rangeSelectShape([...selected, hoveredShape]) : selection.selectShape(hoveredShape);
-        } else {
-            if (!selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).length) selection.resetSelectShapes();
-        }
     }
     function checkStatus() {
         if (workspace.value.isPreToTranslating) {

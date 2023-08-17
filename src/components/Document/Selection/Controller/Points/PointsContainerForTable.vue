@@ -40,6 +40,7 @@ function update_transform() {
     let rb = matrix.computeCoord2(frame.width, frame.height);
     trans_btn_transform.value = `translate(${lt.x - 20}, ${lt.y - 20})`
     scale_btn_transform.value = `translate(${rb.x + 1}, ${rb.y + 1})`;
+    props.context.workspace.setCtrlPath(`M${lt.x - 20} ${lt.y - 20} h18 v18 h-18 z`);
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         hidden.value = true;
     }
@@ -161,7 +162,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g :transform="trans_btn_transform" @mousedown.stop>
+    <g :transform="trans_btn_transform">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.25" stroke="none"></rect>
         <svg t="1692178735834" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10180"
             width="12" height="12" x="3px" y="3px">
