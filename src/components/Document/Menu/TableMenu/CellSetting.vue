@@ -40,6 +40,8 @@ const splitCell = () => {
     const shape = props.context.selection.selectedShapes[0]
     const table = props.context.selection.getTableSelection(shape as TableShape);
     if(table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+        console.log(table.getSelectedCells(),table,'table.getSelectedCells()');
+        
         const cell = (Array.from(table.getSelectedCells()))[0]
         console.log(cell,'splitCell');
         

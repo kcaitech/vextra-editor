@@ -43,11 +43,14 @@ export class TableSelection implements Notifiable {
         return this.m_tableColEnd;
     }
     getSelectedCells(visible: boolean = true): TableCell[] {
-        return this.m_shape.getTableCells(this.m_tableRowStart,
+        if (visible) return this.m_shape.getVisibleCells(this.m_tableRowStart,
             this.m_tableRowEnd,
             this.m_tableColStart,
-            this.m_tableColEnd,
-            visible);
+            this.m_tableColEnd);
+        return this.m_shape.getCells(this.m_tableRowStart,
+            this.m_tableRowEnd,
+            this.m_tableColStart,
+            this.m_tableColEnd);
     }
 
     // table
