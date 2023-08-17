@@ -15,34 +15,49 @@ interface Props {
     position: { x: number, y: number }
     cellMenu: string
 }
+const horIcon = ref('text-left');
+const verIcon = ref('align-top');
 const props = defineProps<Props>();
-const isAlginMenu = ref('')
+const isAlignMenu = ref('')
+const color = ref<Color>(new Color(1, 216, 216, 216));
 const showAlginMenu = (meun: string) => {
-    if (isAlginMenu.value) return isAlginMenu.value = '';
-    isAlginMenu.value = meun
+    if (isAlignMenu.value) return isAlignMenu.value = '';
+    isAlignMenu.value = meun
 }
-const color = ref<Color>(new Color(1, 255, 0, 0));
+const textAlginHor = (svg: string) => {
+    horIcon.value = svg;
+    isAlignMenu.value = ''
+}
+
+const textAlginVer = (svg: string) => {
+    verIcon.value = svg;
+    isAlignMenu.value = '';
+}
+
+const getColorFromPicker = (c: Color) => {
+    color.value = c;
+}
 </script>
 
 <template>
     <div class="custom-popover" :style="{ top: `${props.position.x}px`, left: `${props.position.y}px` }">
         <div v-if="props.cellMenu === 'multiCells'" class="popover-content">
             <div class="hor selected_bgc">
-                <svg-icon icon-class="text-left"></svg-icon>
+                <svg-icon :icon-class="horIcon"></svg-icon>
                 <div class="menu" @click="showAlginMenu('hor')">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <TableContextAlgin v-if="isAlginMenu === 'hor'" :menu="isAlginMenu"></TableContextAlgin>
+                <TableContextAlgin v-if="isAlignMenu === 'hor'" :menu="isAlignMenu" @textAlginHor="textAlginHor"></TableContextAlgin>
             </div>
             <div class="ver selected_bgc">
-                <svg-icon icon-class="align-top"></svg-icon>
+                <svg-icon :icon-class="verIcon"></svg-icon>
                 <div class="menu" @click="showAlginMenu('ver')">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <TableContextAlgin v-if="isAlginMenu === 'ver'" :menu="isAlginMenu"></TableContextAlgin>
+                <TableContextAlgin v-if="isAlignMenu === 'ver'" :menu="isAlignMenu" @textAlginVer="textAlginVer"></TableContextAlgin>
             </div>
             <div style="display: flex; align-items: center; justify-content: center;">
-                <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"></ColorPicker>
+                <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24" @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
             <div>
                 <svg width="16" height="16" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -59,7 +74,7 @@ const color = ref<Color>(new Color(1, 255, 0, 0));
         </div>
         <div v-if="props.cellMenu === 'row' || props.cellMenu === 'col'" class="popover-content">
             <div style="display: flex; align-items: center; justify-content: center;">
-                <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"></ColorPicker>
+                <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24" @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
             <div :style="{ transform: props.cellMenu === 'row' ? `rotate(180deg)` : `rotate(270deg)` }">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -140,6 +155,16 @@ const color = ref<Color>(new Color(1, 255, 0, 0));
 
     .ver {
         position: relative;
+    }
+    .menu {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 10px;
+        transition: 0.2s;
+    }
+    .menu:hover {
+        transform: translateY(4px);
     }
 }
 

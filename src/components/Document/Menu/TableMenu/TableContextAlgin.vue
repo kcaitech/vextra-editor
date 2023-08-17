@@ -9,15 +9,19 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<{
+    (e: 'textAlginHor', svgicon: string): void;
+    (e: 'textAlginVer', svgicon: string): void;
+}>()
 const { t } = useI18n()
 const selectLevel = ref('')
 const selectVertical = ref('')
 
-const onSelectLevel = (icon: string) => {
-
+const onSelectLevel = (icon: string, svg: string) => {
+    emit('textAlginHor', svg)
 }
-const onSelectVertical = (icon: string) => {
-
+const onSelectVertical = (icon: string, svg: string) => {
+    emit('textAlginVer', svg)
 }
 </script>
 
@@ -25,25 +29,25 @@ const onSelectVertical = (icon: string) => {
     <div class="text-bottom-align">
         <div class="level-aligning jointly-text" v-if="menu === 'hor'">
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'left' }"
-                @click="onSelectLevel(TextHorAlign.Left)">
+                @click="onSelectLevel(TextHorAlign.Left, 'text-left')">
                 <Tooltip :content="t('attr.align_left')" :offset="15">
                     <svg-icon icon-class="text-left"></svg-icon>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'centered' }"
-                @click="onSelectLevel(TextHorAlign.Centered)">
+                @click="onSelectLevel(TextHorAlign.Centered, 'text-center')">
                 <Tooltip :content="t('attr.align_center')" :offset="15">
                     <svg-icon icon-class="text-center"></svg-icon>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'right' }"
-                @click="onSelectLevel(TextHorAlign.Right)">
+                @click="onSelectLevel(TextHorAlign.Right, 'text-right')">
                 <Tooltip :content="t('attr.align_right')" :offset="15">
                     <svg-icon icon-class="text-right"></svg-icon>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'natural' }"
-                @click="onSelectLevel(TextHorAlign.Natural)">
+                @click="onSelectLevel(TextHorAlign.Natural, 'text-justify')">
                 <Tooltip :content="t('attr.align_the_sides')" :offset="15">
                     <svg-icon icon-class="text-justify"></svg-icon>
                 </Tooltip>
@@ -51,19 +55,19 @@ const onSelectVertical = (icon: string) => {
         </div>
         <div class="vertical-aligning jointly-text" v-if="menu === 'ver'">
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'top' }"
-                @click="onSelectVertical(TextVerAlign.Top)">
+                @click="onSelectVertical(TextVerAlign.Top, 'align-top')">
                 <Tooltip :content="t('attr.align_top')" :offset="15">
                     <svg-icon icon-class="align-top"></svg-icon>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'middle' }"
-                @click="onSelectVertical(TextVerAlign.Middle)">
+                @click="onSelectVertical(TextVerAlign.Middle, 'align-middle')">
                 <Tooltip :content="t('attr.align_middle')" :offset="15">
                     <svg-icon icon-class="align-middle"></svg-icon>
                 </Tooltip>
             </i>
             <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'bottom' }"
-                @click="onSelectVertical(TextVerAlign.Bottom)">
+                @click="onSelectVertical(TextVerAlign.Bottom, 'align-bottom')">
                 <Tooltip :content="t('attr.align_bottom')" :offset="15">
                     <svg-icon icon-class="align-bottom"></svg-icon>
                 </Tooltip>
