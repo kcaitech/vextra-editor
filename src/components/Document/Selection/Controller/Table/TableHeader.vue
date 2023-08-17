@@ -66,7 +66,7 @@ function add_cols() {
 }
 function add_rows() {
     const editor = props.context.editor4Table(props.shape as TableShape);
-    editor.insertRow(ids_x + 1, 30);
+    editor.insertRow(ids_y + 1, 30);
 }
 watch(() => props.matrix, update_position, { deep: true });
 onMounted(() => {
