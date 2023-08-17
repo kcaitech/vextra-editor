@@ -58,9 +58,9 @@ export const system = {
     'dissolution': '取消容器',
     'content_includes': '文本包含',
     'title_includes': '标题包含',
-    'license_key':'粤ICP备2023042416号',
-    'phonetips':'移动端暂不支持登录，请在电脑端进行登录！',
-    'btn_login':'登录',
+    'license_key': '粤ICP备2023042416号',
+    'phonetips': '移动端暂不支持登录，请在电脑端进行登录！',
+    'btn_login': '登录',
     'artboart_title_visible': '显示容器标题'
 }
 
@@ -189,6 +189,7 @@ export const attr: any = {
     constraints: '相对容器位置',
     border: '边框',
     fill: '填充',
+    shadow: '阴影',
     text: '文本',
     'follow_container_scaling': '跟随容器缩放',
     'advanced_stroke': '边框设置',

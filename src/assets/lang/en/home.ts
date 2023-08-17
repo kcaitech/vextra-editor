@@ -58,9 +58,9 @@ export const system = {
     'dissolution': 'Dissolution',
     'content_includes': 'Content includes',
     'title_includes': 'Title includes',
-    'license_key':'粤ICP备2023042416号',
-    'phonetips':'Mobile terminal does not support login, please login on the computer side!',
-    'btn_login':'Login',
+    'license_key': '粤ICP备2023042416号',
+    'phonetips': 'Mobile terminal does not support login, please login on the computer side!',
+    'btn_login': 'Login',
     'artboart_title_visible': 'Show artboard title'
 }
 
@@ -189,6 +189,7 @@ export const attr: any = {
     constraints: 'Constraints',
     border: 'Border',
     fill: 'Fill',
+    shadow: "Shadow",
     text: 'Text',
     'follow_container_scaling': 'Follow container scaling',
     'advanced_stroke': 'Advanced stroke',
