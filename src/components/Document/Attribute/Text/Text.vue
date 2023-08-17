@@ -246,7 +246,6 @@ const textFormat = () => {
     if(format.underlineIsMulti) isUnderline.value = false
     if(format.strikethroughIsMulti) isDeleteline.value = false
     props.context.workspace.focusText()
-    
 }
 
 function selection_wather(t: number) {
