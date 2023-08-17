@@ -38,7 +38,7 @@ function update_transform() {
     const frame = props.shape.frame;
     let lt = matrix.computeCoord(0, 0);
     let rb = matrix.computeCoord(frame.width, frame.height);
-    trans_btn_transform.value = `translate(${lt.x - 24}, ${lt.y})`
+    trans_btn_transform.value = `translate(${lt.x - 20}, ${lt.y - 20})`
     scale_btn_transform.value = `translate(${rb.x + 1}, ${rb.y + 1})`;
 }
 

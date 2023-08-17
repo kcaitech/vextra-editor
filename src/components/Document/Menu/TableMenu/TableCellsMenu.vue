@@ -5,11 +5,17 @@ import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Color } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
+enum CellMenu {
+    MultiSelect = 'multiCells', //多选单元格时
+    SelectRow = 'row', //选中整行单元格
+    selectCol = 'col' //选中整列单元格
+}
 interface Props {
     context: Context
+    position: { x: number, y: number }
+    cellMenu: string
 }
 const props = defineProps<Props>();
-const isPopoverVisible = ref('col');
 const isAlginMenu = ref('')
 const showAlginMenu = (meun: string) => {
     if (isAlginMenu.value) return isAlginMenu.value = '';
@@ -19,8 +25,8 @@ const color = ref<Color>(new Color(1, 255, 0, 0));
 </script>
 
 <template>
-    <div class="custom-popover">
-        <div v-if="isPopoverVisible === 'selectCells'" class="popover-content">
+    <div class="custom-popover" :style="{ top: `${props.position.x}px`, left: `${props.position.y}px` }">
+        <div v-if="props.cellMenu === 'multiCells'" class="popover-content">
             <div class="hor selected_bgc">
                 <svg-icon icon-class="text-left"></svg-icon>
                 <div class="menu" @click="showAlginMenu('hor')">
@@ -51,18 +57,18 @@ const color = ref<Color>(new Color(1, 255, 0, 0));
                 </svg>
             </div>
         </div>
-        <div v-if="isPopoverVisible === 'row' || isPopoverVisible === 'col'" class="popover-content">
+        <div v-if="props.cellMenu === 'row' || props.cellMenu === 'col'" class="popover-content">
             <div style="display: flex; align-items: center; justify-content: center;">
                 <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"></ColorPicker>
             </div>
-            <div :style="{ transform: isPopoverVisible === 'row' ? `rotate(180deg)` : `rotate(270deg)` }">
+            <div :style="{ transform: props.cellMenu === 'row' ? `rotate(180deg)` : `rotate(270deg)` }">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="9" height="20" fill="#D8D8D8" />
                     <line x1="11" y1="9.5" x2="20" y2="9.5" stroke="black" />
                     <line x1="15.5" y1="5" x2="15.5" y2="14" stroke="black" />
                 </svg>
             </div>
-            <div :style="{ transform: isPopoverVisible === 'row' ? `rotate(0deg)` : `rotate(90deg)` }">
+            <div :style="{ transform: props.cellMenu === 'row' ? `rotate(0deg)` : `rotate(90deg)` }">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="9" height="20" fill="#D8D8D8" />
                     <line x1="11" y1="9.5" x2="20" y2="9.5" stroke="black" />
@@ -79,8 +85,7 @@ const color = ref<Color>(new Color(1, 255, 0, 0));
 
 <style scoped lang="scss">
 .custom-popover {
-    position: relative;
-    width: 140px;
+    position: absolute;
     height: 32px;
     border-radius: 4px;
     background-color: #fff;
@@ -112,6 +117,7 @@ const color = ref<Color>(new Color(1, 255, 0, 0));
         display: flex;
         border-radius: 4px;
         padding: 4px;
+        margin: 2px;
 
         >svg {
             width: 16px;
