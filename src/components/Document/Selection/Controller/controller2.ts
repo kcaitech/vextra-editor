@@ -295,22 +295,10 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function mouseup4body(e: MouseEvent) {
         up_cell = check_cell_on_point(e);
-        // if (up_cell && down_cell && isDragging) {
-        //     const { rows, rowe, cols, cole } = get_range(down_cell.index, up_cell.index);
-        //     const m: Map<string, { row: number, col: number }> = new Map(), grid = table.getLayout().grid;
-        //     for (let i = rows; i <= rowe; i++) {
-        //         for (let j = cols; j <= cole; j++) {
-        //             const gt = grid.get(i, j);
-        //             m.set(gt.cell.id, gt.index);
-        //         }
-        //     }
-        //     table_selection.selectTableCellRange(rows, rowe, cols, cole, m);
-        // }
         if (isDragging) isDragging = false;
         workspace.value.setCtrl('page');
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
-        // console.log('body上抬起');
     }
     // #endregion
     function set_position(e: MouseEvent) {
