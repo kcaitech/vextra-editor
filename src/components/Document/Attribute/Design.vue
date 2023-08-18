@@ -11,7 +11,6 @@ import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
 import TableText from './Table/TableText.vue';
-import Module from './Module/Module.vue';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -84,7 +83,6 @@ onUnmounted(() => {
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
             </TableText>
-            <!-- <Module :context="props.context"></Module> -->
         </div>
     </section>
 </template>
