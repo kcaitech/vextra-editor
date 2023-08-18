@@ -167,37 +167,37 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 const textFormat = () => {
   const table = props.context.selection.getTableSelection(props.textShape, props.context);
   if ((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
-    shape.value = (Array.from(table.getSelectedCells()))[0]
+    shape.value = (Array.from(table.getSelectedCells()))[0];
     if (!shape.value || !shape.value.text) return;
     const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape(shape.value)
-    let format: AttrGetter
+    const editor = props.context.editor4TextShape(shape.value);
+    let format: AttrGetter;
     if (textIndex === -1) {
-      format = shape.value.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+      format = shape.value.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
     } else {
-      format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+      format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
     }
-    wordSpace.value = format.kerning || 0
-    rowHeight.value = format.minimumLineHeight || ''
-    paragraphSpace.value = format.paraSpacing || 0
-    selectCase.value = format.transform
-    if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
-    if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
-    if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
-    if (format.transformIsMulti) selectCase.value = ''
+    wordSpace.value = format.kerning || 0;
+    rowHeight.value = format.minimumLineHeight || '';
+    paragraphSpace.value = format.paraSpacing || 0;
+    selectCase.value = format.transform;
+    if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`;
+    if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`;
+    if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`;
+    if (format.transformIsMulti) selectCase.value = '';
   } else {
     const shape = props.textShape;
-    const cells = Array.from(shape.childs)
-    const formats: any[] = []
+    const cells = Array.from(shape.childs);
+    const formats: any[] = [];
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
       if (cell.text) {
-        const editor = props.context.editor4TextShape(cell as any)
-        const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-        formats.push(forma)
+        const editor = props.context.editor4TextShape(cell as any);
+        const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+        formats.push(forma);
       }
     }
-    let format: any = {}
+    let format: any = {};
     if (formats.length > 0) {
       const referenceKeys = Object.keys(formats[0]);
       for (const key of referenceKeys) {
@@ -216,38 +216,38 @@ const textFormat = () => {
         }
       }
     }
-    wordSpace.value = format.kerning || 0
+    wordSpace.value = format.kerning || 0;
     rowHeight.value = format.minimumLineHeight || ''
-    paragraphSpace.value = format.paraSpacing || 0
-    selectCase.value = format.transform
-    if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`
-    if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`
-    if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`
-    if (format.wordSpace === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`
-    if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`
-    if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`
-    if (format.transformIsMulti === 'unlikeness') selectCase.value = ''
-    if (format.transform === 'unlikeness') selectCase.value = ''
+    paragraphSpace.value = format.paraSpacing || 0;
+    selectCase.value = format.transform;
+    if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+    if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+    if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+    if (format.wordSpace === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+    if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
+    if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
+    if (format.transformIsMulti === 'unlikeness') selectCase.value = '';
+    if (format.transform === 'unlikeness') selectCase.value = '';
   }
 }
 function selection_wather(t: any) {
   if (t === Selection.CHANGE_TEXT) {
-    textFormat()
+    textFormat();
   }
   if (t === Selection.CHANGE_SHAPE) {
-    textFormat()
+    textFormat();
   }
 }
 
 onMounted(() => {
-  textFormat()
-  props.textShape.watch(textFormat)
+  textFormat();
+  props.textShape.watch(textFormat);
   props.context.selection.watch(selection_wather);
 })
 onUnmounted(() => {
   props.context.selection.unwatch(selection_wather);
-  props.textShape.unwatch(textFormat)
-  shapeWatch()
+  props.textShape.unwatch(textFormat);
+  shapeWatch();
 })
 </script>
 
