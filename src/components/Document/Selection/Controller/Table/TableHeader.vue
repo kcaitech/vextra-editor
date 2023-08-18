@@ -18,10 +18,10 @@ interface FrameParams {
 }
 const data: {
     frame_params: FrameParams
-    xbars: { s: number, length: number }[]
-    ybars: { s: number, length: number }[]
-    xs: number[]
-    ys: number[]
+    xbars: { s: number, length: number, idx: number }[]
+    ybars: { s: number, length: number, idx: number }[]
+    xs: { x: number, idx: number }[]
+    ys: { y: number, idx: number }[]
 } = reactive({ frame_params: { x: 0, y: 0, width: 0, height: 0 }, xbars: [], ybars: [], xs: [], ys: [] });
 const show_add_x = ref<boolean>(false);
 let add_x: number = 0, ids_x = 0;
@@ -42,12 +42,16 @@ function update_position() {
         let growx = 0, growy = 0;
         for (let i = 0, len = cols.length; i < len; i++) {
             const tx = cols[i], x = growx + tx;
-            xs.push(x), xbars.push({ s: growx + 4, length: tx - 8 });
+            if (tx - 8 > 10) {
+                xs.push({ x, idx: i }), xbars.push({ s: growx + 4, length: tx - 8, idx: i });
+            }
             growx += tx;
         }
         for (let i = 0, len = rows.length; i < len; i++) {
             const ty = rows[i], y = growy + ty;
-            ys.push(y), ybars.push({ s: growy + 4, length: ty - 8 });
+            if (ty - 8 > 10) {
+                ys.push({ y, idx: i }), ybars.push({ s: growy + 4, length: ty - 8, idx: i });
+            }
             growy += ty;
         }
     } else {
@@ -101,12 +105,12 @@ onUnmounted(() => {
 
 <template>
     <g :transform="`translate(${frame_params.x}, ${frame_params.y})`" :class="{ hidden }">
-        <circle v-for="(d, ids) in xs" :key="ids" :cx="d" cy="-5.5" r="3" stroke="none" class="dot"
-            @mouseenter="() => x_dot_mouseennter(d, ids)" />
+        <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-5.5" r="3" stroke="none" class="dot"
+            @mouseenter="() => x_dot_mouseennter(d.x, d.idx)" />
         <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-9" :width="b.length" height="7" stroke="none" rx="2.5"
             ry="2.5" class="bar" @mousedown.stop="select_col" />
-        <circle v-for="(d, ids) in ys" :key="ids" cx="-5.5" :cy="d" r="3" stroke="none" class="dot"
-            @mouseenter="() => y_dot_mouseennter(d, ids)" />
+        <circle v-for="(d, ids) in ys" :key="ids" cx="-5.5" :cy="d.y" r="3" stroke="none" class="dot"
+            @mouseenter="() => y_dot_mouseennter(d.y, d.idx)" />
         <rect v-for="(b, ids) in ybars" :key="ids" x="-9" :y="b.s" :height="b.length" width="7" stroke="none" rx="2.5"
             ry="2.5" class="bar" @mousedown.stop="select_row" />
         <g v-if="show_add_x">
