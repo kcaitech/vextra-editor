@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Matrix, Shape, TableShape } from '@kcdesign/data';
+import { Matrix, Shape, TableLayout, TableShape } from '@kcdesign/data';
 import { Point } from '../../SelectionView.vue';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
@@ -29,7 +29,7 @@ const show_add_y = ref<boolean>(false);
 let add_y: number = 0, ids_y = 0;
 const hidden = ref<boolean>(false);
 let frame_params = data.frame_params, xbars = data.xbars, ybars = data.ybars, xs = data.xs, ys = data.ys;
-let layout: any;
+let layout: TableLayout;
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
@@ -78,11 +78,29 @@ function add_rows() {
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertRow(ids_y + 1, layout.rowHeights[ids_y]);
 }
-function select_col() {
-    console.log('选择列');
+function select_col(index: number) {
+    const selection = props.context.selection;
+    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const grid = layout.grid;
+    const rl = layout.grid.rowCount;
+    const m: Map<string, { row: number, col: number }> = new Map();
+    for (let i = 0; i < rl; i++) {
+        const gt = grid.get(i, index);
+        m.set(gt.cell.id, { row: gt.index.row, col: gt.index.col });
+    }
+    table_selection.selectTableCellRange(0, rl, index, index, m);
 }
-function select_row() {
-    console.log('选择行');
+function select_row(index: number) {
+    const selection = props.context.selection;
+    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const grid = layout.grid;
+    const cl = layout.grid.colCount;
+    const m: Map<string, { row: number, col: number }> = new Map();
+    for (let i = 0; i < cl; i++) {
+        const gt = grid.get(index, i);
+        m.set(gt.cell.id, { row: gt.index.row, col: gt.index.col });
+    }
+    table_selection.selectTableCellRange(index, index, 0, cl, m);
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
@@ -108,11 +126,11 @@ onUnmounted(() => {
         <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-5.5" r="3" stroke="none" class="dot"
             @mouseenter="() => x_dot_mouseennter(d.x, d.idx)" />
         <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-9" :width="b.length" height="7" stroke="none" rx="2.5"
-            ry="2.5" class="bar" @mousedown.stop="select_col" />
+            ry="2.5" class="bar" @mousedown.stop="() => select_col(b.idx)" />
         <circle v-for="(d, ids) in ys" :key="ids" cx="-5.5" :cy="d.y" r="3" stroke="none" class="dot"
             @mouseenter="() => y_dot_mouseennter(d.y, d.idx)" />
         <rect v-for="(b, ids) in ybars" :key="ids" x="-9" :y="b.s" :height="b.length" width="7" stroke="none" rx="2.5"
-            ry="2.5" class="bar" @mousedown.stop="select_row" />
+            ry="2.5" class="bar" @mousedown.stop="() => select_row(b.idx)" />
         <g v-if="show_add_x">
             <line :x1="add_x" y1="0" :x2="add_x" :y2="frame_params.height" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"

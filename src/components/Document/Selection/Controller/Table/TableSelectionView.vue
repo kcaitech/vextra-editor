@@ -4,7 +4,6 @@ import { ClientXY, Selection } from '@/context/selection';
 import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { genRectPath } from '../../common';
-import { Tables } from 'aws-sdk/clients/honeycode';
 
 interface Props {
     context: Context
@@ -17,12 +16,14 @@ function update_cell_selection() {
     const shape = selection.selectedShapes[0];
     if (shape && shape.type === ShapeType.Table) {
         const table_selection = selection.getTableSelection(shape as TableShape, props.context);
-        const cells = table_selection.getSelectedCells(true);
-        console.log('画面', cells);
-        gen_view(shape, cells);
+        const m2f = table_selection.map2Frame;
+        if (m2f.size) {
+            const cells = table_selection.getSelectedCells(true);
+            gen_view(shape, cells, m2f);
+        }
     }
 }
-function gen_view(table: Shape, cells: TableCell[]) {
+function gen_view(table: Shape, cells: TableCell[], m2f: Map<string, { row: number, col: number }>) {
     const t2r = table.matrix2Root(), m = props.context.workspace.matrix;
     t2r.multiAtLeft(m);
     let points: ClientXY[] = [];
@@ -31,15 +32,16 @@ function gen_view(table: Shape, cells: TableCell[]) {
         const cell = cells[i];
         const c2p = cell.matrix2Parent();
         c2p.multiAtLeft(t2r);
-        const f = grid.get(0, 0).frame;
-        const cps = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
+        const rc = m2f.get(cell.id);
+        if (!rc) continue;
+        const f = grid.get(rc.row, rc.col).frame;
+        const cps = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, { x: f.x + f.width, y: f.y + f.height }, { x: f.x, y: f.y + f.height }];
         for (let j = 0; j < 4; j++) {
             const p = cps[j];
             points.push(c2p.computeCoord2(p.x, p.y));
         }
     }
     selection_path.value = genRectPath(points);
-    console.log(selection_path.value);
 }
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_TABLE_CELL) return update_cell_selection();
@@ -54,7 +56,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <path v-if="selection_path" :d="selection_path" fill="orange" fill-opacity="0.3" stroke='none'>
+    <path v-if="selection_path" :d="selection_path" fill="#865dff" fill-opacity="0.25" stroke='none'>
     </path>
 </template>
 <style scoped lang="scss"></style>

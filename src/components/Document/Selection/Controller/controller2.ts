@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
-import { get_speed, keyboardHandle as handle } from "@/utils/controllerFn";
+import { get_range, get_speed, keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
@@ -55,6 +55,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
             matrix.reset(workspace.value.matrix.inverse);
             set_position(e);
             pre2trans(e);
+            table_selection.reset();
+            context.selection.notify(Selection.CHANGE_TABLE_CELL);
         } else if (area === 'body') {
             workspace.value.setCtrl('controller');
             down4body(e);
@@ -74,10 +76,12 @@ function useControllerCustom(context: Context, i18nT: Function) {
         const shape = context.selection.selectedShapes[0];
         if (!shape || shape.type !== ShapeType.Table) return;
         root = context.workspace.root;
-        const table_selection = context.selection.getTableSelection(shape as TableShape, context);
         const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
         if (a === "body") {
-            console.log('触发双击');
+            up_cell = check_cell_on_point(e);
+            if (up_cell) {
+                table_selection.selectTableCell(up_cell.index.row, up_cell.index.col, up_cell.cell);
+            }
         }
     }
     // #region 4trans
@@ -260,6 +264,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function down4body(e: MouseEvent) {
         if (e.button !== 0) return;
+        table_selection.reset();
+        context.selection.notify(Selection.CHANGE_TABLE_CELL);
         set_position(e);
         down_cell = check_cell_on_point(e);
         document.addEventListener('mousemove', mousemove4body);
@@ -271,16 +277,35 @@ function useControllerCustom(context: Context, i18nT: Function) {
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
         if (isDragging) {
             startPosition = { ...mousePosition };
+            const m_cell = check_cell_on_point(e);
+            if (m_cell && down_cell && isDragging) {
+                const { rows, rowe, cols, cole } = get_range(down_cell.index, m_cell.index);
+                const m: Map<string, { row: number, col: number }> = new Map(), grid = table.getLayout().grid;
+                for (let i = rows; i <= rowe; i++) {
+                    for (let j = cols; j <= cole; j++) {
+                        const gt = grid.get(i, j);
+                        m.set(gt.cell.id, gt.index);
+                    }
+                }
+                table_selection.selectTableCellRange(rows, rowe, cols, cole, m);
+            }
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
         }
     }
     function mouseup4body(e: MouseEvent) {
         up_cell = check_cell_on_point(e);
-        console.log('up_cell', up_cell);
-        if (up_cell) {
-            table_selection.selectTableCell(up_cell.index.row, up_cell.index.col);
-        }
+        // if (up_cell && down_cell && isDragging) {
+        //     const { rows, rowe, cols, cole } = get_range(down_cell.index, up_cell.index);
+        //     const m: Map<string, { row: number, col: number }> = new Map(), grid = table.getLayout().grid;
+        //     for (let i = rows; i <= rowe; i++) {
+        //         for (let j = cols; j <= cole; j++) {
+        //             const gt = grid.get(i, j);
+        //             m.set(gt.cell.id, gt.index);
+        //         }
+        //     }
+        //     table_selection.selectTableCellRange(rows, rowe, cols, cole, m);
+        // }
         if (isDragging) isDragging = false;
         workspace.value.setCtrl('page');
         document.removeEventListener('mousemove', move);

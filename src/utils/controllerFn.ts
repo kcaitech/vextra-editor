@@ -147,3 +147,11 @@ export function getDelta(s: Shape, p: PageXY) {
 export function get_speed(e1: MouseEvent, e2: MouseEvent) {
     return Math.hypot(Math.abs(e2.clientX - e1.clientX), Math.abs(e2.clientY - e1.clientY));
 }
+export function get_range(index1: { row: number, col: number }, index2: { row: number, col: number }) {
+    return {
+        rows: Math.min(index1.row, index2.row),
+        rowe: Math.max(index1.row, index2.row),
+        cols: Math.min(index1.col, index2.col),
+        cole: Math.max(index1.col, index2.col),
+    }
+}

@@ -12,6 +12,7 @@ export class TableSelection implements Notifiable {
     private m_tableColEnd: number = -1;
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_context: Context;
+    private m_cell2selection: Map<string, { row: number, col: number }> = new Map();
 
     constructor(shape: TableShape, context: Context, notify: Notifiable) {
         this.m_shape = shape;
@@ -28,6 +29,7 @@ export class TableSelection implements Notifiable {
     }
 
     reset() {
+        this.m_cell2selection.clear();
         this.m_tableRowStart = -1;
         this.m_tableRowEnd = -1;
         this.m_tableColStart = -1;
@@ -58,7 +60,8 @@ export class TableSelection implements Notifiable {
     }
 
     // table
-    selectTableCellRange(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+    selectTableCellRange(rowStart: number, rowEnd: number, colStart: number, colEnd: number, c2s: Map<string, { row: number, col: number }>) {
+        this.m_cell2selection = c2s;
         if (this.m_tableRowStart !== rowStart ||
             this.m_tableRowEnd !== rowEnd ||
             this.m_tableColStart !== colStart ||
@@ -68,11 +71,12 @@ export class TableSelection implements Notifiable {
             this.m_tableRowEnd = rowEnd;
             this.m_tableColStart = colStart;
             this.m_tableColEnd = colEnd;
-
             this.notify(Selection.CHANGE_TABLE_CELL);
         }
     }
-    selectTableCell(rowIdx: number, colIdx: number) {
+    selectTableCell(rowIdx: number, colIdx: number, cell: TableCell) {
+        this.m_cell2selection.clear();
+        this.m_cell2selection.set(cell.id, { row: rowIdx, col: colIdx });
         if (this.m_tableRowStart !== this.m_tableRowEnd ||
             this.m_tableRowStart !== rowIdx ||
             this.m_tableColStart !== this.m_tableColEnd ||
@@ -93,6 +97,9 @@ export class TableSelection implements Notifiable {
             }
         }
         return area;
+    }
+    get map2Frame() {
+        return this.m_cell2selection;
     }
     setArea(table_area: { id: TableArea, area: string }[]) {
         this.m_table_area = table_area;
