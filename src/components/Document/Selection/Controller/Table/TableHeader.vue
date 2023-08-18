@@ -42,14 +42,14 @@ function update_position() {
         let growx = 0, growy = 0;
         for (let i = 0, len = cols.length; i < len; i++) {
             const tx = cols[i], x = growx + tx;
-            if (tx - 8 > 10) {
+            if (tx - 8 > 5) {
                 xs.push({ x, idx: i }), xbars.push({ s: growx + 4, length: tx - 8, idx: i });
             }
             growx += tx;
         }
         for (let i = 0, len = rows.length; i < len; i++) {
             const ty = rows[i], y = growy + ty;
-            if (ty - 8 > 10) {
+            if (ty - 8 > 5) {
                 ys.push({ y, idx: i }), ybars.push({ s: growy + 4, length: ty - 8, idx: i });
             }
             growy += ty;

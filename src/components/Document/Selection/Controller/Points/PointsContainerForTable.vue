@@ -67,6 +67,11 @@ function point_mousemove(event: MouseEvent) {
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = mouseOnClient;
     if (isDragging && asyncBaseAction) {
+        let lt = matrix.computeCoord2(0, 0);
+        if (mouseOnClient.x - lt.x < 40 || mouseOnClient.y - lt.y < 40) {
+            startPosition = { ...mouseOnClient };
+            return;
+        }
         const action = props.context.tool.action;
         const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
         let p2: PageXY = submatrix.computeCoord(mouseOnClient.x - 10, mouseOnClient.y - 10);
