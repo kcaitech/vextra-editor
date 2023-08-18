@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, TableShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TableShape, TableCell, TableGridItem } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -17,7 +17,7 @@ import { permIsEdit } from '@/utils/content';
 import { distance2apex, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
-import { TableArea } from '@/context/tableselection';
+import { TableArea, TableSelection } from '@/context/tableselection';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -37,6 +37,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let speed: number = 0;
     let area: TableArea = 'invalid';
     let move: any, up: any;
+    let matrix4table = new Matrix();
+    let down_cell: TableGridItem | undefined;
+    let up_cell: TableGridItem | undefined;
+    let table: TableShape = context.selection.selectedShapes[0] as TableShape;
+    let table_selection: TableSelection;
     function mousedown(e: MouseEvent) {
         if (context.workspace.isPageDragging) return;
         const shape = context.selection.selectedShapes[0];
@@ -44,7 +49,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         root = context.workspace.root;
         const table_selection = context.selection.getTableSelection(shape as TableShape, context);
         area = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        console.log('click-area', area);
+        // console.log('click-area', area);
         if (area === 'move') {
             matrix.reset(workspace.value.matrix.inverse);
             set_position(e);
@@ -240,10 +245,22 @@ function useControllerCustom(context: Context, i18nT: Function) {
     // #endregion
 
     // #region 4body action
+    function check_cell_on_point(e: MouseEvent) {
+        const root = workspace.value.root;
+        const p = matrix4table.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+        return table.locateCell(p.x, p.y);
+    }
+    function get_matrix4table() {
+        const table: TableShape = context.selection.selectedShapes[0] as TableShape;
+        if (!table || table.type !== ShapeType.Table) return;
+        const m = table.matrix2Root();
+        m.multiAtLeft(workspace.value.matrix);
+        matrix4table = new Matrix(m.inverse);
+    }
     function down4body(e: MouseEvent) {
-        set_position(e);
         if (e.button !== 0) return;
-        
+        set_position(e);
+        down_cell = check_cell_on_point(e);
         document.addEventListener('mousemove', mousemove4body);
         document.addEventListener('mouseup', mouseup4body);
         move = mousemove4body, up = mouseup4body;
@@ -252,18 +269,23 @@ function useControllerCustom(context: Context, i18nT: Function) {
         if (e.buttons !== 1) return;
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
         if (isDragging) {
-            console.log('在body上移动');
             startPosition = { ...mousePosition };
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
-            console.log(1);
             isDragging = true;
         }
     }
-    function mouseup4body() {
+    function mouseup4body(e: MouseEvent) {
+        up_cell = check_cell_on_point(e);
+        console.log('up_cell', up_cell);
+
+        if (up_cell) {
+            table_selection.selectTableCell(up_cell.index.col, up_cell.index.row);
+        }
         if (isDragging) isDragging = false;
+        workspace.value.setCtrl('page');
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
-        console.log('body上抬起');
+        // console.log('body上抬起');
     }
     // #endregion
     function set_position(e: MouseEvent) {
@@ -273,7 +295,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
         startPositionOnPage = matrix.computeCoord2(startPosition.x, startPosition.y);
     }
     function initController() {
-        //todo
+        const t: TableShape = context.selection.selectedShapes[0] as TableShape;
+        if (!t || t.type !== ShapeType.Table) return;
+        table = t;
+        get_matrix4table();
+        table_selection = context.selection.getTableSelection(t, context);
     }
 
     function isDrag() {
@@ -310,6 +336,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         context.workspace.contentEdit(false);
+        table.watch(initController);
     }
     function dispose() {
         context.workspace.unwatch(workspace_watcher);
@@ -318,13 +345,13 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         document.removeEventListener('dblclick', dblclick);
+        table.unwatch(initController);
     }
     return { isDrag, init, dispose };
 }
 
 export function useController(context: Context) {
     const { t } = useI18n();
-
     const ctrl = useControllerCustom(context, t);
     onMounted(() => {
         ctrl.init();

@@ -166,6 +166,7 @@ declare module '@vue/runtime-core' {
     TableHeader: typeof import('./src/components/Document/Selection/Controller/Table/TableHeader.vue')['default']
     Tablelist: typeof import('./src/components/AppHome/tablelist.vue')['default']
     TableMenu: typeof import('./src/components/Document/Menu/TableMenu/TableMenu.vue')['default']
+    TableSelectionView: typeof import('./src/components/Document/Selection/Controller/Table/TableSelectionView.vue')['default']
     TableStyle: typeof import('./src/components/Document/Attribute/Table/TableStyle.vue')['default']
     TableText: typeof import('./src/components/Document/Attribute/Table/TableText.vue')['default']
     TableTextSetting: typeof import('./src/components/Document/Attribute/Table/TableTextSetting.vue')['default']

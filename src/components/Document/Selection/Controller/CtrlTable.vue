@@ -16,6 +16,7 @@ import { v4 as uuid } from "uuid"
 import { useI18n } from 'vue-i18n';
 import { textState } from './Table/celltextstate';
 import TableHeader from './Table/TableHeader.vue';
+import TableSelectionView from './Table/TableSelectionView.vue';
 
 type TextShape = Shape & { text: Text };
 const props = defineProps<{
@@ -268,6 +269,7 @@ onUnmounted(() => {
         :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible">
+        <TableSelectionView :context="props.context"></TableSelectionView>
         <!-- 插入图片icon -->
         <g v-if="showImageIcon()" :transform="imageIconTrans()">
             <svg-icon icon-class="pattern-image" :width="imageIconSize" :height="imageIconSize"></svg-icon>

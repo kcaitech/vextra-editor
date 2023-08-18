@@ -72,7 +72,7 @@ export class TableSelection implements Notifiable {
             this.notify(Selection.CHANGE_TABLE_CELL);
         }
     }
-    selectTableCell(cell: TableCell, rowIdx: number, colIdx: number) {
+    selectTableCell(rowIdx: number, colIdx: number) {
         if (this.m_tableRowStart !== this.m_tableRowEnd ||
             this.m_tableRowStart !== rowIdx ||
             this.m_tableColStart !== this.m_tableColEnd ||
