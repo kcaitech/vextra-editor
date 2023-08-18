@@ -36,15 +36,23 @@ const escClose = (e: KeyboardEvent) => {
     emit('close');
 }
 
-const InsertCell = () => {
+const InsertCell = (state: string) => {
     const shape = props.context.selection.selectedShapes[0]
+    const layout = shape.getLayout();
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-        const cell = (Array.from(table.getSelectedCells()))[0]
-        console.log(table, 'splitCell');
-
-        const editor = props.context.editor4Table(shape as TableShape)
-        editor.insertRow(table.tableRowEnd, 80)
+        const editor = props.context.editor4Table(shape as TableShape);
+        if(state === 'top') {
+            editor.insertRow(table.tableRowStart, layout.rowHeights[table.tableRowStart]);
+        }else  if(state === 'bottom') {
+            editor.insertRow(table.tableRowEnd, layout.rowHeights[table.tableRowEnd]);
+        }
+        else  if(state === 'left') {
+            editor.insertCol(table.tableColStart, layout.rowHeights[table.tableColStart]);
+        }
+        else  if(state === 'right') {
+            editor.insertCol(table.tableColEnd, layout.rowHeights[table.tableColEnd]);
+        }
     }
     emit('close');
 }
@@ -100,7 +108,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="save">
-                <div @click="InsertCell">{{t('table.confirm')}}</div>
+                <div @click="InsertCell(radioRanks)">{{t('table.confirm')}}</div>
             </div>
         </el-dialog>
     </div>

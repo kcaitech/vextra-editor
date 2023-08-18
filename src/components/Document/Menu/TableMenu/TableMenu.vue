@@ -76,6 +76,11 @@ const spliceCol = () => {
   emit('close');
 }
 
+const deleteTable = () => {
+  const shape = props.context.selection.selectedShapes[0]
+  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+}
+
 // /**
 //  * 关闭图层菜单 
 //  */
@@ -100,7 +105,7 @@ function closeLayerSubMenu() {
         <span>{{ t('table.del_select_col') }}</span>
         <span></span>
       </div>
-      <div class="item">
+      <div class="item" @click="deleteTable">
         <span>{{ t('table.del_table') }}</span>
         <span></span>
       </div>
