@@ -197,7 +197,7 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 })
 
 const textFormat = () => {
-    const table = props.context.selection.getTableSelection(props.textShape);
+    const table = props.context.selection.getTableSelection(props.textShape, props.context);
     if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
         shape.value = (Array.from(table.getSelectedCells()))[0]
         if(!shape.value || !shape.value.text) return;

@@ -1,6 +1,7 @@
 import { TableShape, TableCell, Notifiable } from "@kcdesign/data";
-import { Selection } from "./selection"
-
+import { ClientXY, Selection } from "./selection"
+import { Context } from ".";
+export type TableArea = 'invalid' | 'move' | 'body' | 'content';
 export class TableSelection implements Notifiable {
     private m_shape: TableShape;
     private m_notify: Notifiable;
@@ -9,9 +10,12 @@ export class TableSelection implements Notifiable {
     private m_tableRowEnd: number = -1;
     private m_tableColStart: number = -1;
     private m_tableColEnd: number = -1;
+    private m_table_area: { id: TableArea, area: string }[] = [];
+    private m_context: Context;
 
-    constructor(shape: TableShape, notify: Notifiable) {
+    constructor(shape: TableShape, context: Context, notify: Notifiable) {
         this.m_shape = shape;
+        this.m_context = context;
         this.m_notify = notify;
     }
 
@@ -78,5 +82,19 @@ export class TableSelection implements Notifiable {
             this.notify(Selection.CHANGE_TABLE_CELL);
         }
     }
-
+    getArea(p: ClientXY): TableArea {
+        let area: TableArea = 'invalid';
+        const scout = this.m_context.selection.scout;
+        for (let i = 0, len = this.m_table_area.length; i < len; i++) {
+            const a = this.m_table_area[i];
+            if (scout!.isPointInPath(a.area, p)) {
+                area = a.id;
+                break;
+            }
+        }
+        return area;
+    }
+    setArea(table_area: { id: TableArea, area: string }[]) {
+        this.m_table_area = table_area;
+    }
 }

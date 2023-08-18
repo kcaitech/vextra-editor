@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, Shape, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -39,10 +39,14 @@ function update_transform() {
     let rb = matrix.computeCoord2(frame.width, frame.height);
     trans_btn_transform.value = `translate(${lt.x - 20}, ${lt.y - 20})`
     scale_btn_transform.value = `translate(${rb.x + 1}, ${rb.y + 1})`;
-    props.context.workspace.setCtrlPath(`M${lt.x - 20} ${lt.y - 20} h18 v18 h-18 z`);
-    if (!props.context.workspace.shouldSelectionViewUpdate) {
-        hidden.value = true;
-    }
+    const table_selection = props.context.selection.getTableSelection(props.shape as TableShape, props.context);
+    const root = props.context.workspace.root;
+    table_selection.setArea([
+        { id: 'move', area: `M${lt.x - 20} ${lt.y - 20} h18 v18 h-18 z` },
+        { id: 'body', area: `M${lt.x} ${lt.y} h${rb.x - lt.x} v${rb.y - lt.y} h${lt.x - rb.x} z` },
+        { id: 'content', area: `M0 0 h${root.width} v${root.height} h${-root.width} z` }
+    ])
+    if (!props.context.workspace.shouldSelectionViewUpdate) hidden.value = true;
 }
 
 function point_mousedown(event: MouseEvent) {

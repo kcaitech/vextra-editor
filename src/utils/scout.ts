@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { PageXY } from "@/context/selection";
+import { PageXY, XY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import { bool } from "aws-sdk/clients/signer";
 import { v4 as uuid } from "uuid";
@@ -40,12 +40,12 @@ function scout(context: Context): Scout {
         return result;
     }
 
-    function isPointInPath(d: string, point: PageXY): boolean {
+    function isPointInPath(d: string, point: XY): boolean {
         SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
-    function isPointInStroke(d: string, point: PageXY): boolean {
+    function isPointInStroke(d: string, point: XY): boolean {
         SVGPoint.x = point.x, SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         path.setAttributeNS(null, 'stroke-width', '14');
