@@ -86,15 +86,15 @@ const onShowSizeBlur = (e: Event) => {
 // 设置加粗
 const onBold = () => {
     isBold.value = !isBold.value
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextBold(isBold.value, 0, Infinity)
-        }else {
-            editor.setTextBold(isBold.value, textIndex,selectLength)
+        } else {
+            editor.setTextBold(isBold.value, textIndex, selectLength)
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextBold(isBold.value);
@@ -104,15 +104,15 @@ const onBold = () => {
 // 设置文本倾斜
 const onTilt = () => {
     isTilt.value = !isTilt.value
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextItalic(isTilt.value, 0, Infinity)
-        }else {
-            editor.setTextItalic(isTilt.value, textIndex,selectLength)
+        } else {
+            editor.setTextItalic(isTilt.value, textIndex, selectLength)
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextItalic(isTilt.value);
@@ -122,15 +122,15 @@ const onTilt = () => {
 //设置下划线
 const onUnderlint = () => {
     isUnderline.value = !isUnderline.value
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextUnderline(isUnderline.value, 0, Infinity)
-        }else {
-            editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
+        } else {
+            editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextUnderline(isUnderline.value);
@@ -140,15 +140,15 @@ const onUnderlint = () => {
 // 设置删除线
 const onDeleteline = () => {
     isDeleteline.value = !isDeleteline.value
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
-        if(isSelectText()) {
-            editor.setTextStrikethrough(isDeleteline.value, 0,Infinity)
-        }else {
-            editor.setTextStrikethrough(isDeleteline.value, textIndex,selectLength)
+        if (isSelectText()) {
+            editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
+        } else {
+            editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextStrikethrough(isDeleteline.value);
@@ -158,15 +158,15 @@ const onDeleteline = () => {
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         const editor = props.context.editor4TextShape(shape.value)
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextHorAlign(icon, 0, Infinity)
         } else {
             editor.setTextHorAlign(icon, textIndex, selectLength)
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextHorAlign(icon);
@@ -176,10 +176,10 @@ const onSelectLevel = (icon: TextHorAlign) => {
 //设置垂直对齐
 const onSelectVertical = (icon: TextVerAlign) => {
     selectVertical.value = icon
-    if(shape.value) {
+    if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value)
         editor.setTextVerAlign(icon)
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextVerAlign(icon);
@@ -190,15 +190,15 @@ const onSelectVertical = (icon: TextVerAlign) => {
 const changeTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
-    if(shape.value) {
+    if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value)
         const { textIndex, selectLength } = getTextIndexAndLen()
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextFontSize(0, Infinity, size)
-        }else {
+        } else {
             editor.setTextFontSize(textIndex, selectLength, size)
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextFontSize(size);
@@ -209,15 +209,15 @@ const changeTextSize = (size: number) => {
 const setFont = (font: string) => {
     fontName.value = font
     showFont.value = false;
-    if(shape.value) {
+    if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value)
         const { textIndex, selectLength } = getTextIndexAndLen()
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextFontName(0, Infinity, font)
-        }else {
+        } else {
             editor.setTextFontName(textIndex, selectLength, font)
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextFontName(font)
@@ -234,11 +234,11 @@ const getTextIndexAndLen = () => {
 }
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-    if(shape.value) {
+    if (shape.value) {
         const selection = props.context.selection.getTextSelection(shape.value);
-        if((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
+        if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
             return false;
-        }else {
+        } else {
             return true;
         }
     }
@@ -253,7 +253,7 @@ const setTextSize = () => {
     if (!isNaN(Number(fonstSize.value))) {
         changeTextSize(fonstSize.value);
         textFormat();
-    }else {
+    } else {
         textFormat();
     }
 }
@@ -266,16 +266,16 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 // 获取当前文字格式
 const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape);
-    if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
+    if ((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
         // 拿到某个单元格
         shape.value = (Array.from(table.getSelectedCells()))[0];
-        if(!shape.value || !shape.value.text) return;
+        if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
         let format: AttrGetter;
         if (textIndex === -1) {
             format = shape.value.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
-        }else {
+        } else {
             format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr());
         }
         colorIsMulti.value = format.colorIsMulti;
@@ -290,41 +290,41 @@ const textFormat = () => {
         highlight.value = format.highlight;
         isBold.value = format.bold || false;
         isTilt.value = format.italic || false;
-        if(format.italicIsMulti) isTilt.value = false;
-        if(format.boldIsMulti) isBold.value= false;
-        if(format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`;
-        if(format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`;
-        if(format.underlineIsMulti) isUnderline.value = false;
-        if(format.strikethroughIsMulti) isDeleteline.value = false;
+        if (format.italicIsMulti) isTilt.value = false;
+        if (format.boldIsMulti) isBold.value = false;
+        if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`;
+        if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`;
+        if (format.underlineIsMulti) isUnderline.value = false;
+        if (format.strikethroughIsMulti) isDeleteline.value = false;
         props.context.workspace.focusText();
-    }else {
+    } else {
         shape.value = undefined
         const shapeTable = props.shape;
         const cells = Array.from(shapeTable.childs);
         const formats: any[] = [];
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
-            if(cell.text) {
+            if (cell.text) {
                 const editor = props.context.editor4TextShape(cell as any);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
                 formats.push(forma);
             }
         }
-        let format:any = {};
-        if(formats.length > 0) {
+        let format: any = {};
+        if (formats.length > 0) {
             const referenceKeys = Object.keys(formats[0]);
             for (const key of referenceKeys) {
                 const referenceValue = formats[0][key];
                 let foundEqual = true;
                 for (let i = 1; i < formats.length; i++) {
-                    if(key === 'color' || key === 'highlight' && formats[i][key] && referenceValue) {
+                    if (key === 'color' || key === 'highlight' && formats[i][key] && referenceValue) {
                         const { alpha: alpha1, blue: blue1, green: green1, red: red1 } = formats[i][key];
                         const { alpha: alpha2, blue: blue2, green: green2, red: red2 } = referenceValue;
-                        if(alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {
+                        if (alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {
                             foundEqual = false;
                             break;
                         }
-                    }else if (formats[i][key] !== referenceValue) {
+                    } else if (formats[i][key] !== referenceValue) {
                         foundEqual = false;
                         break;
                     }
@@ -348,38 +348,38 @@ const textFormat = () => {
         isBold.value = format.bold || false;
         isTilt.value = format.italic || false;
         textColor.value = format.color;
-        if(format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
-        if(format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
-        if(format.alignment === 'unlikeness') selectLevel.value = '';
-        if(format.verAlign === 'unlikeness') selectVertical.value = '';
-        if(format.color === 'unlikeness') colorIsMulti.value = true;
-        if(format.highlight === 'unlikeness') highlightIsMulti.value = true;
-        if(format.bold === 'unlikeness') isBold.value= false;
-        if(format.italic === 'unlikeness') isTilt.value = false;
-        if(format.underline === 'unlikeness') isUnderline.value = false;
-        if(format.strikethrough === 'unlikeness') isDeleteline.value = false;
-        if(format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
-        if(format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
+        if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
+        if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
+        if (format.alignment === 'unlikeness') selectLevel.value = '';
+        if (format.verAlign === 'unlikeness') selectVertical.value = '';
+        if (format.color === 'unlikeness') colorIsMulti.value = true;
+        if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
+        if (format.bold === 'unlikeness') isBold.value = false;
+        if (format.italic === 'unlikeness') isTilt.value = false;
+        if (format.underline === 'unlikeness') isUnderline.value = false;
+        if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
+        if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
+        if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
     }
 }
 
 function selection_wather(t: number) {
-    if(t === Selection.CHANGE_TEXT) {
+    if (t === Selection.CHANGE_TEXT) {
         textFormat();
-    }else if(t === Selection.CHANGE_SHAPE) {
+    } else if (t === Selection.CHANGE_SHAPE) {
         textFormat();
     }
 }
 function workspace_wather(t: number) {
-    if(t === WorkSpace.BOLD) {
+    if (t === WorkSpace.BOLD) {
         onBold();
-    }else if(t === WorkSpace.UNDER_LINE) {
+    } else if (t === WorkSpace.UNDER_LINE) {
         onUnderlint();
-    }else if(t === WorkSpace.DELETE_LINE) {
+    } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline();
-    }else if(t === WorkSpace.ITALIC) {
+    } else if (t === WorkSpace.ITALIC) {
         onTilt();
-    }else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat();
     }
 }
@@ -393,12 +393,12 @@ function onAlphaChange(e: Event, type: string) {
             }
             value = value.toFixed(2) / 100
             let color
-            if(type === 'color') {
+            if (type === 'color') {
                 color = textColor.value
-            }else {
+            } else {
                 color = highlight.value
             }
-            if(!color) return
+            if (!color) return
             let clr = toHex(color.red, color.green, color.blue);
             if (clr.slice(0, 1) !== '#') {
                 clr = "#" + clr
@@ -407,9 +407,9 @@ function onAlphaChange(e: Event, type: string) {
             return
         } else {
             message('danger', t('system.illegal_input'));
-            if(type === 'color') {
+            if (type === 'color') {
                 return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-            }else {
+            } else {
                 return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
             }
         }
@@ -420,12 +420,12 @@ function onAlphaChange(e: Event, type: string) {
             }
             value = Number((Number(value)).toFixed(2)) / 100
             let color
-            if(type === 'color') {
+            if (type === 'color') {
                 color = textColor.value
-            }else {
+            } else {
                 color = highlight.value
             }
-            if(!color) return
+            if (!color) return
             let clr = toHex(color.red, color.green, color.blue);
             if (clr.slice(0, 1) !== '#') {
                 clr = "#" + clr
@@ -434,17 +434,17 @@ function onAlphaChange(e: Event, type: string) {
             return
         } else {
             message('danger', t('system.illegal_input'));
-            if(type === 'color') {
+            if (type === 'color') {
                 return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-            }else {
+            } else {
                 return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
             }
         }
     } else {
         message('danger', t('system.illegal_input'));
-        if(type === 'color') {
+        if (type === 'color') {
             return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-        }else {
+        } else {
             return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
         }
     }
@@ -456,15 +456,15 @@ function onColorChange(e: Event, type: string) {
     }
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
-    if(type === 'color') {
+    if (type === 'color') {
         if (Reg_HEX.test(value)) {
             const alpha = textColor.value!.alpha;
             setColor(0, value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = toHex(textColor.value!.red,textColor.value!.green, textColor.value!.blue);
+            return (e.target as HTMLInputElement).value = toHex(textColor.value!.red, textColor.value!.green, textColor.value!.blue);
         }
-    }else {
+    } else {
         if (Reg_HEX.test(value)) {
             const alpha = highlight.value!.alpha;
             setColor(0, value, alpha, type);
@@ -475,28 +475,28 @@ function onColorChange(e: Event, type: string) {
     }
 }
 function getColorFromPicker(color: Color, type: string) {
-    if(shape.value) {
+    if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value);
         const { textIndex, selectLength } = getTextIndexAndLen();
-        if(isSelectText()) {
-            if(type === 'color') {
+        if (isSelectText()) {
+            if (type === 'color') {
                 editor.setTextColor(0, Infinity, color);
-            }else {
+            } else {
                 editor.setTextHighlightColor(0, Infinity, color);
             }
-        }else {
-            if(type === 'color') {
+        } else {
+            if (type === 'color') {
                 editor.setTextColor(textIndex, selectLength, color);
-            }else {
+            } else {
                 editor.setTextHighlightColor(textIndex, selectLength, color);
             }
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
-        if(type === 'color') {
+        if (type === 'color') {
             editor.setTextColor(color);
-        }else {
+        } else {
             editor.setTextHighlightColor(color);
         }
     }
@@ -512,28 +512,28 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
-        if(isSelectText()) {
-            if(type === 'color') {
+        if (isSelectText()) {
+            if (type === 'color') {
                 editor.setTextColor(0, Infinity, new Color(alpha, r, g, b));
-            }else {
+            } else {
                 editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b));
             }
-        }else {
-            if(type === 'color') {
+        } else {
+            if (type === 'color') {
                 editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b));
-            }else {
+            } else {
                 editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b));
             }
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
-        if(type === 'color') {
+        if (type === 'color') {
             editor.setTextColor(new Color(alpha, r, g, b))
-        }else {
+        } else {
             editor.setTextHighlightColor(new Color(alpha, r, g, b));
         }
     }
@@ -541,15 +541,15 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
 }
 
 const deleteHighlight = () => {
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextHighlightColor(0, Infinity, undefined);
-        }else {
+        } else {
             editor.setTextHighlightColor(textIndex, selectLength, undefined);
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextHighlightColor(undefined)
@@ -558,15 +558,15 @@ const deleteHighlight = () => {
 }
 
 const addHighlight = () => {
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216));
-        }else {
+        } else {
             editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216));
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextHighlightColor(new Color(1, 216, 216, 216))
@@ -574,15 +574,15 @@ const addHighlight = () => {
     textFormat();
 }
 const addTextColor = () => {
-    if(shape.value) {
+    if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
-        if(isSelectText()) {
+        if (isSelectText()) {
             editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6));
-        }else {
+        } else {
             editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6));
         }
-    }else {
+    } else {
         const table = props.shape;
         const editor = props.context.editor4Table(table)
         editor.setTextColor(new Color(1, 6, 6, 6))
@@ -638,7 +638,8 @@ onUnmounted(() => {
             <div class="text-middle">
                 <div class="text-middle-size">
                     <div class="text-size jointly-text">
-                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize" @focus="selectSizeValue">
+                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
+                            @focus="selectSizeValue">
                         <svg-icon icon-class="down" @click="onShowSize"></svg-icon>
                         <div class="font-size-list" ref="sizeList" v-if="showSize">
                             <div @click="changeTextSize(10)">10</div>
@@ -728,27 +729,31 @@ onUnmounted(() => {
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
-                <div>{{t('attr.font_color')}}</div>
+                <div>{{ t('attr.font_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'color')">
+                    <ColorPicker :color="textColor!" :context="props.context" :late="40"
+                        @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
-                    <input ref="sizeColor" @focus="selectColorValue" :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)" @change="(e) => onColorChange(e, 'color')"/>
-                    <input ref="alphaFill" @focus="selectAlphaValue" style="text-align: center;" :value="(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
+                    <input ref="sizeColor" @focus="selectColorValue" :spellcheck="false"
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                        @change="(e) => onColorChange(e, 'color')" />
+                    <input ref="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
+                        :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
                 <div class="perch"></div>
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div>{{t('attr.font_color')}}</div>
+                    <div>{{ t('attr.font_color') }}</div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>
-                <div class="color-text">{{t('attr.multiple_colors')}}</div>
+                <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div>{{t('attr.font_color')}}</div>
+                    <div>{{ t('attr.font_color') }}</div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -756,12 +761,16 @@ onUnmounted(() => {
             </div>
             <!-- 高亮颜色 -->
             <div class="text-color" v-if="!highlightIsMulti && highlight">
-                <div>{{t('attr.highlight_color')}}</div>
+                <div>{{ t('attr.highlight_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'highlight')">
+                    <ColorPicker :color="highlight!" :context="props.context" :late="40"
+                        @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
-                    <input ref="higlightColor" @focus="selectHiglightColor" :spellcheck="false" :value="toHex(highlight!.red, highlight!.green, highlight!.blue)" @change="(e) => onColorChange(e, 'highlight')"/>
-                    <input ref="higlighAlpha" @focus="selectHiglighAlpha" style="text-align: center;" :value="(highlight!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')"/>
+                    <input ref="higlightColor" @focus="selectHiglightColor" :spellcheck="false"
+                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
+                        @change="(e) => onColorChange(e, 'highlight')" />
+                    <input ref="higlighAlpha" @focus="selectHiglighAlpha" style="text-align: center;"
+                        :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
                     <svg-icon class="svg" icon-class="delete"></svg-icon>
@@ -769,16 +778,16 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
-                    <div>{{t('attr.highlight_color')}}</div>
+                    <div>{{ t('attr.highlight_color') }}</div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>
-                <div class="color-text">{{t('attr.multiple_colors')}}</div>
+                <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
                 <div class="color-title">
-                    <div>{{t('attr.highlight_color')}}</div>
+                    <div>{{ t('attr.highlight_color') }}</div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
@@ -924,6 +933,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
             margin-bottom: 10px;
+
             .text-bottom-align {
                 display: flex;
                 align-items: center;
@@ -948,9 +958,11 @@ onUnmounted(() => {
                 justify-content: center;
             }
         }
+
         .text-color {
             display: flex;
             align-items: center;
+
             .color {
                 background-color: rgba(#D8D8D8, 0.4);
                 height: 25px;
@@ -974,12 +986,14 @@ onUnmounted(() => {
                 }
             }
         }
+
         .text-colors {
             .color-title {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 5px;
+
                 .add {
                     width: 22px;
                     height: 22px;
@@ -995,17 +1009,20 @@ onUnmounted(() => {
                     transition: .2s;
                 }
             }
+
             .color-text {
                 color: rgba(0, 0, 0, 0.5);
                 text-align: center;
             }
         }
+
         .perch {
             display: flex;
             justify-content: center;
             align-items: center;
             width: 22px;
             height: 22px;
+
             >svg {
                 height: 70%;
                 width: 70%;
@@ -1022,4 +1039,5 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}</style>
+}
+</style>

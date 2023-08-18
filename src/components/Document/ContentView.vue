@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard, TableShape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace';
@@ -337,6 +337,14 @@ function contextMenuMount(e: MouseEvent) {
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems.push('layers');
+    } 
+    if (shapes.length > 1 && area === 'table_cell') {
+        const shape = selection.selectedShapes[0]
+        const table = selection.getTableSelection(shape as TableShape);
+        if(table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
+            contextMenuItems.push('split_cell');
+            contextMenuItems = contextMenuItems.filter(item => item !== 'merge_cell');
+        }
     }
     contextMenu.value = true; // 数据准备就绪之后打开菜单
     menu.menuMount('content');
@@ -787,7 +795,7 @@ onUnmounted(() => {
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
-        <TableCellsMenu :context="props.context" :position="{x: 100, y: 100}" cell-menu="multiCells"></TableCellsMenu>
+        <TableCellsMenu :context="props.context" :position="{ x: 100, y: 100 }" cell-menu="multiCells"></TableCellsMenu>
         <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
