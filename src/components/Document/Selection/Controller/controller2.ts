@@ -43,7 +43,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         if (!shape || shape.type !== ShapeType.Table) return;
         root = context.workspace.root;
         const table_selection = context.selection.getTableSelection(shape as TableShape, context);
-        const area = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
+        area = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
         console.log('click-area', area);
         if (area === 'move') {
             matrix.reset(workspace.value.matrix.inverse);
@@ -56,13 +56,22 @@ function useControllerCustom(context: Context, i18nT: Function) {
             const selection = context.selection;
             const selected = selection.selectedShapes;
             const h = selection.hoveredShape;
-            if (!h) {
-                selection.resetSelectShapes();
-            } else {
-                e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
-            }
+            if (!h) selection.resetSelectShapes();
+            else e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
         } else {
             workspace.value.setCtrl('page');
+        }
+    }
+    function dblclick(e: MouseEvent) {
+        if (e.button !== 0) return;
+        if (context.workspace.isPageDragging) return;
+        const shape = context.selection.selectedShapes[0];
+        if (!shape || shape.type !== ShapeType.Table) return;
+        root = context.workspace.root;
+        const table_selection = context.selection.getTableSelection(shape as TableShape, context);
+        const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
+        if (a === "body") {
+            console.log('触发双击');
         }
     }
     // #region 4trans
@@ -285,6 +294,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         window.addEventListener('blur', windowBlur);
         document.addEventListener('keydown', keyboardHandle);
         document.addEventListener('mousedown', mousedown);
+        document.addEventListener('dblclick', dblclick);
         checkStatus();
         initController();
         context.workspace.contentEdit(false);
