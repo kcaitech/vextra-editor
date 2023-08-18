@@ -4,6 +4,7 @@ import { ClientXY, Selection } from '@/context/selection';
 import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { genRectPath } from '../../common';
+import { Tables } from 'aws-sdk/clients/honeycode';
 
 interface Props {
     context: Context
@@ -24,12 +25,13 @@ function update_cell_selection() {
 function gen_view(table: Shape, cells: TableCell[]) {
     const t2r = table.matrix2Root(), m = props.context.workspace.matrix;
     t2r.multiAtLeft(m);
-    let points: ClientXY[] = []
+    let points: ClientXY[] = [];
+    const grid = (table as TableShape).getLayout().grid;
     for (let i = 0, len = cells.length; i < len; i++) {
         const cell = cells[i];
         const c2p = cell.matrix2Parent();
         c2p.multiAtLeft(t2r);
-        const f = cell.frame;
+        const f = grid.get(0, 0).frame;
         const cps = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
         for (let j = 0; j < 4; j++) {
             const p = cps[j];
