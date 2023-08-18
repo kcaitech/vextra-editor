@@ -305,6 +305,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         window.removeEventListener('blur', windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
+        document.removeEventListener('dblclick', dblclick);
     }
     return { isDrag, init, dispose };
 }
