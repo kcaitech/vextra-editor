@@ -84,7 +84,7 @@ onUnmounted(() => {
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
             </TableText>
-            <Module :context="props.context"></Module>
+            <!-- <Module :context="props.context"></Module> -->
         </div>
     </section>
 </template>
