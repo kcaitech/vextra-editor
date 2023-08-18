@@ -29,13 +29,14 @@ const show_add_y = ref<boolean>(false);
 let add_y: number = 0, ids_y = 0;
 const hidden = ref<boolean>(false);
 let frame_params = data.frame_params, xbars = data.xbars, ybars = data.ybars, xs = data.xs, ys = data.ys;
+let layout: any;
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
         const m = new Matrix(props.matrix), f = props.shape.frame;
         const lt = m.computeCoord2(0, 0);
         const table: TableShape = props.shape as TableShape;
-        const layout = table.getLayout();
+        layout = table.getLayout();
         frame_params = { x: lt.x, y: lt.y, width: layout.width, height: layout.height };
         const cols = layout.colWidths, rows = layout.rowHeights;
         let growx = 0, growy = 0;
@@ -67,11 +68,11 @@ function y_dot_mouseleave() {
 }
 function add_cols() {
     const editor = props.context.editor4Table(props.shape as TableShape);
-    editor.insertCol(ids_x + 1, 80);
+    editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);
 }
 function add_rows() {
     const editor = props.context.editor4Table(props.shape as TableShape);
-    editor.insertRow(ids_y + 1, 30);
+    editor.insertRow(ids_y + 1, layout.rowHeights[ids_y]);
 }
 function select_col() {
     console.log('选择列');
@@ -111,7 +112,7 @@ onUnmounted(() => {
         <g v-if="show_add_x">
             <line :x1="add_x" y1="0" :x2="add_x" :y2="frame_params.height" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
-                :x="add_x - 10" y="-15" width="20" height="20" @mouseleave="x_dot_mouseleave" @mousedown.stop="add_cols"
+                :x="add_x - 10" y="-15.5" width="20" height="20" @mouseleave="x_dot_mouseleave" @mousedown.stop="add_cols"
                 style="cursor:pointer;">
                 <circle cx="512" cy="512" r="512" stroke="none" fill="#ffffff" />
                 <path
@@ -122,7 +123,7 @@ onUnmounted(() => {
         <g v-if="show_add_y">
             <line x1="0" :y1="add_y" :x2="frame_params.width" :y2="add_y" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
-                x="-15" :y="add_y - 10" width="20" height="20" @mouseleave="y_dot_mouseleave" @mousedown.stop="add_rows"
+                x="-15.5" :y="add_y - 10" width="20" height="20" @mouseleave="y_dot_mouseleave" @mousedown.stop="add_rows"
                 style="cursor:pointer;">
                 <circle cx="512" cy="512" r="512" stroke="none" fill="#ffffff" />
                 <path

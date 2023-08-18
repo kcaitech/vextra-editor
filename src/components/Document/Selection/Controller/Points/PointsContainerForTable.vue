@@ -7,7 +7,6 @@ import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { PointType } from '@/context/assist';
 import { WorkSpace } from '@/context/workspace';
-
 interface Props {
     matrix: number[]
     context: Context
@@ -48,21 +47,25 @@ function update_transform() {
 
 function point_mousedown(event: MouseEvent) {
     if (event.button !== 0) return;
-    //todo
+    props.context.menu.menuMount();
+    const workspace = props.context.workspace;
+    event.stopPropagation();
+    workspace.setCtrl('controller');
+    const root = workspace.root;
+    startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
 function point_mousemove(event: MouseEvent) {
-    const { clientX, clientY } = event;
     const workspace = props.context.workspace;
     const root = workspace.root;
-    const mouseOnClient: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+    const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = mouseOnClient;
     if (isDragging && asyncBaseAction) {
         const action = props.context.tool.action;
         const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
-        let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
+        let p2: PageXY = submatrix.computeCoord(mouseOnClient.x - 10, mouseOnClient.y - 10);
         if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
             p2 = get_t(p1, p2);
             asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
@@ -171,7 +174,7 @@ onUnmounted(() => {
                 fill="#865dff" p-id="10181"></path>
         </svg>
     </g>
-    <g :transform="scale_btn_transform" @mousedown.stop :class="{ hidden }">
+    <g :transform="scale_btn_transform" @mousedown.stop :class="{ hidden }" @mousedown="(e) => point_mousedown(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.25" stroke="none"></rect>
         <svg t="1692177601146" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4010"
             width="12" height="12" x="3px" y="3px">
