@@ -340,7 +340,7 @@ function contextMenuMount(e: MouseEvent) {
     } 
     if (shapes.length > 1 && area === 'table_cell') {
         const shape = selection.selectedShapes[0]
-        const table = selection.getTableSelection(shape as TableShape);
+        const table = selection.getTableSelection(shape as TableShape, props.context);
         if(table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
             contextMenuItems.push('split_cell');
             contextMenuItems = contextMenuItems.filter(item => item !== 'merge_cell');

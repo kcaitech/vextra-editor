@@ -29,7 +29,7 @@ function showLayerSubMenu(e: MouseEvent) {
 
 const splitCell = (column: string) => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape);
+  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
     const cell = (Array.from(table.getSelectedCells()))[0]
     const editor = props.context.editor4Table(shape as TableShape)
@@ -49,31 +49,29 @@ const openInsertCell = (value: string) => {
 
 const mergeCell = () => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape);
-  if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape)
-    editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
+  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  if(table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+      const editor = props.context.editor4Table(shape as TableShape)
+      editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
   }
   emit('close');
 }
 const spliceRow = () => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape);
-  if (table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape)
-    console.log(table, 'spliceRow');
-    editor.removeRow(table.tableRowEnd)
+  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  if(table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
+      const editor = props.context.editor4Table(shape as TableShape)
+      editor.removeRow(table.tableRowStart)
   }
   emit('close');
 }
 
 const spliceCol = () => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape);
-  if (table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape)
-    console.log(table, 'spliceCol');
-    editor.removeCol(table.tableColEnd)
+  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  if(table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
+      const editor = props.context.editor4Table(shape as TableShape)
+      editor.removeCol(table.tableColEnd)
   }
   emit('close');
 }

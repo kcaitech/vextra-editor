@@ -421,7 +421,7 @@ function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selecti
   const is_edting = context.workspace.isEditing;
   const area_0 = finder(context, p);
   if(area_0.length && area_0[0].type === ShapeType.Table) {
-    const table = context.selection.getTableSelection(area_0[0] as TableShape);
+    const table = context.selection.getTableSelection(area_0[0] as TableShape, context);
     if ((e.target as Element).closest('#text-selection') && is_edting) {
       return 'table';
     }else if (table.tableRowEnd > -1) {

@@ -301,9 +301,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     // table
     private m_tableSelection?: TableSelection;
     private m_tablecell: TableCell[] = [];
-    getTableSelection(shape: TableShape) {
+    getTableSelection(shape: TableShape, context: Context) {
         if (!this.m_tableSelection || this.m_tableSelection.shape.id !== shape.id) {
-            this.m_tableSelection = new TableSelection(shape, this);
+            this.m_tableSelection = new TableSelection(shape, context, this);
         }
         return this.m_tableSelection;
     }

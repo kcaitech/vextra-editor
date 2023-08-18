@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TableShape } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -17,19 +17,17 @@ import { permIsEdit } from '@/utils/content';
 import { distance2apex, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
+import { TableArea } from '@/context/tableselection';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
     const dragActiveDis = 3;
-    let timer: any;
-    const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
     let startPosition: ClientXY = { x: 0, y: 0 };
     let startPositionOnPage: PageXY = { x: 0, y: 0 };
     let root: ClientXY = { x: 0, y: 0 };
     let wheel: Wheel | undefined = undefined;
-    let editing: boolean = false;
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let need_update_comment: boolean = false;
@@ -37,7 +35,46 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let stickedY: boolean = false;
     let t_e: MouseEvent | undefined;
     let speed: number = 0;
-
+    let area: TableArea = 'invalid';
+    let move: any, up: any;
+    function mousedown(e: MouseEvent) {
+        if (context.workspace.isPageDragging) return;
+        const shape = context.selection.selectedShapes[0];
+        if (!shape || shape.type !== ShapeType.Table) return;
+        root = context.workspace.root;
+        const table_selection = context.selection.getTableSelection(shape as TableShape, context);
+        area = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
+        console.log('click-area', area);
+        if (area === 'move') {
+            matrix.reset(workspace.value.matrix.inverse);
+            set_position(e);
+            pre2trans(e);
+        } else if (area === 'body') {
+            workspace.value.setCtrl('controller');
+            down4body();
+        } else if (area === 'content') {
+            const selection = context.selection;
+            const selected = selection.selectedShapes;
+            const h = selection.hoveredShape;
+            if (!h) selection.resetSelectShapes();
+            else e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
+        } else {
+            workspace.value.setCtrl('page');
+        }
+    }
+    function dblclick(e: MouseEvent) {
+        if (e.button !== 0) return;
+        if (context.workspace.isPageDragging) return;
+        const shape = context.selection.selectedShapes[0];
+        if (!shape || shape.type !== ShapeType.Table) return;
+        root = context.workspace.root;
+        const table_selection = context.selection.getTableSelection(shape as TableShape, context);
+        const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
+        if (a === "body") {
+            console.log('触发双击');
+        }
+    }
+    // #region 4trans
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
         if (shapes.length) {
             const ps: PageXY = matrix.computeCoord(start.x, start.y);
@@ -62,7 +99,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         }
         return result
     }
-    function preTodo(e: MouseEvent) { // 移动之前做的准备
+    function pre2trans(e: MouseEvent) { // 移动之前做的准备
         const action = context.tool.action;
         if (!permIsEdit(context) || action === Action.AddComment) return;
         if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
@@ -75,47 +112,16 @@ function useControllerCustom(context: Context, i18nT: Function) {
             if (action == Action.AutoV || action == Action.AutoK) {
                 workspace.value.setCtrl('controller');
                 wheel = fourWayWheel(context, undefined, startPositionOnPage);
-                document.addEventListener('mousemove', mousemove);
-                document.addEventListener('mouseup', mouseup);
+                document.addEventListener('mousemove', mousemove4trans);
+                document.addEventListener('mouseup', mouseup4trans);
+                move = mousemove4trans, up = mouseup4trans;
             }
         }
     }
-    function handleDblClick() {
-        if (context.selection.selectedShapes.length !== 1) return;
-        editing = !editing;
-    }
-    function isMouseOnContent(e: MouseEvent): boolean {
-        return Boolean((e.target as Element)?.closest(`#content`));
-    }
-    function mousedown(e: MouseEvent) {
-        if (context.workspace.isEditing) {
-            if (isMouseOnContent(e)) {
-                context.selection.resetSelectShapes();
-            }
-            return;
-        }
-        if (context.workspace.isPageDragging) return;
-        if (isElement(e)) {
-            matrix.reset(workspace.value.matrix.inverse);
-            setPosition(e);
-            if (timer) handleDblClick();
-            initTimer();
-            preTodo(e);
-        } else if (isMouseOnContent(e)) {
-            const selection = context.selection;
-            const selected = selection.selectedShapes;
-            const h = selection.hoveredShape;
-            if (!h) {
-                selection.resetSelectShapes();
-            } else {
-                e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
-            }
-        }
-    }
-    function mousemove(e: MouseEvent) {
+    function mousemove4trans(e: MouseEvent) {
         if (e.buttons !== 1) return;
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
-        if (isDragging && !editing && wheel && asyncTransfer) {
+        if (isDragging && wheel && asyncTransfer) {
             speed = get_speed(t_e || e, e), t_e = e;
             let update_type = 0;
             const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
@@ -123,7 +129,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             if (update_type === 3) startPosition = { ...mousePosition };
             else if (update_type === 2) startPosition.y = mousePosition.y;
             else if (update_type === 1) startPosition.x = mousePosition.x;
-        } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
+        } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
             if (e.altKey) shapes = paster_short(context, shapes);
             asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
             context.selection.unHoverShape();
@@ -195,7 +201,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         // console.log('一次辅助线从计算到渲染总共用时', Date.now() - s1); // < 3ms
         return update_type;
     }
-    function mouseup(e: MouseEvent) {
+    function mouseup4trans(e: MouseEvent) {
         if (e.button === 0) {
             if (isDragging) {
                 if (asyncTransfer) {
@@ -210,8 +216,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 isDragging = false;
             }
             if (wheel) wheel = wheel.remove();
-            document.removeEventListener('mousemove', mousemove);
-            document.removeEventListener('mouseup', mouseup);
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
         }
         if (need_update_comment) {
             context.comment.notify(Comment.UPDATE_COMMENT_POS);
@@ -225,56 +231,47 @@ function useControllerCustom(context: Context, i18nT: Function) {
             const start = workspace.value.startPoint;
             if (!start) return;
             matrix.reset(workspace.value.matrix.inverse);
-            setPosition(start);
-            preTodo(start);
+            set_position(start);
+            pre2trans(start);
             workspace.value.preToTranslating(false);
             need_update_comment = true;
         }
     }
-    function setPosition(e: MouseEvent) {
+    // #endregion
+
+    // #region 4body action
+    function down4body() {
+        document.addEventListener('mousemove', mousemove4body);
+        document.addEventListener('mouseup', mouseup4body);
+        move = mousemove4body, up = mouseup4body;
+    }
+    function mousemove4body() {
+        console.log('在body上移动');
+    }
+    function mouseup4body() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+        console.log('body上抬起');
+    }
+    // #endregion
+    function set_position(e: MouseEvent) {
         const { clientX, clientY } = e;
         root = workspace.value.root;
         startPosition = { x: clientX - root.x, y: clientY - root.y };
         startPositionOnPage = matrix.computeCoord2(startPosition.x, startPosition.y);
     }
     function initController() {
-        initTimer();
+        //todo
     }
-    function initTimer() {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            clearTimeout(timer);
-            timer = null;
-        }, duration)
-    }
-    function timerClear() {
-        if (timer) {
-            clearTimeout(timer);
-            timer = null;
-        }
-    }
-    function isDblClick(): boolean {
-        return Boolean(timer);
-    }
-    function isEditing() {
-        return editing;
-    }
+
     function isDrag() {
         return isDragging;
-    }
-    function isElement(e: MouseEvent): boolean {
-        const root = context.workspace.root;
-        return Boolean(context.selection.scout?.isPointInPath(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
     }
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context, i18nT);
     }
     function selection_watcher(t?: number) {
-        if (t === Selection.CHANGE_SHAPE) {
-            initController();
-            editing = false;
-            context.workspace.contentEdit(false);
-        }
+        if (t === Selection.CHANGE_SHAPE) initController();
     }
     function workspace_watcher(t?: number) {
         if (t === WorkSpace.CHECKSTATUS) checkStatus();
@@ -282,14 +279,13 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function windowBlur() {
         if (isDragging) {
             workspace.value.translating(false);
-            document.removeEventListener('mousemove', mousemove);
-            document.removeEventListener('mouseup', mouseup);
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', up);
             if (asyncTransfer) asyncTransfer = asyncTransfer.close();
             isDragging = false;
         }
         if (wheel) wheel = wheel.remove();
         workspace.value.setCtrl('page');
-        timerClear();
         context.cursor.cursor_freeze(false);
     }
     function init() {
@@ -298,6 +294,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         window.addEventListener('blur', windowBlur);
         document.addEventListener('keydown', keyboardHandle);
         document.addEventListener('mousedown', mousedown);
+        document.addEventListener('dblclick', dblclick);
         checkStatus();
         initController();
         context.workspace.contentEdit(false);
@@ -308,9 +305,9 @@ function useControllerCustom(context: Context, i18nT: Function) {
         window.removeEventListener('blur', windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
-        timerClear();
+        document.removeEventListener('dblclick', dblclick);
     }
-    return { isDblClick, isEditing, isDrag, init, dispose };
+    return { isDrag, init, dispose };
 }
 
 export function useController(context: Context) {
