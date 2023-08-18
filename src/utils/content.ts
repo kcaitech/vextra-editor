@@ -1,7 +1,7 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
@@ -420,9 +420,12 @@ function page_scale(context: Context, scale: number) {
 function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' {
   const is_edting = context.workspace.isEditing;
   const area_0 = finder(context, p);
-  if (area_0.length) {
-    if ((e.target as Element).closest('#text-selection') && is_edting && area_0[0].type === ShapeType.Table) {
+  if(area_0.length && area_0[0].type === ShapeType.Table) {
+    const table = context.selection.getTableSelection(area_0[0] as TableShape, context);
+    if ((e.target as Element).closest('#text-selection') && is_edting) {
       return 'table';
+    }else if (table.tableRowEnd > -1) {
+      return 'table_cell';
     }
   }
   if ((e.target as Element).closest('#text-selection') && is_edting) {
@@ -553,7 +556,7 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else if (area === 'table_cell') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['insert_column', 'delete_column', 'split_cell', 'merge_cell'];
+      contextMenuItems = ['insert_column', 'delete_column', 'merge_cell'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }

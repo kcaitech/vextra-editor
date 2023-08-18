@@ -14,8 +14,6 @@ interface Props {
 const popover = ref();
 const props = defineProps<Props>();
 const selectCase = ref()
-const selectText = ref('autowidth')
-const selectId = ref()
 const wordSpace = ref()
 const rowHeight = ref()
 const row_height = ref(`${t('attr.auto')}`)
@@ -39,47 +37,17 @@ function showMenu() {
   props.context.workspace.focusText()
 }
 
-const onSelectId = (icon: BulletNumbersType) => {
-  selectId.value = icon
-  if(shape.value) {
-      const { textIndex, selectLength } = getTextIndexAndLen();
-      const editor = props.context.editor4TextShape(shape.value)
-      if (isSelectText()) {
-        editor.setTextBulletNumbers(icon, 0, Infinity)
-      } else {
-        editor.setTextBulletNumbers(icon, textIndex, selectLength)
-      }
-  }
-  // else {
-  //   const table = props.textShape;
-  //   const editor = props.context.editor4Table(table);
-  //   editor.setTextBulletNumbers(icon);
-  // }
-}
-
-const onSelectText = (icon: TextBehaviour) => {
-  selectText.value = icon
-  if(shape.value) {
-      const editor = props.context.editor4TextShape(shape.value)
-      editor.setTextBehaviour(icon)
-  }
-  // else {
-  //   const table = props.textShape;
-  //   const editor = props.context.editor4Table(table);
-  //   editor.setTextBehaviour(icon);
-  // }
-}
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon
-  if(shape.value) {
-      const { textIndex, selectLength } = getTextIndexAndLen();
-      const editor = props.context.editor4TextShape(shape.value)
-      if (isSelectText()) {
-        editor.setTextTransform(icon, 0, Infinity)
-      } else {
-        editor.setTextTransform(icon, textIndex, selectLength)
-      }
-  }else {
+  if (shape.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(shape.value)
+    if (isSelectText()) {
+      editor.setTextTransform(icon, 0, Infinity)
+    } else {
+      editor.setTextTransform(icon, textIndex, selectLength)
+    }
+  } else {
     const table = props.textShape;
     const editor = props.context.editor4Table(table);
     editor.setTextTransform(icon);
@@ -92,24 +60,24 @@ const setRowHeight = () => {
   if (rowHeight.value.length < 1) {
     rowHeight.value = 1
   }
-  if(shape.value) {
-      const { textIndex, selectLength } = getTextIndexAndLen();
-      const editor = props.context.editor4TextShape(shape.value)
-      if (!isNaN(Number(rowHeight.value))) {
-        if (isSelectText()) {
-          editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
-        } else {
-          editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
-        }
+  if (shape.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(shape.value)
+    if (!isNaN(Number(rowHeight.value))) {
+      if (isSelectText()) {
+        editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
       } else {
-        textFormat();
+        editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
       }
-  }else {
+    } else {
+      textFormat();
+    }
+  } else {
     if (!isNaN(Number(rowHeight.value))) {
       const table = props.textShape;
       const editor = props.context.editor4Table(table);
       editor.setLineHeight(Number(rowHeight.value));
-    }else {
+    } else {
       textFormat();
     }
   }
@@ -118,27 +86,27 @@ const setRowHeight = () => {
 const setWordSpace = () => {
   wordSpace.value = wordSpace.value.trim()
   if (wordSpace.value.length < 1) { wordSpace.value = 0 }
-  if(shape.value) {
-      const { textIndex, selectLength } = getTextIndexAndLen();
-      const editor = props.context.editor4TextShape(shape.value)
-      // if (wordSpace.value.slice(-1) === '%') {
-      //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
-      // }
-      if (!isNaN(Number(wordSpace.value))) {
-        if (isSelectText()) {
-          editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
-        } else {
-          editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
-        }
+  if (shape.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(shape.value)
+    // if (wordSpace.value.slice(-1) === '%') {
+    //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
+    // }
+    if (!isNaN(Number(wordSpace.value))) {
+      if (isSelectText()) {
+        editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
       } else {
-        textFormat()
+        editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
       }
-  }else {
+    } else {
+      textFormat()
+    }
+  } else {
     if (!isNaN(Number(wordSpace.value))) {
       const table = props.textShape;
       const editor = props.context.editor4Table(table);
       editor.setCharSpacing(Number(wordSpace.value));
-    }else {
+    } else {
       textFormat();
     }
   }
@@ -146,24 +114,24 @@ const setWordSpace = () => {
 
 const setParagraphSpace = () => {
   paragraphSpace.value = paragraphSpace.value.trim()
-  if(shape.value) {
-      const { textIndex, selectLength } = getTextIndexAndLen();
-      const editor = props.context.editor4TextShape(shape.value)
-      if (!isNaN(Number(paragraphSpace.value))) {
-        if (isSelectText()) {
-          editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
-        } else {
-          editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
-        }
+  if (shape.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(shape.value)
+    if (!isNaN(Number(paragraphSpace.value))) {
+      if (isSelectText()) {
+        editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
       } else {
-        textFormat();
+        editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
       }
-  }else {
+    } else {
+      textFormat();
+    }
+  } else {
     if (!isNaN(Number(paragraphSpace.value))) {
       const table = props.textShape;
       const editor = props.context.editor4Table(table);
       editor.setParaSpacing(Number(paragraphSpace.value));
-    }else {
+    } else {
       textFormat();
     }
   }
@@ -171,14 +139,14 @@ const setParagraphSpace = () => {
 
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-    if(shape.value) {
-        const selection = props.context.selection.getTextSelection(shape.value);
-        if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
-            return false
-        } else {
-            return true
-        }
+  if (shape.value) {
+    const selection = props.context.selection.getTextSelection(shape.value);
+    if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
+      return false
+    } else {
+      return true
     }
+  }
 }
 
 const selectCharSpacing = () => {
@@ -197,76 +165,70 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 })
 
 const textFormat = () => {
-    const table = props.context.selection.getTableSelection(props.textShape, props.context);
-    if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
-        shape.value = (Array.from(table.getSelectedCells()))[0]
-        if(!shape.value || !shape.value.text) return;
-        const { textIndex, selectLength } = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(shape.value)
-        let format: AttrGetter
-        if (textIndex === -1) {
-          format = shape.value.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-        } else {
-          format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
-        }
-        wordSpace.value = format.kerning || 0
-        selectText.value = format.textBehaviour || 'flexible'
-        rowHeight.value = format.minimumLineHeight || ''
-        paragraphSpace.value = format.paraSpacing || 0
-        selectCase.value = format.transform
-        selectId.value = format.bulletNumbers?.type || ''
-        if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
-        if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
-        if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
-        if (format.transformIsMulti) selectCase.value = ''
-    }else {
-        const shape = props.textShape;
-        const cells = Array.from(shape.childs)
-        const formats: any[] = []
-        for (let i = 0; i < cells.length; i++) {
-            const cell = cells[i];
-            if(cell.text) {
-              const editor = props.context.editor4TextShape(cell as any)
-              const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-              formats.push(forma)
-            }
-        }
-        let format:any = {}
-        if(formats.length > 0) {
-          const referenceKeys = Object.keys(formats[0]);
-          for (const key of referenceKeys) {
-              const referenceValue = formats[0][key];
-              let foundEqual = true;
-              for (let i = 1; i < formats.length; i++) {
-                  if (formats[i][key] !== referenceValue) {
-                      foundEqual = false;
-                      break;
-                  }
-              }
-              if (foundEqual) {
-                  format[key] = referenceValue;
-              } else {
-                  format[key] = `unlikeness`;
-              }
+  const table = props.context.selection.getTableSelection(props.textShape, props.context);
+  if ((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
+    shape.value = (Array.from(table.getSelectedCells()))[0]
+    if (!shape.value || !shape.value.text) return;
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(shape.value)
+    let format: AttrGetter
+    if (textIndex === -1) {
+      format = shape.value.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+    } else {
+      format = shape.value.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+    }
+    wordSpace.value = format.kerning || 0
+    rowHeight.value = format.minimumLineHeight || ''
+    paragraphSpace.value = format.paraSpacing || 0
+    selectCase.value = format.transform
+    if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
+    if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
+    if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
+    if (format.transformIsMulti) selectCase.value = ''
+  } else {
+    const shape = props.textShape;
+    const cells = Array.from(shape.childs)
+    const formats: any[] = []
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      if (cell.text) {
+        const editor = props.context.editor4TextShape(cell as any)
+        const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+        formats.push(forma)
+      }
+    }
+    let format: any = {}
+    if (formats.length > 0) {
+      const referenceKeys = Object.keys(formats[0]);
+      for (const key of referenceKeys) {
+        const referenceValue = formats[0][key];
+        let foundEqual = true;
+        for (let i = 1; i < formats.length; i++) {
+          if (formats[i][key] !== referenceValue) {
+            foundEqual = false;
+            break;
           }
         }
-        wordSpace.value = format.kerning || 0
-        selectText.value = format.textBehaviour || 'flexible'
-        rowHeight.value = format.minimumLineHeight || ''
-        paragraphSpace.value = format.paraSpacing || 0
-        selectCase.value = format.transform
-        selectId.value = format.bulletNumbers?.type || ''
-        if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`
-        if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`
-        if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`
-        if (format.wordSpace === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`
-        if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`
-        if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`
-        if (format.transformIsMulti === 'unlikeness') selectCase.value = ''
-        if (format.transform === 'unlikeness') selectCase.value = ''
-        if (format.textBehaviour === 'unlikeness') selectText.value = ''
-        if (format.bulletNumbers === 'unlikeness') selectId.value = ''
+        if (foundEqual) {
+          format[key] = referenceValue;
+        } else {
+          format[key] = `unlikeness`;
+        }
+      }
     }
+    wordSpace.value = format.kerning || 0
+    rowHeight.value = format.minimumLineHeight || ''
+    paragraphSpace.value = format.paraSpacing || 0
+    selectCase.value = format.transform
+    if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`
+    if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`
+    if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`
+    if (format.wordSpace === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`
+    if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`
+    if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`
+    if (format.transformIsMulti === 'unlikeness') selectCase.value = ''
+    if (format.transform === 'unlikeness') selectCase.value = ''
+  }
 }
 function selection_wather(t: any) {
   if (t === Selection.CHANGE_TEXT) {
@@ -318,29 +280,6 @@ onUnmounted(() => {
                 @change="setParagraphSpace"></div>
           </div>
           <div>
-            <span>{{ t('attr.id_style') }}</span>
-            <div class="vertical-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'none' }"
-                @click="onSelectId(BulletNumbersType.None)">
-                <Tooltip :content="t('attr.none_list')" :offset="15">
-                  <svg-icon icon-class="text-no-list"></svg-icon>
-                </Tooltip>
-              </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'disorded' }"
-                @click="onSelectId(BulletNumbersType.Disorded)">
-                <Tooltip :content="t('attr.unordered_list')" :offset="15">
-                  <svg-icon icon-class="text-bulleted-list"></svg-icon>
-                </Tooltip>
-              </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'ordered-1ai' }"
-                @click="onSelectId(BulletNumbersType.Ordered1Ai)">
-                <Tooltip :content="t('attr.ordered_list')" :offset="15">
-                  <svg-icon icon-class="text-number-list"></svg-icon>
-                </Tooltip>
-              </i>
-            </div>
-          </div>
-          <div>
             <span>{{ t('attr.letter_case') }}</span>
             <div class="level-aligning jointly-text">
               <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'none' }"
@@ -365,29 +304,6 @@ onUnmounted(() => {
                 @click="onSelectCase(TextTransformType.UppercaseFirst)">
                 <Tooltip :content="t('attr.titlecase')" :offset="15">
                   <svg-icon icon-class="text-titlecase"></svg-icon>
-                </Tooltip>
-              </i>
-            </div>
-          </div>
-          <div>
-            <span>{{ t('attr.text_style') }}</span>
-            <div class="vertical-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'flexible' }"
-                @click="onSelectText(TextBehaviour.Flexible)">
-                <Tooltip :content="t('attr.autowidth')" :offset="15">
-                  <svg-icon icon-class="text-autowidth"></svg-icon>
-                </Tooltip>
-              </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'fixed' }"
-                @click="onSelectText(TextBehaviour.Fixed)">
-                <Tooltip :content="t('attr.autoheight')" :offset="15">
-                  <svg-icon icon-class="text-autoheight"></svg-icon>
-                </Tooltip>
-              </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'fixWidthAndHeight' }"
-                @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
-                <Tooltip :content="t('attr.fixedsize')" :offset="15">
-                  <svg-icon icon-class="text-fixedsize"></svg-icon>
                 </Tooltip>
               </i>
             </div>
@@ -507,4 +423,5 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
   outline: none !important;
-}</style>
+}
+</style>
