@@ -18,6 +18,7 @@ import { distance2apex, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
 import { TableArea, TableSelection } from '@/context/tableselection';
+import { genRectPath } from '../common';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -279,12 +280,34 @@ function useControllerCustom(context: Context, i18nT: Function) {
         console.log('up_cell', up_cell);
         if (up_cell) {
             table_selection.selectTableCell(up_cell.index.col, up_cell.index.row);
+            gen_view(table, [up_cell.cell]);
         }
         if (isDragging) isDragging = false;
         workspace.value.setCtrl('page');
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
         // console.log('body上抬起');
+    }
+
+    function gen_view(table: Shape, cells: TableCell[]) {
+        const t2r = table.matrix2Root(), m = context.workspace.matrix;
+        t2r.multiAtLeft(m);
+        let points: ClientXY[] = []
+        for (let i = 0, len = cells.length; i < len; i++) {
+            const cell = cells[i];
+            const c2p = cell.matrix2Parent();
+            c2p.multiAtLeft(t2r);
+            const f = cell.frame;
+            const cps = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
+            for (let j = 0; j < 4; j++) {
+                const p = cps[j];
+                points.push(c2p.computeCoord2(p.x, p.y));
+            }
+        }
+        console.log('points', points);
+
+        const s = genRectPath(points);
+        console.log(s);
     }
     // #endregion
     function set_position(e: MouseEvent) {

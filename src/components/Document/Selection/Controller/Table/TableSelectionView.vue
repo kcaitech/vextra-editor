@@ -31,8 +31,8 @@ function gen_view(table: Shape, cells: TableCell[]) {
         c2p.multiAtLeft(t2r);
         const f = cell.frame;
         const cps = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
-        for (let i = 0; i < 4; i++) {
-            const p = cps[i];
+        for (let j = 0; j < 4; j++) {
+            const p = cps[j];
             points.push(c2p.computeCoord2(p.x, p.y));
         }
     }
