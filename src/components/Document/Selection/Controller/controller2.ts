@@ -51,7 +51,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             pre2trans(e);
         } else if (area === 'body') {
             workspace.value.setCtrl('controller');
-            down4body();
+            down4body(e);
         } else if (area === 'content') {
             const selection = context.selection;
             const selected = selection.selectedShapes;
@@ -240,15 +240,27 @@ function useControllerCustom(context: Context, i18nT: Function) {
     // #endregion
 
     // #region 4body action
-    function down4body() {
+    function down4body(e: MouseEvent) {
+        set_position(e);
+        if (e.button !== 0) return;
+        
         document.addEventListener('mousemove', mousemove4body);
         document.addEventListener('mouseup', mouseup4body);
         move = mousemove4body, up = mouseup4body;
     }
-    function mousemove4body() {
-        console.log('在body上移动');
+    function mousemove4body(e: MouseEvent) {
+        if (e.buttons !== 1) return;
+        const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
+        if (isDragging) {
+            console.log('在body上移动');
+            startPosition = { ...mousePosition };
+        } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
+            console.log(1);
+            isDragging = true;
+        }
     }
     function mouseup4body() {
+        if (isDragging) isDragging = false;
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
         console.log('body上抬起');
