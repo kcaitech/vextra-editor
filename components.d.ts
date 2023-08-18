@@ -48,6 +48,7 @@ declare module '@vue/runtime-core' {
     CommentPopupItem: typeof import('./src/components/Document/Content/CommentPopupItem.vue')['default']
     CommentTab: typeof import('./src/components/Document/Navigation/Comment/CommentTab.vue')['default']
     CommentView: typeof import('./src/components/Document/Content/CommentView.vue')['default']
+    CompLayerShow: typeof import('./src/components/Document/Attribute/PopoverMenu/CompLayerShow.vue')['default']
     ComponentAttr: typeof import('./src/components/Document/Attribute/Module/ComponentAttr.vue')['default']
     ComponentState: typeof import('./src/components/Document/Attribute/Module/ComponentState.vue')['default']
     CompsTab: typeof import('./src/components/Document/Navigation/CompsTab.vue')['default']
