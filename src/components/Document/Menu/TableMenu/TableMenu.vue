@@ -18,13 +18,19 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
-const layerSubMenuVisiable = ref<boolean>(false);
+const isDeleteColumn = ref<boolean>(false);
+const isSplitCell = ref<boolean>(false);
 const splitCellOpen = ref(false);
-function showLayerSubMenu(e: MouseEvent) {
+function showLayerSubMenu(e: MouseEvent, show: string) {
+  e.stopPropagation();
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
   layerSubMenuPosition.y = -4;
-  layerSubMenuVisiable.value = true;
+  if(show === 'split') {
+    isSplitCell.value = true;
+  }else {
+    isDeleteColumn.value = true;
+  }
 }
 
 const splitCell = (column: string) => {
@@ -85,17 +91,17 @@ const deleteTable = () => {
 //  * 关闭图层菜单 
 //  */
 function closeLayerSubMenu() {
-  layerSubMenuVisiable.value = false;
+  isDeleteColumn.value = false;
 }
 
 </script>
 <template>
   <div class="line" v-if="props.items.includes('delete_column') && props.items.includes('only_text')"></div>
   <div v-if="props.items.includes('delete_column')" class="item layer-select"
-    @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
+    @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'delete')" @mouseleave="isDeleteColumn = false">
     <span>{{ t('table.del_column') }}</span>
     <div class="triangle"></div>
-    <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
+    <ContextMenu v-if="isDeleteColumn" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
       :site="site" :context="props.context">
       <div class="item" @click="spliceRow">
         <span>{{ t('table.del_select_row') }}</span>
@@ -111,10 +117,11 @@ function closeLayerSubMenu() {
       </div>
     </ContextMenu>
   </div>
-  <div class="item" v-if="props.items.includes('split_cell')">
+  <div class="item" v-if="props.items.includes('split_cell')"
+  @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'split')" @mouseleave="isSplitCell = false">
     <span>{{ t('table.split_cell') }}</span>
     <div class="triangle"></div>
-    <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
+    <ContextMenu v-if="isSplitCell" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
       :site="site" :context="props.context">
       <div class="item" @click="splitCell('row')">
         <span>{{ t('table.split_towrow') }}</span>
@@ -130,8 +137,7 @@ function closeLayerSubMenu() {
     <span>{{ t('table.insert_column') }}</span>
     <span></span>
   </div>
-  <!-- <div class="item" v-if="props.items.includes('merge_cell')"> -->
-  <div class="item" v-if="props.items.includes('insert_column')" @click="mergeCell">
+  <div class="item" v-if="props.items.includes('merge_cell')" @click="mergeCell">
     <span>{{ t('table.merge_cell') }}</span>
     <span></span>
   </div>

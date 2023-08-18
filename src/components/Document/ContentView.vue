@@ -337,7 +337,8 @@ function contextMenuMount(e: MouseEvent) {
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems.push('layers');
-    } else if (shapes.length > 1 && area === 'table_cell') {
+    } 
+    if (area === 'table_cell') {
         const shape = selection.selectedShapes[0]
         const table = selection.getTableSelection(shape as TableShape, props.context);
         if(table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
