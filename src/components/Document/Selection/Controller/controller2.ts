@@ -277,7 +277,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function mouseup4body(e: MouseEvent) {
         up_cell = check_cell_on_point(e);
         console.log('up_cell', up_cell);
-
         if (up_cell) {
             table_selection.selectTableCell(up_cell.index.col, up_cell.index.row);
         }
