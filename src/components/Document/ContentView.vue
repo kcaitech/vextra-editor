@@ -333,12 +333,11 @@ function contextMenuMount(e: MouseEvent) {
     const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
     contextMenuItems = get_menu_items(props.context, area); // 根据点击环境确定菜单选项
     const shapes = selection.getLayers(mousedownOnPageXY);
-    if (shapes.length > 1 && area !== 'text-selection') {
+    if (shapes.length > 1 && (area !== 'text-selection' && area !== 'table_cell')) {
         shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems.push('layers');
-    } 
-    if (shapes.length > 1 && area === 'table_cell') {
+    } else if (shapes.length > 1 && area === 'table_cell') {
         const shape = selection.selectedShapes[0]
         const table = selection.getTableSelection(shape as TableShape, props.context);
         if(table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
