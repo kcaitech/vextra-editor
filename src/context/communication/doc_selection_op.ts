@@ -66,7 +66,7 @@ export class DocSelectionOp extends Watchable(Object) {
         const shapeId = (shape0 instanceof TableCell) ? ((() => {
             const table = shape0.parent as TableShape;
             const index = table.indexOfCell(shape0);
-            return [shape0.id, new TableIndex(index?.rowIdx ?? -1, index?.colIdx ?? -1)]
+            return [table.id, new TableIndex(index?.rowIdx ?? -1, index?.colIdx ?? -1)]
         })()) : [(shape0 as TextShape).id];
 
         const textSelectionCmd = MyTextCmdSelection.Make(
