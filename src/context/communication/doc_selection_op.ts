@@ -1,4 +1,4 @@
-import { Watchable, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder } from "@kcdesign/data"
+import { Watchable, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder, ArrayOpSelection } from "@kcdesign/data"
 import { MyTextCmdSelection } from "@kcdesign/data"
 import {
     DocSelectionOp as _DocSelectionOp,
@@ -71,8 +71,9 @@ export class DocSelectionOp extends Watchable(Object) {
         if (op?.type !== OpType.ArraySelection) {
             cursorStart = cursorEnd = -1
         } else {
-            cursorStart = op.start
-            cursorEnd = op.start + op.length
+            const _op = op as ArrayOpSelection;
+            cursorStart = _op.start
+            cursorEnd = _op.start + _op.length
         }
         if (cursorStart === originalCursorStart && cursorEnd === originalCursorEnd) return;
         this.previousTextSelectionAfterTransform = { cursorStart: cursorStart, cursorEnd: cursorEnd, cursorAtBefore: this.context.selection.cursorAtBefore }
