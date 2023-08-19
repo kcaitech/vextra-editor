@@ -1,4 +1,4 @@
-import { Watchable, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder, ArrayOpSelection } from "@kcdesign/data"
+import { Watchable, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder, ArrayOpSelection, TextShape, TableShape, TableCell, TableIndex } from "@kcdesign/data"
 import { MyTextCmdSelection } from "@kcdesign/data"
 import {
     DocSelectionOp as _DocSelectionOp,
@@ -50,15 +50,28 @@ export class DocSelectionOp extends Watchable(Object) {
 
     private _textSelectionTransform(cmd: Cmd) {
         if (!this.context) return;
-        if (this.context.selection.selectedShapes.length !== 1) return;
-        if (this.context.selection.cursorStart === -1 || this.context.selection.cursorEnd === -1) return;
+        const _selection = this.context.selection;
+        if (_selection.selectedShapes.length !== 1) return;
+        const shape0 = _selection.selectedShapes[0];
+
+        if (!(shape0 instanceof TextShape) || !(shape0 instanceof TableCell)) return;
+
+        const selection = _selection.getTextSelection(shape0)
+        if (selection.cursorStart === -1 || this.context.selection.cursorEnd === -1) return;
         if (cmd.serverId === undefined && !(cmd as any).isUndo) return;
         if (!this.docSelectionOpUpdate) this.docSelectionOpUpdate = throttle(this.update, 1000).bind(this);
-        const originalCursorStart = this.context.selection.cursorStart
-        const originalCursorEnd = this.context.selection.cursorEnd
+        const originalCursorStart = selection.cursorStart
+        const originalCursorEnd = selection.cursorEnd
+
+        const shapeId = (shape0 instanceof TableCell) ? ((() => {
+            const table = shape0.parent as TableShape;
+            const index = table.indexOfCell(shape0);
+            return [shape0.id, new TableIndex(index?.rowIdx ?? -1, index?.colIdx ?? -1)]
+        })()) : [(shape0 as TextShape).id];
+
         const textSelectionCmd = MyTextCmdSelection.Make(
             this.context.selection.selectedPage?.id ?? "",
-            this.context.selection.selectedShapes[0].id,
+            shapeId,
             this.context.selection.cursorStart,
             this.context.selection.cursorEnd - this.context.selection.cursorStart,
         )
