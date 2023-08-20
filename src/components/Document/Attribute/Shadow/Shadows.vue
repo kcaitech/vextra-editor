@@ -119,14 +119,11 @@ function setColor(idx: number, clr: string, alpha: number) {
 }
 function onColorChange(idx: number, e: Event) {
   let value = (e.target as HTMLInputElement)?.value;
-  if (value.slice(0, 1) !== '#') {
-    value = "#" + value
-  }
+  if (value.slice(0, 1) !== '#') value = "#" + value;
   if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
   if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
   if (Reg_HEX.test(value)) {
-    const alpha = shadows[idx].shadow.color.alpha;
-    setColor(idx, value, alpha);
+    setColor(idx, value, shadows[idx].shadow.color.alpha);
   } else {
     message('danger', t('system.illegal_input'));
     return (e.target as HTMLInputElement).value = toHex(shadows[idx].shadow.color.red, shadows[idx].shadow.color.green, shadows[idx].shadow.color.blue);
@@ -187,14 +184,10 @@ function getColorFromPicker(idx: number, color: Color) {
 }
 
 const selectColor = (id: number) => {
-  if (colorShadow.value) {
-    colorShadow.value[id].select()
-  }
+  if (colorShadow.value) colorShadow.value[id].select();
 }
 const selectAlpha = (id: number) => {
-  if (alphaShadow.value) {
-    alphaShadow.value[id].select()
-  }
+  if (alphaShadow.value) alphaShadow.value[id].select();
 }
 const filterAlpha = (a: number) => {
   let alpha = Math.round(a * 100) / 100;
@@ -212,12 +205,8 @@ function update_by_shapes() {
 }
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
-onMounted(() => {
-  update_by_shapes();
-})
-onUnmounted(() => {
-  stop();
-})
+onMounted(update_by_shapes);
+onUnmounted(stop);
 </script>
 
 <template>
