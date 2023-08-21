@@ -1,4 +1,4 @@
-import { ISave4Restore, TableCell, TableShape, Watchable } from "@kcdesign/data";
+import { ISave4Restore, TableShape, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
