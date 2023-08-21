@@ -62,6 +62,8 @@ function updateData() {
     mixed.value = false;
     if (props.shapes.length === 1) {
         const style = props.shapes[0].style;
+        console.log(props.shapes[0],'table');
+        
         for (let i = 0, l = style.borders.length; i < l; i++) {
             const border = style.borders[i];
             const b: BorderItem = {

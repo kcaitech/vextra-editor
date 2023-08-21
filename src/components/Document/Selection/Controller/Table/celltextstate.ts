@@ -26,10 +26,9 @@ export function textState(props: {
                 props.context.cursor.setType('scan-0');
             }
             if (!editing.value) return;
-            // const selection = props.context.selection;
             workspace.setCtrl('controller');
             const root = workspace.root
-            matrix.reset(props.matrix); // parent坐标系？
+            matrix.reset(props.matrix);
             const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
             downIndex = props.shape.text!.locateText(xy.x, xy.y);
             e.stopPropagation();
@@ -41,16 +40,11 @@ export function textState(props: {
             }
         }
     }
-    function be_editor(index?: number) {
+    function be_editor() {
         const workspace = props.context.workspace;
-        const selection = props.context.selection.getTextSelection(props.shape as any);
         editing.value = true;
         workspace.contentEdit(editing.value);
         props.context.cursor.setType('scan-0');
-        if (index !== undefined) {
-            downIndex = { index, before: true };
-            selection.setCursor(index, true);
-        }
     }
     function onMouseUp(e: MouseEvent) {
         e.stopPropagation();

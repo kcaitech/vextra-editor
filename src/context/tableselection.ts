@@ -1,4 +1,4 @@
-import { TableShape, TableCell, Notifiable } from "@kcdesign/data";
+import { TableShape, TableCell, Notifiable, TableGridItem } from "@kcdesign/data";
 import { ClientXY, Selection } from "./selection"
 import { Context } from ".";
 export type TableArea = 'invalid' | 'move' | 'body' | 'content';
@@ -12,7 +12,7 @@ export class TableSelection implements Notifiable {
     private m_tableColEnd: number = -1;
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_context: Context;
-    // private m_cell2selection: Map<string, { row: number, col: number }> = new Map();
+    private m_editing_cell: TableGridItem | undefined;
 
     constructor(shape: TableShape, context: Context, notify: Notifiable) {
         this.m_shape = shape;
@@ -29,7 +29,6 @@ export class TableSelection implements Notifiable {
     }
 
     reset() {
-        // this.m_cell2selection.clear();
         this.m_tableRowStart = -1;
         this.m_tableRowEnd = -1;
         this.m_tableColStart = -1;
@@ -48,6 +47,13 @@ export class TableSelection implements Notifiable {
     get tableColEnd() {
         return this.m_tableColEnd;
     }
+    get editingCell() {
+        return this.m_editing_cell;
+    }
+    setEditingCell(cell?: TableGridItem) {
+        this.m_editing_cell = cell;
+        this.notify(Selection.CHANGE_EDITING_CELL);
+    }
     getSelectedCells(visible: boolean = true): {
         cell: TableCell | undefined;
         rowIdx: number;
@@ -65,7 +71,6 @@ export class TableSelection implements Notifiable {
 
     // table
     selectTableCellRange(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
-        // this.m_cell2selection = c2s;
         if (this.m_tableRowStart !== rowStart ||
             this.m_tableRowEnd !== rowEnd ||
             this.m_tableColStart !== colStart ||
@@ -79,8 +84,6 @@ export class TableSelection implements Notifiable {
         }
     }
     selectTableCell(rowIdx: number, colIdx: number) {
-        // this.m_cell2selection.clear();
-        // this.m_cell2selection.set(cell.id, { row: rowIdx, col: colIdx });
         if (this.m_tableRowStart !== this.m_tableRowEnd ||
             this.m_tableRowStart !== rowIdx ||
             this.m_tableColStart !== this.m_tableColEnd ||
@@ -102,9 +105,6 @@ export class TableSelection implements Notifiable {
         }
         return area;
     }
-    // get map2Frame() {
-    //     return this.m_cell2selection;
-    // }
     setArea(table_area: { id: TableArea, area: string }[]) {
         this.m_table_area = table_area;
     }

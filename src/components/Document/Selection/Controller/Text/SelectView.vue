@@ -22,7 +22,7 @@ let cursor_points: { x: number, y: number }[] = [];
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
-    if (!props.shape.text) return;
+    // if (!props.shape.text) return;
     const selection = props.context.selection;
     matrix.reset(props.matrix);
     const frame = props.shape.frame;
@@ -49,6 +49,8 @@ function update() {
         return bounds;
     }, bounds)
     const text_selection = selection.getTextSelection(props.shape);
+    console.log('cursor', text_selection.cursorStart, text_selection.cursorEnd);
+
     if (text_selection.cursorStart !== text_selection.cursorEnd) {
         isCursor.value = false;
         // selected range
@@ -122,6 +124,7 @@ onMounted(() => {
     const selection = props.context.selection;
     props.shape.watch(update);
     selection.watch(selectionWatcher);
+    update();
 })
 onUnmounted(() => {
     const selection = props.context.selection;

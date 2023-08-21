@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { ClientXY, Selection } from '@/context/selection';
-import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
+import { Matrix, Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { genRectPath } from '../../common';
 
@@ -16,25 +16,21 @@ function update_cell_selection() {
     const shape = selection.selectedShapes[0];
     if (shape && shape.type === ShapeType.Table) {
         const table_selection = selection.getTableSelection(shape as TableShape, props.context);
-        const m2f = table_selection.map2Frame;
-        if (m2f.size) {
-            const cells = table_selection.getSelectedCells(true);
-            gen_view(shape, cells, m2f);
-        }
+        if (table_selection.tableRowStart < 0 || table_selection.tableColStart < 0) return;
+        const cells = table_selection.getSelectedCells(true);
+        gen_view(shape, cells);
     }
 }
-function gen_view(table: Shape, cells: TableCell[], m2f: Map<string, { row: number, col: number }>) {
+function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[]) {
     const t2r = table.matrix2Root(), m = props.context.workspace.matrix;
     t2r.multiAtLeft(m);
     let points: ClientXY[] = [];
     const grid = (table as TableShape).getLayout().grid;
     for (let i = 0, len = cells.length; i < len; i++) {
         const cell = cells[i];
-        const c2p = cell.matrix2Parent();
+        const c2p = new Matrix();
         c2p.multiAtLeft(t2r);
-        const rc = m2f.get(cell.id);
-        if (!rc) continue;
-        const f = grid.get(rc.row, rc.col).frame;
+        const f = grid.get(cell.rowIdx, cell.colIdx).frame;
         const cps = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, { x: f.x + f.width, y: f.y + f.height }, { x: f.x, y: f.y + f.height }];
         for (let j = 0; j < 4; j++) {
             const p = cps[j];

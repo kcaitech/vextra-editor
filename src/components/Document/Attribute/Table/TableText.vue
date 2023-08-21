@@ -268,7 +268,7 @@ const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape, props.context);
     if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
         // 拿到某个单元格
-        shape.value = (Array.from(table.getSelectedCells()))[0];
+        shape.value = table.getSelectedCells()[0];
         if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
