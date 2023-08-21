@@ -21,6 +21,7 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let cursor_points: { x: number, y: number }[] = [];
 
 function update() {
+    console.log('selectview-update');
     if (!props.shape.text) return;
     const selection = props.context.selection;
     // const m2p = props.shape.matrix2Root();
@@ -69,6 +70,8 @@ function update() {
         } else {
             cursor_points = cursor.cursorPoints.map((point) => matrix.computeCoord2(point.x, point.y))
             cursorPath.value = genCursorPath(cursor_points);
+            console.log('cursorPath', cursorPath.value);
+
         }
     }
 }

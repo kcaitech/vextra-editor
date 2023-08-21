@@ -38,6 +38,8 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
 function update() {
+    console.log('ctrltext-update');
+    
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
