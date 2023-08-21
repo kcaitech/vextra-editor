@@ -277,10 +277,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
             if (down_cell.cell) {
                 if (down_cell.cell.cellType === TableCellType.Text) {
                     console.log('点到textcell', down_cell.cell);
-
                 } else if (down_cell.cell.cellType === TableCellType.Image) {
                     console.log('点到imagecell');
-
                 } else {
                     console.log('unexcept');
                     init_text_cell(down_cell);
@@ -290,7 +288,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 }
             } else {
                 console.log('init cell');
-
                 init_text_cell(down_cell);
                 // @ts-ignore
                 text_selection = context.selection.getTextSelection(down_cell.cell);
