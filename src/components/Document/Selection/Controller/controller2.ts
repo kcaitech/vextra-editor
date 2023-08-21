@@ -80,7 +80,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         if (a === "body") {
             up_cell = check_cell_on_point(e);
             if (up_cell) {
-                table_selection.selectTableCell(up_cell.index.row, up_cell.index.col, up_cell.cell);
+                table_selection.selectTableCell(up_cell.index.row, up_cell.index.col);
             }
         }
     }
@@ -280,14 +280,14 @@ function useControllerCustom(context: Context, i18nT: Function) {
             const m_cell = check_cell_on_point(e);
             if (m_cell && down_cell && isDragging) {
                 const { rows, rowe, cols, cole } = get_range(down_cell.index, m_cell.index);
-                const m: Map<string, { row: number, col: number }> = new Map(), grid = table.getLayout().grid;
-                for (let i = rows; i <= rowe; i++) {
-                    for (let j = cols; j <= cole; j++) {
-                        const gt = grid.get(i, j);
-                        m.set(gt.cell.id, gt.index);
-                    }
-                }
-                table_selection.selectTableCellRange(rows, rowe, cols, cole, m);
+                // const m: Map<string, { row: number, col: number }> = new Map(), grid = table.getLayout().grid;
+                // for (let i = rows; i <= rowe; i++) {
+                //     for (let j = cols; j <= cole; j++) {
+                //         const gt = grid.get(i, j);
+                //         m.set(gt.cell.id, gt.index);
+                //     }
+                // }
+                table_selection.selectTableCellRange(rows, rowe, cols, cole);
             }
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
