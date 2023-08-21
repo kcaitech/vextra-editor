@@ -74,18 +74,16 @@ function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
     function dblclick(e: MouseEvent) {
-        // if (e.button !== 0) return;
-        // if (context.workspace.isPageDragging) return;
-        // const shape = context.selection.selectedShapes[0];
-        // if (!shape || shape.type !== ShapeType.Table) return;
-        // root = context.workspace.root;
-        // const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        // if (a === "body") {
-        //     up_cell = check_cell_on_point(e);
-        //     if (up_cell) {
-        //         table_selection.selectTableCell(up_cell.index.row, up_cell.index.col, up_cell.cell);
-        //     }
-        // }
+        if (e.button !== 0) return;
+        if (context.workspace.isPageDragging) return;
+        const shape = context.selection.selectedShapes[0];
+        if (!shape || shape.type !== ShapeType.Table) return;
+        root = context.workspace.root;
+        const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
+        if (a === "body") {
+            up_cell = check_cell_on_point(e);
+            if (up_cell) table_selection.selectTableCell(up_cell.index.row, up_cell.index.col);
+        }
     }
     // #region 4trans
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
@@ -275,22 +273,22 @@ function useControllerCustom(context: Context, i18nT: Function) {
 
         down_cell = check_cell_on_point(e);
 
-        if (down_cell) {
-            if (down_cell.cell) {
-                if (down_cell.cell.cellType === TableCellType.Text) {
-                    console.log('点到textcell', down_cell.cell);
+        // if (down_cell) {
+        //     if (down_cell.cell) {
+        //         if (down_cell.cell.cellType === TableCellType.Text) {
+        //             console.log('点到textcell', down_cell.cell);
 
-                } else if (down_cell.cell.cellType === TableCellType.Image) {
-                    console.log('点到imagecell');
+        //         } else if (down_cell.cell.cellType === TableCellType.Image) {
+        //             console.log('点到imagecell');
 
-                }
-            } else {
-                init_text_cell(down_cell);
-                text_selection = context.selection.getTextSelection(down_cell.cell);
-                text_selection.setCursor(0, false);
-                table_selection.setEditingCell(down_cell);
-            }
-        }
+        //         }
+        //     } else {
+        //         init_text_cell(down_cell);
+        //         text_selection = context.selection.getTextSelection(down_cell.cell);
+        //         text_selection.setCursor(0, false);
+        //         table_selection.setEditingCell(down_cell);
+        //     }
+        // }
 
         document.addEventListener('mousemove', mousemove4body);
         document.addEventListener('mouseup', mouseup4body);
@@ -304,15 +302,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
             const m_cell = check_cell_on_point(e);
             if (m_cell && down_cell && isDragging) {
                 const { rows, rowe, cols, cole } = get_range(down_cell.index, m_cell.index);
-                const m: Map<string, { row: number, col: number }> = new Map(), grid = table.getLayout().grid;
-                for (let i = rows; i <= rowe; i++) {
-                    for (let j = cols; j <= cole; j++) {
-                        const gt = grid.get(i, j);
-                        m.set(gt.cell.id, gt.index);
-                    }
-                }
-                table_selection.selectTableCellRange(rows, rowe, cols, cole, m);
-                if (m_cell.cell.id !== down_cell.cell.id) table_selection.setEditingCell();
+                table_selection.selectTableCellRange(rows, rowe, cols, cole);
+                if (rows !== rowe || cols !== cole) table_selection.setEditingCell();
             }
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
