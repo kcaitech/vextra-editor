@@ -12,7 +12,7 @@ export class TableSelection implements Notifiable {
     private m_tableColEnd: number = -1;
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_context: Context;
-    private m_editing_cell: TableGridItem | undefined;
+    private m_editing_cell: TableGridItem & { cell: TableCell | undefined } | undefined;
 
     constructor(shape: TableShape, context: Context, notify: Notifiable) {
         this.m_shape = shape;
@@ -50,7 +50,7 @@ export class TableSelection implements Notifiable {
     get editingCell() {
         return this.m_editing_cell;
     }
-    setEditingCell(cell?: TableGridItem) {
+    setEditingCell(cell?: TableGridItem & { cell: TableCell | undefined }) {
         this.m_editing_cell = cell;
         this.notify(Selection.CHANGE_EDITING_CELL);
     }

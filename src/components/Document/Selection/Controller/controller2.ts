@@ -281,8 +281,10 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const f = down_item.frame;
                     const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
                     console.log('点到textcell', xy);
+                    table_selection.setEditingCell(down_item);
+                    down_index = down_item.cell.text!.locateText(xy.x, xy.y); // text_selection.locateText(xy.x, xy.y);
                     text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
-                    down_index = text_selection.locateText(xy.x, xy.y);
+                    text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
                     console.log('点到imagecell');
                 } else {

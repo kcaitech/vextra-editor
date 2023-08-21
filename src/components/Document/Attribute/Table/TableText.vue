@@ -304,7 +304,7 @@ const textFormat = () => {
         const formats: any[] = [];
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
-            if (cell.text) {
+            if (cell && cell.text) {
                 const editor = props.context.editor4TextShape(cell as any);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
                 formats.push(forma);

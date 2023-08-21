@@ -6,6 +6,7 @@ import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { genRectPath } from '../../common';
 import { WorkSpace } from '@/context/workspace';
+import { throttle } from '../../common';
 const props = defineProps<{
     shape: Shape & { text: Text },
     matrix: number[],
@@ -19,8 +20,8 @@ const selectPath = ref("");
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let cursor_points: { x: number, y: number }[] = [];
-
-function update() {
+const update = throttle(_update, 5);
+function _update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     // if (!props.shape.text) return;
     const selection = props.context.selection;
