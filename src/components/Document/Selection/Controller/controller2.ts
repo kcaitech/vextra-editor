@@ -264,6 +264,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function down4body(e: MouseEvent) {
         if (e.button !== 0) return;
+        console.log('down-body');
         table_selection.reset();
         context.selection.notify(Selection.CHANGE_TABLE_CELL);
         set_position(e);
@@ -290,15 +291,18 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 table_selection.selectTableCellRange(rows, rowe, cols, cole);
             }
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
+            
             isDragging = true;
         }
     }
-    function mouseup4body(e: MouseEvent) {
-        up_cell = check_cell_on_point(e);
+    function mouseup4body() {
         if (isDragging) isDragging = false;
         workspace.value.setCtrl('page');
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
+    }
+    function editor_mode() {
+        
     }
     // #endregion
     function set_position(e: MouseEvent) {
@@ -314,7 +318,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
         get_matrix4table();
         table_selection = context.selection.getTableSelection(t, context);
     }
-
     function isDrag() {
         return isDragging;
     }
