@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, TableShape, TableCell, TableGridItem } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TableShape, TableCell, TableGridItem, TextShape, TableCellType } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -18,6 +18,7 @@ import { distance2apex, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
 import { TableArea, TableSelection } from '@/context/tableselection';
+import { TextSelection } from '@/context/textselection';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -42,7 +43,9 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let up_cell: TableGridItem | undefined;
     let table: TableShape = context.selection.selectedShapes[0] as TableShape;
     let table_selection: TableSelection;
+    let text_selection: TextSelection;
     let text_editor: any;
+    
     function mousedown(e: MouseEvent) {
         if (context.workspace.isPageDragging) return;
         const shape = context.selection.selectedShapes[0];
@@ -264,16 +267,30 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function down4body(e: MouseEvent) {
         if (e.button !== 0) return;
-        console.log('down-body');
+
         table_selection.reset();
-        context.selection.notify(Selection.CHANGE_TABLE_CELL);
+        context.selection.notify(Selection.CHANGE_TABLE_CELL); // 单击清除表格选区
+
         set_position(e);
+
         down_cell = check_cell_on_point(e);
+
         if (down_cell) {
-            if (down_cell.cell.cellType === undefined) init_text_cell(down_cell);
-            console.log('down_cell.type', down_cell.cell.cellType);
-            table_selection.setEditingCell(down_cell);
+            if (down_cell.cell.cellType === undefined) {
+                console.log('点到未定义的cell');
+                init_text_cell(down_cell);
+                text_selection = context.selection.getTextSelection(down_cell.cell as TextShape);
+                text_selection.setCursor(0, false);
+                table_selection.setEditingCell(down_cell);
+            } else if (down_cell.cell.cellType === TableCellType.Text) {
+                console.log('点到textcell', down_cell.cell);
+
+            } else if (down_cell.cell.cellType === TableCellType.Image) {
+                console.log('点到imagecell');
+
+            }
         }
+
         document.addEventListener('mousemove', mousemove4body);
         document.addEventListener('mouseup', mouseup4body);
         move = mousemove4body, up = mouseup4body;
@@ -294,9 +311,9 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     }
                 }
                 table_selection.selectTableCellRange(rows, rowe, cols, cole, m);
+                if (m_cell.cell.id !== down_cell.cell.id) table_selection.setEditingCell();
             }
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
-
             isDragging = true;
         }
     }
@@ -310,12 +327,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
         const editor = context.editor.editor4Table(table);
         editor.initTextCell(cell.index.row, cell.index.col)
     }
-    function editor_mode() {
-
-    }
-    function static_mode() {
-
-    }
+    function editor_mode() { }
+    function static_mode() { }
     // #endregion
     function set_position(e: MouseEvent) {
         const { clientX, clientY } = e;

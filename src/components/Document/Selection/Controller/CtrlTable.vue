@@ -33,19 +33,6 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const submatrix = reactive(new Matrix());
 const submatrixArray = computed(() => submatrix.toArray());
 const imageIconSize = 20; // px
-// const hoverCellBounds = computed(() => {
-//     if (!hoveringCell.value) return { x: 0, y: 0, w: 0, h: 0 };
-//     const frame = hoveringCell.value.frame;
-//     matrix.reset(submatrix.toArray());
-//     matrix.preTrans(frame.x, frame.y);
-//     const xy = matrix.computeCoord2(0, 0);
-//     const xy1 = matrix.computeCoord2(frame.width, frame.height);
-//     const x = xy.x;
-//     const y = xy.y;
-//     const w = xy1.x - x;
-//     const h = xy1.y - y;
-//     return { x, y, w, h }
-// })
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
@@ -91,9 +78,6 @@ function update() {
     if (editingCell.value) {
         editingCell.value = props.shape.locateCell2(editingCell.value.cell);
     }
-    // if (hoveringCell.value) {
-    //     hoveringCell.value = props.shape.locateCell2(hoveringCell.value.cell);
-    // }
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
@@ -117,26 +101,6 @@ function mousedown(e: MouseEvent) {
     //     getCellState(editingCell.value.cell).onMouseDown(e);
     //     return;
     // }
-    // if (hoveringCell.value && isInCell(xy, hoveringCell.value) && showImageIcon()) {
-    //     // 是否点击了图标
-    //     const x = clientX - root.x;
-    //     const y = clientY - root.y;
-    //     const bounds = hoverCellBounds.value;
-    //     const iconX = bounds.x + (bounds.w - imageIconSize) / 2;
-    //     const iconY = bounds.y + (bounds.h - imageIconSize) / 2;
-
-    //     if (x > iconX && y > iconY &&
-    //         (x - iconX) < imageIconSize && (y - iconY) < imageIconSize) {
-    //         const cell = hoveringCell.value.cell;
-    //         pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
-    //             onLoadImage(name, data, cell);
-    //         });
-    //         e.stopPropagation();
-    //         e.preventDefault();
-    //         return;
-    //     }
-    // }
-
     // const cell = props.shape.locateCell(xy.x, xy.y);
     // if (!cell) return;
     // if (cell.cell.cellType === TableCellType.Image) { // todo 应该是查看大图？
@@ -182,12 +146,6 @@ function mousemove(e: MouseEvent) {
     //     // getCellState(editingCell.value.cell).onMouseDown(e);
     //     return;
     // }
-
-    // const cell = props.shape.locateCell(xy.x, xy.y);
-    // if (cell && (!hoveringCell.value || cell.cell.id !== hoveringCell.value.cell.id)) {
-    //     // hover cell
-    //     hoveringCell.value = cell;
-    // }
 }
 
 function mouseup(e: MouseEvent) {
@@ -220,7 +178,6 @@ const imageIconTrans = () => {
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_EDITING_CELL) {
         editingCell.value = tableSelection().editingCell;
-        console.log('editing mode',);
     }
 }
 function init() {

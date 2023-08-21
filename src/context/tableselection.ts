@@ -52,7 +52,7 @@ export class TableSelection implements Notifiable {
     get editingCell() {
         return this.m_editing_cell;
     }
-    setEditingCell(cell: TableGridItem) {
+    setEditingCell(cell?: TableGridItem) {
         this.m_editing_cell = cell;
         this.notify(Selection.CHANGE_EDITING_CELL);
     }
