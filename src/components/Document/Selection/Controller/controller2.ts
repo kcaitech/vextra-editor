@@ -293,8 +293,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             isDragging = true;
         }
     }
-    function mouseup4body(e: MouseEvent) {
-        up_cell = check_cell_on_point(e);
+    function mouseup4body() {
         if (isDragging) isDragging = false;
         workspace.value.setCtrl('page');
         document.removeEventListener('mousemove', move);

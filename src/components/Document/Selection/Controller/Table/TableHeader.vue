@@ -33,7 +33,7 @@ let layout: TableLayout;
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
-        const m = new Matrix(props.matrix), f = props.shape.frame;
+        const m = new Matrix(props.matrix), f = props.shape.frame, mw = new Matrix(props.context.workspace.matrix);
         const lt = m.computeCoord2(0, 0);
         const table: TableShape = props.shape as TableShape;
         layout = table.getLayout();
@@ -41,15 +41,15 @@ function update_position() {
         const cols = layout.colWidths, rows = layout.rowHeights;
         let growx = 0, growy = 0;
         for (let i = 0, len = cols.length; i < len; i++) {
-            const tx = cols[i], x = growx + tx;
-            if (tx - 8 > 5) {
+            const tx = cols[i] * mw.m00, x = growx + tx;
+            if (tx > 13) {
                 xs.push({ x, idx: i }), xbars.push({ s: growx + 4, length: tx - 8, idx: i });
             }
             growx += tx;
         }
         for (let i = 0, len = rows.length; i < len; i++) {
-            const ty = rows[i], y = growy + ty;
-            if (ty - 8 > 5) {
+            const ty = rows[i] * mw.m00, y = growy + ty;
+            if (ty > 13) {
                 ys.push({ y, idx: i }), ybars.push({ s: growy + 4, length: ty - 8, idx: i });
             }
             growy += ty;
