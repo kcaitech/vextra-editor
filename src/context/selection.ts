@@ -1,4 +1,4 @@
-import { ISave4Restore, TableCell, TableShape, Watchable } from "@kcdesign/data";
+import { ISave4Restore, TableCell, TableShape, Watchable, objectId } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
@@ -293,7 +293,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     // text
     private m_textSelection?: TextSelection;
     getTextSelection(shape: TextShapeLike) {
-        if (!this.m_textSelection || this.m_textSelection.shape.id !== shape.id) {
+        if (!this.m_textSelection || objectId(this.m_textSelection.shape) !== objectId(shape)) {
             this.m_textSelection = new TextSelection(shape, this);
         }
         return this.m_textSelection;
