@@ -1,4 +1,4 @@
-import { TableShape, TableCell, Notifiable } from "@kcdesign/data";
+import { TableShape, TableCell, Notifiable, TableGridItem } from "@kcdesign/data";
 import { ClientXY, Selection } from "./selection"
 import { Context } from ".";
 export type TableArea = 'invalid' | 'move' | 'body' | 'content';
@@ -13,6 +13,7 @@ export class TableSelection implements Notifiable {
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_context: Context;
     private m_cell2selection: Map<string, { row: number, col: number }> = new Map();
+    private m_editing_cell: TableGridItem | undefined;
 
     constructor(shape: TableShape, context: Context, notify: Notifiable) {
         this.m_shape = shape;
@@ -47,6 +48,13 @@ export class TableSelection implements Notifiable {
     }
     get tableColEnd() {
         return this.m_tableColEnd;
+    }
+    get editingCell() {
+        return this.m_editing_cell;
+    }
+    setEditingCell(cell: TableGridItem) {
+        this.m_editing_cell = cell;
+        this.notify(Selection.CHANGE_EDITING_CELL);
     }
     getSelectedCells(visible: boolean = true): TableCell[] {
         if (visible) return this.m_shape.getVisibleCells(this.m_tableRowStart,

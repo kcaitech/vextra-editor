@@ -4,7 +4,7 @@ import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridIte
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
-import { ClientXY } from '@/context/selection';
+import { ClientXY, Selection } from '@/context/selection';
 import { getAxle } from '@/utils/common';
 import BarsContainer from "./Bars/BarsContainerForTable.vue";
 import PointsContainer from "./Points/PointsContainerForTable.vue";
@@ -14,7 +14,6 @@ import SelectView from "./Text/SelectView.vue";
 import { useImagePicker } from './Table/loadimage';
 import { v4 as uuid } from "uuid"
 import { useI18n } from 'vue-i18n';
-import { textState } from './Table/celltextstate';
 import TableHeader from './Table/TableHeader.vue';
 import TableSelectionView from './Table/TableSelectionView.vue';
 
@@ -27,31 +26,31 @@ const props = defineProps<{
     shape: TableShape
 }>();
 const { t } = useI18n();
+const { isDrag, tableSelection } = useController(props.context);
 const matrix = new Matrix();
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const submatrix = reactive(new Matrix());
 const submatrixArray = computed(() => submatrix.toArray());
 const imageIconSize = 20; // px
-const hoverCellBounds = computed(() => {
-    if (!hoveringCell.value) return { x: 0, y: 0, w: 0, h: 0 };
-    const frame = hoveringCell.value.frame;
-    matrix.reset(submatrix.toArray());
-    matrix.preTrans(frame.x, frame.y);
-    const xy = matrix.computeCoord2(0, 0);
-    const xy1 = matrix.computeCoord2(frame.width, frame.height);
-    const x = xy.x;
-    const y = xy.y;
-    const w = xy1.x - x;
-    const h = xy1.y - y;
-    return { x, y, w, h }
-})
+// const hoverCellBounds = computed(() => {
+//     if (!hoveringCell.value) return { x: 0, y: 0, w: 0, h: 0 };
+//     const frame = hoveringCell.value.frame;
+//     matrix.reset(submatrix.toArray());
+//     matrix.preTrans(frame.x, frame.y);
+//     const xy = matrix.computeCoord2(0, 0);
+//     const xy1 = matrix.computeCoord2(frame.width, frame.height);
+//     const x = xy.x;
+//     const y = xy.y;
+//     const w = xy1.x - x;
+//     const h = xy1.y - y;
+//     return { x, y, w, h }
+// })
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
 const editingCell = shallowRef<TableGridItem>();
-const hoveringCell = shallowRef<TableGridItem>();
 
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
@@ -92,43 +91,13 @@ function update() {
     if (editingCell.value) {
         editingCell.value = props.shape.locateCell2(editingCell.value.cell);
     }
-    if (hoveringCell.value) {
-        hoveringCell.value = props.shape.locateCell2(hoveringCell.value.cell);
-    }
+    // if (hoveringCell.value) {
+    //     hoveringCell.value = props.shape.locateCell2(hoveringCell.value.cell);
+    // }
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
-let cellState: {
-    onMouseDown: (e: MouseEvent) => void,
-    onMouseEnter: (e: MouseEvent) => void,
-    onMouseLeave: (e: MouseEvent) => void,
-    dispose: (e: MouseEvent) => void,
-    props: {
-        shape: TableCell,
-        matrix: number[],
-        context: Context
-    }
-} | undefined;
-function getCellState(cell: TableCell) {
-    if (!cellState) {
-        cellState = textState({
-            shape: cell,
-            matrix: editingCellMatrix.value,
-            context: props.context
-        }, t)
-    }
-    else {
-        cellState.props.shape = cell;
-        cellState.props.matrix = editingCellMatrix.value;
-    }
-    return cellState;
-}
-
-function isInCell(xy: { x: number, y: number }, cell: TableGridItem) {
-    return xy.x > cell.frame.x && xy.y > cell.frame.y && (xy.x - cell.frame.x) < cell.frame.width && (xy.y - cell.frame.y) < cell.frame.height;
-}
-
 function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, cell: TableCell) {
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
@@ -136,7 +105,6 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, c
     editor.setCellContentImage(cell, id);
 }
 const pickImage = useImagePicker();
-const { isDrag } = useController(props.context);
 function mousedown(e: MouseEvent) {
     // // find cell
     // const workspace = props.context.workspace;
@@ -237,17 +205,27 @@ function isEditingText() {
 }
 function showImageIcon() {
     const imageIconVisibleSize = imageIconSize << 1;
-    const bounds = hoverCellBounds.value;
-    return hoveringCell.value &&
-        (hoveringCell.value.cell.cellType ?? TableCellType.None) === TableCellType.None &&
-        bounds.w > imageIconVisibleSize &&
-        bounds.h > imageIconVisibleSize;
+    // const bounds = hoverCellBounds.value;
+    // return hoveringCell.value &&
+    //     (hoveringCell.value.cell.cellType ?? TableCellType.None) === TableCellType.None &&
+    //     bounds.w > imageIconVisibleSize &&
+    //     bounds.h > imageIconVisibleSize;
 }
 const imageIconTrans = () => {
-    const bounds = hoverCellBounds.value;
-    const x = bounds.x + (bounds.w - imageIconSize) / 2;
-    const y = bounds.y + (bounds.h - imageIconSize) / 2;
-    return `translate(${x}, ${y})`
+    // const bounds = hoverCellBounds.value;
+    // const x = bounds.x + (bounds.w - imageIconSize) / 2;
+    // const y = bounds.y + (bounds.h - imageIconSize) / 2;
+    // return `translate(${x}, ${y})`
+}
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_EDITING_CELL) {
+        editingCell.value = tableSelection().editingCell;
+        console.log('editing mode',);
+    }
+}
+function init() {
+    editingCell.value = undefined;
+    update();
 }
 watch(() => props.matrix, update, { deep: true })
 watch(() => props.shape, (value, old) => {
@@ -256,10 +234,12 @@ watch(() => props.shape, (value, old) => {
     update();
 })
 onMounted(() => {
+    props.context.selection.watch(selection_watcher);
     props.shape.watch(update);
-    update();
+    init();
 })
 onUnmounted(() => {
+    props.context.selection.unwatch(selection_watcher);
     props.shape.unwatch(update);
 })
 </script>
@@ -271,12 +251,12 @@ onUnmounted(() => {
         @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible">
         <TableSelectionView :context="props.context"></TableSelectionView>
         <!-- 插入图片icon -->
-        <g v-if="showImageIcon()" :transform="imageIconTrans()">
+        <!-- <g v-if="showImageIcon()" :transform="imageIconTrans()">
             <svg-icon icon-class="pattern-image" :width="imageIconSize" :height="imageIconSize"></svg-icon>
-        </g>
+        </g> -->
         <!-- 文本选区 -->
-        <!-- <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
-            :matrix="editingCellMatrix"></SelectView> -->
+        <SelectView v-if="editingCell" :context="props.context" :shape="(editingCell!.cell as TextShape)"
+            :matrix="editingCellMatrix"></SelectView>
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </BarsContainer>

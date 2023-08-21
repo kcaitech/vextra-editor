@@ -18,7 +18,6 @@ import { distance2apex, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
 import { TableArea, TableSelection } from '@/context/tableselection';
-import { genRectPath } from '../common';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -43,6 +42,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let up_cell: TableGridItem | undefined;
     let table: TableShape = context.selection.selectedShapes[0] as TableShape;
     let table_selection: TableSelection;
+    let text_editor: any;
     function mousedown(e: MouseEvent) {
         if (context.workspace.isPageDragging) return;
         const shape = context.selection.selectedShapes[0];
@@ -71,18 +71,18 @@ function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
     function dblclick(e: MouseEvent) {
-        if (e.button !== 0) return;
-        if (context.workspace.isPageDragging) return;
-        const shape = context.selection.selectedShapes[0];
-        if (!shape || shape.type !== ShapeType.Table) return;
-        root = context.workspace.root;
-        const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        if (a === "body") {
-            up_cell = check_cell_on_point(e);
-            if (up_cell) {
-                table_selection.selectTableCell(up_cell.index.row, up_cell.index.col, up_cell.cell);
-            }
-        }
+        // if (e.button !== 0) return;
+        // if (context.workspace.isPageDragging) return;
+        // const shape = context.selection.selectedShapes[0];
+        // if (!shape || shape.type !== ShapeType.Table) return;
+        // root = context.workspace.root;
+        // const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
+        // if (a === "body") {
+        //     up_cell = check_cell_on_point(e);
+        //     if (up_cell) {
+        //         table_selection.selectTableCell(up_cell.index.row, up_cell.index.col, up_cell.cell);
+        //     }
+        // }
     }
     // #region 4trans
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
@@ -269,6 +269,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
         context.selection.notify(Selection.CHANGE_TABLE_CELL);
         set_position(e);
         down_cell = check_cell_on_point(e);
+        if (down_cell) {
+            if (down_cell.cell.cellType === undefined) init_text_cell(down_cell);
+            console.log('down_cell.type', down_cell.cell.cellType);
+            table_selection.setEditingCell(down_cell);
+        }
         document.addEventListener('mousemove', mousemove4body);
         document.addEventListener('mouseup', mouseup4body);
         move = mousemove4body, up = mouseup4body;
@@ -291,7 +296,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 table_selection.selectTableCellRange(rows, rowe, cols, cole, m);
             }
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
-            
+
             isDragging = true;
         }
     }
@@ -301,8 +306,15 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
     }
+    function init_text_cell(cell: TableGridItem) {
+        const editor = context.editor.editor4Table(table);
+        editor.initTextCell(cell.index.row, cell.index.col)
+    }
     function editor_mode() {
-        
+
+    }
+    function static_mode() {
+
     }
     // #endregion
     function set_position(e: MouseEvent) {
@@ -363,7 +375,10 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('dblclick', dblclick);
         table.unwatch(initController);
     }
-    return { isDrag, init, dispose };
+    function tableSelection() {
+        return table_selection
+    }
+    return { isDrag, tableSelection, init, dispose };
 }
 
 export function useController(context: Context) {
