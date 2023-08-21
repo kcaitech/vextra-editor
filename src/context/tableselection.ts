@@ -48,7 +48,11 @@ export class TableSelection implements Notifiable {
     get tableColEnd() {
         return this.m_tableColEnd;
     }
-    getSelectedCells(visible: boolean = true): TableCell[] {
+    getSelectedCells(visible: boolean = true): {
+        cell: TableCell | undefined;
+        rowIdx: number;
+        colIdx: number;
+    }[] {
         if (visible) return this.m_shape.getVisibleCells(this.m_tableRowStart,
             this.m_tableRowEnd,
             this.m_tableColStart,

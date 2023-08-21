@@ -40,9 +40,9 @@ const splitCell = (column: string) => {
     const cell = (Array.from(table.getSelectedCells()))[0]
     const editor = props.context.editor4Table(shape as TableShape)
     if (column === 'row') {
-      editor.horSplitCell(cell)
+      editor.horSplitCell(table.tableRowStart, table.tableRowEnd);
     } else {
-      editor.verSplitCell(cell)
+      editor.verSplitCell(table.tableColStart, table.tableColEnd);
     }
   }
   emit('close');
