@@ -37,21 +37,22 @@ const escClose = (e: KeyboardEvent) => {
 }
 
 const InsertCell = (state: string) => {
-    const shape = props.context.selection.selectedShapes[0]
-    const layout = shape.getLayout();
+    const shape = props.context.selection.selectedShapes[0];
+    const layout = (shape as TableShape).getLayout();
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+        const cell = (Array.from(table.getSelectedCells()))[0]
         const editor = props.context.editor4Table(shape as TableShape);
         if(state === 'top') {
-            editor.insertRow(table.tableRowStart, layout.rowHeights[table.tableRowStart]);
+            editor.insertRow(table.tableRowStart, layout.rowHeights[0]);
         }else  if(state === 'bottom') {
-            editor.insertRow(table.tableRowEnd + 1, layout.rowHeights[table.tableRowEnd]);
+            editor.insertRow(table.tableRowEnd + 1, layout.rowHeights[0]);
         }
         else  if(state === 'left') {
-            editor.insertCol(table.tableColStart, layout.colWidths[table.tableColStart]);
+            editor.insertCol(table.tableColStart, layout.colWidths[0]);
         }
         else  if(state === 'right') {
-            editor.insertCol(table.tableColEnd + 1, layout.colWidths[table.tableColEnd]);
+            editor.insertCol(table.tableColEnd + 1, layout.colWidths[0]);
         }
     }
     emit('close');

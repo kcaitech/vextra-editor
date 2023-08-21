@@ -39,8 +39,6 @@ const splitCell = (column: string) => {
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
     const cell = (Array.from(table.getSelectedCells()))[0]
     const editor = props.context.editor4Table(shape as TableShape)
-    console.log(cell);
-
     if (column === 'row') {
       editor.horSplitCell(cell)
     } else {
@@ -65,21 +63,21 @@ const mergeCell = () => {
   emit('close');
 }
 const spliceRow = () => {
-  const shape = props.context.selection.selectedShapes[0]
+  const shape = props.context.selection.selectedShapes[0];
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
   if (table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape)
-    editor.removeRow(table.tableRowStart)
+    const editor = props.context.editor4Table(shape as TableShape);
+    editor.removeRow(table.tableRowStart, table.tableRowStart);
   }
   emit('close');
 }
 
 const spliceCol = () => {
-  const shape = props.context.selection.selectedShapes[0]
+  const shape = props.context.selection.selectedShapes[0];
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
   if (table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape)
-    editor.removeCol(table.tableColEnd)
+    const editor = props.context.editor4Table(shape as TableShape);
+    editor.removeCol(table.tableColEnd, table.tableColEnd);
   }
   emit('close');
 }
