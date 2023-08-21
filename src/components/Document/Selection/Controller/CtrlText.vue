@@ -38,8 +38,7 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
 function update() {
-    console.log('ctrltext-update');
-    
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
@@ -175,6 +174,7 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
     else if (t === WorkSpace.INIT_EDITOR) be_editor(0);
+    else if (t === WorkSpace.SELECTION_VIEW_UPDATE) update();
 }
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
