@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, TableShape, TableGridItem, TableCellType, TextShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TableShape, TableGridItem, TableCellType, TextShape, TableCell } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -39,12 +39,13 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let area: TableArea = 'invalid';
     let move: any, up: any;
     let matrix4table = new Matrix();
-    let down_cell: TableGridItem | undefined;
-    let up_cell: TableGridItem | undefined;
+    let down_item: (TableGridItem & { cell: TableCell | undefined }) | undefined;
+    let up_item: (TableGridItem & { cell: TableCell | undefined }) | undefined;
     let table: TableShape = context.selection.selectedShapes[0] as TableShape;
     let table_selection: TableSelection;
     let text_selection: TextSelection;
     let text_editor: any;
+    let point_on_table: { x: number, y: number } = { x: 0, y: 0 };
 
     function mousedown(e: MouseEvent) {
         if (context.workspace.isPageDragging) return;
@@ -81,8 +82,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
         // root = context.workspace.root;
         // const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
         // if (a === "body") {
-        //     up_cell = check_cell_on_point(e);
-        //     if (up_cell) table_selection.selectTableCell(up_cell.index.row, up_cell.index.col);
+        //     up_item = check_cell_on_point(e);
+        //     if (up_item) table_selection.selectTableCell(up_item.index.row, up_item.index.col);
         // }
     }
     // #region 4trans
@@ -271,28 +272,31 @@ function useControllerCustom(context: Context, i18nT: Function) {
 
         set_position(e);
 
-        down_cell = check_cell_on_point(e);
+        down_item = check_cell_on_point(e);
 
-        if (down_cell) {
-            if (down_cell.cell) {
-                if (down_cell.cell.cellType === TableCellType.Text) {
-                    console.log('点到textcell', down_cell.cell);
-                } else if (down_cell.cell.cellType === TableCellType.Image) {
+        if (down_item) {
+            if (down_item.cell) {
+                if (down_item.cell.cellType === TableCellType.Text) {
+                    const f = down_item.frame;
+                    const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
+                    console.log('点到textcell', xy);
+                } else if (down_item.cell.cellType === TableCellType.Image) {
                     console.log('点到imagecell');
                 } else {
                     console.log('unexcept');
-                    init_text_cell(down_cell);
-                    text_selection = context.selection.getTextSelection(down_cell.cell as TextShape);
+                    init_text_cell(down_item);
+                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
                     text_selection.setCursor(0, false);
-                    table_selection.setEditingCell(down_cell);
+                    table_selection.setEditingCell(down_item);
                 }
             } else {
                 console.log('init cell');
-                init_text_cell(down_cell);
+                init_text_cell(down_item);
+                down_item = check_cell_on_point(e);
                 // @ts-ignore
-                text_selection = context.selection.getTextSelection(down_cell.cell);
+                text_selection = context.selection.getTextSelection(down_item.cell);
                 text_selection.setCursor(0, false);
-                table_selection.setEditingCell(down_cell);
+                table_selection.setEditingCell(down_item);
             }
         }
 
@@ -305,9 +309,9 @@ function useControllerCustom(context: Context, i18nT: Function) {
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
         if (isDragging) {
             startPosition = { ...mousePosition };
-            const m_cell = check_cell_on_point(e);
-            if (m_cell && down_cell && isDragging) {
-                const { rows, rowe, cols, cole } = get_range(down_cell.index, m_cell.index);
+            const m_item = check_cell_on_point(e);
+            if (m_item && down_item && isDragging) {
+                const { rows, rowe, cols, cole } = get_range(down_item.index, m_item.index);
                 table_selection.selectTableCellRange(rows, rowe, cols, cole);
                 if (rows !== rowe || cols !== cole) table_selection.setEditingCell();
             }
@@ -332,7 +336,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         const { clientX, clientY } = e;
         root = workspace.value.root;
         startPosition = { x: clientX - root.x, y: clientY - root.y };
-        startPositionOnPage = matrix.computeCoord2(startPosition.x, startPosition.y);
+        point_on_table = matrix4table.computeCoord2(startPosition.x, startPosition.y);
     }
     function initController() {
         const t: TableShape = context.selection.selectedShapes[0] as TableShape;
