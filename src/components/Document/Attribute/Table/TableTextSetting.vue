@@ -167,7 +167,7 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 const textFormat = () => {
   const table = props.context.selection.getTableSelection(props.textShape, props.context);
   if ((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
-    shape.value = (Array.from(table.getSelectedCells()))[0];
+    shape.value = table.getSelectedCells()[0];
     if (!shape.value || !shape.value.text) return;
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(shape.value);
@@ -191,7 +191,7 @@ const textFormat = () => {
     const formats: any[] = [];
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
-      if (cell.text) {
+      if (cell && cell.text) {
         const editor = props.context.editor4TextShape(cell as any);
         const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
         formats.push(forma);
