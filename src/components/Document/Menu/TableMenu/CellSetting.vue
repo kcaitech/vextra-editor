@@ -37,22 +37,22 @@ const escClose = (e: KeyboardEvent) => {
 }
 
 const InsertCell = (state: string) => {
-    const shape = props.context.selection.selectedShapes[0];
+    const shape: TableShape = props.context.selection.selectedShapes[0] as TableShape;
     const layout = (shape as TableShape).getLayout();
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-        const cell = (Array.from(table.getSelectedCells()))[0]
         const editor = props.context.editor4Table(shape as TableShape);
-        if(state === 'top') {
-            editor.insertRow(table.tableRowStart, layout.rowHeights[0]);
-        }else  if(state === 'bottom') {
-            editor.insertRow(table.tableRowEnd + 1, layout.rowHeights[0]);
+        const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
+        if (state === 'top') {
+            editor.insertRow(table.tableRowStart, grid.frame.height);
+        } else if (state === 'bottom') {
+            editor.insertRow(table.tableRowEnd + 1, grid.frame.height);
         }
-        else  if(state === 'left') {
-            editor.insertCol(table.tableColStart, layout.colWidths[0]);
+        else if (state === 'left') {
+            editor.insertCol(table.tableColStart, grid.frame.width);
         }
-        else  if(state === 'right') {
-            editor.insertCol(table.tableColEnd + 1, layout.colWidths[0]);
+        else if (state === 'right') {
+            editor.insertCol(table.tableColEnd + 1, grid.frame.width);
         }
     }
     emit('close');
@@ -68,8 +68,8 @@ onUnmounted(() => {
 
 <template>
     <div class="container" @mousedown.stop>
-        <el-dialog v-model="dialogVisible" :title="t('table.insert_column')" width="200px" draggable align-center :modal="false"
-            v-if="addOrDivision === 'insert'" :close-on-click-modal="false" :close-on-press-escape="false"
+        <el-dialog v-model="dialogVisible" :title="t('table.insert_column')" width="200px" draggable align-center
+            :modal="false" v-if="addOrDivision === 'insert'" :close-on-click-modal="false" :close-on-press-escape="false"
             :show-close="false" :lock-scroll="false">
             <div class="close" @click="emit('close')"><el-icon>
                     <Close />
@@ -79,7 +79,7 @@ onUnmounted(() => {
                     <el-radio-group v-model="radioRanks">
                         <el-radio label="top"></el-radio>
                     </el-radio-group>
-                    <span @click="radioRanks = 'top'">{{t('table.top_insert')}}</span>
+                    <span @click="radioRanks = 'top'">{{ t('table.top_insert') }}</span>
                     <el-input-number v-model="rowNum" :min="1" :max="50" size="small" :controls="true"
                         controls-position="right" @change="handleChangeRow" />
                 </div>
@@ -87,7 +87,7 @@ onUnmounted(() => {
                     <el-radio-group v-model="radioRanks">
                         <el-radio label="bottom"></el-radio>
                     </el-radio-group>
-                    <span @click="radioRanks = 'bottom'">{{t('table.bottom_insert')}}</span>
+                    <span @click="radioRanks = 'bottom'">{{ t('table.bottom_insert') }}</span>
                     <el-input-number v-model="rowBotom" :min="1" :max="50" size="small" :controls="true"
                         controls-position="right" @change="handleChangeBottom" />
                 </div>
@@ -95,7 +95,7 @@ onUnmounted(() => {
                     <el-radio-group v-model="radioRanks">
                         <el-radio label="left"></el-radio>
                     </el-radio-group>
-                    <span @click="radioRanks = 'left'">{{t('table.left_insert')}}</span>
+                    <span @click="radioRanks = 'left'">{{ t('table.left_insert') }}</span>
                     <el-input-number v-model="colNum" :min="1" :max="50" size="small" :controls="true"
                         controls-position="right" @change="handleChangeCol" />
                 </div>
@@ -103,13 +103,13 @@ onUnmounted(() => {
                     <el-radio-group v-model="radioRanks">
                         <el-radio label="right"></el-radio>
                     </el-radio-group>
-                    <span @click="radioRanks = 'right'">{{t('table.right_insert')}}</span>
+                    <span @click="radioRanks = 'right'">{{ t('table.right_insert') }}</span>
                     <el-input-number v-model="colRight" :min="1" :max="50" size="small" :controls="true"
                         controls-position="right" @change="handleChangeRight" />
                 </div>
             </div>
             <div class="save">
-                <div @click="InsertCell(radioRanks)">{{t('table.confirm')}}</div>
+                <div @click="InsertCell(radioRanks)">{{ t('table.confirm') }}</div>
             </div>
         </el-dialog>
     </div>

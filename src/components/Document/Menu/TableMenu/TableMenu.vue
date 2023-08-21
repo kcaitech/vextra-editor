@@ -65,20 +65,16 @@ const mergeCell = () => {
 const spliceRow = () => {
   const shape = props.context.selection.selectedShapes[0];
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-  if (table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape);
-    editor.removeRow(table.tableRowStart, table.tableRowStart);
-  }
+  const editor = props.context.editor4Table(shape as TableShape);
+  editor.removeRow(table.tableRowStart, table.tableRowEnd);
   emit('close');
 }
 
 const spliceCol = () => {
   const shape = props.context.selection.selectedShapes[0];
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-  if (table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape);
-    editor.removeCol(table.tableColEnd, table.tableColEnd);
-  }
+  const editor = props.context.editor4Table(shape as TableShape);
+  editor.removeCol(table.tableColStart, table.tableColEnd);
   emit('close');
 }
 
