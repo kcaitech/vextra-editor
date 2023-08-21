@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, TableShape, TableCell, TableGridItem, TextShape, TableCellType } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TableShape, TableGridItem, TableCellType, TextShape } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -53,7 +53,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         root = context.workspace.root;
         const table_selection = context.selection.getTableSelection(shape as TableShape, context);
         area = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        // console.log('click-area', area);
+        console.log('click-area', area);
         if (area === 'move') {
             matrix.reset(workspace.value.matrix.inverse);
             set_position(e);
@@ -74,16 +74,16 @@ function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
     function dblclick(e: MouseEvent) {
-        if (e.button !== 0) return;
-        if (context.workspace.isPageDragging) return;
-        const shape = context.selection.selectedShapes[0];
-        if (!shape || shape.type !== ShapeType.Table) return;
-        root = context.workspace.root;
-        const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        if (a === "body") {
-            up_cell = check_cell_on_point(e);
-            if (up_cell) table_selection.selectTableCell(up_cell.index.row, up_cell.index.col);
-        }
+        // if (e.button !== 0) return;
+        // if (context.workspace.isPageDragging) return;
+        // const shape = context.selection.selectedShapes[0];
+        // if (!shape || shape.type !== ShapeType.Table) return;
+        // root = context.workspace.root;
+        // const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
+        // if (a === "body") {
+        //     up_cell = check_cell_on_point(e);
+        //     if (up_cell) table_selection.selectTableCell(up_cell.index.row, up_cell.index.col);
+        // }
     }
     // #region 4trans
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
@@ -273,22 +273,31 @@ function useControllerCustom(context: Context, i18nT: Function) {
 
         down_cell = check_cell_on_point(e);
 
-        // if (down_cell) {
-        //     if (down_cell.cell) {
-        //         if (down_cell.cell.cellType === TableCellType.Text) {
-        //             console.log('点到textcell', down_cell.cell);
+        if (down_cell) {
+            if (down_cell.cell) {
+                if (down_cell.cell.cellType === TableCellType.Text) {
+                    console.log('点到textcell', down_cell.cell);
 
-        //         } else if (down_cell.cell.cellType === TableCellType.Image) {
-        //             console.log('点到imagecell');
+                } else if (down_cell.cell.cellType === TableCellType.Image) {
+                    console.log('点到imagecell');
 
-        //         }
-        //     } else {
-        //         init_text_cell(down_cell);
-        //         text_selection = context.selection.getTextSelection(down_cell.cell);
-        //         text_selection.setCursor(0, false);
-        //         table_selection.setEditingCell(down_cell);
-        //     }
-        // }
+                } else {
+                    console.log('unexcept');
+                    init_text_cell(down_cell);
+                    text_selection = context.selection.getTextSelection(down_cell.cell as TextShape);
+                    text_selection.setCursor(0, false);
+                    table_selection.setEditingCell(down_cell);
+                }
+            } else {
+                console.log('init cell');
+
+                init_text_cell(down_cell);
+                // @ts-ignore
+                text_selection = context.selection.getTextSelection(down_cell.cell);
+                text_selection.setCursor(0, false);
+                table_selection.setEditingCell(down_cell);
+            }
+        }
 
         document.addEventListener('mousemove', mousemove4body);
         document.addEventListener('mouseup', mouseup4body);
