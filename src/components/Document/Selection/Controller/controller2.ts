@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, TableShape, TableGridItem, TableCellType, TextShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TableShape, TableGridItem, TableCellType, TextShape, TableCell } from '@kcdesign/data';
 import { computed, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -39,8 +39,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let area: TableArea = 'invalid';
     let move: any, up: any;
     let matrix4table = new Matrix();
-    let down_cell: TableGridItem | undefined;
-    let up_cell: TableGridItem | undefined;
+    let down_cell: (TableGridItem & { cell: TableCell | undefined }) | undefined;
+    let up_cell: (TableGridItem & { cell: TableCell | undefined }) | undefined;
     let table: TableShape = context.selection.selectedShapes[0] as TableShape;
     let table_selection: TableSelection;
     let text_selection: TextSelection;
@@ -289,6 +289,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             } else {
                 console.log('init cell');
                 init_text_cell(down_cell);
+                down_cell = check_cell_on_point(e);
                 // @ts-ignore
                 text_selection = context.selection.getTextSelection(down_cell.cell);
                 text_selection.setCursor(0, false);
