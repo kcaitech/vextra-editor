@@ -58,7 +58,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static ABOUT_ME = 13;
     static EXTEND = 14;
     static CHANGE_TABLE_CELL = 15;
-    static CHANGE_EDITING_CELL = 16; m_item = check_cell_on_point(e);
+    static CHANGE_EDITING_CELL = 16;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
