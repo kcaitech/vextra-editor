@@ -4,6 +4,7 @@ import { Matrix, Shape, TableLayout, TableShape } from '@kcdesign/data';
 import { Point } from '../../SelectionView.vue';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
+import { Selection } from '@/context/selection';
 const props = defineProps<{
     matrix: number[]
     context: Context
@@ -33,23 +34,22 @@ let layout: TableLayout;
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
-        const m = new Matrix(props.matrix), f = props.shape.frame;
-        const lt = m.computeCoord2(0, 0);
+        const m = new Matrix(props.matrix), lt = m.computeCoord2(0, 0), mw = new Matrix(props.context.workspace.matrix);
         const table: TableShape = props.shape as TableShape;
         layout = table.getLayout();
         frame_params = { x: lt.x, y: lt.y, width: layout.width, height: layout.height };
         const cols = layout.colWidths, rows = layout.rowHeights;
         let growx = 0, growy = 0;
         for (let i = 0, len = cols.length; i < len; i++) {
-            const tx = cols[i], x = growx + tx;
-            if (tx - 8 > 5) {
+            const tx = cols[i] * mw.m00, x = growx + tx;
+            if (tx > 13) {
                 xs.push({ x, idx: i }), xbars.push({ s: growx + 4, length: tx - 8, idx: i });
             }
             growx += tx;
         }
         for (let i = 0, len = rows.length; i < len; i++) {
-            const ty = rows[i], y = growy + ty;
-            if (ty - 8 > 5) {
+            const ty = rows[i] * mw.m00, y = growy + ty;
+            if (ty > 13) {
                 ys.push({ y, idx: i }), ybars.push({ s: growy + 4, length: ty - 8, idx: i });
             }
             growy += ty;
@@ -71,10 +71,20 @@ function y_dot_mouseleave() {
     show_add_y.value = false;
 }
 function add_cols() {
+    const selection = props.context.selection;
+    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    table_selection.reset();
+    selection.notify(Selection.CHANGE_TABLE_CELL);
+
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);
 }
 function add_rows() {
+    const selection = props.context.selection;
+    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    table_selection.reset();
+    selection.notify(Selection.CHANGE_TABLE_CELL);
+
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertRow(ids_y + 1, layout.rowHeights[ids_y]);
 }

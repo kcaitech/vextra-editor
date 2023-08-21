@@ -264,9 +264,9 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-        :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
+        :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible">
         <TableSelectionView :context="props.context"></TableSelectionView>
@@ -275,8 +275,8 @@ onUnmounted(() => {
             <svg-icon icon-class="pattern-image" :width="imageIconSize" :height="imageIconSize"></svg-icon>
         </g>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
-            :matrix="editingCellMatrix"></SelectView>
+        <!-- <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
+            :matrix="editingCellMatrix"></SelectView> -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </BarsContainer>
