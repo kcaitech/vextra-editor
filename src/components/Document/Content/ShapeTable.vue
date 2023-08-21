@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Shape, TableCell, TableShape, objectId } from "@kcdesign/data";
+import { Shape, TableCell, TableShape } from "@kcdesign/data";
 import { renderTable as r } from "@kcdesign/data";
 
 const props = defineProps<{ data: TableShape }>();
@@ -56,7 +56,7 @@ function render() {
         if (s0 === s) { // undefined
             continue;
         }
-        if (s && s0 && objectId(s.shape) === objectId(s0)) {
+        if (s && s0 && s.shape.id === s0.id) {
             continue;
         }
         if (s) s.stopWatch();
