@@ -45,6 +45,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let table_selection: TableSelection;
     let text_selection: TextSelection;
     let text_editor: any;
+    let down_index: { index: number, before: boolean };
     let point_on_table: { x: number, y: number } = { x: 0, y: 0 };
 
     function mousedown(e: MouseEvent) {
@@ -280,6 +281,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const f = down_item.frame;
                     const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
                     console.log('点到textcell', xy);
+                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
+                    down_index = text_selection.locateText(xy.x, xy.y);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
                     console.log('点到imagecell');
                 } else {
