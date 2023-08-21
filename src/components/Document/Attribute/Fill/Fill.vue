@@ -300,7 +300,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0 10px 12px 10px;
+    padding: 10px 10px 12px 10px;
     box-sizing: border-box;
 
     .add {

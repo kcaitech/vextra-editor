@@ -57,8 +57,27 @@ function _change(t: number) {
         } else {
             shapes.value = new Array();
         }
+        baseAttr.value = true;
+    } else if (t === Selection.CHANGE_TABLE_CELL) {
+        baseAttrVisible()
     }
 }
+const baseAttr = ref(true);
+const baseAttrVisible = () => {
+    const shape = props.context.selection.selectedShapes[0]
+    if(props.context.selection.selectedShapes.length === 1 && shape.type === ShapeType.Table) {
+        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+        const is_edting = props.context.workspace.isEditing;
+        if(table.tableColStart === -1 && !is_edting) {
+            baseAttr.value = true;
+        }else {
+            baseAttr.value = false;
+        }
+    }else {
+        baseAttr.value = true;
+    }
+}
+
 const change = throttle(_change, 200);
 function selection_watcher(t: number) { change(t) }
 onMounted(() => {
@@ -77,7 +96,7 @@ onUnmounted(() => {
         </div>
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len" :reflush="reflush">
-            <ShapeBaseAttr :context="props.context"></ShapeBaseAttr>
+            <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
