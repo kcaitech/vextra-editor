@@ -91,26 +91,14 @@ function add_rows() {
 function select_col(index: number) {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
-    const grid = layout.grid;
     const rl = layout.grid.rowCount;
-    const m: Map<string, { row: number, col: number }> = new Map();
-    for (let i = 0; i < rl; i++) {
-        const gt = grid.get(i, index);
-        m.set(gt.cell.id, { row: gt.index.row, col: gt.index.col });
-    }
-    table_selection.selectTableCellRange(0, rl, index, index, m);
+    table_selection.selectTableCellRange(0, rl, index, index);
 }
 function select_row(index: number) {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
-    const grid = layout.grid;
     const cl = layout.grid.colCount;
-    const m: Map<string, { row: number, col: number }> = new Map();
-    for (let i = 0; i < cl; i++) {
-        const gt = grid.get(index, i);
-        m.set(gt.cell.id, { row: gt.index.row, col: gt.index.col });
-    }
-    table_selection.selectTableCellRange(index, index, 0, cl, m);
+    table_selection.selectTableCellRange(index, index, 0, cl);
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
