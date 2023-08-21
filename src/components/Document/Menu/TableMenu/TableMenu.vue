@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY } from '@/context/selection';
-import {Shape, TableShape } from "@kcdesign/data";
+import { Shape, TableShape } from "@kcdesign/data";
 import { Context } from '@/context';
 
 const { t } = useI18n();
@@ -26,9 +26,9 @@ function showLayerSubMenu(e: MouseEvent, show: string) {
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
   layerSubMenuPosition.y = -4;
-  if(show === 'split') {
+  if (show === 'split') {
     isSplitCell.value = true;
-  }else {
+  } else {
     isDeleteColumn.value = true;
   }
 }
@@ -39,6 +39,8 @@ const splitCell = (column: string) => {
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
     const cell = (Array.from(table.getSelectedCells()))[0]
     const editor = props.context.editor4Table(shape as TableShape)
+    console.log(cell);
+
     if (column === 'row') {
       editor.horSplitCell(cell)
     } else {
@@ -56,18 +58,18 @@ const openInsertCell = (value: string) => {
 const mergeCell = () => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-  if(table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-      const editor = props.context.editor4Table(shape as TableShape)
-      editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
+  if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+    const editor = props.context.editor4Table(shape as TableShape)
+    editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
   }
   emit('close');
 }
 const spliceRow = () => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-  if(table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-      const editor = props.context.editor4Table(shape as TableShape)
-      editor.removeRow(table.tableRowStart)
+  if (table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
+    const editor = props.context.editor4Table(shape as TableShape)
+    editor.removeRow(table.tableRowStart)
   }
   emit('close');
 }
@@ -75,16 +77,19 @@ const spliceRow = () => {
 const spliceCol = () => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-  if(table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-      const editor = props.context.editor4Table(shape as TableShape)
-      editor.removeCol(table.tableColEnd)
+  if (table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
+    const editor = props.context.editor4Table(shape as TableShape)
+    editor.removeCol(table.tableColEnd)
   }
   emit('close');
 }
 
 const deleteTable = () => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  const editor = props.context.editor4Shape(shape);
+  editor.delete();
+  props.context.selection.resetSelectShapes();
+  emit('close');
 }
 
 // /**
@@ -101,8 +106,8 @@ function closeLayerSubMenu() {
     @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'delete')" @mouseleave="isDeleteColumn = false">
     <span>{{ t('table.del_column') }}</span>
     <div class="triangle"></div>
-    <ContextMenu v-if="isDeleteColumn" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
-      :site="site" :context="props.context">
+    <ContextMenu v-if="isDeleteColumn" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site"
+      :context="props.context">
       <div class="item" @click="spliceRow">
         <span>{{ t('table.del_select_row') }}</span>
         <span></span>
@@ -118,11 +123,11 @@ function closeLayerSubMenu() {
     </ContextMenu>
   </div>
   <div class="item" v-if="props.items.includes('split_cell')"
-  @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'split')" @mouseleave="isSplitCell = false">
+    @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'split')" @mouseleave="isSplitCell = false">
     <span>{{ t('table.split_cell') }}</span>
     <div class="triangle"></div>
-    <ContextMenu v-if="isSplitCell" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
-      :site="site" :context="props.context">
+    <ContextMenu v-if="isSplitCell" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site"
+      :context="props.context">
       <div class="item" @click="splitCell('row')">
         <span>{{ t('table.split_towrow') }}</span>
         <span></span>
