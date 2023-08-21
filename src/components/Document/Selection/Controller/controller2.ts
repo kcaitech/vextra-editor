@@ -309,7 +309,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
         if (isDragging) {
             startPosition = { ...mousePosition };
-            const m_item = check_cell_on_point(e);
+            let m_item = check_cell_on_point(e);
             if (m_item && down_item && isDragging) {
                 const { rows, rowe, cols, cole } = get_range(down_item.index, m_item.index);
                 table_selection.selectTableCellRange(rows, rowe, cols, cole);
