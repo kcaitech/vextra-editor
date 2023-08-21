@@ -1,4 +1,4 @@
-import { ISave4Restore, TableCell, TableShape, Watchable } from "@kcdesign/data";
+import { ISave4Restore, TableShape, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
@@ -58,7 +58,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static ABOUT_ME = 13;
     static EXTEND = 14;
     static CHANGE_TABLE_CELL = 15;
-    static CHANGE_EDITING_CELL = 16;
+    static CHANGE_EDITING_CELL = 16; m_item = check_cell_on_point(e);
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
