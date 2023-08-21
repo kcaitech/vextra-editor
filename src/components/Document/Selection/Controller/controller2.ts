@@ -45,7 +45,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let table_selection: TableSelection;
     let text_selection: TextSelection;
     let text_editor: any;
-    
+
     function mousedown(e: MouseEvent) {
         if (context.workspace.isPageDragging) return;
         const shape = context.selection.selectedShapes[0];
@@ -276,18 +276,19 @@ function useControllerCustom(context: Context, i18nT: Function) {
         down_cell = check_cell_on_point(e);
 
         if (down_cell) {
-            if (down_cell.cell.cellType === undefined) {
-                console.log('点到未定义的cell');
+            if (down_cell.cell) {
+                if (down_cell.cell.cellType === TableCellType.Text) {
+                    console.log('点到textcell', down_cell.cell);
+
+                } else if (down_cell.cell.cellType === TableCellType.Image) {
+                    console.log('点到imagecell');
+
+                }
+            } else {
                 init_text_cell(down_cell);
-                text_selection = context.selection.getTextSelection(down_cell.cell as TextShape);
+                text_selection = context.selection.getTextSelection(down_cell.cell);
                 text_selection.setCursor(0, false);
                 table_selection.setEditingCell(down_cell);
-            } else if (down_cell.cell.cellType === TableCellType.Text) {
-                console.log('点到textcell', down_cell.cell);
-
-            } else if (down_cell.cell.cellType === TableCellType.Image) {
-                console.log('点到imagecell');
-
             }
         }
 
