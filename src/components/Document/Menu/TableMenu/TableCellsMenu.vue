@@ -2,9 +2,11 @@
 import { ref, computed } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { Color, TableShape } from '@kcdesign/data';
+import { Color, TableCell, TableShape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
+import { useImagePicker } from '../../Selection/Controller/Table/loadimage';
+import { v4 as uuid } from "uuid"
 enum CellMenu {
     MultiSelect = 'multiCells', //多选单元格时
     SelectRow = 'row', //选中整行单元格
@@ -46,6 +48,20 @@ const imgVisible = computed(() => {
     // }else return false;
     return true;
 })
+const pickImage = useImagePicker();
+// function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, cell: TableCell) {
+//     const id = uuid();
+//     props.context.data.mediasMgr.add(id, data);
+//     const editor = props.context.editor4Table(props.shape)
+//     const index = props.shape.indexOfCell(cell);
+//     if (index) editor.setCellContentImage(index.rowIdx, index.colIdx, id);
+// }
+const onPickImge = (e: MouseEvent) => {
+    // e.stopPropagation();
+    // pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
+    //     onLoadImage(name, data, cell.cell);
+    // });
+}
 </script>
 
 <template>
@@ -83,7 +99,7 @@ const imgVisible = computed(() => {
                     <path d="M12 1L20 1V21H12" stroke="black" />
                 </svg>
             </div>
-            <div style="padding: 2px;" v-if="imgVisible">
+            <div style="padding: 2px;" v-if="imgVisible" @click="onPickImge">
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
         </div>
@@ -188,4 +204,5 @@ const imgVisible = computed(() => {
 
 .selected_bgc {
     background-color: var(--active-color) !important;
-}</style>
+}
+</style>
