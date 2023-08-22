@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef, onBeforeUpdate } from 'vue';
+import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection } from '@/context/selection';
@@ -11,9 +11,6 @@ import PointsContainer from "./Points/PointsContainerForTable.vue";
 import { useController } from './controller2';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
-import { useImagePicker } from './Table/loadimage';
-import { v4 as uuid } from "uuid"
-import { useI18n } from 'vue-i18n';
 import TableHeader from './Table/TableHeader.vue';
 import TableSelectionView from './Table/TableSelectionView.vue';
 import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
@@ -26,14 +23,12 @@ const props = defineProps<{
     matrix: Matrix, // root->屏幕 变换矩阵
     shape: TableShape
 }>();
-const { t } = useI18n();
-const { isDrag, tableSelection } = useController(props.context);
+const { tableSelection } = useController(props.context);
 const matrix = new Matrix();
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const submatrix = reactive(new Matrix());
 const submatrixArray = computed(() => submatrix.toArray());
-const imageIconSize = 20; // px
 const cell_menu = ref<boolean>(false);
 const cell_menu_type = ref<CellMenu>(CellMenu.MultiSelect);
 const cell_menu_posi = ref<{ x: number, y: number }>({ x: 0, y: 0 });
@@ -50,7 +45,6 @@ const editingCellMatrix = computed(() => {
     }
     return matrix.toArray();
 })
-
 function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
@@ -86,102 +80,11 @@ function update() {
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + (bounds.right - bounds.left) + " " + (bounds.bottom - bounds.top);
 }
-function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, cell: TableCell) {
-    const id = uuid();
-    props.context.data.mediasMgr.add(id, data);
-    const editor = props.context.editor4Table(props.shape)
-    const index = props.shape.indexOfCell(cell);
-    if (index) editor.setCellContentImage(index.rowIdx, index.colIdx, id);
-}
-const pickImage = useImagePicker();
-function mousedown(e: MouseEvent) {
-    // // find cell
-    // const workspace = props.context.workspace;
-    // const { clientX, clientY } = e;
-    // const root = workspace.root;
-    // matrix.reset(submatrixArray.value);
-
-    // const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    // if (editingCell.value && isInCell(xy, editingCell.value)) {
-    //     getCellState(editingCell.value.cell).onMouseDown(e);
-    //     return;
-    // }
-    // const cell = props.shape.locateCell(xy.x, xy.y);
-    // if (!cell) return;
-    // if (cell.cell.cellType === TableCellType.Image) { // todo 应该是查看大图？
-    //     pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
-    //         onLoadImage(name, data, cell.cell);
-    //     });
-    //     e.stopPropagation();
-    //     e.preventDefault();
-    //     return;
-    // }
-    // if ((cell.cell.cellType ?? TableCellType.None) === TableCellType.None) {
-    //     const editor = props.context.editor4Table(props.shape)
-    //     editor.setCellContentText(cell.cell)
-    // }
-    // // editing cell
-    // const selection = props.context.selection.getTableSelection(props.shape);
-    // selection.selectTableCell(cell.cell, cell.index.row, cell.index.col);
-    // editingCell.value = cell;
-    // getCellState(cell.cell).onMouseDown(e);
-
-    // document.addEventListener('mousemove', mousemove);
-    // document.addEventListener('mouseup', mouseup);
-}
-function mousemove(e: MouseEvent) {
-    // const isDragging = isDrag();
-    // if (isDragging) {
-    //     visible.value = false; // 控件在移动过程中不可视
-    //     return;
-    // }
-
-    // if (e.buttons > 0) {
-    //     return;
-    // }
-
-    // const workspace = props.context.workspace;
-    // const { clientX, clientY } = e;
-    // const root = workspace.root;
-
-    // matrix.reset(submatrixArray.value);
-
-    // const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    // if (editingCell.value && isInCell(xy, editingCell.value)) {
-    //     // getCellState(editingCell.value.cell).onMouseDown(e);
-    //     return;
-    // }
-}
-
-function mouseup(e: MouseEvent) {
-    // document.removeEventListener('mousemove', mousemove);
-    // document.removeEventListener('mouseup', mouseup);
-}
-
-function windowBlur() {
-    // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
-    document.removeEventListener('mousemove', mousemove);
-    document.removeEventListener('mouseup', mouseup);
-}
 function isEditingText() {
     return editingCell.value &&
         editingCell.value.cell &&
         editingCell.value.cell.cellType === TableCellType.Text &&
         editingCell.value.cell.text;
-}
-function showImageIcon() {
-    const imageIconVisibleSize = imageIconSize << 1;
-    // const bounds = hoverCellBounds.value;
-    // return hoveringCell.value &&
-    //     (hoveringCell.value.cell.cellType ?? TableCellType.None) === TableCellType.None &&
-    //     bounds.w > imageIconVisibleSize &&
-    //     bounds.h > imageIconVisibleSize;
-}
-const imageIconTrans = () => {
-    // const bounds = hoverCellBounds.value;
-    // const x = bounds.x + (bounds.w - imageIconSize) / 2;
-    // const y = bounds.y + (bounds.h - imageIconSize) / 2;
-    // return `translate(${x}, ${y})`
 }
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_EDITING_CELL) {
@@ -216,20 +119,20 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible">
+        overflow="visible">
+        <!-- 表格选区 -->
         <TableSelectionView :context="props.context" @get-menu="update_menu_posi"></TableSelectionView>
-        <!-- 插入图片icon -->
-        <!-- <g v-if="showImageIcon()" :transform="imageIconTrans()">
-            <svg-icon icon-class="pattern-image" :width="imageIconSize" :height="imageIconSize"></svg-icon>
-        </g> -->
         <!-- 文本选区 -->
         <SelectView v-if="editingCell && editingCell.cell" :context="props.context" :shape="(editingCell.cell as TextShape)"
             :matrix="editingCellMatrix"></SelectView>
+        <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </BarsContainer>
+        <!-- 表头 -->
         <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape" :c-frame="props.controllerFrame"
             @get-menu="update_menu_posi"></TableHeader>
+        <!-- 表格拖拽 -->
         <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>

@@ -67,6 +67,7 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     const editor = props.context.editor4Table(shape)
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
     editor.setCellContentImage(table.tableRowStart, table.tableColStart, id);
+    props.context.communication.docResourceUpload.upload(id, data.buff.buffer.slice(0)).then((res: boolean) => console.log('资源上传成功'));
 }
 const onPickImge = (e: MouseEvent) => {
     e.stopPropagation();

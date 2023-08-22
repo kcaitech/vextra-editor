@@ -115,6 +115,8 @@ function select_row(index: number) {
     const xy = m.computeCoord2(0, (ys[index].y + (ys[index - 1]?.y || 0)) / 2);
     emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
 }
+function move(e: MouseEvent) { }
+function up(e: MouseEvent) { }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         hidden.value = false;
