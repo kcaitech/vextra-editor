@@ -49,7 +49,8 @@ const imgVisible = computed(() => {
 </script>
 
 <template>
-    <div class="custom-popover" :style="{ top: `${props.position.x}px`, left: `${props.position.y}px` }">
+    <div class="custom-popover"
+        :style="{ top: `${props.position.y}px`, left: `${props.position.x}px`, transform: `translate(-50%, -124%)` }">
         <div v-if="props.cellMenu === 'multiCells'" class="popover-content">
             <div class="hor selected_bgc">
                 <svg-icon :icon-class="horIcon"></svg-icon>
@@ -188,4 +189,5 @@ const imgVisible = computed(() => {
 
 .selected_bgc {
     background-color: var(--active-color) !important;
-}</style>
+}
+</style>

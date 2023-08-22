@@ -16,7 +16,7 @@ import { v4 as uuid } from "uuid"
 import { useI18n } from 'vue-i18n';
 import TableHeader from './Table/TableHeader.vue';
 import TableSelectionView from './Table/TableSelectionView.vue';
-
+import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
 type TextShape = Shape & { text: Text };
 const props = defineProps<{
     context: Context,
@@ -33,11 +33,13 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const submatrix = reactive(new Matrix());
 const submatrixArray = computed(() => submatrix.toArray());
 const imageIconSize = 20; // px
+const cell_menu = ref<boolean>(false);
+const cell_menu_posi = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
-const editingCell = shallowRef<TableGridItem & {cell: TableCell | undefined}>();
+const editingCell = shallowRef<TableGridItem & { cell: TableCell | undefined }>();
 
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
@@ -160,10 +162,10 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 function isEditingText() {
-    return editingCell.value && 
-    editingCell.value.cell && 
-    editingCell.value.cell.cellType === TableCellType.Text && 
-    editingCell.value.cell.text;
+    return editingCell.value &&
+        editingCell.value.cell &&
+        editingCell.value.cell.cellType === TableCellType.Text &&
+        editingCell.value.cell.text;
 }
 function showImageIcon() {
     const imageIconVisibleSize = imageIconSize << 1;
@@ -188,6 +190,9 @@ function init() {
     editingCell.value = undefined;
     update();
 }
+function update_menu_posi(x: number, y: number, cm: boolean) {
+    cell_menu_posi.value.x = x, cell_menu_posi.value.y = y, cell_menu.value = cm;
+}
 watch(() => props.matrix, update, { deep: true })
 watch(() => props.shape, (value, old) => {
     old.unwatch(update);
@@ -210,7 +215,7 @@ onUnmounted(() => {
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         @mousedown="mousedown" @mouseup="mouseup" @mousemove="mousemove" overflow="visible">
-        <TableSelectionView :context="props.context"></TableSelectionView>
+        <TableSelectionView :context="props.context" @get-menu="update_menu_posi"></TableSelectionView>
         <!-- 插入图片icon -->
         <!-- <g v-if="showImageIcon()" :transform="imageIconTrans()">
             <svg-icon icon-class="pattern-image" :width="imageIconSize" :height="imageIconSize"></svg-icon>
@@ -229,5 +234,7 @@ onUnmounted(() => {
     </svg>
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>
+    <TableCellsMenu v-if="cell_menu" :context="props.context" :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }"
+        cell-menu="multiCells"></TableCellsMenu>
 </template>
 <style lang='scss' scoped></style>

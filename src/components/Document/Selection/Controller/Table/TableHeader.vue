@@ -92,13 +92,14 @@ function select_col(index: number) {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     const rl = layout.grid.rowCount;
-    table_selection.selectTableCellRange(0, rl, index, index);
+    table_selection.selectTableCellRange(0, rl, index, index, false);
+
 }
 function select_row(index: number) {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     const cl = layout.grid.colCount;
-    table_selection.selectTableCellRange(index, index, 0, cl);
+    table_selection.selectTableCellRange(index, index, 0, cl, false);
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {

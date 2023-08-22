@@ -4,26 +4,33 @@ import { ClientXY, Selection } from '@/context/selection';
 import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { genRectPath } from '../../common';
+import { XYsBounding } from '@/utils/common';
+import { debounce } from 'lodash';
 
 interface Props {
     context: Context
 }
+interface Emits {
+    (e: 'get-menu', x: number, y: number, cell_menu: boolean): void;
+}
 const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
 const selection_path = ref<string>('');
 const triangle = ref<boolean>(false);
 let triangle_position: ClientXY = { x: 0, y: 0 };
-function update_cell_selection() {
+function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
+    emits("get-menu", 0, 0, false);
     const selection = props.context.selection;
     const shape = selection.selectedShapes[0];
     if (shape && shape.type === ShapeType.Table) {
         const table_selection = selection.getTableSelection(shape as TableShape, props.context);
         if (table_selection.tableRowStart < 0 || table_selection.tableColStart < 0) return;
         const cells = table_selection.getSelectedCells(true);
-        gen_view(shape, cells);
+        gen_view(shape, cells, gen_menu_posi);
     }
 }
-function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[]) {
+function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
     const t2r = table.matrix2Root(), m = props.context.workspace.matrix;
     t2r.multiAtLeft(m);
     let points: ClientXY[] = [];
@@ -38,6 +45,7 @@ function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: nu
         }
     }
     selection_path.value = genRectPath(points);
+    if (gen_menu_posi) get_menu_position(points);
 }
 function update_triangle() {
     triangle.value = false;
@@ -56,12 +64,13 @@ function update_triangle() {
         triangle.value = true;
     }
 }
-function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_TABLE_CELL) return update_cell_selection();
+function selection_watcher(t: number, gen_menu_posi: any) {
+    if (t === Selection.CHANGE_TABLE_CELL) return update_cell_selection(gen_menu_posi);
     if (t === Selection.CHANGE_SHAPE) return update_cell_selection();
     if (t === Selection.CHANGE_PAGE) return update_cell_selection();
     if (t === Selection.CHANGE_EDITING_CELL) return update_triangle();
 }
+
 function select_cell_by_triangle(e: MouseEvent) {
     const selection = props.context.selection;
     const shape = selection.selectedShapes[0];
@@ -73,6 +82,11 @@ function select_cell_by_triangle(e: MouseEvent) {
         e.stopPropagation();
     }
 }
+function _get_menu_position(points: ClientXY[]) {
+    const b = XYsBounding(points);
+    emits("get-menu", (b.right + b.left) / 2, b.top, true);
+}
+const get_menu_position = debounce(_get_menu_position, 100);
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
 })
