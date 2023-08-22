@@ -183,6 +183,11 @@ const imageIconTrans = () => {
     // const y = bounds.y + (bounds.h - imageIconSize) / 2;
     // return `translate(${x}, ${y})`
 }
+
+const closeCellMenu = () => {
+    cell_menu.value = false;
+}
+
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_EDITING_CELL) {
         editingCell.value = tableSelection().editingCell;
@@ -236,7 +241,7 @@ onUnmounted(() => {
     </svg>
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>
-    <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context"
+    <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
         :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>
 </template>
 <style lang='scss' scoped></style>

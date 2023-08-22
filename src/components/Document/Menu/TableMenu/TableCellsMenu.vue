@@ -29,13 +29,11 @@ const showAlginMenu = (meun: string) => {
 const textAlginHor = (svg: string) => {
     horIcon.value = svg;
     isAlignMenu.value = '';
-    emit('close');
 }
 
 const textAlginVer = (svg: string) => {
     verIcon.value = svg;
     isAlignMenu.value = '';
-    emit('close');
 }
 
 const getColorFromPicker = (c: Color) => {
