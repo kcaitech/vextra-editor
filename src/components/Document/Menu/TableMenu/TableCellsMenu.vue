@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { Color, TableCell, TableShape } from '@kcdesign/data';
+import { Color, Fill, FillType, TableCell, TableShape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { useImagePicker } from '../../Selection/Controller/Table/loadimage';
@@ -17,6 +17,9 @@ interface Props {
 const horIcon = ref('text-left');
 const verIcon = ref('align-top');
 const props = defineProps<Props>();
+const emit = defineEmits<{
+    (e: 'close'): void;
+}>()
 const isAlignMenu = ref('')
 const color = ref<Color>(new Color(1, 216, 216, 216));
 const showAlginMenu = (meun: string) => {
@@ -25,19 +28,23 @@ const showAlginMenu = (meun: string) => {
 }
 const textAlginHor = (svg: string) => {
     horIcon.value = svg;
-    isAlignMenu.value = ''
+    isAlignMenu.value = '';
+    emit('close');
 }
 
 const textAlginVer = (svg: string) => {
     verIcon.value = svg;
     isAlignMenu.value = '';
+    emit('close');
 }
 
 const getColorFromPicker = (c: Color) => {
-    if (props.cells.length === 1) {
-        const editor = props.context.editor4TextShape(props.cells[0] as TableCell & { text: Text; })
-    } else {
-        console.log('多个单元格');
+    const shape = props.context.selection.selectedShapes[0]
+    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+        const editor = props.context.editor4Table(shape as TableShape)
+        const fill = new Fill(uuid(), true, FillType.SolidColor, c);
+        editor.addFill(fill ,{ rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
     }
     color.value = c;
 }
@@ -49,6 +56,7 @@ const mergeCells = () => {
         const editor = props.context.editor4Table(shape as TableShape)
         editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
     }
+    emit('close');
 }
 
 const imgVisible = computed(() => {
@@ -67,6 +75,7 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     const editor = props.context.editor4Table(shape)
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
     editor.setCellContentImage(table.tableRowStart, table.tableColStart, id);
+    emit('close');
 }
 const onPickImge = (e: MouseEvent) => {
     e.stopPropagation();
@@ -96,17 +105,19 @@ const insertColumn = (dir: string) => {
             editor.insertCol(table.tableColEnd + 1, grid.frame.width);
         }
     }
+    emit('close');
 }
 
 const deleteColumn = () => {
     const shape = props.context.selection.selectedShapes[0];
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
     const editor = props.context.editor4Table(shape as TableShape);
-    if (props.cellMenu === 'row') {
-        editor.removeCol(table.tableColStart, table.tableColEnd);
-    } else {
+    if (props.cellMenu === CellMenu.SelectRow) {
         editor.removeRow(table.tableRowStart, table.tableRowEnd);
+    } else {
+        editor.removeCol(table.tableColStart, table.tableColEnd);
     }
+    emit('close');
 }
 </script>
 

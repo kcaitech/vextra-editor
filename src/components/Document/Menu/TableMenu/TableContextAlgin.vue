@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType, Shape, TableCell } from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType, Shape, TableCell, TableShape } from "@kcdesign/data";
 
 interface Props {
     menu: string
@@ -20,21 +20,17 @@ const selectLevel = ref('')
 const selectVertical = ref('')
 
 const onSelectLevel = (icon: TextHorAlign, svg: string,) => {
-    if (props.cells.length === 1) {
-        const editor = props.context.editor4TextShape(props.cells[0] as TableCell & { text: Text; })
-        editor.setTextHorAlign(icon, 0, Infinity)
-    } else {
-        console.log('多个单元格');
-    }
+    const shape = props.context.selection.selectedShapes[0] as TableShape;
+    const table_Selection = props.context.selection.getTableSelection(shape, props.context);
+    const editor = props.context.editor4Table(shape)
+    editor.setTextHorAlign(icon, { rowStart: table_Selection.tableRowStart, rowEnd: table_Selection.tableRowEnd, colStart: table_Selection.tableColStart, colEnd: table_Selection.tableColEnd })
     emit('textAlginHor', svg)
 }
 const onSelectVertical = (icon: TextVerAlign, svg: string) => {
-    if (props.cells.length === 1) {
-        const editor = props.context.editor4TextShape(props.cells[0] as TableCell & { text: Text; })
-        editor.setTextVerAlign(icon)
-    } else {
-        console.log('多个单元格');
-    }
+    const shape = props.context.selection.selectedShapes[0] as TableShape;
+    const table_Selection = props.context.selection.getTableSelection(shape, props.context);
+    const editor = props.context.editor4Table(shape)
+    editor.setTextVerAlign(icon, { rowStart: table_Selection.tableRowStart, rowEnd: table_Selection.tableRowEnd, colStart: table_Selection.tableColStart, colEnd: table_Selection.tableColEnd })
     emit('textAlginVer', svg)
 }
 </script>
