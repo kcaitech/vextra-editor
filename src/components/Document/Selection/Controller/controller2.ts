@@ -279,7 +279,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
         else if (down_type === 2) dbldown(e);
         else if (down_type === 3) multidown(e);
 
-
         down_type++;
         set_timer();
 
@@ -297,7 +296,9 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 if (rows !== rowe || cols !== cole) {
                     table_selection.setEditingCell();
                 } else {
-                    const xy = matrix4table.computeCoord2(mousePosition.x, mousePosition.y);
+                    const f = m_item.frame;
+                    const point_on_table = matrix4table.computeCoord2(mousePosition.x, mousePosition.y);
+                    const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
                     const m_index = editingCell.cell.text!.locateText(xy.x, xy.y);
                     text_selection.selectText(down_index.index, m_index.index);
                 }
@@ -366,6 +367,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         move = mousemove4body, up = mouseup4body;
     }
     function dbldown(e: MouseEvent) {
+
         console.log('双击');
     }
     function multidown(e: MouseEvent) {
