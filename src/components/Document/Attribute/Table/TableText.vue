@@ -103,10 +103,10 @@ const onBold = () => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextBold(isBold.value);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextBold(isBold.value, cell_selection);
-        } else {
-            editor.setTextBold(isBold.value);
         }
     }
     textFormat();
@@ -127,10 +127,10 @@ const onTilt = () => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextItalic(isTilt.value);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextItalic(isTilt.value, cell_selection);
-        } else {
-            editor.setTextItalic(isTilt.value);
         }
     }
     textFormat();
@@ -151,10 +151,10 @@ const onUnderlint = () => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextUnderline(isUnderline.value);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextUnderline(isUnderline.value, cell_selection);
-        } else {
-            editor.setTextUnderline(isUnderline.value);
         }
     }
     textFormat();
@@ -175,10 +175,10 @@ const onDeleteline = () => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextStrikethrough(isDeleteline.value);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextStrikethrough(isDeleteline.value, cell_selection);
-        } else {
-            editor.setTextStrikethrough(isDeleteline.value);
         }
     }
     textFormat();
@@ -199,10 +199,10 @@ const onSelectLevel = (icon: TextHorAlign) => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHorAlign(icon);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextHorAlign(icon, cell_selection);
-        } else {
-            editor.setTextHorAlign(icon);
         }
     }
     textFormat();
@@ -218,10 +218,10 @@ const onSelectVertical = (icon: TextVerAlign) => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextVerAlign(icon);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextVerAlign(icon, cell_selection);
-        } else {
-            editor.setTextVerAlign(icon);
         }
     }
     textFormat();
@@ -243,10 +243,10 @@ const changeTextSize = (size: number) => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextFontSize(size);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextFontSize(size, cell_selection);
-        } else {
-            editor.setTextFontSize(size);
         }
     }
     textFormat();
@@ -268,10 +268,10 @@ const setFont = (font: string) => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextFontName(font);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextFontName(font, cell_selection);
-        } else {
-            editor.setTextFontName(font);
         }
     }
     textFormat();
@@ -554,17 +554,17 @@ function getColorFromPicker(color: Color, type: string) {
         const table_Selection = props.context.selection.getTableSelection(props.shape, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            if (type === 'color') {
+                editor.setTextColor(color);
+            } else {
+                editor.setTextHighlightColor(color);
+            }
+        } else {
             const cell_selection = cellSelect(table_Selection)
             if (type === 'color') {
                 editor.setTextColor(color, cell_selection);
             } else {
                 editor.setTextHighlightColor(color, cell_selection);
-            }
-        } else {
-            if (type === 'color') {
-                editor.setTextColor(color);
-            } else {
-                editor.setTextHighlightColor(color);
             }
         }
     }
@@ -601,17 +601,17 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            if (type === 'color') {
+                editor.setTextColor(new Color(alpha, r, g, b))
+            } else {
+                editor.setTextHighlightColor(new Color(alpha, r, g, b));
+            }
+        } else {
             const cell_selection = cellSelect(table_Selection)
             if (type === 'color') {
                 editor.setTextColor(new Color(alpha, r, g, b), cell_selection)
             } else {
                 editor.setTextHighlightColor(new Color(alpha, r, g, b), cell_selection);
-            }
-        } else {
-            if (type === 'color') {
-                editor.setTextColor(new Color(alpha, r, g, b))
-            } else {
-                editor.setTextHighlightColor(new Color(alpha, r, g, b));
             }
         }
     }
@@ -632,10 +632,10 @@ const deleteHighlight = () => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHighlightColor(undefined);
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextHighlightColor(undefined, cell_selection);
-        } else {
-            editor.setTextHighlightColor(undefined);
         }
     }
     textFormat();
@@ -655,10 +655,10 @@ const addHighlight = () => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHighlightColor(new Color(1, 216, 216, 216));
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextHighlightColor(new Color(1, 216, 216, 216), cell_selection);
-        } else {
-            editor.setTextHighlightColor(new Color(1, 216, 216, 216));
         }
     }
     textFormat();
@@ -677,10 +677,10 @@ const addTextColor = () => {
         const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextColor(new Color(1, 6, 6, 6));
+        } else {
             const cell_selection = cellSelect(table_Selection)
             editor.setTextColor(new Color(1, 6, 6, 6), cell_selection);
-        } else {
-            editor.setTextColor(new Color(1, 6, 6, 6));
         }
     }
 }

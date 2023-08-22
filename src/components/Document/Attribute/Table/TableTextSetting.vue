@@ -57,10 +57,10 @@ const onSelectCase = (icon: TextTransformType) => {
     const table_Selection = props.context.selection.getTableSelection(table, props.context);
     const editor = props.context.editor4Table(table)
     if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+      editor.setTextTransform(icon);
+    } else {
       const cell_selection = cellSelect(table_Selection)
       editor.setTextTransform(icon, cell_selection);
-    } else {
-      editor.setTextTransform(icon);
     }
   }
   props.context.workspace.focusText();
@@ -89,10 +89,10 @@ const setRowHeight = () => {
       const table_Selection = props.context.selection.getTableSelection(table, props.context);
       const editor = props.context.editor4Table(table)
       if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setLineHeight(Number(rowHeight.value));
+      } else {
         const cell_selection = cellSelect(table_Selection)
         editor.setLineHeight(Number(rowHeight.value), cell_selection);
-      } else {
-        editor.setLineHeight(Number(rowHeight.value));
       }
     } else {
       textFormat();
@@ -124,10 +124,10 @@ const setWordSpace = () => {
       const table_Selection = props.context.selection.getTableSelection(table, props.context);
       const editor = props.context.editor4Table(table)
       if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setCharSpacing(Number(wordSpace.value));
+      } else {
         const cell_selection = cellSelect(table_Selection)
         editor.setCharSpacing(Number(wordSpace.value), cell_selection);
-      } else {
-        editor.setCharSpacing(Number(wordSpace.value));
       }
     } else {
       textFormat();
@@ -155,10 +155,10 @@ const setParagraphSpace = () => {
       const table_Selection = props.context.selection.getTableSelection(table, props.context);
       const editor = props.context.editor4Table(table)
       if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setParaSpacing(Number(paragraphSpace.value));
+      } else {
         const cell_selection = cellSelect(table_Selection)
         editor.setParaSpacing(Number(paragraphSpace.value), cell_selection);
-      } else {
-        editor.setParaSpacing(Number(paragraphSpace.value));
       }
     } else {
       textFormat();
