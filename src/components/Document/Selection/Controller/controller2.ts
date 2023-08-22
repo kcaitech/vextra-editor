@@ -47,6 +47,9 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let text_editor: any;
     let down_index: { index: number, before: boolean };
     let point_on_table: { x: number, y: number } = { x: 0, y: 0 };
+    let down_type: number = 1; //针对主键 1 单击 2 双击 3 三次点击
+    let down_timer: any = null;
+    const TIMER = 300; // 连续点击最大间隔时间
 
     function mousedown(e: MouseEvent) {
         if (context.workspace.isPageDragging) return;
@@ -55,7 +58,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         root = context.workspace.root;
         const table_selection = context.selection.getTableSelection(shape as TableShape, context);
         area = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        console.log('click-area', area);
+        // console.log('click-area', area);
         if (area === 'move') {
             matrix.reset(workspace.value.matrix.inverse);
             set_position(e);
@@ -267,47 +270,19 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function down4body(e: MouseEvent) {
         if (e.button !== 0) return;
-
-        table_selection.reset();
-        context.selection.notify(Selection.CHANGE_TABLE_CELL); // 单击清除表格选区
-
+        const new_down_item = check_cell_on_point(e);
+        if (down_item && ((new_down_item?.index.col !== down_item.index.col) || (new_down_item?.index.row !== down_item.index.row))) init_down_timer();
+        down_item = new_down_item;
         set_position(e);
 
-        down_item = check_cell_on_point(e);
+        if (down_type === 1) down(e) // 单击
+        else if (down_type === 2) dbldown(e);
+        else if (down_type === 3) multidown(e);
 
-        if (down_item) {
-            if (down_item.cell) {
-                if (down_item.cell.cellType === TableCellType.Text) {
-                    const f = down_item.frame;
-                    const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
-                    console.log('点到textcell', xy);
-                    table_selection.setEditingCell(down_item);
-                    down_index = down_item.cell.text!.locateText(xy.x, xy.y); // text_selection.locateText(xy.x, xy.y);
-                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
-                    text_selection.setCursor(down_index.index, down_index.before);
-                } else if (down_item.cell.cellType === TableCellType.Image) {
-                    console.log('点到imagecell');
-                } else {
-                    console.log('unexcept');
-                    init_text_cell(down_item);
-                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
-                    text_selection.setCursor(0, false);
-                    table_selection.setEditingCell(down_item);
-                }
-            } else {
-                console.log('init cell');
-                init_text_cell(down_item);
-                down_item = check_cell_on_point(e);
-                // @ts-ignore
-                text_selection = context.selection.getTextSelection(down_item.cell);
-                text_selection.setCursor(0, false);
-                table_selection.setEditingCell(down_item);
-            }
-        }
 
-        document.addEventListener('mousemove', mousemove4body);
-        document.addEventListener('mouseup', mouseup4body);
-        move = mousemove4body, up = mouseup4body;
+        down_type++;
+        set_timer();
+
     }
     function mousemove4body(e: MouseEvent) {
         if (e.buttons !== 1) return;
@@ -327,8 +302,12 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     text_selection.selectText(down_index.index, m_index.index);
                 }
             } else {
-                table_selection.selectTableCellRange(rows, rowe, cols, cole);
-                if (rows !== rowe || cols !== cole) table_selection.setEditingCell();
+                if (m_item.cell?.id === down_item.cell?.id) {
+                    clear_selection();
+                    table_selection.setEditingCell(down_item);
+                } else {
+                    table_selection.selectTableCellRange(rows, rowe, cols, cole);
+                }
             }
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
@@ -346,6 +325,53 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function editor_mode() { }
     function static_mode() { }
+    function clear_selection() {
+        table_selection.reset();
+        context.selection.notify(Selection.CHANGE_TABLE_CELL);
+    }
+    function down(e: MouseEvent) {
+        console.log('单击', down_item);
+        clear_selection();// 单击清除表格选区
+        if (down_item) {
+            if (down_item.cell) {
+                if (down_item.cell.cellType === TableCellType.Text) {
+                    const f = down_item.frame;
+                    const xy = { x: point_on_table.x - f.x, y: point_on_table.y - f.y };
+                    // console.log('点到textcell', xy);
+                    table_selection.setEditingCell(down_item);
+                    down_index = down_item.cell.text!.locateText(xy.x, xy.y); // text_selection.locateText(xy.x, xy.y);
+                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
+                    text_selection.setCursor(down_index.index, down_index.before);
+                } else if (down_item.cell.cellType === TableCellType.Image) {
+                    // console.log('点到imagecell');
+                } else {
+                    // console.log('unexcept');
+                    init_text_cell(down_item);
+                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
+                    text_selection.setCursor(0, false);
+                    table_selection.setEditingCell(down_item);
+                }
+            } else {
+                console.log('init cell');
+                init_text_cell(down_item);
+                down_item = check_cell_on_point(e);
+                // @ts-ignore
+                text_selection = context.selection.getTextSelection(down_item.cell);
+                text_selection.setCursor(0, false);
+                table_selection.setEditingCell(down_item);
+            }
+        }
+        document.addEventListener('mousemove', mousemove4body);
+        document.addEventListener('mouseup', mouseup4body);
+        move = mousemove4body, up = mouseup4body;
+    }
+    function dbldown(e: MouseEvent) {
+        console.log('双击');
+    }
+    function multidown(e: MouseEvent) {
+        init_down_timer();
+        console.log('三次点击');
+    }
     // #endregion
     function set_position(e: MouseEvent) {
         const { clientX, clientY } = e;
@@ -359,6 +385,19 @@ function useControllerCustom(context: Context, i18nT: Function) {
         table = t;
         get_matrix4table();
         table_selection = context.selection.getTableSelection(t, context);
+        init_down_timer();
+    }
+    function init_down_timer() {
+        clearTimeout(down_timer);
+        down_timer = null, down_type = 1;
+    }
+    function set_timer() {
+        clearTimeout(down_timer);
+        down_timer = setTimeout(() => {
+            console.log('dis');
+            clearTimeout(down_timer);
+            down_type = 1, down_timer = null;
+        }, TIMER)
     }
     function isDrag() {
         return isDragging;
@@ -367,7 +406,10 @@ function useControllerCustom(context: Context, i18nT: Function) {
         handle(e, context, i18nT);
     }
     function selection_watcher(t?: number) {
-        if (t === Selection.CHANGE_SHAPE) initController();
+        if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
+            table_selection.setEditingCell();
+            initController();
+        }
     }
     function workspace_watcher(t?: number) {
         if (t === WorkSpace.CHECKSTATUS) checkStatus();
