@@ -4,11 +4,10 @@ import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType, Shape, TableCell } from "@kcdesign/data";
-interface Props {
-}
+
 interface Props {
     menu: string
-    context: Context,
+    context: Context
     cells: TableCell[]
 }
 const props = defineProps<Props>();
