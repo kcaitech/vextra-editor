@@ -7,10 +7,11 @@ import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { useImagePicker } from '../../Selection/Controller/Table/loadimage';
 import { v4 as uuid } from "uuid"
+import { CellMenu } from '@/context/menu';
 interface Props {
     context: Context
     position: { x: number, y: number }
-    cellMenu: string
+    cellMenu: CellMenu
     cells: TableCell[]
 }
 const horIcon = ref('text-left');
@@ -44,11 +45,7 @@ const getColorFromPicker = (c: Color) => {
 const mergeCells = () => {
     const shape = props.context.selection.selectedShapes[0]
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    console.log(table, 'talbe');
-
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-        console.log(111);
-
         const editor = props.context.editor4Table(shape as TableShape)
         editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
     }
@@ -63,18 +60,19 @@ const imgVisible = computed(() => {
     return true;
 })
 const pickImage = useImagePicker();
-// function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, cell: TableCell) {
-//     const id = uuid();
-//     props.context.data.mediasMgr.add(id, data);
-//     const editor = props.context.editor4Table(props.shape)
-//     const index = props.shape.indexOfCell(cell);
-//     if (index) editor.setCellContentImage(index.rowIdx, index.colIdx, id);
-// }
+function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
+    const id = uuid();
+    const shape = props.context.selection.selectedShapes[0] as TableShape
+    props.context.data.mediasMgr.add(id, data);
+    const editor = props.context.editor4Table(shape)
+    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    editor.setCellContentImage(table.tableRowStart, table.tableColStart, id);
+}
 const onPickImge = (e: MouseEvent) => {
-    // e.stopPropagation();
-    // pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
-    //     onLoadImage(name, data, cell.cell);
-    // });
+    e.stopPropagation();
+    pickImage((name: string, data: { buff: Uint8Array, base64: string }) => {
+        onLoadImage(name, data);
+    });
 }
 
 const insertColumn = (dir: string) => {
@@ -84,16 +82,16 @@ const insertColumn = (dir: string) => {
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableShape);
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
-        if (props.cellMenu === 'row' && dir === 'lt') {
+        if (props.cellMenu === CellMenu.SelectRow && dir === 'lt') {
             editor.insertCol(table.tableColStart, grid.frame.width);
-        } else if (props.cellMenu === 'row' && dir === 'rb') {
+        } else if (props.cellMenu === CellMenu.SelectRow && dir === 'rb') {
             const grid = layout.grid.get(table.tableRowEnd, table.tableColStart);
             editor.insertCol(table.tableColEnd + 1, grid.frame.width);
         }
-        else if (props.cellMenu === 'col' && dir === 'lt') {
+        else if (props.cellMenu === CellMenu.selectCol && dir === 'lt') {
             editor.insertRow(table.tableRowStart, grid.frame.height);
         }
-        else if (props.cellMenu === 'col' && dir === 'rb') {
+        else if (props.cellMenu === CellMenu.selectCol && dir === 'rb') {
             const grid = layout.grid.get(table.tableRowEnd, table.tableColEnd);
             editor.insertRow(table.tableRowStart, grid.frame.height);
         }
@@ -116,7 +114,7 @@ const deleteColumn = () => {
     <div class="custom-popover"
         :style="{ top: `${props.position.y}px`, left: `${props.position.x}px`, transform: `translate(-50%, -124%)` }"
         @mousedown.stop>
-        <div v-if="props.cellMenu === 'multiCells'" class="popover-content">
+        <div v-if="props.cellMenu === CellMenu.MultiSelect" class="popover-content">
             <div class="hor selected_bgc">
                 <svg-icon :icon-class="horIcon"></svg-icon>
                 <div class="menu" @click="showAlginMenu('hor')">
@@ -155,12 +153,12 @@ const deleteColumn = () => {
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
         </div>
-        <div v-if="props.cellMenu === 'row' || props.cellMenu === 'col'" class="popover-content">
+        <div v-if="props.cellMenu === CellMenu.SelectRow || props.cellMenu === CellMenu.selectCol" class="popover-content">
             <div style="display: flex; align-items: center; justify-content: center;">
                 <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
-            <div :style="{ transform: props.cellMenu === 'row' ? `rotate(180deg)` : `rotate(270deg)` }"
+            <div :style="{ transform: props.cellMenu === CellMenu.SelectRow ? `rotate(180deg)` : `rotate(270deg)` }"
                 @click="insertColumn('lt')">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="9" height="20" fill="#D8D8D8" />
@@ -168,7 +166,7 @@ const deleteColumn = () => {
                     <line x1="15.5" y1="5" x2="15.5" y2="14" stroke="black" />
                 </svg>
             </div>
-            <div :style="{ transform: props.cellMenu === 'row' ? `rotate(0deg)` : `rotate(90deg)` }"
+            <div :style="{ transform: props.cellMenu === CellMenu.SelectRow ? `rotate(0deg)` : `rotate(90deg)` }"
                 @click="insertColumn('rb')">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="9" height="20" fill="#D8D8D8" />
