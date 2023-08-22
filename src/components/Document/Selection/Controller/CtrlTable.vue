@@ -17,6 +17,7 @@ import { useI18n } from 'vue-i18n';
 import TableHeader from './Table/TableHeader.vue';
 import TableSelectionView from './Table/TableSelectionView.vue';
 import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
+import { CellMenu } from '@/context/menu';
 type TextShape = Shape & { text: Text };
 const props = defineProps<{
     context: Context,
@@ -34,6 +35,7 @@ const submatrix = reactive(new Matrix());
 const submatrixArray = computed(() => submatrix.toArray());
 const imageIconSize = 20; // px
 const cell_menu = ref<boolean>(false);
+const cell_menu_type = ref<CellMenu>(CellMenu.MultiSelect);
 const cell_menu_posi = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -190,8 +192,8 @@ function init() {
     editingCell.value = undefined;
     update();
 }
-function update_menu_posi(x: number, y: number, cm: boolean) {
-    cell_menu_posi.value.x = x, cell_menu_posi.value.y = y, cell_menu.value = cm;
+function update_menu_posi(x: number, y: number, cmt: CellMenu, cm: boolean) {
+    cell_menu_posi.value.x = x, cell_menu_posi.value.y = y, cell_menu_type.value = cmt, cell_menu.value = cm;
 }
 watch(() => props.matrix, update, { deep: true })
 watch(() => props.shape, (value, old) => {

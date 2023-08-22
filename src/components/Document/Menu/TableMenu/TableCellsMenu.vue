@@ -7,11 +7,6 @@ import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { useImagePicker } from '../../Selection/Controller/Table/loadimage';
 import { v4 as uuid } from "uuid"
-enum CellMenu {
-    MultiSelect = 'multiCells', //多选单元格时
-    SelectRow = 'row', //选中整行单元格
-    selectCol = 'col' //选中整列单元格
-}
 interface Props {
     context: Context
     position: { x: number, y: number }

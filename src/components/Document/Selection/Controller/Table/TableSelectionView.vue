@@ -6,12 +6,13 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';
 import { debounce } from 'lodash';
+import { CellMenu } from '@/context/menu';
 
 interface Props {
     context: Context
 }
 interface Emits {
-    (e: 'get-menu', x: number, y: number, cell_menu: boolean): void;
+    (e: 'get-menu', x: number, y: number, type: CellMenu, cell_menu: boolean): void;
 }
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
@@ -20,7 +21,7 @@ const triangle = ref<boolean>(false);
 let triangle_position: ClientXY = { x: 0, y: 0 };
 function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
-    emits("get-menu", 0, 0, false);
+    emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
     const selection = props.context.selection;
     const shape = selection.selectedShapes[0];
     if (shape && shape.type === ShapeType.Table) {
@@ -84,7 +85,7 @@ function select_cell_by_triangle(e: MouseEvent) {
 }
 function _get_menu_position(points: ClientXY[]) {
     const b = XYsBounding(points);
-    emits("get-menu", (b.right + b.left) / 2, b.top, true);
+    emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
 }
 const get_menu_position = debounce(_get_menu_position, 100);
 onMounted(() => {
