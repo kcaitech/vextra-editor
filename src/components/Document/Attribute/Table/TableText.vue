@@ -267,7 +267,6 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape, props.context);
     if ((table.editingCell || (table.tableColEnd === table.tableColStart && table.tableRowStart === table.tableRowEnd) && table.tableRowEnd !== -1)) {
-        console.log(table.editingCell,'table.editingCell');
         shape.value = table.editingCell?.cell as TableCell & { text: Text; } || (table.getSelectedCells(true)[0].cell as TableCell & { text: Text; });
         // 拿到某个单元格
         if (!shape.value || !shape.value.text) return;
@@ -299,13 +298,9 @@ const textFormat = () => {
         if (format.strikethroughIsMulti) isDeleteline.value = false;
         props.context.workspace.focusText();
     } else {
-        console.log(111);
-        
         let cells: (TableCell | undefined)[] = []
         if (table.tableRowStart < 0 || table.tableColStart < 0) {
             cells = props.shape.childs
-            console.log(11111111);
-            
         } else {
             cells = table.getSelectedCells(true).map(item => item.cell);
         }
