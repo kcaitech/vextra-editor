@@ -234,7 +234,7 @@ onUnmounted(() => {
     </svg>
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>
-    <TableCellsMenu v-if="cell_menu" :context="props.context" :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }"
-        cell-menu="multiCells"></TableCellsMenu>
+    <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context"
+        :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" cell-menu="multiCells"></TableCellsMenu>
 </template>
 <style lang='scss' scoped></style>
