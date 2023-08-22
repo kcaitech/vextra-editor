@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { ClientXY, Selection } from '@/context/selection';
-import { Matrix, Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
+import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { genRectPath } from '../../common';
 
@@ -10,6 +10,8 @@ interface Props {
 }
 const props = defineProps<Props>();
 const selection_path = ref<string>('');
+const triangle = ref<boolean>(false);
+let triangle_position: ClientXY = { x: 0, y: 0 };
 function update_cell_selection() {
     selection_path.value = '';
     const selection = props.context.selection;
@@ -28,21 +30,48 @@ function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: nu
     const grid = (table as TableShape).getLayout().grid;
     for (let i = 0, len = cells.length; i < len; i++) {
         const cell = cells[i];
-        const c2p = new Matrix();
-        c2p.multiAtLeft(t2r);
         const f = grid.get(cell.rowIdx, cell.colIdx).frame;
         const cps = [{ x: f.x, y: f.y }, { x: f.x + f.width, y: f.y }, { x: f.x + f.width, y: f.y + f.height }, { x: f.x, y: f.y + f.height }];
         for (let j = 0; j < 4; j++) {
             const p = cps[j];
-            points.push(c2p.computeCoord2(p.x, p.y));
+            points.push(t2r.computeCoord2(p.x, p.y));
         }
     }
     selection_path.value = genRectPath(points);
+}
+function update_triangle() {
+    triangle.value = false;
+    const selection = props.context.selection;
+    const shape = selection.selectedShapes[0];
+    if (shape && shape.type === ShapeType.Table) {
+        const table_selection = selection.getTableSelection(shape as TableShape, props.context);
+        const cell = table_selection.editingCell;
+        if (!cell) return false;
+        const grid = (shape as TableShape).getLayout().grid;
+        const f = grid.get(cell.index.row, cell.index.col).frame;
+        const t2r = shape.matrix2Root(), m = props.context.workspace.matrix;
+        t2r.multiAtLeft(m);
+        const rb = t2r.computeCoord2(f.x + f.width, f.y + f.height);
+        triangle_position.x = rb.x - 20, triangle_position.y = rb.y - 20;
+        triangle.value = true;
+    }
 }
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_TABLE_CELL) return update_cell_selection();
     if (t === Selection.CHANGE_SHAPE) return update_cell_selection();
     if (t === Selection.CHANGE_PAGE) return update_cell_selection();
+    if (t === Selection.CHANGE_EDITING_CELL) return update_triangle();
+}
+function select_cell_by_triangle(e: MouseEvent) {
+    const selection = props.context.selection;
+    const shape = selection.selectedShapes[0];
+    const table_selection = selection.getTableSelection(shape as TableShape, props.context);
+    const cell = table_selection.editingCell;
+    if (cell) {
+        table_selection.selectTableCell(cell.index.row, cell.index.col);
+        table_selection.setEditingCell();
+        e.stopPropagation();
+    }
 }
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
@@ -54,5 +83,13 @@ onUnmounted(() => {
 <template>
     <path v-if="selection_path" :d="selection_path" fill="#865dff" fill-opacity="0.25" stroke='none'>
     </path>
+    <svg v-if="triangle" :x="triangle_position.x" :y="triangle_position.y" viewBox="0 0 1024 1024" version="1.1"
+        @mousedown="(e) => select_cell_by_triangle(e)" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+        style="cursor: pointer;">
+        <rect x="200" y="200" width="824" height="824" fill="transparent"></rect>
+        <path
+            d="M547.328 810.666667H810.666667v-263.338667L547.328 810.666667zM896 341.333333v554.666667H341.333333L896 341.333333z"
+            fill="#444444" p-id="13243"></path>
+    </svg>
 </template>
 <style scoped lang="scss"></style>
