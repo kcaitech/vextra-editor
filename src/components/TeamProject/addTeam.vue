@@ -30,18 +30,20 @@
             </div>
         </div>
         <div class="addteam">
-            <button type="submit" :disabled=isDisabled @click.stop="createTeam">{{ t('Createteam.add_team') }}</button>
+            <button type="submit" :disabled=isDisabled @click.stop.once="createTeam">{{ t('Createteam.add_team') }}{{
+                message }}</button>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { computed, nextTick, ref } from 'vue';
+import { Ref, computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
-
+import { useRoute } from 'vue-router'
 const { t } = useI18n();
-const emits = defineEmits(['close'])
+const route = useRoute()
+const emits = defineEmits(['close', 'updateteamlist'])
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
@@ -49,16 +51,23 @@ const imgsrc = ref('')
 const isshow = ref(true)
 const formData = new FormData()
 
+const message = inject<Ref<string>>('message')
+    
 const createTeam = async () => {
     formData.append('name', inputValue.value)
     if (textareaValue.value != '') {
         formData.append('description', textareaValue.value)
     }
     try {
-        const { code, message } = await user_api.CreateTeam(formData)
+        const { code, message, data } = await user_api.CreateTeam(formData)
         if (code === 0) {
+
             emits('close')
             ElMessage.success(t('percenter.successtips'))
+            route.params.id = data.id
+            emits('updateteamlist')
+
+
         } else {
             ElMessage.error(message)
         }
@@ -68,20 +77,24 @@ const createTeam = async () => {
 }
 
 const selectimg = (e: any) => {
-    const file = e.target.files[0]
-    const fileName = file.name
-    const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
-    const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
-    if (file && file.size <= maxSizeInBytes && e.target.accept.includes(fileExtension)) {
-        isshow.value = false
-        nextTick(() => {
-            imgsrc.value = URL.createObjectURL(file)
-            formData.append('avatar', file)
-        })
-    } else {
-        ElMessage.error(t('percenter.errortips'))
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0]
+        const fileName = file.name
+        const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
+        const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+        if (file && file.size <= maxSizeInBytes && e.target.accept.includes(fileExtension)) {
+            isshow.value = false
+            nextTick(() => {
+                imgsrc.value = URL.createObjectURL(file)
+                formData.delete('avatar')
+                formData.append('avatar', file)
+            })
+        } else {
+            ElMessage.error(t('percenter.errortips'))
+        }
     }
 }
+
 
 const close = () => {
     emits('close')

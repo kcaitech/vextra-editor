@@ -14,11 +14,16 @@ router.beforeEach((to, from, next) => {
         if (whiteList.find(function (item) {
             return item === to.path
         })) {
-            if(to.name==='privacypolicy'){
-                document.title='隐私协议'
-            }
-            if(to.name==='serviceagreement'){
-                document.title='服务协议'
+            if (to.name === 'privacypolicy') {
+                console.log('1111111');
+                
+                document.title = '隐私协议'
+            } else if (to.name === 'serviceagreement') {
+                console.log('2222222');
+                document.title = '服务协议'
+            } else {
+                console.log('3333333');
+                document.title = 'protodesign'
             }
             next()
         } else {

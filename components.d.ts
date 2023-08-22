@@ -10,6 +10,7 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Abbreviation: typeof import('./src/components/Document/Navigation/Abbreviation.vue')['default']
+    AddProject: typeof import('./src/components/TeamProject/addProject.vue')['default']
     AddTeam: typeof import('./src/components/TeamProject/addTeam.vue')['default']
     AgreementBaseComponent: typeof import('./src/components/Login/AgreementBaseComponent.vue')['default']
     Apphome: typeof import('./src/components/AppHome/Apphome.vue')['default']
@@ -85,6 +86,7 @@ declare module '@vue/runtime-core' {
     IconText: typeof import('./src/components/common/IconText.vue')['default']
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
     Inform: typeof import('./src/components/AppHome/Inform.vue')['default']
+    InviteMember: typeof import('./src/components/TeamProject/InviteMember.vue')['default']
     KChome: typeof import('./src/components/Home/KChome.vue')['default']
     Key: typeof import('./src/components/common/Key.vue')['default']
     Layers: typeof import('./src/components/Document/Menu/Layers.vue')['default']
@@ -115,6 +117,7 @@ declare module '@vue/runtime-core' {
     Popover: typeof import('./src/components/common/Popover.vue')['default']
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
     Privacypolicy: typeof import('./src/components/Login/Privacypolicy.vue')['default']
+    ProjectList: typeof import('./src/components/TeamProject/ProjectList.vue')['default']
     Radius: typeof import('./src/components/Document/Attribute/Radius.vue')['default']
     RadiusForIos: typeof import('./src/components/Document/Attribute/PopoverMenu/RadiusForIos.vue')['default']
     Readonly: typeof import('./src/components/Document/Selection/Controller/Readonly.vue')['default']
@@ -158,6 +161,9 @@ declare module '@vue/runtime-core' {
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
     Tablelist: typeof import('./src/components/AppHome/tablelist.vue')['default']
+    TeamMember: typeof import('./src/components/TeamProject/TeamMember.vue')['default']
+    TeamPage: typeof import('./src/components/TeamProject/TeamPage.vue')['default']
+    TeamSetting: typeof import('./src/components/TeamProject/TeamSetting.vue')['default']
     Text: typeof import('./src/components/Document/Attribute/Text/Text.vue')['default']
     TextAdvancedSettings: typeof import('./src/components/Document/Attribute/Text/TextAdvancedSettings.vue')['default']
     TextInput: typeof import('./src/components/Document/Selection/Controller/Text/TextInput.vue')['default']
