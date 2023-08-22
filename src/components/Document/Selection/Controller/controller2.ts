@@ -139,7 +139,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             context.selection.unHoverShape();
             workspace.value.setSelectionViewUpdater(false);
             workspace.value.translating(true);
-            // context.assist.setTransTarget(shapes);
+            context.assist.setTransTarget(shapes);
             isDragging = true;
         }
     }
@@ -154,58 +154,56 @@ function useControllerCustom(context: Context, i18nT: Function) {
         return update_type;
     }
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
-        asyncTransfer.trans(ps, pe);
-        return 3;
         // const s1 = Date.now();
-        // if (speed > 5) {
-        //     asyncTransfer.trans(ps, pe);
-        //     context.assist.notify(Asssit.CLEAR);
-        //     return 3;
-        // }
-        // let need_multi = 0;
-        // let update_type = 3;
-        // const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
-        // const stickness = context.assist.stickness + 1;
-        // const shape = shapes[0];
-        // const target = context.assist.trans_match(shape);
-        // if (!target) return update_type;
-        // if (stickedX) {
-        //     if (Math.abs(pe.x - ps.x) > stickness) stickedX = false;
-        //     else {
-        //         pe.x = ps.x, update_type -= 1, need_multi += 1;
-        //     }
-        // } else if (target.sticked_by_x) {
-        //     const distance = distance2apex(shape, target.alignX);
-        //     const trans_x = target.x - distance;
-        //     stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y, pe.x = ps.x + trans_x;
-        //     const t = matrix.inverseCoord(pe);
-        //     startPosition.x = t.x, update_type -= 1, stickedX = true, need_multi += 1;
-        // }
-        // if (stickedY) {
-        //     if (Math.abs(pe.y - ps.y) > stickness) stickedY = false;
-        //     else {
-        //         pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
-        //     }
-        // } else if (target.sticked_by_y) {
-        //     const distance = distance2apex(shape, target.alignY);
-        //     const trans_y = target.y - distance;
-        //     stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;
-        //     if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-        //     const t = matrix.inverseCoord(pe);
-        //     startPosition.y = t.y, update_type -= 2, stickedY = true, need_multi += 2;
-        // }
-        // if (stick.sticked_x || stick.sticked_y) {
-        //     asyncTransfer.stick(stick.dx, stick.dy);
-        // } else {
-        //     asyncTransfer.trans(ps, pe);
-        // }
-        // if (need_multi) {
-        //     context.assist.setCPG(update_pg_2(shape, true));
-        //     context.assist.notify(Asssit.UPDATE_ASSIST, need_multi);
-        //     context.assist.notify(Asssit.UPDATE_MAIN_LINE);
-        // }
-        // // console.log('一次辅助线从计算到渲染总共用时', Date.now() - s1); // < 3ms
-        // return update_type;
+        if (speed > 5) {
+            asyncTransfer.trans(ps, pe);
+            context.assist.notify(Asssit.CLEAR);
+            return 3;
+        }
+        let need_multi = 0;
+        let update_type = 3;
+        const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
+        const stickness = context.assist.stickness + 1;
+        const shape = shapes[0];
+        const target = context.assist.trans_match(shape);
+        if (!target) return update_type;
+        if (stickedX) {
+            if (Math.abs(pe.x - ps.x) > stickness) stickedX = false;
+            else {
+                pe.x = ps.x, update_type -= 1, need_multi += 1;
+            }
+        } else if (target.sticked_by_x) {
+            const distance = distance2apex(shape, target.alignX);
+            const trans_x = target.x - distance;
+            stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y, pe.x = ps.x + trans_x;
+            const t = matrix.inverseCoord(pe);
+            startPosition.x = t.x, update_type -= 1, stickedX = true, need_multi += 1;
+        }
+        if (stickedY) {
+            if (Math.abs(pe.y - ps.y) > stickness) stickedY = false;
+            else {
+                pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
+            }
+        } else if (target.sticked_by_y) {
+            const distance = distance2apex(shape, target.alignY);
+            const trans_y = target.y - distance;
+            stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;
+            if (!stick.sticked_x) stick.dx = pe.x - ps.x;
+            const t = matrix.inverseCoord(pe);
+            startPosition.y = t.y, update_type -= 2, stickedY = true, need_multi += 2;
+        }
+        if (stick.sticked_x || stick.sticked_y) {
+            asyncTransfer.stick(stick.dx, stick.dy);
+        } else {
+            asyncTransfer.trans(ps, pe);
+        }
+        if (need_multi) {
+            context.assist.setCPG(update_pg_2(shape, true));
+            context.assist.notify(Asssit.UPDATE_ASSIST, need_multi);
+            context.assist.notify(Asssit.UPDATE_MAIN_LINE);
+        }
+        // console.log('一次辅助线从计算到渲染总共用时', Date.now() - s1); // < 3ms
+        return update_type;
     }
     function mouseup4trans(e: MouseEvent) {
         if (e.button === 0) {
@@ -331,7 +329,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
                     text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
-                    // console.log('点到imagecell');
+                    console.log('点到imagecell');
                 } else {
                     // console.log('unexcept');
                     init_text_cell(down_item);
