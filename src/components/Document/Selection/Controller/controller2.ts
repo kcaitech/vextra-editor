@@ -329,7 +329,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
                     text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
-                    // console.log('点到imagecell');
+                    console.log('点到imagecell');
                 } else {
                     // console.log('unexcept');
                     init_text_cell(down_item);
