@@ -312,11 +312,21 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function mousemove4body(e: MouseEvent) {
         if (e.buttons !== 1) return;
         const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
-        if (isDragging) {
+        if (isDragging && down_item) {
             startPosition = { ...mousePosition };
-            let m_item = check_cell_on_point(e);
-            if (m_item && down_item && isDragging) {
-                const { rows, rowe, cols, cole } = get_range(down_item.index, m_item.index);
+            const editingCell = table_selection.editingCell;
+            const m_item = check_cell_on_point(e);
+            if (!m_item) return;
+            const { rows, rowe, cols, cole } = get_range(down_item.index, m_item.index);
+            if (editingCell && editingCell.cell && editingCell.cell.cellType === TableCellType.Text) {
+                if (rows !== rowe || cols !== cole) {
+                    table_selection.setEditingCell();
+                } else {
+                    const xy = matrix4table.computeCoord2(mousePosition.x, mousePosition.y);
+                    const m_index = editingCell.cell.text!.locateText(xy.x, xy.y);
+                    text_selection.selectText(down_index.index, m_index.index);
+                }
+            } else {
                 table_selection.selectTableCellRange(rows, rowe, cols, cole);
                 if (rows !== rowe || cols !== cole) table_selection.setEditingCell();
             }
