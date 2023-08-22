@@ -70,27 +70,29 @@ export class TableSelection implements Notifiable {
     }
 
     // table
-    selectTableCellRange(rowStart: number, rowEnd: number, colStart: number, colEnd: number) {
+    /**
+     * @param gen_menu_posi 默认产生菜单位置
+     */
+    selectTableCellRange(rowStart: number, rowEnd: number, colStart: number, colEnd: number, gen_menu_posi = true) {
         if (this.m_tableRowStart !== rowStart ||
             this.m_tableRowEnd !== rowEnd ||
             this.m_tableColStart !== colStart ||
             this.m_tableColEnd !== colEnd) {
-
             this.m_tableRowStart = rowStart;
             this.m_tableRowEnd = rowEnd;
             this.m_tableColStart = colStart;
             this.m_tableColEnd = colEnd;
-            this.notify(Selection.CHANGE_TABLE_CELL);
+            this.notify(Selection.CHANGE_TABLE_CELL, gen_menu_posi);
         }
     }
-    selectTableCell(rowIdx: number, colIdx: number) {
+    selectTableCell(rowIdx: number, colIdx: number, gen_menu_posi = true) {
         if (this.m_tableRowStart !== this.m_tableRowEnd ||
             this.m_tableRowStart !== rowIdx ||
             this.m_tableColStart !== this.m_tableColEnd ||
             this.m_tableColStart !== colIdx) {
             this.m_tableRowStart = this.m_tableRowEnd = rowIdx;
             this.m_tableColStart = this.m_tableColEnd = colIdx;
-            this.notify(Selection.CHANGE_TABLE_CELL);
+            this.notify(Selection.CHANGE_TABLE_CELL, gen_menu_posi);
         }
     }
     getArea(p: ClientXY): TableArea {
