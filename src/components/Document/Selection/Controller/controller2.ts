@@ -63,6 +63,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             matrix.reset(workspace.value.matrix.inverse);
             set_position(e);
             pre2trans(e);
+            table_selection.setEditingCell();
             table_selection.reset();
             context.selection.notify(Selection.CHANGE_TABLE_CELL);
         } else if (area === 'body') {
@@ -330,6 +331,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
                     console.log('点到imagecell');
+                    table_selection.setEditingCell();
+                    table_selection.selectTableCell(down_item.index.row, down_item.index.col);
                 } else {
                     // console.log('unexcept');
                     init_text_cell(down_item);
