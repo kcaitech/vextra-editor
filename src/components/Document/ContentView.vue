@@ -318,30 +318,25 @@ function pageViewDragEnd() {
     props.context.cursor.setType('grab-0')
 }
 function contextMenuMount(e: MouseEvent) {
-    const workspace = props.context.workspace;
-    const selection = props.context.selection;
-    const menu = props.context.menu;
+    const workspace = props.context.workspace, selection = props.context.selection, menu = props.context.menu;
     menu.menuMount();
     selection.unHoverShape();
-    site.x = e.clientX
-    site.y = e.clientY
-    const { x, y } = workspace.root;
-    contextMenuPosition.x = e.clientX - x;
-    contextMenuPosition.y = e.clientY - y;
+    site.x = e.clientX, site.y = e.clientY;
+    const root = workspace.root;
+    contextMenuPosition.x = e.clientX - root.x, contextMenuPosition.y = e.clientY - root.y;
     setMousedownXY(e); // 更新鼠标定位
     contextMenuItems = [];
     const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
     contextMenuItems = get_menu_items(props.context, area); // 根据点击环境确定菜单选项
     const shapes = selection.getLayers(mousedownOnPageXY);
     if (shapes.length > 1 && (area !== 'text-selection' && area !== 'table_cell')) {
-        shapesContainsMousedownOnPageXY.length = 0;
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems.push('layers');
-    } 
+    }
     if (area === 'table_cell') {
         const shape = selection.selectedShapes[0]
         const table = selection.getTableSelection(shape as TableShape, props.context);
-        if(table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
+        if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
             contextMenuItems.push('split_cell');
             contextMenuItems = contextMenuItems.filter(item => item !== 'merge_cell');
         }
