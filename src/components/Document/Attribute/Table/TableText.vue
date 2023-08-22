@@ -41,8 +41,7 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const shape = ref()
-const editingCell = shallowRef<TableGridItem & {cell: TableCell | undefined}>();
+const shape = ref<TableCell & { text: Text; }>()
 // const selection = ref(props.context.selection) 
 
 function toHex(r: number, g: number, b: number) {
@@ -267,16 +266,10 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 // 获取当前文字格式
 const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape, props.context);
-    if(editingCell.value) {
-
-        console.log(table.editingCell,'ed');
-    }
-    
-    if ((table.tableColEnd === table.tableColStart && table.tableRowStart === table.tableRowEnd) && table.tableRowEnd !== -1) {
-        const cells = table.getSelectedCells(true);
+    if ((table.editingCell || (table.tableColEnd === table.tableColStart && table.tableRowStart === table.tableRowEnd) && table.tableRowEnd !== -1)) {
+        console.log(table.editingCell,'table.editingCell');
+        shape.value = table.editingCell?.cell as TableCell & { text: Text; } || (table.getSelectedCells(true)[0].cell as TableCell & { text: Text; });
         // 拿到某个单元格
-        console.log(cells, 'cells');
-        shape.value = table.getSelectedCells()[0];
         if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -306,11 +299,20 @@ const textFormat = () => {
         if (format.strikethroughIsMulti) isDeleteline.value = false;
         props.context.workspace.focusText();
     } else {
+        console.log(111);
+        
+        let cells: (TableCell | undefined)[] = []
+        if (table.tableRowStart < 0 || table.tableColStart < 0) {
+            cells = props.shape.childs
+            console.log(11111111);
+            
+        } else {
+            cells = table.getSelectedCells(true).map(item => item.cell);
+        }
         shape.value = undefined
-        const cells = table.getSelectedCells(true);
         const formats: any[] = [];
         for (let i = 0; i < cells.length; i++) {
-            const cell = cells[i].cell;
+            const cell = cells[i];
             if (cell && cell.text) {
                 const editor = props.context.editor4TextShape(cell as any);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
@@ -376,10 +378,6 @@ function selection_wather(t: number) {
     } else if (t === Selection.CHANGE_SHAPE) {
         textFormat();
     } else if (t === Selection.CHANGE_TABLE_CELL) {
-    }
-    if(t === Selection.CHANGE_EDITING_CELL) {
-        const table = props.context.selection.getTableSelection(props.shape, props.context);
-        editingCell.value = table.editingCell;
         textFormat();
     }
 }

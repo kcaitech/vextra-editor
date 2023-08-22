@@ -21,7 +21,7 @@ const paragraphSpace = ref()
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
-const shape = ref()
+const shape = ref<TableCell & { text: Text; }>()
 // const selection = ref(props.context.selection)
 
 //获取选中字体的长度和下标
@@ -166,8 +166,9 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 
 const textFormat = () => {
   const table = props.context.selection.getTableSelection(props.textShape, props.context);
-  if ((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
-    shape.value = table.getSelectedCells()[0];
+  if ((table.editingCell || (table.tableColEnd === table.tableColStart && table.tableRowStart === table.tableRowEnd) && table.tableRowEnd !== -1)) {
+    shape.value = table.editingCell?.cell as TableCell & { text: Text; } || (table.getSelectedCells(true)[0].cell as TableCell & { text: Text; });
+    // 拿到某个单元格
     if (!shape.value || !shape.value.text) return;
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(shape.value);
@@ -186,8 +187,13 @@ const textFormat = () => {
     if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.transformIsMulti) selectCase.value = '';
   } else {
-    const shape = props.textShape;
-    const cells = Array.from(shape.childs);
+    let cells: (TableCell | undefined)[] = []
+    if (table.tableRowStart < 0 || table.tableColStart < 0) {
+      cells = props.textShape.childs
+    } else {
+      cells = table.getSelectedCells(true).map(item => item.cell);
+    }
+    shape.value = undefined
     const formats: any[] = [];
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
@@ -233,8 +239,9 @@ const textFormat = () => {
 function selection_wather(t: any) {
   if (t === Selection.CHANGE_TEXT) {
     textFormat();
-  }
-  if (t === Selection.CHANGE_SHAPE) {
+  } else if (t === Selection.CHANGE_SHAPE) {
+    textFormat();
+  } else if (t === Selection.CHANGE_TABLE_CELL) {
     textFormat();
   }
 }
