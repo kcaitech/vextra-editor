@@ -77,23 +77,23 @@ const onPickImge = (e: MouseEvent) => {
 
 const insertColumn = (dir: string) => {
     const shape: TableShape = props.context.selection.selectedShapes[0] as TableShape;
-    const layout = (shape as TableShape).getLayout();
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+        const layout = (shape as TableShape).getLayout();
         const editor = props.context.editor4Table(shape as TableShape);
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
         if (props.cellMenu === CellMenu.SelectRow && dir === 'lt') {
-            editor.insertCol(table.tableColStart, grid.frame.width);
+            editor.insertRow(table.tableRowStart, grid.frame.height);
         } else if (props.cellMenu === CellMenu.SelectRow && dir === 'rb') {
             const grid = layout.grid.get(table.tableRowEnd, table.tableColStart);
-            editor.insertCol(table.tableColEnd + 1, grid.frame.width);
+            editor.insertRow(table.tableRowEnd + 1, grid.frame.height);
         }
         else if (props.cellMenu === CellMenu.selectCol && dir === 'lt') {
-            editor.insertRow(table.tableRowStart, grid.frame.height);
+            editor.insertCol(table.tableColStart, grid.frame.width);
         }
         else if (props.cellMenu === CellMenu.selectCol && dir === 'rb') {
-            const grid = layout.grid.get(table.tableRowEnd, table.tableColEnd);
-            editor.insertRow(table.tableRowStart, grid.frame.height);
+            const grid = layout.grid.get(table.tableRowStart, table.tableColEnd);
+            editor.insertCol(table.tableColEnd + 1, grid.frame.width);
         }
     }
 }
@@ -158,7 +158,7 @@ const deleteColumn = () => {
                 <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
-            <div :style="{ transform: props.cellMenu === CellMenu.SelectRow ? `rotate(180deg)` : `rotate(270deg)` }"
+            <div :style="{ transform: props.cellMenu === CellMenu.selectCol ? `rotate(180deg)` : `rotate(270deg)` }"
                 @click="insertColumn('lt')">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="9" height="20" fill="#D8D8D8" />
@@ -166,7 +166,7 @@ const deleteColumn = () => {
                     <line x1="15.5" y1="5" x2="15.5" y2="14" stroke="black" />
                 </svg>
             </div>
-            <div :style="{ transform: props.cellMenu === CellMenu.SelectRow ? `rotate(0deg)` : `rotate(90deg)` }"
+            <div :style="{ transform: props.cellMenu === CellMenu.selectCol ? `rotate(0deg)` : `rotate(90deg)` }"
                 @click="insertColumn('rb')">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="9" height="20" fill="#D8D8D8" />
