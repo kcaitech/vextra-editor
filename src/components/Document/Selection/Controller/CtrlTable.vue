@@ -226,8 +226,8 @@ onUnmounted(() => {
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
         </BarsContainer>
-        <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-            :c-frame="props.controllerFrame"></TableHeader>
+        <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape" :c-frame="props.controllerFrame"
+            @get-menu="update_menu_posi"></TableHeader>
         <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>

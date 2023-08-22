@@ -5,6 +5,10 @@ import { Point } from '../../SelectionView.vue';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
+interface Emits {
+    (e: 'get-menu', x: number, y: number, cell_menu: boolean): void;
+}
+const emits = defineEmits<Emits>();
 const props = defineProps<{
     matrix: number[]
     context: Context
@@ -37,7 +41,7 @@ function update_position() {
         const m = new Matrix(props.matrix), lt = m.computeCoord2(0, 0), mw = new Matrix(props.context.workspace.matrix);
         const table: TableShape = props.shape as TableShape;
         layout = table.getLayout();
-        frame_params = { x: lt.x, y: lt.y, width: layout.width, height: layout.height };
+        frame_params = { x: lt.x, y: lt.y, width: layout.width * mw.m00, height: layout.height * mw.m00 };
         const cols = layout.colWidths, rows = layout.rowHeights;
         let growx = 0, growy = 0;
         for (let i = 0, len = cols.length; i < len; i++) {
@@ -93,13 +97,20 @@ function select_col(index: number) {
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     const rl = layout.grid.rowCount;
     table_selection.selectTableCellRange(0, rl, index, index, false);
-
+    const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
+    m.multiAtLeft(wm);
+    const xy = m.computeCoord2((xs[index].x + (xs[index - 1]?.x || 0)) / 2, 0);
+    emits("get-menu", xy.x, xy.y, true);
 }
 function select_row(index: number) {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     const cl = layout.grid.colCount;
     table_selection.selectTableCellRange(index, index, 0, cl, false);
+    const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
+    m.multiAtLeft(wm);
+    const xy = m.computeCoord2(0, (ys[index].y + (ys[index - 1]?.y || 0)) / 2);
+    emits("get-menu", xy.x, xy.y, true);
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
