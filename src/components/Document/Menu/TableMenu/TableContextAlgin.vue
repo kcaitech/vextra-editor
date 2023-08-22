@@ -3,11 +3,14 @@ import { useI18n } from 'vue-i18n';
 import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType, Shape, TableCell } from "@kcdesign/data";
+interface Props {
+}
 interface Props {
     menu: string
+    context: Context,
+    cells: TableCell[]
 }
-
 const props = defineProps<Props>();
 const emit = defineEmits<{
     (e: 'textAlginHor', svgicon: string): void;
@@ -17,10 +20,22 @@ const { t } = useI18n()
 const selectLevel = ref('')
 const selectVertical = ref('')
 
-const onSelectLevel = (icon: string, svg: string) => {
+const onSelectLevel = (icon: TextHorAlign, svg: string) => {
+    if (props.cells.length === 1) {
+        const editor = props.context.editor4TextShape(props.cells[0] as TableCell & { text: Text; })
+        editor.setTextHorAlign(icon, 0, Infinity)
+    } else {
+        console.log('多个单元格');
+    }
     emit('textAlginHor', svg)
 }
-const onSelectVertical = (icon: string, svg: string) => {
+const onSelectVertical = (icon: TextVerAlign, svg: string) => {
+    if (props.cells.length === 1) {
+        const editor = props.context.editor4TextShape(props.cells[0] as TableCell & { text: Text; })
+        editor.setTextVerAlign(icon)
+    } else {
+        console.log('多个单元格');
+    }
     emit('textAlginVer', svg)
 }
 </script>
@@ -85,6 +100,7 @@ const onSelectVertical = (icon: string, svg: string) => {
     align-items: center;
     justify-content: space-between;
 }
+
 .jointly-text {
     height: 25px;
     border-radius: 4px;
@@ -92,27 +108,31 @@ const onSelectVertical = (icon: string, svg: string) => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+
     >svg {
         width: 14px;
         height: 14px;
         overflow: visible !important;
     }
 }
+
 .level-aligning {
     box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.2);
     padding: 0 5px;
 }
+
 .font-posi {
     width: 25px;
     height: 25px;
     display: flex;
     justify-content: center;
 }
+
 .selected_bgc {
     background-color: var(--active-color) !important;
     color: #fff;
 }
+
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}
-</style>
+}</style>

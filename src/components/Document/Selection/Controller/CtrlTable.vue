@@ -228,7 +228,7 @@ onUnmounted(() => {
         <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
-        <TableCellsMenu :context="props.context" :position="{ x: 100, y: 100 }" cell-menu="multiCells"></TableCellsMenu>
+        <TableCellsMenu :context="props.context" :cells="[]" :position="{ x: 100, y: 100 }" cell-menu="multiCells"></TableCellsMenu>
     </svg>
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>
