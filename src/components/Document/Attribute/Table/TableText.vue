@@ -2,10 +2,10 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch, shallowRef } from 'vue';
 import TextAdvancedSettings from '../Text/TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { TextShape, AttrGetter, TableShape, TableCell, Shape, Text } from "@kcdesign/data";
+import { TextShape, AttrGetter, TableShape, TableCell, Shape, Text, TableGridItem } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -42,6 +42,7 @@ const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
 const shape = ref()
+const editingCell = shallowRef<TableGridItem & {cell: TableCell | undefined}>();
 // const selection = ref(props.context.selection) 
 
 function toHex(r: number, g: number, b: number) {
@@ -266,8 +267,15 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 // 获取当前文字格式
 const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape, props.context);
-    if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
+    if(editingCell.value) {
+
+        console.log(table.editingCell,'ed');
+    }
+    
+    if ((table.tableColEnd === table.tableColStart && table.tableRowStart === table.tableRowEnd) && table.tableRowEnd !== -1) {
+        const cells = table.getSelectedCells(true);
         // 拿到某个单元格
+        console.log(cells, 'cells');
         shape.value = table.getSelectedCells()[0];
         if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -299,11 +307,10 @@ const textFormat = () => {
         props.context.workspace.focusText();
     } else {
         shape.value = undefined
-        const shapeTable = props.shape;
-        const cells = Array.from(shapeTable.childs);
+        const cells = table.getSelectedCells(true);
         const formats: any[] = [];
         for (let i = 0; i < cells.length; i++) {
-            const cell = cells[i];
+            const cell = cells[i].cell;
             if (cell && cell.text) {
                 const editor = props.context.editor4TextShape(cell as any);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
@@ -368,12 +375,18 @@ function selection_wather(t: number) {
         textFormat();
     } else if (t === Selection.CHANGE_SHAPE) {
         textFormat();
+    } else if (t === Selection.CHANGE_TABLE_CELL) {
+    }
+    if(t === Selection.CHANGE_EDITING_CELL) {
+        const table = props.context.selection.getTableSelection(props.shape, props.context);
+        editingCell.value = table.editingCell;
+        textFormat();
     }
 }
 function workspace_wather(t: number) {
     if (t === WorkSpace.BOLD) {
-        onBold();
     } else if (t === WorkSpace.UNDER_LINE) {
+        onBold();
         onUnderlint();
     } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline();
