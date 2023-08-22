@@ -78,18 +78,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
             workspace.value.setCtrl('page');
         }
     }
-    function dblclick(e: MouseEvent) {
-        // if (e.button !== 0) return;
-        // if (context.workspace.isPageDragging) return;
-        // const shape = context.selection.selectedShapes[0];
-        // if (!shape || shape.type !== ShapeType.Table) return;
-        // root = context.workspace.root;
-        // const a = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        // if (a === "body") {
-        //     up_item = check_cell_on_point(e);
-        //     if (up_item) table_selection.selectTableCell(up_item.index.row, up_item.index.col);
-        // }
-    }
     // #region 4trans
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
         if (shapes.length) {
@@ -273,15 +261,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
         const new_down_item = check_cell_on_point(e);
         if (down_item && ((new_down_item?.index.col !== down_item.index.col) || (new_down_item?.index.row !== down_item.index.row))) init_down_timer();
         down_item = new_down_item;
-        set_position(e);
-
         if (down_type === 1) down(e) // 单击
-        else if (down_type === 2) dbldown(e);
-        else if (down_type === 3) multidown(e);
-
+        else if (down_type === 2) dbldown();
+        else if (down_type === 3) multidown();
         down_type++;
         set_timer();
-
     }
     function mousemove4body(e: MouseEvent) {
         if (e.buttons !== 1) return;
@@ -333,6 +317,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function down(e: MouseEvent) {
         console.log('单击', down_item);
         clear_selection();// 单击清除表格选区
+        set_position(e);
         if (down_item) {
             if (down_item.cell) {
                 if (down_item.cell.cellType === TableCellType.Text) {
@@ -366,13 +351,25 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.addEventListener('mouseup', mouseup4body);
         move = mousemove4body, up = mouseup4body;
     }
-    function dbldown(e: MouseEvent) {
-
+    function dbldown() {
         console.log('双击');
+        if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
+            const text = down_item.cell.text, len: number = text?.length!;
+            if (text && len !== 1) {
+                text_selection.selectText(0, len);
+            } else {
+                table_selection.setEditingCell();
+                table_selection.selectTableCell(down_item.index.row, down_item.index.col);
+            }
+        }
     }
-    function multidown(e: MouseEvent) {
+    function multidown() {
         init_down_timer();
         console.log('三次点击');
+        if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
+            table_selection.setEditingCell();
+            table_selection.selectTableCell(down_item.index.row, down_item.index.col);
+        }
     }
     // #endregion
     function set_position(e: MouseEvent) {
@@ -434,7 +431,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
         window.addEventListener('blur', windowBlur);
         document.addEventListener('keydown', keyboardHandle);
         document.addEventListener('mousedown', mousedown);
-        document.addEventListener('dblclick', dblclick);
         checkStatus();
         initController();
         context.workspace.contentEdit(false);
@@ -446,7 +442,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
         window.removeEventListener('blur', windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
-        document.removeEventListener('dblclick', dblclick);
         table.unwatch(initController);
     }
     function tableSelection() {
