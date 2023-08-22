@@ -37,7 +37,6 @@ const splitCell = (column: string) => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-    const cell = (Array.from(table.getSelectedCells()))[0]
     const editor = props.context.editor4Table(shape as TableShape)
     if (column === 'row') {
       editor.horSplitCell(table.tableRowStart, table.tableRowEnd);

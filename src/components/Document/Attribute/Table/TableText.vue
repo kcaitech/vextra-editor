@@ -2,10 +2,10 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch, shallowRef } from 'vue';
 import TextAdvancedSettings from '../Text/TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { TextShape, AttrGetter, TableShape, TableCell, Shape, Text } from "@kcdesign/data";
+import { TextShape, AttrGetter, TableShape, TableCell, Shape, Text, TableGridItem } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -41,7 +41,7 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const shape = ref()
+const shape = ref<TableCell & { text: Text; }>()
 // const selection = ref(props.context.selection) 
 
 function toHex(r: number, g: number, b: number) {
@@ -266,9 +266,9 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 // 获取当前文字格式
 const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape, props.context);
-    if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
+    if ((table.editingCell || (table.tableColEnd === table.tableColStart && table.tableRowStart === table.tableRowEnd) && table.tableRowEnd !== -1)) {
+        shape.value = table.editingCell?.cell as TableCell & { text: Text; } || (table.getSelectedCells(true)[0].cell as TableCell & { text: Text; });
         // 拿到某个单元格
-        shape.value = table.getSelectedCells()[0];
         if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -298,9 +298,13 @@ const textFormat = () => {
         if (format.strikethroughIsMulti) isDeleteline.value = false;
         props.context.workspace.focusText();
     } else {
+        let cells: (TableCell | undefined)[] = []
+        if (table.tableRowStart < 0 || table.tableColStart < 0) {
+            cells = props.shape.childs
+        } else {
+            cells = table.getSelectedCells(true).map(item => item.cell);
+        }
         shape.value = undefined
-        const shapeTable = props.shape;
-        const cells = Array.from(shapeTable.childs);
         const formats: any[] = [];
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
@@ -368,12 +372,14 @@ function selection_wather(t: number) {
         textFormat();
     } else if (t === Selection.CHANGE_SHAPE) {
         textFormat();
+    } else if (t === Selection.CHANGE_TABLE_CELL) {
+        textFormat();
     }
 }
 function workspace_wather(t: number) {
     if (t === WorkSpace.BOLD) {
-        onBold();
     } else if (t === WorkSpace.UNDER_LINE) {
+        onBold();
         onUnderlint();
     } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline();
