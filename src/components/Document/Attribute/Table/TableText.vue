@@ -14,6 +14,7 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
 import TableTextSetting from './TableTextSetting.vue';
+import { TableSelection } from '@/context/tableselection';
 interface Props {
     context: Context
     shape: TableShape
@@ -83,6 +84,9 @@ const onShowSizeBlur = (e: Event) => {
         }, 10)
     }
 }
+const cellSelect = (table: TableSelection) => {
+    return { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
+}
 // 设置加粗
 const onBold = () => {
     isBold.value = !isBold.value
@@ -96,8 +100,14 @@ const onBold = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextBold(isBold.value);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextBold(isBold.value);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextBold(isBold.value, cell_selection);
+        }
     }
     textFormat();
 }
@@ -114,8 +124,14 @@ const onTilt = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextItalic(isTilt.value);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextItalic(isTilt.value);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextItalic(isTilt.value, cell_selection);
+        }
     }
     textFormat();
 }
@@ -132,8 +148,14 @@ const onUnderlint = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextUnderline(isUnderline.value);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextUnderline(isUnderline.value);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextUnderline(isUnderline.value, cell_selection);
+        }
     }
     textFormat();
 }
@@ -150,8 +172,14 @@ const onDeleteline = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextStrikethrough(isDeleteline.value);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextStrikethrough(isDeleteline.value);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextStrikethrough(isDeleteline.value, cell_selection);
+        }
     }
     textFormat();
 }
@@ -168,8 +196,14 @@ const onSelectLevel = (icon: TextHorAlign) => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextHorAlign(icon);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHorAlign(icon);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextHorAlign(icon, cell_selection);
+        }
     }
     textFormat();
 }
@@ -181,8 +215,14 @@ const onSelectVertical = (icon: TextVerAlign) => {
         editor.setTextVerAlign(icon)
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextVerAlign(icon);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextVerAlign(icon);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextVerAlign(icon, cell_selection);
+        }
     }
     textFormat();
 }
@@ -200,8 +240,14 @@ const changeTextSize = (size: number) => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextFontSize(size);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextFontSize(size);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextFontSize(size, cell_selection);
+        }
     }
     textFormat();
 }
@@ -219,8 +265,14 @@ const setFont = (font: string) => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextFontName(font)
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextFontName(font);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextFontName(font, cell_selection);
+        }
     }
     textFormat();
 }
@@ -499,11 +551,21 @@ function getColorFromPicker(color: Color, type: string) {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(props.shape, props.context);
         const editor = props.context.editor4Table(table)
-        if (type === 'color') {
-            editor.setTextColor(color);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            if (type === 'color') {
+                editor.setTextColor(color);
+            } else {
+                editor.setTextHighlightColor(color);
+            }
         } else {
-            editor.setTextHighlightColor(color);
+            const cell_selection = cellSelect(table_Selection)
+            if (type === 'color') {
+                editor.setTextColor(color, cell_selection);
+            } else {
+                editor.setTextHighlightColor(color, cell_selection);
+            }
         }
     }
     textFormat();
@@ -536,11 +598,21 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        if (type === 'color') {
-            editor.setTextColor(new Color(alpha, r, g, b))
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            if (type === 'color') {
+                editor.setTextColor(new Color(alpha, r, g, b))
+            } else {
+                editor.setTextHighlightColor(new Color(alpha, r, g, b));
+            }
         } else {
-            editor.setTextHighlightColor(new Color(alpha, r, g, b));
+            const cell_selection = cellSelect(table_Selection)
+            if (type === 'color') {
+                editor.setTextColor(new Color(alpha, r, g, b), cell_selection)
+            } else {
+                editor.setTextHighlightColor(new Color(alpha, r, g, b), cell_selection);
+            }
         }
     }
     textFormat();
@@ -557,8 +629,14 @@ const deleteHighlight = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextHighlightColor(undefined)
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHighlightColor(undefined);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextHighlightColor(undefined, cell_selection);
+        }
     }
     textFormat();
 }
@@ -574,8 +652,14 @@ const addHighlight = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextHighlightColor(new Color(1, 216, 216, 216))
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHighlightColor(new Color(1, 216, 216, 216));
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextHighlightColor(new Color(1, 216, 216, 216), cell_selection);
+        }
     }
     textFormat();
 }
@@ -590,8 +674,14 @@ const addTextColor = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.selection.getTableSelection(table, props.context);
         const editor = props.context.editor4Table(table)
-        editor.setTextColor(new Color(1, 6, 6, 6))
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextColor(new Color(1, 6, 6, 6));
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextColor(new Color(1, 6, 6, 6), cell_selection);
+        }
     }
 }
 const selectSizeValue = () => {

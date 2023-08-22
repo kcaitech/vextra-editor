@@ -49,7 +49,11 @@ const getColorFromPicker = (c: Color) => {
 const mergeCells = () => {
     const shape = props.context.selection.selectedShapes[0]
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    console.log(table, 'talbe');
+
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+        console.log(111);
+
         const editor = props.context.editor4Table(shape as TableShape)
         editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
     }
@@ -115,7 +119,8 @@ const deleteColumn = () => {
 
 <template>
     <div class="custom-popover"
-        :style="{ top: `${props.position.y}px`, left: `${props.position.x}px`, transform: `translate(-50%, -124%)` }">
+        :style="{ top: `${props.position.y}px`, left: `${props.position.x}px`, transform: `translate(-50%, -124%)` }"
+        @mousedown.stop>
         <div v-if="props.cellMenu === 'multiCells'" class="popover-content">
             <div class="hor selected_bgc">
                 <svg-icon :icon-class="horIcon"></svg-icon>
@@ -139,7 +144,7 @@ const deleteColumn = () => {
                 <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
-            <div style="padding: 2px;" @click="mergeCells">
+            <div style="padding: 2px;" @click.stop="mergeCells">
                 <svg width="16" height="16" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M7.35355 11.3536C7.54882 11.1583 7.54882 10.8417 7.35355 10.6464L4.17157 7.46447C3.97631 7.2692 3.65973 7.2692 3.46447 7.46447C3.2692 7.65973 3.2692 7.97631 3.46447 8.17157L6.29289 11L3.46447 13.8284C3.2692 14.0237 3.2692 14.3403 3.46447 14.5355C3.65973 14.7308 3.97631 14.7308 4.17157 14.5355L7.35355 11.3536ZM0 11.5H7V10.5H0V11.5Z"

@@ -6,6 +6,7 @@ import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { AttrGetter, TextShape, TextTransformType, TextBehaviour, TableShape, BulletNumbersType, TableCell } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
+import { TableSelection } from '@/context/tableselection';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -37,6 +38,10 @@ function showMenu() {
   props.context.workspace.focusText()
 }
 
+const cellSelect = (table: TableSelection) => {
+  return { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
+}
+
 const onSelectCase = (icon: TextTransformType) => {
   selectCase.value = icon
   if (shape.value) {
@@ -49,8 +54,14 @@ const onSelectCase = (icon: TextTransformType) => {
     }
   } else {
     const table = props.textShape;
-    const editor = props.context.editor4Table(table);
-    editor.setTextTransform(icon);
+    const table_Selection = props.context.selection.getTableSelection(table, props.context);
+    const editor = props.context.editor4Table(table)
+    if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+      editor.setTextTransform(icon);
+    } else {
+      const cell_selection = cellSelect(table_Selection)
+      editor.setTextTransform(icon, cell_selection);
+    }
   }
   props.context.workspace.focusText();
 }
@@ -75,8 +86,14 @@ const setRowHeight = () => {
   } else {
     if (!isNaN(Number(rowHeight.value))) {
       const table = props.textShape;
-      const editor = props.context.editor4Table(table);
-      editor.setLineHeight(Number(rowHeight.value));
+      const table_Selection = props.context.selection.getTableSelection(table, props.context);
+      const editor = props.context.editor4Table(table)
+      if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setLineHeight(Number(rowHeight.value));
+      } else {
+        const cell_selection = cellSelect(table_Selection)
+        editor.setLineHeight(Number(rowHeight.value), cell_selection);
+      }
     } else {
       textFormat();
     }
@@ -104,8 +121,14 @@ const setWordSpace = () => {
   } else {
     if (!isNaN(Number(wordSpace.value))) {
       const table = props.textShape;
-      const editor = props.context.editor4Table(table);
-      editor.setCharSpacing(Number(wordSpace.value));
+      const table_Selection = props.context.selection.getTableSelection(table, props.context);
+      const editor = props.context.editor4Table(table)
+      if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setCharSpacing(Number(wordSpace.value));
+      } else {
+        const cell_selection = cellSelect(table_Selection)
+        editor.setCharSpacing(Number(wordSpace.value), cell_selection);
+      }
     } else {
       textFormat();
     }
@@ -129,8 +152,14 @@ const setParagraphSpace = () => {
   } else {
     if (!isNaN(Number(paragraphSpace.value))) {
       const table = props.textShape;
-      const editor = props.context.editor4Table(table);
-      editor.setParaSpacing(Number(paragraphSpace.value));
+      const table_Selection = props.context.selection.getTableSelection(table, props.context);
+      const editor = props.context.editor4Table(table)
+      if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setParaSpacing(Number(paragraphSpace.value));
+      } else {
+        const cell_selection = cellSelect(table_Selection)
+        editor.setParaSpacing(Number(paragraphSpace.value), cell_selection);
+      }
     } else {
       textFormat();
     }
