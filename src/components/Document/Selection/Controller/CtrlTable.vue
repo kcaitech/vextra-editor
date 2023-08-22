@@ -16,6 +16,8 @@ import { v4 as uuid } from "uuid"
 import { useI18n } from 'vue-i18n';
 import TableHeader from './Table/TableHeader.vue';
 import TableSelectionView from './Table/TableSelectionView.vue';
+import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
+
 
 type TextShape = Shape & { text: Text };
 const props = defineProps<{
@@ -226,6 +228,7 @@ onUnmounted(() => {
         <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
+        <TableCellsMenu :context="props.context" :position="{ x: 100, y: 100 }" cell-menu="multiCells"></TableCellsMenu>
     </svg>
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>

@@ -31,7 +31,6 @@ import { Action } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
-import TableCellsMenu from './Menu/TableMenu/TableCellsMenu.vue';
 
 interface Props {
     context: Context
@@ -790,7 +789,6 @@ onUnmounted(() => {
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
-        <TableCellsMenu :context="props.context" :position="{ x: 100, y: 100 }" cell-menu="multiCells"></TableCellsMenu>
         <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
