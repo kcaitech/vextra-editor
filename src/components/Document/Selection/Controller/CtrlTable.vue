@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
+import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef, onBeforeUpdate } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection } from '@/context/selection';
@@ -37,7 +37,7 @@ const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
-const editingCell = shallowRef<TableGridItem>();
+const editingCell = shallowRef<TableGridItem & {cell: TableCell | undefined}>();
 
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
@@ -75,7 +75,7 @@ function update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
-    if (editingCell.value) {
+    if (editingCell.value && editingCell.value.cell) {
         editingCell.value = props.shape.locateCell2(editingCell.value.cell);
     }
 }
@@ -86,7 +86,8 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }, c
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
     const editor = props.context.editor4Table(props.shape)
-    editor.setCellContentImage(cell, id);
+    const index = props.shape.indexOfCell(cell);
+    if (index) editor.setCellContentImage(index.rowIdx, index.colIdx, id);
 }
 const pickImage = useImagePicker();
 function mousedown(e: MouseEvent) {
@@ -159,7 +160,10 @@ function windowBlur() {
     document.removeEventListener('mouseup', mouseup);
 }
 function isEditingText() {
-    return editingCell.value && editingCell.value.cell.cellType === TableCellType.Text && editingCell.value.cell.text;
+    return editingCell.value && 
+    editingCell.value.cell && 
+    editingCell.value.cell.cellType === TableCellType.Text && 
+    editingCell.value.cell.text;
 }
 function showImageIcon() {
     const imageIconVisibleSize = imageIconSize << 1;
@@ -212,7 +216,7 @@ onUnmounted(() => {
             <svg-icon icon-class="pattern-image" :width="imageIconSize" :height="imageIconSize"></svg-icon>
         </g> -->
         <!-- 文本选区 -->
-        <SelectView v-if="editingCell" :context="props.context" :shape="(editingCell!.cell as TextShape)"
+        <SelectView v-if="editingCell && editingCell.cell" :context="props.context" :shape="(editingCell.cell as TextShape)"
             :matrix="editingCellMatrix"></SelectView>
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
