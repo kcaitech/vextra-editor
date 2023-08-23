@@ -23,7 +23,7 @@ const props = defineProps<{
     matrix: Matrix, // root->屏幕 变换矩阵
     shape: TableShape
 }>();
-const { tableSelection } = useController(props.context);
+const { tableSelection, m4table } = useController(props.context);
 const matrix = new Matrix();
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
@@ -37,7 +37,6 @@ const axle = computed<ClientXY>(() => {
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
 });
 const editingCell = shallowRef<TableGridItem & { cell: TableCell | undefined }>();
-
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
     if (editingCell.value) {
@@ -45,6 +44,11 @@ const editingCellMatrix = computed(() => {
     }
     return matrix.toArray();
 })
+let x_checked: boolean = false, y_checked: boolean = false;
+let m_col: number = 0, m_row: number = 0, down_x: number = 0, down_y: number = 0, t_height: number = 0, t_width: number = 0;
+const m_x = ref<number>(0), m_y = ref<number>(0);
+let down_p_on_table: { x: number, y: number } = { x: 0, y: 0 };
+const col_dash = ref<boolean>(false), row_dash = ref<boolean>(false);
 function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
@@ -92,9 +96,7 @@ const closeCellMenu = () => {
     cell_menu.value = false;
 }
 function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_EDITING_CELL) {
-        editingCell.value = tableSelection().editingCell;
-    }
+    if (t === Selection.CHANGE_EDITING_CELL) editingCell.value = tableSelection().editingCell;
 }
 function init() {
     editingCell.value = undefined;
@@ -102,6 +104,100 @@ function init() {
 }
 function update_menu_posi(x: number, y: number, cmt: CellMenu, cm: boolean) {
     cell_menu_posi.value.x = x, cell_menu_posi.value.y = y, cell_menu_type.value = cmt, cell_menu.value = cm;
+}
+function move(e: MouseEvent) {
+    if (e.buttons !== 0) return;
+    x_checked = false, y_checked = false;
+    const m4t = m4table(), root = props.context.workspace.root;
+    const p = m4t.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const cell = (props.shape as TableShape).locateCell(p.x, p.y);
+    if (!cell) return;
+    const frame = cell.frame;
+    const trans_p = { x: p.x - frame.x, y: p.y - frame.y };
+    if (trans_p.x < 5) {
+        if (cell.index.col) {
+            x_checked = true, m_col = cell.index.col;
+        }
+    } else if (frame.width - trans_p.x < 5) {
+        x_checked = true, m_col = cell.index.col + 1;
+    }
+    if (trans_p.y < 5) {
+        if (cell.index.row) {
+            y_checked = true, m_row = cell.index.row;
+        }
+    } else if (frame.height - trans_p.y < 5) {
+        y_checked = true, m_row = cell.index.row + 1;
+    }
+    if (!x_checked && !y_checked) {
+        props.context.cursor.reset();
+    } else if (x_checked) {
+        props.context.cursor.setType('scale-0');
+    } else if (y_checked) {
+        props.context.cursor.setType('scale-90');
+    }
+}
+function down(e: MouseEvent) {
+    if (e.button !== 0) return;
+    if (x_checked || y_checked) {
+        e.stopPropagation();
+        if (x_checked) {
+            get_x_by_col(m_col);
+            col_dash.value = true;
+            document.addEventListener('mouseup', up_x);
+            document.addEventListener('mousemove', move_x);
+        } else if (y_checked) {
+            get_y_by_row(m_row);
+            row_dash.value = true;
+            document.addEventListener('mouseup', up_y);
+            document.addEventListener('mousemove', move_y);
+        }
+    }
+}
+function move_x(e: MouseEvent) {
+    const m4t = m4table(), root = props.context.workspace.root;
+    const p = m4t.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    m_x.value = p.x;
+}
+function up_x() {
+    const dx = down_x - m_x.value;
+    const editor = props.context.editor4Table(props.shape as TableShape);
+    editor.adjColWidth(m_col - 1, m_col, dx);
+    col_dash.value = false;
+    document.removeEventListener('mousemove', move_x);
+    document.removeEventListener('mouseup', up_x);
+}
+function move_y(e: MouseEvent) {
+    const m4t = m4table(), root = props.context.workspace.root;
+    const p = m4t.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    m_y.value = p.y;
+}
+function up_y() {
+    const dy = down_y - m_y.value;
+    const editor = props.context.editor4Table(props.shape as TableShape);
+    editor.adjRowHeight(m_row - 1, m_row, dy);
+    row_dash.value = false;
+    document.removeEventListener('mousemove', move_y);
+    document.removeEventListener('mouseup', up_y);
+}
+function get_x_by_col(col: number) {
+    const mw = new Matrix(props.context.workspace.matrix);
+    const table: TableShape = props.shape as TableShape;
+    const layout = table.getLayout();
+    const cols = layout.colWidths;
+    const scale = mw.m00;
+    let growx = 0;
+    for (let i = 0; i < col; i++)  growx += cols[i] * scale;
+    down_x = growx, t_height = layout.height * scale, m_x.value = growx;
+}
+function get_y_by_row(row: number) {
+    const mw = new Matrix(props.context.workspace.matrix);
+    const table: TableShape = props.shape as TableShape;
+    const layout = table.getLayout();
+    const rows = layout.rowHeights;
+    const scale = mw.m00;
+    let growy = 0;
+    for (let i = 0; i < row; i++)  growy += rows[i] * scale;
+    down_y = growy, t_width = layout.width * scale, m_y.value = growy;
 }
 watch(() => props.matrix, update, { deep: true })
 watch(() => props.shape, (value, old) => {
@@ -124,7 +220,7 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        overflow="visible">
+        overflow="visible" @mousemove="move" @mousedown="down">
         <!-- 表格选区 -->
         <TableSelectionView :context="props.context" @get-menu="update_menu_posi"></TableSelectionView>
         <!-- 文本选区 -->
@@ -141,6 +237,12 @@ onUnmounted(() => {
         <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
+        <g :transform="`translate(${bounds.left},${bounds.top})`">
+            <line v-if="col_dash" :x1="m_x" y1="0" :x2="m_x" :y2="t_height" stroke="#865dff" stroke-dasharray="3 3"
+                stroke-width="2"></line>
+            <line v-if="row_dash" x1="0" :y1="m_y" :x2="t_width" :y2="m_y" stroke="#865dff" stroke-dasharray="3 3"
+                stroke-width="2"></line>
+        </g>
     </svg>
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>

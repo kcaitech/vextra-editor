@@ -207,12 +207,12 @@ onUnmounted(() => {
     <g :transform="`translate(${frame_params.x}, ${frame_params.y})`" :class="{ hidden }">
         <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-5.5" r="3" stroke="none" class="dot"
             @mouseenter="() => x_dot_mouseennter(d.x, d.idx)" />
-        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-9" :width="b.length" height="7" stroke="none" rx="2.5"
-            ry="2.5" class="bar" @mousedown.stop="() => select_col(b.idx)" />
+        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-12" :width="b.length" height="12" stroke="none" rx="6"
+            ry="6" class="bar" @mousedown.stop="() => select_col(b.idx)" />
         <circle v-for="(d, ids) in ys" :key="ids" cx="-5.5" :cy="d.y" r="3" stroke="none" class="dot"
             @mouseenter="() => y_dot_mouseennter(d.y, d.idx)" />
-        <rect v-for="(b, ids) in ybars" :key="ids" x="-9" :y="b.s" :height="b.length" width="7" stroke="none" rx="2.5"
-            ry="2.5" class="bar" @mousedown.stop="() => select_row(b.idx)" />
+        <rect v-for="(b, ids) in ybars" :key="ids" x="-12" :y="b.s" :height="b.length" width="12" stroke="none" rx="6"
+            ry="6" class="bar" @mousedown.stop="() => select_row(b.idx)" />
         <g v-if="show_add_x">
             <line :x1="add_x" y1="0" :x2="add_x" :y2="frame_params.height" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
@@ -235,10 +235,6 @@ onUnmounted(() => {
                     fill="#865dff" p-id="9400"></path>
             </svg>
         </g>
-        <!-- <line v-for="(x, idx) in xs" :key="idx" :x1="x.x" y1="0" :x2="x.x" :y2="frame_params.height" stroke="red"
-            stroke-width="5" class="line-x"></line>
-        <line v-for="(y, idx) in ys" :key="idx" x1="0" :y1="y.y" :x2="frame_params.width" :y2="y.y" stroke="green"
-            stroke-width="5" class="line-y"></line> -->
     </g>
 </template>
 <style lang='scss' scoped>
@@ -261,14 +257,6 @@ onUnmounted(() => {
     stroke-width: 3px;
     stroke-linecap: round;
 }
-
-// .line-x {
-//     cursor: col-resize;
-// }
-
-// .line-y {
-//     cursor: row-resize;
-// }
 
 .hidden {
     opacity: 0;
