@@ -344,10 +344,12 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 console.log('init cell');
                 init_text_cell(down_item);
                 down_item = check_cell_on_point(e);
+                table_selection.setEditingCell(down_item);
+                // @ts-ignore
+                down_index = down_item.cell.text!.locateText(0, 0);
                 // @ts-ignore
                 text_selection = context.selection.getTextSelection(down_item.cell);
-                text_selection.setCursor(0, false);
-                table_selection.setEditingCell(down_item);
+                text_selection.setCursor(down_index.index, down_index.before);
             }
         }
         document.addEventListener('mousemove', mousemove4body);
