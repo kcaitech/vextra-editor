@@ -387,6 +387,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         table = t;
         get_matrix4table();
         table_selection = context.selection.getTableSelection(t, context);
+        table_selection.reset();
         init_down_timer();
     }
     function init_down_timer() {

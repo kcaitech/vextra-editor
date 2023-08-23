@@ -5,7 +5,7 @@ import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Color, Fill, FillType, TableCell, TableShape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
-import { useImagePicker } from '../../Selection/Controller/Table/loadimage';
+import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';
 import { v4 as uuid } from "uuid"
 import { CellMenu } from '@/context/menu';
 interface Props {
@@ -67,13 +67,14 @@ const imgVisible = computed(() => {
 })
 const pickImage = useImagePicker();
 function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
-    const id = uuid();
+    const format = getFormatFromBase64(data.base64);
+    const ref = `${uuid()}.${format}`;
     const shape = props.context.selection.selectedShapes[0] as TableShape
-    props.context.data.mediasMgr.add(id, data);
+    props.context.data.mediasMgr.add(ref, data);
     const editor = props.context.editor4Table(shape)
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    editor.setCellContentImage(table.tableRowStart, table.tableColStart, id);
-    props.context.communication.docResourceUpload.upload(id, data.buff.buffer.slice(0)).then((res: boolean) => console.log('资源上传成功'));
+    editor.setCellContentImage(table.tableRowStart, table.tableColStart, ref);
+    props.context.communication.docResourceUpload.upload(ref, data.buff.buffer.slice(0));
     emit('close');
 }
 const onPickImge = (e: MouseEvent) => {
