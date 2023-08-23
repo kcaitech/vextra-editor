@@ -126,8 +126,8 @@ onUnmounted(() => {
         <!-- 表格选区 -->
         <TableSelectionView :context="props.context" @get-menu="update_menu_posi"></TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="editingCell && editingCell.cell" :context="props.context" :shape="(editingCell.cell as TextShape)"
-            :matrix="editingCellMatrix"></SelectView>
+        <SelectView v-if="editingCell && editingCell.cell && editingCell.cell.cellType === TableCellType.Text"
+            :context="props.context" :shape="(editingCell.cell as TextShape)" :matrix="editingCellMatrix"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
