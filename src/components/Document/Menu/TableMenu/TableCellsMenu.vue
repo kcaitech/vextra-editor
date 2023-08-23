@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Color, Fill, FillType, TableCell, TableShape } from '@kcdesign/data';
@@ -8,6 +8,7 @@ import { Delete } from '@element-plus/icons-vue'
 import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';
 import { v4 as uuid } from "uuid"
 import { CellMenu } from '@/context/menu';
+import { Selection } from '@/context/selection';
 interface Props {
     context: Context
     position: { x: number, y: number }
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 }>()
 const isAlignMenu = ref('')
 const color = ref<Color>(new Color(1, 216, 216, 216));
+const singleChoice = ref<boolean>(false);
 const showAlginMenu = (meun: string) => {
     if (isAlignMenu.value) return isAlignMenu.value = '';
     isAlignMenu.value = meun
@@ -57,14 +59,6 @@ const mergeCells = () => {
     emit('close');
 }
 
-const imgVisible = computed(() => {
-    // const shape = props.context.selection.selectedShapes[0]
-    // const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    // if(table.tableRowEnd === table.tableRowStart && table.tableRowStart !== -1) {
-    //     return true;
-    // }else return false;
-    return true;
-})
 const pickImage = useImagePicker();
 function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     const format = getFormatFromBase64(data.base64);
@@ -119,6 +113,31 @@ const deleteColumn = () => {
     }
     emit('close');
 }
+
+const selection_watcher = (t: number) => {
+    if (t === Selection.CHANGE_TABLE_CELL) {
+        handleCellMenu();
+    }
+}
+
+const handleCellMenu = () => {
+    const shape = props.context.selection.selectedShapes[0];
+    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
+        singleChoice.value = true;
+    } else {
+        singleChoice.value = false;
+    }
+}
+
+onMounted(() => {
+    handleCellMenu();
+    props.context.selection.watch(selection_watcher);
+})
+
+onUnmounted(() => {
+    props.context.selection.unwatch(selection_watcher);
+})
 </script>
 
 <template>
@@ -148,7 +167,7 @@ const deleteColumn = () => {
                 <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
-            <div style="padding: 2px;" @click.stop="mergeCells">
+            <div style="padding: 2px;" @click.stop="mergeCells" v-if="!singleChoice">
                 <svg width="16" height="16" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M7.35355 11.3536C7.54882 11.1583 7.54882 10.8417 7.35355 10.6464L4.17157 7.46447C3.97631 7.2692 3.65973 7.2692 3.46447 7.46447C3.2692 7.65973 3.2692 7.97631 3.46447 8.17157L6.29289 11L3.46447 13.8284C3.2692 14.0237 3.2692 14.3403 3.46447 14.5355C3.65973 14.7308 3.97631 14.7308 4.17157 14.5355L7.35355 11.3536ZM0 11.5H7V10.5H0V11.5Z"
@@ -160,7 +179,7 @@ const deleteColumn = () => {
                     <path d="M12 1L20 1V21H12" stroke="black" />
                 </svg>
             </div>
-            <div style="padding: 2px;" v-if="imgVisible" @click="onPickImge">
+            <div style="padding: 2px;" v-if="singleChoice" @click="onPickImge">
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
         </div>
