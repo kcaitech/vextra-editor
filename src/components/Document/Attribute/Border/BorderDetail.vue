@@ -95,19 +95,9 @@ function positionSelect(selected: SelectItem) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   position.value = selected;
   if (len.value === 1) {
-    const shape = props.shapes[0] as TableShape;
-    if (shape.type === ShapeType.Table) {
-      const table = props.context.selection.getTableSelection(shape, props.context);
-      const e = props.context.editor4Table(shape);
-      if (table.tableRowStart > -1 || table.tableColStart > -1) {
-        e.setBorderPosition(props.index, selected.value as BorderPosition, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
-      } else {
-        editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
-      }
-    } else {
-      editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
-    }
+    editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
   } else if (len.value > 1) {
+    if(props.shapes[0].type === ShapeType.Table) return;
     const actions = get_actions_border_position(props.shapes, props.index, selected.value as BorderPosition);
     if (actions && actions.length) {
       const page = props.context.selection.selectedPage;
@@ -307,10 +297,10 @@ onUnmounted(() => {
       <template #body>
         <div class="options-container">
           <!-- 边框位置 -->
-          <div v-if="show_position">
+          <div v-if="show_position" :style="{opacity: shapes[0].type === ShapeType.Table ? '.5' : '1'}">
             <label>{{ t('attr.position') }}</label>
             <Select :selected="position" :item-view="BorderPositonItem" :item-height="30" :source="positonOptionsSource"
-              @select="positionSelect"></Select>
+              @select="positionSelect" :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'"></Select>
           </div>
           <!-- 边框厚度 -->
           <div>

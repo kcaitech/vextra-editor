@@ -349,9 +349,9 @@ onUnmounted(() => {
 
 <template>
     <div class="border-panel">
-        <TypeHeader :title="t('attr.border')" class="mt-24" @click="first">
+        <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first">
             <template #tool>
-                <div class="add" @click="addBorder">
+                <div class="add" @click.stop="addBorder">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </template>

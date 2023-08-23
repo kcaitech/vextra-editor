@@ -24,12 +24,14 @@ const props = defineProps<{
     itemView?: any,
     valueView?: any
     width?: number,
+    type?: string
 }>();
 const selectContainer = ref<HTMLDivElement>();
 const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
 const source = ref<SelectSource[]>([]);
 function toggle() {
+    if(props.type === 'table') return;
     optionsContainerVisible.value = !optionsContainerVisible.value;
     nextTick(() => {
         if (optionsContainer.value && selectContainer.value) {
@@ -99,7 +101,7 @@ watch(() => props.selected, () => {
             <div v-else class="value-wrap">
                 <component :is="props.valueView" :data="curValue" />
             </div>
-            <div class="svg-wrap">
+            <div class="svg-wrap" v-show="props.type !== 'table'">
                 <svg-icon icon-class="down"></svg-icon>
             </div>
         </div>

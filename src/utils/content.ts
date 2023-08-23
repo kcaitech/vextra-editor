@@ -422,7 +422,8 @@ function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selecti
   const area_0 = finder(context, p);
   if(area_0.length && area_0[0].type === ShapeType.Table) {
     const table = context.selection.getTableSelection(area_0[0] as TableShape, context);
-    if ((e.target as Element).closest('#text-selection') && is_edting) {
+    if (table.editingCell) {
+      console.log('table进来的');
       return 'table';
     }else if (table.tableRowEnd > -1) {
       return 'table_cell';

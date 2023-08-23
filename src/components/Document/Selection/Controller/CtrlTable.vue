@@ -91,6 +91,8 @@ function isEditingText() {
         editingCell.value.cell.text;
 }
 const closeCellMenu = () => {
+    tableSelection().reset();
+    props.context.selection.notify(Selection.CHANGE_TABLE_CELL);
     cell_menu.value = false;
 }
 function selection_watcher(t: number) {
