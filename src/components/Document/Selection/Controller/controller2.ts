@@ -330,7 +330,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
                     text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
-                    console.log('点到imagecell');
+                    // console.log('点到imagecell');
                     table_selection.setEditingCell();
                     table_selection.selectTableCell(down_item.index.row, down_item.index.col);
                 } else {
@@ -397,7 +397,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function set_timer() {
         clearTimeout(down_timer);
         down_timer = setTimeout(() => {
-            console.log('dis');
             clearTimeout(down_timer);
             down_type = 1, down_timer = null;
         }, TIMER)
