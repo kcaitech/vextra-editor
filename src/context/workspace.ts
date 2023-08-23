@@ -337,14 +337,8 @@ export class WorkSpace extends Watchable(Object) {
                 if (selected.length === 1 && selected[0].type === ShapeType.Table) {
                     const table: TableShape = selected[0] as TableShape;
                     const ts = selection.getTableSelection(table, this.context);
-                    const ec = ts.editingCell;
-                    if (ec) {
-                        ts.selectTableCell(ec.index.row, ec.index.col, true);
-                        ts.setEditingCell();
-                    } else {
-                        const grid = table.getLayout().grid;
-                        ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
-                    }
+                    const grid = table.getLayout().grid;
+                    ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
                 } else {
                     const p_map = new Map();
                     selected.forEach(s => { if (s.parent) p_map.set(s.parent.id, s.parent) });

@@ -90,6 +90,8 @@ export class TableSelection implements Notifiable {
         }
     }
     selectTableCell(rowIdx: number, colIdx: number, gen_menu_posi = true) {
+        console.log('====', rowIdx, colIdx);
+
         if (this.m_tableRowStart !== this.m_tableRowEnd ||
             this.m_tableRowStart !== rowIdx ||
             this.m_tableColStart !== this.m_tableColEnd ||
