@@ -2,9 +2,10 @@
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
-import { XY } from '@/context/selection';
+import { XY, Selection } from '@/context/selection';
 import { Shape, TableShape } from "@kcdesign/data";
 import { Context } from '@/context';
+import { TableSelection } from '@/context/tableselection';
 
 const { t } = useI18n();
 interface Props {
@@ -36,16 +37,29 @@ function showLayerSubMenu(e: MouseEvent, show: string) {
 const splitCell = (column: string) => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  const editor = props.context.editor4Table(shape as TableShape)
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape)
     if (column === 'row') {
-      editor.horSplitCell(table.tableRowStart, table.tableRowEnd);
+      editor.horSplitCell(table.tableRowStart, table.tableColStart);
     } else {
-      editor.verSplitCell(table.tableColStart, table.tableColEnd);
+      editor.verSplitCell(table.tableRowStart, table.tableColStart);
+    }
+  } else if (table.editingCell) {
+    if (column === 'row') {
+      editor.horSplitCell(table.editingCell.index.row, table.editingCell.index.col);
+    } else {
+      editor.verSplitCell(table.editingCell.index.row, table.editingCell.index.col);
     }
   }
+  reset(table, props.context);
   emit('close');
 };
+
+function reset(table: TableSelection, context: Context) {
+  table.reset();
+  context.selection.notify(Selection.CHANGE_TABLE_CELL);
+  table.setEditingCell();
+}
 const openInsertCell = (value: string) => {
   splitCellOpen.value = true;
   props.context.menu.setSplitCell(value);
@@ -59,13 +73,19 @@ const mergeCell = () => {
     const editor = props.context.editor4Table(shape as TableShape)
     editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
   }
+  reset(table, props.context);
   emit('close');
 }
 const spliceRow = () => {
   const shape = props.context.selection.selectedShapes[0];
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
   const editor = props.context.editor4Table(shape as TableShape);
-  editor.removeRow(table.tableRowStart, table.tableRowEnd);
+  if (table.editingCell) {
+    editor.removeRow(table.editingCell.index.row);
+  } else {
+    editor.removeRow(table.tableRowStart, table.tableRowEnd);
+  }
+  reset(table, props.context);
   emit('close');
 }
 
@@ -73,7 +93,12 @@ const spliceCol = () => {
   const shape = props.context.selection.selectedShapes[0];
   const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
   const editor = props.context.editor4Table(shape as TableShape);
-  editor.removeCol(table.tableColStart, table.tableColEnd);
+  if (table.editingCell) {
+    editor.removeCol(table.editingCell.index.col);
+  } else {
+    editor.removeCol(table.tableColStart, table.tableColEnd);
+  }
+  reset(table, props.context);
   emit('close');
 }
 

@@ -86,17 +86,33 @@ const insertColumn = (dir: string) => {
         const editor = props.context.editor4Table(shape as TableShape);
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
         if (props.cellMenu === CellMenu.SelectRow && dir === 'lt') {
-            editor.insertRow(table.tableRowStart, grid.frame.height);
+            if(table.tableRowEnd === table.tableRowStart) {
+                editor.insertRow(table.tableRowStart, grid.frame.height);
+            }else {
+                editor.insertMultiRow(table.tableRowStart, grid.frame.height, (table.tableRowEnd - table.tableRowStart) + 1);
+            }
         } else if (props.cellMenu === CellMenu.SelectRow && dir === 'rb') {
             const grid = layout.grid.get(table.tableRowEnd, table.tableColStart);
-            editor.insertRow(table.tableRowEnd + 1, grid.frame.height);
+            if(table.tableRowEnd === table.tableRowStart) {
+                editor.insertRow(table.tableRowEnd + 1, grid.frame.height);
+            }else {
+                editor.insertMultiRow(table.tableRowEnd + 1, grid.frame.height, (table.tableRowEnd - table.tableRowStart) + 1);
+            }
         }
         else if (props.cellMenu === CellMenu.selectCol && dir === 'lt') {
-            editor.insertCol(table.tableColStart, grid.frame.width);
+            if(table.tableColStart === table.tableColEnd) {
+                editor.insertCol(table.tableColStart, grid.frame.width);
+            }else {
+                editor.insertMultiCol(table.tableColStart, grid.frame.width, (table.tableColEnd - table.tableColStart) + 1);
+            }
         }
         else if (props.cellMenu === CellMenu.selectCol && dir === 'rb') {
             const grid = layout.grid.get(table.tableRowStart, table.tableColEnd);
-            editor.insertCol(table.tableColEnd + 1, grid.frame.width);
+            if(table.tableColStart === table.tableColEnd) {
+                editor.insertCol(table.tableColEnd + 1, grid.frame.width);
+            }else {
+                editor.insertMultiCol(table.tableColEnd + 1, grid.frame.width, (table.tableColEnd - table.tableColStart) + 1);
+            }
         }
     }
     emit('close');
