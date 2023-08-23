@@ -116,28 +116,23 @@ function move(e: MouseEvent) {
     if (!cell) return;
     const frame = cell.frame;
     const trans_p = { x: p.x - frame.x, y: p.y - frame.y };
-    if (cell.index.col > 0) {
-        if (trans_p.x < 5) {
-            x_checked = true, m_col = cell.index.col;
-        } else if (frame.width - trans_p.x < 5) {
-            x_checked = true, m_col = cell.index.col + 1;
-        }
+    if (trans_p.x < 5) {
+        x_checked = true, m_col = cell.index.col;
+    } else if (frame.width - trans_p.x < 5) {
+        x_checked = true, m_col = cell.index.col + 1;
     }
-    if (cell.index.row > 0) {
-        if (trans_p.y < 5) {
-            y_checked = true, m_row = cell.index.row;
-        } else if (frame.height - trans_p.y < 5) {
-            y_checked = true, m_row = cell.index.row + 1;
-        }
+    if (trans_p.y < 5) {
+        y_checked = true, m_row = cell.index.row;
+    } else if (frame.height - trans_p.y < 5) {
+        y_checked = true, m_row = cell.index.row + 1;
     }
     if (!x_checked && !y_checked) {
         props.context.cursor.reset();
     } else if (x_checked) {
-        props.context.cursor.setType('extend-0');
+        props.context.cursor.setType('scale-0');
     } else if (y_checked) {
-        props.context.cursor.setType('extend-0');
+        props.context.cursor.setType('scale-90');
     }
-
 }
 function down(e: MouseEvent) {
     if (e.button !== 0) return;
@@ -162,13 +157,9 @@ function move_x(e: MouseEvent) {
     m_x.value = p.x;
 }
 function up_x() {
-    const dx = m_x.value - down_x;
-    const table: TableShape = props.shape as TableShape;
-    const layout = table.getLayout();
-    const cols = layout.colWidths;
-    const o_w = cols[m_col];
+    const dx = down_x - m_x.value;
     const editor = props.context.editor4Table(props.shape as TableShape);
-    editor.setColWidth(m_col - 1, o_w + dx);
+    editor.adjColWidth(m_col - 1, m_col, dx);
     col_dash.value = false;
     document.removeEventListener('mousemove', move_x);
     document.removeEventListener('mouseup', up_x);
@@ -179,13 +170,9 @@ function move_y(e: MouseEvent) {
     m_y.value = p.y;
 }
 function up_y() {
-    const dy = m_y.value - down_y;
-    const table: TableShape = props.shape as TableShape;
-    const layout = table.getLayout();
-    const rows = layout.rowHeights;
-    const o_h = rows[m_row];
+    const dy = down_y - m_y.value;
     const editor = props.context.editor4Table(props.shape as TableShape);
-    editor.setRowHeight(m_row - 1, o_h + dy);
+    editor.adjRowHeight(m_row - 1, m_row, dy);
     row_dash.value = false;
     document.removeEventListener('mousemove', move_y);
     document.removeEventListener('mouseup', up_y);
