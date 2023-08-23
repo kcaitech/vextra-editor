@@ -20,6 +20,12 @@ const stopWatch = watch(() => props.data, (value, old) => {
 })
 onMounted(() => {
     props.data.watch(watcher);
+    //
+    props.data.childs.forEach((cell) => {
+        if (cell && cell.isImageCell() && !cell.peekImage()) cell.loadImage().then(() => {
+            reflush.value++;
+        })
+    })
 })
 onUnmounted(() => {
     props.data.unwatch(watcher);
