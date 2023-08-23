@@ -28,6 +28,7 @@ const fills: FillItem[] = reactive([]);
 const alphaFill = ref<any>();
 const colorFill = ref<any>();
 const mixed = ref<boolean>(false);
+const mixed_cell = ref(false);
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
@@ -56,14 +57,27 @@ function watchShapes() {
 }
 function updateData() {
     fills.length = 0;
-    mixed.value = false;
+    mixed.value = false; mixed_cell.value = false;
     if (props.shapes.length === 1) {
         const shape = props.shapes[0];
-        const style = shape.style;
-        for (let i = 0, len = style.fills.length; i < len; i++) {
-            const fill = style.fills[i];
-            const f = { id: i, fill };
-            fills.unshift(f);
+        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+        if (shape.type === ShapeType.Table && table.tableRowStart > -1) {
+            const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
+            if (cells.length > 0) {
+                const _fs = get_fills(cells as Shape[]);
+                if (_fs === 'mixed') {
+                    mixed_cell.value = true;
+                } else {
+                    fills.unshift(..._fs);
+                }
+            }
+        } else {
+            const style = shape.style;
+            for (let i = 0, len = style.fills.length; i < len; i++) {
+                const fill = style.fills[i];
+                const f = { id: i, fill };
+                fills.unshift(f);
+            }
         }
     } else if (props.shapes.length > 1) {
         const _fs = get_fills(props.shapes);
@@ -87,10 +101,8 @@ function addFill(): void {
             const table = props.context.selection.getTableSelection(s as TableShape, props.context);
             const editor = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
                 editor.addFill(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
-                console.log(fill, 'fill');
                 e.addFill(fill);
             }
         } else {
@@ -113,6 +125,7 @@ function addFill(): void {
             }
         }
     }
+    updateData();
 }
 function first() {
     if (fills.length === 0 && !mixed.value) addFill();
@@ -125,7 +138,6 @@ function deleteFill(idx: number) {
             const table = props.context.selection.getTableSelection(s as TableShape, props.context);
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
                 e.deleteFill(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.deleteFill(_idx);
@@ -141,6 +153,7 @@ function deleteFill(idx: number) {
             editor.shapesDeleteFill(actions);
         }
     }
+    updateData();
 }
 function toggleVisible(idx: number) {
     const _idx = fills.length - idx - 1;
@@ -150,7 +163,6 @@ function toggleVisible(idx: number) {
             const table = props.context.selection.getTableSelection(s as TableShape, props.context);
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
                 e.setFillEnable(_idx, !fills[idx].fill.isEnabled, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.setFillEnable(_idx, !fills[idx].fill.isEnabled);
@@ -184,7 +196,6 @@ function setColor(idx: number, clr: string, alpha: number) {
             const table = props.context.selection.getTableSelection(s as TableShape, props.context);
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
                 e.setFillColor(_idx, new Color(alpha, r, g, b), { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.setFillColor(_idx, new Color(alpha, r, g, b));
@@ -200,6 +211,7 @@ function setColor(idx: number, clr: string, alpha: number) {
             editor.setShapesFillColor(actions);
         }
     }
+    updateData()
 }
 function onColorChange(idx: number, e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -268,7 +280,6 @@ function getColorFromPicker(idx: number, color: Color) {
             const table = props.context.selection.getTableSelection(s as TableShape, props.context);
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
                 e.setFillColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.setFillColor(_idx, color);
@@ -284,6 +295,7 @@ function getColorFromPicker(idx: number, color: Color) {
             editor.setShapesFillColor(actions);
         }
     }
+    updateData();
 }
 
 const selectColor = (id: number) => {
@@ -312,11 +324,19 @@ function update_by_shapes() {
 }
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
+
+const selection_watcher = (t: number) => {
+    if (t === Selection.CHANGE_TABLE_CELL) {
+        updateData();
+    }
+}
 onMounted(() => {
     update_by_shapes();
+    props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
     stop();
+    props.context.selection.unwatch(selection_watcher);
 })
 </script>
 
@@ -331,6 +351,9 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="tips-wrap" v-if="mixed">
             <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
+        </div>
+        <div class="tips-wrap" v-if="mixed_cell">
+            <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
         <div class="fills-container" v-else-if="!mixed">
             <div class="fill" v-for="(f, idx) in fills" :key="f.id">

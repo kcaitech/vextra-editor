@@ -222,6 +222,7 @@ export const attr: any = {
     'adapt': 'Resize to fit',
     'mixed': 'Mixed',
     'mixed_lang': 'Click + to replace mixed content.',
+    'mixed_cell_lang': 'There are cell Settings, click + set centrally',
     text_advanced_settings: "Text Advanced Settings",
     word_space: 'Word space',
     row_height: 'Line height',

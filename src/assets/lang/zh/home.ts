@@ -222,6 +222,7 @@ export const attr: any = {
     'adapt': '适应容器大小',
     'mixed': '多值',
     'mixed_lang': '存在对象设置不同，可点击 + 号统一设置',
+    'mixed_cell_lang': '存在单元格设置不同，点击 + 进行统一设置',
     text_advanced_settings: "文本高级设置",
     word_space: '字间距',
     row_height: '行高',
