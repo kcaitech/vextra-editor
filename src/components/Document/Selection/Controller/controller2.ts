@@ -451,7 +451,10 @@ function useControllerCustom(context: Context, i18nT: Function) {
     function tableSelection() {
         return table_selection
     }
-    return { isDrag, tableSelection, init, dispose };
+    function m4table() {
+        return matrix4table;
+    }
+    return { isDrag, tableSelection, m4table, init, dispose };
 }
 
 export function useController(context: Context) {

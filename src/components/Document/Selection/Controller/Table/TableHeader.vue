@@ -235,10 +235,6 @@ onUnmounted(() => {
                     fill="#865dff" p-id="9400"></path>
             </svg>
         </g>
-        <!-- <line v-for="(x, idx) in xs" :key="idx" :x1="x.x" y1="0" :x2="x.x" :y2="frame_params.height" stroke="red"
-            stroke-width="5" class="line-x"></line>
-        <line v-for="(y, idx) in ys" :key="idx" x1="0" :y1="y.y" :x2="frame_params.width" :y2="y.y" stroke="green"
-            stroke-width="5" class="line-y"></line> -->
     </g>
 </template>
 <style lang='scss' scoped>
@@ -261,14 +257,6 @@ onUnmounted(() => {
     stroke-width: 3px;
     stroke-linecap: round;
 }
-
-// .line-x {
-//     cursor: col-resize;
-// }
-
-// .line-y {
-//     cursor: row-resize;
-// }
 
 .hidden {
     opacity: 0;
