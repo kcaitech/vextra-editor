@@ -51,6 +51,10 @@ export class TableSelection implements Notifiable {
         return this.m_editing_cell;
     }
     setEditingCell(cell?: TableGridItem & { cell: TableCell | undefined }) {
+        if (cell) {
+            this.reset();
+            this.notify(Selection.CHANGE_TABLE_CELL);
+        }
         this.m_editing_cell = cell;
         this.notify(Selection.CHANGE_EDITING_CELL);
     }
@@ -86,6 +90,8 @@ export class TableSelection implements Notifiable {
         }
     }
     selectTableCell(rowIdx: number, colIdx: number, gen_menu_posi = true) {
+        console.log('====', rowIdx, colIdx);
+
         if (this.m_tableRowStart !== this.m_tableRowEnd ||
             this.m_tableRowStart !== rowIdx ||
             this.m_tableColStart !== this.m_tableColEnd ||

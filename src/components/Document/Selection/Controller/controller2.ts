@@ -289,7 +289,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 }
             } else {
                 if (m_item.cell?.id === down_item.cell?.id) {
-                    clear_selection();
                     table_selection.setEditingCell(down_item);
                 } else {
                     table_selection.selectTableCellRange(rows, rowe, cols, cole);
