@@ -4,8 +4,8 @@ import { replace } from "./clipaboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { permIsEdit } from "./content";
 import { Action } from "@/context/tool";
-import { Shape } from "@kcdesign/data";
-import { PageXY } from "@/context/selection";
+import { Shape, ShapeType, TableShape } from "@kcdesign/data";
+import { PageXY, Selection } from "@/context/selection";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
@@ -76,11 +76,22 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
                 const editor = context.editor4Page(page);
                 editor.delete_batch(shapes);
             }
-        } else {
-            const editor = context.editor4Shape(shapes[0]);
-            editor.delete();
+            context.selection.resetSelectShapes();
+        } else if (shapes.length === 1) {
+            const shape = shapes[0];
+            if (shape.type === ShapeType.Table) {
+                const ts = context.selection.getTableSelection(shape as TableShape, context);
+                const editor = context.editor4Table(shape as TableShape);
+                editor.initCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
+                ts.reset();
+                ts.notify(Selection.CHANGE_TABLE_CELL);
+            } else {
+                const editor = context.editor4Shape(shape);
+                editor.delete();
+                context.selection.resetSelectShapes();
+            }
         }
-        context.selection.resetSelectShapes();
+
     } else if (e.code === 'Escape') {
         context.selection.resetSelectShapes();
     } else if (e.code === 'KeyR') {

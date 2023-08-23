@@ -1,4 +1,4 @@
-import { Watchable } from "@kcdesign/data";
+import { ShapeType, TableShape, Watchable } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
@@ -332,15 +332,28 @@ export class WorkSpace extends Watchable(Object) {
     }
     keydown_a(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) {
-            const selection = this.context.selection;
-            if (selection.selectedShapes.length) {
-                const p_map = new Map();
-                selection.selectedShapes.forEach(s => { if (s.parent) p_map.set(s.parent.id, s.parent) });
-                if (p_map.size > 1) {
-                    const page = selection.selectedPage;
-                    if (page) selection.rangeSelectShape(page.childs);
+            const selection = this.context.selection, selected = selection.selectedShapes;
+            if (selected.length) {
+                if (selected.length === 1 && selected[0].type === ShapeType.Table) {
+                    const table: TableShape = selected[0] as TableShape;
+                    const ts = selection.getTableSelection(table, this.context);
+                    const ec = ts.editingCell;
+                    if (ec) {
+                        ts.selectTableCell(ec.index.row, ec.index.col, true);
+                        ts.setEditingCell();
+                    } else {
+                        const grid = table.getLayout().grid;
+                        ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
+                    }
                 } else {
-                    selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+                    const p_map = new Map();
+                    selected.forEach(s => { if (s.parent) p_map.set(s.parent.id, s.parent) });
+                    if (p_map.size > 1) {
+                        const page = selection.selectedPage;
+                        if (page) selection.rangeSelectShape(page.childs);
+                    } else {
+                        selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+                    }
                 }
             } else {
                 const page = selection.selectedPage;
