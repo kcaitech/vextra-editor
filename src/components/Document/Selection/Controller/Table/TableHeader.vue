@@ -98,7 +98,7 @@ function select_col(index: number) {
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     table_selection.setEditingCell();
     const rl = layout.grid.rowCount;
-    table_selection.selectTableCellRange(0, rl, index, index, false);
+    table_selection.selectTableCellRange(0, rl - 1, index, index, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     const xy = m.computeCoord2((xs[index].x + (xs[index - 1]?.x || 0)) / 2, 0);
@@ -109,7 +109,7 @@ function select_row(index: number) {
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     table_selection.setEditingCell();
     const cl = layout.grid.colCount;
-    table_selection.selectTableCellRange(index, index, 0, cl, false);
+    table_selection.selectTableCellRange(index, index, 0, cl - 1, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     const xy = m.computeCoord2(0, (ys[index].y + (ys[index - 1]?.y || 0)) / 2);
