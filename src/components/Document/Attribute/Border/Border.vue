@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Shape, ShapeType } from '@kcdesign/data';
+import { Shape, ShapeType, TableShape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -85,7 +85,20 @@ function addBorder() {
     const borderStyle = new BorderStyle(0, 0);
     const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
     if (len.value === 1) {
-        editor.value.addBorder(border);
+        const shape = props.shapes[0] as TableShape;
+        if (shape.type === ShapeType.Table) {
+            const table = props.context.selection.getTableSelection(shape, props.context);
+            const e = props.context.editor4Table(shape);
+            if(table.tableRowStart > -1 || table.tableColStart > -1) {
+                console.log(table,'table');
+                e.addBorder(border, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            }else {
+                console.log(border,'border');
+                editor.value.addBorder(border);
+            }
+        } else {
+            editor.value.addBorder(border);
+        }
     } else if (len.value > 1) {
         if (mixed.value) {
             const actions = get_actions_border_unify(props.shapes);

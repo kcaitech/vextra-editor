@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, Shape, FillType } from "@kcdesign/data";
+import { Color, Fill, Shape, FillType, ShapeType, TableShape } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -83,7 +83,19 @@ function addFill(): void {
     if (len.value === 1) {
         const s = props.context.selection.selectedShapes[0];
         const e = props.context.editor4Shape(s);
-        e.addFill(fill);
+        if (s.type === ShapeType.Table) {
+            const table = props.context.selection.getTableSelection(s as TableShape, props.context);
+            const editor = props.context.editor4Table(s as TableShape);
+            if(table.tableRowStart > -1 || table.tableColStart > -1) {
+                console.log(table,'table');
+                editor.addFill(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            }else {
+                console.log(fill,'fill');
+                e.addFill(fill);
+            }
+        } else {
+            e.addFill(fill);
+        }
     } else if (len.value > 1) {
         if (mixed.value) {
             const actions = get_actions_fill_unify(props.shapes);
