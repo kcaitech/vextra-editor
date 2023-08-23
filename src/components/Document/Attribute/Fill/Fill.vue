@@ -322,9 +322,9 @@ onUnmounted(() => {
 
 <template>
     <div class="fill-panel">
-        <TypeHeader :title="t('attr.fill')" class="mt-24" @click="first">
+        <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first">
             <template #tool>
-                <div class="add" @click="addFill">
+                <div class="add" @click.stop="addFill">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </template>
