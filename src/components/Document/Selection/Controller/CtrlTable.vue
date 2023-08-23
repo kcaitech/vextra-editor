@@ -96,9 +96,7 @@ const closeCellMenu = () => {
     cell_menu.value = false;
 }
 function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_EDITING_CELL) {
-        editingCell.value = tableSelection().editingCell;
-    }
+    if (t === Selection.CHANGE_EDITING_CELL) editingCell.value = tableSelection().editingCell;
 }
 function init() {
     editingCell.value = undefined;
@@ -117,12 +115,16 @@ function move(e: MouseEvent) {
     const frame = cell.frame;
     const trans_p = { x: p.x - frame.x, y: p.y - frame.y };
     if (trans_p.x < 5) {
-        x_checked = true, m_col = cell.index.col;
+        if (cell.index.col) {
+            x_checked = true, m_col = cell.index.col;
+        }
     } else if (frame.width - trans_p.x < 5) {
         x_checked = true, m_col = cell.index.col + 1;
     }
     if (trans_p.y < 5) {
-        y_checked = true, m_row = cell.index.row;
+        if (cell.index.row) {
+            y_checked = true, m_row = cell.index.row;
+        }
     } else if (frame.height - trans_p.y < 5) {
         y_checked = true, m_row = cell.index.row + 1;
     }
@@ -236,9 +238,9 @@ onUnmounted(() => {
             :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
         <g :transform="`translate(${bounds.left},${bounds.top})`">
-            <line v-if="col_dash" :x1="m_x" y1="0" :x2="m_x" :y2="t_height" stroke="#865dff" stroke-dasharray="5 5"
+            <line v-if="col_dash" :x1="m_x" y1="0" :x2="m_x" :y2="t_height" stroke="#865dff" stroke-dasharray="3 3"
                 stroke-width="2"></line>
-            <line v-if="row_dash" x1="0" :y1="m_y" :x2="t_width" :y2="m_y" stroke="#865dff" stroke-dasharray="5 5"
+            <line v-if="row_dash" x1="0" :y1="m_y" :x2="t_width" :y2="m_y" stroke="#865dff" stroke-dasharray="3 3"
                 stroke-width="2"></line>
         </g>
     </svg>
