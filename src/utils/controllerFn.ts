@@ -82,16 +82,21 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             if (shape.type === ShapeType.Table) {
                 const ts = context.selection.getTableSelection(shape as TableShape, context);
                 const editor = context.editor4Table(shape as TableShape);
-                editor.initCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
-                ts.reset();
-                ts.notify(Selection.CHANGE_TABLE_CELL);
+                if (ts.tableRowStart > -1 || ts.tableColStart > -1) {
+                    editor.initCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
+                    ts.reset();
+                    ts.notify(Selection.CHANGE_TABLE_CELL);
+                } else {
+                    const editor = context.editor4Shape(shape);
+                    editor.delete();
+                    context.selection.resetSelectShapes();
+                }
             } else {
                 const editor = context.editor4Shape(shape);
                 editor.delete();
                 context.selection.resetSelectShapes();
             }
         }
-
     } else if (e.code === 'Escape') {
         context.selection.resetSelectShapes();
     } else if (e.code === 'KeyR') {
@@ -106,7 +111,6 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
                 context.selection.resetSelectShapes();
             }
         })
-
     } else if (e.code === 'KeyH') {
         if (shiftKey && (ctrlKey || metaKey)) {
             let shapes = context.selection.selectedShapes;
