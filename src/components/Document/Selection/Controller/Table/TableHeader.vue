@@ -36,6 +36,11 @@ let add_y: number = 0, ids_y = 0;
 const hidden = ref<boolean>(false);
 let frame_params = data.frame_params, xbars = data.xbars, ybars = data.ybars, xs = data.xs, ys = data.ys;
 let layout: TableLayout;
+let m4table: Matrix = new Matrix();
+let move: any;
+let index_col: number = 0, index_row: number = 0;
+let m_index_col: number = 0, m_index_row: number = 0;
+let selecting: boolean = false;
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
@@ -64,12 +69,14 @@ function update_position() {
     }
 }
 function x_dot_mouseennter(x: number, ids: number) {
+    if (selecting) return;
     show_add_x.value = true, add_x = x, ids_x = ids;
 }
 function x_dot_mouseleave() {
     show_add_x.value = false;
 }
 function y_dot_mouseennter(y: number, ids: number) {
+    if (selecting) return;
     show_add_y.value = true, add_y = y, ids_y = ids;
 }
 function y_dot_mouseleave() {
@@ -80,7 +87,6 @@ function add_cols() {
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     table_selection.reset();
     selection.notify(Selection.CHANGE_TABLE_CELL);
-
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);
 }
@@ -101,8 +107,13 @@ function select_col(index: number) {
     table_selection.selectTableCellRange(0, rl - 1, index, index, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
+    m4table.reset(m.inverse);
     const xy = m.computeCoord2((xs[index].x + (xs[index - 1]?.x || 0)) / 2, 0);
+    index_col = index, m_index_col = index;
     emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
+    document.addEventListener('mousemove', move_x);
+    document.addEventListener('mouseup', up);
+    move = move_x;
 }
 function select_row(index: number) {
     const selection = props.context.selection;
@@ -112,16 +123,70 @@ function select_row(index: number) {
     table_selection.selectTableCellRange(index, index, 0, cl - 1, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
+    m4table.reset(m.inverse);
     const xy = m.computeCoord2(0, (ys[index].y + (ys[index - 1]?.y || 0)) / 2);
+    index_row = index, m_index_row = index;
+    emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
+    document.addEventListener('mousemove', move_y);
+    document.addEventListener('mouseup', up);
+    move = move_y;
+}
+function move_x(e: MouseEvent) {
+    const root = props.context.workspace.root;
+    const xy = m4table.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const cell = (props.shape as TableShape).locateCell(xy.x, 1);
+    if (!cell) return;
+    if (cell.index.col !== m_index_col) select_cols(Math.min(index_col, cell.index.col), Math.max(index_col, cell.index.col));
+    m_index_col = cell.index.col, selecting = true;
+
+}
+function move_y(e: MouseEvent) {
+    const root = props.context.workspace.root;
+    const xy = m4table.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const cell = (props.shape as TableShape).locateCell(1, xy.y);
+    if (!cell) return;
+    if (cell.index.row !== m_index_row) select_rows(Math.min(index_row, cell.index.row), Math.max(index_row, cell.index.row));
+    m_index_row = cell.index.row, selecting = true;
+}
+function up() {
+    selecting = false;
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+}
+function select_cols(index1: number, index2: number) {
+    if (index1 === index2) return select_col(index1);
+    const selection = props.context.selection;
+    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    table_selection.setEditingCell();
+    const rl = layout.grid.rowCount;
+    table_selection.selectTableCellRange(0, rl - 1, index1, index2, false);
+    const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
+    m.multiAtLeft(wm);
+    const xy = m.computeCoord2((xs[index2].x + (xs[index1 - 1]?.x || 0)) / 2, 0);
+    emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
+}
+function select_rows(index1: number, index2: number) {
+    if (index1 === index2) return select_row(index1);
+    const selection = props.context.selection;
+    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    table_selection.setEditingCell();
+    const cl = layout.grid.colCount;
+    table_selection.selectTableCellRange(index1, index2, 0, cl - 1, false);
+    const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
+    m.multiAtLeft(wm);
+    const xy = m.computeCoord2(0, (ys[index2].y + (ys[index1 - 1]?.y || 0)) / 2);
     emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
 }
-function move(e: MouseEvent) { }
-function up(e: MouseEvent) { }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         hidden.value = false;
         update_position();
     }
+}
+function window_blur() {
+    m_index_col = 0, index_col = 0, index_row = 0, m_index_row = 0, selecting = false;
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
 }
 watch(() => props.matrix, update_position, { deep: true });
 
@@ -129,10 +194,12 @@ onMounted(() => {
     update_position();
     props.shape.watch(update_position);
     props.context.workspace.watch(workspace_watcher);
+    window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {
     props.shape.unwatch(update_position);
     props.context.workspace.unwatch(workspace_watcher);
+    window.removeEventListener('blur', window_blur);
 })
 </script>
 

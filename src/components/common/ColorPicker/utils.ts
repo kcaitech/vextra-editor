@@ -535,7 +535,7 @@ export function HSL2RGB(hsl: HSL): RGB {
   }
 }
 export function getColorsFromDoc(context: Context) {
-  const s = Date.now();
+  // const s = Date.now();
   const page = context.selection.selectedPage;
   if (!page) return [];
   let dcs = Array.from(finder(context, page).values());
@@ -546,7 +546,7 @@ export function getColorsFromDoc(context: Context) {
   });
   const result: { times: number, color: Color }[] = [];
   for (let i = 0; i < dcs.length; i++)  result.push({ times: dcs[i].length, color: dcs[i][0] });
-  const e = Date.now();
+  // const e = Date.now();
   // console.log(e - s);
   return result;
 }
@@ -556,6 +556,7 @@ function finder(context: Context, shape: GroupShape, init?: Map<string, Color[]>
   const result: Map<string, Color[]> = init || new Map();
   for (let i = 0; i < cs.length; i++) {
     const s = cs[i];
+    if (!s) continue;
     const fbs: Array<Fill | Border> = [...s.style.fills, ...s.style.borders];
     for (let j = 0; j < fbs.length; j++) {
       const r = result.get(c2s(fbs[j].color));
