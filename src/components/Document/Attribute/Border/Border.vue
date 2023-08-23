@@ -89,11 +89,11 @@ function addBorder() {
         if (shape.type === ShapeType.Table) {
             const table = props.context.selection.getTableSelection(shape, props.context);
             const e = props.context.editor4Table(shape);
-            if(table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table,'table');
+            if (table.tableRowStart > -1 || table.tableColStart > -1) {
+                console.log(table, 'table');
                 e.addBorder(border, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
-            }else {
-                console.log(border,'border');
+            } else {
+                console.log(border, 'border');
                 editor.value.addBorder(border);
             }
         } else {
@@ -125,7 +125,19 @@ function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     if (len.value === 1) {
-        editor.value.deleteBorder(_idx);
+        const shape = props.shapes[0] as TableShape;
+        if (shape.type === ShapeType.Table) {
+            const table = props.context.selection.getTableSelection(shape, props.context);
+            const e = props.context.editor4Table(shape);
+            if (table.tableRowStart > -1 || table.tableColStart > -1) {
+                console.log(_idx, '_idx');
+                e.deleteBorder(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            } else {
+                editor.value.deleteBorder(_idx);
+            }
+        } else {
+            editor.value.deleteBorder(_idx);
+        }
     } else if (len.value > 1) {
         const actions = get_actions_border_delete(props.shapes, _idx);
         const page = props.context.selection.selectedPage;
@@ -142,7 +154,19 @@ function toggleVisible(idx: number) {
     const isEnabled = !border.isEnabled;
     const _idx = borders.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setBorderEnable(_idx, isEnabled);
+        const shape = props.shapes[0] as TableShape;
+        if (shape.type === ShapeType.Table) {
+            const table = props.context.selection.getTableSelection(shape, props.context);
+            const e = props.context.editor4Table(shape);
+            if (table.tableRowStart > -1 || table.tableColStart > -1) {
+                console.log(table, 'table');
+                e.setBorderEnable(_idx, isEnabled, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            } else {
+                editor.value.setBorderEnable(_idx, isEnabled);
+            }
+        } else {
+            editor.value.setBorderEnable(_idx, isEnabled);
+        }
     } else if (len.value > 1) {
         const actions = get_actions_border_enabled(props.shapes, idx, isEnabled);
         const page = props.context.selection.selectedPage;
@@ -174,7 +198,19 @@ function onColorChange(e: Event, idx: number) {
     const color = new Color(alpha, r, g, b);
     const _idx = borders.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setBorderColor(_idx, color);
+        const shape = props.shapes[0] as TableShape;
+        if (shape.type === ShapeType.Table) {
+            const table = props.context.selection.getTableSelection(shape, props.context);
+            const e = props.context.editor4Table(shape);
+            if (table.tableRowStart > -1 || table.tableColStart > -1) {
+                console.log(table, 'table');
+                e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            } else {
+                editor.value.setBorderColor(_idx, color);
+            }
+        } else {
+            editor.value.setBorderColor(_idx, color);
+        }
     } else if (len.value > 1) {
         const actions = get_actions_border_color(props.shapes, _idx, color);
         const page = props.context.selection.selectedPage;
@@ -204,7 +240,19 @@ function onAlphaChange(e: Event, idx: number) {
             const color = new Color(alpha, red, green, blue);
             const _idx = borders.length - idx - 1;
             if (len.value === 1) {
-                editor.value.setBorderColor(_idx, color);
+                const shape = props.shapes[0] as TableShape;
+                if (shape.type === ShapeType.Table) {
+                    const table = props.context.selection.getTableSelection(shape, props.context);
+                    const e = props.context.editor4Table(shape);
+                    if (table.tableRowStart > -1 || table.tableColStart > -1) {
+                        console.log(table, 'table');
+                        e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+                    } else {
+                        editor.value.setBorderColor(_idx, color);
+                    }
+                } else {
+                    editor.value.setBorderColor(_idx, color);
+                }
             } else if (len.value > 1) {
                 const actions = get_actions_border_color(props.shapes, _idx, color);
                 const page = props.context.selection.selectedPage;
@@ -235,7 +283,19 @@ function onAlphaChange(e: Event, idx: number) {
 function getColorFromPicker(color: Color, idx: number) {
     const _idx = borders.length - idx - 1;
     if (len.value === 1) {
-        editor.value.setBorderColor(_idx, color);
+        const shape = props.shapes[0] as TableShape;
+        if (shape.type === ShapeType.Table) {
+            const table = props.context.selection.getTableSelection(shape, props.context);
+            const e = props.context.editor4Table(shape);
+            if (table.tableRowStart > -1 || table.tableColStart > -1) {
+                console.log(table, 'table');
+                e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            } else {
+                editor.value.setBorderColor(_idx, color);
+            }
+        } else {
+            editor.value.setBorderColor(_idx, color);
+        }
     } else if (len.value > 1) {
         const actions = get_actions_border_color(props.shapes, _idx, color);
         const page = props.context.selection.selectedPage;

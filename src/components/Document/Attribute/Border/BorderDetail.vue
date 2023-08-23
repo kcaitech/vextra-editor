@@ -7,7 +7,7 @@ import BorderPositonItem from './BorderPositionItem.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { Border, BorderPosition, BorderStyle, Shape, ShapeType } from "@kcdesign/data";
+import { Border, BorderPosition, BorderStyle, Shape, ShapeType, TableShape } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
@@ -66,7 +66,18 @@ function borderStyleSelect(selected: SelectItem) {
   borderStyle.value = selected;
   if (len.value === 1) {
     const bs = selected.value === 'dash' ? new BorderStyle(10, 10) : new BorderStyle(0, 0);
-    editor.value.setBorderStyle(props.index, bs);
+    const shape = props.shapes[0] as TableShape;
+    if (shape.type === ShapeType.Table) {
+      const table = props.context.selection.getTableSelection(shape, props.context);
+      const e = props.context.editor4Table(shape);
+      if (table.tableRowStart > -1 || table.tableColStart > -1) {
+        e.setBorderStyle(props.index, bs, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      } else {
+        editor.value.setBorderStyle(props.index, bs);
+      }
+    } else {
+      editor.value.setBorderStyle(props.index, bs);
+    }
   } else if (len.value > 1) {
     const actions = get_actions_border_style(props.shapes, props.index, (selected.value as 'dash' | 'solid'));
     if (actions && actions.length) {
@@ -84,7 +95,18 @@ function positionSelect(selected: SelectItem) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   position.value = selected;
   if (len.value === 1) {
-    editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
+    const shape = props.shapes[0] as TableShape;
+    if (shape.type === ShapeType.Table) {
+      const table = props.context.selection.getTableSelection(shape, props.context);
+      const e = props.context.editor4Table(shape);
+      if (table.tableRowStart > -1 || table.tableColStart > -1) {
+        e.setBorderPosition(props.index, selected.value as BorderPosition, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      } else {
+        editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
+      }
+    } else {
+      editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
+    }
   } else if (len.value > 1) {
     const actions = get_actions_border_position(props.shapes, props.index, selected.value as BorderPosition);
     if (actions && actions.length) {
@@ -102,7 +124,18 @@ function setThickness(e: Event) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   const thickness = Number((e.target as HTMLInputElement).value);
   if (len.value === 1) {
-    editor.value.setBorderThickness(props.index, thickness);
+    const shape = props.shapes[0] as TableShape;
+    if (shape.type === ShapeType.Table) {
+      const table = props.context.selection.getTableSelection(shape, props.context);
+      const e = props.context.editor4Table(shape);
+      if (table.tableRowStart > -1 || table.tableColStart > -1) {
+        e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      } else {
+        editor.value.setBorderThickness(props.index, thickness);
+      }
+    } else {
+      editor.value.setBorderThickness(props.index, thickness);
+    }
   } else if (len.value > 1) {
     const actions = get_actions_border_thickness(props.shapes, props.index, thickness);
     if (actions && actions.length) {
@@ -119,7 +152,18 @@ function setThickness(e: Event) {
 const augment = (e: Event) => {
   if (borderThickness.value) {
     const thickness = Number(borderThickness.value.value) + 1
-    editor.value.setBorderThickness(props.index, thickness);
+    const shape = props.shapes[0] as TableShape;
+    if (shape.type === ShapeType.Table) {
+      const table = props.context.selection.getTableSelection(shape, props.context);
+      const e = props.context.editor4Table(shape);
+      if (table.tableRowStart > -1 || table.tableColStart > -1) {
+        e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      } else {
+        editor.value.setBorderThickness(props.index, thickness);
+      }
+    } else {
+      editor.value.setBorderThickness(props.index, thickness);
+    }
     borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
   }
 }
@@ -127,7 +171,18 @@ const decrease = (e: Event) => {
   if (borderThickness.value) {
     if (Number(borderThickness.value.value) === 0) return
     const thickness = Number(borderThickness.value.value) - 1
-    editor.value.setBorderThickness(props.index, thickness);
+    const shape = props.shapes[0] as TableShape;
+    if (shape.type === ShapeType.Table) {
+      const table = props.context.selection.getTableSelection(shape, props.context);
+      const e = props.context.editor4Table(shape);
+      if (table.tableRowStart > -1 || table.tableColStart > -1) {
+        e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      } else {
+        editor.value.setBorderThickness(props.index, thickness);
+      }
+    } else {
+      editor.value.setBorderThickness(props.index, thickness);
+    }
     borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
   }
 }
@@ -157,7 +212,18 @@ const onMouseMove = (e: MouseEvent) => {
       if (mx > 0) {
         if (borderThickness.value) {
           const thickness = Number(borderThickness.value.value) + 1
-          editor.value.setBorderThickness(props.index, thickness);
+          const shape = props.shapes[0] as TableShape;
+          if (shape.type === ShapeType.Table) {
+            const table = props.context.selection.getTableSelection(shape, props.context);
+            const e = props.context.editor4Table(shape);
+            if (table.tableRowStart > -1 || table.tableColStart > -1) {
+              e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            } else {
+              editor.value.setBorderThickness(props.index, thickness);
+            }
+          } else {
+            editor.value.setBorderThickness(props.index, thickness);
+          }
           borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
         }
       } else if (mx < 0) {
@@ -167,7 +233,18 @@ const onMouseMove = (e: MouseEvent) => {
             thickness = 0
             _curpt.x = e.screenX
           }
-          editor.value.setBorderThickness(props.index, thickness);
+          const shape = props.shapes[0] as TableShape;
+          if (shape.type === ShapeType.Table) {
+            const table = props.context.selection.getTableSelection(shape, props.context);
+            const e = props.context.editor4Table(shape);
+            if (table.tableRowStart > -1 || table.tableColStart > -1) {
+              e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            } else {
+              editor.value.setBorderThickness(props.index, thickness);
+            }
+          } else {
+            editor.value.setBorderThickness(props.index, thickness);
+          }
           if (Number(borderThickness.value.value) > 0) {
             borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
           }
@@ -219,7 +296,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="border-detail-container">
+  <div class="border-detail-container" @mousedown.stop>
     <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="-455"
       :title="t('attr.advanced_stroke')">
       <template #trigger>
@@ -309,7 +386,7 @@ onUnmounted(() => {
           padding: 0 14px;
           background-color: var(--input-background);
           width: calc(100% - 72px);
-          height:  var(--default-input-height);
+          height: var(--default-input-height);
           border-radius: var(--default-radius);
           display: flex;
           align-items: center;
