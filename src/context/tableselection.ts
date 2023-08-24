@@ -28,11 +28,12 @@ export class TableSelection implements Notifiable {
         this.m_notify.notify(...args);
     }
 
-    reset() {
+    resetSelection() {
         this.m_tableRowStart = -1;
         this.m_tableRowEnd = -1;
         this.m_tableColStart = -1;
         this.m_tableColEnd = -1;
+        this.notify(Selection.CHANGE_TABLE_CELL);
     }
 
     get tableRowStart() {
@@ -51,10 +52,7 @@ export class TableSelection implements Notifiable {
         return this.m_editing_cell;
     }
     setEditingCell(cell?: TableGridItem & { cell: TableCell | undefined }) {
-        if (cell) {
-            this.reset();
-            this.notify(Selection.CHANGE_TABLE_CELL);
-        }
+        if (cell) this.resetSelection();
         this.m_editing_cell = cell;
         this.notify(Selection.CHANGE_EDITING_CELL);
     }

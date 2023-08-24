@@ -535,7 +535,7 @@ export function HSL2RGB(hsl: HSL): RGB {
   }
 }
 export function getColorsFromDoc(context: Context) {
-  const s = Date.now();
+  // const s = Date.now();
   const page = context.selection.selectedPage;
   if (!page) return [];
   let dcs = Array.from(finder(context, page).values());
@@ -546,7 +546,7 @@ export function getColorsFromDoc(context: Context) {
   });
   const result: { times: number, color: Color }[] = [];
   for (let i = 0; i < dcs.length; i++)  result.push({ times: dcs[i].length, color: dcs[i][0] });
-  const e = Date.now();
+  // const e = Date.now();
   // console.log(e - s);
   return result;
 }

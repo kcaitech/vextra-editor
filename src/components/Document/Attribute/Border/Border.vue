@@ -31,6 +31,7 @@ const { borders } = data;
 const alphaBorder = ref<any>();
 const colorBorder = ref<any>()
 const mixed = ref<boolean>(false);
+const mixed_cell = ref(false);
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const watchedShapes = new Map();
 const len = computed<number>(() => props.shapes.length);
@@ -59,16 +60,30 @@ function watcher(...args: any[]) {
 }
 function updateData() {
     borders.length = 0;
-    mixed.value = false;
+    mixed.value = false; mixed_cell.value = false;
     if (props.shapes.length === 1) {
-        const style = props.shapes[0].style;
-        for (let i = 0, l = style.borders.length; i < l; i++) {
-            const border = style.borders[i];
-            const b: BorderItem = {
-                id: i,
-                border: border
+        const shape = props.shapes[0];
+        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+        if (shape.type === ShapeType.Table && table.tableRowStart > -1) {
+            const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
+            if (cells.length > 0) {
+                const _bs = get_borders(cells as Shape[]);
+                if (_bs === 'mixed') {
+                    mixed_cell.value = true;
+                } else {
+                    borders.unshift(..._bs);
+                }
             }
-            borders.unshift(b);
+        } else {
+            const style = shape.style;
+            for (let i = 0, l = style.borders.length; i < l; i++) {
+                const border = style.borders[i];
+                const b: BorderItem = {
+                    id: i,
+                    border: border
+                }
+                borders.unshift(b);
+            }
         }
     } else if (props.shapes.length > 1) {
         const _bs = get_borders(props.shapes);
@@ -90,10 +105,13 @@ function addBorder() {
             const table = props.context.selection.getTableSelection(shape, props.context);
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
-                e.addBorder(border, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+                const range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
+                if (mixed_cell.value) {
+                    e.addBorder4Multi(border, range)
+                } else {
+                    e.addBorder(border, range)
+                }
             } else {
-                console.log(border, 'border');
                 editor.value.addBorder(border);
             }
         } else {
@@ -125,12 +143,11 @@ function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     if (len.value === 1) {
-        const shape = props.shapes[0] as TableShape;
+        const shape = props.shapes[0];
+        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
         if (shape.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(shape, props.context);
-            const e = props.context.editor4Table(shape);
+            const e = props.context.editor4Table(shape as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(_idx, '_idx');
                 e.deleteBorder(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.deleteBorder(_idx);
@@ -159,7 +176,6 @@ function toggleVisible(idx: number) {
             const table = props.context.selection.getTableSelection(shape, props.context);
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
                 e.setBorderEnable(_idx, isEnabled, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.setBorderEnable(_idx, isEnabled);
@@ -203,7 +219,6 @@ function onColorChange(e: Event, idx: number) {
             const table = props.context.selection.getTableSelection(shape, props.context);
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
                 e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.setBorderColor(_idx, color);
@@ -245,7 +260,6 @@ function onAlphaChange(e: Event, idx: number) {
                     const table = props.context.selection.getTableSelection(shape, props.context);
                     const e = props.context.editor4Table(shape);
                     if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                        console.log(table, 'table');
                         e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
                     } else {
                         editor.value.setBorderColor(_idx, color);
@@ -288,7 +302,6 @@ function getColorFromPicker(color: Color, idx: number) {
             const table = props.context.selection.getTableSelection(shape, props.context);
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(table, 'table');
                 e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.setBorderColor(_idx, color);
@@ -337,21 +350,36 @@ function update_by_shapes() {
     updateData();
     layout();
 }
+
+const selection_watcher = (t: number) => {
+    if (t === Selection.CHANGE_TABLE_CELL) {
+        updateData();
+    }
+}
+const workspace_watcher = (t: number) => {
+    if (t === WorkSpace.CTRL_APPEAR) {
+        updateData();
+    }
+}
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
 onMounted(() => {
     update_by_shapes();
+    props.context.selection.watch(selection_watcher);
+    props.context.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     stop();
+    props.context.selection.unwatch(selection_watcher);
+    props.context.workspace.unwatch(workspace_watcher);
 })
 </script>
 
 <template>
     <div class="border-panel">
-        <TypeHeader :title="t('attr.border')" class="mt-24" @click="first">
+        <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first">
             <template #tool>
-                <div class="add" @click="addBorder">
+                <div class="add" @click.stop="addBorder">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
             </template>
@@ -359,7 +387,10 @@ onUnmounted(() => {
         <div class="tips-wrap" v-if="mixed">
             <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
         </div>
-        <div class="borders-container" v-else-if="!mixed">
+        <div class="tips-wrap" v-if="mixed_cell">
+            <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
+        </div>
+        <div class="borders-container" v-else-if="!mixed && !mixed_cell">
             <div class="border" v-for="(b, idx) in borders" :key="b.id">
                 <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>

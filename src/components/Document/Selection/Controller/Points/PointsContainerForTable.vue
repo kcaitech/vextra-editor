@@ -11,7 +11,6 @@ interface Props {
     matrix: number[]
     context: Context
     shape: Shape
-    axle: { x: number, y: number }
     cFrame: Point[]
 }
 const props = defineProps<Props>();

@@ -36,6 +36,11 @@ let add_y: number = 0, ids_y = 0;
 const hidden = ref<boolean>(false);
 let frame_params = data.frame_params, xbars = data.xbars, ybars = data.ybars, xs = data.xs, ys = data.ys;
 let layout: TableLayout;
+let m4table: Matrix = new Matrix();
+let move: any;
+let index_col: number = 0, index_row: number = 0;
+let m_index_col: number = 0, m_index_row: number = 0;
+let selecting: boolean = false;
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
@@ -64,12 +69,14 @@ function update_position() {
     }
 }
 function x_dot_mouseennter(x: number, ids: number) {
+    if (selecting) return;
     show_add_x.value = true, add_x = x, ids_x = ids;
 }
 function x_dot_mouseleave() {
     show_add_x.value = false;
 }
 function y_dot_mouseennter(y: number, ids: number) {
+    if (selecting) return;
     show_add_y.value = true, add_y = y, ids_y = ids;
 }
 function y_dot_mouseleave() {
@@ -78,9 +85,7 @@ function y_dot_mouseleave() {
 function add_cols() {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
-    table_selection.reset();
-    selection.notify(Selection.CHANGE_TABLE_CELL);
-
+    table_selection.resetSelection();
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);
 }
@@ -88,8 +93,7 @@ function add_rows() {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     table_selection.setEditingCell();
-    table_selection.reset();
-    selection.notify(Selection.CHANGE_TABLE_CELL);
+    table_selection.resetSelection();
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertRow(ids_y + 1, layout.rowHeights[ids_y]);
 }
@@ -101,8 +105,13 @@ function select_col(index: number) {
     table_selection.selectTableCellRange(0, rl - 1, index, index, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
+    m4table.reset(m.inverse);
     const xy = m.computeCoord2((xs[index].x + (xs[index - 1]?.x || 0)) / 2, 0);
+    index_col = index, m_index_col = index;
     emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
+    document.addEventListener('mousemove', move_x);
+    document.addEventListener('mouseup', up);
+    move = move_x;
 }
 function select_row(index: number) {
     const selection = props.context.selection;
@@ -112,16 +121,70 @@ function select_row(index: number) {
     table_selection.selectTableCellRange(index, index, 0, cl - 1, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
+    m4table.reset(m.inverse);
     const xy = m.computeCoord2(0, (ys[index].y + (ys[index - 1]?.y || 0)) / 2);
+    index_row = index, m_index_row = index;
+    emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
+    document.addEventListener('mousemove', move_y);
+    document.addEventListener('mouseup', up);
+    move = move_y;
+}
+function move_x(e: MouseEvent) {
+    const root = props.context.workspace.root;
+    const xy = m4table.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const cell = (props.shape as TableShape).locateCell(xy.x, 1);
+    if (!cell) return;
+    if (cell.index.col !== m_index_col) select_cols(Math.min(index_col, cell.index.col), Math.max(index_col, cell.index.col));
+    m_index_col = cell.index.col, selecting = true;
+
+}
+function move_y(e: MouseEvent) {
+    const root = props.context.workspace.root;
+    const xy = m4table.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const cell = (props.shape as TableShape).locateCell(1, xy.y);
+    if (!cell) return;
+    if (cell.index.row !== m_index_row) select_rows(Math.min(index_row, cell.index.row), Math.max(index_row, cell.index.row));
+    m_index_row = cell.index.row, selecting = true;
+}
+function up() {
+    selecting = false;
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+}
+function select_cols(index1: number, index2: number) {
+    if (index1 === index2) return select_col(index1);
+    const selection = props.context.selection;
+    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    table_selection.setEditingCell();
+    const rl = layout.grid.rowCount;
+    table_selection.selectTableCellRange(0, rl - 1, index1, index2, false);
+    const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
+    m.multiAtLeft(wm);
+    const xy = m.computeCoord2((xs[index2].x + (xs[index1 - 1]?.x || 0)) / 2, 0);
+    emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
+}
+function select_rows(index1: number, index2: number) {
+    if (index1 === index2) return select_row(index1);
+    const selection = props.context.selection;
+    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    table_selection.setEditingCell();
+    const cl = layout.grid.colCount;
+    table_selection.selectTableCellRange(index1, index2, 0, cl - 1, false);
+    const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
+    m.multiAtLeft(wm);
+    const xy = m.computeCoord2(0, (ys[index2].y + (ys[index1 - 1]?.y || 0)) / 2);
     emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
 }
-function move(e: MouseEvent) { }
-function up(e: MouseEvent) { }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         hidden.value = false;
         update_position();
     }
+}
+function window_blur() {
+    m_index_col = 0, index_col = 0, index_row = 0, m_index_row = 0, selecting = false;
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
 }
 watch(() => props.matrix, update_position, { deep: true });
 
@@ -129,10 +192,12 @@ onMounted(() => {
     update_position();
     props.shape.watch(update_position);
     props.context.workspace.watch(workspace_watcher);
+    window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {
     props.shape.unwatch(update_position);
     props.context.workspace.unwatch(workspace_watcher);
+    window.removeEventListener('blur', window_blur);
 })
 </script>
 
@@ -140,12 +205,12 @@ onUnmounted(() => {
     <g :transform="`translate(${frame_params.x}, ${frame_params.y})`" :class="{ hidden }">
         <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-5.5" r="3" stroke="none" class="dot"
             @mouseenter="() => x_dot_mouseennter(d.x, d.idx)" />
-        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-9" :width="b.length" height="7" stroke="none" rx="2.5"
-            ry="2.5" class="bar" @mousedown.stop="() => select_col(b.idx)" />
+        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-12" :width="b.length" height="12" stroke="none" rx="6"
+            ry="6" class="bar" @mousedown.stop="() => select_col(b.idx)" />
         <circle v-for="(d, ids) in ys" :key="ids" cx="-5.5" :cy="d.y" r="3" stroke="none" class="dot"
             @mouseenter="() => y_dot_mouseennter(d.y, d.idx)" />
-        <rect v-for="(b, ids) in ybars" :key="ids" x="-9" :y="b.s" :height="b.length" width="7" stroke="none" rx="2.5"
-            ry="2.5" class="bar" @mousedown.stop="() => select_row(b.idx)" />
+        <rect v-for="(b, ids) in ybars" :key="ids" x="-12" :y="b.s" :height="b.length" width="12" stroke="none" rx="6"
+            ry="6" class="bar" @mousedown.stop="() => select_row(b.idx)" />
         <g v-if="show_add_x">
             <line :x1="add_x" y1="0" :x2="add_x" :y2="frame_params.height" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
@@ -168,10 +233,6 @@ onUnmounted(() => {
                     fill="#865dff" p-id="9400"></path>
             </svg>
         </g>
-        <!-- <line v-for="(x, idx) in xs" :key="idx" :x1="x.x" y1="0" :x2="x.x" :y2="frame_params.height" stroke="red"
-            stroke-width="5" class="line-x"></line>
-        <line v-for="(y, idx) in ys" :key="idx" x1="0" :y1="y.y" :x2="frame_params.width" :y2="y.y" stroke="green"
-            stroke-width="5" class="line-y"></line> -->
     </g>
 </template>
 <style lang='scss' scoped>
@@ -194,14 +255,6 @@ onUnmounted(() => {
     stroke-width: 3px;
     stroke-linecap: round;
 }
-
-// .line-x {
-//     cursor: col-resize;
-// }
-
-// .line-y {
-//     cursor: row-resize;
-// }
 
 .hidden {
     opacity: 0;

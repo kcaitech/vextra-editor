@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { Color, Fill, FillType, TableCell, TableShape } from '@kcdesign/data';
+import { Color, Fill, FillType, Shape, TableCell, TableShape, Text } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';
 import { v4 as uuid } from "uuid"
 import { CellMenu } from '@/context/menu';
+import { Selection } from '@/context/selection';
+import { get_fills } from '@/utils/shape_style';
 interface Props {
     context: Context
     position: { x: number, y: number }
@@ -16,12 +18,15 @@ interface Props {
 }
 const horIcon = ref('text-left');
 const verIcon = ref('align-top');
+const mixed_h = ref(false);
+const mixed_v = ref(false);
 const props = defineProps<Props>();
 const emit = defineEmits<{
     (e: 'close'): void;
 }>()
 const isAlignMenu = ref('')
 const color = ref<Color>(new Color(1, 216, 216, 216));
+const singleChoice = ref<boolean>(false);
 const showAlginMenu = (meun: string) => {
     if (isAlignMenu.value) return isAlignMenu.value = '';
     isAlignMenu.value = meun
@@ -42,7 +47,7 @@ const getColorFromPicker = (c: Color) => {
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableShape)
         const fill = new Fill(uuid(), true, FillType.SolidColor, c);
-        editor.addFill(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
+        editor.addFill4Multi(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
     }
     color.value = c;
 }
@@ -57,14 +62,6 @@ const mergeCells = () => {
     emit('close');
 }
 
-const imgVisible = computed(() => {
-    // const shape = props.context.selection.selectedShapes[0]
-    // const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    // if(table.tableRowEnd === table.tableRowStart && table.tableRowStart !== -1) {
-    //     return true;
-    // }else return false;
-    return true;
-})
 const pickImage = useImagePicker();
 function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     const format = getFormatFromBase64(data.base64);
@@ -92,17 +89,33 @@ const insertColumn = (dir: string) => {
         const editor = props.context.editor4Table(shape as TableShape);
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
         if (props.cellMenu === CellMenu.SelectRow && dir === 'lt') {
-            editor.insertRow(table.tableRowStart, grid.frame.height);
+            if (table.tableRowEnd === table.tableRowStart) {
+                editor.insertRow(table.tableRowStart, grid.frame.height);
+            } else {
+                editor.insertMultiRow(table.tableRowStart, grid.frame.height, (table.tableRowEnd - table.tableRowStart) + 1);
+            }
         } else if (props.cellMenu === CellMenu.SelectRow && dir === 'rb') {
             const grid = layout.grid.get(table.tableRowEnd, table.tableColStart);
-            editor.insertRow(table.tableRowEnd + 1, grid.frame.height);
+            if (table.tableRowEnd === table.tableRowStart) {
+                editor.insertRow(table.tableRowEnd + 1, grid.frame.height);
+            } else {
+                editor.insertMultiRow(table.tableRowEnd + 1, grid.frame.height, (table.tableRowEnd - table.tableRowStart) + 1);
+            }
         }
         else if (props.cellMenu === CellMenu.selectCol && dir === 'lt') {
-            editor.insertCol(table.tableColStart, grid.frame.width);
+            if (table.tableColStart === table.tableColEnd) {
+                editor.insertCol(table.tableColStart, grid.frame.width);
+            } else {
+                editor.insertMultiCol(table.tableColStart, grid.frame.width, (table.tableColEnd - table.tableColStart) + 1);
+            }
         }
         else if (props.cellMenu === CellMenu.selectCol && dir === 'rb') {
             const grid = layout.grid.get(table.tableRowStart, table.tableColEnd);
-            editor.insertCol(table.tableColEnd + 1, grid.frame.width);
+            if (table.tableColStart === table.tableColEnd) {
+                editor.insertCol(table.tableColEnd + 1, grid.frame.width);
+            } else {
+                editor.insertMultiCol(table.tableColEnd + 1, grid.frame.width, (table.tableColEnd - table.tableColStart) + 1);
+            }
         }
     }
     emit('close');
@@ -119,6 +132,97 @@ const deleteColumn = () => {
     }
     emit('close');
 }
+
+const selection_watcher = (t: number) => {
+    if (t === Selection.CHANGE_TABLE_CELL) {
+        handleCellMenu();
+    }
+}
+
+const handleCellMenu = () => {
+    const shape = props.context.selection.selectedShapes[0];
+    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
+        singleChoice.value = true;
+    } else {
+        singleChoice.value = false;
+    }
+    getCellsFormat();
+}
+
+const getCellsFormat = () => {
+    const shape = props.context.selection.selectedShapes[0];
+    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    if (table.tableRowStart < 0 || table.tableColStart < 0) return;
+    const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
+    if (cells.length === 1) {
+        const style = cells[0]!.style;
+        if (style.fills[0]) {
+            color.value = style.fills[0].color;
+        } else {
+            color.value = new Color(1, 216, 216, 216);
+        }
+    } else if (cells.length > 1) {
+        const _fs = get_fills(cells as Shape[]);
+        if (_fs === 'mixed' || !_fs.length) {
+            color.value = new Color(1, 216, 216, 216);
+        } else {
+            color.value = _fs[0].fill.color;
+        }
+    }
+    if (cells.length) {
+        const formats: any[] = []; let format: any = {};
+        for (let i = 0; i < cells.length; i++) {
+            const cell = cells[i];
+            if (cell && cell.text) {
+                const editor = props.context.editor4TextShape(cell as any);
+                const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+                formats.push(forma);
+            }
+        }
+        if (formats.length < 0) return;
+        const referenceKeys = Object.keys(formats[0]);
+        for (const key of referenceKeys) {
+            const referenceValue = formats[0][key]; let foundEqual = true;
+            for (let i = 1; i < formats.length; i++) {
+                if (formats[i][key] !== referenceValue) {
+                    foundEqual = false;
+                    break;
+                }
+            }
+            if (foundEqual) { format[key] = referenceValue; } else {
+                format[key] = `unlikeness`;
+            }
+        }
+        mixed_h.value = false; mixed_v.value = false;
+        if (format.alignment === 'left') {
+            horIcon.value = 'text-left';
+        } else if (format.alignment === 'right') {
+            horIcon.value = 'text-right';
+        } else if (format.alignment === 'centered') {
+            horIcon.value = 'text-center';
+        } else if (format.alignment === 'justified') {
+            horIcon.value = 'text-justify';
+        } else { horIcon.value = 'text-left'; mixed_h.value = true }
+
+        if (format.verAlign === 'top') {
+            verIcon.value = 'align-top';
+        } else if (format.verAlign === 'bottom') {
+            verIcon.value = 'align-bottom';
+        } else if (format.verAlign === 'middle') {
+            verIcon.value = 'align-middle';
+        } else { verIcon.value = 'align-top'; mixed_v.value = true }
+    }
+}
+
+onMounted(() => {
+    handleCellMenu();
+    props.context.selection.watch(selection_watcher);
+})
+
+onUnmounted(() => {
+    props.context.selection.unwatch(selection_watcher);
+})
 </script>
 
 <template>
@@ -126,7 +230,7 @@ const deleteColumn = () => {
         :style="{ top: `${props.position.y}px`, left: `${props.position.x}px`, transform: `translate(-50%, -124%)` }"
         @mousedown.stop>
         <div v-if="props.cellMenu === CellMenu.MultiSelect" class="popover-content">
-            <div class="hor selected_bgc">
+            <div class="hor" :class="{ selected_bgc: !mixed_h }">
                 <svg-icon :icon-class="horIcon"></svg-icon>
                 <div class="menu" @click="showAlginMenu('hor')">
                     <svg-icon icon-class="down"></svg-icon>
@@ -135,7 +239,7 @@ const deleteColumn = () => {
                     @textAlginHor="textAlginHor">
                 </TableContextAlgin>
             </div>
-            <div class="ver selected_bgc">
+            <div class="ver" :class="{ selected_bgc: !mixed_v }">
                 <svg-icon :icon-class="verIcon"></svg-icon>
                 <div class="menu" @click="showAlginMenu('ver')">
                     <svg-icon icon-class="down"></svg-icon>
@@ -148,7 +252,7 @@ const deleteColumn = () => {
                 <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
-            <div style="padding: 2px;" @click.stop="mergeCells">
+            <div style="padding: 2px;" @click.stop="mergeCells" v-if="!singleChoice">
                 <svg width="16" height="16" viewBox="0 0 21 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                         d="M7.35355 11.3536C7.54882 11.1583 7.54882 10.8417 7.35355 10.6464L4.17157 7.46447C3.97631 7.2692 3.65973 7.2692 3.46447 7.46447C3.2692 7.65973 3.2692 7.97631 3.46447 8.17157L6.29289 11L3.46447 13.8284C3.2692 14.0237 3.2692 14.3403 3.46447 14.5355C3.65973 14.7308 3.97631 14.7308 4.17157 14.5355L7.35355 11.3536ZM0 11.5H7V10.5H0V11.5Z"
@@ -160,7 +264,7 @@ const deleteColumn = () => {
                     <path d="M12 1L20 1V21H12" stroke="black" />
                 </svg>
             </div>
-            <div style="padding: 2px;" v-if="imgVisible" @click="onPickImge">
+            <div style="padding: 2px;" v-if="singleChoice" @click="onPickImge">
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
         </div>

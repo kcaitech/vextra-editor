@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue';
 import { Context } from '@/context';
+import { Selection } from '@/context/selection';
 import { Close } from '@element-plus/icons-vue'
 import { TableShape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
@@ -19,18 +20,7 @@ const radioRanks = ref('top');
 const colNum = ref(1);
 const rowBotom = ref(1);
 const colRight = ref(1);
-const handleChangeRow = (value: number) => {
-    console.log(value);
-}
-const handleChangeCol = (value: number) => {
-    console.log(value);
-}
-const handleChangeBottom = (value: number) => {
-    console.log(value);
-}
-const handleChangeRight = (value: number) => {
-    console.log(value);
-}
+
 const escClose = (e: KeyboardEvent) => {
     e.stopPropagation();
     emit('close');
@@ -40,21 +30,36 @@ const InsertCell = (state: string) => {
     const shape: TableShape = props.context.selection.selectedShapes[0] as TableShape;
     const layout = (shape as TableShape).getLayout();
     const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    const editor = props.context.editor4Table(shape as TableShape);
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-        const editor = props.context.editor4Table(shape as TableShape);
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
         if (state === 'top') {
-            editor.insertRow(table.tableRowStart, grid.frame.height);
+            editor.insertMultiRow(table.tableRowStart, grid.frame.height, rowNum.value);
         } else if (state === 'bottom') {
-            editor.insertRow(table.tableRowEnd + 1, grid.frame.height);
+            editor.insertMultiRow(table.tableRowEnd + 1, grid.frame.height, rowBotom.value);
         }
         else if (state === 'left') {
-            editor.insertCol(table.tableColStart, grid.frame.width);
+            editor.insertMultiCol(table.tableColStart, grid.frame.width, colNum.value);
         }
         else if (state === 'right') {
-            editor.insertCol(table.tableColEnd + 1, grid.frame.width);
+            editor.insertMultiCol(table.tableColEnd + 1, grid.frame.width, colRight.value);
+        }
+    } else if (table.editingCell) {
+        const grid = layout.grid.get(table.editingCell.index.row, table.editingCell.index.col);
+        if (state === 'top') {
+            editor.insertMultiRow(table.editingCell.index.row, grid.frame.height, rowNum.value);
+        } else if (state === 'bottom') {
+            editor.insertMultiRow(table.editingCell.index.row + 1, grid.frame.height, rowBotom.value);
+        }
+        else if (state === 'left') {
+            editor.insertMultiCol(table.editingCell.index.col, grid.frame.width, colNum.value);
+        }
+        else if (state === 'right') {
+            editor.insertMultiCol(table.editingCell.index.col + 1, grid.frame.width, colRight.value);
         }
     }
+    table.resetSelection();
+    table.setEditingCell();
     emit('close');
 }
 
@@ -81,7 +86,7 @@ onUnmounted(() => {
                     </el-radio-group>
                     <span @click="radioRanks = 'top'">{{ t('table.top_insert') }}</span>
                     <el-input-number v-model="rowNum" :min="1" :max="50" size="small" :controls="true"
-                        controls-position="right" @change="handleChangeRow" />
+                        controls-position="right" />
                 </div>
                 <div class="addcol" :style="{ opacity: radioRanks === 'bottom' ? 1 : .5 }">
                     <el-radio-group v-model="radioRanks">
@@ -89,7 +94,7 @@ onUnmounted(() => {
                     </el-radio-group>
                     <span @click="radioRanks = 'bottom'">{{ t('table.bottom_insert') }}</span>
                     <el-input-number v-model="rowBotom" :min="1" :max="50" size="small" :controls="true"
-                        controls-position="right" @change="handleChangeBottom" />
+                        controls-position="right" />
                 </div>
                 <div class="addcol" :style="{ opacity: radioRanks === 'left' ? 1 : .5 }">
                     <el-radio-group v-model="radioRanks">
@@ -97,7 +102,7 @@ onUnmounted(() => {
                     </el-radio-group>
                     <span @click="radioRanks = 'left'">{{ t('table.left_insert') }}</span>
                     <el-input-number v-model="colNum" :min="1" :max="50" size="small" :controls="true"
-                        controls-position="right" @change="handleChangeCol" />
+                        controls-position="right" />
                 </div>
                 <div class="addcol" :style="{ opacity: radioRanks === 'right' ? 1 : .5 }">
                     <el-radio-group v-model="radioRanks">
@@ -105,7 +110,7 @@ onUnmounted(() => {
                     </el-radio-group>
                     <span @click="radioRanks = 'right'">{{ t('table.right_insert') }}</span>
                     <el-input-number v-model="colRight" :min="1" :max="50" size="small" :controls="true"
-                        controls-position="right" @change="handleChangeRight" />
+                        controls-position="right" />
                 </div>
             </div>
             <div class="save">

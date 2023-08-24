@@ -2,10 +2,9 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch, shallowRef } from 'vue';
-import TextAdvancedSettings from '../Text/TextAdvancedSettings.vue'
+import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
 import { Context } from '@/context';
-import { TextShape, AttrGetter, TableShape, TableCell, Shape, Text, TableGridItem } from "@kcdesign/data";
+import { AttrGetter, TableShape, TableCell, Text } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -318,8 +317,8 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 // 获取当前文字格式
 const textFormat = () => {
     const table = props.context.selection.getTableSelection(props.shape, props.context);
-    if ((table.editingCell || (table.tableColEnd === table.tableColStart && table.tableRowStart === table.tableRowEnd) && table.tableRowEnd !== -1)) {
-        shape.value = table.editingCell?.cell as TableCell & { text: Text; } || (table.getSelectedCells(true)[0].cell as TableCell & { text: Text; });
+    if (table.editingCell) {
+        shape.value = table.editingCell?.cell as TableCell & { text: Text; };
         // 拿到某个单元格
         if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -424,7 +423,7 @@ function selection_wather(t: number) {
         textFormat();
     } else if (t === Selection.CHANGE_SHAPE) {
         textFormat();
-    } else if (t === Selection.CHANGE_TABLE_CELL) {
+    } else if (t === Selection.CHANGE_TABLE_CELL || Selection.CHANGE_EDITING_CELL) {
         textFormat();
     }
 }
@@ -533,6 +532,8 @@ function onColorChange(e: Event, type: string) {
     }
 }
 function getColorFromPicker(color: Color, type: string) {
+    console.log(shape.value,'shape.value');
+    
     if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value);
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -550,6 +551,8 @@ function getColorFromPicker(color: Color, type: string) {
             }
         }
     } else {
+        console.log(11);
+        
         const table = props.shape;
         const table_Selection = props.context.selection.getTableSelection(props.shape, props.context);
         const editor = props.context.editor4Table(table)
@@ -583,7 +586,7 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
-        if (isSelectText()) {
+        if (isSelectText()) {            
             if (type === 'color') {
                 editor.setTextColor(0, Infinity, new Color(alpha, r, g, b));
             } else {
@@ -683,6 +686,7 @@ const addTextColor = () => {
             editor.setTextColor(new Color(1, 6, 6, 6), cell_selection);
         }
     }
+    textFormat();
 }
 const selectSizeValue = () => {
     textSize.value && textSize.value.select();
