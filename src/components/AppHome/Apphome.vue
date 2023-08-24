@@ -6,10 +6,10 @@
       </el-header>
       <el-container>
         <el-aside width="260px" min-width="260px">
-          <Aside @settitle="setTitle" />
+          <Aside @settitle="setTitle" @teamdata="teamdata" />
         </el-aside>
         <el-main>
-          <Main :title="title" @data-update="update" />
+          <Main :title="title" @data-update="update" :teamData="teamData" />
         </el-main>
       </el-container>
     </el-container>
@@ -21,7 +21,7 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onUnmounted, provide } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
@@ -31,10 +31,35 @@ const searchtitle = ref('')
 let items = ref<any[]>([])
 const link_success = t('message.link_success')
 const network_anomaly = t('message.network_anomaly')
+const teamData = ref<any>()
+const teamID = ref('')
+const teamName = ref('')
+const teamAvatar = ref('')
+const teamDescription = ref('')
+
+
+const updateShareData = (id: string, name: string, avatar: string, description: string) => {
+  teamID.value = id
+  teamName.value = name
+  teamAvatar.value = avatar
+  teamDescription.value = description
+}
+
+provide('shareData', {
+  teamID,
+  teamName,
+  teamAvatar,
+  teamDescription,
+  updateShareData
+})
 
 function setTitle(t: string) {
   title.value = t;
   sessionStorage.setItem('title', title.value)
+}
+
+function teamdata(data: any) {
+  teamData.value = data
 }
 
 //===>接收到最新的lists,props传给Headher组件
@@ -46,38 +71,38 @@ const update = (data: any, title: any) => {
 
 //网络连接成功message信息
 const networkLinkSuccess = () => {
-    insertNetworkInfo('netError', false, network_anomaly)
-    insertNetworkInfo('networkSuccess', true, link_success)
-    const timer = setTimeout(() => {
-        insertNetworkInfo('networkSuccess', false, link_success)
-        clearTimeout(timer)
-    }, 3000)
+  insertNetworkInfo('netError', false, network_anomaly)
+  insertNetworkInfo('networkSuccess', true, link_success)
+  const timer = setTimeout(() => {
+    insertNetworkInfo('networkSuccess', false, link_success)
+    clearTimeout(timer)
+  }, 3000)
 }
 // 网络断开连接提示信息
 const networkLinkError = () => {
-    insertNetworkInfo('networkSuccess', false, link_success)
-    insertNetworkInfo('netError', true, network_anomaly)
-    const timer = setTimeout(() => {
-        insertNetworkInfo('netError', false, network_anomaly)
-        clearTimeout(timer)
-    }, 3000)
+  insertNetworkInfo('networkSuccess', false, link_success)
+  insertNetworkInfo('netError', true, network_anomaly)
+  const timer = setTimeout(() => {
+    insertNetworkInfo('netError', false, network_anomaly)
+    clearTimeout(timer)
+  }, 3000)
 }
 const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
 networkStatus.addOnChange((status: any) => {
-    const s = (status.status)as any
-    if(s === 1) {
-      // 网络断开连接
-      networkLinkError()
-    }else {
-      // 网络连接成功
-      networkLinkSuccess()
-    }
+  const s = (status.status) as any
+  if (s === 1) {
+    // 网络断开连接
+    networkLinkError()
+  } else {
+    // 网络连接成功
+    networkLinkSuccess()
+  }
 })
 
 const closeNetMsg = () => {
-    insertNetworkInfo('netError', false, network_anomaly)
-    insertNetworkInfo('networkSuccess', false, link_success)
+  insertNetworkInfo('netError', false, network_anomaly)
+  insertNetworkInfo('networkSuccess', false, link_success)
 }
 
 onUnmounted(() => {
@@ -88,16 +113,19 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.common-layout{
+.common-layout {
   height: 100vh;
   overflow: hidden;
 }
-.el-header{
+
+.el-header {
   margin-top: 8px;
 }
-.el-main{
+
+.el-main {
   padding-top: 0;
 }
+
 .el-aside {
   border-right: rgba(239, 239, 239, 0.838) solid 1px;
   transition: all .3s ease-in-out;
@@ -105,7 +133,7 @@ onUnmounted(() => {
 
 @media screen and (max-width:1000px) {
   .el-aside {
-    width:60px;
+    width: 60px;
   }
 
 }

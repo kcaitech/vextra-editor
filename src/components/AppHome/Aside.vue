@@ -9,6 +9,7 @@ import {
     FolderOpened,
 } from '@element-plus/icons-vue'
 import { router } from '@/router'
+import { useRoute } from 'vue-router'
 import { FilePicker } from '../common/filepicker';
 import { Repository, CoopRepository, Document } from '@kcdesign/data';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
@@ -17,16 +18,28 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-import { measure } from '@/layout/text/measure';
-import { nextTick, onUnmounted, ref } from 'vue';
-import addTeam from '@/components/TeamProject/addTeam.vue'
+import { inject, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import * as user_api from '@/apis/users'
+import addTeam from '../TeamProject/addTeam.vue'
+import addProject from '../TeamProject/addProject.vue';
 
 interface Emits {
     (e: 'settitle', title: string): void;
+    (e: 'teamdata', data: any): void;
 }
+
 const emits = defineEmits<Emits>();
 const { t } = useI18n();
+const route = useRoute()
 const showoverlay = ref(false)
+const teamcard = ref(false)
+const projectcard = ref(false)
+const teamid = ref('')
+const teamdata = ref<any[]>([])
+
+const { updateShareData } = inject('shareData') as {
+    updateShareData: (id: string, name: string, avatar: string, description: string) => void;
+};
 
 const picker = new FilePicker((file) => {
     if (!file) return;
@@ -64,11 +77,45 @@ const x = sessionStorage.getItem('index')
 
 const showteamcard = () => {
     showoverlay.value = true
+    teamcard.value = true
     nextTick(() => {
         const input = document.querySelector(".team-name input") as HTMLInputElement
         input?.focus()
     })
 }
+
+const showprojectcard = (id: string) => {
+    showoverlay.value = true
+    projectcard.value = true
+    teamid.value = id
+    nextTick(() => {
+        const input = document.querySelector(".project-name input") as HTMLInputElement
+        input?.focus()
+    })
+}
+
+const GetteamList = async () => {
+    const { code, data } = await user_api.GetteamList()
+    if (code === 0) {
+        teamdata.value = data
+        emits('teamdata', teamdata.value)
+    }
+}
+
+const torouter = (id: string) => {
+    router.push({ path: '/apphome/teams/' + id })
+}
+
+const isActive = (id: string, name: string, avatar: string, description: string) => {
+    if (route.params.id === id) {
+        updateShareData(id, name, avatar, description)
+    }
+    return route.params.id === id
+}
+
+onMounted(() => {
+    GetteamList()
+})
 
 onUnmounted(() => {
     picker.unmount();
@@ -121,17 +168,39 @@ onUnmounted(() => {
                         <span>{{ t('home.recycling_station') }}</span>
                     </el-menu-item></router-link>
             </el-menu>
+            <div class="teamlists">
+                <div class="teamitem" :class="{ 'is-active': isActive(id, name, avatar, description) }"
+                    v-for="{ team: { name, id, avatar, description } } in teamdata" :key="id" @click.stop="torouter(id)">
+                    <div class="left">
+                        <div class="team-avatar">
+                            <div v-if="avatar.includes('http')" class="img">
+                                <img :src="avatar" alt="team avatar">
+                            </div>
+                            <div v-else class="text">
+                                <span>{{ name.slice(0, 1) }}</span>
+                            </div>
+                        </div>
+                        <span>{{ name }}</span>
+                    </div>
+                    <div class="right" @click.stop="showprojectcard(id)">
+                        <svg-icon icon-class="close" />
+                    </div>
+                </div>
+            </div>
             <div class="team-container">
                 <button class="newteam" @click.stop="showteamcard">
                     <svg-icon icon-class="close" />
-                    <span>{{t('Createteam.add_team')}}</span>
+                    <span>{{ t('Createteam.add_team') }}</span>
                 </button>
             </div>
         </el-col>
     </el-row>
     <transition name="nested" :duration="550">
         <div v-if="showoverlay" class="overlay">
-            <addTeam class="inner" @close="showoverlay = false" />
+            <addTeam v-if="teamcard" class="inner" @close="showoverlay = false; teamcard = false"
+                @updateteamlist="GetteamList" />
+            <addProject v-if="projectcard" class="inner" :teamid="teamid"
+                @close="showoverlay = false; projectcard = false" />
         </div>
     </transition>
 </template>
@@ -231,12 +300,14 @@ a {
 }
 
 .el-row {
+    width: 100%;
     height: calc(100vh - 56px);
     overflow: hidden;
     overflow-y: auto;
     background-color: white;
 
     .el-col {
+        width: 100%;
         max-width: 100%;
         flex: 1;
 
@@ -247,7 +318,7 @@ a {
 
             button {
                 width: 100%;
-                height: 36px;
+                height: 40px;
                 margin: 0px 0 20px 0;
                 border: none;
                 font-size: 14px;
@@ -307,7 +378,7 @@ a {
             .el-menu-item {
                 border-radius: 4px;
                 margin: 10px;
-                height: 32px;
+                height: 40px;
 
                 &:hover {
                     background-color: #f3f0ff;
@@ -320,6 +391,115 @@ a {
                     background-color: #e5dbff;
                 }
             }
+        }
+
+        .teamlists {
+            width: 100%;
+            position: absolute;
+            bottom: 60px;
+            top: 400px;
+            overflow-y: auto;
+
+            &::-webkit-scrollbar {
+                height: 0;
+                width: 0;
+            }
+
+
+            .teamitem {
+                border-radius: 4px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow-x: hidden;
+                line-height: 40px;
+                margin: 0 10px 6px 10px;
+                padding: 0 6px;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+
+                .left {
+                    display: flex;
+                    align-items: center;
+                    width: calc(100% - 16px);
+
+                    .team-avatar {
+                        width: 24px;
+                        height: 24px;
+                        min-width: 24px;
+                        background-color: #9775fa;
+                        text-align: center;
+                        border-radius: 50%;
+                        overflow: hidden;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-right: 6px;
+
+                        .img {
+                            width: 100%;
+                            height: 100%;
+                            line-height: 0;
+
+                            img {
+                                width: 100%;
+                                height: 100%;
+                                object-fit: cover;
+
+                            }
+                        }
+
+                        .text {
+                            line-height: 0;
+
+                            span {
+                                width: 100%;
+                                height: 100%;
+                                font-size: 12px;
+                                font-weight: 600;
+                                color: white;
+                            }
+                        }
+
+                    }
+
+                    span {
+                        overflow-x: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+
+                .right {
+                    display: flex;
+
+                    svg {
+                        width: 16px;
+                        min-width: 16px;
+                        height: 16px;
+                        fill: #9775fa;
+                        transform: rotate(45deg);
+                    }
+
+                    &:hover {
+                        transform: scale(1.1);
+                    }
+                }
+
+                &:hover {
+                    cursor: pointer;
+                    background-color: #f3f0ff;
+                    color: #9775fa;
+                }
+
+                &.is-active {
+                    font-weight: 600;
+                    color: #9775fa;
+                    background-color: #e5dbff;
+                }
+            }
+
+
         }
     }
 }

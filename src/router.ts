@@ -16,6 +16,7 @@ const Privacypolicy = () => import("@/components/Login/Privacypolicy.vue");
 const Serviceagreement = () => import("@/components/Login/Serviceagreement.vue");
 const KChome = () => import("@/components/Home/KChome.vue");
 const HomeContent = () => import("@/components/Home/HomeContent.vue")
+const TeamPage=()=>import("@/components/TeamProject/TeamPage.vue")
 const routes = [
     {
         path: '/',
@@ -91,7 +92,12 @@ const routes = [
                 path: 'recyclebin',
                 name: 'recyclebin',
                 component: RecycleBin
-            }
+            },
+            {
+                path: 'teams/:id',
+                name: 'TeamPage',
+                component: TeamPage
+            },
         ]
     },
     {
@@ -107,6 +113,7 @@ const routes = [
         name: "per_center",
         component: per_center
     },
+
 
     {
         path: '/:catchAll(.*)',
