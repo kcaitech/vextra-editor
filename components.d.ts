@@ -84,6 +84,7 @@ declare module '@vue/runtime-core' {
     HoverComment: typeof import('./src/components/Document/Content/HoverComment.vue')['default']
     Icon: typeof import('./src/components/common/Icon.vue')['default']
     IconText: typeof import('./src/components/common/IconText.vue')['default']
+    ImageLoad: typeof import('./src/components/common/ImageLoad.vue')['default']
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
     Inform: typeof import('./src/components/AppHome/Inform.vue')['default']
     KChome: typeof import('./src/components/Home/KChome.vue')['default']

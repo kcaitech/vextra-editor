@@ -31,6 +31,7 @@ import { Action } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
+import ImageLoad from '../common/ImageLoad.vue';
 
 interface Props {
     context: Context
@@ -806,5 +807,7 @@ onUnmounted(() => {
             @completed="completed" :posi="posi"></CommentInput>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
+        <!-- <ImageLoad :x="0" :y="0" :width="100" :height="100" status="failed"></ImageLoad>
+        <ImageLoad :x="100" :y="0" :width="100" :height="100" status="loading"></ImageLoad> -->
     </div>
 </template>@/components/Document/initpal
