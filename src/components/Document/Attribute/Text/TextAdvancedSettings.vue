@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Popover from '@/components/common/Popover.vue';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -173,8 +173,11 @@ function selection_wather(t: any) {
   }
 }
 
+watchEffect(() => {
+    textFormat()
+})
+
 onMounted(() => {
-  textFormat()
   props.textShape.watch(textFormat)
   props.context.selection.watch(selection_wather);
 })

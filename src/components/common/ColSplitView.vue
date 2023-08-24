@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watchEffect } from "vue";
+import { ref, reactive, onMounted, onUnmounted, watchEffect, nextTick } from "vue";
 import Sash from "@/components/common/Sash.vue";
+import { Context } from "@/context";
+import { WorkSpace } from "@/context/workspace";
 
 export interface SizeBound {
     width: number,
@@ -19,7 +21,8 @@ const props = defineProps<{
     middle: SizeBound, // .8 .3 .9
     right: SizeBound // .1 .05 .5
     rightMinWidthInPx: number,
-    leftMinWidthInPx: number
+    leftMinWidthInPx: number,
+    context: Context
 }>();
 
 const sizeBounds = reactive<{
@@ -94,7 +97,7 @@ function leftAdjust(saveWidth: number, offset: number) {
     let leftWidth = saveWidth + offset;
     let rightWidth = sizeBounds.right.width;
     let middleWidth = Math.max(totalWidth - leftWidth - rightWidth, 0);
-    
+
     if (leftWidth === sizeBounds.left.width) {
         return;
     }
@@ -183,7 +186,7 @@ function onSizeChange() {
 
     const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth));
     const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth));
-    
+
     // sizeBounds.left.width = props.left.width * rootWidth;
     sizeBounds.left.minWidth = Math.max(leftMinWidthImportant, props.left.minWidth) * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
@@ -196,7 +199,7 @@ function onSizeChange() {
 
     let leftWidth = sizeBounds.left.width + (savedRootWidth ? sizeBounds.left.width / savedRootWidth * delta : 0);
     let rightWidth = sizeBounds.right.width + (savedRootWidth ? sizeBounds.right.width / savedRootWidth * delta : 0);
-    
+
     leftWidth = Math.max(sizeBounds.left.minWidth, Math.min(sizeBounds.left.maxWidth, leftWidth));
     rightWidth = Math.max(sizeBounds.right.minWidth, Math.min(sizeBounds.right.maxWidth, rightWidth));
     // const middleWidth = Math.max(rootWidth - leftWidth - rightWidth, 0);
@@ -217,7 +220,7 @@ function initSizeBounds() {
     const rigthMinWidthImportant = Number((props.rightMinWidthInPx / rootWidth));
     const leftMinWidthImportant = Number((props.leftMinWidthInPx / rootWidth));
     const middleMaxWidthImportant = 1 - (leftMinWidthImportant + rigthMinWidthImportant);
-    
+
     sizeBounds.left.width = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.minWidth = Math.max(props.left.width, leftMinWidthImportant) * rootWidth;
     sizeBounds.left.maxWidth = props.left.maxWidth * rootWidth;
@@ -228,15 +231,28 @@ function initSizeBounds() {
 
     sizeBounds.right.width = Math.max(props.right.width, rigthMinWidthImportant) * rootWidth;
     sizeBounds.right.minWidth = Math.max(props.right.minWidth, rigthMinWidthImportant) * rootWidth;
-    sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;  
+    sizeBounds.right.maxWidth = props.right.maxWidth * rootWidth;
+}
+
+const handle_left = (t: number) => {
+    if (t === WorkSpace.CHANGE_NAVI) {
+        const rootWidth = getRootWidth();
+        if (sizeBounds.left.width !== 0) {
+            props.context.workspace.matrix.trans(sizeBounds.left.width, 0)
+        } else {
+            props.context.workspace.matrix.trans(-(0.1 * rootWidth), 0)
+        }
+    }
 }
 
 onMounted(() => {
-    initSizeBounds();
     if (refRoot.value) observer.observe(refRoot.value);
+    props.context.workspace.watch(handle_left);
 })
 onUnmounted(() => {
     observer.disconnect();
+    props.context.workspace.unwatch(handle_left);
+
 })
 watchEffect(initSizeBounds);
 </script>
@@ -264,6 +280,7 @@ watchEffect(initSizeBounds);
     width: 100%;
     height: 100%;
     position: relative;
+
     .column1 {
         position: relative;
     }

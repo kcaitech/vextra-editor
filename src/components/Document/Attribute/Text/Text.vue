@@ -452,6 +452,18 @@ const selectHiglightColor = () => {
 const selectHiglighAlpha = () => {
     higlighAlpha.value && higlighAlpha.value.select()
 }
+
+const filterAlpha = (a: number) => {
+    let alpha = Math.round(a * 100) / 100;
+    if (Number.isInteger(alpha)) {
+        return alpha.toFixed(0); // 返回整数形式
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+        return alpha.toFixed(1); // 保留一位小数
+    } else {
+        return alpha.toFixed(2); // 保留两位小数
+    }
+}
+
 watchEffect(() => {
     textFormat()
 })
@@ -582,7 +594,7 @@ onUnmounted(() => {
                     <ColorPicker :color="textColor!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
                     <input ref="sizeColor" @focus="selectColorValue" :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)" @change="(e) => onColorChange(e, 'color')"/>
-                    <input ref="alphaFill" @focus="selectAlphaValue" style="text-align: center;" :value="(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
+                    <input ref="alphaFill" @focus="selectAlphaValue" style="text-align: center;" :value="filterAlpha(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
                 </div>
                 <div class="perch"></div>
             </div>
@@ -610,7 +622,7 @@ onUnmounted(() => {
                     <ColorPicker :color="highlight!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" @focus="selectHiglightColor" :spellcheck="false" :value="toHex(highlight!.red, highlight!.green, highlight!.blue)" @change="(e) => onColorChange(e, 'highlight')"/>
-                    <input ref="higlighAlpha" @focus="selectHiglighAlpha" style="text-align: center;" :value="(highlight!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')"/>
+                    <input ref="higlighAlpha" @focus="selectHiglighAlpha" style="text-align: center;" :value="filterAlpha(highlight.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')"/>
                 </div>
                 <div class="perch" @click="deleteHighlight">
                     <svg-icon class="svg" icon-class="delete"></svg-icon>

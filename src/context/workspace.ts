@@ -83,6 +83,7 @@ export class WorkSpace extends Watchable(Object) {
     static ITALIC = 30;
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
+    static CHANGE_NAVI = 33;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
