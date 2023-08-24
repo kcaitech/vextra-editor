@@ -101,7 +101,12 @@ function addFill(): void {
             const table = props.context.selection.getTableSelection(s as TableShape, props.context);
             const editor = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                editor.addFill(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+                const range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                if (mixed_cell.value) {
+                    editor.addFill4Multi(fill, range);
+                } else {
+                    editor.addFill(fill, range);
+                }
             } else {
                 e.addFill(fill);
             }
@@ -355,7 +360,7 @@ onUnmounted(() => {
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="fills-container" v-else-if="!mixed">
+        <div class="fills-container" v-else-if="!mixed && !mixed_cell">
             <div class="fill" v-for="(f, idx) in fills" :key="f.id">
                 <div :class="f.fill.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>

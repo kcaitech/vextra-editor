@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape, TextTransformType, TextBehaviour, TableShape, BulletNumbersType, TableCell } from "@kcdesign/data";
+import { AttrGetter, TextTransformType, TableShape, TableCell } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 import { TableSelection } from '@/context/tableselection';
 const { t } = useI18n();
@@ -195,8 +195,8 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 
 const textFormat = () => {
   const table = props.context.selection.getTableSelection(props.textShape, props.context);
-  if ((table.editingCell || (table.tableColEnd === table.tableColStart && table.tableRowStart === table.tableRowEnd) && table.tableRowEnd !== -1)) {
-    shape.value = table.editingCell?.cell as TableCell & { text: Text; } || (table.getSelectedCells(true)[0].cell as TableCell & { text: Text; });
+  if (table.editingCell) {
+    shape.value = table.editingCell?.cell as TableCell & { text: Text; };
     // 拿到某个单元格
     if (!shape.value || !shape.value.text) return;
     const { textIndex, selectLength } = getTextIndexAndLen();
@@ -270,7 +270,7 @@ function selection_wather(t: any) {
     textFormat();
   } else if (t === Selection.CHANGE_SHAPE) {
     textFormat();
-  } else if (t === Selection.CHANGE_TABLE_CELL) {
+  } else if (t === Selection.CHANGE_TABLE_CELL || Selection.CHANGE_EDITING_CELL) {
     textFormat();
   }
 }
