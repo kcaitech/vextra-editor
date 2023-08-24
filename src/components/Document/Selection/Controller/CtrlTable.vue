@@ -7,7 +7,7 @@ import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection } from '@/context/selection';
 import BarsContainer from "./Bars/BarsContainerForTable.vue";
 import PointsContainer from "./Points/PointsContainerForTable.vue";
-import { useController } from './controller2';
+import { useController } from './controller4table';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
 import TableHeader from './Table/TableHeader.vue';

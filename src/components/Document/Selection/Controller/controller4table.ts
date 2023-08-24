@@ -24,6 +24,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     const workspace_matrix = ref<Matrix>(context.workspace.matrix);
     const matrix = new Matrix();
     const dragActiveDis = 3;
+    const TIMER = 300; // 连续点击最大间隔时间
     let isDragging = false;
     let startPosition: ClientXY = { x: 0, y: 0 };
     let startPositionOnPage: PageXY = { x: 0, y: 0 };
@@ -46,10 +47,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let point_on_table: { x: number, y: number } = { x: 0, y: 0 };
     let down_type: number = 1; //针对主键 1 单击 2 双击 3 三次点击
     let down_timer: any = null;
-    const TIMER = 300; // 连续点击最大间隔时间
+    let shapes: Shape[] = [];
 
     function mousedown(e: MouseEvent) {
         if (context.workspace.isPageDragging) return;
+        shapes = context.selection.selectedShapes;
         root = context.workspace.root;
         area = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
         console.log('click-area', area);
@@ -74,15 +76,14 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     // #region 4trans
     function _migrate(start: ClientXY, end: ClientXY) {
-        if (table) {
-            const ps: PageXY = matrix.computeCoord(start.x, start.y);
-            const pe: PageXY = matrix.computeCoord(end.x, end.y);
-            const selection = context.selection;
-            const artboardOnStart = selection.getClosetArtboard(ps, undefined, [table]);
-            const targetParent = (artboardOnStart && artboardOnStart.type !== ShapeType.Page) ? selection.getClosetArtboard(pe, artboardOnStart) : selection.getClosetArtboard(pe);
-            const m = getCloesetContainer(table).id !== targetParent.id;
-            if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
-        }
+        if (!shapes.length) return;
+        const ps: PageXY = matrix.computeCoord(start.x, start.y);
+        const pe: PageXY = matrix.computeCoord(end.x, end.y);
+        const selection = context.selection;
+        const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes);
+        const targetParent = (artboardOnStart && artboardOnStart.type !== ShapeType.Page) ? selection.getClosetArtboard(pe, artboardOnStart) : selection.getClosetArtboard(pe);
+        const m = getCloesetContainer(table).id !== targetParent.id;
+        if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
     }
     const migrate: (start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
     function getCloesetContainer(shape: Shape): Shape {
@@ -125,11 +126,12 @@ function useControllerCustom(context: Context, i18nT: Function) {
             else if (update_type === 2) startPosition.y = mousePosition.y;
             else if (update_type === 1) startPosition.x = mousePosition.x;
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
-            asyncTransfer = context.editor.controller().asyncTransfer([table], context.selection.selectedPage!);
+            shapes = context.selection.selectedShapes;
+            asyncTransfer = context.editor.controller().asyncTransfer(shapes, context.selection.selectedPage!);
             context.selection.unHoverShape();
             workspace.value.setSelectionViewUpdater(false);
             workspace.value.translating(true);
-            context.assist.setTransTarget([table]);
+            context.assist.setTransTarget(shapes);
             isDragging = true;
         }
     }
@@ -149,6 +151,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
             context.assist.notify(Asssit.CLEAR);
             return 3;
         }
+        const table = shapes[0];
+        if (!table) return 3;
         let need_multi = 0;
         let update_type = 3;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
@@ -413,6 +417,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         initController();
         context.workspace.contentEdit(false);
         table.watch(get_matrix4table);
+        shapes = context.selection.selectedShapes;
     }
     function dispose() {
         context.workspace.unwatch(workspace_watcher);
@@ -421,6 +426,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         table.unwatch(get_matrix4table);
+        console.log('dispose');
     }
     function tableSelection() {
         return table_selection

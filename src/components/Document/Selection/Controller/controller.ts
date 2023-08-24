@@ -75,7 +75,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             context.menu.menuMount(); // 取消右键事件
             context.menu.notify(Menu.SHUTDOWN_POPOVER);
             root = context.workspace.root;
-            shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
             if (action == Action.AutoV || action == Action.AutoK) {
                 workspace.value.setCtrl('controller');
@@ -103,16 +102,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function mousedown(e: MouseEvent) {
         if (context.workspace.isEditing) {
             if (isMouseOnContent(e)) {
-                const selected = context.selection.selectedShapes;
-                if (selected.length === 1 && selected[0].type === ShapeType.Text) {
-                    const len = (selected[0] as TextShape).text.length;
-                    const t = (selected[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
+                shapes = context.selection.selectedShapes;
+                if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
+                    const len = (shapes[0] as TextShape).text.length;
+                    const t = (shapes[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
                     if (t.length) {
-                        const save = selected.slice(0, 1);
+                        const save = shapes.slice(0, 1);
                         context.selection.resetSelectShapes();
                         context.selection.rangeSelectShape(save);
                     } else {
-                        const editor = context.editor4Shape(selected[0]);
+                        const editor = context.editor4Shape(shapes[0]);
                         editor.delete();
                         context.selection.resetSelectShapes();
                     }
@@ -339,6 +338,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         context.cursor.cursor_freeze(false);
     }
     function init() {
+        shapes = context.selection.selectedShapes;
         context.workspace.watch(workspace_watcher);
         context.selection.watch(selection_watcher);
         window.addEventListener('blur', windowBlur);
