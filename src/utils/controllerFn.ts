@@ -84,8 +84,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
                 const editor = context.editor4Table(shape as TableShape);
                 if (ts.tableRowStart > -1 || ts.tableColStart > -1) {
                     editor.initCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
-                    ts.reset();
-                    ts.notify(Selection.CHANGE_TABLE_CELL);
+                    ts.resetSelection();
                 } else {
                     const editor = context.editor4Shape(shape);
                     editor.delete();

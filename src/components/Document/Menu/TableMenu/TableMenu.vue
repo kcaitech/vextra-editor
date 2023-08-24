@@ -56,8 +56,7 @@ const splitCell = (column: string) => {
 };
 
 function reset(table: TableSelection, context: Context) {
-  table.reset();
-  context.selection.notify(Selection.CHANGE_TABLE_CELL);
+  table.resetSelection();
   table.setEditingCell();
 }
 const openInsertCell = (value: string) => {

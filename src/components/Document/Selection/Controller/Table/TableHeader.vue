@@ -85,8 +85,7 @@ function y_dot_mouseleave() {
 function add_cols() {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
-    table_selection.reset();
-    selection.notify(Selection.CHANGE_TABLE_CELL);
+    table_selection.resetSelection();
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);
 }
@@ -94,8 +93,7 @@ function add_rows() {
     const selection = props.context.selection;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     table_selection.setEditingCell();
-    table_selection.reset();
-    selection.notify(Selection.CHANGE_TABLE_CELL);
+    table_selection.resetSelection();
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertRow(ids_y + 1, layout.rowHeights[ids_y]);
 }

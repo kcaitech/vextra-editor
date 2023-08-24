@@ -58,8 +58,7 @@ const InsertCell = (state: string) => {
             editor.insertMultiCol(table.editingCell.index.col + 1, grid.frame.width, colRight.value);
         }
     }
-    table.reset();
-    props.context.selection.notify(Selection.CHANGE_TABLE_CELL);
+    table.resetSelection();
     table.setEditingCell();
     emit('close');
 }
