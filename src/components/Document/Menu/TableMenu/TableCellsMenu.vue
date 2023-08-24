@@ -47,7 +47,7 @@ const getColorFromPicker = (c: Color) => {
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableShape)
         const fill = new Fill(uuid(), true, FillType.SolidColor, c);
-        editor.addFill(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
+        editor.addFill4Multi(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
     }
     color.value = c;
 }

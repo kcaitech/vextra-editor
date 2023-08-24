@@ -105,7 +105,12 @@ function addBorder() {
             const table = props.context.selection.getTableSelection(shape, props.context);
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                e.addBorder(border, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+                const range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
+                if (mixed_cell.value) {
+                    e.addBorder4Multi(border, range)
+                } else {
+                    e.addBorder(border, range)
+                }
             } else {
                 editor.value.addBorder(border);
             }
@@ -138,10 +143,10 @@ function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     if (len.value === 1) {
-        const shape = props.shapes[0] as TableShape;
+        const shape = props.shapes[0];
+        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
         if (shape.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(shape, props.context);
-            const e = props.context.editor4Table(shape);
+            const e = props.context.editor4Table(shape as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 e.deleteBorder(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
@@ -385,7 +390,7 @@ onUnmounted(() => {
         <div class="tips-wrap" v-if="mixed_cell">
             <span class="mixed-tips">{{ t('attr.mixed_cell_lang') }}</span>
         </div>
-        <div class="borders-container" v-else-if="!mixed">
+        <div class="borders-container" v-else-if="!mixed && !mixed_cell">
             <div class="border" v-for="(b, idx) in borders" :key="b.id">
                 <div :class="b.border.isEnabled ? 'visibility' : 'hidden'" @click="toggleVisible(idx)">
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
