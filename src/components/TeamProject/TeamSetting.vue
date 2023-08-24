@@ -33,7 +33,7 @@
                 <div class="text">解散团队，删除团队文件，不可恢复</div>
             </div>
             <div class="right">
-                <button type="button" @click.stop="disband(teamID)">解散团队</button>
+                <button class="disband" type="button" @click.stop="disband(teamID)">解散团队</button>
             </div>
 
         </div>

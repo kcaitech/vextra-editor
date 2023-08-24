@@ -30,8 +30,7 @@
             </div>
         </div>
         <div class="addteam">
-            <button type="submit" :disabled=isDisabled @click.stop.once="createTeam">{{ t('Createteam.add_team') }}{{
-                message }}</button>
+            <button type="submit" :disabled=isDisabled @click.stop.once="createTeam">{{ t('Createteam.add_team') }}</button>
         </div>
     </div>
 </template>
@@ -43,7 +42,7 @@ import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router'
 const { t } = useI18n();
 const route = useRoute()
-const emits = defineEmits(['close', 'updateteamlist'])
+const emits = defineEmits(['close'])
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
@@ -51,8 +50,10 @@ const imgsrc = ref('')
 const isshow = ref(true)
 const formData = new FormData()
 
-const message = inject<Ref<string>>('message')
-    
+const { state } = inject('shareData') as {
+    state: (b: boolean) => void;
+}
+
 const createTeam = async () => {
     formData.append('name', inputValue.value)
     if (textareaValue.value != '') {
@@ -61,13 +62,10 @@ const createTeam = async () => {
     try {
         const { code, message, data } = await user_api.CreateTeam(formData)
         if (code === 0) {
-
             emits('close')
             ElMessage.success(t('percenter.successtips'))
+            state(true)  //改变updatestate的值为TRUE
             route.params.id = data.id
-            emits('updateteamlist')
-
-
         } else {
             ElMessage.error(message)
         }
@@ -94,7 +92,6 @@ const selectimg = (e: any) => {
         }
     }
 }
-
 
 const close = () => {
     emits('close')

@@ -6,10 +6,10 @@
       </el-header>
       <el-container>
         <el-aside width="260px" min-width="260px">
-          <Aside @settitle="setTitle" @teamdata="teamdata" />
+          <Aside @settitle="setTitle" />
         </el-aside>
         <el-main>
-          <Main :title="title" @data-update="update" :teamData="teamData" />
+          <Main :title="title" @data-update="update" />
         </el-main>
       </el-container>
     </el-container>
@@ -31,12 +31,14 @@ const searchtitle = ref('')
 let items = ref<any[]>([])
 const link_success = t('message.link_success')
 const network_anomaly = t('message.network_anomaly')
-const teamData = ref<any>()
 const teamID = ref('')
 const teamName = ref('')
 const teamAvatar = ref('')
 const teamDescription = ref('')
-const updatestate = ref(false)
+const teamData = ref<any[]>([]) //储存团队列表
+const updatestate = ref(false) //控制aside组件中的团队列表请求
+const updateprojectlist = ref(false)  //控制projectlist组件中的项目列表请求
+
 
 const updateShareData = (id: string, name: string, avatar: string, description: string) => {
   teamID.value = id
@@ -45,8 +47,19 @@ const updateShareData = (id: string, name: string, avatar: string, description: 
   teamDescription.value = description
 }
 
-const state = (b:boolean) => {
+//用于改变updatestate的值
+const state = (b: boolean) => {
   updatestate.value = b
+}
+
+//将获取的团队列表保存在到teamData
+const upDateTeamData = (data: any[]) => {
+  teamData.value = data
+}
+
+//用于改变updateprojectlist的值
+const updateprojectliststate = (b: boolean) => {
+  updateprojectlist.value = b
 }
 
 provide('shareData', {
@@ -56,16 +69,16 @@ provide('shareData', {
   teamDescription,
   updatestate,
   updateShareData,
-  state
+  state,
+  teamData,
+  updateprojectlist,
+  upDateTeamData,
+  updateprojectliststate
 })
 
 function setTitle(t: string) {
   title.value = t;
   sessionStorage.setItem('title', title.value)
-}
-
-function teamdata(data: any) {
-  teamData.value = data
 }
 
 //===>接收到最新的lists,props传给Headher组件

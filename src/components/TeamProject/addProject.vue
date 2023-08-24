@@ -11,13 +11,11 @@
         <div class="centent">
             <div class="project-name">
                 <div class="title">项目名称<span>{{ t('Createteam.required') }}</span></div>
-                <input type="text" placeholder="输入项目名称" v-model="inputValue" maxlength="20"
-                    required>
+                <input type="text" placeholder="输入项目名称" v-model="inputValue" maxlength="20" required>
             </div>
             <div class="project-description">
                 <div class="title">项目描述<span>{{ t('Createteam.optional') }}</span></div>
-                <textarea name="" id="" cols="30" rows="10" placeholder="输入项目描述"
-                    v-model="textareaValue" maxlength="120" />
+                <textarea name="" id="" cols="30" rows="10" placeholder="输入项目描述" v-model="textareaValue" maxlength="120" />
             </div>
         </div>
         <div class="addproject">
@@ -26,26 +24,34 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-
+import { router } from '@/router';
+import { useRoute } from 'vue-router';
 const { t } = useI18n();
 const emits = defineEmits(['close'])
 const props = defineProps<{
     teamid: string
 }>()
+const route = useRoute()
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
+const { updateprojectliststate } = inject('shareData') as {
+    updateprojectliststate: (b: boolean) => void;
+};
 
 const createProject = async () => {
     try {
         const { code, message } = await user_api.CreateProject({ team_id: props.teamid, name: inputValue.value, description: textareaValue.value })
         if (code === 0) {
             emits('close')
+            updateprojectliststate(true)
             ElMessage.success(t('percenter.successtips'))
+            if (route.params.id === props.teamid) return
+            router.push({ path: '/apphome/teams/' + props.teamid })
         } else {
             ElMessage.error(message)
         }

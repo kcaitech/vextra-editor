@@ -79,8 +79,6 @@ const membertype = (num: number) => {
     }
 }
 
-
-
 onMounted(() => {
     GetteamMember()
 
