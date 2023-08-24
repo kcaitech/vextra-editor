@@ -43,13 +43,16 @@
 import { Ref, computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
+import { router } from '@/router';
+import { ElMessage } from 'element-plus';
 const { t } = useI18n();
 
-const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+const { teamID, teamName, teamAvatar, teamDescription, state } = inject('shareData') as {
     teamID: Ref<string>;
     teamName: Ref<string>;
     teamAvatar: Ref<string>;
     teamDescription: Ref<string>;
+    state: (b: boolean) => void;
 }
 
 const Description = computed(() => {
@@ -65,10 +68,11 @@ const disband = (async (id: string) => {
     try {
         const { code, message } = await user_api.Disband({ team_id: id })
         if (code === 0) {
-            console.log('1');
-            
+            state(true)
+            router.push({ name: 'recently' })
+        } else {
+            ElMessage({ type: 'error', message: message })
         }
-
     } catch (error) {
 
     }

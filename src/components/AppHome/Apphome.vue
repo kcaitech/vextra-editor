@@ -36,7 +36,7 @@ const teamID = ref('')
 const teamName = ref('')
 const teamAvatar = ref('')
 const teamDescription = ref('')
-
+const updatestate = ref(false)
 
 const updateShareData = (id: string, name: string, avatar: string, description: string) => {
   teamID.value = id
@@ -45,12 +45,18 @@ const updateShareData = (id: string, name: string, avatar: string, description: 
   teamDescription.value = description
 }
 
+const state = (b:boolean) => {
+  updatestate.value = b
+}
+
 provide('shareData', {
   teamID,
   teamName,
   teamAvatar,
   teamDescription,
-  updateShareData
+  updatestate,
+  updateShareData,
+  state
 })
 
 function setTitle(t: string) {

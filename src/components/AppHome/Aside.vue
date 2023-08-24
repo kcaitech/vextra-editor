@@ -18,10 +18,11 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-import { inject, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { Ref, computed, inject, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import * as user_api from '@/apis/users'
 import addTeam from '../TeamProject/addTeam.vue'
 import addProject from '../TeamProject/addProject.vue';
+import { ElMessage } from 'element-plus';
 
 interface Emits {
     (e: 'settitle', title: string): void;
@@ -95,12 +96,36 @@ const showprojectcard = (id: string) => {
 }
 
 const GetteamList = async () => {
-    const { code, data } = await user_api.GetteamList()
-    if (code === 0) {
-        teamdata.value = data
-        emits('teamdata', teamdata.value)
+    try {
+        const { code, data, message } = await user_api.GetteamList()
+        if (code === 0) {
+            teamdata.value = data
+            emits('teamdata', teamdata.value)
+        } else {
+            ElMessage({ type: 'error', message: message })
+        }
+    } catch (error) {
+
     }
+
 }
+
+
+const { updatestate, state } = inject('shareData') as {
+    updatestate: Ref<boolean>;
+    state: (b: boolean) => void;
+};
+
+watch(updatestate, (newvalue) => {
+    if (newvalue) {
+        console.log(newvalue);
+        
+        GetteamList()
+        state(false)
+        console.log(updatestate);
+        
+    }
+})
 
 const torouter = (id: string) => {
     router.push({ path: '/apphome/teams/' + id })
