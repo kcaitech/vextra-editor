@@ -242,6 +242,7 @@ const handle_left = (t: number) => {
         } else {
             props.context.workspace.matrix.trans(-(0.1 * rootWidth), 0)
         }
+        props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
 

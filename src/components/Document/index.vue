@@ -176,8 +176,7 @@ const showHiddenRight = () => {
 }
 const showHiddenLeft = () => {
     if (!context) return;
-    const o_left = context.workspace.root.x, ele = context.workspace.root.element, w = context.workspace;    
-    if (!ele) return;
+    const w = context.workspace;    
     if (showLeft.value) {
         Left.value.leftMin = 0
         Left.value.leftWidth = 0
@@ -191,12 +190,7 @@ const showHiddenLeft = () => {
         middleWidth.value = middleWidth.value - 0.1
         showLeft.value = true
     }
-    _updateRoot(context, ele);
-    const m_left = context.workspace.root.x;
-    console.log('m_left', m_left);
-
-    w.matrix.trans(showLeft.value ? -o_left : 256, 0);
-    w.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    w.notify(WorkSpace.CHANGE_NAVI);
 }
 
 function keyToggleLR() {
@@ -208,6 +202,7 @@ function keyToggleLR() {
     }
 }
 function keyToggleTB() {
+    if (!context) return;
     if (showRight.value !== showLeft.value) {
         showHiddenLeft();
         return;
@@ -221,6 +216,12 @@ function keyToggleTB() {
     showHiddenRight();
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
+    if(showTop.value) {
+        context.workspace.matrix.trans(0, -40);
+    }else {
+        context.workspace.matrix.trans(0, 40);
+    }
+    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 //只读权限隐藏右侧属性栏
@@ -634,7 +635,7 @@ onUnmounted(() => {
         <div id="visit">
             <ApplyFor></ApplyFor>
         </div>
-        <ColSplitView id="center" v-if="!loading && !null_context"
+        <ColSplitView id="center" :style="{height: showTop ? 'calc(100% - 40px)' : '100%'}" v-if="!loading && !null_context"
             :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
             :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
             :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
@@ -720,7 +721,6 @@ onUnmounted(() => {
     flex-flow: row nowrap;
     flex: 1 1 auto;
     width: 100%;
-    height: calc(100% - 40px);
     overflow: hidden;
     position: relative;
 

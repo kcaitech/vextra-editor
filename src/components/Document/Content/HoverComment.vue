@@ -49,10 +49,12 @@ const isControlsDel = computed(() => {
 })
 
 const hoverShape = (e: MouseEvent) => {
+    e.stopPropagation();
     comment.value.hoverComment(true, props.commentInfo.id)
     hover.value = true
 }
 const unHoverShape = (e: MouseEvent) => {
+    e.stopPropagation();
     if(!props.context.comment.isCommentMove) {
         comment.value.hoverComment(false, props.commentInfo.id)
     }

@@ -477,7 +477,7 @@ onUnmounted(() => {
                 </el-button-group>
             </div>
         </div>
-        <el-scrollbar ref="scrollbarRef" :height="scrollHeight + 'px'" @wheel.stop>
+        <el-scrollbar ref="scrollbarRef" :height="scrollHeight + 'px'" @wheel.stop @mousedown.stop>
             <div ref="itemHeight">
                 <CommentPopupItem :context="props.context" @close="() => emit('close')" :commentInfo="props.commentInfo"
                     :index="props.index" @delete="onDeleteItem" @editComment="editComment" @quick-reply="quickReply">
@@ -487,7 +487,7 @@ onUnmounted(() => {
                     @editComment="editCommentChild" @quick-reply="quickReply"></CommentPopupItem>
             </div>
         </el-scrollbar>
-        <div class="popup-footer">
+        <div class="popup-footer" @mousedown.stop>
             <div class="textarea" ref="textareaEl">
                 <el-input ref="inputPopup" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }"
                     type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
