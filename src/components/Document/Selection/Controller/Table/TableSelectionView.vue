@@ -95,7 +95,7 @@ watch(() => props.cell, (c, oc) => {
     if (c) c.watch(update_triangle)
     if (oc) oc.unwatch(update_triangle);
 })
-watch(() => props.matrix, () => { update_cell_selection(true) });
+watch(() => props.matrix, () => { update_cell_selection(true); update_triangle(); });
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.table.watch(t1);
