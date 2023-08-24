@@ -6,10 +6,10 @@
       </el-header>
       <el-container>
         <el-aside width="260px" min-width="260px">
-          <Aside @settitle="setTitle" @teamdata="teamdata" />
+          <Aside @settitle="setTitle" />
         </el-aside>
         <el-main>
-          <Main :title="title" @data-update="update" :teamData="teamData" />
+          <Main :title="title" @data-update="update" />
         </el-main>
       </el-container>
     </el-container>
@@ -31,12 +31,12 @@ const searchtitle = ref('')
 let items = ref<any[]>([])
 const link_success = t('message.link_success')
 const network_anomaly = t('message.network_anomaly')
-const teamData = ref<any>()
 const teamID = ref('')
 const teamName = ref('')
 const teamAvatar = ref('')
 const teamDescription = ref('')
-
+const teamData = ref<any[]>([])
+const updateprojectlist = ref(false)
 
 const updateShareData = (id: string, name: string, avatar: string, description: string) => {
   teamID.value = id
@@ -45,21 +45,29 @@ const updateShareData = (id: string, name: string, avatar: string, description: 
   teamDescription.value = description
 }
 
+const upDateTeamData = (data: any[]) => {
+  teamData.value = data
+}
+
+const updateprojectliststate = (b:boolean) => {
+  updateprojectlist.value = b
+}
+
 provide('shareData', {
   teamID,
   teamName,
   teamAvatar,
   teamDescription,
-  updateShareData
+  teamData,
+  updateprojectlist,
+  updateShareData,
+  upDateTeamData,
+  updateprojectliststate
 })
 
 function setTitle(t: string) {
   title.value = t;
   sessionStorage.setItem('title', title.value)
-}
-
-function teamdata(data: any) {
-  teamData.value = data
 }
 
 //===>接收到最新的lists,props传给Headher组件

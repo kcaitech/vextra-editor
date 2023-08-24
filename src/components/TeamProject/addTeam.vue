@@ -61,7 +61,6 @@ const createTeam = async () => {
     try {
         const { code, message, data } = await user_api.CreateTeam(formData)
         if (code === 0) {
-
             emits('close')
             ElMessage.success(t('percenter.successtips'))
             route.params.id = data.id

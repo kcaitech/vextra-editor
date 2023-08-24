@@ -18,14 +18,14 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-import { inject, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { Ref, inject, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import * as user_api from '@/apis/users'
 import addTeam from '../TeamProject/addTeam.vue'
 import addProject from '../TeamProject/addProject.vue';
+import { ElMessage } from 'element-plus';
 
 interface Emits {
     (e: 'settitle', title: string): void;
-    (e: 'teamdata', data: any): void;
 }
 
 const emits = defineEmits<Emits>();
@@ -35,10 +35,18 @@ const showoverlay = ref(false)
 const teamcard = ref(false)
 const projectcard = ref(false)
 const teamid = ref('')
-const teamdata = ref<any[]>([])
 
-const { updateShareData } = inject('shareData') as {
+const { teamData, updateShareData, upDateTeamData } = inject('shareData') as {
+    teamData: Ref<[{
+        team: {
+            id: string,
+            name: string,
+            avatar: string,
+            description: string
+        }
+    }]>;
     updateShareData: (id: string, name: string, avatar: string, description: string) => void;
+    upDateTeamData: (data: any[]) => void;
 };
 
 const picker = new FilePicker((file) => {
@@ -95,11 +103,18 @@ const showprojectcard = (id: string) => {
 }
 
 const GetteamList = async () => {
-    const { code, data } = await user_api.GetteamList()
-    if (code === 0) {
-        teamdata.value = data
-        emits('teamdata', teamdata.value)
+    try {
+        const { code, data, message } = await user_api.GetteamList()
+        if (code === 0) {
+            upDateTeamData(data)
+            ElMessage({ type: 'success', message: message })
+        } else {
+            ElMessage({ type: 'error', message: message })
+        }
+    } catch (error) {
+
     }
+
 }
 
 const torouter = (id: string) => {
@@ -170,7 +185,7 @@ onUnmounted(() => {
             </el-menu>
             <div class="teamlists">
                 <div class="teamitem" :class="{ 'is-active': isActive(id, name, avatar, description) }"
-                    v-for="{ team: { name, id, avatar, description } } in teamdata" :key="id" @click.stop="torouter(id)">
+                    v-for="{ team: { name, id, avatar, description } } in teamData" :key="id" @click.stop="torouter(id)">
                     <div class="left">
                         <div class="team-avatar">
                             <div v-if="avatar.includes('http')" class="img">
@@ -209,6 +224,7 @@ onUnmounted(() => {
 a {
     text-decoration: none;
 }
+
 
 .nested-enter-active,
 .nested-leave-active {
@@ -471,7 +487,8 @@ a {
                 }
 
                 .right {
-                    display: flex;
+                    display: none;
+
 
                     svg {
                         width: 16px;
@@ -483,6 +500,7 @@ a {
 
                     &:hover {
                         transform: scale(1.1);
+
                     }
                 }
 
@@ -490,6 +508,10 @@ a {
                     cursor: pointer;
                     background-color: #f3f0ff;
                     color: #9775fa;
+
+                    .right {
+                        display: flex;
+                    }
                 }
 
                 &.is-active {

@@ -49,7 +49,7 @@
     </transition>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, reactive, ref } from 'vue'
+import { Ref, computed, inject, ref } from 'vue'
 import { Search, Close } from '@element-plus/icons-vue'
 import ProjectList from '@/components/TeamProject/ProjectList.vue'
 import addProject from './addProject.vue'
@@ -62,12 +62,14 @@ const itemid = ref(0)
 const items = ['项目', '成员', '团队设置']
 const img = ref(false)
 const search = ref<string>('')
-const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+
+const { teamID, teamName, teamAvatar, teamDescription, teamData } = inject('shareData') as {
     teamID: Ref<string>;
     teamName: Ref<string>;
     teamAvatar: Ref<string>;
     teamDescription: Ref<string>;
-};
+    teamData: Ref<[]>
+}
 
 const description = computed(() => {
     if (teamDescription.value != '') {

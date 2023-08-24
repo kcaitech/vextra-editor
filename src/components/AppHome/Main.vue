@@ -1,21 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { RouterView } from 'vue-router';
 interface Props {
     title: string,
-    teamData: any
 }
 
 const props = defineProps<Props>();
 
 const emits = defineEmits(['data-update'])
 
-
-setTimeout(() => {
-    console.log(props.teamData);
-
-
-}, 3000);
 //===>Apphome组件接收
 const update = (data: any, searchtitle: string) => {
     //main目录下传过来的lists和title
@@ -30,7 +22,7 @@ const update = (data: any, searchtitle: string) => {
     </div>
     <el-divider v-if="props.title != '' && $route.name != 'TeamPage'" />
     <div class="main">
-        <RouterView @data-update="update" :teamData="props.teamData" />
+        <RouterView @data-update="update" />
     </div>
 </template>
 
