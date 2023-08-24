@@ -133,6 +133,11 @@ export class Context extends Watchable(Object) {
         this.m_textEditor = this.editor.editor4TextShape(shape);
         return this.m_textEditor;
     }
+    peekEditor4TextShape(shape: Shape & { text: Text }): TextShapeEditor | undefined {
+        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
+            return this.m_textEditor;
+        }
+    }
     editor4Table(shape: TableShape): TableEditor {
         return this.editor.editor4Table(shape);
     }
