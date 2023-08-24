@@ -203,14 +203,18 @@ onUnmounted(() => {
 
 <template>
     <g :transform="`translate(${frame_params.x}, ${frame_params.y})`" :class="{ hidden }">
-        <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-5.5" r="3" stroke="none" class="dot"
+        <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-3.5" r="3" stroke="none" class="dot"
             @mouseenter="() => x_dot_mouseennter(d.x, d.idx)" />
-        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-12" :width="b.length" height="12" stroke="none" rx="6"
-            ry="6" class="bar" @mousedown.stop="() => select_col(b.idx)" />
-        <circle v-for="(d, ids) in ys" :key="ids" cx="-5.5" :cy="d.y" r="3" stroke="none" class="dot"
+        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-12" :width="b.length" height="12" rx="6" ry="6"
+            class="bar-back" @mousedown.stop="() => select_col(b.idx)" />
+        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-6" :width="b.length" height="6" rx="3" ry="3" class="bar"
+            @mousedown.stop="() => select_col(b.idx)" />
+        <circle v-for="(d, ids) in ys" :key="ids" cx="-3.5" :cy="d.y" r="3" stroke="none" class="dot"
             @mouseenter="() => y_dot_mouseennter(d.y, d.idx)" />
-        <rect v-for="(b, ids) in ybars" :key="ids" x="-12" :y="b.s" :height="b.length" width="12" stroke="none" rx="6"
-            ry="6" class="bar" @mousedown.stop="() => select_row(b.idx)" />
+        <rect v-for="(b, ids) in ybars" :key="ids" x="-12" :y="b.s" :height="b.length" width="12" rx="6" ry="6"
+            class="bar-back" @mousedown.stop="() => select_row(b.idx)" />
+        <rect v-for="(b, ids) in ybars" :key="ids" x="-6" :y="b.s" :height="b.length" width="6" rx="3" ry="3" class="bar"
+            @mousedown.stop="() => select_row(b.idx)" />
         <g v-if="show_add_x">
             <line :x1="add_x" y1="0" :x2="add_x" :y2="frame_params.height" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
@@ -241,7 +245,14 @@ onUnmounted(() => {
     cursor: pointer;
 }
 
+.bar-back {
+    fill: transparent;
+    stroke: none;
+    cursor: pointer;
+}
+
 .bar {
+    stroke: none;
     fill: #865dff45;
     cursor: pointer;
 }

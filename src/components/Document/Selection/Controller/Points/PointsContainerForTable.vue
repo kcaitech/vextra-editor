@@ -55,6 +55,9 @@ function point_mousedown(event: MouseEvent) {
     event.stopPropagation();
     workspace.setCtrl('controller');
     const root = workspace.root;
+    const table_selection = props.context.selection.getTableSelection(props.shape as TableShape, props.context);
+    table_selection.setEditingCell();
+    table_selection.resetSelection();
     startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);

@@ -412,7 +412,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         context.workspace.contentEdit(false);
-        table.watch(initController);
+        table.watch(get_matrix4table);
     }
     function dispose() {
         context.workspace.unwatch(workspace_watcher);
@@ -420,7 +420,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         window.removeEventListener('blur', windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
-        table.unwatch(initController);
+        table.unwatch(get_matrix4table);
     }
     function tableSelection() {
         return table_selection

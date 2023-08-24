@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { ClientXY, Selection } from '@/context/selection';
 import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';
 import { debounce } from 'lodash';
@@ -10,6 +10,9 @@ import { CellMenu } from '@/context/menu';
 
 interface Props {
     context: Context
+    cell: TableCell | undefined
+    table: TableShape
+    matrix: number[]
 }
 interface Emits {
     (e: 'get-menu', x: number, y: number, type: CellMenu, cell_menu: boolean): void;
@@ -23,12 +26,11 @@ function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
     const selection = props.context.selection;
-    const shape = selection.selectedShapes[0];
-    if (shape && shape.type === ShapeType.Table) {
-        const table_selection = selection.getTableSelection(shape as TableShape, props.context);
-        if (table_selection.tableRowStart < 0 || table_selection.tableColStart < 0) return;
+    if (props.table && props.table.type === ShapeType.Table) {
+        const table_selection = selection.getTableSelection(props.table, props.context);
+        if (table_selection.tableRowStart < 0) return;
         const cells = table_selection.getSelectedCells(true);
-        gen_view(shape, cells, gen_menu_posi);
+        gen_view(props.table, cells, gen_menu_posi);
     }
 }
 function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
@@ -88,11 +90,19 @@ function _get_menu_position(points: ClientXY[]) {
     emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
 }
 const get_menu_position = debounce(_get_menu_position, 100);
+const t1 = () => update_cell_selection(true);
+watch(() => props.cell, (c, oc) => {
+    if (c) c.watch(update_triangle)
+    if (oc) oc.unwatch(update_triangle);
+})
+watch(() => props.matrix, () => { update_cell_selection(true) });
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
+    props.table.watch(t1);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    props.table.unwatch(t1);
 })
 </script>
 <template>

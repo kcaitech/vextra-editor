@@ -42,7 +42,7 @@ const editingCellMatrix = computed(() => {
 const m_x = ref<number>(0), m_y = ref<number>(0);
 const col_dash = ref<boolean>(false), row_dash = ref<boolean>(false);
 let x_checked: boolean = false, y_checked: boolean = false;
-let m_col: number = 0, m_row: number = 0, down_x: number = 0, down_y: number = 0, t_height: number = 0, t_width: number = 0;
+let m_col: number = 0, m_row: number = 0, down_x: number = 0, down_y: number = 0, t_height: number = 0, t_width: number = 0, t_x: number = 0, t_y: number = 0;
 function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
@@ -138,6 +138,9 @@ function move(e: MouseEvent) {
 function down(e: MouseEvent) {
     if (e.button !== 0) return;
     if (x_checked || y_checked) {
+        const table_selection = props.context.selection.getTableSelection(props.shape as TableShape, props.context);
+        table_selection.setEditingCell();
+        table_selection.resetSelection();
         e.stopPropagation();
         if (x_checked) {
             get_x_by_col(m_col);
@@ -153,9 +156,8 @@ function down(e: MouseEvent) {
     }
 }
 function move_x(e: MouseEvent) {
-    const m4t = new Matrix(submatrix.inverse), root = props.context.workspace.root;
-    const p = m4t.computeCoord2(e.clientX - root.x, e.clientY - root.y);
-    m_x.value = p.x;
+    const root = props.context.workspace.root;
+    m_x.value = e.clientX - root.x;
 }
 function up_x() {
     const dx = down_x - m_x.value;
@@ -166,9 +168,8 @@ function up_x() {
     document.removeEventListener('mouseup', up_x);
 }
 function move_y(e: MouseEvent) {
-    const m4t = new Matrix(submatrix.inverse), root = props.context.workspace.root;
-    const p = m4t.computeCoord2(e.clientX - root.x, e.clientY - root.y);
-    m_y.value = p.y;
+    const root = props.context.workspace.root;
+    m_y.value = e.clientY - root.y;
 }
 function up_y() {
     const dy = down_y - m_y.value;
@@ -185,7 +186,9 @@ function get_x_by_col(col: number) {
     const cols = layout.colWidths;
     const scale = mw.m00;
     let growx = 0;
-    for (let i = 0; i < col; i++)  growx += cols[i] * scale;
+    for (let i = 0; i < col; i++)  growx += cols[i];
+    const xy = submatrix.computeCoord2(growx, 0);
+    growx = xy.x, t_y = xy.y;
     down_x = growx, t_height = layout.height * scale, m_x.value = growx;
 }
 function get_y_by_row(row: number) {
@@ -195,10 +198,12 @@ function get_y_by_row(row: number) {
     const rows = layout.rowHeights;
     const scale = mw.m00;
     let growy = 0;
-    for (let i = 0; i < row; i++)  growy += rows[i] * scale;
+    for (let i = 0; i < row; i++)  growy += rows[i];
+    const xy = submatrix.computeCoord2(0, growy);
+    growy = xy.y, t_x = xy.x;
     down_y = growy, t_width = layout.width * scale, m_y.value = growy;
 }
-function leave(e: MouseEvent) {
+function leave() {
     props.context.cursor.reset();
 }
 watch(() => props.matrix, update, { deep: true })
@@ -224,7 +229,9 @@ onUnmounted(() => {
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" overflow="visible" @mousemove="move"
         @mousedown="down" @mouseleave="leave">
         <!-- 表格选区 -->
-        <TableSelectionView :context="props.context" @get-menu="update_menu_posi"></TableSelectionView>
+        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell?.cell"
+            :table="props.shape" :matrix="submatrixArray">
+        </TableSelectionView>
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
             :matrix="editingCellMatrix"></SelectView>
@@ -240,11 +247,11 @@ onUnmounted(() => {
             :c-frame="props.controllerFrame">
         </PointsContainer>
         <!-- 列宽缩放 -->
-        <g :transform="`translate(${bounds.left},${bounds.top})`">
-            <line v-if="col_dash" :x1="m_x" y1="0" :x2="m_x" :y2="t_height" stroke="#865dff" stroke-dasharray="3 3"
-                stroke-width="2"></line>
-            <line v-if="row_dash" x1="0" :y1="m_y" :x2="t_width" :y2="m_y" stroke="#865dff" stroke-dasharray="3 3"
-                stroke-width="2"></line>
+        <g>
+            <line v-if="col_dash" :x1="m_x" :y1="t_y" :x2="m_x" :y2="t_y + t_height" stroke="#865dff" stroke-dasharray="3 3"
+                stroke-width="3"></line>
+            <line v-if="row_dash" :x1="t_x" :y1="m_y" :x2="t_x + t_width" :y2="m_y" stroke="#865dff" stroke-dasharray="3 3"
+                stroke-width="3"></line>
         </g>
     </svg>
     <!-- 输入 -->

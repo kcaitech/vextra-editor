@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { Color, Fill, FillType, Shape, TableCell, TableShape, Text } from '@kcdesign/data';
+import { Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape, Text } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';
@@ -141,13 +141,15 @@ const selection_watcher = (t: number) => {
 
 const handleCellMenu = () => {
     const shape = props.context.selection.selectedShapes[0];
-    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
-        singleChoice.value = true;
-    } else {
-        singleChoice.value = false;
+    if (shape && shape.type === ShapeType.Table) {
+        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+        if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
+            singleChoice.value = true;
+        } else {
+            singleChoice.value = false;
+        }
+        getCellsFormat();
     }
-    getCellsFormat();
 }
 
 const getCellsFormat = () => {
