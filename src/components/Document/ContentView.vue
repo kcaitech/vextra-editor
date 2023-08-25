@@ -31,8 +31,7 @@ import { Action, Tool } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
-import ImageLoad from '../common/ImageLoad.vue';
-
+import Overview from './Content/Overview.vue';
 interface Props {
     context: Context
     page: Page
@@ -81,6 +80,7 @@ const background_color = ref<string>('rgba(239,239,239,1)');
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
 const cellStatus = ref()
+const overview = ref<boolean>(false);
 
 let stickedX: boolean = false;
 let stickedY: boolean = false;
@@ -145,15 +145,19 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     search_once(e) // 滚动过程进行常规图形检索
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
+    if (e.target instanceof HTMLInputElement) return;
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
+        overview.value = true;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
     }
 }
 function onKeyUp(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement) return;
     if (spacePressed.value && e.code === KeyboardKeys.Space) {
+        overview.value = false;
         endDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(false);// 根据鼠标当前位置进行一次冒泡式图形检索
@@ -809,5 +813,6 @@ onUnmounted(() => {
             @completed="completed" :posi="posi"></CommentInput>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
+        <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview>
     </div>
 </template>@/components/Document/initpal
