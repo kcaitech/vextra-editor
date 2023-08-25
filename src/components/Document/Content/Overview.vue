@@ -16,6 +16,7 @@ const container_origin = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const page_el = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();
 const show_locate = ref<boolean>(false);
+const show_current = ref<boolean>(true);
 const locate = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const locate_xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const current_xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
@@ -51,15 +52,22 @@ function init() {
         m.multiAtLeft(matrix);
         const c_xy = m.computeCoord2(root.center.x, root.center.y);
         current_xy.value.x = c_xy.x - fix_x.value - 13.5, current_xy.value.y = c_xy.y + fix_y.value - 22;
+        if (current_xy.value.x < -20 || current_xy.value.x > 300 || current_xy.value.y < -20 || current_xy.value.y > 300) {
+            show_current.value = false;
+        }
         reflush.value++;
     })
 }
 function update_current() {
+    show_current.value = true;
     const workspace = props.context.workspace, root = workspace.root;
     const m = new Matrix(workspace.matrix.inverse);
     m.multiAtLeft(matrix);
     const c_xy = m.computeCoord2(root.center.x, root.center.y);
     current_xy.value.x = c_xy.x - fix_x.value - 13.5, current_xy.value.y = c_xy.y + fix_y.value - 22;
+    if (current_xy.value.x < -20 || current_xy.value.x > 300 || current_xy.value.y < -20 || current_xy.value.y > 300) {
+        show_current.value = false;
+    }
 }
 
 function showL() {
@@ -98,15 +106,16 @@ onBeforeMount(init);
 <template>
     <div ref="container" class="container" @mousedown.stop="trans" @mouseenter="showL" @mouseleave="hiddenL"
         @mousemove="updatelocate">
-        <div class="name">{{ props.context.selection.selectedPage!.name || '' }}</div>
         <div class="page" ref="page_el"
             :style="{ left: fix_x + 'px', top: fix_y + 'px', width: fix_w + 'px', height: fix_h + 'px' }">
             <Simple v-for="(s, i) in props.context.selection.selectedPage!.childs" :key="i" :matrix="matrix" :shape="s">
             </Simple>
         </div>
+        <div class="name" :style="{ left: fix_x + 'px', top: fix_y - 18 + 'px' }">{{
+            props.context.selection.selectedPage!.name || '' }}</div>
         <div v-if="show_locate" class="locate" :style="{ left: locate_xy.x + 'px', top: locate_xy.y + 'px' }">{{
             `${locate.x}, ${locate.y}` }}</div>
-        <svg t="1692954273763" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" class="current"
+        <svg v-if="show_current" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" class="current"
             :reflush="reflush" p-id="4031" width="24" height="24"
             :style="{ left: current_xy.x + 'px', top: current_xy.y + 'px' }">
             <path stroke="#fff" stroke-width="10px"
@@ -128,7 +137,7 @@ onBeforeMount(init);
     border: 2px solid var(--active-color);
     background-color: #fff;
     cursor: crosshair;
-    overflow: hidden;
+    z-index: 9;
 
     .name {
         position: absolute;
@@ -146,11 +155,14 @@ onBeforeMount(init);
 
     .locate {
         position: absolute;
-        width: 60px;
+        display: inline-block;
+        white-space: nowrap;
+        color: #efefef;
+        padding: 0 4px;
         height: 24px;
         line-height: 24px;
         text-align: center;
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: var(--active-color);
         border-radius: var(--default-radius);
         font-size: var(--font-default-fontsize);
     }
