@@ -81,10 +81,8 @@ export class WorkSpace extends Watchable(Object) {
     static ITALIC = 30;
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
-    static INSERT_TABLE = 33;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
-    private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
     private m_translating: boolean = false; // 编辑器是否正在移动图形
@@ -156,9 +154,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     get startPoint() {
         return this.m_mousedown_on_page;
-    }
-    get tableSize() {
-        return this.m_table_size;
     }
     get transforming() {
         return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating || this.m_setting;
@@ -287,10 +282,6 @@ export class WorkSpace extends Watchable(Object) {
             event.preventDefault();
             if (ctrlKey || metaKey) adapt_page(this.context);
         }
-    }
-    setTable(size: { row: number, col: number }) {
-        this.m_table_size = size
-        this.notify(WorkSpace.INSERT_TABLE);
     }
     scaling(v: boolean) {
         this.m_scaling = v;

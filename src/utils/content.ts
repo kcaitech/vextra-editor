@@ -169,7 +169,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
 function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
   const tool = context.tool;
   const action = tool.action;
-  const table = context.workspace.tableSize;
+  const table = context.tool.tableSize;
   const matrix = context.workspace.matrix;
   const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
   const { x, y } = landFinderOnPage(matrix, context, frame)

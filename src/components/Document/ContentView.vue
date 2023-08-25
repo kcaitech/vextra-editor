@@ -246,7 +246,6 @@ function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     else if (type === WorkSpace.PASTE_RIGHT) paster(props.context, t, mousedownOnPageXY);
     else if (type === WorkSpace.COPY) props.context.workspace.clipboard.write_html();
     else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) contextMenuMount((param as MouseEvent));
-    else if (type === WorkSpace.INSERT_TABLE) init_insert_table(props.context, t);
 }
 function comment_watcher(type?: number) {
     if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
@@ -267,6 +266,7 @@ function menu_watcher(type?: number, mount?: string) {
 }
 function tool_watcher(type: number) {
     if (type === Tool.INSERT_FRAME) insertFrame();
+    else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
 }
 function insertFrame() {
     insertFrameTemplate(props.context);
