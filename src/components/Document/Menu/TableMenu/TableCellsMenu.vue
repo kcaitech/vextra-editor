@@ -182,7 +182,7 @@ const getCellsFormat = () => {
                 formats.push(forma);
             }
         }
-        if (formats.length < 0) return;
+        if (formats.length === 0) return;
         const referenceKeys = Object.keys(formats[0]);
         for (const key of referenceKeys) {
             const referenceValue = formats[0][key]; let foundEqual = true;
