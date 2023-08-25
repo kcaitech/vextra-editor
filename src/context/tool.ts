@@ -59,10 +59,13 @@ export class Tool extends Watchable(Object) {
     static GROUP = 2;
     static UNGROUP = 3;
     static COMPS = 4;
-    static TITILE_VISIBLE = 5
+    static TITILE_VISIBLE = 5;
+    static INSERT_FRAME = 6;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
+    private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
+    private m_frame_name: string = ''; // 容器模版名称
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -164,5 +167,14 @@ export class Tool extends Watchable(Object) {
     setTitleVisibale(val: boolean) {
         this.m_show_title = val;
         this.notify(Tool.TITILE_VISIBLE);
+    }
+    
+    setArtboardTemp(width: number, height: number, name: string) {
+        this.m_frame_size = { width, height };
+        this.m_frame_name = name;
+        this.notify(Tool.INSERT_FRAME);
+    }
+    get frameSize(): { size: { width: number, height: number }, name: string } {
+        return { size: this.m_frame_size, name: this.m_frame_name };
     }
 }

@@ -58,8 +58,6 @@ export enum Perm {
     isEdit = 3
 }
 export class WorkSpace extends Watchable(Object) {
-    static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
-    static INSERT_FRAME = 1; // notify类型：插入容器模版、更新光标、重置光标、矩阵变换
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
     static TEXT_FORMAT = 6;
@@ -86,7 +84,6 @@ export class WorkSpace extends Watchable(Object) {
     static INSERT_TABLE = 33;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
-    private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
@@ -159,9 +156,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     get startPoint() {
         return this.m_mousedown_on_page;
-    }
-    get frameSize() {
-        return this.m_frame_size;
     }
     get tableSize() {
         return this.m_table_size;
@@ -293,13 +287,6 @@ export class WorkSpace extends Watchable(Object) {
             event.preventDefault();
             if (ctrlKey || metaKey) adapt_page(this.context);
         }
-    }
-    setFrameSize(size: { width: number, height: number }) {
-        this.m_frame_size = size
-        this.notify(WorkSpace.INSERT_FRAME);
-    }
-    setFrame(size: { width: number, height: number }) {
-        this.m_frame_size = size
     }
     setTable(size: { row: number, col: number }) {
         this.m_table_size = size

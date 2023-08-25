@@ -192,26 +192,18 @@ export function isIncluded(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY
 
 // 两个形状既不🍌也没有包含关系，返回false
 export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[], includes?: boolean) {
-  if (isIncluded(selectorPoints, shapePoints)) {
-    return true
-  }
+  if (isIncluded(selectorPoints, shapePoints)) return true;
   if (includes) return false;
-  let s = 0;
-  while (s < selectorPoints.length - 1) {
-    const p1 = selectorPoints[s], q1 = selectorPoints[s + 1];
+  for (let i = 0, len = selectorPoints.length - 1; i < len; i++) {
+    const p1 = selectorPoints[i], q1 = selectorPoints[i + 1];
     if (shapePoints.length === 2) { // 线条
-      if (isIntersect(p1, q1, shapePoints[0], shapePoints[1])) {
-        return true;
-      }
+      if (isIntersect(p1, q1, shapePoints[0], shapePoints[1])) return true;
     } else {
-      for (let i = 0; i < shapePoints.length - 1; i++) {
-        const p2 = shapePoints[i], q2 = shapePoints[i + 1];
-        if (isIntersect(p1, q1, p2, q2)) {
-          return true;
-        }
+      for (let j = 0; j < shapePoints.length - 1; j++) {
+        const p2 = shapePoints[j], q2 = shapePoints[j + 1];
+        if (isIntersect(p1, q1, p2, q2)) return true;
       }
     }
-    s++;
   }
   return false;
 }

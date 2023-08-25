@@ -27,7 +27,7 @@ import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
-import { Action } from "@/context/tool";
+import { Action, Tool } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
@@ -242,7 +242,6 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
 }
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) matrix.reset(workspace.value.matrix);
-    else if (type === WorkSpace.INSERT_FRAME) insertFrame();
     else if (type === WorkSpace.PASTE) paster(props.context, t);
     else if (type === WorkSpace.PASTE_RIGHT) paster(props.context, t, mousedownOnPageXY);
     else if (type === WorkSpace.COPY) props.context.workspace.clipboard.write_html();
@@ -266,10 +265,11 @@ function menu_watcher(type?: number, mount?: string) {
         cellSetting.value = true;
     }
 }
+function tool_watcher(type: number) {
+    if (type === Tool.INSERT_FRAME) insertFrame();
+}
 function insertFrame() {
-    const brothers = props.context.selection.selectedPage?.childs || [];
-    const name = getName(ShapeType.Artboard, brothers, t);
-    insertFrameTemplate(props.context, name);
+    insertFrameTemplate(props.context);
 }
 
 function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
@@ -751,6 +751,7 @@ onMounted(() => {
     props.context.menu.watch(menu_watcher);
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
+    props.context.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
     props.context.assist.init();
     rootRegister(true);
@@ -774,6 +775,7 @@ onUnmounted(() => {
     props.context.comment.unwatch(comment_watcher);
     props.context.menu.unwatch(menu_watcher);
     props.context.cursor.unwatch(cursor_watcher);
+    props.context.tool.unwatch(tool_watcher);
     props.page.unwatch(page_watcher);
     resizeObserver.disconnect();
     document.removeEventListener('keydown', onKeyDown);
@@ -807,7 +809,5 @@ onUnmounted(() => {
             @completed="completed" :posi="posi"></CommentInput>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
-        <!-- <ImageLoad :x="0" :y="0" :width="100" :height="100" status="failed"></ImageLoad>
-        <ImageLoad :x="100" :y="0" :width="100" :height="100" status="loading"></ImageLoad> -->
     </div>
 </template>@/components/Document/initpal

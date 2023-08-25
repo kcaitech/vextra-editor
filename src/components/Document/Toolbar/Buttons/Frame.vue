@@ -3,14 +3,14 @@ import { ref, nextTick } from 'vue';
 import ToolButton from '../ToolButton.vue';
 import { useI18n } from 'vue-i18n';
 import FrameChild from './FrameChild.vue'
-import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 import Tooltip from '@/components/common/Tooltip.vue';
+import { Context } from '@/context';
 type Button = InstanceType<typeof ToolButton>
 
 const { t } = useI18n();
 const props = defineProps<{
-  workspace: WorkSpace,
+  context: Context,
   active: boolean
 }>()
 const emit = defineEmits<{
@@ -68,7 +68,7 @@ const closeChildFrame = () => {
 const frames = ['frame.phone', 'frame.tablet', 'frame.deskdop', 'frame.presentation', 'frame.watch', 'frame.paper', 'frame.social_media']
 
 const framesChild = [
-  [['iphone 14', '390 × 844'], ['iphone 14 Pro', '393 × 852']],
+  [['iPhone 14', '390 × 844'], ['iPhone 14 Pro', '393 × 852']],
   [['Surface Pro 8', '1440 × 960'], ['iPad mini 8.3', '744 × 1133']],
   [['MacBook Air', '1280 × 832'], ['Desktop', '1440 × 1024']],
   [['Slide 16:9', '1920 × 1080'], ['Slide 4:3', '1024 × 768']],
@@ -83,8 +83,6 @@ const closeFrame = () => {
 }
 const isSelect = () => {
   select(Action.AddFrame)
-  props.workspace.setFrame({ width: 100, height: 100 })
-
 }
 var timer: any = null
 const onMouseenter = () => {
@@ -114,22 +112,22 @@ const customFrame = () => {
       <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
         <span>{{ t(`${item}`) }}</span>
         <div class="triangle"></div>
-        <FrameChild :workspace="props.workspace" :childFrame="hoverIndex === i" :top="-8" :left="left"
+        <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-8" :left="left"
           :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>
       </div>
     </div>
   </div>
-    <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`">
-      <ToolButton ref="button" @click="isSelect" :selected="props.active" @mouseenter.stop="onMouseenter"
-        @mouseleave.stop="onMouseleave">
-        <div class="svg-container">
-          <svg-icon icon-class="frame"></svg-icon>
-        </div>
-        <div class="menu-f" @click.stop="showMenu">
-          <svg-icon icon-class="down"></svg-icon>
-        </div>
-      </ToolButton>
-    </Tooltip>
+  <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`">
+    <ToolButton ref="button" @click="isSelect" :selected="props.active" @mouseenter.stop="onMouseenter"
+      @mouseleave.stop="onMouseleave">
+      <div class="svg-container">
+        <svg-icon icon-class="frame"></svg-icon>
+      </div>
+      <div class="menu-f" @click.stop="showMenu">
+        <svg-icon icon-class="down"></svg-icon>
+      </div>
+    </ToolButton>
+  </Tooltip>
 </template>
 
 <style scoped lang="scss">
