@@ -138,8 +138,10 @@ onBeforeMount(init);
     height: 300px;
     right: 15px;
     bottom: 15px;
-    border: 2px solid var(--active-color);
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
     background-color: #fff;
+    border-radius: 4px;
     cursor: crosshair;
     z-index: 9;
 
