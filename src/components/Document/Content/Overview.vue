@@ -21,6 +21,7 @@ const locate = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const locate_xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const current_xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const reflush = ref<number>(0);
+const url = ref<string>('');
 function init() {
     const selection = props.context.selection, workspace = props.context.workspace, root = workspace.root;
     const page = selection.selectedPage;
@@ -51,10 +52,11 @@ function init() {
         const m = new Matrix(workspace.matrix.inverse);
         m.multiAtLeft(matrix);
         const c_xy = m.computeCoord2(root.center.x, root.center.y);
-        current_xy.value.x = c_xy.x - fix_x.value - 13.5, current_xy.value.y = c_xy.y + fix_y.value - 22;
+        current_xy.value.x = c_xy.x - fix_x.value - 18, current_xy.value.y = c_xy.y + fix_y.value - 32;
         if (current_xy.value.x < -20 || current_xy.value.x > 300 || current_xy.value.y < -20 || current_xy.value.y > 300) {
             show_current.value = false;
         }
+        url.value = localStorage.getItem('avatar') || '';
         reflush.value++;
     })
 }
@@ -64,7 +66,7 @@ function update_current() {
     const m = new Matrix(workspace.matrix.inverse);
     m.multiAtLeft(matrix);
     const c_xy = m.computeCoord2(root.center.x, root.center.y);
-    current_xy.value.x = c_xy.x - fix_x.value - 13.5, current_xy.value.y = c_xy.y + fix_y.value - 22;
+    current_xy.value.x = c_xy.x - fix_x.value - 18, current_xy.value.y = c_xy.y + fix_y.value - 32;
     if (current_xy.value.x < -20 || current_xy.value.x > 300 || current_xy.value.y < -20 || current_xy.value.y > 300) {
         show_current.value = false;
     }
@@ -115,15 +117,17 @@ onBeforeMount(init);
             props.context.selection.selectedPage!.name || '' }}</div>
         <div v-if="show_locate" class="locate" :style="{ left: locate_xy.x + 'px', top: locate_xy.y + 'px' }">{{
             `${locate.x}, ${locate.y}` }}</div>
-        <svg v-if="show_current" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" class="current"
-            :reflush="reflush" p-id="4031" width="24" height="24"
-            :style="{ left: current_xy.x + 'px', top: current_xy.y + 'px' }">
-            <path stroke="#fff" stroke-width="10px"
-                d="M511.954463 250.971985c-73.709769 0-133.669372 58.877969-133.669372 131.23288 0 72.339562 59.959603 131.157155 133.669372 131.157155 73.707722 0 133.639696-58.817594 133.639696-131.157155C645.594159 309.84893 585.662185 250.971985 511.954463 250.971985M511.954463 455.252555c-40.97625 0-74.311473-32.779567-74.311473-73.078389 0-40.284495 33.334199-73.077366 74.311473-73.077366 40.945551 0 74.278727 32.79287 74.278727 73.077366C586.23319 422.472987 552.900014 455.252555 511.954463 455.252555"
-                fill="#231F20" p-id="4032"></path>
-            <path stroke="#fff" stroke-width="10px"
-                d="M824.811914 401.684522c0-169.441087-140.347468-307.277362-312.857451-307.277362-172.479283 0-312.768423 137.836275-312.768423 307.277362 0 132.88552 192.606693 400.645866 275.461749 509.584997 8.724709 11.492752 22.683628 18.321274 37.305651 18.321274 14.5903 0 28.580942-6.828522 37.334303-18.321274C632.11517 802.331411 824.811914 534.602787 824.811914 401.684522M516.887822 864.759229l-4.933359 6.557346-4.934382-6.557346C350.606705 656.92881 253.370103 479.470119 253.370103 401.684522c0-140.062989 115.979478-254.012228 258.58436-254.012228 142.575206 0 258.552637 113.949238 258.552637 254.012228C770.537799 479.499795 673.36055 656.92881 516.887822 864.759229"
-                fill="#231F20" p-id="4033"></path>
+        <svg v-if="show_current" :reflush="reflush" class="current" viewBox="0 0 1024 1024" version="1.1"
+            :style="{ left: current_xy.x + 'px', top: current_xy.y + 'px' }" xmlns="http://www.w3.org/2000/svg" width="32"
+            height="32">
+            <path
+                d="M512 0C279.13 0 90.353 189.862 90.353 424.177c0 117.097 47.224 223.111 123.482 299.911L512 1024l298.164-299.912a424.117 424.117 0 0 0 123.483-299.911C933.647 189.862 744.869 0 512 0z m0 612.593a187.934 187.934 0 0 1-187.453-188.537A187.874 187.874 0 0 1 512 235.64a187.934 187.934 0 0 1 187.452 188.537A187.874 187.874 0 0 1 512 612.653z"
+                fill="#865dff" p-id="5719"></path>
+            <clipPath id="avatar">
+                <path d="M512 360 v-290 a360 360 1 1 1 0 720 a 360 360 1 1 1 0 -720 z" clip-rule="evenodd"></path>
+            </clippath>
+            <image :xlink:href="url" width="720" height="720" x="150" y="60" clip-path="url(#avatar)"
+                preserveAspectRatio="none meet"></image>
         </svg>
     </div>
 </template>
