@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick, watch } from 'vue'
 import { Context } from '@/context';
-import { Close, Delete, CircleCheck, Back, CircleCheckFilled } from '@element-plus/icons-vue'
+import { Close, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
 import { Action } from "@/context/tool";
 import { Matrix } from "@kcdesign/data";
@@ -11,7 +11,6 @@ import { v4 } from 'uuid';
 import { ElScrollbar } from 'element-plus'
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
-import { text } from 'express';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -27,6 +26,7 @@ const emit = defineEmits<{
     (e: 'close', event?: MouseEvent): void
     (e: 'resolve', status: number, index: number): void
     (e: 'delete', index: number): void
+    (e: 'addComment', info: any): void
     (e: 'recover', index?: number, id?: string): void
     (e: 'editComment', index: number, text: string): void
     (e: 'editCommentChild', index: number, text: string): void
@@ -46,7 +46,6 @@ interface CommentData {
     content: string
 }
 const matrix = new Matrix(props.context.workspace.matrix);
-const workspace = computed(() => props.context.workspace);
 const comment = computed(() => props.context.comment);
 const textarea = ref('')
 const offside = ref(false)
@@ -62,6 +61,7 @@ const scrollMaxHeight = ref(0)
 const commentShowList = ref<any[]>([])
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 const reply = ref<boolean>(props.context.selection.commentStatus)
+const iscommentTop = ref(false);
 const close = (e: MouseEvent) => {
     emit('close', e)
     nextTick(() => {
@@ -112,11 +112,6 @@ const isControls = computed(() => {
     else return false
 })
 
-const isControlsDel = computed(() => {
-    if (comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
-    else return false
-})
-
 const height = ref()
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const commentPosition = () => {
@@ -124,12 +119,13 @@ const commentPosition = () => {
         const text = inputPopup.value?.$refs.textarea
         if (text) {
             const computedStyle = window.getComputedStyle(text);
+            iscommentTop.value = true;
             const _height = text.clientHeight + parseInt(computedStyle.paddingTop) + parseInt(computedStyle.paddingBottom);
-            height.value = Math.min(_height + 14, 214)
-            inputPopup.value && inputPopup.value.focus()
+            height.value = Math.min(_height + 18, 214);
+            inputPopup.value && inputPopup.value.focus();
             const p = matrix.computeCoord({ x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1 });
-            offside.value = props.rootWidth! - p.x < 360
-            let t = 0
+            offside.value = props.rootWidth! - p.x < 360;
+            let t = 0;
             t = props.rootHeight! - p.y //剩余的高度
             scrollMaxHeight.value = (props.rootHeight - 55 - (height.value as number) - 30) * 0.7
             scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
@@ -137,13 +133,12 @@ const commentPosition = () => {
                 if (commentPopup.value) {
                     const commentPopupH = scrollHeight.value + height.value + 45
                     if (t - commentPopupH < -45) {
-                        commentTop.value = t - commentPopupH + 10
+                        commentTop.value = t - commentPopupH;
                     } else {
                         commentTop.value = -10
                     }
                 }
                 scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
-                text.scrollTo(0, text.clientHeight)
             })
         }
     })
@@ -151,6 +146,7 @@ const commentPosition = () => {
 const scrollVisible = ref(false)
 
 const handleInput = () => {
+    scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
     nextTick(() => {
         if (textareaEl.value) {
             const text = inputPopup.value.$refs.textarea
@@ -161,9 +157,10 @@ const handleInput = () => {
                 const textareaHeight = text.clientHeight
                 const numberOfLines = Math.ceil(textareaHeight / lineHeight)
                 scrollVisible.value = numberOfLines > 10 ? true : false
-                commentPosition()
             }
         }
+        scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
+        commentPosition()
     })
 }
 
@@ -265,15 +262,8 @@ function commentUpdate(t?: number, p?: number) {
             }
             clearTimeout(timeout)
         }, 10)
-    }
-    if (t === Comment.UPDATE_COMMENT_CHILD) {
-        const timeout = setTimeout(() => {
-            if (scrollbarRef.value) {
-                scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
-                commentPosition()
-            }
-            clearTimeout(timeout)
-        }, 200)
+    } else if (t === Comment.UPDATE_COMMENT_CHILD) {
+        commentHtight()
     }
 }
 
@@ -313,24 +303,59 @@ const commentShow = () => {
             commentShowList.value && commentShowList.value.push(item)
         }
     })
+    if (textareaEl.value) {
+        const text = inputPopup.value.$refs.textarea
+        if (text) {
+            text.style.height = "auto"; // 重置高度，避免高度叠加
+            text.style.height = text.scrollHeight + "px";
+            const lineHeight = parseInt(getComputedStyle(text).lineHeight)
+            const textareaHeight = text.clientHeight
+            const numberOfLines = Math.ceil(textareaHeight / lineHeight)
+            scrollVisible.value = numberOfLines > 10 ? true : false
+        }
+    }
 }
 
 const addComment = () => {
-    const timestamp = getCurrentTime()
-    commentData.value.record_created_at = timestamp
-    commentData.value.content = textarea.value
-    commentData.value.doc_id = props.commentInfo.doc_id
-    commentData.value.page_id = props.commentInfo.page_id
-    commentData.value.target_shape_id = props.commentInfo.target_shape_id
-    commentData.value.shape_frame = {}
-    commentData.value.shape_id = v4()
-    commentData.value.parent_id = props.commentInfo.id
-    commentData.value.root_id = props.commentInfo.id
-    const data = commentData.value
-    createComment(data)
-    emit('recover')
-    textarea.value = ''
+    const timestamp = getCurrentTime();
+    commentData.value.record_created_at = timestamp;
+    commentData.value.content = textarea.value;
+    commentData.value.doc_id = props.commentInfo.doc_id;
+    commentData.value.page_id = props.commentInfo.page_id;
+    commentData.value.target_shape_id = props.commentInfo.target_shape_id;
+    commentData.value.shape_frame = {};
+    commentData.value.shape_id = v4();
+    commentData.value.parent_id = props.commentInfo.id;
+    commentData.value.root_id = props.commentInfo.id;
+    const data = commentData.value;
+    const info = { ...data, status: 0, user: props.commentInfo.user, id: '1' };
+    createComment(data);
+    scrollMaxHeight.value = (props.rootHeight - 58 - 100) * 0.7
+    emit('addComment', info);
+    commentHtight();
+    nextTick(() => {
+        scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
+        textarea.value = '';
+    })
+}
 
+const commentHtight = () => {
+    nextTick(() => {
+        if (scrollbarRef.value) {
+            scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
+            if (commentPopup.value) {
+                const p = matrix.computeCoord({ x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1 });
+                let t = 0;
+                t = props.rootHeight! - p.y //剩余的高度
+                const commentPopupH = scrollHeight.value + 73 + 45
+                if (t - commentPopupH < -45) {
+                    commentTop.value = t - commentPopupH;
+                } else {
+                    commentTop.value = -10
+                }
+            }
+        }
+    })
 }
 
 const getCurrentTime = () => {
@@ -371,7 +396,6 @@ const editComment = (index: number, text: string) => {
 }
 
 const editCommentChild = (index: number, text: string) => {
-    // documentCommentList.value[index].content = text
     emit('editCommentChild', index, text)
 }
 
@@ -380,20 +404,6 @@ const quickReply = (name: string) => {
     selectedPerson.value = `@${name}`
     inputPopup.value && inputPopup.value.focus()
 }
-watchEffect(() => {
-    commentPosition()
-})
-
-// watch(
-//     () => props.documentCommentList,
-//     () => {
-//         nextTick(() => {
-//             if(scrollbarRef.value) {
-//                 scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
-//             }
-//         })
-//     }
-// )
 
 const scrollup = (e: MouseEvent) => {
 }
@@ -420,6 +430,10 @@ const update = (t: number) => {
         reply.value = props.context.selection.commentStatus
     }
 }
+watchEffect(() =>{
+    props.documentCommentList;
+    commentHtight();
+})
 
 defineExpose({
     commentPopup,
@@ -428,6 +442,7 @@ defineExpose({
 })
 onMounted(() => {
     commentShow()
+    commentPosition();
     props.context.comment.saveCommentId(props.commentInfo.id);
     props.context.comment.commentOpacity(true);
     props.context.comment.commentInput(true);
@@ -489,7 +504,7 @@ onUnmounted(() => {
         </el-scrollbar>
         <div class="popup-footer" @mousedown.stop>
             <div class="textarea" ref="textareaEl">
-                <el-input ref="inputPopup" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }"
+                <el-input ref="inputPopup" class="input" v-model="textarea" :autosize="{ minRows: 0, maxRows: 10 }"
                     type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
                     :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
                     @input="handleInput" />
