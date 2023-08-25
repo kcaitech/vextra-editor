@@ -130,7 +130,6 @@ function addFill(): void {
             }
         }
     }
-    updateData();
 }
 function first() {
     if (fills.length === 0 && !mixed.value) addFill();
@@ -143,6 +142,8 @@ function deleteFill(idx: number) {
             const table = props.context.selection.getTableSelection(s as TableShape, props.context);
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
+                console.log(112);
+                
                 e.deleteFill(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.deleteFill(_idx);
@@ -158,7 +159,6 @@ function deleteFill(idx: number) {
             editor.shapesDeleteFill(actions);
         }
     }
-    updateData();
 }
 function toggleVisible(idx: number) {
     const _idx = fills.length - idx - 1;
@@ -216,7 +216,6 @@ function setColor(idx: number, clr: string, alpha: number) {
             editor.setShapesFillColor(actions);
         }
     }
-    updateData()
 }
 function onColorChange(idx: number, e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -300,7 +299,6 @@ function getColorFromPicker(idx: number, color: Color) {
             editor.setShapesFillColor(actions);
         }
     }
-    updateData();
 }
 
 const selectColor = (id: number) => {

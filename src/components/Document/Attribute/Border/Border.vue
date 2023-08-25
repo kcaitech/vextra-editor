@@ -285,7 +285,27 @@ function onAlphaChange(e: Event, idx: number) {
                 const { red, green, blue } = border.color
                 const color = new Color(alpha, red, green, blue);
                 const _idx = borders.length - idx - 1;
-                editor.value.setBorderColor(_idx, color);
+                if (len.value === 1) {
+                    const shape = props.shapes[0] as TableShape;
+                    if (shape.type === ShapeType.Table) {
+                        const table = props.context.selection.getTableSelection(shape, props.context);
+                        const e = props.context.editor4Table(shape);
+                        if (table.tableRowStart > -1 || table.tableColStart > -1) {
+                            e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+                        } else {
+                            editor.value.setBorderColor(_idx, color);
+                        }
+                    } else {
+                        editor.value.setBorderColor(_idx, color);
+                    }
+                } else if (len.value > 1) {
+                    const actions = get_actions_border_color(props.shapes, _idx, color);
+                    const page = props.context.selection.selectedPage;
+                    if (page) {
+                        const editor = props.context.editor4Page(page);
+                        editor.setShapesBorderColor(actions);
+                    }
+                }
             } else {
                 message('danger', t('system.illegal_input'));
                 return (e.target as HTMLInputElement).value = (borders[idx].border.color.alpha * 100) + '%'
