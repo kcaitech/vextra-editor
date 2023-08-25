@@ -29,32 +29,39 @@
     </div>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, inject, Ref, watch } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-
+const props = defineProps<{
+    searchvalue?: string
+}>()
 const { t } = useI18n()
 const titles = ['姓名', '团队权限']
 const filteritems = ['全部', '创建者', '管理员', '可编辑', '仅阅读']
 const noNetwork = ref(false)
-const props = defineProps<{
-    teamid: string,
-    searchvalue?: string
-}>()
 const teammemberdata = ref<any[]>([])
 const fold = ref(false)
 const fontName = ref('全部')
 const menu = ref<HTMLElement>()
 
+const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+    teamID: Ref<string>;
+    teamName: Ref<string>;
+    teamAvatar: Ref<string>;
+    teamDescription: Ref<string>;
+}
+
 const GetteamMember = async () => {
     try {
-        const { code, data, message } = await user_api.GetteamMember({ team_id: props.teamid })
-        if (code === 0) {
-            teammemberdata.value = data
-        } else {
-            ElMessage({ type: 'error', message: message })
+        if (teamID.value) {
+            const { code, data, message } = await user_api.GetteamMember({ team_id: teamID.value })
+            if (code === 0) {
+                teammemberdata.value = data
+            } else {
+                ElMessage({ type: 'error', message: message })
+            }
         }
     } catch (error) {
         noNetwork.value = true
@@ -78,6 +85,10 @@ const membertype = (num: number) => {
             break
     }
 }
+
+watch(teamID, () => {
+    GetteamMember()
+})
 
 onMounted(() => {
     GetteamMember()

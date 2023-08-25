@@ -28,13 +28,19 @@ import NetworkError from '@/components/NetworkError.vue'
 const noNetwork = ref(false)
 const { t } = useI18n()
 interface Props {
-    teamid: string
     searchvalue?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
     searchvalue: ''
 })
+
+const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+    teamID: Ref<string>;
+    teamName: Ref<string>;
+    teamAvatar: Ref<string>;
+    teamDescription: Ref<string>;
+}
 
 const { updateprojectlist, updateprojectliststate } = inject('shareData') as {
     updateprojectlist: Ref<boolean>;
@@ -51,7 +57,7 @@ const GetprojectLists = async () => {
         if (code === 0) {
             projectdata.value = data
         } else {
-            ElMessage({ type: 'error', message: message })
+            ElMessage({ type: 'error', message:'成功获取团队项目列表' })
         }
     } catch (error) {
         noNetwork.value = true
@@ -70,7 +76,7 @@ watch(updateprojectlist, (newvalue) => {
 
 //获取当前用户所有项目列表,然后用计算属性筛选出当前团队的项目
 const teamprojectlist = computed(() => {
-    return projectdata.value.filter((item) => item.project.team_id === props.teamid)
+    return projectdata.value.filter((item) => item.project.team_id === teamID.value)
 })
 
 //通过计算属性，筛选出与搜索匹配的项目

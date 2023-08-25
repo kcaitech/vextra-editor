@@ -197,6 +197,16 @@ export function GetteamMember(params = {}, ops = {}) {
     })
 }
 
+//设置团队信息
+export function Setteaminfo(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/info',
+        method: 'put',
+        data:data,
+        ...ops
+    })
+}
+
 //获取项目列表
 export function GetprojectLists(params = {}, ops = {}) {
     return httpRequest({
@@ -226,3 +236,4 @@ export function Disband(params = {}, ops = {}) {
         ...ops
     })
 }
+

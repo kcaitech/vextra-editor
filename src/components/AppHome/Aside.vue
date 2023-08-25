@@ -36,7 +36,7 @@ const teamcard = ref(false)
 const projectcard = ref(false)
 const teamid = ref('')
 
-const { teamData, updatestate,updateShareData, upDateTeamData,state } = inject('shareData') as {
+const { teamData, updatestate, updateShareData, upDateTeamData, state } = inject('shareData') as {
     teamData: Ref<[{
         team: {
             id: string,
@@ -108,7 +108,7 @@ const GetteamList = async () => {
         const { code, data, message } = await user_api.GetteamList()
         if (code === 0) {
             upDateTeamData(data)
-            ElMessage({ type: 'success', message: message })
+            ElMessage({ type: 'success', message: '成功获取团队列表' })
         } else {
             ElMessage({ type: 'error', message: message })
         }
@@ -131,7 +131,7 @@ const torouter = (id: string) => {
 
 const isActive = (id: string, name: string, avatar: string, description: string) => {
     if (route.params.id === id) {
-        updateShareData(id, name, avatar, description)
+        updateShareData(id, name, avatar, description != '' ? description : '你还没有填写团队描述，快去填写吧。')
     }
     return route.params.id === id
 }
@@ -220,7 +220,7 @@ onUnmounted(() => {
     </el-row>
     <transition name="nested" :duration="550">
         <div v-if="showoverlay" class="overlay">
-            <addTeam v-if="teamcard" class="inner" @close="showoverlay = false; teamcard = false"/>
+            <addTeam v-if="teamcard" class="inner" @close="showoverlay = false; teamcard = false" />
             <addProject v-if="projectcard" class="inner" :teamid="teamid"
                 @close="showoverlay = false; projectcard = false" />
         </div>

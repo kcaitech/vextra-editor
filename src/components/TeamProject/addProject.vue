@@ -49,7 +49,7 @@ const createProject = async () => {
         if (code === 0) {
             emits('close')
             updateprojectliststate(true)
-            ElMessage.success(t('percenter.successtips'))
+            ElMessage.success('成功添加项目')
             if (route.params.id === props.teamid) return
             router.push({ path: '/apphome/teams/' + props.teamid })
         } else {

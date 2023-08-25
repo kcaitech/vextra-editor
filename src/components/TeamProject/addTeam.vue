@@ -63,7 +63,7 @@ const createTeam = async () => {
         const { code, message, data } = await user_api.CreateTeam(formData)
         if (code === 0) {
             emits('close')
-            ElMessage.success(t('percenter.successtips'))
+            ElMessage.success('成功添加团队')
             state(true)  //改变updatestate的值为TRUE
             route.params.id = data.id
         } else {

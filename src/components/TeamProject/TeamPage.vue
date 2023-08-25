@@ -10,13 +10,13 @@
         </div>
         <div class="team-info">
             <div class="team-name">{{ teamName }}</div>
-            <div class="team-description">{{ description }}</div>
+            <div class="team-description">{{ teamDescription }}</div>
         </div>
     </div>
     <div class="team-header">
         <ul class="menu">
             <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
-                @click="itemid = index">
+                @click.stop="clickEvent(index)">
                 {{ item }}
             </li>
         </ul>
@@ -38,8 +38,8 @@
             </el-input>
         </div>
     </div>
-    <ProjectList v-if="itemid === 0" :teamid="teamID" :searchvalue="search" />
-    <TeamMember v-if="itemid === 1" :teamid="teamID" :searchvalue="search" />
+    <ProjectList v-if="itemid === 0" :searchvalue="search" />
+    <TeamMember v-if="itemid === 1" :searchvalue="search" />
     <TeamSetting v-if="itemid === 2" />
     <transition name="nested" :duration="550">
         <div v-if="showoverlay" class="overlay">
@@ -49,7 +49,7 @@
     </transition>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, ref } from 'vue'
+import { Ref, computed, inject, ref, onMounted } from 'vue'
 import { Search, Close } from '@element-plus/icons-vue'
 import ProjectList from '@/components/TeamProject/ProjectList.vue'
 import addProject from './addProject.vue'
@@ -63,6 +63,8 @@ const items = ['项目', '成员', '团队设置']
 const img = ref(false)
 const search = ref<string>('')
 
+
+
 const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
     teamID: Ref<string>;
     teamName: Ref<string>;
@@ -70,14 +72,23 @@ const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as
     teamDescription: Ref<string>;
 }
 
-const description = computed(() => {
-    return teamDescription.value != '' ? teamDescription.value : '你还没有填写团队描述，快去填写吧。'
-})
-
 const avatar = computed(() => {
     return teamAvatar.value != '' ? teamAvatar.value : teamName.value.slice(0, 1)
 })
 
+const clickEvent = (index: number) => {
+    itemid.value = index
+    sessionStorage.setItem('activateitem', index)
+}
+
+
+
+onMounted(() => {
+    const x = sessionStorage.getItem('activateitem')
+    if (x) {
+        itemid.value = parseInt(x)
+    }
+})
 </script>
 <style lang="scss" scoped>
 .nested-enter-active,
