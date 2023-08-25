@@ -113,18 +113,18 @@ function move(e: MouseEvent) {
     if (!cell) return;
     const frame = cell.frame;
     const trans_p = { x: p.x - frame.x, y: p.y - frame.y };
-    if (trans_p.x < 5) {
+    if (trans_p.x < 3) {
         if (cell.index.col) {
             x_checked = true, m_col = cell.index.col;
         }
-    } else if (frame.width - trans_p.x < 5) {
+    } else if (frame.width - trans_p.x < 3) {
         x_checked = true, m_col = cell.index.col + 1;
     }
-    if (trans_p.y < 5) {
+    if (trans_p.y < 3) {
         if (cell.index.row) {
             y_checked = true, m_row = cell.index.row;
         }
-    } else if (frame.height - trans_p.y < 5) {
+    } else if (frame.height - trans_p.y < 3) {
         y_checked = true, m_row = cell.index.row + 1;
     }
     if (!x_checked && !y_checked) {
