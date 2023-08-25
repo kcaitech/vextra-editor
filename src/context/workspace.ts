@@ -142,9 +142,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     get pageView() {//return pageView HTMLElement
         const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
-        if (pageView) {
-            return pageView as Element;
-        }
+        if (pageView) return pageView as Element;
     }
     get documentPerm() {
         return this.m_document_perm;
@@ -304,9 +302,7 @@ export class WorkSpace extends Watchable(Object) {
         this.m_setting = v;
     }
     keydown_v(ctrlKey: boolean, metaKey: boolean) {
-        if (ctrlKey || metaKey) {
-            this.notify(WorkSpace.PASTE);
-        }
+        if (ctrlKey || metaKey) this.notify(WorkSpace.PASTE);
     }
     keydown_a(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) {
@@ -329,16 +325,12 @@ export class WorkSpace extends Watchable(Object) {
                 }
             } else {
                 const page = selection.selectedPage;
-                if (page) {
-                    selection.rangeSelectShape(page.childs);
-                }
+                if (page) selection.rangeSelectShape(page.childs);
             }
         }
     }
     keydown_i(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) {
-            this.notify(WorkSpace.ITALIC);
-        }
+        if (ctrl || meta) this.notify(WorkSpace.ITALIC);
     }
     keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         const repo = context.repo;
@@ -352,20 +344,14 @@ export class WorkSpace extends Watchable(Object) {
                 if (shapes.length) {
                     for (let i = 0; i < shapes.length; i++) {
                         const item = shapes[i];
-                        if (!flat.get(item.id)) {
-                            selection.unSelectShape(item);
-                        }
+                        if (!flat.get(item.id)) selection.unSelectShape(item);
                     }
                 }
             }
-            if (this.context.selection.selectedShapes.length > 1) {
-                this.notify(WorkSpace.CLAC_ATTRI);
-            }
+            if (this.context.selection.selectedShapes.length > 1) this.notify(WorkSpace.CLAC_ATTRI);
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
-            if (this.context.selection.selectedShapes.length > 1) {
-                this.notify(WorkSpace.CLAC_ATTRI);
-            }
+            if (this.context.selection.selectedShapes.length > 1) this.notify(WorkSpace.CLAC_ATTRI);
         }
     }
     keydown_c(ctrlKey?: boolean, metaKey?: boolean, shift?: boolean) {
@@ -386,18 +372,12 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     keydown_b(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) {
-            this.notify(WorkSpace.BOLD);
-        }
+        if (ctrl || meta) this.notify(WorkSpace.BOLD);
     }
     keydown_u(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) {
-            this.notify(WorkSpace.UNDER_LINE);
-        }
+        if (ctrl || meta) this.notify(WorkSpace.UNDER_LINE);
     }
     keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
-        if ((ctrl || meta) && shift) {
-            this.notify(WorkSpace.DELETE_LINE)
-        }
+        if ((ctrl || meta) && shift) this.notify(WorkSpace.DELETE_LINE);
     }
 }
