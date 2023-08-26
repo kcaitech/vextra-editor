@@ -7,12 +7,14 @@ import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';
 import { debounce } from 'lodash';
 import { CellMenu } from '@/context/menu';
+import { TableSelection } from '@/context/tableselection';
 
 interface Props {
     context: Context
     cell: TableCell | undefined
     table: TableShape
     matrix: number[]
+    tableSelection: TableSelection
 }
 interface Emits {
     (e: 'get-menu', x: number, y: number, type: CellMenu, cell_menu: boolean): void;
@@ -25,10 +27,9 @@ let triangle_position: ClientXY = { x: 0, y: 0 };
 function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
-    const selection = props.context.selection;
     if (props.table && props.table.type === ShapeType.Table) {
-        const table_selection = selection.getTableSelection(props.table, props.context);
-        if (table_selection.tableRowStart < 0) return;
+        const table_selection = props.tableSelection;
+        if (!table_selection || table_selection.tableRowStart < 0) return;
         const cells = table_selection.getSelectedCells(true);
         gen_view(props.table, cells, gen_menu_posi);
     }
@@ -114,7 +115,7 @@ onUnmounted(() => {
         <rect x="200" y="200" width="824" height="824" fill="transparent"></rect>
         <path
             d="M547.328 810.666667H810.666667v-263.338667L547.328 810.666667zM896 341.333333v554.666667H341.333333L896 341.333333z"
-            fill="#444444" p-id="13243"></path>
+            fill="#444444"></path>
     </svg>
 </template>
 <style scoped lang="scss"></style>

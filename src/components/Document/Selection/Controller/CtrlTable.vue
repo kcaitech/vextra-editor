@@ -230,7 +230,7 @@ onUnmounted(() => {
         @mousedown="down" @mouseleave="leave">
         <!-- 表格选区 -->
         <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell?.cell"
-            :table="props.shape" :matrix="submatrixArray">
+            :table="props.shape" :matrix="submatrixArray" :table-selection="tableSelection()">
         </TableSelectionView>
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"

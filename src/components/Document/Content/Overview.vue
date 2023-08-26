@@ -157,6 +157,8 @@ onBeforeMount(init);
         background-color: #efefef;
         position: absolute;
         box-sizing: border-box;
+        border-top: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
     }
 
     .locate {

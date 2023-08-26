@@ -92,7 +92,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         while (p) {
             if (p.type == ShapeType.Artboard) {
                 result = p as any;
-                break;
+                return result;
             }
             p = p.parent;
         }
