@@ -348,6 +348,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 table_selection.selectTableCell(down_item.index.row, down_item.index.col);
             }
         }
+        document.addEventListener('mouseup', mouseup4body);
+        up = mouseup4body;
     }
     function multidown() {
         init_down_timer();
@@ -356,6 +358,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
             table_selection.setEditingCell();
             table_selection.selectTableCell(down_item.index.row, down_item.index.col);
         }
+        document.addEventListener('mouseup', mouseup4body);
+        up = mouseup4body;
     }
     // #endregion
     function set_position(e: MouseEvent) {
