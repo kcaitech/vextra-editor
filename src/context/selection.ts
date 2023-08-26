@@ -40,7 +40,7 @@ export interface ShapeXY { // 图形自身坐标系的xy
 }
 type TextShapeLike = Shape & { text: Text }
 export type ActionType = 'translate' | 'scale' | 'rotate';
-
+export type TableArea = 'invalid' | 'move' | 'body' | 'content';
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -72,6 +72,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_select_comment: boolean = false;
     private m_comment_page_sort: boolean = false;
     private m_comment_about_me: boolean = false;
+    private m_table_area: { id: TableArea, area: string }[] = [];
+
 
     constructor(document: Document) {
         super();
@@ -289,7 +291,19 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return shape;
     }
-
+    getArea(p: ClientXY): TableArea {
+        let area: TableArea = 'invalid';
+        for (let i = 0, len = this.m_table_area.length; i < len; i++) {
+            const a = this.m_table_area[i];
+            if (this.m_scout!.isPointInPath(a.area, p)) {
+                area = a.id; return area;
+            }
+        }
+        return area;
+    }
+    setArea(table_area: { id: TableArea, area: string }[]) {
+        this.m_table_area = table_area;
+    }
     // text
     private m_textSelection?: TextSelection;
     getTextSelection(shape: TextShapeLike) {

@@ -5,7 +5,7 @@ import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
 import { get_range, get_speed, keyboardHandle as handle } from "@/utils/controllerFn";
-import { Selection } from "@/context/selection";
+import { Selection, TableArea } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 import { AsyncTransfer } from "@kcdesign/data";
@@ -16,7 +16,7 @@ import { permIsEdit } from '@/utils/content';
 import { distance2apex, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
-import { TableArea, TableSelection } from '@/context/tableselection';
+import { TableSelection } from '@/context/tableselection';
 import { TextSelection } from '@/context/textselection';
 
 function useControllerCustom(context: Context, i18nT: Function) {
@@ -53,7 +53,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         if (context.workspace.isPageDragging) return;
         shapes = context.selection.selectedShapes;
         root = context.workspace.root;
-        area = table_selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
+        area = context.selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
         console.log('click-area', area);
         if (area === 'move') {
             matrix.reset(workspace.value.matrix.inverse);

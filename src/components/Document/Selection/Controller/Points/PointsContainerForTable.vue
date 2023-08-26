@@ -38,9 +38,8 @@ function update_transform() {
     let rb = matrix.computeCoord2(frame.width, frame.height);
     trans_btn_transform.value = `translate(${lt.x - 20}, ${lt.y - 20})`
     scale_btn_transform.value = `translate(${rb.x + 1}, ${rb.y + 1})`;
-    const table_selection = props.context.selection.getTableSelection(props.shape as TableShape, props.context);
     const root = props.context.workspace.root;
-    table_selection.setArea([
+    props.context.selection.setArea([
         { id: 'move', area: `M${lt.x - 20} ${lt.y - 20} h18 v18 h-18 z` },
         { id: 'body', area: `M${lt.x} ${lt.y} h${rb.x - lt.x} v${rb.y - lt.y} h${lt.x - rb.x} z` },
         { id: 'content', area: `M0 0 h${root.width} v${root.height} h${-root.width} z` }
