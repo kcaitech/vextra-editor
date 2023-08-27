@@ -1,5 +1,5 @@
 import { getHorizontalAngle } from "@/utils/common"
-import { CtrlElementType, Shape } from "@kcdesign/data"
+import { CtrlElementType, Matrix, Point2D, Shape } from "@kcdesign/data"
 
 
 interface Dot {
@@ -83,4 +83,15 @@ export function update_dot3(ps: { x: number, y: number, type?: CtrlElementType }
     transform3 += `rotate(${rotation}deg) translate(-${rb.x}px, -${rb.y}px)`;
     const path_obj_3 = { point: { x: rb.x - bit_v, y: rb.y - bit_v }, extra: { x: rb.x - bit_v_d, y: rb.y - bit_v_d }, r: { p: r3, transform: transform3 }, type: CtrlElementType.RectRB, type2: CtrlElementType.RectRBR };
     return [path_obj_1, path_obj_3];
+}
+export function get_path_by_point(s: Shape, matrix: Matrix) {
+    const points = [], raw_p = s.points, m = new Matrix(matrix);
+    if (!raw_p || !raw_p.length) return [];
+    m.preScale(s.frame.width, s.frame.height);
+    for (let i = 0, len = raw_p.length; i < len; i++) {
+        const p: Point2D = raw_p[i]?.point;
+        if (!p) continue;
+        points.push({ point: m.computeCoord3(p), index: i });
+    }
+    return points;
 }
