@@ -53,9 +53,7 @@ function point_mousemove(event: MouseEvent) {
   const root = workspace.root;
   const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
   if (isDragging && pathEditor) {
-    const p = submatrix.computeCoord3(mouseOnClient);
-    console.log('page-xy', p);
-    pathEditor.execute(down_index, p);
+    pathEditor.execute(down_index, submatrix.computeCoord3(mouseOnClient));
     startPosition.x = mouseOnClient.x, startPosition.y = mouseOnClient.y;
   } else {
     const { x: sx, y: sy } = startPosition;
