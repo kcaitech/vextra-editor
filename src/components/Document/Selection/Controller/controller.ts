@@ -16,7 +16,7 @@ import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { distance2apex, distance2apex2, get_frame, update_pg_1, get_pg_by_frame, update_pg_2 } from '@/utils/assist';
+import { distance2apex, distance2apex2, get_frame, get_pg_by_frame, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
 export function useController(context: Context) {
@@ -94,7 +94,15 @@ export function useController(context: Context) {
             if (!scout) return;
             const target = groupPassthrough(scout, scope, startPositionOnPage);
             if (target) context.selection.selectShape(target);
-        } else editing = !editing;
+        } else {
+            editing = !editing;
+            context.workspace.contentEdit(editing);
+            if (editing) {
+                console.log('进入编辑状态！');
+            } else {
+                console.log('取消编辑状态！');
+            }
+        }
     }
     function isMouseOnContent(e: MouseEvent): boolean {
         return (e.target as Element)?.closest(`#content`) ? true : false;
@@ -115,9 +123,9 @@ export function useController(context: Context) {
                         editor.delete();
                         context.selection.resetSelectShapes();
                     }
+                    return;
                 }
             }
-            return;
         }
         if (context.workspace.isPageDragging) return;
         if (isElement(e)) {
