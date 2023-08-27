@@ -95,3 +95,28 @@ export function get_path_by_point(s: Shape, matrix: Matrix) {
     }
     return points;
 }
+export function get_conact_by_point(s: Shape, matrix: Matrix) {
+    const points = [], raw_p = s.points, m = new Matrix(matrix);
+    if (!raw_p || !raw_p.length) return [];
+    m.preScale(s.frame.width, s.frame.height);
+    const len = raw_p.length - 1;
+    if (len < 1) return [];
+    for (let i = 0; i < len; i++) {
+        const p1: Point2D = raw_p[i]?.point, p2: Point2D = raw_p[i + 1]?.point;
+        if (!p1 || !p2) continue;
+        const point_raw = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+        const apex1 = m.computeCoord3(p1);
+        const apex2 = m.computeCoord3(p2);
+        const point = { x: (apex1.x + apex2.x) / 2, y: (apex1.y + apex2.y) / 2 };
+        points.push({ apex1, point, apex2, point_raw, index: i + 1 });
+    }
+    const p1: Point2D = raw_p[len]?.point, p2: Point2D = raw_p[0]?.point;
+    if (p1 && p2) {
+        const point_raw = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+        const apex1 = m.computeCoord3(p1);
+        const apex2 = m.computeCoord3(p2);
+        const point = { x: (apex1.x + apex2.x) / 2, y: (apex1.y + apex2.y) / 2 };
+        points.push({ apex1, point, apex2, point_raw, index: len + 1 });
+    }
+    return points;
+}
