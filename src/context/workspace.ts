@@ -83,6 +83,7 @@ export class WorkSpace extends Watchable(Object) {
     static ITALIC = 30;
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
+    static PRE_EDIT = 33;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
@@ -222,6 +223,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     contentEdit(v: boolean) {
         this.m_content_editing = v;
+        this.notify(WorkSpace.PRE_EDIT);
     }
     pageDragging(v: boolean) {
         this.m_page_dragging = v;

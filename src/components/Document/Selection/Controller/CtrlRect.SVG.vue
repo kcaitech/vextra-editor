@@ -12,6 +12,7 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
 import { getAxle } from "@/utils/common";
+import PathEdit from './Points/PathEdit.vue';
 interface Props {
   context: Context
   controllerFrame: Point[]
@@ -73,6 +74,9 @@ function selection_watcher(t: number) {
 }
 function workspace_watcher(t: number) {
   if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
+  else if (t === WorkSpace.PRE_EDIT) {
+    editing.value = props.context.workspace.isEditing;
+  }
 }
 function mousedown(e: MouseEvent) {
   document.addEventListener('mousemove', mousemove);
@@ -107,22 +111,19 @@ watchEffect(updateControllerView);
     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
     :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
-    <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-    <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
+    <ShapesStrokeContainer v-if="!editing" :context="props.context" :matrix="props.matrix" :shape="props.shape">
     </ShapesStrokeContainer>
-    <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+    <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
       :c-frame="props.controllerFrame"></BarsContainer>
-    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-      :c-frame="props.controllerFrame">
+    <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+      :axle="axle" :c-frame="props.controllerFrame">
     </PointsContainer>
+    <PathEdit v-else="editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
+      :c-frame="props.controllerFrame"></PathEdit>
   </svg>
 </template>
 <style lang='scss' scoped>
 .un-visible {
   opacity: 0;
-}
-
-.editing {
-  background-color: rgba($color: #865dff, $alpha: 0.15);
 }
 </style>
