@@ -111,15 +111,19 @@ watchEffect(updateControllerView);
     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
     :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
-    <ShapesStrokeContainer v-if="!editing" :context="props.context" :matrix="props.matrix" :shape="props.shape">
-    </ShapesStrokeContainer>
-    <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-      :c-frame="props.controllerFrame"></BarsContainer>
-    <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-      :axle="axle" :c-frame="props.controllerFrame">
-    </PointsContainer>
-    <PathEdit v-else="editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-      :c-frame="props.controllerFrame"></PathEdit>
+    <g v-if="!editing">
+      <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
+      </ShapesStrokeContainer>
+      <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+        :c-frame="props.controllerFrame"></BarsContainer>
+      <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
+        :c-frame="props.controllerFrame">
+      </PointsContainer>
+    </g>
+    <g v-else>
+      <PathEdit :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
+        :c-frame="props.controllerFrame"></PathEdit>
+    </g>
   </svg>
 </template>
 <style lang='scss' scoped>
