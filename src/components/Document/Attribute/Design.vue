@@ -77,7 +77,7 @@ const baseAttrVisible = () => {
     }
 }
 
-const change = throttle(_change, 200);
+const change = throttle(_change, 100);
 function selection_watcher(t: number) { change(t) }
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_TABLE_CELL) baseAttrVisible();

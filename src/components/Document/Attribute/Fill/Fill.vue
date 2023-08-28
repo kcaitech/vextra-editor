@@ -69,7 +69,7 @@ function updateData() {
                 if (_fs === 'mixed') {
                     mixed_cell.value = true;
                 } else {
-                    fills.unshift(..._fs);
+                    fills.push(..._fs.reverse());
                 }
             }
         } else {
@@ -85,7 +85,7 @@ function updateData() {
         if (_fs === 'mixed') {
             mixed.value = true;
         } else {
-            fills.unshift(..._fs);
+            fills.push(..._fs.reverse());
         }
     }
 }
@@ -143,8 +143,6 @@ function deleteFill(idx: number) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(112);
-
                 e.deleteFill(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.deleteFill(_idx);
