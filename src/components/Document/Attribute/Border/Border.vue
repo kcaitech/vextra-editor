@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { Shape, ShapeType, TableShape } from '@kcdesign/data';
+import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -37,6 +37,7 @@ const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const watchedShapes = new Map();
 const len = computed<number>(() => props.shapes.length);
 const show_apex = ref<boolean>(false);
+let table: TableShape;
 function watchShapes() {
     const needWatchShapes = new Map();
     const selection = props.shapes;
@@ -72,7 +73,7 @@ function updateData() {
                 if (_bs === 'mixed') {
                     mixed_cell.value = true;
                 } else {
-                    borders.unshift(..._bs);
+                    borders.push(..._bs.reverse());
                 }
             }
         } else {
@@ -91,7 +92,7 @@ function updateData() {
         if (_bs === 'mixed') {
             mixed.value = true;
         } else {
-            borders.unshift(..._bs);
+            borders.push(..._bs.reverse());
         }
     }
 }
@@ -372,25 +373,57 @@ function update_by_shapes() {
     layout();
 }
 
-const workspace_watcher = (t: number) => {
-    if (t === WorkSpace.CTRL_APPEAR) {
-        updateData();
+function shapes_watcher(v: Shape[]) {
+    update_by_shapes();
+    watchCells.forEach((v) => v.unwatch(updateData));
+    watchCells.clear();
+    if (v.length === 1 && v[0].type === ShapeType.Table) {
+        table?.unwatch(table_watcher);
+        v[0].watch(table_watcher);
+    } else {
+        table?.unwatch(table_watcher);
     }
 }
+
+function table_watcher() {
+    cells_watcher();
+}
+
+let watchCells: Map<string, TableCell> = new Map();
+function cells_watcher() {
+    const table_selection = props.context.tableSelection;
+    if (table_selection.tableRowStart > -1) {
+        const cells = table_selection.getSelectedCells(true);
+        const needWatch: Map<string, TableCell> = new Map();
+        for (let i = 0, len = cells.length; i < len; i++) {
+            let c = cells[i];
+            if (c.cell) {
+                needWatch.set(c.cell.id, c.cell);
+                c.cell.watch(updateData);
+            }
+        }
+        watchCells.forEach((v, k) => {
+            if (!needWatch.get(k)) v.unwatch(updateData);
+        })
+        watchCells = needWatch;
+    }
+}
+
 function table_selection_watcher(t: number) {
-    if (t === TableSelection.CHANGE_TABLE_CELL) updateData();
+    if (t === TableSelection.CHANGE_TABLE_CELL) {
+        updateData();
+        cells_watcher();
+    } 
 }
 // hooks
-const stop = watch(() => props.shapes, update_by_shapes);
+const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
-    props.context.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     stop();
     props.context.tableSelection.unwatch(table_selection_watcher);
-    props.context.workspace.unwatch(workspace_watcher);
 })
 </script>
 

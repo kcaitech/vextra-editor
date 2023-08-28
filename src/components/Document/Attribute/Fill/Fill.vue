@@ -69,7 +69,7 @@ function updateData() {
                 if (_fs === 'mixed') {
                     mixed_cell.value = true;
                 } else {
-                    fills.unshift(..._fs);
+                    fills.push(..._fs.reverse());
                 }
             }
         } else {
@@ -85,7 +85,7 @@ function updateData() {
         if (_fs === 'mixed') {
             mixed.value = true;
         } else {
-            fills.unshift(..._fs);
+            fills.push(..._fs.reverse());
         }
     }
 }

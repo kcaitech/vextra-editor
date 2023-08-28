@@ -118,7 +118,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container" @dblclick.stop>
-        <div class="home" title="new file" @click="home">
+        <div class="home" @click="home">
             <svg-icon icon-class="home_0508"></svg-icon>
         </div>
         <span v-if="ele === 1" @click="rename">{{ name }}</span>
