@@ -67,7 +67,7 @@ function update_current() {
     m.multiAtLeft(matrix);
     const c_xy = m.computeCoord2(root.center.x, root.center.y);
     current_xy.value.x = c_xy.x + fix_x.value - 18, current_xy.value.y = c_xy.y + fix_y.value - 32;
-    if (current_xy.value.x < -20 || current_xy.value.x > 300 || current_xy.value.y < -20 || current_xy.value.y > 300) {
+    if (current_xy.value.x < -20 || current_xy.value.x > 300 || current_xy.value.y < -40 || current_xy.value.y > 280) {
         show_current.value = false;
     }
 }
