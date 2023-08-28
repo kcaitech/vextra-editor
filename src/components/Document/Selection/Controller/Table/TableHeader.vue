@@ -4,7 +4,6 @@ import { Matrix, Shape, TableLayout, TableShape } from '@kcdesign/data';
 import { Point } from '../../SelectionView.vue';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
-import { Selection } from '@/context/selection';
 import { CellMenu } from '@/context/menu'
 interface Emits {
     (e: 'get-menu', x: number, y: number, type: CellMenu, cell_menu: boolean): void;
@@ -99,15 +98,16 @@ function add_rows() {
 }
 function select_col(index: number) {
     const selection = props.context.selection;
+    const idx = xs[index].idx;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     table_selection.setEditingCell();
     const rl = layout.grid.rowCount;
-    table_selection.selectTableCellRange(0, rl - 1, index, index, false);
+    table_selection.selectTableCellRange(0, rl - 1, idx, idx, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     m4table.reset(m.inverse);
     const xy = m.computeCoord2((xs[index].x + (xs[index - 1]?.x || 0)) / 2, 0);
-    index_col = index, m_index_col = index;
+    index_col = idx, m_index_col = idx;
     emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
     document.addEventListener('mousemove', move_x);
     document.addEventListener('mouseup', up);
@@ -115,15 +115,16 @@ function select_col(index: number) {
 }
 function select_row(index: number) {
     const selection = props.context.selection;
+    const idx = xs[index].idx;
     const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
     table_selection.setEditingCell();
     const cl = layout.grid.colCount;
-    table_selection.selectTableCellRange(index, index, 0, cl - 1, false);
+    table_selection.selectTableCellRange(idx, idx, 0, cl - 1, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     m4table.reset(m.inverse);
     const xy = m.computeCoord2(0, (ys[index].y + (ys[index - 1]?.y || 0)) / 2);
-    index_row = index, m_index_row = index;
+    index_row = idx, m_index_row = idx;
     emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
     document.addEventListener('mousemove', move_y);
     document.addEventListener('mouseup', up);
@@ -204,17 +205,17 @@ onUnmounted(() => {
 <template>
     <g :transform="`translate(${frame_params.x}, ${frame_params.y})`" :class="{ hidden }">
         <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-3.5" r="3" stroke="none" class="dot"
-            @mouseenter="() => x_dot_mouseennter(d.x, d.idx)" />
+            @mouseenter="() => x_dot_mouseennter(d.x, ids)" />
         <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-12" :width="b.length" height="12" rx="6" ry="6"
-            class="bar-back" @mousedown.stop="() => select_col(b.idx)" />
+            class="bar-back" @mousedown.stop="() => select_col(ids)" />
         <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-6" :width="b.length" height="6" rx="3" ry="3" class="bar"
-            @mousedown.stop="() => select_col(b.idx)" />
+            @mousedown.stop="() => select_col(ids)" />
         <circle v-for="(d, ids) in ys" :key="ids" cx="-3.5" :cy="d.y" r="3" stroke="none" class="dot"
-            @mouseenter="() => y_dot_mouseennter(d.y, d.idx)" />
+            @mouseenter="() => y_dot_mouseennter(d.y, ids)" />
         <rect v-for="(b, ids) in ybars" :key="ids" x="-12" :y="b.s" :height="b.length" width="12" rx="6" ry="6"
-            class="bar-back" @mousedown.stop="() => select_row(b.idx)" />
+            class="bar-back" @mousedown.stop="() => select_row(ids)" />
         <rect v-for="(b, ids) in ybars" :key="ids" x="-6" :y="b.s" :height="b.length" width="6" rx="3" ry="3" class="bar"
-            @mousedown.stop="() => select_row(b.idx)" />
+            @mousedown.stop="() => select_row(ids)" />
         <g v-if="show_add_x">
             <line :x1="add_x" y1="0" :x2="add_x" :y2="frame_params.height" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
