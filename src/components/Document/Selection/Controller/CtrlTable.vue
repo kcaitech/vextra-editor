@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
+import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef, onBeforeUpdate } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection } from '@/context/selection';
@@ -42,6 +42,7 @@ const editingCellMatrix = computed(() => {
 })
 const m_x = ref<number>(0), m_y = ref<number>(0);
 const col_dash = ref<boolean>(false), row_dash = ref<boolean>(false);
+const table_selection = ref<TableSelection | undefined>(tableSelection());
 let x_checked: boolean = false, y_checked: boolean = false;
 let m_col: number = 0, m_row: number = 0, down_x: number = 0, down_y: number = 0, t_height: number = 0, t_width: number = 0, t_x: number = 0, t_y: number = 0;
 function update() {
@@ -213,6 +214,9 @@ watch(() => props.shape, (value, old) => {
     value.watch(update);
     update();
 })
+onBeforeUpdate(() => {
+    table_selection.value = tableSelection();
+})
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.shape.watch(update);
@@ -230,8 +234,9 @@ onUnmounted(() => {
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" overflow="visible" @mousemove="move"
         @mousedown="down" @mouseleave="leave">
         <!-- 表格选区 -->
-        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell?.cell"
-            :table="props.shape" :matrix="submatrixArray" :table-selection="tableSelection()">
+        <TableSelectionView v-if="table_selection" :context="props.context" @get-menu="update_menu_posi"
+            :cell="editingCell?.cell" :table="props.shape" :matrix="submatrixArray"
+            :table-selection="(table_selection as TableSelection)">
         </TableSelectionView>
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
@@ -259,9 +264,9 @@ onUnmounted(() => {
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>
     <!-- 小菜单 -->
-    <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
+    <TableCellsMenu :cells="[]" v-if="cell_menu && table_selection" :context="props.context" @close="closeCellMenu"
         :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"
-        :table-selection="tableSelection()"></TableCellsMenu>
+        :table-selection="(table_selection as TableSelection)"></TableCellsMenu>
 </template>
 <style lang='scss' scoped>
 svg {

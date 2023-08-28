@@ -52,7 +52,6 @@ export class TableSelection implements Notifiable {
     setEditingCell(cell?: TableGridItem & { cell: TableCell | undefined }) {
         if (cell) this.resetSelection(); // 进入编辑状态默认清除所有选区
         this.m_editing_cell = cell;
-        console.log('this.m_editing_cell', this.m_editing_cell);
         this.notify(Selection.CHANGE_EDITING_CELL);
     }
     getSelectedCells(visible: boolean = true): {

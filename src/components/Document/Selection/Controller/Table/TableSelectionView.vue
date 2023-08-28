@@ -57,7 +57,7 @@ function update_triangle() {
     const shape = selection.selectedShapes[0];
     if (shape && shape.type === ShapeType.Table && props.tableSelection) {
         const cell = props.tableSelection.editingCell;
-        if (!cell || !cell.index) return false;
+        if (!cell) return false;
         const grid = (shape as TableShape).getLayout().grid;
         const g = grid.get(cell.index.row, cell.index.col);
         if (!g) return false;
