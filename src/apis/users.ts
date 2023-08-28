@@ -207,6 +207,26 @@ export function Setteaminfo(data = {}, ops = {}) {
     })
 }
 
+//设置团队邀请选项
+export function Setteaminviteinfo(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/invited',
+        method: 'put',
+        data:data,
+        ...ops
+    })
+}
+
+//解散团队
+export function Disband(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team',
+        method: 'delete',
+        params:params,
+        ...ops
+    })
+}
+
 //获取项目列表
 export function GetprojectLists(params = {}, ops = {}) {
     return httpRequest({
@@ -227,13 +247,5 @@ export function CreateProject(data = {}, ops = {}) {
     })
 }
 
-//解散团队
-export function Disband(params = {}, ops = {}) {
-    return httpRequest({
-        url: '/documents/team',
-        method: 'delete',
-        params:params,
-        ...ops
-    })
-}
+
 

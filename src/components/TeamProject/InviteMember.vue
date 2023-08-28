@@ -15,42 +15,71 @@
                     <el-option v-for="{ id, label } in options" :key="id" :value="id" :label="label" />
                 </el-select>
             </div>
-            <div>发送链接或二维码给同事申请加入</div>
-            <div>邀请链接开关：<el-switch v-model="value2" class="ml-2"
-                    style="--el-switch-on-color: #9775fa" /></div>
-            <input type="text" placeholder="test" :disabled="!value2">
-            <div>同事申请后，需管理员确认后才能加入</div>
+            <div class="permission-text">发送链接或二维码给同事申请加入</div>
+            <div class="permission-text">
+                <span> 邀请链接开关：</span>
+                <el-switch v-model="value2" class="ml-2" style="--el-switch-on-color: #9775fa" size="small" />
+            </div>
+            <input class="switch" v-if="value2" type="text" v-model="a">
+            <div class="permission-text" style="color: #666;">同事申请后，需管理员确认后才能加入</div>
         </div>
         <div class="invitemember">
-            <button type="submit" @click.stop="createProject">复制链接</button>
+            <button type="submit" :disabled="!value2" @click.stop="copyText">复制链接</button>
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { Ref, computed, inject, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 
 
+
 const { t } = useI18n();
 const emits = defineEmits(['close'])
-const props = defineProps<{
-    teamid: string
-}>()
-const inputValue = ref('')
-const textareaValue = ref('')
-const isDisabled = computed(() => inputValue.value.trim() === '')
-const value = ref({ id: 0, label: '可编辑' })
-const options = [{ id: 0, label: '可编辑' }, { id: 1, label: '仅阅读' }]
-const value2=ref(false)
+const { teamID } = inject('shareData') as {
+    teamID: Ref<string>;
+}
 
-const createProject = () => {
-    console.log(value.value);
+const inputValue = ref()
+const value = ref<any>(1)
+const options = [{ id: 1, label: '可编辑' }, { id: 0, label: '仅阅读' }]
+const value2 = ref(false)
 
+const setTeamInviteInfo = async (value?: number, value2?: boolean) => {
+    try {
+        const { code } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_perm_type: value, invited_switch: value2 })
+        if (code === 0) {
+            ElMessage.success(value?.toString())
+        } else {
+            ElMessage.error('error')
+        }
+    } catch (error) {
+
+    }
+}
+
+const a = computed(() => {
+    return `https://localhost:8080/zbb/#/join?key=${value.value}&temid=${value2.value}`
+})
+
+// watch([value, value2], (newvalue) => {
+//     inputValue.value = `https://localhost:8080/zbb/#/join?key=${newvalue[0]}&temid=${newvalue[1]}`
+// })
+
+function copyText() {
+    navigator.clipboard.writeText(inputValue.value)
+        .then(() => {
+            return
+        })
+        .catch(err => {
+            console.error('复制失败：', err);
+        });
 }
 
 const close = () => {
+    setTeamInviteInfo(value.value, value2.value)
     emits('close')
 }
 
@@ -60,7 +89,7 @@ const close = () => {
     position: absolute;
     background-color: white;
     width: 480px;
-    height: 400px;
+    height: auto;
     border-radius: 5px;
     top: 50%;
     left: 50%;
@@ -108,23 +137,45 @@ const close = () => {
 
     .centent {
         margin-top: 12px;
-        font-size: 16px;
+        font-size: 14px;
 
         .permission-setting {
             margin-top: 16px;
-            color: #3D3D3D;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
+            line-height: 24px;
 
             .select {
                 margin-left: 8px;
             }
         }
+
+        .permission-text,
+        .switch {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            line-height: 24px;
+        }
+
+        .permission-text+.permission-text {
+            margin-bottom: 6px;
+        }
+
+        .switch {
+            outline-style: none;
+            border: 1px solid #9775fa;
+            height: 24px;
+            width: 80%;
+            border-radius: 2px;
+            line-height: 24px;
+        }
     }
 
     .invitemember {
         text-align: center;
-        margin-top: 40px;
+        margin-top: 24px;
 
         button {
             cursor: pointer;
@@ -136,7 +187,6 @@ const close = () => {
             border: none;
             background-color: #9775fa;
             border-radius: 4px;
-            box-shadow: 1px 1px 3px rgb(0, 0, 0);
 
             &:hover {
                 background-color: rgba(150, 117, 250, 0.862745098);

@@ -49,23 +49,43 @@
     </transition>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, ref, onMounted } from 'vue'
+import { Ref, computed, inject, ref, onMounted, nextTick, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Search, Close } from '@element-plus/icons-vue'
 import ProjectList from '@/components/TeamProject/ProjectList.vue'
 import addProject from './addProject.vue'
 import TeamMember from './TeamMember.vue'
 import InviteMember from './InviteMember.vue'
 import TeamSetting from './TeamSetting.vue'
+import { router } from '@/router'
+import { ElMessage } from 'element-plus'
 
 const showoverlay = ref(false)
 const itemid = ref(0)
 const items = ['项目', '成员', '团队设置']
 const img = ref(false)
 const search = ref<string>('')
+const route = useRoute()
 
 
+interface data {
+    team: {
+        id: string,
+        name: string,
+        avatar: string,
+        description: string
+    }
+}
 
-const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+const { teamData, teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+    teamData: Ref<[{
+        team: {
+            id: string,
+            name: string,
+            avatar: string,
+            description: string
+        }
+    }]>;
     teamID: Ref<string>;
     teamName: Ref<string>;
     teamAvatar: Ref<string>;
@@ -81,7 +101,18 @@ const clickEvent = (index: number) => {
     sessionStorage.setItem('activateitem', index.toString())
 }
 
+const isIdInList = (id: any, list: Array<data>) => {
+    return list.find(item => item.team.id === id) !== undefined;
+}
 
+watch(teamData, (newvalue) => {
+    const a = isIdInList(route.params.id, newvalue)
+    if (a) {
+        console.log('在');
+    } else {
+        router.push({ path: '/join', query: { key: 2,name:'ahsj' } })
+    }
+})
 
 onMounted(() => {
     const x = sessionStorage.getItem('activateitem')

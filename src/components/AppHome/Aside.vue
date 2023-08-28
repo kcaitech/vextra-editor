@@ -118,25 +118,6 @@ const GetteamList = async () => {
 
 }
 
-const GetteamMember = async () => {
-    try {
-        if (teamID.value) {
-            const { code, data, message } = await user_api.GetteamMember({ team_id: teamID.value })
-            if (code === 0) {
-                teammemberdata.value = data
-                ElMessage.success('成功获取团队成员列表')
-            } else {
-                ElMessage({ type: 'error', message: message })
-            }
-        }
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
-    }
-
-}
-
 watch(updatestate, (newvalue) => {
     if (newvalue) {
         GetteamList()

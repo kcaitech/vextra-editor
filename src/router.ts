@@ -17,6 +17,7 @@ const Serviceagreement = () => import("@/components/Login/Serviceagreement.vue")
 const KChome = () => import("@/components/Home/KChome.vue");
 const HomeContent = () => import("@/components/Home/HomeContent.vue")
 const TeamPage=()=>import("@/components/TeamProject/TeamPage.vue")
+const joinTeam=()=>import("@/components/TeamProject/jionTeam.vue")
 const routes = [
     {
         path: '/',
@@ -99,6 +100,14 @@ const routes = [
                 component: TeamPage
             },
         ]
+    },
+    {
+        path: "/join",
+        name: "join",
+        component: joinTeam,
+        meta: {
+            requireAuth: true
+        }
     },
     {
         path: "/apply",

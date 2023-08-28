@@ -88,6 +88,7 @@ declare module '@vue/runtime-core' {
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
     Inform: typeof import('./src/components/AppHome/Inform.vue')['default']
     InviteMember: typeof import('./src/components/TeamProject/InviteMember.vue')['default']
+    JionTeam: typeof import('./src/components/TeamProject/jionTeam.vue')['default']
     KChome: typeof import('./src/components/Home/KChome.vue')['default']
     Key: typeof import('./src/components/common/Key.vue')['default']
     Layers: typeof import('./src/components/Document/Menu/Layers.vue')['default']
