@@ -7,7 +7,7 @@
         @r-removefile="Deletefile" @ropen="openDocument"/>
 
     <div v-if="showFileShare" class="overlay"></div>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo" :docUserId="docUserId"
         @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
     </FileShare>
 </template>
@@ -29,6 +29,7 @@ interface data {
         id: string
         name: string
         doc_type: number
+        user_id: string
     }
     document_favorites: {
         is_favorite: boolean
@@ -45,6 +46,7 @@ const pageHeight = ref(0)
 const docId = ref('')
 const mydata = ref()
 const selectValue = ref(1)
+const docUserId = ref('')
 const noNetwork = ref(false)
 const lists = ref<any[]>([])
 const userInfo = ref<UserInfo | undefined>()
@@ -129,6 +131,7 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
+    docUserId.value = data.document.user_id
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     userInfo.value = userData.value

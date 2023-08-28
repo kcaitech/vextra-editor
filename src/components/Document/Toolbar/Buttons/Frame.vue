@@ -42,7 +42,7 @@ function showMenu(e: MouseEvent) {
 }
 
 function onMenuBlur(e: MouseEvent) {
-  if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu-f')) {
+  if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.menu-f')) {
     var timer = setTimeout(() => {
       popoverVisible.value = false;
       clearTimeout(timer)
@@ -104,7 +104,7 @@ const customFrame = () => {
 </script>
 
 <template>
-  <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+  <div ref="popover" class="popover-f" tabindex="-1" v-if="popoverVisible">
     <div>
       <span @click="customFrame">{{ t('frame.custom') }}</span>
     </div>
@@ -117,17 +117,19 @@ const customFrame = () => {
       </div>
     </div>
   </div>
-  <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`">
-    <ToolButton ref="button" @click="isSelect" :selected="props.active" @mouseenter.stop="onMouseenter"
-      @mouseleave.stop="onMouseleave">
-      <div class="svg-container">
-        <svg-icon icon-class="frame"></svg-icon>
-      </div>
-      <div class="menu-f" @click.stop="showMenu">
-        <svg-icon icon-class="down"></svg-icon>
-      </div>
-    </ToolButton>
-  </Tooltip>
+  <el-tooltip class="box-item" effect="dark"
+    :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" placement="bottom" :show-after="600" :offset="10" 
+    :hide-after="0" :visible="popoverVisible ? false : visible">
+      <ToolButton ref="button" @click="isSelect" :selected="props.active" @mouseenter.stop="onMouseenter"
+        @mouseleave.stop="onMouseleave">
+        <div class="svg-container">
+          <svg-icon icon-class="frame"></svg-icon>
+        </div>
+        <div class="menu-f" @click="showMenu">
+          <svg-icon icon-class="down"></svg-icon>
+        </div>
+      </ToolButton>
+    </el-tooltip>
 </template>
 
 <style scoped lang="scss">
@@ -167,7 +169,7 @@ const customFrame = () => {
   transform: translateY(4px);
 }
 
-.popover {
+.popover-f {
   position: absolute;
   color: #ffffff;
   z-index: 999;

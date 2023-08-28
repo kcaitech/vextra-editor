@@ -453,6 +453,18 @@ const selectHiglightColor = () => {
 const selectHiglighAlpha = () => {
     higlighAlpha.value && higlighAlpha.value.select()
 }
+
+const filterAlpha = (a: number) => {
+    let alpha = Math.round(a * 100) / 100;
+    if (Number.isInteger(alpha)) {
+        return alpha.toFixed(0); // 返回整数形式
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+        return alpha.toFixed(1); // 保留一位小数
+    } else {
+        return alpha.toFixed(2); // 保留两位小数
+    }
+}
+
 watchEffect(() => {
     textFormat()
 })

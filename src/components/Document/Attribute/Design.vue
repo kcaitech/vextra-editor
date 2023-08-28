@@ -12,6 +12,8 @@ import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
 import TableText from './Table/TableText.vue'
 import { TableSelection } from '@/context/tableselection';
+import TableStyle from './Table/TableStyle.vue'
+import { Tool } from '@/context/tool';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -46,18 +48,23 @@ const WITH_BORDER = [
 const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
 const reflush = ref<number>(0);
+
+const getShapeType = () => {
+    if (props.context.selection.selectedShapes.length === 1) {
+        shapes.value = new Array(...props.context.selection.selectedShapes);
+        shapeType.value = shapes.value[0].type;
+    } else if (props.context.selection.selectedShapes.length > 1) {
+        shapes.value = new Array(...props.context.selection.selectedShapes);
+    } else {
+        shapes.value = new Array();
+    }
+}
+
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         shapes.value = new Array();
     } else if (t === Selection.CHANGE_SHAPE) {
-        if (props.context.selection.selectedShapes.length === 1) {
-            shapes.value = new Array(...props.context.selection.selectedShapes);
-            shapeType.value = shapes.value[0].type;
-        } else if (props.context.selection.selectedShapes.length > 1) {
-            shapes.value = new Array(...props.context.selection.selectedShapes);
-        } else {
-            shapes.value = new Array();
-        }
+        getShapeType();
         baseAttr.value = true;
     }
 }
@@ -78,6 +85,11 @@ const baseAttrVisible = () => {
 }
 
 const change = throttle(_change, 100);
+function tool_watcher(t: number) { 
+    if(t === Tool.CHANGE_ACTION) {
+        getShapeType()
+    }
+ }
 function selection_watcher(t: number) { change(t) }
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_TABLE_CELL) baseAttrVisible();
@@ -86,10 +98,12 @@ onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
     _change(Selection.CHANGE_SHAPE);
+    props.context.tool.watch(tool_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tableSelection.unwatch(table_selection_watcher);
+    props.context.tool.unwatch(tool_watcher);
 })
 </script>
 <template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect, nextTick } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -27,9 +27,10 @@ import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
 import { DocSelectionOp } from "@/context/communication/doc_selection_op";
 import { throttle } from "@/utils/timing_util";
-import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op"
+import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { debounce } from '@/utils/timing_util';
-import { NetworkStatusType } from "@/communication/types"
+import { NetworkStatusType } from "@/communication/types";
+import { _updateRoot } from '@/utils/content';
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -174,6 +175,8 @@ const showHiddenRight = () => {
     }
 }
 const showHiddenLeft = () => {
+    if (!context) return;
+    const w = context.workspace;    
     if (showLeft.value) {
         Left.value.leftMin = 0
         Left.value.leftWidth = 0
@@ -187,6 +190,7 @@ const showHiddenLeft = () => {
         middleWidth.value = middleWidth.value - 0.1
         showLeft.value = true
     }
+    w.notify(WorkSpace.CHANGE_NAVI);
 }
 
 function keyToggleLR() {
@@ -198,6 +202,7 @@ function keyToggleLR() {
     }
 }
 function keyToggleTB() {
+    if (!context) return;
     if (showRight.value !== showLeft.value) {
         showHiddenLeft();
         return;
@@ -211,6 +216,12 @@ function keyToggleTB() {
     showHiddenRight();
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
+    if(showTop.value) {
+        context.workspace.matrix.trans(0, -40);
+    }else {
+        context.workspace.matrix.trans(0, 40);
+    }
+    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 //只读权限隐藏右侧属性栏
@@ -353,6 +364,7 @@ const getDocumentInfo = async () => {
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
             getDocumentAuthority();
+            getUserInfo()
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
@@ -372,7 +384,6 @@ const getDocumentInfo = async () => {
             await context.communication.docSelectionOp.start(token, docId, context);
             context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
         }
-        getUserInfo()
     } catch (err) {
         loading.value = false;
         noNetwork.value = true
@@ -485,7 +496,7 @@ let previousStatus: NetworkStatusType = NetworkStatusType.Online
 const networkMessage = (status: NetworkStatusType) => {
     if (status === previousStatus) return;
     previousStatus = status
-    if(status === NetworkStatusType.Offline) {
+    if (status === NetworkStatusType.Offline) {
         networkLinkError()
     } else {
         networkLinkSuccess()
@@ -499,16 +510,16 @@ const refreshDoc = () => {
 }
 
 const hasPendingSync = () => {
-    if(context && context.communication.docOp.hasPendingSyncCmd() && !netErr ){
+    if (context && context.communication.docOp.hasPendingSyncCmd() && !netErr) {
         insertNetworkInfo('networkError', true, network_error);
         netErr = setInterval(() => {
-            if(context && !context.communication.docOp.hasPendingSyncCmd()) {
+            if (context && !context.communication.docOp.hasPendingSyncCmd()) {
                 insertNetworkInfo('networkError', false, network_error);
                 autoSaveSuccess();
                 clearInterval(netErr);
                 netErr = null;
             }
-        },1000);
+        }, 1000);
     }
 }
 // 检测是否有未上传的数据
@@ -518,28 +529,28 @@ let netErr: any = null
 const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
 networkStatus.addOnChange((status: NetworkStatusType) => {
-    if(status === NetworkStatusType.Offline) {
+    if (status === NetworkStatusType.Offline) {
         // 网络断开连接
-        if(context) {
+        if (context) {
             clearInterval(loopNet);
             loopNet = null;
             loopNet = setInterval(() => {
                 hasPendingSync()
-            },1000)
-            if(context.communication.docOp.hasPendingSyncCmd() || netErr) {
+            }, 1000)
+            if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
                 //有未上传资源
                 hasPendingSync()
-            }else {
+            } else {
                 networkDebounce(status)
             }
         }
     } else {
         //网络连接成功
-        if(context) {
-            if(context.communication.docOp.hasPendingSyncCmd() || netErr) {
+        if (context) {
+            if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
                 //有未上传资源
                 hasPendingSync()
-            }else {
+            } else {
                 networkDebounce(status)
             }
             context.comment.notify(Comment.EDIT_COMMENT)
@@ -549,7 +560,7 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
 })
 
 function onBeforeUnload(event: any) {
-    if(context?.communication.docOp.hasPendingSyncCmd()) return event.returnValue = t('message.leave'); // 浏览器弹框提示
+    if (context?.communication.docOp.hasPendingSyncCmd()) return event.returnValue = t('message.leave'); // 浏览器弹框提示
     return event.preventDefault();
 }
 
@@ -575,12 +586,12 @@ function closeNetMsg() {
 //协作人员操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     const data = docCommentOpData.data
-    if (docCommentOpData.user_id !== context?.comment.isUserInfo?.id) {
+    if (context && (docCommentOpData.user_id !== context.comment.isUserInfo?.id) && context.comment.isUserInfo?.id) {
         const addUset = context!.teamwork.getUserSelection
-        if(docCommentOpData.type === DocSelectionOpType.Exit) {
+        if (docCommentOpData.type === DocSelectionOpType.Exit) {
             const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
             context?.teamwork.userSelectionExit(index)
-        }else if (docCommentOpData.type === DocSelectionOpType.Update) {
+        } else if (docCommentOpData.type === DocSelectionOpType.Update) {
             const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
             context?.teamwork.userSelectionUpdate(data, index)
         }
@@ -617,51 +628,51 @@ onUnmounted(() => {
 
 <template>
     <div class="main" style="height: 100vh;">
-    <Loading v-if="loading || null_context"></Loading>
-    <div id="top" @dblclick="screenSetting" v-if="showTop">
-        <Toolbar :context="context!" v-if="!loading && !null_context" />
+        <Loading v-if="loading || null_context"></Loading>
+        <div id="top" @dblclick="screenSetting" v-if="showTop">
+            <Toolbar :context="context!" v-if="!loading && !null_context" />
+        </div>
+        <div id="visit">
+            <ApplyFor></ApplyFor>
+        </div>
+        <ColSplitView id="center" :style="{height: showTop ? 'calc(100% - 40px)' : '100%'}" v-if="!loading && !null_context"
+            :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+            :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+            :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+            :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+            <template #slot1>
+                <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
+                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+                    @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
+                    :leftTriggleVisible="leftTriggleVisible">
+                </Navigation>
+            </template>
+            <template #slot2>
+                <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
+                    :page="(curPage as Page)">
+                </ContentView>
+            </template>
+            <template #slot3>
+                <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
+                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+                </Attribute>
+            </template>
+        </ColSplitView>
+        <SubLoading v-if="sub_loading"></SubLoading>
+        <div class="network" v-if="noNetwork">
+            <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
+        </div>
+        <div v-if="showHint" class="notification">
+            <el-icon :size="13">
+                <Warning />
+            </el-icon>
+            <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
+            <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
+            <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
+            <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
+        </div>
     </div>
-    <div id="visit">
-        <ApplyFor></ApplyFor>
-    </div>
-    <ColSplitView id="center" v-if="!loading && !null_context"
-        :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-        :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-        :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-        :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin">
-        <template #slot1>
-            <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-                @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
-                :leftTriggleVisible="leftTriggleVisible">
-            </Navigation>
-        </template>
-        <template #slot2>
-            <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                :page="(curPage as Page)">
-            </ContentView>
-        </template>
-        <template #slot3>
-            <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
-                @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-                :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
-            </Attribute>
-        </template>
-    </ColSplitView>
-    <SubLoading v-if="sub_loading"></SubLoading>
-    <div class="network" v-if="noNetwork">
-        <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
-    </div>
-    <div v-if="showHint" class="notification">
-        <el-icon :size="13">
-            <Warning />
-        </el-icon>
-        <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
-        <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
-        <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
-        <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
-    </div>
-</div>
 </template>
 <style>
 :root {
@@ -710,7 +721,6 @@ onUnmounted(() => {
     flex-flow: row nowrap;
     flex: 1 1 auto;
     width: 100%;
-    height: calc(100% - 40px);
     overflow: hidden;
     position: relative;
 
@@ -752,6 +762,7 @@ onUnmounted(() => {
         margin: 0 15px 0 10px;
     }
 }
+
 .network_error {
     position: fixed;
     font-size: var(--font-default-fontsize);
@@ -765,18 +776,22 @@ onUnmounted(() => {
     padding: 7px 30px;
     border: 1px solid var(--active-color-beta);
     border-radius: 4px;
+
     .loading-spinner {
         >svg {
             width: 15px;
             height: 15px;
             color: #000;
         }
+
         animation: spin 1s linear infinite;
     }
+
     @keyframes spin {
         0% {
             transform: rotate(0deg);
         }
+
         100% {
             transform: rotate(360deg);
         }

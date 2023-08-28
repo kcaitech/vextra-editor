@@ -81,6 +81,7 @@ export class WorkSpace extends Watchable(Object) {
     static ITALIC = 30;
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
+    static CHANGE_NAVI = 33;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
