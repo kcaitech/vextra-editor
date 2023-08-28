@@ -327,7 +327,7 @@ onUnmounted(() => {
         <!-- 分享人 -->
         <div>
           <span>{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
-          <el-scrollbar height="285px" class="shared-by">
+          <el-scrollbar height="300px" class="shared-by">
             <div class="scrollbar-demo-item">
               <div class="item-left">
                 <div class="avatar"><img :src="userInfo?.avatar"></div>
@@ -346,7 +346,7 @@ onUnmounted(() => {
                 <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
                 <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
                 <div class="popover" v-if="authority && index === ids" ref="popover"
-                  :style="{ top: posi.top + 'px', right: 30 + 'px' }">
+                  :style="{ top: posi.top - 8 + 'px', right: 30 + 'px' }">
                   <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">{{ editable }}</div>
                   <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">{{ reviewable }}
                   </div>
@@ -528,7 +528,7 @@ onUnmounted(() => {
   flex-direction: column;
   width: 100px;
   justify-content: space-around;
-
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
   >div {
     padding: var(--default-margin-quarter) var(--default-padding-half);
   }
