@@ -312,11 +312,16 @@ onUnmounted(() => {
                 justify-content: space-between;
                 .item_heard {
                     display: flex;
-                    width: calc(100% - 70px);
+                    width: calc(100% - 73px);
+                    margin-right: 3px;
                     .name {
+                        flex: 1;
                         width: calc(100% - 95px);
                         overflow: hidden;
                         text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                    .data {
                         white-space: nowrap;
                     }
                 }

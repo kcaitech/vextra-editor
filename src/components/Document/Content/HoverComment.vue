@@ -250,6 +250,7 @@ onUnmounted(() => {
                     }
                     .date {
                         width: 120px;
+                        white-space: nowrap;
                     }
                 }
 
