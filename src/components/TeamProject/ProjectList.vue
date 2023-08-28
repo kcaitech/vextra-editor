@@ -27,6 +27,7 @@ import NetworkError from '@/components/NetworkError.vue'
 
 const noNetwork = ref(false)
 const { t } = useI18n()
+
 interface Props {
     searchvalue?: string
 }
@@ -35,11 +36,8 @@ const props = withDefaults(defineProps<Props>(), {
     searchvalue: ''
 })
 
-const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+const { teamID} = inject('shareData') as {
     teamID: Ref<string>;
-    teamName: Ref<string>;
-    teamAvatar: Ref<string>;
-    teamDescription: Ref<string>;
 }
 
 const { updateprojectlist, updateprojectliststate } = inject('shareData') as {
@@ -56,8 +54,9 @@ const GetprojectLists = async () => {
         const { code, data, message } = await user_api.GetprojectLists()
         if (code === 0) {
             projectdata.value = data
+            ElMessage.success('成功获取项目列表')
         } else {
-            ElMessage({ type: 'error', message:'成功获取团队项目列表' })
+            ElMessage({ type: 'error', message: message })
         }
     } catch (error) {
         noNetwork.value = true
@@ -67,8 +66,8 @@ const GetprojectLists = async () => {
 }
 
 //监听updateprojectlist的值，为true的时候，重新获取列表，然后调用updateprojectliststate重新设为false
-watch(updateprojectlist, (newvalue) => {
-    if (newvalue) {
+watch(updateprojectlist, () => {
+    if (updateprojectlist.value) {
         GetprojectLists()
         updateprojectliststate(false)
     }

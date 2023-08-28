@@ -97,7 +97,7 @@ const getDocumentInfo = async () => {
   try {
     const { data } = await share_api.getDocumentInfoAPI({ doc_id: docID })
     if (data) {
-      docInfo.value = data
+      docInfo.value = data  
     }
   } catch (err) {
     console.log(err);
@@ -138,6 +138,8 @@ const getShareList = async () => {
     const { data } = await share_api.getShareListAPI({ doc_id: docID })
     if(data) {
       shareList.value = data
+      console.log(shareList.value+'11111');
+      
     }
   } catch(err) {
     console.log(err);

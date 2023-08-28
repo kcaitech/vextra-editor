@@ -40,6 +40,7 @@ import { Ref, computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router'
+import { router } from '@/router';
 const { t } = useI18n();
 const route = useRoute()
 const emits = defineEmits(['close'])
@@ -65,7 +66,14 @@ const createTeam = async () => {
             emits('close')
             ElMessage.success('成功添加团队')
             state(true)  //改变updatestate的值为TRUE
-            route.params.id = data.id
+            if (route.params.id) {
+                console.log(route.params.id);
+                
+                route.params.id = data.id
+            } else {
+                router.push({ path: `teams/${data.id}` })
+            }
+
         } else {
             ElMessage.error(message)
         }

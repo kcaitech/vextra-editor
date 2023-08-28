@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="hearder-container">
-            <div class="title" v-for="(item, index) in titles" :key="index">
+            <div class="title" v-for="(item, index) in  titles " :key="index">
                 <div>{{ item }}
                     <div v-if="index === 1" class="shrink" @click="fold = !fold">
                         <svg-icon icon-class="down"
@@ -9,9 +9,10 @@
                     </div>
                     <transition name="el-zoom-in-top">
                         <ul class="filterlist" v-if="index === 1 && fold" ref="menu">
-                            <li class="item" v-for="(item, index) in filteritems" :key="index"
-                                @click.stop="fontName = item, fold = false">
-                                <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+                            <li class="item" v-for="(item, index) in  filteritems " :key="index"
+                                @click.stop="filterEvent(index)">
+                                <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
+                                </div>
                                 {{ item }}
                             </li>
                         </ul>
@@ -20,7 +21,8 @@
             </div>
         </div>
         <div class="main" v-if="!noNetwork">
-            <div class="member-item" v-for="{ user: { nickname, id }, perm_type } in teammemberdata" :key="id">
+            <div class="member-item"
+                v-for=" { user: { nickname, id }, perm_type }  in  searchvalue === '' ? ListData : SearchList " :key="id">
                 <div class="member-name">{{ nickname }}</div>
                 <div class="member-jurisdiction">{{ membertype(perm_type) }}</div>
             </div>
@@ -29,28 +31,30 @@
     </div>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, inject, Ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, inject, Ref, watch, computed } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-const props = defineProps<{
+
+interface Props {
     searchvalue?: string
-}>()
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    searchvalue: ''
+})
 const { t } = useI18n()
 const titles = ['姓名', '团队权限']
-const filteritems = ['全部', '创建者', '管理员', '可编辑', '仅阅读']
+const filteritems = ['仅阅读', '可编辑', '管理员', '创建者', '全部']
 const noNetwork = ref(false)
 const teammemberdata = ref<any[]>([])
 const fold = ref(false)
-const fontName = ref('全部')
+const fontName = ref(4)
 const menu = ref<HTMLElement>()
 
-const { teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+const { teamID } = inject('shareData') as {
     teamID: Ref<string>;
-    teamName: Ref<string>;
-    teamAvatar: Ref<string>;
-    teamDescription: Ref<string>;
 }
 
 const GetteamMember = async () => {
@@ -59,6 +63,7 @@ const GetteamMember = async () => {
             const { code, data, message } = await user_api.GetteamMember({ team_id: teamID.value })
             if (code === 0) {
                 teammemberdata.value = data
+                ElMessage.success('成功获取团队成员列表')
             } else {
                 ElMessage({ type: 'error', message: message })
             }
@@ -82,8 +87,31 @@ const membertype = (num: number) => {
         case 3:
             return '创建者'
         default:
-            break
+            return null
     }
+}
+
+//通过计算属性，筛选出与搜索匹配的成员
+const SearchList = computed(() => {
+    return ListData.value.filter((el: any) => {
+        return el.user.nickname.toLowerCase().includes(props.searchvalue.toLowerCase())
+    })
+})
+
+//通过计算属性，筛选出符合当前权限类型的成员
+const ListData = computed(() => {
+    if (fontName.value < 4) {
+        return teammemberdata.value.filter((el: any) => {
+            return el.perm_type === fontName.value
+        })
+    } else {
+        return teammemberdata.value
+    }
+})
+
+const filterEvent = (index: number = 4) => {
+    fontName.value = index
+    fold.value = false
 }
 
 watch(teamID, () => {

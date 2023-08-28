@@ -86,10 +86,17 @@ const { teamID, teamName, teamAvatar, teamDescription, teamData, state } = injec
 }
 
 interface TeamData {
+    id: string,
+    avatar: string,
+    name: string,
+    description: string
+}
+
+interface teamDataType {
     team: {
         id: string,
-        avatar: string,
         name: string,
+        avatar: string,
         description: string
     }
 }
@@ -102,7 +109,7 @@ const el = () => {
 }
 
 //将修改的新值替换到teamData数组，返回修改后的新数组，重新渲染
-const midDateTeamData = (teamData: Array<TeamData>, id: string, updates: Partial<TeamData>) => {
+const midDateTeamData = (teamData: Array<teamDataType>, id: string, updates: Partial<TeamData>) => {
     const newTeamData = teamData.map((item) => {
         if (item.team.id === id) {
             return { ...item, team: { ...item.team, ...updates } }

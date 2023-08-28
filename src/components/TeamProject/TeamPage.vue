@@ -78,7 +78,7 @@ const avatar = computed(() => {
 
 const clickEvent = (index: number) => {
     itemid.value = index
-    sessionStorage.setItem('activateitem', index)
+    sessionStorage.setItem('activateitem', index.toString())
 }
 
 

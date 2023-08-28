@@ -203,6 +203,7 @@ const columns: Column<any>[] = [
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
                             emits('share', rowData)
+                            console.log(rowData);
                         }}>
                         <el-tooltip content={t('home.share')} show-after={1000} hide-after={0}>
                             <Share />
