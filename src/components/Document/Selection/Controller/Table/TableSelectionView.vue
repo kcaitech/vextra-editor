@@ -25,7 +25,6 @@ let watchCells: Map<string, TableCell> = new Map();
 let triangle_position: ClientXY = { x: 0, y: 0 };
 (window as any).xx = watchCells;
 function update_cell_selection(gen_menu_posi?: boolean) {
-    console.log('update');
     selection_path.value = '';
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
     if (props.table && props.table.type === ShapeType.Table) {
