@@ -21,9 +21,7 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const selection_path = ref<string>('');
 const triangle = ref<boolean>(false);
-let watchCells: Map<string, TableCell> = new Map();
 let triangle_position: ClientXY = { x: 0, y: 0 };
-(window as any).xx = watchCells;
 function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
@@ -71,7 +69,6 @@ function update_triangle() {
         triangle.value = true;
     }
 }
-
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         update_cell_selection();
@@ -104,7 +101,7 @@ function _get_menu_position(points: ClientXY[]) {
     const b = XYsBounding(points);
     emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
 }
-
+let watchCells: Map<string, TableCell> = new Map();
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
     if (table_selection.tableRowStart > -1) {

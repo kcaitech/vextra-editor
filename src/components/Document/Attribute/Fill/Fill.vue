@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, Shape, FillType, ShapeType, TableShape } from "@kcdesign/data";
+import { Color, Fill, Shape, FillType, ShapeType, TableShape, TableCell } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
-import { Selection } from '@/context/selection';
 import { get_fills, get_actions_fill_color, get_actions_add_fill, get_actions_fill_unify, get_actions_fill_enabled, get_actions_fill_delete } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import { TableSelection } from '@/context/tableselection';
@@ -30,6 +29,7 @@ const alphaFill = ref<any>();
 const colorFill = ref<any>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
+let table: TableShape;
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
@@ -326,10 +326,46 @@ function update_by_shapes() {
     watchShapes();
     updateData();
 }
+function shapes_watcher(v: Shape[]) {
+    update_by_shapes();
+    watchCells.forEach((v) => v.unwatch(updateData));
+    watchCells.clear();
+    if (v.length === 1 && v[0].type === ShapeType.Table) {
+        table?.unwatch(table_watcher);
+        v[0].watch(table_watcher);
+    } else {
+        table?.unwatch(table_watcher);
+    }
+}
+function table_watcher() {
+    cells_watcher();
+}
+let watchCells: Map<string, TableCell> = new Map();
+function cells_watcher() {
+    const table_selection = props.context.tableSelection;
+    if (table_selection.tableRowStart > -1) {
+        const cells = table_selection.getSelectedCells(true);
+        const needWatch: Map<string, TableCell> = new Map();
+        for (let i = 0, len = cells.length; i < len; i++) {
+            let c = cells[i];
+            if (c.cell) {
+                needWatch.set(c.cell.id, c.cell);
+                c.cell.watch(updateData);
+            }
+        }
+        watchCells.forEach((v, k) => {
+            if (!needWatch.get(k)) v.unwatch(updateData);
+        })
+        watchCells = needWatch;
+    }
+}
 // hooks
-const stop = watch(() => props.shapes, update_by_shapes);
+const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 function table_selection_watcher(t: number) {
-    if (t === TableSelection.CHANGE_TABLE_CELL) updateData();
+    if (t === TableSelection.CHANGE_TABLE_CELL) {
+        updateData();
+        cells_watcher();
+    }
 }
 onMounted(() => {
     update_by_shapes();
