@@ -38,7 +38,7 @@
             </el-input>
         </div>
     </div>
-    <ProjectList v-if="itemid === 0" :searchvalue="search" />
+    <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
     <TeamMember v-if="itemid === 1" :searchvalue="search" />
     <TeamSetting v-if="itemid === 2" />
     <transition name="nested" :duration="550">
@@ -49,7 +49,7 @@
     </transition>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, ref, onMounted, nextTick, watch } from 'vue'
+import { Ref, computed, inject, ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Search, Close } from '@element-plus/icons-vue'
 import ProjectList from '@/components/TeamProject/ProjectList.vue'
@@ -58,7 +58,6 @@ import TeamMember from './TeamMember.vue'
 import InviteMember from './InviteMember.vue'
 import TeamSetting from './TeamSetting.vue'
 import { router } from '@/router'
-import { ElMessage } from 'element-plus'
 
 const showoverlay = ref(false)
 const itemid = ref(0)
@@ -110,7 +109,7 @@ watch(teamData, (newvalue) => {
     if (a) {
         console.log('在');
     } else {
-        router.push({ path: '/join', query: { key: 2,name:'ahsj' } })
+        router.push({ path: '/join', query: { key: 2, name: 'ahsj' } })
     }
 })
 

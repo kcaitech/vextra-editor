@@ -1,53 +1,60 @@
 <template>
-    <div class="container">
-        <div class="hearder-container">
-            <div class="title" v-for="(item, index) in titles" :key="index">{{ item }}</div>
-        </div>
-        <div class="main" v-if="!noNetwork">
-            <div class="project-item" :class="{ 'selected': selectid === id }"
-                v-for="{ project: { name, id, description }, creator: { nickname }, self_perm_type } in searchvalue === '' ? teamprojectlist : SearchList"
-                :key="id" @click.stop="selectid = id">
-                <div class="project-name">{{ name }}</div>
-                <div class="project-description">{{ description }}</div>
-                <div class="project-creator">{{ nickname }}</div>
-                <div class="other">
-                    {{ self_perm_type }}
+    <div v-if="!noNetwork">
+        <div v-if="!showbutton" class="container">
+            <div class="hearder-container">
+                <div class="title" v-for="(item, index) in titles" :key="index">{{ item }}</div>
+            </div>
+            <div class="main">
+                <div class="project-item" :class="{ 'selected': selectid === id }"
+                    v-for="{ project: { name, id, description }, creator: { nickname }, self_perm_type } in searchvalue === '' ? teamprojectlist : SearchList"
+                    :key="id" @click.stop="selectid = id">
+                    <div class="project-name">{{ name }}</div>
+                    <div class="project-description">{{ description }}</div>
+                    <div class="project-creator">{{ nickname }}</div>
+                    <div class="other">
+                        {{ self_perm_type }}
+                    </div>
                 </div>
             </div>
         </div>
-        <NetworkError v-else></NetworkError>
+        <div v-else class="datanull">
+            <p>未加入任何项目</p>
+            <button type="button" @click.stop="emits('addproject')">新建项目</button>
+        </div>
     </div>
+    <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, onMounted, ref, watch } from 'vue';
+import { Ref, computed, inject, nextTick, onMounted, ref, watch } from 'vue';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
 
-const noNetwork = ref(false)
-const { t } = useI18n()
-
 interface Props {
     searchvalue?: string
 }
+
+const showbutton = ref(false)
+const noNetwork = ref(false)
+const { t } = useI18n()
+const titles = ['项目名称', '项目描述', '创建者', '操作',]
+const projectdata = ref<any[]>([])
+const selectid = ref(0)
+
+const emits = defineEmits<{
+    (e: 'addproject'): () => void
+}>()
 
 const props = withDefaults(defineProps<Props>(), {
     searchvalue: ''
 })
 
-const { teamID} = inject('shareData') as {
-    teamID: Ref<string>;
-}
-
-const { updateprojectlist, updateprojectliststate } = inject('shareData') as {
+const { teamID, updateprojectlist, updateprojectliststate } = inject('shareData') as {
     updateprojectlist: Ref<boolean>;
     updateprojectliststate: (b: boolean) => void;
+    teamID: Ref<string>;
 };
-
-const titles = ['项目名称', '项目描述', '创建者', '操作',]
-const projectdata = ref<any[]>([])
-const selectid = ref(0)
 
 const GetprojectLists = async () => {
     try {
@@ -55,6 +62,7 @@ const GetprojectLists = async () => {
         if (code === 0) {
             projectdata.value = data
             ElMessage.success('成功获取项目列表')
+            if (noNetwork.value) noNetwork.value = false
         } else {
             ElMessage({ type: 'error', message: message })
         }
@@ -77,6 +85,18 @@ watch(updateprojectlist, () => {
 const teamprojectlist = computed(() => {
     return projectdata.value.filter((item) => item.project.team_id === teamID.value)
 })
+
+watch(teamprojectlist, () => {
+    setTimeout(() => {
+        if (teamprojectlist.value.length === 0) {
+            showbutton.value = true
+        } else {
+            showbutton.value = false
+        }
+    }, 300);
+})
+
+
 
 //通过计算属性，筛选出与搜索匹配的项目
 const SearchList = computed(() => {
@@ -128,6 +148,29 @@ onMounted(() => {
         .other {
             flex: 1;
 
+        }
+    }
+}
+
+.datanull {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 240px;
+
+    button {
+        cursor: pointer;
+        border: none;
+        width: 120px;
+        height: 40px;
+        border-radius: 4px;
+        background-color: #9775fa;
+        box-sizing: border-box;
+        transition: all 0.5s ease-out;
+        color: white;
+
+        &:hover {
+            background-color: rgba(150, 117, 250, 0.862745098);
         }
     }
 }

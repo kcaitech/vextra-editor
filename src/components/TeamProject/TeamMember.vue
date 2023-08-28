@@ -1,5 +1,5 @@
 <template>
-    <div class="container">
+    <div v-if="!noNetwork" class="container">
         <div class="hearder-container">
             <div class="title" v-for="(item, index) in  titles " :key="index">
                 <div>{{ item }}
@@ -20,15 +20,15 @@
                 </div>
             </div>
         </div>
-        <div class="main" v-if="!noNetwork">
+        <div class="main">
             <div class="member-item"
                 v-for=" { user: { nickname, id }, perm_type }  in  searchvalue === '' ? ListData : SearchList " :key="id">
                 <div class="member-name">{{ nickname }}</div>
                 <div class="member-jurisdiction">{{ membertype(perm_type) }}</div>
             </div>
         </div>
-        <NetworkError v-else></NetworkError>
     </div>
+    <NetworkError v-else @refresh-doc="GetteamMember"></NetworkError>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, Ref, watch, computed } from 'vue';
@@ -64,6 +64,7 @@ const GetteamMember = async () => {
             if (code === 0) {
                 teammemberdata.value = data
                 ElMessage.success('成功获取团队成员列表')
+                if (noNetwork.value) noNetwork.value = false
             } else {
                 ElMessage({ type: 'error', message: message })
             }
