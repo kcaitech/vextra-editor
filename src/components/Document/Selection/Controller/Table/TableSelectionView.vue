@@ -55,11 +55,12 @@ function update_triangle() {
     triangle.value = false;
     const selection = props.context.selection;
     const shape = selection.selectedShapes[0];
-    if (shape && shape.type === ShapeType.Table) {
-        const table_selection = selection.getTableSelection(shape as TableShape, props.context);
-        const cell = table_selection.editingCell;
-        if (!cell) return false;
+    if (shape && shape.type === ShapeType.Table && props.tableSelection) {
+        const cell = props.tableSelection.editingCell;
+        if (!cell || !cell.index) return false;
         const grid = (shape as TableShape).getLayout().grid;
+        const g = grid.get(cell.index.row, cell.index.col);
+        if (!g) return false;
         const f = grid.get(cell.index.row, cell.index.col).frame;
         const t2r = shape.matrix2Root(), m = props.context.workspace.matrix;
         t2r.multiAtLeft(m);
@@ -76,14 +77,13 @@ function selection_watcher(t: number, gen_menu_posi: any) {
 }
 
 function select_cell_by_triangle(e: MouseEvent) {
-    const selection = props.context.selection;
-    const shape = selection.selectedShapes[0];
-    const table_selection = selection.getTableSelection(shape as TableShape, props.context);
-    const cell = table_selection.editingCell;
-    if (cell) {
-        table_selection.selectTableCell(cell.index.row, cell.index.col);
-        table_selection.setEditingCell();
-        e.stopPropagation();
+    if (props.tableSelection) {
+        const cell = props.tableSelection.editingCell;
+        if (cell) {
+            props.tableSelection.selectTableCell(cell.index.row, cell.index.col);
+            props.tableSelection.setEditingCell();
+            e.stopPropagation();
+        }
     }
 }
 function _get_menu_position(points: ClientXY[]) {

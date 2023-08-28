@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape, Text } from '@kcdesign/data';
@@ -10,11 +10,13 @@ import { v4 as uuid } from "uuid"
 import { CellMenu } from '@/context/menu';
 import { Selection } from '@/context/selection';
 import { get_fills } from '@/utils/shape_style';
+import { TableSelection } from '@/context/tableselection';
 interface Props {
     context: Context
     position: { x: number, y: number }
     cellMenu: CellMenu
     cells: TableCell[]
+    tableSelection: TableSelection | undefined
 }
 const horIcon = ref('text-left');
 const verIcon = ref('align-top');
@@ -43,8 +45,8 @@ const textAlginVer = (svg: string) => {
 
 const getColorFromPicker = (c: Color) => {
     const shape = props.context.selection.selectedShapes[0]
-    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+    const table = props.tableSelection;
+    if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableShape)
         const fill = new Fill(uuid(), true, FillType.SolidColor, c);
         editor.addFill4Multi(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
@@ -54,8 +56,8 @@ const getColorFromPicker = (c: Color) => {
 
 const mergeCells = () => {
     const shape = props.context.selection.selectedShapes[0]
-    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+    const table = props.tableSelection;
+    if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableShape)
         editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
     }
@@ -69,10 +71,12 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     const shape = props.context.selection.selectedShapes[0] as TableShape
     props.context.data.mediasMgr.add(ref, data);
     const editor = props.context.editor4Table(shape)
-    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    editor.setCellContentImage(table.tableRowStart, table.tableColStart, ref);
-    props.context.communication.docResourceUpload.upload(ref, data.buff.buffer.slice(0));
-    emit('close');
+    const table = props.tableSelection;
+    if (table) {
+        editor.setCellContentImage(table.tableRowStart, table.tableColStart, ref);
+        props.context.communication.docResourceUpload.upload(ref, data.buff.buffer.slice(0));
+        emit('close');
+    }
 }
 const onPickImge = (e: MouseEvent) => {
     e.stopPropagation();
@@ -83,8 +87,8 @@ const onPickImge = (e: MouseEvent) => {
 
 const insertColumn = (dir: string) => {
     const shape: TableShape = props.context.selection.selectedShapes[0] as TableShape;
-    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+    const table = props.tableSelection;
+    if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const layout = (shape as TableShape).getLayout();
         const editor = props.context.editor4Table(shape as TableShape);
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
@@ -123,8 +127,9 @@ const insertColumn = (dir: string) => {
 
 const deleteColumn = () => {
     const shape = props.context.selection.selectedShapes[0];
-    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    const table = props.tableSelection
     const editor = props.context.editor4Table(shape as TableShape);
+    if (!table) return;
     if (props.cellMenu === CellMenu.SelectRow) {
         editor.removeRow(table.tableRowStart, table.tableRowEnd);
     } else {
@@ -142,7 +147,8 @@ const selection_watcher = (t: number) => {
 const handleCellMenu = () => {
     const shape = props.context.selection.selectedShapes[0];
     if (shape && shape.type === ShapeType.Table) {
-        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+        const table = props.tableSelection;
+        if (!table) return;
         if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
             singleChoice.value = true;
         } else {
@@ -153,9 +159,8 @@ const handleCellMenu = () => {
 }
 
 const getCellsFormat = () => {
-    const shape = props.context.selection.selectedShapes[0];
-    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-    if (table.tableRowStart < 0 || table.tableColStart < 0) return;
+    const table = props.tableSelection;
+    if (!table || table.tableRowStart < 0 || table.tableColStart < 0) return;
     const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
     if (cells.length === 1) {
         const style = cells[0]!.style;

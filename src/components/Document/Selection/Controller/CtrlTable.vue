@@ -14,6 +14,7 @@ import TableHeader from './Table/TableHeader.vue';
 import TableSelectionView from './Table/TableSelectionView.vue';
 import TableCellsMenu from '@/components/Document/Menu/TableMenu/TableCellsMenu.vue';
 import { CellMenu } from '@/context/menu';
+import { TableSelection } from '@/context/tableselection';
 type TextShape = Shape & { text: Text };
 const props = defineProps<{
     context: Context,
@@ -259,7 +260,8 @@ onUnmounted(() => {
         :matrix="editingCellMatrix"></TextInput>
     <!-- 小菜单 -->
     <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
-        :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>
+        :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"
+        :table-selection="tableSelection()"></TableCellsMenu>
 </template>
 <style lang='scss' scoped>
 svg {
