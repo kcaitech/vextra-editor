@@ -83,7 +83,7 @@ function y_dot_mouseleave() {
 }
 function add_cols() {
     const selection = props.context.selection;
-    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const table_selection = selection.(props.shape as TableShape, props.context);
     table_selection.resetSelection();
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);

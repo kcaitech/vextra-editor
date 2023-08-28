@@ -59,8 +59,6 @@ function _change(t: number) {
         }
         baseAttr.value = true;
     } else if (t === Selection.CHANGE_TABLE_CELL) {
-        console.log('CHANGE_TABLE_CELL');
-        
         baseAttrVisible()
     }
 }
@@ -71,7 +69,6 @@ const baseAttrVisible = () => {
         const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
         const is_edting = props.context.workspace.isEditing;
         console.log(table, is_edting);
-        
         if(table.tableColStart === -1 && !is_edting) {
             baseAttr.value = true;
         }else {
@@ -82,7 +79,7 @@ const baseAttrVisible = () => {
     }
 }
 
-const change = throttle(_change, 200);
+const change = throttle(_change, 100);
 function selection_watcher(t: number) { change(t) }
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
