@@ -3,7 +3,7 @@
         @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"/>
     <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo"
-        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight ">
+        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight"  :docUserId="docUserId">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
 </template>
@@ -29,6 +29,7 @@ const userInfo = ref<UserInfo | undefined>()
 let lists = ref<any[]>([])
 const docId = ref('')
 const mydata = ref()
+const docUserId = ref('')
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
 const emits = defineEmits(['data-update'])
@@ -129,6 +130,7 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
+    docUserId.value = data.document.user_id
     userInfo.value = userData.value
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type

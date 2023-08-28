@@ -4,7 +4,7 @@
         @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
     <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removehistory="Removefile" @ropen="openDocument"/>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"  :docUserId="docUserId"
         :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
@@ -31,6 +31,7 @@ const lists = ref<any[]>([])
 const selectValue = ref(1)
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
+const docUserId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share', 'remove'])
@@ -135,6 +136,7 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
+    docUserId.value = data.document.user_id
     userInfo.value = userData.value
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type

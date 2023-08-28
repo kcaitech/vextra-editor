@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect,} from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect, } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { UserInfo } from '@/context/user';
 import { Context } from '@/context';
@@ -15,7 +15,7 @@ const props = defineProps<{
   selectValue: number,
   docUserId?: string,
   context?: Context,
-  userInfo:UserInfo | undefined,
+  userInfo: UserInfo | undefined,
   docInfo?: DocInfo
 }>()
 const emit = defineEmits<{
@@ -136,10 +136,10 @@ const onRemove = (id: string, i: number) => {
 const getShareList = async () => {
   try {
     const { data } = await share_api.getShareListAPI({ doc_id: docID })
-    if(data) {
+    if (data) {
       shareList.value = data
     }
-  } catch(err) {
+  } catch (err) {
     console.log(err);
   }
 }
@@ -163,10 +163,10 @@ const setShateType = async (type: number) => {
   try {
     await share_api.setShateTypeAPI({ doc_id: docID, doc_type: type })
     for (let i = 0; i < shareList.value.length; i++) {
-      if(type === 1) {
+      if (type === 1) {
         return
-      }else if(shareList.value[i].document_permission.perm_source_type === 0) {
-        shareList.value[i].document_permission.perm_type = type -1
+      } else if (shareList.value[i].document_permission.perm_source_type === 0) {
+        shareList.value[i].document_permission.perm_type = type - 1
       }
     }
   } catch (err) {
@@ -209,13 +209,18 @@ watch(value1, (nVal, oVal) => {
 
 watchEffect(() => {
   if (route.query.id) {
-    const userId = userInfo.value?.id
-    if (props.docInfo) {
-      if(props.docUserId) {
-        props.docUserId != userId ? founder.value = true : founder.value = false
-      }else {
-        props.docInfo.user.id != userId ? founder.value = true : founder.value = false
-      }
+    const userId = props.userInfo?.id
+    if (props.docUserId) {
+      props.docUserId != userId ? founder.value = true : founder.value = false
+    } else if (props.docInfo) {
+      props.docInfo.user.id != userId ? founder.value = true : founder.value = false
+    }
+  }else {
+    const userId = props.userInfo?.id
+    if (props.docUserId) {
+      props.docUserId != userId ? founder.value = true : founder.value = false
+    } else if (props.docInfo) {
+      props.docInfo.user.id != userId ? founder.value = true : founder.value = false
     }
   }
 })
@@ -330,8 +335,8 @@ onUnmounted(() => {
           <el-scrollbar height="300px" class="shared-by">
             <div class="scrollbar-demo-item">
               <div class="item-left">
-                <div class="avatar"><img :src="userInfo?.avatar"></div>
-                <div class="name">{{ userInfo?.nickname }}</div>
+                <div class="avatar"><img :src="docInfo.user.avatar"></div>
+                <div class="name">{{ docInfo.user.nickname }}</div>
               </div>
               <div class="item-right">
                 <div class="founder">{{ t('share.founder') }}</div>
@@ -384,7 +389,7 @@ onUnmounted(() => {
         <!-- 文档权限 -->
         <div class="unfounder">
           <span>{{ t('share.document_permission') }}:</span>
-          <p class="name">{{DocType[docInfo.document.doc_type]}}</p>
+          <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
         </div>
         <!-- 链接按钮 -->
         <div class="button bottom">
@@ -529,6 +534,7 @@ onUnmounted(() => {
   width: 100px;
   justify-content: space-around;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+
   >div {
     padding: var(--default-margin-quarter) var(--default-padding-half);
   }
