@@ -5,7 +5,6 @@ import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';
-import { debounce } from 'lodash';
 import { CellMenu } from '@/context/menu';
 import { TableSelection } from '@/context/tableselection';
 
@@ -22,7 +21,9 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const selection_path = ref<string>('');
 const triangle = ref<boolean>(false);
+let watchCells: Map<string, TableCell> = new Map();
 let triangle_position: ClientXY = { x: 0, y: 0 };
+(window as any).xx = watchCells;
 function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
@@ -33,6 +34,7 @@ function update_cell_selection(gen_menu_posi?: boolean) {
         gen_view(props.table, cells, gen_menu_posi);
     }
 }
+const t1 = () => update_cell_selection(true);
 function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
     const t2r = table.matrix2Root(), m = props.context.workspace.matrix;
     t2r.multiAtLeft(m);
@@ -48,7 +50,7 @@ function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: nu
         }
     }
     selection_path.value = genRectPath(points);
-    if (gen_menu_posi) get_menu_position(points);
+    if (gen_menu_posi) _get_menu_position(points);
 }
 function update_triangle() {
     triangle.value = false;
@@ -69,13 +71,24 @@ function update_triangle() {
         triangle.value = true;
     }
 }
+
 function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_SHAPE) return update_cell_selection();
-    if (t === Selection.CHANGE_PAGE) return update_cell_selection();
+    if (t === Selection.CHANGE_SHAPE) {
+        update_cell_selection();
+        watchCells.forEach((v) => v.unwatch(t1));
+        watchCells.clear();
+    }
+    else if (t === Selection.CHANGE_PAGE) {
+        update_cell_selection();
+        watchCells.forEach((v) => v.unwatch(t1));
+        watchCells.clear();
+    }
 }
 function table_selection_watcher(t: number, gen_menu_posi: any) {
-    if (t === TableSelection.CHANGE_TABLE_CELL) return update_cell_selection(gen_menu_posi);
-    if (t === TableSelection.CHANGE_EDITING_CELL) return update_triangle();
+    if (t === TableSelection.CHANGE_TABLE_CELL) {
+        update_cell_selection(gen_menu_posi);
+        cells_watcher();
+    } else if (t === TableSelection.CHANGE_EDITING_CELL) return update_triangle();
 }
 
 function select_cell_by_triangle(e: MouseEvent) {
@@ -91,22 +104,48 @@ function _get_menu_position(points: ClientXY[]) {
     const b = XYsBounding(points);
     emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
 }
-const get_menu_position = debounce(_get_menu_position, 100);
-const t1 = () => update_cell_selection(true);
+
+function cells_watcher() {
+    const table_selection = props.context.tableSelection;
+    if (table_selection.tableRowStart > -1) {
+        const cells = table_selection.getSelectedCells(true);
+        const needWatch: Map<string, TableCell> = new Map();
+        for (let i = 0, len = cells.length; i < len; i++) {
+            let c = cells[i];
+            if (c.cell) {
+                needWatch.set(c.cell.id, c.cell);
+                c.cell.watch(t1);
+            }
+        }
+        watchCells.forEach((v, k) => {
+            if (!needWatch.get(k)) v.unwatch(t1);
+        })
+        watchCells = needWatch;
+    }
+}
+function table_watcher() {
+    update_cell_selection(true);
+    cells_watcher();
+}
 watch(() => props.cell, (c, oc) => {
     if (c) c.watch(update_triangle)
     if (oc) oc.unwatch(update_triangle);
 })
 watch(() => props.matrix, () => { update_cell_selection(true); update_triangle(); });
+watch(() => props.table, (v, o) => {
+    if (o) o.unwatch(table_watcher);
+    v.watch(table_watcher);
+})
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
-    props.table.watch(t1);
+    props.table.watch(table_watcher);
+    cells_watcher();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tableSelection.unwatch(table_selection_watcher);
-    props.table.unwatch(t1);
+    props.table.unwatch(table_watcher);
 })
 </script>
 <template>

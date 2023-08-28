@@ -50,8 +50,6 @@ function _update() {
         return bounds;
     }, bounds)
     const text_selection = selection.getTextSelection(props.shape);
-    console.log('cursor', text_selection.cursorStart, text_selection.cursorEnd);
-
     if (text_selection.cursorStart !== text_selection.cursorEnd) {
         isCursor.value = false;
         // selected range
