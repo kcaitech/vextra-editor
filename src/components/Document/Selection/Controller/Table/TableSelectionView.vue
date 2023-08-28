@@ -107,13 +107,13 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <path v-if="selection_path" :d="selection_path" fill="#865dff" fill-opacity="0.25" stroke='none'>
+    <path v-if="selection_path" :d="selection_path" fill="#865dff" fill-opacity="0.40" stroke='none'>
     </path>
     <svg v-if="triangle" :x="triangle_position.x" :y="triangle_position.y" viewBox="0 0 1024 1024" version="1.1"
         @mousedown="(e) => select_cell_by_triangle(e)" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
         style="cursor: pointer;">
         <rect x="200" y="200" width="824" height="824" fill="transparent"></rect>
-        <path
+        <path fill-opacity="0.75"
             d="M547.328 810.666667H810.666667v-263.338667L547.328 810.666667zM896 341.333333v554.666667H341.333333L896 341.333333z"
             fill="#444444"></path>
     </svg>
