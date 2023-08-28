@@ -232,7 +232,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
 // 判断一个编组中是否已经有子元素被选中
 function isPartSelect(shape: Shape, selected: Shape): boolean {
     let result: boolean = false;
-    const c = (shape as GroupShape).childs;
+    const c = shape instanceof GroupShape ? shape.childs : undefined;
     if (c) {
         for (let i = 0; i < c.length; i++) {
             if (c[i].id == selected.id) {
