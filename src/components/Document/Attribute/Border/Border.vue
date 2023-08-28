@@ -16,6 +16,7 @@ import { WorkSpace } from '@/context/workspace';
 import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import Apex from './Apex.vue';
+import { TableSelection } from '@/context/tableselection';
 interface BorderItem {
     id: number
     border: Border
@@ -63,7 +64,7 @@ function updateData() {
     mixed.value = false; mixed_cell.value = false;
     if (props.shapes.length === 1) {
         const shape = props.shapes[0];
-        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+        const table = props.context.tableSelection;
         if (shape.type === ShapeType.Table && table.tableRowStart > -1) {
             const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
             if (cells.length > 0) {
@@ -102,7 +103,7 @@ function addBorder() {
     if (len.value === 1) {
         const shape = props.shapes[0] as TableShape;
         if (shape.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(shape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 const range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
@@ -144,7 +145,7 @@ function deleteBorder(idx: number) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     if (len.value === 1) {
         const shape = props.shapes[0];
-        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+        const table = props.context.tableSelection;
         if (shape.type === ShapeType.Table) {
             const e = props.context.editor4Table(shape as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
@@ -173,7 +174,7 @@ function toggleVisible(idx: number) {
     if (len.value === 1) {
         const shape = props.shapes[0] as TableShape;
         if (shape.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(shape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 e.setBorderEnable(_idx, isEnabled, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -216,7 +217,7 @@ function onColorChange(e: Event, idx: number) {
     if (len.value === 1) {
         const shape = props.shapes[0] as TableShape;
         if (shape.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(shape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -257,7 +258,7 @@ function onAlphaChange(e: Event, idx: number) {
             if (len.value === 1) {
                 const shape = props.shapes[0] as TableShape;
                 if (shape.type === ShapeType.Table) {
-                    const table = props.context.selection.getTableSelection(shape, props.context);
+                    const table = props.context.tableSelection;
                     const e = props.context.editor4Table(shape);
                     if (table.tableRowStart > -1 || table.tableColStart > -1) {
                         e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -288,7 +289,7 @@ function onAlphaChange(e: Event, idx: number) {
                 if (len.value === 1) {
                     const shape = props.shapes[0] as TableShape;
                     if (shape.type === ShapeType.Table) {
-                        const table = props.context.selection.getTableSelection(shape, props.context);
+                        const table = props.context.tableSelection;
                         const e = props.context.editor4Table(shape);
                         if (table.tableRowStart > -1 || table.tableColStart > -1) {
                             e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -319,7 +320,7 @@ function getColorFromPicker(color: Color, idx: number) {
     if (len.value === 1) {
         const shape = props.shapes[0] as TableShape;
         if (shape.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(shape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 e.setBorderColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -371,26 +372,24 @@ function update_by_shapes() {
     layout();
 }
 
-const selection_watcher = (t: number) => {
-    if (t === Selection.CHANGE_TABLE_CELL) {
-        updateData();
-    }
-}
 const workspace_watcher = (t: number) => {
     if (t === WorkSpace.CTRL_APPEAR) {
         updateData();
     }
 }
+function table_selection_watcher(t: number) {
+    if (t === TableSelection.CHANGE_TABLE_CELL) updateData();
+}
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
 onMounted(() => {
     update_by_shapes();
-    props.context.selection.watch(selection_watcher);
+    props.context.tableSelection.watch(table_selection_watcher);
     props.context.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     stop();
-    props.context.selection.unwatch(selection_watcher);
+    props.context.tableSelection.unwatch(table_selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
 })
 </script>

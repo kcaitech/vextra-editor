@@ -8,7 +8,6 @@ import { Delete } from '@element-plus/icons-vue'
 import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';
 import { v4 as uuid } from "uuid"
 import { CellMenu } from '@/context/menu';
-import { Selection } from '@/context/selection';
 import { get_fills } from '@/utils/shape_style';
 import { TableSelection } from '@/context/tableselection';
 interface Props {
@@ -16,7 +15,6 @@ interface Props {
     position: { x: number, y: number }
     cellMenu: CellMenu
     cells: TableCell[]
-    tableSelection: TableSelection | undefined
 }
 const horIcon = ref('text-left');
 const verIcon = ref('align-top');
@@ -45,7 +43,7 @@ const textAlginVer = (svg: string) => {
 
 const getColorFromPicker = (c: Color) => {
     const shape = props.context.selection.selectedShapes[0]
-    const table = props.tableSelection;
+    const table = props.context.tableSelection;
     if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableShape)
         const fill = new Fill(uuid(), true, FillType.SolidColor, c);
@@ -56,7 +54,7 @@ const getColorFromPicker = (c: Color) => {
 
 const mergeCells = () => {
     const shape = props.context.selection.selectedShapes[0]
-    const table = props.tableSelection;
+    const table = props.context.tableSelection;
     if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const editor = props.context.editor4Table(shape as TableShape)
         editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
@@ -71,7 +69,7 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     const shape = props.context.selection.selectedShapes[0] as TableShape
     props.context.data.mediasMgr.add(ref, data);
     const editor = props.context.editor4Table(shape)
-    const table = props.tableSelection;
+    const table = props.context.tableSelection;
     if (table) {
         editor.setCellContentImage(table.tableRowStart, table.tableColStart, ref);
         props.context.communication.docResourceUpload.upload(ref, data.buff.buffer.slice(0));
@@ -87,7 +85,7 @@ const onPickImge = (e: MouseEvent) => {
 
 const insertColumn = (dir: string) => {
     const shape: TableShape = props.context.selection.selectedShapes[0] as TableShape;
-    const table = props.tableSelection;
+    const table = props.context.tableSelection;
     if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const layout = (shape as TableShape).getLayout();
         const editor = props.context.editor4Table(shape as TableShape);
@@ -127,7 +125,7 @@ const insertColumn = (dir: string) => {
 
 const deleteColumn = () => {
     const shape = props.context.selection.selectedShapes[0];
-    const table = props.tableSelection
+    const table = props.context.tableSelection
     const editor = props.context.editor4Table(shape as TableShape);
     if (!table) return;
     if (props.cellMenu === CellMenu.SelectRow) {
@@ -139,7 +137,7 @@ const deleteColumn = () => {
 }
 
 const selection_watcher = (t: number) => {
-    if (t === Selection.CHANGE_TABLE_CELL) {
+    if (t === TableSelection.CHANGE_TABLE_CELL) {
         handleCellMenu();
     }
 }
@@ -147,7 +145,7 @@ const selection_watcher = (t: number) => {
 const handleCellMenu = () => {
     const shape = props.context.selection.selectedShapes[0];
     if (shape && shape.type === ShapeType.Table) {
-        const table = props.tableSelection;
+        const table = props.context.tableSelection;
         if (!table) return;
         if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
             singleChoice.value = true;
@@ -159,7 +157,7 @@ const handleCellMenu = () => {
 }
 
 const getCellsFormat = () => {
-    const table = props.tableSelection;
+    const table = props.context.tableSelection;
     if (!table || table.tableRowStart < 0 || table.tableColStart < 0) return;
     const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
     if (cells.length === 1) {

@@ -22,7 +22,7 @@ const selectVertical = ref('')
 
 const onSelectLevel = (icon: TextHorAlign, svg: string,) => {
     const shape = props.context.selection.selectedShapes[0] as TableShape;
-    const table_Selection = props.context.selection.getTableSelection(shape, props.context);
+    const table_Selection = props.context.tableSelection;
     const editor = props.context.editor4Table(shape);
     editor.setTextHorAlign(icon, { rowStart: table_Selection.tableRowStart, rowEnd: table_Selection.tableRowEnd, colStart: table_Selection.tableColStart, colEnd: table_Selection.tableColEnd });
     props.context.selection.notify(Selection.CHANGE_TEXT);
@@ -30,7 +30,7 @@ const onSelectLevel = (icon: TextHorAlign, svg: string,) => {
 }
 const onSelectVertical = (icon: TextVerAlign, svg: string) => {
     const shape = props.context.selection.selectedShapes[0] as TableShape;
-    const table_Selection = props.context.selection.getTableSelection(shape, props.context);
+    const table_Selection = props.context.tableSelection;
     const editor = props.context.editor4Table(shape);
     editor.setTextVerAlign(icon, { rowStart: table_Selection.tableRowStart, rowEnd: table_Selection.tableRowEnd, colStart: table_Selection.tableColStart, colEnd: table_Selection.tableColEnd });
     props.context.selection.notify(Selection.CHANGE_TEXT);

@@ -10,6 +10,7 @@ import { message } from "@/utils/message";
 import { Selection } from '@/context/selection';
 import { get_fills, get_actions_fill_color, get_actions_add_fill, get_actions_fill_unify, get_actions_fill_enabled, get_actions_fill_delete } from '@/utils/shape_style';
 import { v4 } from 'uuid';
+import { TableSelection } from '@/context/tableselection';
 
 interface FillItem {
     id: number,
@@ -60,7 +61,7 @@ function updateData() {
     mixed.value = false; mixed_cell.value = false;
     if (props.shapes.length === 1) {
         const shape = props.shapes[0];
-        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+        const table = props.context.tableSelection;
         if (shape.type === ShapeType.Table && table.tableRowStart > -1) {
             const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
             if (cells.length > 0) {
@@ -98,7 +99,7 @@ function addFill(): void {
         const s = props.context.selection.selectedShapes[0];
         const e = props.context.editor4Shape(s);
         if (s.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(s as TableShape, props.context);
+            const table = props.context.tableSelection;
             const editor = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 const range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
@@ -139,11 +140,11 @@ function deleteFill(idx: number) {
     if (len.value === 1) {
         const s = props.context.selection.selectedShapes[0];
         if (s.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(s as TableShape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 console.log(112);
-                
+
                 e.deleteFill(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.deleteFill(_idx);
@@ -165,7 +166,7 @@ function toggleVisible(idx: number) {
     if (len.value === 1) {
         const s = props.context.selection.selectedShapes[0];
         if (s.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(s as TableShape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 e.setFillEnable(_idx, !fills[idx].fill.isEnabled, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -198,7 +199,7 @@ function setColor(idx: number, clr: string, alpha: number) {
     if (len.value === 1) {
         const s = props.context.selection.selectedShapes[0];
         if (s.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(s as TableShape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 e.setFillColor(_idx, new Color(alpha, r, g, b), { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -281,7 +282,7 @@ function getColorFromPicker(idx: number, color: Color) {
     if (len.value === 1) {
         const s = props.context.selection.selectedShapes[0];
         if (s.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(s as TableShape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
                 e.setFillColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -327,19 +328,16 @@ function update_by_shapes() {
 }
 // hooks
 const stop = watch(() => props.shapes, update_by_shapes);
-
-const selection_watcher = (t: number) => {
-    if (t === Selection.CHANGE_TABLE_CELL) {
-        updateData();
-    }
+function table_selection_watcher(t: number) {
+    if (t === TableSelection.CHANGE_TABLE_CELL) updateData();
 }
 onMounted(() => {
     update_by_shapes();
-    props.context.selection.watch(selection_watcher);
+    props.context.tableSelection.watch(table_selection_watcher);
 })
 onUnmounted(() => {
     stop();
-    props.context.selection.unwatch(selection_watcher);
+    props.context.tableSelection.unwatch(table_selection_watcher);
 })
 </script>
 

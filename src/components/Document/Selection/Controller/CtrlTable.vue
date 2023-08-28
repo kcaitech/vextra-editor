@@ -23,7 +23,7 @@ const props = defineProps<{
     matrix: Matrix, // root->屏幕 变换矩阵
     shape: TableShape
 }>();
-const { tableSelection } = useController(props.context);
+useController(props.context);
 const matrix = new Matrix();
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
@@ -42,7 +42,6 @@ const editingCellMatrix = computed(() => {
 })
 const m_x = ref<number>(0), m_y = ref<number>(0);
 const col_dash = ref<boolean>(false), row_dash = ref<boolean>(false);
-const table_selection = ref<TableSelection | undefined>(tableSelection());
 let x_checked: boolean = false, y_checked: boolean = false;
 let m_col: number = 0, m_row: number = 0, down_x: number = 0, down_y: number = 0, t_height: number = 0, t_width: number = 0, t_x: number = 0, t_y: number = 0;
 function update() {
@@ -85,16 +84,18 @@ function isEditingText() {
         editingCell.value.cell.text;
 }
 const closeCellMenu = () => {
-    tableSelection().resetSelection();
+    props.context.tableSelection.resetSelection();
     cell_menu.value = false;
 }
 function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_EDITING_CELL) editingCell.value = tableSelection().editingCell;
-    else if (t === Selection.CHANGE_SHAPE) return init();
+    if (t === Selection.CHANGE_SHAPE) return init();
     else if (t === Selection.CHANGE_PAGE) return init();
 }
+function table_selection_watcher(t: number) {
+    if (t === TableSelection.CHANGE_EDITING_CELL) editingCell.value = props.context.tableSelection.editingCell;
+}
 function init() {
-    tableSelection().resetSelection();
+    props.context.tableSelection.resetSelection();
     editingCell.value = undefined;
     update();
 }
@@ -140,7 +141,7 @@ function move(e: MouseEvent) {
 function down(e: MouseEvent) {
     if (e.button !== 0) return;
     if (x_checked || y_checked) {
-        const table_selection = props.context.selection.getTableSelection(props.shape as TableShape, props.context);
+        const table_selection = props.context.tableSelection;
         table_selection.setEditingCell();
         table_selection.resetSelection();
         e.stopPropagation();
@@ -214,16 +215,15 @@ watch(() => props.shape, (value, old) => {
     value.watch(update);
     update();
 })
-onBeforeUpdate(() => {
-    table_selection.value = tableSelection();
-})
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
+    props.context.tableSelection.watch(table_selection_watcher);
     props.shape.watch(update);
     init();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
 })
 </script>
@@ -234,9 +234,8 @@ onUnmounted(() => {
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" overflow="visible" @mousemove="move"
         @mousedown="down" @mouseleave="leave">
         <!-- 表格选区 -->
-        <TableSelectionView v-if="table_selection" :context="props.context" @get-menu="update_menu_posi"
-            :cell="editingCell?.cell" :table="props.shape" :matrix="submatrixArray"
-            :table-selection="(table_selection as TableSelection)">
+        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell?.cell"
+            :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
@@ -264,9 +263,8 @@ onUnmounted(() => {
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
         :matrix="editingCellMatrix"></TextInput>
     <!-- 小菜单 -->
-    <TableCellsMenu :cells="[]" v-if="cell_menu && table_selection" :context="props.context" @close="closeCellMenu"
-        :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"
-        :table-selection="(table_selection as TableSelection)"></TableCellsMenu>
+    <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
+        :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>
 </template>
 <style lang='scss' scoped>
 svg {

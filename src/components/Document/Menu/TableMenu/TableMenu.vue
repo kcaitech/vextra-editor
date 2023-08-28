@@ -36,7 +36,7 @@ function showLayerSubMenu(e: MouseEvent, show: string) {
 
 const splitCell = (column: string) => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  const table = props.context.tableSelection;
   const editor = props.context.editor4Table(shape as TableShape)
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
     if (column === 'row') {
@@ -67,7 +67,7 @@ const openInsertCell = (value: string) => {
 
 const mergeCell = () => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  const table = props.context.tableSelection;
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
     const editor = props.context.editor4Table(shape as TableShape)
     editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
@@ -77,7 +77,7 @@ const mergeCell = () => {
 }
 const spliceRow = () => {
   const shape = props.context.selection.selectedShapes[0];
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  const table = props.context.tableSelection;
   const editor = props.context.editor4Table(shape as TableShape);
   if (table.editingCell) {
     editor.removeRow(table.editingCell.index.row);
@@ -90,7 +90,7 @@ const spliceRow = () => {
 
 const spliceCol = () => {
   const shape = props.context.selection.selectedShapes[0];
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  const table = props.context.tableSelection;
   const editor = props.context.editor4Table(shape as TableShape);
   if (table.editingCell) {
     editor.removeCol(table.editingCell.index.col);

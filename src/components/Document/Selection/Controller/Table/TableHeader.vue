@@ -82,24 +82,21 @@ function y_dot_mouseleave() {
     show_add_y.value = false;
 }
 function add_cols() {
-    const selection = props.context.selection;
-    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const table_selection = props.context.tableSelection;
     table_selection.resetSelection();
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);
 }
 function add_rows() {
-    const selection = props.context.selection;
-    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     table_selection.resetSelection();
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertRow(ids_y + 1, layout.rowHeights[ids_y]);
 }
 function select_col(index: number) {
-    const selection = props.context.selection;
     const idx = xs[index].idx;
-    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     const rl = layout.grid.rowCount;
     table_selection.selectTableCellRange(0, rl - 1, idx, idx, false);
@@ -114,9 +111,8 @@ function select_col(index: number) {
     move = move_x;
 }
 function select_row(index: number) {
-    const selection = props.context.selection;
     const idx = xs[index].idx;
-    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     const cl = layout.grid.colCount;
     table_selection.selectTableCellRange(idx, idx, 0, cl - 1, false);
@@ -154,8 +150,7 @@ function up() {
 }
 function select_cols(index1: number, index2: number) {
     if (index1 === index2) return select_col(index1);
-    const selection = props.context.selection;
-    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     const rl = layout.grid.rowCount;
     table_selection.selectTableCellRange(0, rl - 1, index1, index2, false);
@@ -166,8 +161,7 @@ function select_cols(index1: number, index2: number) {
 }
 function select_rows(index1: number, index2: number) {
     if (index1 === index2) return select_row(index1);
-    const selection = props.context.selection;
-    const table_selection = selection.getTableSelection(props.shape as TableShape, props.context);
+    const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     const cl = layout.grid.colCount;
     table_selection.selectTableCellRange(index1, index2, 0, cl - 1, false);

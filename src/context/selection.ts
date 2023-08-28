@@ -57,8 +57,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
-    static CHANGE_TABLE_CELL = 15;
-    static CHANGE_EDITING_CELL = 16;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -313,14 +311,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_textSelection;
     }
 
-    // table
-    private m_tableSelection?: TableSelection;
-    getTableSelection(shape: TableShape, context: Context) {
-        if (!this.m_tableSelection || this.m_tableSelection.shape.id !== shape.id) {
-            this.m_tableSelection = new TableSelection(shape, context, this);
-        }
-        return this.m_tableSelection;
-    }
     save() {
         throw new Error("Method not implemented.");
     }

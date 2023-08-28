@@ -310,7 +310,7 @@ export class WorkSpace extends Watchable(Object) {
             if (selected.length) {
                 if (selected.length === 1 && selected[0].type === ShapeType.Table) {
                     const table: TableShape = selected[0] as TableShape;
-                    const ts = selection.getTableSelection(table, this.context);
+                    const ts = this.context.tableSelection;
                     const grid = table.getLayout().grid;
                     ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
                 } else {

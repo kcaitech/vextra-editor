@@ -14,7 +14,6 @@ interface Props {
     cell: TableCell | undefined
     table: TableShape
     matrix: number[]
-    tableSelection: TableSelection | undefined
 }
 interface Emits {
     (e: 'get-menu', x: number, y: number, type: CellMenu, cell_menu: boolean): void;
@@ -28,7 +27,7 @@ function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
     if (props.table && props.table.type === ShapeType.Table) {
-        const table_selection = props.tableSelection;
+        const table_selection = props.context.tableSelection;
         if (!table_selection || table_selection.tableRowStart < 0) return;
         const cells = table_selection.getSelectedCells(true);
         gen_view(props.table, cells, gen_menu_posi);
@@ -55,8 +54,9 @@ function update_triangle() {
     triangle.value = false;
     const selection = props.context.selection;
     const shape = selection.selectedShapes[0];
-    if (shape && shape.type === ShapeType.Table && props.tableSelection) {
-        const cell = props.tableSelection.editingCell;
+    const tableSelection = props.context.tableSelection;
+    if (shape && shape.type === ShapeType.Table && tableSelection) {
+        const cell = tableSelection.editingCell;
         if (!cell) return false;
         const grid = (shape as TableShape).getLayout().grid;
         const g = grid.get(cell.index.row, cell.index.col);
@@ -69,21 +69,22 @@ function update_triangle() {
         triangle.value = true;
     }
 }
-function selection_watcher(t: number, gen_menu_posi: any) {
-    if (t === Selection.CHANGE_TABLE_CELL) return update_cell_selection(gen_menu_posi);
+function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) return update_cell_selection();
     if (t === Selection.CHANGE_PAGE) return update_cell_selection();
-    if (t === Selection.CHANGE_EDITING_CELL) return update_triangle();
+}
+function table_selection_watcher(t: number, gen_menu_posi: any) {
+    if (t === TableSelection.CHANGE_TABLE_CELL) return update_cell_selection(gen_menu_posi);
+    if (t === TableSelection.CHANGE_EDITING_CELL) return update_triangle();
 }
 
 function select_cell_by_triangle(e: MouseEvent) {
-    if (props.tableSelection) {
-        const cell = props.tableSelection.editingCell;
-        if (cell) {
-            props.tableSelection.selectTableCell(cell.index.row, cell.index.col);
-            props.tableSelection.setEditingCell();
-            e.stopPropagation();
-        }
+    const tableSelection = props.context.tableSelection;
+    const cell = tableSelection.editingCell;
+    if (cell) {
+        tableSelection.selectTableCell(cell.index.row, cell.index.col);
+        tableSelection.setEditingCell();
+        e.stopPropagation();
     }
 }
 function _get_menu_position(points: ClientXY[]) {
@@ -99,10 +100,12 @@ watch(() => props.cell, (c, oc) => {
 watch(() => props.matrix, () => { update_cell_selection(true); update_triangle(); });
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
+    props.context.tableSelection.watch(table_selection_watcher);
     props.table.watch(t1);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    props.context.tableSelection.unwatch(table_selection_watcher);
     props.table.unwatch(t1);
 })
 </script>

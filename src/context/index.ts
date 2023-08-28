@@ -15,6 +15,7 @@ import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
 import { Asssit } from "./assist";
 import { TeamWork } from "./teamwork";
+import { TableSelection } from "./tableselection";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -60,7 +61,7 @@ export class Context extends Watchable(Object) {
     private m_escstack: EscStack;
     private m_assist: Asssit;
     private m_teamwork: TeamWork;
-
+    private m_tableselection: TableSelection;
     constructor(data: Document, repo: CoopRepository) {
         super();
         (window as any).__context = this;
@@ -80,6 +81,7 @@ export class Context extends Watchable(Object) {
         this.m_escstack = new EscStack();
         this.m_assist = new Asssit(this);
         this.m_teamwork = new TeamWork();
+        this.m_tableselection = new TableSelection(this);
         const pagelist = data.pagesList.slice(0);
         this.m_taskMgr.add(new class implements Task { // page auto loader
             isValid(): boolean {
@@ -189,5 +191,8 @@ export class Context extends Watchable(Object) {
     }
     get teamwork() {
         return this.m_teamwork;
+    }
+    get tableSelection() {
+        return this.m_tableselection;
     }
 }

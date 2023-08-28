@@ -54,7 +54,7 @@ const onSelectCase = (icon: TextTransformType) => {
     }
   } else {
     const table = props.textShape;
-    const table_Selection = props.context.selection.getTableSelection(table, props.context);
+    const table_Selection = props.context.tableSelection;
     const editor = props.context.editor4Table(table)
     if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
       editor.setTextTransform(icon);
@@ -86,7 +86,7 @@ const setRowHeight = () => {
   } else {
     if (!isNaN(Number(rowHeight.value))) {
       const table = props.textShape;
-      const table_Selection = props.context.selection.getTableSelection(table, props.context);
+      const table_Selection = props.context.tableSelection;
       const editor = props.context.editor4Table(table)
       if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
         editor.setLineHeight(Number(rowHeight.value));
@@ -121,7 +121,7 @@ const setWordSpace = () => {
   } else {
     if (!isNaN(Number(wordSpace.value))) {
       const table = props.textShape;
-      const table_Selection = props.context.selection.getTableSelection(table, props.context);
+      const table_Selection = props.context.tableSelection;
       const editor = props.context.editor4Table(table)
       if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
         editor.setCharSpacing(Number(wordSpace.value));
@@ -152,7 +152,7 @@ const setParagraphSpace = () => {
   } else {
     if (!isNaN(Number(paragraphSpace.value))) {
       const table = props.textShape;
-      const table_Selection = props.context.selection.getTableSelection(table, props.context);
+      const table_Selection = props.context.tableSelection;
       const editor = props.context.editor4Table(table)
       if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
         editor.setParaSpacing(Number(paragraphSpace.value));
@@ -194,7 +194,7 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 })
 
 const textFormat = () => {
-  const table = props.context.selection.getTableSelection(props.textShape, props.context);
+  const table = props.context.tableSelection;
   if (table.editingCell) {
     shape.value = table.editingCell?.cell as TableCell & { text: Text; };
     // 拿到某个单元格
@@ -270,19 +270,22 @@ function selection_wather(t: any) {
     textFormat();
   } else if (t === Selection.CHANGE_SHAPE) {
     textFormat();
-  } else if (t === Selection.CHANGE_TABLE_CELL || Selection.CHANGE_EDITING_CELL) {
-    textFormat();
   }
+}
+function table_selection_watcher(t: any) {
+  if (t === TableSelection.CHANGE_EDITING_CELL || TableSelection.CHANGE_TABLE_CELL) textFormat();
 }
 
 onMounted(() => {
   textFormat();
   props.textShape.watch(textFormat);
   props.context.selection.watch(selection_wather);
+  props.context.tableSelection.watch(table_selection_watcher);
 })
 onUnmounted(() => {
   props.context.selection.unwatch(selection_wather);
   props.textShape.unwatch(textFormat);
+  props.context.tableSelection.unwatch(table_selection_watcher);
   shapeWatch();
 })
 </script>

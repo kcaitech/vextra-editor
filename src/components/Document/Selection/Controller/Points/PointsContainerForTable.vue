@@ -54,7 +54,7 @@ function point_mousedown(event: MouseEvent) {
     event.stopPropagation();
     workspace.setCtrl('controller');
     const root = workspace.root;
-    const table_selection = props.context.selection.getTableSelection(props.shape as TableShape, props.context);
+    const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     table_selection.resetSelection();
     startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
