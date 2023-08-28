@@ -142,8 +142,6 @@ function deleteFill(idx: number) {
             const table = props.context.selection.getTableSelection(s as TableShape, props.context);
             const e = props.context.editor4Table(s as TableShape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                console.log(112);
-                
                 e.deleteFill(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
             } else {
                 editor.value.deleteFill(_idx);
