@@ -14,7 +14,7 @@ interface Props {
     cell: TableCell | undefined
     table: TableShape
     matrix: number[]
-    tableSelection: TableSelection
+    tableSelection: TableSelection | undefined
 }
 interface Emits {
     (e: 'get-menu', x: number, y: number, type: CellMenu, cell_menu: boolean): void;
