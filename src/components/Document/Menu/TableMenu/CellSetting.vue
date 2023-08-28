@@ -29,7 +29,7 @@ const escClose = (e: KeyboardEvent) => {
 const InsertCell = (state: string) => {
     const shape: TableShape = props.context.selection.selectedShapes[0] as TableShape;
     const layout = (shape as TableShape).getLayout();
-    const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    const table = props.context.tableSelection;
     const editor = props.context.editor4Table(shape as TableShape);
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);

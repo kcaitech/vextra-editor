@@ -68,7 +68,7 @@ function borderStyleSelect(selected: SelectItem) {
     const bs = selected.value === 'dash' ? new BorderStyle(10, 10) : new BorderStyle(0, 0);
     const shape = props.shapes[0] as TableShape;
     if (shape.type === ShapeType.Table) {
-      const table = props.context.selection.getTableSelection(shape, props.context);
+      const table = props.context.tableSelection;
       const e = props.context.editor4Table(shape);
       if (table.tableRowStart > -1 || table.tableColStart > -1) {
         e.setBorderStyle(props.index, bs, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -97,7 +97,7 @@ function positionSelect(selected: SelectItem) {
   if (len.value === 1) {
     editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
   } else if (len.value > 1) {
-    if(props.shapes[0].type === ShapeType.Table) return;
+    if (props.shapes[0].type === ShapeType.Table) return;
     const actions = get_actions_border_position(props.shapes, props.index, selected.value as BorderPosition);
     if (actions && actions.length) {
       const page = props.context.selection.selectedPage;
@@ -116,7 +116,7 @@ function setThickness(e: Event) {
   if (len.value === 1) {
     const shape = props.shapes[0] as TableShape;
     if (shape.type === ShapeType.Table) {
-      const table = props.context.selection.getTableSelection(shape, props.context);
+      const table = props.context.tableSelection;
       const e = props.context.editor4Table(shape);
       if (table.tableRowStart > -1 || table.tableColStart > -1) {
         e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -144,7 +144,7 @@ const augment = (e: Event) => {
     const thickness = Number(borderThickness.value.value) + 1
     const shape = props.shapes[0] as TableShape;
     if (shape.type === ShapeType.Table) {
-      const table = props.context.selection.getTableSelection(shape, props.context);
+      const table = props.context.tableSelection;
       const e = props.context.editor4Table(shape);
       if (table.tableRowStart > -1 || table.tableColStart > -1) {
         e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -163,7 +163,7 @@ const decrease = (e: Event) => {
     const thickness = Number(borderThickness.value.value) - 1
     const shape = props.shapes[0] as TableShape;
     if (shape.type === ShapeType.Table) {
-      const table = props.context.selection.getTableSelection(shape, props.context);
+      const table = props.context.tableSelection;
       const e = props.context.editor4Table(shape);
       if (table.tableRowStart > -1 || table.tableColStart > -1) {
         e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -204,7 +204,7 @@ const onMouseMove = (e: MouseEvent) => {
           const thickness = Number(borderThickness.value.value) + 1
           const shape = props.shapes[0] as TableShape;
           if (shape.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(shape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
               e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -225,7 +225,7 @@ const onMouseMove = (e: MouseEvent) => {
           }
           const shape = props.shapes[0] as TableShape;
           if (shape.type === ShapeType.Table) {
-            const table = props.context.selection.getTableSelection(shape, props.context);
+            const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
             if (table.tableRowStart > -1 || table.tableColStart > -1) {
               e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
@@ -297,7 +297,7 @@ onUnmounted(() => {
       <template #body>
         <div class="options-container">
           <!-- 边框位置 -->
-          <div v-if="show_position" :style="{opacity: shapes[0].type === ShapeType.Table ? '.5' : '1'}">
+          <div v-if="show_position" :style="{ opacity: shapes[0].type === ShapeType.Table ? '.5' : '1' }">
             <label>{{ t('attr.position') }}</label>
             <Select :selected="position" :item-view="BorderPositonItem" :item-height="30" :source="positonOptionsSource"
               @select="positionSelect" :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'"></Select>

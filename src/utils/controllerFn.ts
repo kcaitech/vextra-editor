@@ -80,7 +80,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         } else if (shapes.length === 1) {
             const shape = shapes[0];
             if (shape.type === ShapeType.Table) {
-                const ts = context.selection.getTableSelection(shape as TableShape, context);
+                const ts = context.tableSelection;
                 const editor = context.editor4Table(shape as TableShape);
                 if (ts.tableRowStart > -1 || ts.tableColStart > -1) {
                     editor.initCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);

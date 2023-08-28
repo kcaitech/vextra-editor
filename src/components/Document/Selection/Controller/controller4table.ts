@@ -374,7 +374,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             table = t;
             get_matrix4table();
             init_down_timer();
-            table_selection = context.selection.getTableSelection(t, context);
+            table_selection = context.tableSelection;
             table_selection.resetSelection();
             table_selection.setEditingCell();
         }
@@ -432,14 +432,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
         table.unwatch(get_matrix4table);
         console.log('dispose');
     }
-    function tableSelection() {
-        return table_selection
-    }
     function m4table() {
         return matrix4table;
     }
     watch(() => workspace_matrix.value, get_matrix4table, { deep: true });
-    return { tableSelection, m4table, init, dispose };
+    return { m4table, init, dispose };
 }
 
 export function useController(context: Context) {

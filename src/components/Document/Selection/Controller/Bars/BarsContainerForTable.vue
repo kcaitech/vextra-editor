@@ -60,7 +60,7 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
         props.context.menu.menuMount()
         event.stopPropagation();
         props.context.menu.menuMount()
-        const table_selection = props.context.selection.getTableSelection(props.shape as TableShape, props.context);
+        const table_selection = props.context.tableSelection;
         table_selection.setEditingCell();
         table_selection.resetSelection();
         cur_ctrl_type = ele;

@@ -420,12 +420,12 @@ function page_scale(context: Context, scale: number) {
 function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' {
   const is_edting = context.workspace.isEditing;
   const area_0 = finder(context, p);
-  if(area_0.length && area_0[0].type === ShapeType.Table) {
-    const table = context.selection.getTableSelection(area_0[0] as TableShape, context);
+  if (area_0.length && area_0[0].type === ShapeType.Table) {
+    const table = context.tableSelection;
     if (table.editingCell) {
       console.log('table进来的');
       return 'table';
-    }else if (table.tableRowEnd > -1) {
+    } else if (table.tableRowEnd > -1) {
       return 'table_cell';
     }
   }

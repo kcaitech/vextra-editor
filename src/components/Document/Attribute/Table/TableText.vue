@@ -99,7 +99,7 @@ const onBold = () => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextBold(isBold.value);
@@ -123,7 +123,7 @@ const onTilt = () => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextItalic(isTilt.value);
@@ -147,7 +147,7 @@ const onUnderlint = () => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextUnderline(isUnderline.value);
@@ -171,7 +171,7 @@ const onDeleteline = () => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextStrikethrough(isDeleteline.value);
@@ -195,7 +195,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextHorAlign(icon);
@@ -214,7 +214,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
         editor.setTextVerAlign(icon)
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextVerAlign(icon);
@@ -239,7 +239,7 @@ const changeTextSize = (size: number) => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextFontSize(size);
@@ -264,7 +264,7 @@ const setFont = (font: string) => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextFontName(font);
@@ -278,7 +278,7 @@ const setFont = (font: string) => {
 
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
-    const selection = props.context.selection.getTextSelection(shape.value!);
+    const selection = props.context.tableSelection;
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart);
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart);
     return { textIndex, selectLength };
@@ -286,7 +286,7 @@ const getTextIndexAndLen = () => {
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
     if (shape.value) {
-        const selection = props.context.selection.getTextSelection(shape.value);
+        const selection = props.context.tableSelection;
         if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
             return false;
         } else {
@@ -316,7 +316,7 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 
 // 获取当前文字格式
 const textFormat = () => {
-    const table = props.context.selection.getTableSelection(props.shape, props.context);
+    const table = props.context.tableSelection;
     if (table.editingCell) {
         shape.value = table.editingCell?.cell as TableCell & { text: Text; };
         // 拿到某个单元格
@@ -423,8 +423,6 @@ function selection_wather(t: number) {
         textFormat();
     } else if (t === Selection.CHANGE_SHAPE) {
         textFormat();
-    } else if (t === Selection.CHANGE_TABLE_CELL || Selection.CHANGE_EDITING_CELL) {
-        textFormat();
     }
 }
 function workspace_wather(t: number) {
@@ -439,6 +437,9 @@ function workspace_wather(t: number) {
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat();
     }
+}
+function table_selection_watcher(t: number) {
+    if (t === TableSelection.CHANGE_EDITING_CELL || TableSelection.CHANGE_TABLE_CELL) textFormat();
 }
 function onAlphaChange(e: Event, type: string) {
     let value = (e.currentTarget as any)['value'];
@@ -532,8 +533,8 @@ function onColorChange(e: Event, type: string) {
     }
 }
 function getColorFromPicker(color: Color, type: string) {
-    console.log(shape.value,'shape.value');
-    
+    console.log(shape.value, 'shape.value');
+
     if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value);
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -552,9 +553,9 @@ function getColorFromPicker(color: Color, type: string) {
         }
     } else {
         console.log(11);
-        
+
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(props.shape, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             if (type === 'color') {
@@ -586,7 +587,7 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     if (shape.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
-        if (isSelectText()) {            
+        if (isSelectText()) {
             if (type === 'color') {
                 editor.setTextColor(0, Infinity, new Color(alpha, r, g, b));
             } else {
@@ -601,7 +602,7 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             if (type === 'color') {
@@ -632,7 +633,7 @@ const deleteHighlight = () => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextHighlightColor(undefined);
@@ -655,7 +656,7 @@ const addHighlight = () => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextHighlightColor(new Color(1, 216, 216, 216));
@@ -677,7 +678,7 @@ const addTextColor = () => {
         }
     } else {
         const table = props.shape;
-        const table_Selection = props.context.selection.getTableSelection(table, props.context);
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
         if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
             editor.setTextColor(new Color(1, 6, 6, 6));
@@ -710,11 +711,13 @@ onMounted(() => {
     props.shape.watch(textFormat);
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
+    props.context.tableSelection.watch(table_selection_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_wather);
     props.shape.unwatch(textFormat);
+    props.context.tableSelection.unwatch(table_selection_watcher);
     shapeWatch();
 })
 </script>

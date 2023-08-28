@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { onMounted, onUnmounted, shallowRef, ref, computed, watchEffect } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape, TableCell } from "@kcdesign/data"
+import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
+import { ShapeType, Shape, TextShape, TableShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr.vue';
 import Fill from './Fill/Fill.vue';
@@ -11,6 +11,7 @@ import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
 import TableText from './Table/TableText.vue'
+import { TableSelection } from '@/context/tableselection';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -58,35 +59,37 @@ function _change(t: number) {
             shapes.value = new Array();
         }
         baseAttr.value = true;
-    } else if (t === Selection.CHANGE_TABLE_CELL) {
-        baseAttrVisible()
     }
 }
 const baseAttr = ref(true);
 const baseAttrVisible = () => {
     const shape = props.context.selection.selectedShapes[0]
-    if(props.context.selection.selectedShapes.length === 1 && shape.type === ShapeType.Table) {
-        const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+    if (props.context.selection.selectedShapes.length === 1 && shape.type === ShapeType.Table) {
+        const table = props.context.tableSelection;
         const is_edting = props.context.workspace.isEditing;
-        console.log(table, is_edting);
-        if(table.tableColStart === -1 && !is_edting) {
+        if (table.tableColStart === -1 && !is_edting) {
             baseAttr.value = true;
-        }else {
+        } else {
             baseAttr.value = false;
         }
-    }else {
+    } else {
         baseAttr.value = true;
     }
 }
 
 const change = throttle(_change, 100);
 function selection_watcher(t: number) { change(t) }
+function table_selection_watcher(t: number) {
+    if (t === TableSelection.CHANGE_TABLE_CELL) baseAttrVisible();
+}
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
+    props.context.tableSelection.watch(table_selection_watcher);
     _change(Selection.CHANGE_SHAPE);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    props.context.tableSelection.unwatch(table_selection_watcher);
 })
 </script>
 <template>
