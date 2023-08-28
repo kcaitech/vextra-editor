@@ -164,8 +164,9 @@ function move_x(e: MouseEvent) {
 }
 function up_x() {
     const dx = down_x - m_x.value;
+    const scale = props.context.workspace.matrix.m00;
     const editor = props.context.editor4Table(props.shape as TableShape);
-    editor.adjColWidth(m_col - 1, m_col, dx);
+    editor.adjColWidth(m_col - 1, m_col, dx / scale);
     col_dash.value = false;
     document.removeEventListener('mousemove', move_x);
     document.removeEventListener('mouseup', up_x);
@@ -176,8 +177,9 @@ function move_y(e: MouseEvent) {
 }
 function up_y() {
     const dy = down_y - m_y.value;
+    const scale = props.context.workspace.matrix.m00;
     const editor = props.context.editor4Table(props.shape as TableShape);
-    editor.adjRowHeight(m_row - 1, m_row, dy);
+    editor.adjRowHeight(m_row - 1, m_row, dy / scale);
     row_dash.value = false;
     document.removeEventListener('mousemove', move_y);
     document.removeEventListener('mouseup', up_y);
