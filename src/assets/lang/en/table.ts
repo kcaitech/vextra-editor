@@ -15,5 +15,11 @@ export const table: any = {
     bottom_insert: 'Insert row below',
     left_insert: 'Left insert column',
     right_insert: 'Right insert column',
-    confirm: 'Confirm'
+    confirm: 'Confirm',
+    row: 'row',
+    col: 'col',
+    insert_table: 'Insert table',
+    row_num: 'Number of rows',
+    col_num: 'Number of columns',
+    column_table: 'Designated column table'
 }

@@ -15,5 +15,11 @@ export const table: any = {
     bottom_insert: '下方插入行',
     left_insert: '左侧插入列',
     right_insert: '右侧插入列',
-    confirm: '确定'
+    confirm: '确定',
+    row: '行',
+    col: '列',
+    insert_table: '插入表格',
+    row_num: '行数',
+    col_num: '列数',
+    column_table: '指定行列表格'
 }

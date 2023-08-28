@@ -48,9 +48,9 @@ const createTable = (row?: number, col?: number) => {
 <template>
     <div class="table_container">
         <div class="table-title">
-            <span>插入表格</span>
-            <span><span>{{ highlightedRow + 1 }}行</span><strong style="font-size: 16px;"> · </strong><span>{{ highlightedCol +
-                1 }}列</span></span>
+            <span>{{t('table.insert_table')}}</span>
+            <span><span>{{ highlightedRow + 1 }}{{ t('table.row') }}</span><strong style="font-size: 16px;"> · </strong><span>{{ highlightedCol +
+                1 }}{{ t('table.col') }}</span></span>
         </div>
         <div class="table-cell">
             <div class="grid-container">
@@ -73,20 +73,20 @@ const createTable = (row?: number, col?: number) => {
                 </table>
             </div>
         </div>
-        <div class="table-state">指定行列表格</div>
+        <div class="table-state">{{ t('table.column_table') }}</div>
         <div class="table-input">
             <div class="row">
-                <span>行数:</span>
+                <span>{{t('table.row_num')}}:</span>
                 <input type="text" v-model="inputRow" placeholder="1~50">
             </div>
             <div class="col">
-                <span>列数:</span>
+                <span>{{t('table.col_num')}}:</span>
                 <input type="text" v-model="inputCol" placeholder="1~50">
             </div>
         </div>
         <div class="table-button">
             <button @click="createTable(inputRow, inputCol)"
-                :style="{ opacity: inputRow && inputCol ? '1' : '.4' }">确定</button>
+                :style="{ opacity: inputRow && inputCol ? '1' : '.4' }">{{t('table.confirm')}}</button>
         </div>
     </div>
 </template>
