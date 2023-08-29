@@ -7,11 +7,13 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import avatar from '@/assets/pd-logo-svg.svg';
 interface Props {
-    items: Array<object>
-    title: string | undefined
+    items?: Array<object>,
+    title?: string | undefined
+    switch?: boolean
 }
-const props = defineProps<Props>()
-
+const props = withDefaults(defineProps<Props>(), {
+    switch: true
+})
 const { t } = useI18n()
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
@@ -29,6 +31,7 @@ const menuAbout = ref(false)
 const menuUser = ref(false)
 const isLoading = ref(false)
 const inputRef = ref<HTMLElement>()
+
 
 const errorHandler = () => true
 const closeInForm = () => {
@@ -76,7 +79,8 @@ const screenout = async () => {
     isLoading.value = true
     SearchList.value = []
     await new Promise((resolve) => setTimeout(resolve, 200));
-    SearchList.value = props.items.filter((el: any) => el.document.name.toLowerCase().includes(search.value.toLowerCase()))
+    if (props.items)
+        SearchList.value = props.items.filter((el: any) => el.document.name.toLowerCase().includes(search.value.toLowerCase()))
     isLoading.value = false;
 }
 
@@ -177,7 +181,7 @@ const textHighLight = (text: string) => {
             <img class="logo-image" :src="avatar" alt="ProtoDesign" />
             <div class="logo-text">ProtoDesign</div>
         </div>
-        <div class="search">
+        <div v-if="props.switch" class="search">
             <el-input ref="inputRef" v-model="search" size="large" :placeholder="`${t('system.placeholder')}`"
                 @focus="showSearchHistory = true" @input="screenout">
                 <template #prefix>
@@ -244,7 +248,7 @@ const textHighLight = (text: string) => {
             </transition>
         </div>
         <div class="content">
-            <div class="bell">
+            <div v-if="props.switch" class="bell">
                 <div class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
                     @click="showInForm = !showInForm">
                     <el-icon size="24">

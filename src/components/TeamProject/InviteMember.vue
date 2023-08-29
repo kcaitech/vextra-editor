@@ -11,30 +11,36 @@
         <div class="centent">
             <div class="permission-setting">
                 <span>权限设置</span>
-                <el-select class="select" v-model="value" value-key="id" filterable style="width: 120px;">
+                <el-select class="select" v-model="teamInvitePermission" value-key="id" filterable
+                    @change="setTeamInvitePermission(teamInvitePermission)" style="width: 120px;">
                     <el-option v-for="{ id, label } in options" :key="id" :value="id" :label="label" />
                 </el-select>
             </div>
             <div class="permission-text">发送链接或二维码给同事申请加入</div>
             <div class="permission-text">
                 <span> 邀请链接开关：</span>
-                <el-switch v-model="value2" class="ml-2" style="--el-switch-on-color: #9775fa" size="small" />
+                <el-switch v-model="teamInviteSwitch" class="ml-2" style="--el-switch-on-color: #9775fa" size="small"
+                    @change="setTeamInviteSwitch(teamInviteSwitch)" />
             </div>
-            <input class="switch" v-if="value2" type="text" v-model="a">
+            <input class="switch" v-if="teamInviteSwitch" type="text" v-model="teaminviteinfo">
             <div class="permission-text" style="color: #666;">同事申请后，需管理员确认后才能加入</div>
         </div>
         <div class="invitemember">
-            <button type="submit" :disabled="!value2" @click.stop="copyText">复制链接</button>
+            <button type="submit" :disabled="!teamInviteSwitch" @click.stop="copyText">复制链接</button>
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, ref, watch } from 'vue';
+import { Ref, computed, inject, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 
-
+interface teaminfotype {
+    invited_perm_type: number,
+    self_perm_type: number,
+    invited_switch: boolean
+}
 
 const { t } = useI18n();
 const emits = defineEmits(['close'])
@@ -42,14 +48,14 @@ const { teamID } = inject('shareData') as {
     teamID: Ref<string>;
 }
 
-const inputValue = ref()
-const value = ref<any>(1)
+const teamInvitePermission = ref<any>(1)
 const options = [{ id: 1, label: '可编辑' }, { id: 0, label: '仅阅读' }]
-const value2 = ref(false)
+const teamInviteSwitch = ref(false)
+const teaminfo = ref<teaminfotype>()
 
-const setTeamInviteInfo = async (value?: number, value2?: boolean) => {
+const setTeamInvitePermission = async (value: number) => {
     try {
-        const { code } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_perm_type: value, invited_switch: value2 })
+        const { code } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_perm_type: value })
         if (code === 0) {
             ElMessage.success(value?.toString())
         } else {
@@ -60,28 +66,55 @@ const setTeamInviteInfo = async (value?: number, value2?: boolean) => {
     }
 }
 
-const a = computed(() => {
-    return `https://localhost:8080/zbb/#/join?key=${value.value}&temid=${value2.value}`
+const setTeamInviteSwitch = async (value: boolean) => {
+    try {
+        const { code } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_switch: value })
+        if (code === 0) {
+            ElMessage.success(value?.toString())
+        } else {
+            ElMessage.error('error')
+        }
+    } catch (error) {
+
+    }
+}
+
+const Getteaminfo = async () => {
+    try {
+        const { code, data } = await user_api.Getteaminfo({ team_id: teamID.value })
+        if (code === 0) {
+            teaminfo.value = data
+            if (teaminfo.value) {
+                teamInvitePermission.value = teaminfo.value.invited_perm_type
+                teamInviteSwitch.value = teaminfo.value.invited_switch
+            }
+        } else {
+            ElMessage.error('获取失败')
+        }
+    } catch (error) {
+
+    }
+}
+
+const teaminviteinfo = computed(() => {
+    return `https:test.protodesign.cn/zbb/#/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
 })
 
-// watch([value, value2], (newvalue) => {
-//     inputValue.value = `https://localhost:8080/zbb/#/join?key=${newvalue[0]}&temid=${newvalue[1]}`
-// })
-
-function copyText() {
-    navigator.clipboard.writeText(inputValue.value)
-        .then(() => {
-            return
-        })
-        .catch(err => {
-            console.error('复制失败：', err);
-        });
+async function copyText() {
+    try {
+        await navigator.clipboard.writeText(teaminviteinfo.value);
+    } catch (error) {
+        ElMessage.error("复制失败");
+    }
 }
 
 const close = () => {
-    setTeamInviteInfo(value.value, value2.value)
     emits('close')
 }
+
+onMounted(() => {
+    Getteaminfo()
+})
 
 </script>
 <style lang="scss" scoped>
