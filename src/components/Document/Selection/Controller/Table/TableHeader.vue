@@ -40,6 +40,7 @@ let move: any;
 let index_col: number = 0, index_row: number = 0;
 let m_index_col: number = 0, m_index_row: number = 0;
 let selecting: boolean = false;
+let transform = '';
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
@@ -63,10 +64,21 @@ function update_position() {
             }
             growy += ty;
         }
+        // transform = get_transform(props.shape, frame_params);
     } else {
         hidden.value = true;
     }
 }
+// function get_transform(shape: Shape, fps: FrameParams) {
+//     const { x, y, width, height } = fps;
+//     const cx = x + width / 2, cy = y + height / 2;
+//     let transform = `translate(${cx}px, ${cy}px) `;
+//     if (shape.isFlippedHorizontal) transform += 'rotateY(180deg) ';
+//     if (shape.isFlippedVertical) transform += 'rotateX(180deg) ';
+//     if (shape.rotation) transform += `rotate(${shape.rotation}deg) `;
+//     transform += `translate(${x - cx}px, ${y - cy}px)`;
+//     return transform;
+// }
 function x_dot_mouseennter(x: number, ids: number) {
     if (selecting) return;
     show_add_x.value = true, add_x = x, ids_x = ids;
@@ -103,7 +115,7 @@ function select_col(index: number) {
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     m4table.reset(m.inverse);
-    const xy = m.computeCoord2((xs[index].x + (xs[index - 1]?.x || 0)) / 2, 0);
+    const xy = m.computeCoord2(((xs[index].x + (xs[index - 1]?.x || 0)) / 2) / wm.m00, 0);
     index_col = idx, m_index_col = idx;
     emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
     document.addEventListener('mousemove', move_x);
@@ -119,7 +131,7 @@ function select_row(index: number) {
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     m4table.reset(m.inverse);
-    const xy = m.computeCoord2(0, (ys[index].y + (ys[index - 1]?.y || 0)) / 2);
+    const xy = m.computeCoord2(0, ((ys[index].y + (ys[index - 1]?.y || 0)) / 2) / wm.m00);
     index_row = idx, m_index_row = idx;
     emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
     document.addEventListener('mousemove', move_y);
@@ -156,7 +168,8 @@ function select_cols(index1: number, index2: number) {
     table_selection.selectTableCellRange(0, rl - 1, index1, index2, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
-    const xy = m.computeCoord2((xs[index2].x + (xs[index1 - 1]?.x || 0)) / 2, 0);
+    const xy = m.computeCoord2(((xs[index2].x + (xs[index1 - 1]?.x || 0)) / 2) / wm.m00, 0);
+
     emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
 }
 function select_rows(index1: number, index2: number) {
@@ -167,7 +180,7 @@ function select_rows(index1: number, index2: number) {
     table_selection.selectTableCellRange(index1, index2, 0, cl - 1, false);
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
-    const xy = m.computeCoord2(0, (ys[index2].y + (ys[index1 - 1]?.y || 0)) / 2);
+    const xy = m.computeCoord2(0, ((ys[index2].y + (ys[index1 - 1]?.y || 0)) / 2) / wm.m00);
     emits("get-menu", xy.x, xy.y, CellMenu.SelectRow, true);
 }
 function workspace_watcher(t?: number) {
