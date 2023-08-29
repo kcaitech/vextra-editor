@@ -268,8 +268,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             startPosition = { ...mousePosition };
             const editingCell = table_selection.editingCell;
             const m_item = check_cell_on_point(e);
-            const coord = check_coord_on_point2(e);
-            if (!m_item || !coord) return;
+            if (!m_item) return;
             if (editingCell && editingCell.cell && editingCell.cell.cellType === TableCellType.Text) {
                 const { rows, rowe, cols, cole } = get_range(down_item.index, m_item.index);
                 if (rows !== rowe || cols !== cole) {
@@ -285,6 +284,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 if (m_item.cell?.id === down_item.cell?.id) {
                     table_selection.setEditingCell(down_item);
                 } else {
+                    const coord = check_coord_on_point2(e);
+                    if (!coord) return;
                     const { rows, rowe, cols, cole } = get_range(down_item.index, coord);
                     table_selection.selectTableCellRange(rows, rowe, cols, cole);
                 }
