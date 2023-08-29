@@ -22,6 +22,7 @@ const emits = defineEmits<Emits>();
 const selection_path = ref<string>('');
 const triangle = ref<boolean>(false);
 let triangle_position: ClientXY = { x: 0, y: 0 };
+let transform: string;
 function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
@@ -65,10 +66,16 @@ function update_triangle() {
         const t2r = shape.matrix2Root(), m = props.context.workspace.matrix;
         t2r.multiAtLeft(m);
         const rb = t2r.computeCoord2(f.x + f.width, f.y + f.height);
-        triangle_position.x = rb.x - 20, triangle_position.y = rb.y - 20;
+        triangle_position.x = rb.x - 24, triangle_position.y = rb.y - 24;
+        transform = `translate(${triangle_position.x + 24}px, ${triangle_position.y + 24}px) `;
+        if (shape.isFlippedHorizontal) transform += 'rotateY(180deg) ';
+        if (shape.isFlippedVertical) transform += 'rotateX(180deg) ';
+        if (shape.rotation) transform += `rotate(${shape.rotation}deg) `;
+        transform += `translate(-24px, -24px) `;
         triangle.value = true;
     }
 }
+
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         update_cell_selection();
@@ -101,6 +108,7 @@ function _get_menu_position(points: ClientXY[]) {
     const b = XYsBounding(points);
     emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
 }
+
 let watchCells: Map<string, TableCell> = new Map();
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
@@ -148,13 +156,10 @@ onUnmounted(() => {
 <template>
     <path v-if="selection_path" :d="selection_path" fill="#865dff" fill-opacity="0.40" stroke='none'>
     </path>
-    <svg v-if="triangle" :x="triangle_position.x" :y="triangle_position.y" viewBox="0 0 1024 1024" version="1.1"
-        @mousedown="(e) => select_cell_by_triangle(e)" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-        style="cursor: pointer;">
-        <rect x="200" y="200" width="824" height="824" fill="transparent"></rect>
-        <path fill-opacity="0.75"
-            d="M547.328 810.666667H810.666667v-263.338667L547.328 810.666667zM896 341.333333v554.666667H341.333333L896 341.333333z"
-            fill="#444444"></path>
-    </svg>
+    <g v-if="triangle" :style="{ transform }">
+        <path stroke-opacity="0.75" d="M20 10 v10 h-10 z" stroke="#444444" stroke-width="2px" fill="transparent"></path>
+        <rect width="20" height="20" fill="transparent" @mousedown="(e) => select_cell_by_triangle(e)"
+            style="cursor: pointer;"></rect>
+    </g>
 </template>
 <style scoped lang="scss"></style>

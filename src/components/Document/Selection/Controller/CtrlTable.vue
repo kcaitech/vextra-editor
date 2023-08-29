@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem } from '@kcdesign/data';
+import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem, TableLayout } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
@@ -43,7 +43,11 @@ const editingCellMatrix = computed(() => {
 const m_x = ref<number>(0), m_y = ref<number>(0);
 const col_dash = ref<boolean>(false), row_dash = ref<boolean>(false);
 let x_checked: boolean = false, y_checked: boolean = false;
-let m_col: number = 0, m_row: number = 0, down_x: number = 0, down_y: number = 0, t_height: number = 0, t_width: number = 0, t_x: number = 0, t_y: number = 0;
+let x1: number, x2: number, y1: number, y2: number;
+let m_col: number = 0, down_x: number = 0, t_height: number = 0, t_x: number = 0;
+let m_row: number = 0, down_y: number = 0, t_width: number = 0, t_y: number = 0;
+let layout: TableLayout;
+let submatrix_inverse: Matrix;
 function update() {
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
@@ -56,7 +60,7 @@ function update() {
         { x: frame.width, y: frame.height }, // right bottom
         { x: 0, y: frame.height }, // left bottom
     ];
-    const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
+    const boundrect = points.map((point) => matrix.computeCoord2(point.x, point.y));
     boundrectPath.value = genRectPath(boundrect);
     const p0 = boundrect[0];
     bounds.left = p0.x;
@@ -116,26 +120,26 @@ function move(e: MouseEvent) {
     if (!cell) return;
     const frame = cell.frame;
     const trans_p = { x: p.x - frame.x, y: p.y - frame.y };
+
     if (trans_p.x < 3) {
-        if (cell.index.col) {
-            x_checked = true, m_col = cell.index.col;
-        }
-    } else if (frame.width - trans_p.x < 3) {
-        x_checked = true, m_col = cell.index.col + 1;
-    }
+        if (cell.index.col) x_checked = true, m_col = cell.index.col;
+    } else if (frame.width - trans_p.x < 3) x_checked = true, m_col = cell.index.col + 1;
+
     if (trans_p.y < 3) {
-        if (cell.index.row) {
-            y_checked = true, m_row = cell.index.row;
-        }
-    } else if (frame.height - trans_p.y < 3) {
-        y_checked = true, m_row = cell.index.row + 1;
-    }
+        if (cell.index.row) y_checked = true, m_row = cell.index.row;
+    } else if (frame.height - trans_p.y < 3) y_checked = true, m_row = cell.index.row + 1;
+
     if (!x_checked && !y_checked) {
         props.context.cursor.reset();
-    } else if (x_checked) {
-        props.context.cursor.setType('scale-0');
-    } else if (y_checked) {
-        props.context.cursor.setType('scale-90');
+    } else {
+        let deg = props.shape.rotation || 0;
+        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
+        if (props.shape.isFlippedVertical) deg = 360 - deg;
+        if (x_checked) {
+            props.context.cursor.setType(`scale-${deg}`);
+        } else if (y_checked) {
+            props.context.cursor.setType(`scale-${90 + deg}`);
+        }
     }
 }
 function down(e: MouseEvent) {
@@ -156,11 +160,17 @@ function down(e: MouseEvent) {
             document.addEventListener('mouseup', up_y);
             document.addEventListener('mousemove', move_y);
         }
+        submatrix_inverse = new Matrix(submatrix.inverse);
     }
 }
 function move_x(e: MouseEvent) {
     const root = props.context.workspace.root;
-    m_x.value = e.clientX - root.x;
+    const height = layout.height;
+    const x = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).x;
+    const xy1 = submatrix.computeCoord2(x, 0);
+    const xy2 = submatrix.computeCoord2(x, height);
+    m_x.value = xy1.x, x1 = xy1.x, y1 = xy1.y;
+    x2 = xy2.x, y2 = xy2.y;
 }
 function up_x() {
     const dx = down_x - m_x.value;
@@ -173,10 +183,18 @@ function up_x() {
 }
 function move_y(e: MouseEvent) {
     const root = props.context.workspace.root;
-    m_y.value = e.clientY - root.y;
+    const width = layout.width;
+    const y = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).y;
+    const xy1 = submatrix.computeCoord2(0, y);
+    const xy2 = submatrix.computeCoord2(width, y);
+    m_y.value = xy1.y, x1 = xy1.x, y1 = xy1.y;
+    x2 = xy2.x, y2 = xy2.y;
 }
-function up_y() {
-    const dy = down_y - m_y.value;
+function up_y(e: MouseEvent) {
+    const root = props.context.workspace.root;
+    const y = submatrix_inverse.computeCoord2(e.clientX - root.x, e.clientY - root.y).y;
+    const xy1 = submatrix.computeCoord2(0, y);
+    const dy = down_y - xy1.y;
     const scale = props.context.workspace.matrix.m00;
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.adjRowHeight(m_row - 1, m_row, dy / scale);
@@ -185,28 +203,26 @@ function up_y() {
     document.removeEventListener('mouseup', up_y);
 }
 function get_x_by_col(col: number) {
-    const mw = new Matrix(props.context.workspace.matrix);
     const table: TableShape = props.shape as TableShape;
-    const layout = table.getLayout();
+    layout = table.getLayout();
     const cols = layout.colWidths;
-    const scale = mw.m00;
     let growx = 0;
     for (let i = 0; i < col; i++)  growx += cols[i];
-    const xy = submatrix.computeCoord2(growx, 0);
-    growx = xy.x, t_y = xy.y;
-    down_x = growx, t_height = layout.height * scale, m_x.value = growx;
+    const xy1 = submatrix.computeCoord2(growx, 0);
+    const xy2 = submatrix.computeCoord2(growx, layout.height);
+    x1 = xy1.x, y1 = xy1.y, x2 = xy2.x, y2 = xy2.y;
+    down_x = xy1.x, m_x.value = xy1.x;
 }
 function get_y_by_row(row: number) {
-    const mw = new Matrix(props.context.workspace.matrix);
     const table: TableShape = props.shape as TableShape;
-    const layout = table.getLayout();
+    layout = table.getLayout();
     const rows = layout.rowHeights;
-    const scale = mw.m00;
     let growy = 0;
     for (let i = 0; i < row; i++)  growy += rows[i];
-    const xy = submatrix.computeCoord2(0, growy);
-    growy = xy.y, t_x = xy.x;
-    down_y = growy, t_width = layout.width * scale, m_y.value = growy;
+    const xy1 = submatrix.computeCoord2(0, growy);
+    const xy2 = submatrix.computeCoord2(layout.width, growy);
+    x1 = xy1.x, y1 = xy1.y, x2 = xy2.x, y2 = xy2.y;
+    down_y = xy1.y, m_y.value = xy1.y;
 }
 function leave() {
     props.context.cursor.reset();
@@ -233,8 +249,8 @@ onUnmounted(() => {
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" overflow="visible" @mousemove="move"
-        @mousedown="down" @mouseleave="leave">
+        :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible" @mousemove="move" @mousedown="down"
+        @mouseleave="leave">
         <!-- 表格选区 -->
         <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell?.cell"
             :table="props.shape" :matrix="submatrixArray">
@@ -255,9 +271,9 @@ onUnmounted(() => {
         </PointsContainer>
         <!-- 列宽缩放 -->
         <g>
-            <line v-if="col_dash" :x1="m_x" :y1="t_y" :x2="m_x" :y2="t_y + t_height" stroke="#865dff" stroke-dasharray="3 3"
+            <line v-if="col_dash" :x1="m_x" :y1="y1" :x2="x2" :y2="y2" stroke="#865dff" stroke-dasharray="3 3"
                 stroke-width="3"></line>
-            <line v-if="row_dash" :x1="t_x" :y1="m_y" :x2="t_x + t_width" :y2="m_y" stroke="#865dff" stroke-dasharray="3 3"
+            <line v-if="row_dash" :x1="x1" :y1="m_y" :x2="x2" :y2="y2" stroke="#865dff" stroke-dasharray="3 3"
                 stroke-width="3"></line>
         </g>
     </svg>

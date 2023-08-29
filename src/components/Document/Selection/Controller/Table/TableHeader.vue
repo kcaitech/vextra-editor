@@ -52,32 +52,24 @@ function update_position() {
         let growx = 0, growy = 0;
         for (let i = 0, len = cols.length; i < len; i++) {
             const tx = cols[i] * mw.m00, x = growx + tx;
-            if (tx > 13) {
-                xs.push({ x, idx: i }), xbars.push({ s: growx + 4, length: tx - 8, idx: i });
-            }
+            if (tx > 13) xs.push({ x, idx: i }), xbars.push({ s: growx + 4, length: tx - 8, idx: i });
             growx += tx;
         }
         for (let i = 0, len = rows.length; i < len; i++) {
             const ty = rows[i] * mw.m00, y = growy + ty;
-            if (ty > 13) {
-                ys.push({ y, idx: i }), ybars.push({ s: growy + 4, length: ty - 8, idx: i });
-            }
+            if (ty > 13) ys.push({ y, idx: i }), ybars.push({ s: growy + 4, length: ty - 8, idx: i });
             growy += ty;
         }
-        transform = get_transform(props.shape, frame_params);
+        modify_transform(props.shape, frame_params);
     } else {
         hidden.value = true;
     }
 }
-function get_transform(shape: Shape, fps: FrameParams) {
-    const { x, y, width, height } = fps;
-    const cx = x + width / 2, cy = y + height / 2;
-    let transform = `translate(${cx}px, ${cy}px) `;
+function modify_transform(shape: Shape, fps: FrameParams) {
+    transform = `translate(${fps.x}px, ${fps.y}px) `;
     if (shape.isFlippedHorizontal) transform += 'rotateY(180deg) ';
     if (shape.isFlippedVertical) transform += 'rotateX(180deg) ';
-    if (shape.rotation) transform += `rotate(${shape.rotation}deg) `;
-    transform += `translate(${x - cx}px, ${y - cy}px)`;
-    return transform;
+    if (shape.rotation) transform += `rotate(${shape.rotation}deg)`;
 }
 function x_dot_mouseennter(x: number, ids: number) {
     if (selecting) return;
@@ -95,6 +87,7 @@ function y_dot_mouseleave() {
 }
 function add_cols() {
     const table_selection = props.context.tableSelection;
+    table_selection.setEditingCell();
     table_selection.resetSelection();
     const editor = props.context.editor4Table(props.shape as TableShape);
     editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);
