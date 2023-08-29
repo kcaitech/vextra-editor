@@ -73,7 +73,7 @@ const baseAttrVisible = () => {
     const shape = props.context.selection.selectedShapes[0]
     if (props.context.selection.selectedShapes.length === 1 && shape.type === ShapeType.Table) {
         const table = props.context.tableSelection;
-        const is_edting = props.context.workspace.isEditing;
+        const is_edting = props.context.tableSelection.editingCell;
         if (table.tableColStart === -1 && !is_edting) {
             baseAttr.value = true;
         } else {
@@ -93,6 +93,7 @@ function tool_watcher(t: number) {
 function selection_watcher(t: number) { change(t) }
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_TABLE_CELL) baseAttrVisible();
+    else if (t === TableSelection.CHANGE_EDITING_CELL) baseAttrVisible();
 }
 onMounted(() => {
     props.context.selection.watch(selection_watcher);

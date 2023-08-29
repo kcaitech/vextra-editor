@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard, TableShape } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace';
@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table, init_insert_shape2 } from '@/utils/content';
+import { _updateRoot, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table, init_insert_shape2 } from '@/utils/content';
 import { paster } from '@/utils/clipaboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -814,4 +814,4 @@ onUnmounted(() => {
         </CommentView>
         <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview>
     </div>
-</template>@/components/Document/initpal
+</template>

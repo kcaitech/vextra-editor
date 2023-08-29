@@ -62,14 +62,29 @@ function updateData() {
     if (props.shapes.length === 1) {
         const shape = props.shapes[0];
         const table = props.context.tableSelection;
-        if (shape.type === ShapeType.Table && table.tableRowStart > -1) {
-            const cells = table.getSelectedCells(true).map(item => item.cell).filter(item => item);
+        const is_edting = table.editingCell;
+        if (shape.type === ShapeType.Table && table.tableRowStart > -1 || is_edting) {
+            let cells = [], might_is_mixed = false;
+            if (table.tableRowStart > -1) {
+                const _cs = table.getSelectedCells(true);
+                for (let i = 0, len = _cs.length; i < len; i++) {
+                    const c = _cs[i];
+                    if (!c.cell) might_is_mixed = true;
+                    else cells.push(c.cell);
+                }
+            } else if (is_edting) {
+                cells.push(is_edting.cell);
+            }
             if (cells.length > 0) {
                 const _fs = get_fills(cells as Shape[]);
                 if (_fs === 'mixed') {
                     mixed_cell.value = true;
                 } else {
-                    fills.push(..._fs.reverse());
+                    if (_fs.length > 0 && might_is_mixed) {
+                        mixed_cell.value = true;
+                    } else {
+                        fills.push(..._fs.reverse());
+                    }
                 }
             }
         } else {
@@ -101,8 +116,14 @@ function addFill(): void {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const editor = props.context.editor4Table(s as TableShape);
-            if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                const range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+            const is_edting = table.editingCell;
+            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+                let range
+                if (is_edting) {
+                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                } else {
+                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                }
                 if (mixed_cell.value) {
                     editor.addFill4Multi(fill, range);
                 } else {
@@ -142,8 +163,15 @@ function deleteFill(idx: number) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
-            if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                e.deleteFill(_idx, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            const is_edting = table.editingCell;
+            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+                let range
+                if (is_edting) {
+                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                } else {
+                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                }
+                e.deleteFill(_idx, range)
             } else {
                 editor.value.deleteFill(_idx);
             }
@@ -166,8 +194,15 @@ function toggleVisible(idx: number) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
-            if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                e.setFillEnable(_idx, !fills[idx].fill.isEnabled, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            const is_edting = table.editingCell;
+            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+                let range
+                if (is_edting) {
+                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                } else {
+                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                }
+                e.setFillEnable(_idx, !fills[idx].fill.isEnabled, range)
             } else {
                 editor.value.setFillEnable(_idx, !fills[idx].fill.isEnabled);
             }
@@ -199,8 +234,15 @@ function setColor(idx: number, clr: string, alpha: number) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
-            if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                e.setFillColor(_idx, new Color(alpha, r, g, b), { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            const is_edting = table.editingCell;
+            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+                let range
+                if (is_edting) {
+                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                } else {
+                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                }
+                e.setFillColor(_idx, new Color(alpha, r, g, b), range)
             } else {
                 editor.value.setFillColor(_idx, new Color(alpha, r, g, b));
             }
@@ -282,8 +324,15 @@ function getColorFromPicker(idx: number, color: Color) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
-            if (table.tableRowStart > -1 || table.tableColStart > -1) {
-                e.setFillColor(_idx, color, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            const is_edting = table.editingCell;
+            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+                let range
+                if (is_edting) {
+                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                } else {
+                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                }
+                e.setFillColor(_idx, color, range)
             } else {
                 editor.value.setFillColor(_idx, color);
             }
@@ -341,8 +390,14 @@ function table_watcher() {
 let watchCells: Map<string, TableCell> = new Map();
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
-    if (table_selection.tableRowStart > -1) {
-        const cells = table_selection.getSelectedCells(true);
+    const is_edting = table_selection.editingCell;
+    if (table_selection.tableRowStart > -1 || is_edting) {
+        let cells: any[] = [];
+        if (is_edting) {
+            cells.push(is_edting);
+        } else {
+            cells = table_selection.getSelectedCells(true);
+        }
         const needWatch: Map<string, TableCell> = new Map();
         for (let i = 0, len = cells.length; i < len; i++) {
             let c = cells[i];
@@ -361,6 +416,9 @@ function cells_watcher() {
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_TABLE_CELL) {
+        updateData();
+        cells_watcher();
+    } else if (t === TableSelection.CHANGE_EDITING_CELL) {
         updateData();
         cells_watcher();
     }

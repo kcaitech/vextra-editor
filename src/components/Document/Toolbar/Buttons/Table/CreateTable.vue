@@ -46,7 +46,7 @@ const createTable = (row?: number, col?: number) => {
 </script>
 
 <template>
-    <div class="table_container">
+    <div class="table_container" @click.stop @mousedown.stop>
         <div class="table-title">
             <span>{{t('table.insert_table')}}</span>
             <span><span>{{ highlightedRow + 1 }}{{ t('table.row') }}</span><strong style="font-size: 16px;"> · </strong><span>{{ highlightedCol +

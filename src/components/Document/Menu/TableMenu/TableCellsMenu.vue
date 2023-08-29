@@ -49,7 +49,6 @@ const getColorFromPicker = (c: Color) => {
         const fill = new Fill(uuid(), true, FillType.SolidColor, c);
         editor.addFill4Multi(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
     }
-    color.value = c;
 }
 
 const mergeCells = () => {
@@ -235,18 +234,18 @@ onUnmounted(() => {
         :style="{ top: `${props.position.y}px`, left: `${props.position.x}px`, transform: `translate(-50%, -124%)` }"
         @mousedown.stop>
         <div v-if="props.cellMenu === CellMenu.MultiSelect" class="popover-content">
-            <div class="hor" :class="{ selected_bgc: !mixed_h }">
+            <div class="hor" @click="showAlginMenu('hor')" :class="{ selected_bgc: isAlignMenu === 'hor' }">
                 <svg-icon :icon-class="horIcon"></svg-icon>
-                <div class="menu" @click="showAlginMenu('hor')">
+                <div class="menu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <TableContextAlgin v-if="isAlignMenu === 'hor'" :context="context" :cells="[]" :menu="isAlignMenu"
                     @textAlginHor="textAlginHor">
                 </TableContextAlgin>
             </div>
-            <div class="ver" :class="{ selected_bgc: !mixed_v }">
+            <div class="ver" @click="showAlginMenu('ver')" :class="{ selected_bgc: isAlignMenu === 'ver' }">
                 <svg-icon :icon-class="verIcon"></svg-icon>
-                <div class="menu" @click="showAlginMenu('ver')">
+                <div class="menu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <TableContextAlgin v-if="isAlignMenu === 'ver'" :context="context" :cells="[]" :menu="isAlignMenu"
@@ -334,7 +333,7 @@ onUnmounted(() => {
 
     >div {
         display: flex;
-        border-radius: 4px;
+        border-radius: 2px;
         padding: 4px;
         margin: 2px;
 
@@ -351,6 +350,10 @@ onUnmounted(() => {
                 height: 8px;
             }
         }
+    }
+
+    >div:hover {
+        background-color: rgba($color: #865dff, $alpha: 0.5);
     }
 
     .hor {
@@ -375,6 +378,6 @@ onUnmounted(() => {
 }
 
 .selected_bgc {
-    background-color: var(--active-color) !important;
+    background-color: rgba($color: #865dff, $alpha: 0.5);
 }
 </style>
