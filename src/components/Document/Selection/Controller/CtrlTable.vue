@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef, onBeforeUpdate } from 'vue';
+import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection } from '@/context/selection';

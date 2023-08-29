@@ -123,7 +123,7 @@ function select_col(index: number) {
     move = move_x;
 }
 function select_row(index: number) {
-    const idx = xs[index].idx;
+    const idx = ys[index].idx;
     const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     const cl = layout.grid.colCount;
