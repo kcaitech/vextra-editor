@@ -24,8 +24,9 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
-const scale_btn_transform = ref<string>('translate(0, 0)');
 const transform = ref<string>('');
+const transform2 = ref<string>('');
+
 const hidden = ref<boolean>(false);
 const dragActiveDis = 3;
 function update() {
@@ -38,12 +39,15 @@ function update_transform() {
     let rt = matrix.computeCoord2(frame.width, 0);
     let rb = matrix.computeCoord2(frame.width, frame.height);
     let lb = matrix.computeCoord2(0, frame.height);
-    let t1 = `translate(${lt.x}px, ${lt.y}px)`;
-    if (shape.isFlippedHorizontal) t1 += 'rotateY(180deg) ';
-    if (shape.isFlippedVertical) t1 += 'rotateX(180deg) ';
-    if (shape.rotation) t1 += `rotate(${shape.rotation}deg)`;
-    transform.value = t1;
-    scale_btn_transform.value = `translate(${rb.x - lt.x + 1}, ${rb.y - lt.y + 1})`;
+    let mt = ''
+    if (shape.isFlippedHorizontal) mt += 'rotateY(180deg) ';
+    if (shape.isFlippedVertical) mt += 'rotateX(180deg) ';
+    if (shape.rotation) mt += `rotate(${shape.rotation}deg)`;
+    let t1 = `translate(${lt.x}px, ${lt.y}px) `;
+    t1 += mt, t1 += `translate(-20px, -20px) `;
+    let t2 = `translate(${rb.x}px, ${rb.y}px) `;
+    t2 += mt, t2 += `translate(2px, 2px) `;
+    transform.value = t1, transform2.value = t2;
     const root = props.context.workspace.root;
     props.context.selection.setArea([
         { id: 'move', area: `M${lt.x - 20} ${lt.y - 20} h18 v18 h-18 z` },
@@ -181,26 +185,23 @@ onUnmounted(() => {
 </script>
 <template>
     <g :style="{ transform }">
-        <g transform="translate(-20, -20)">
-            <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
-            </rect>
-            <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3px"
-                y="3px">
-                <path
-                    d="M0 0h256v256H0V0z m384 0h256v256h-256V0zM768 0H1024v256h-256V0zM0 768h256V1024H0v-256z m384 0h256V1024h-256v-256z m384 0H1024V1024h-256v-256zM0 384h256v256H0v-256z m384 0h256v256h-256v-256z m384 0H1024v256h-256v-256z"
-                    fill="#865dff"></path>
-            </svg>
-        </g>
-        <!-- <g :transform="scale_btn_transform" :class="{ hidden }" @mousedown.stop="(e) => point_mousedown(e)">
-            <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
-            </rect>
-            <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3"
-                y="3">
-                <path fill="#865dff"
-                    d="M927.232 689.664a25.6 25.6 0 0 0-29.184 5.888l-64.512 64.256-244.736-245.76 246.016-245.504L898.304 332.8c5.888 5.888 11.776 5.888 23.296 5.888h5.888c11.776 0 17.664-11.776 17.664-23.296l64.512-269.056a52.736 52.736 0 0 0-5.888-29.184C998.4 5.376 986.368 5.376 974.592 11.264l-269.056 64c-11.776 0-17.664 11.776-23.296 17.408a43.776 43.776 0 0 0 5.888 29.184l64.256 64.512-246.016 245.504-222.208-222.464 58.624-46.848a37.888 37.888 0 0 0 11.776-29.184c0-11.776-11.776-17.664-17.408-23.296L73.728 22.272c-11.776-5.888-17.664 0-29.184 5.888a44.8 44.8 0 0 0-11.776 29.184L73.472 332.8c0 11.776 5.888 17.664 17.408 23.296H102.4a21.504 21.504 0 0 0 17.664-5.888l76.8-64.256 227.84 228.352-222.976 221.696-46.592-58.624A44.8 44.8 0 0 0 125.696 665.6c-11.776 0-17.664 11.776-23.296 17.408L14.336 947.2c-5.888 11.776 0 17.664 5.888 29.184a30.464 30.464 0 0 0 23.296 11.776h5.888L324.352 947.2c11.776 0 17.664-5.888 23.296-17.408a25.6 25.6 0 0 0-5.888-29.184l-64.256-76.8 228.352-227.84 245.504 246.016-64.512 64.256a25.6 25.6 0 0 0-5.888 29.184c5.888 11.776 11.776 17.664 23.296 17.664L972.8 1017.344h5.888c5.888 0 17.664-5.888 23.296-5.888a25.6 25.6 0 0 0 5.888-29.184L944.64 713.216c0-11.776-11.776-17.664-17.408-23.296z">
-                </path>
-            </svg>
-        </g> -->
+        <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
+        </rect>
+        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3px"
+            y="3px">
+            <path
+                d="M0 0h256v256H0V0z m384 0h256v256h-256V0zM768 0H1024v256h-256V0zM0 768h256V1024H0v-256z m384 0h256V1024h-256v-256z m384 0H1024V1024h-256v-256zM0 384h256v256H0v-256z m384 0h256v256h-256v-256z m384 0H1024v256h-256v-256z"
+                fill="#865dff"></path>
+        </svg>
+    </g>
+    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e) => point_mousedown(e)">
+        <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
+        </rect>
+        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3" y="3">
+            <path fill="#865dff"
+                d="M927.232 689.664a25.6 25.6 0 0 0-29.184 5.888l-64.512 64.256-244.736-245.76 246.016-245.504L898.304 332.8c5.888 5.888 11.776 5.888 23.296 5.888h5.888c11.776 0 17.664-11.776 17.664-23.296l64.512-269.056a52.736 52.736 0 0 0-5.888-29.184C998.4 5.376 986.368 5.376 974.592 11.264l-269.056 64c-11.776 0-17.664 11.776-23.296 17.408a43.776 43.776 0 0 0 5.888 29.184l64.256 64.512-246.016 245.504-222.208-222.464 58.624-46.848a37.888 37.888 0 0 0 11.776-29.184c0-11.776-11.776-17.664-17.408-23.296L73.728 22.272c-11.776-5.888-17.664 0-29.184 5.888a44.8 44.8 0 0 0-11.776 29.184L73.472 332.8c0 11.776 5.888 17.664 17.408 23.296H102.4a21.504 21.504 0 0 0 17.664-5.888l76.8-64.256 227.84 228.352-222.976 221.696-46.592-58.624A44.8 44.8 0 0 0 125.696 665.6c-11.776 0-17.664 11.776-23.296 17.408L14.336 947.2c-5.888 11.776 0 17.664 5.888 29.184a30.464 30.464 0 0 0 23.296 11.776h5.888L324.352 947.2c11.776 0 17.664-5.888 23.296-17.408a25.6 25.6 0 0 0-5.888-29.184l-64.256-76.8 228.352-227.84 245.504 246.016-64.512 64.256a25.6 25.6 0 0 0-5.888 29.184c5.888 11.776 11.776 17.664 23.296 17.664L972.8 1017.344h5.888c5.888 0 17.664-5.888 23.296-5.888a25.6 25.6 0 0 0 5.888-29.184L944.64 713.216c0-11.776-11.776-17.664-17.408-23.296z">
+            </path>
+        </svg>
     </g>
 </template>
 <style lang='scss' scoped>

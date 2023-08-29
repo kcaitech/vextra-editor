@@ -66,8 +66,7 @@ function update_triangle() {
         const t2r = shape.matrix2Root(), m = props.context.workspace.matrix;
         t2r.multiAtLeft(m);
         const rb = t2r.computeCoord2(f.x + f.width, f.y + f.height);
-        triangle_position.x = rb.x - 24, triangle_position.y = rb.y - 24;
-        transform = `translate(${triangle_position.x + 24}px, ${triangle_position.y + 24}px) `;
+        transform = `translate(${rb.x}px, ${rb.y}px) `;
         if (shape.isFlippedHorizontal) transform += 'rotateY(180deg) ';
         if (shape.isFlippedVertical) transform += 'rotateX(180deg) ';
         if (shape.rotation) transform += `rotate(${shape.rotation}deg) `;
