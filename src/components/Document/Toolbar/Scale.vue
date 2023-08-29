@@ -9,11 +9,18 @@ interface Props {
 const props = defineProps<Props>();
 const cus = ref<boolean>(false);
 const input = ref<HTMLInputElement>();
+const inputSpan = ref<HTMLSpanElement>()
+const inputSpan2 = ref<HTMLSpanElement>()
+const inputWidth = ref(32)
 let scale = ref<string>('100');
 function input_cus() {
     cus.value = !cus.value;
     nextTick(() => {
         if (input.value) {
+            if (inputSpan2.value) {
+                inputSpan2.value.innerHTML = scale.value
+                inputWidth.value = inputSpan2.value.offsetWidth
+            }
             input.value.value = scale.value;
             input.value.select();
             input.value.addEventListener('blur', blur);
@@ -39,12 +46,24 @@ function blur() {
 }
 function init() {
     scale.value = (props.context.workspace.matrix.toArray()[0] * 100).toFixed(0);
+    if (inputSpan.value) {
+        inputWidth.value = inputSpan.value.offsetWidth
+    }
 }
 function watcher(t: any) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         scale.value = (props.context.workspace.matrix.toArray()[0] * 100).toFixed(0);
     }
 }
+
+const onInputName = (e: Event) => {
+    const value = (e.target as HTMLInputElement).value
+    if (inputSpan2.value) {
+        inputSpan2.value.innerHTML = value
+        inputWidth.value = inputSpan2.value.offsetWidth
+    }
+}
+
 onMounted(() => {
     props.context.workspace.watch(watcher);
     init();
@@ -55,8 +74,11 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="scale-display-warp">
-        <span v-if="!cus" @click="input_cus">{{ scale }}%</span>
-        <input v-if="cus" type="text" ref="input">
+        <span v-if="!cus" @click="input_cus" ref="inputSpan" :style="{ width: inputWidth + 'px', minWidth: '32px' }">{{
+            scale }}%</span>
+        <input v-if="cus" type="text" ref="input" @input="onInputName"
+            :style="{ width: inputWidth + 'px', minWidth: '32px' }">
+        <span v-if="cus" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan2"></span>
     </div>
 </template>
 <style lang='scss' scoped>
@@ -74,10 +96,9 @@ onUnmounted(() => {
         background-color: transparent;
         outline: none;
         border: none;
-        width: 100%;
         color: var(--theme-color-anti);
         font-size: var(--font-default-fontsize);
-        width: 48px;
+        padding: 0;
     }
 }
 </style>

@@ -122,7 +122,7 @@ function closeLayerSubMenu() {
   <div v-if="props.items.includes('delete_column')" class="item layer-select"
     @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'delete')" @mouseleave="isDeleteColumn = false">
     <span>{{ t('table.del_column') }}</span>
-    <div class="triangle"></div>
+    <div class="layer-icon"><svg-icon icon-class="down"></svg-icon></div>
     <ContextMenu v-if="isDeleteColumn" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site"
       :context="props.context">
       <div class="item" @click="spliceRow">
@@ -139,10 +139,10 @@ function closeLayerSubMenu() {
       </div>
     </ContextMenu>
   </div>
-  <div class="item" v-if="props.items.includes('split_cell')"
+  <div class="item layer-select" v-if="props.items.includes('split_cell')"
     @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'split')" @mouseleave="isSplitCell = false">
     <span>{{ t('table.split_cell') }}</span>
-    <div class="triangle"></div>
+    <div class="layer-icon"><svg-icon icon-class="down"></svg-icon></div>
     <ContextMenu v-if="isSplitCell" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site"
       :context="props.context">
       <div class="item" @click="splitCell('row')">
@@ -210,7 +210,19 @@ function closeLayerSubMenu() {
     border-left: 6px solid var(--theme-color-anti);
     transform: rotate(90deg);
   }
+
 }
+.layer-icon {
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+    transform: rotate(270deg);
+  }
+  .layer-select {
+    display: flex;
+    justify-content: space-between;
+  }
 
 .invalid {
   position: relative;

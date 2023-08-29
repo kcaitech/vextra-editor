@@ -70,8 +70,15 @@ function borderStyleSelect(selected: SelectItem) {
     if (shape.type === ShapeType.Table) {
       const table = props.context.tableSelection;
       const e = props.context.editor4Table(shape);
-      if (table.tableRowStart > -1 || table.tableColStart > -1) {
-        e.setBorderStyle(props.index, bs, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      const is_edting = table.editingCell;
+      if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+        let range
+        if (is_edting) {
+          range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+        } else {
+          range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+        }
+        e.setBorderStyle(props.index, bs, range)
       } else {
         editor.value.setBorderStyle(props.index, bs);
       }
@@ -118,8 +125,15 @@ function setThickness(e: Event) {
     if (shape.type === ShapeType.Table) {
       const table = props.context.tableSelection;
       const e = props.context.editor4Table(shape);
-      if (table.tableRowStart > -1 || table.tableColStart > -1) {
-        e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      const is_edting = table.editingCell;
+      if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+        let range
+        if (is_edting) {
+          range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+        } else {
+          range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+        }
+        e.setBorderThickness(props.index, thickness, range)
       } else {
         editor.value.setBorderThickness(props.index, thickness);
       }
@@ -146,8 +160,15 @@ const augment = (e: Event) => {
     if (shape.type === ShapeType.Table) {
       const table = props.context.tableSelection;
       const e = props.context.editor4Table(shape);
-      if (table.tableRowStart > -1 || table.tableColStart > -1) {
-        e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      const is_edting = table.editingCell;
+      if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+        let range
+        if (is_edting) {
+          range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+        } else {
+          range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+        }
+        e.setBorderThickness(props.index, thickness, range)
       } else {
         editor.value.setBorderThickness(props.index, thickness);
       }
@@ -165,8 +186,15 @@ const decrease = (e: Event) => {
     if (shape.type === ShapeType.Table) {
       const table = props.context.tableSelection;
       const e = props.context.editor4Table(shape);
-      if (table.tableRowStart > -1 || table.tableColStart > -1) {
-        e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+      const is_edting = table.editingCell;
+      if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+        let range
+        if (is_edting) {
+          range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+        } else {
+          range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+        }
+        e.setBorderThickness(props.index, thickness, range)
       } else {
         editor.value.setBorderThickness(props.index, thickness);
       }
@@ -206,8 +234,15 @@ const onMouseMove = (e: MouseEvent) => {
           if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
-            if (table.tableRowStart > -1 || table.tableColStart > -1) {
-              e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            const is_edting = table.editingCell;
+            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+              let range
+              if (is_edting) {
+                range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+              } else {
+                range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+              }
+              e.setBorderThickness(props.index, thickness, range)
             } else {
               editor.value.setBorderThickness(props.index, thickness);
             }
@@ -227,8 +262,15 @@ const onMouseMove = (e: MouseEvent) => {
           if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
-            if (table.tableRowStart > -1 || table.tableColStart > -1) {
-              e.setBorderThickness(props.index, thickness, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd })
+            const is_edting = table.editingCell;
+            if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+              let range
+              if (is_edting) {
+                range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+              } else {
+                range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+              }
+              e.setBorderThickness(props.index, thickness, range)
             } else {
               editor.value.setBorderThickness(props.index, thickness);
             }
