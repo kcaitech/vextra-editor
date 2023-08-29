@@ -41,10 +41,14 @@ let index_col: number = 0, index_row: number = 0;
 let m_index_col: number = 0, m_index_row: number = 0;
 let selecting: boolean = false;
 let transform = '';
+let offset: number = 0.5;
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
         const m = new Matrix(props.matrix), lt = m.computeCoord2(0, 0), mw = new Matrix(props.context.workspace.matrix);
+        offset = mw.m00 * 0.5;
+        console.log('offset', offset);
+
         const table: TableShape = props.shape as TableShape;
         layout = table.getLayout();
         frame_params = { x: lt.x, y: lt.y, width: layout.width * mw.m00, height: layout.height * mw.m00 };
@@ -162,7 +166,6 @@ function select_cols(index1: number, index2: number) {
     const m = props.shape.matrix2Root(), wm = props.context.workspace.matrix;
     m.multiAtLeft(wm);
     const xy = m.computeCoord2(((xs[index2].x + (xs[index1 - 1]?.x || 0)) / 2) / wm.m00, 0);
-
     emits("get-menu", xy.x, xy.y, CellMenu.selectCol, true);
 }
 function select_rows(index1: number, index2: number) {
@@ -204,18 +207,18 @@ onUnmounted(() => {
 
 <template>
     <g :style="{ transform }" :class="{ hidden }">
-        <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-3.5" r="3" stroke="none" class="dot"
+        <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" :cy="-3.5 - offset" r="3" stroke="none" class="dot"
             @mouseenter="() => x_dot_mouseennter(d.x, ids)" />
-        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-12" :width="b.length" height="12" rx="6" ry="6"
+        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" :y="-12 - offset" :width="b.length" height="12" rx="6" ry="6"
             class="bar-back" @mousedown.stop="() => select_col(ids)" />
-        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-6" :width="b.length" height="6" rx="3" ry="3" class="bar"
-            @mousedown.stop="() => select_col(ids)" />
-        <circle v-for="(d, ids) in ys" :key="ids" cx="-3.5" :cy="d.y" r="3" stroke="none" class="dot"
+        <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" :y="-6 - offset" :width="b.length" height="6" rx="3" ry="3"
+            class="bar" @mousedown.stop="() => select_col(ids)" />
+        <circle v-for="(d, ids) in ys" :key="ids" :cx="-3.5 - offset" :cy="d.y" r="3" stroke="none" class="dot"
             @mouseenter="() => y_dot_mouseennter(d.y, ids)" />
-        <rect v-for="(b, ids) in ybars" :key="ids" x="-12" :y="b.s" :height="b.length" width="12" rx="6" ry="6"
+        <rect v-for="(b, ids) in ybars" :key="ids" :x="-12 - offset" :y="b.s" :height="b.length" width="12" rx="6" ry="6"
             class="bar-back" @mousedown.stop="() => select_row(ids)" />
-        <rect v-for="(b, ids) in ybars" :key="ids" x="-6" :y="b.s" :height="b.length" width="6" rx="3" ry="3" class="bar"
-            @mousedown.stop="() => select_row(ids)" />
+        <rect v-for="(b, ids) in ybars" :key="ids" :x="-6 - offset" :y="b.s" :height="b.length" width="6" rx="3" ry="3"
+            class="bar" @mousedown.stop="() => select_row(ids)" />
         <g v-if="show_add_x">
             <line :x1="add_x" y1="0" :x2="add_x" :y2="frame_params.height" class="line" />
             <svg t="1692244646475" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="9259"
