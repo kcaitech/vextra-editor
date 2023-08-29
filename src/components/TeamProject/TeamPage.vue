@@ -47,9 +47,6 @@
             <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
         </div>
     </transition>
-    <div class="test">
-
-    </div>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch } from 'vue'
@@ -108,14 +105,6 @@ const isIdInList = (id: any, list: Array<data>) => {
     return list.find(item => item.team.id === id) !== undefined;
 }
 
-const Getjoinlist = async () => {
-    try {
-        const { code } = await user_api.Getjoinlist({team_id:'',start_time:''})
-    } catch (error) {
-
-    }
-}
-
 watch(teamData, (newvalue) => {
     const a = isIdInList(route.params.id, newvalue)
     if (a) {
@@ -133,16 +122,6 @@ onMounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-.test {
-    position: absolute;
-    height: 320px;
-    width: 480px;
-    left: 50%;
-    top: 400px;
-    border-radius: 4px;
-    background-color: #ffffff;
-    box-shadow: 0px 0px 3px #5b5b5b;
-}
 
 .nested-enter-active,
 .nested-leave-active {

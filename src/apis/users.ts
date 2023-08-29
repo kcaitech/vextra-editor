@@ -247,8 +247,18 @@ export function Getjoinlist(params = {}, ops = {}) {
     })
 }
 
+//离开团队
+export function Leaveteam(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/exit',
+        method: 'post',
+        data: data,
+        ...ops
+    })
+}
+
 //解散团队
-export function Disband(params = {}, ops = {}) {
+export function Disbandteam(params = {}, ops = {}) {
     return httpRequest({
         url: '/documents/team',
         method: 'delete',

@@ -3,7 +3,7 @@
         <Header :switch="false" />
         <div class="content">
             <div class="img" style="width: 400px;height: 400px;background-color: silver;border-radius: 4px;"></div>
-            <div v-if="teaminfo?.invited_switch" class="join">
+            <div v-if="switchstate" class="join">
                 <p>
                     申请加入团队：<strong>{{ teaminfo?.name }}</strong>
                     <span>（权限：<strong>{{ checktype(teaminfo?.invited_perm_type) }}</strong>）</span>
@@ -37,11 +37,14 @@ interface teaminfotype {
 const route = useRoute()
 const teaminfo = ref<teaminfotype>()
 const showjoinbnt = ref(true)
+const switchstate = ref<boolean>()
+
 const Getteaminfo = async (teamid: string) => {
     try {
         const { code, data } = await user_api.Getteaminfo({ team_id: teamid })
         if (code === 0) {
             teaminfo.value = data
+            switchstate.value = teaminfo.value?.invited_switch
         } else {
             ElMessage.error('获取失败')
         }
@@ -70,7 +73,7 @@ const joinTeam = async (id: any, notes?: any) => {
             tohome()
         } else if (code === 400) {
             if (data.code === 1) ElMessage.error('团队不存在')
-            if (data.code === 2) return
+            if (data.code === 2) switchstate.value = false
             if (data.code === 3) router.push({ path: `/apphome/teams/${id}` })
             if (data.code === 4) showjoinbnt.value = false, tohome()
         } else {

@@ -6,7 +6,7 @@
                 <div class="text">{{ teamName }}</div>
             </div>
             <div class="right">
-                <button type="button" @click.stop="midname">修改名称</button>
+                <button type="button" :disabled="isDisabled.state" @click.stop="midname">修改名称</button>
             </div>
         </div>
         <div class="description-container">
@@ -14,7 +14,9 @@
                 <div class="title">团队描述</div>
                 <div class="text">{{ teamDescription }}</div>
             </div>
-            <div class="right"> <button type="button" @click.stop="middescription">修改描述</button></div>
+            <div class="right">
+                <button type="button" :disabled="isDisabled.state" @click.stop="middescription">修改描述</button>
+            </div>
 
         </div>
         <div class="avatar-container">
@@ -23,12 +25,12 @@
                 <div class="text">{{ t('Createteam.avatar_restriction') }}</div>
             </div>
             <div class="right">
-                <label class="modify" for="image_uploads">修改头像</label>
+                <label class="modify" :style="{ backgroundColor: isDisabled.color }" for="image_uploads">修改头像</label>
                 <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
-                    @change="midAvatarRequest($event)" />
+                    @change="midAvatarRequest($event)" :disabled="isDisabled.state" />
             </div>
         </div>
-        <div class="dissolve-container">
+        <div v-if="teamSelfPermType === 3" class="dissolve-container">
             <div class="left">
                 <div class="title">解散团队</div>
                 <div class="text">解散团队，删除团队文件，不可恢复</div>
@@ -36,7 +38,15 @@
             <div class="right">
                 <button class="disband" type="button" @click.stop="dissolveteam">解散团队</button>
             </div>
-
+        </div>
+        <div v-else class="leave-container">
+            <div class="left">
+                <div class="title">离开团队</div>
+                <div class="text">离开团队后，将无法再查看团队项目及资源</div>
+            </div>
+            <div class="right">
+                <button class="disband" type="button" @click.stop="leaveteam">离开团队</button>
+            </div>
         </div>
     </div>
     <div v-if="showoverlay" class="overlay">
@@ -51,36 +61,42 @@
                 <div class="textarea-container">
                     <textarea v-if="textareashow" class="text-textarea" name="" id="" cols="30" rows="10"
                         :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue" />
-                    <div v-else class="disbandtips">解散团队后，将彻底删除团队中包含的全部项目资料，且不可恢复。</div>
+                    <div v-else class="disbandtips">
+                        <p v-if="teamSelfPermType === 3">解散团队后，将彻底删除团队中包含的全部项目资料，且不可恢复。</p>
+                        <p v-else>离开团队后，将无法再查看团队项目及资源。</p>
+                    </div>
                 </div>
             </div>
             <div class="addproject">
-                <button class="bnt_confirm" type="submit" :disabled=isDisabled @click.stop="confirm">确定</button>
+                <button class="bnt_confirm" type="submit" @click.stop="confirm">
+                    {{ teamSelfPermType === 3 ? '确定' : '离开' }}
+                </button>
                 <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">取消</button>
             </div>
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, nextTick, ref } from 'vue';
+import { Ref, computed, inject, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { router } from '@/router';
 import { ElMessage } from 'element-plus';
+
 const { t } = useI18n();
 const titlevalue = ref('')
 const placeholdervalue = ref('')
 const formData = new FormData()
 const showoverlay = ref(false)
 const textareaValue = ref('')
-const isDisabled = ref(false)
 const textareashow = ref(true)
 const maxvalue = ref(0)
-const { teamID, teamName, teamAvatar, teamDescription, teamData, state } = inject('shareData') as {
+
+const { teamID, teamName, teamDescription, teamSelfPermType, teamData, state } = inject('shareData') as {
     teamID: Ref<string>;
     teamName: Ref<string>;
-    teamAvatar: Ref<string>;
     teamDescription: Ref<string>;
+    teamSelfPermType: Ref<number>;
     teamData: Ref<any[]>;
     state: (b: boolean) => void;
 }
@@ -100,6 +116,10 @@ interface teamDataType {
         description: string
     }
 }
+
+const isDisabled: any = computed(() => {
+    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? { state: true, color: 'rgba(98, 67, 237, 0.3)' } : false
+})
 
 //获取元素，设置焦点并全选内容
 const el = () => {
@@ -193,7 +213,7 @@ const midDescriptionRequest = async () => {
 //解散团队
 const disband = async (id: string) => {
     try {
-        const { code, message } = await user_api.Disband({ team_id: id })
+        const { code, message } = await user_api.Disbandteam({ team_id: id })
         if (code === 0) {
             state(true)
             router.push({ name: 'recently' })
@@ -204,6 +224,22 @@ const disband = async (id: string) => {
 
     }
 }
+
+//离开团队
+const leave = async (id: string) => {
+    try {
+        const { code, message } = await user_api.Leaveteam({ team_id: id })
+        if (code === 0) {
+            state(true)
+            router.push({ name: 'recently' })
+        } else {
+            ElMessage({ type: 'error', message: message })
+        }
+    } catch (error) {
+
+    }
+}
+
 
 const midname = () => {
     showoverlay.value = true
@@ -229,6 +265,11 @@ const dissolveteam = () => {
     titlevalue.value = '解散团队'
 }
 
+const leaveteam = () => {
+    showoverlay.value = true
+    textareashow.value = false
+    titlevalue.value = '离开团队'
+}
 
 const confirm = () => {
     switch (titlevalue.value) {
@@ -238,6 +279,8 @@ const confirm = () => {
             return midDescriptionRequest()
         case '解散团队':
             return disband(teamID.value)
+        case '离开团队':
+            return leave(teamID.value)
         default:
             return
     }
@@ -387,7 +430,8 @@ const confirm = () => {
     .name-container,
     .description-container,
     .avatar-container,
-    .dissolve-container {
+    .dissolve-container,
+    .leave-container {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -429,6 +473,10 @@ const confirm = () => {
 
             &:active {
                 background-color: #9775fa;
+            }
+
+            &:disabled {
+                background-color: rgba(98, 67, 237, 0.3);
             }
         }
     }

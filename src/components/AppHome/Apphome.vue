@@ -35,16 +35,17 @@ const teamID = ref('')
 const teamName = ref('')
 const teamAvatar = ref('')
 const teamDescription = ref('')
+const teamSelfPermType = ref<number>()
 const teamData = ref<any[]>([]) //储存团队列表
 const updatestate = ref(false) //控制aside组件中的团队列表请求
 const updateprojectlist = ref(false)  //控制projectlist组件中的项目列表请求
 
-
-const updateShareData = (id: string, name: string, avatar: string, description: string) => {
+const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {
   teamID.value = id
   teamName.value = name
   teamAvatar.value = avatar
   teamDescription.value = description
+  teamSelfPermType.value = selfpermtype
 }
 
 //用于改变updatestate的值
@@ -67,6 +68,7 @@ provide('shareData', {
   teamName,
   teamAvatar,
   teamDescription,
+  teamSelfPermType,
   updatestate,
   updateShareData,
   state,
