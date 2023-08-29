@@ -162,10 +162,12 @@ export function get_speed(e1: MouseEvent, e2: MouseEvent) {
     return Math.hypot(Math.abs(e2.clientX - e1.clientX), Math.abs(e2.clientY - e1.clientY));
 }
 export function get_range(index1: { row: number, col: number }, index2: { row: number, col: number }) {
+    const t1 = index1.row > index2.row;
+    const t2 = index1.col > index2.col;
     return {
-        rows: Math.min(index1.row, index2.row),
-        rowe: Math.max(index1.row, index2.row),
-        cols: Math.min(index1.col, index2.col),
-        cole: Math.max(index1.col, index2.col),
+        rows: t1 ? index2.row : index1.row,
+        rowe: t1 ? index1.row : index2.row,
+        cols: t2 ? index2.col : index1.col,
+        cole: t2 ? index1.col : index2.col,
     }
 }

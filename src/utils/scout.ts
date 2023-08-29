@@ -1,7 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
-import { bool } from "aws-sdk/clients/signer";
 import { v4 as uuid } from "uuid";
 interface Scout {
     path: SVGPathElement

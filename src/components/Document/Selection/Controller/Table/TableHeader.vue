@@ -64,21 +64,21 @@ function update_position() {
             }
             growy += ty;
         }
-        // transform = get_transform(props.shape, frame_params);
+        transform = get_transform(props.shape, frame_params);
     } else {
         hidden.value = true;
     }
 }
-// function get_transform(shape: Shape, fps: FrameParams) {
-//     const { x, y, width, height } = fps;
-//     const cx = x + width / 2, cy = y + height / 2;
-//     let transform = `translate(${cx}px, ${cy}px) `;
-//     if (shape.isFlippedHorizontal) transform += 'rotateY(180deg) ';
-//     if (shape.isFlippedVertical) transform += 'rotateX(180deg) ';
-//     if (shape.rotation) transform += `rotate(${shape.rotation}deg) `;
-//     transform += `translate(${x - cx}px, ${y - cy}px)`;
-//     return transform;
-// }
+function get_transform(shape: Shape, fps: FrameParams) {
+    const { x, y, width, height } = fps;
+    const cx = x + width / 2, cy = y + height / 2;
+    let transform = `translate(${cx}px, ${cy}px) `;
+    if (shape.isFlippedHorizontal) transform += 'rotateY(180deg) ';
+    if (shape.isFlippedVertical) transform += 'rotateX(180deg) ';
+    if (shape.rotation) transform += `rotate(${shape.rotation}deg) `;
+    transform += `translate(${x - cx}px, ${y - cy}px)`;
+    return transform;
+}
 function x_dot_mouseennter(x: number, ids: number) {
     if (selecting) return;
     show_add_x.value = true, add_x = x, ids_x = ids;
@@ -210,7 +210,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <g :transform="`translate(${frame_params.x}, ${frame_params.y})`" :class="{ hidden }">
+    <g :style="{ transform }" :class="{ hidden }">
         <circle v-for="(d, ids) in xs" :key="ids" :cx="d.x" cy="-3.5" r="3" stroke="none" class="dot"
             @mouseenter="() => x_dot_mouseennter(d.x, ids)" />
         <rect v-for="(b, ids) in xbars" :key="ids" :x="b.s" y="-12" :width="b.length" height="12" rx="6" ry="6"
