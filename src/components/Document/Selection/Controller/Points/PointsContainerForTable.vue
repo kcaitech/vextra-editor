@@ -78,7 +78,7 @@ function point_mousedown(event: MouseEvent) {
     move = point_mousemove, up = point_mouseup;
 }
 function point_mousemove(event: MouseEvent) {
-    const workspace = props.context.workspace, root = workspace.root;;
+    const workspace = props.context.workspace, root = workspace.root;
     const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
     const { x: sx, y: sy } = startPosition, { x: mx, y: my } = mouseOnClient;
     if (isDragging && asyncBaseAction) {
@@ -321,7 +321,7 @@ function window_blur() {
         isDragging = false;
     }
     if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
-    if (asyncTransfer) { asyncTransfer.close(); asyncTransfer = undefined };
+    if (asyncTransfer) { asyncTransfer.close(); asyncTransfer = undefined }
     workspace.scaling(false);
     workspace.rotating(false);
     workspace.setCtrl('page');
