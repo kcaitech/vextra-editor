@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import * as share_api from '@/apis/share'
-import { useI18n } from 'vue-i18n'
+import { ref, computed } from 'vue';
+import { ElMessage } from 'element-plus';
+import * as share_api from '@/apis/share';
+import * as team_api from '@/apis/team';
+import { useI18n } from 'vue-i18n';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
@@ -13,7 +14,8 @@ const emit = defineEmits<{
   (e: 'reviewed'): void
 }>()
 const props = defineProps<{
-  applyList: any
+  applyList: any,
+  teamApplyList: any
 }>()
 const activeName = ref('fill')
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
@@ -21,6 +23,14 @@ enum Audit {
   unPass,
   Pass
 }
+const hoveredFillIndex = ref(-1);
+const tooltipTillVisible = ref(true);
+const fillnum = computed(() => {
+  return props.applyList.filter((item: any) => item.apply.status === 0).length > 0
+})
+const teamnum = computed(() => {
+  return props.teamApplyList.filter((item: any) => item.request.status === 0).length > 0
+})
 
 const formatDate = computed(() => {
   return function (value: string): string {
@@ -62,6 +72,18 @@ const handleInform = () => {
   console.log(11);
 }
 
+const showFillTooltip = (i: number) => {
+  hoveredFillIndex.value = i;
+  tooltipTillVisible.value = true;
+}
+const hideFillTooltip = () => {
+  hoveredFillIndex.value = -1;
+  tooltipTillVisible.value = false;
+}
+const scrollFill = () => {
+  tooltipTillVisible.value = false;
+}
+
 </script>
 
 <template>
@@ -79,12 +101,12 @@ const handleInform = () => {
       <el-tab-pane name="fill">
         <template #label>
           <span class="custom-tabs-label">
-            <div></div>
+            <div v-if="fillnum"></div>
             <span>{{ t('apply.fill') }}</span>
           </span>
         </template>
         <div class="contain">
-          <el-scrollbar height="400px" style="padding-right: 10px;">
+          <el-scrollbar height="400px" style="padding-right: 10px;" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
               <div class="avatar"><img :src="item.user.avatar" alt=""></div>
               <div class="item-container">
@@ -92,14 +114,14 @@ const handleInform = () => {
                   <span class="name">{{ item.user.nickname }}</span>
                   <span class="date">{{ formatDate(item.apply.created_at) }}</span>
                 </div>
-                <el-tooltip class="box-item" effect="light" placement="bottom-end">
+                <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end" :visible="hoveredFillIndex === i && tooltipTillVisible">
                   <template #content>
                     <div class="custom-tooltip">
                       {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
                         permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}
                     </div>
                   </template>
-                  <div class="item-text">
+                  <div class="item-text" @mouseenter="showFillTooltip(i)" @mouseleave="hideFillTooltip">
                     {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
                       permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
                 </el-tooltip>
@@ -122,43 +144,51 @@ const handleInform = () => {
       <el-tab-pane name="team">
         <template #label>
           <span class="custom-tabs-label">
-            <div></div>
+            <div v-if="teamnum"></div>
             <span>{{ t('apply.team') }}</span>
           </span>
         </template>
         <div class="contain">
-          <el-scrollbar height="400px" style="padding-right: 10px;">
-            <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
+          <el-scrollbar height="400px" style="padding-right: 10px;" @scroll="scrollFill">
+            <div class="inform-item" v-for="(item, i) in props.teamApplyList" :key="i">
               <div class="avatar"><img :src="item.user.avatar" alt=""></div>
               <div class="item-container">
                 <div class="item-title">
                   <span class="name">{{ item.user.nickname }}</span>
-                  <span class="date">{{ formatDate(item.apply.created_at) }}</span>
+                  <span class="date">{{ formatDate(item.request.created_at) }}</span>
                 </div>
-                <el-tooltip class="box-item" effect="light" placement="bottom-end">
+                <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end" :visible="hoveredFillIndex === i && tooltipTillVisible">
                   <template #content>
-                    <div class="custom-tooltip">
-                      {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
-                        permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}
+                    <div class="custom-tooltip" v-if="item.team">
+                      {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
+                        permission[item.request.perm_type] }}
+                    </div>
+                    <div class="custom-tooltip" v-if="item.project">
+                      {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
+                        permission[item.request.perm_type] }}
                     </div>
                   </template>
-                  <div class="item-text">
-                    {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
-                      permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
+                  <div class="item-text" v-if="item.team" @mouseenter="showFillTooltip(i)" @mouseleave="hideFillTooltip">
+                    {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
+                      permission[item.request.perm_type] }}</div>
+                  <div class="item-text" v-if="item.project" @mouseenter="showFillTooltip(i)" @mouseleave="hideFillTooltip">
+                    {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
+                      permission[item.request.perm_type] }}</div>
                 </el-tooltip>
               </div>
-              <div class="botton" v-if="item.apply.status === 0">
-                <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, i)">{{ t('apply.agree')
+              <div class="botton" v-if="item.request.status === 0">
+                <el-button color="#0d99ff" size="small" @click="consent(item.request.id, i)">{{ t('apply.agree')
                 }}</el-button>
-                <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.apply.id, i)">{{
+                <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.request.id, i)">{{
                   t('apply.refuse') }}</el-button>
               </div>
               <div class="botton" v-else>
-                <p v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</p>
-                <p v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
+                <p v-if="item.request.status === 1">{{ t('apply.have_agreed') }}</p>
+                <p v-else-if="item.request.status === 2">{{ t('apply.rejected') }}</p>
               </div>
             </div>
-            <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
+            <div class="text" v-if="props.teamApplyList.length === 0"><span>{{ t('apply.no_message_received') }}</span>
+            </div>
           </el-scrollbar>
         </div>
       </el-tab-pane>
@@ -194,6 +224,7 @@ const handleInform = () => {
 :deep(.el-tabs__item) {
   padding: 0 11px;
 }
+
 :deep(.el-tabs__item.is-top:last-child) {
   padding-right: 8px;
 }

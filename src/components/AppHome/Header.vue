@@ -2,7 +2,8 @@
 import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
 import { Search, User, SwitchButton, Close, Bell, Loading } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
-import * as share_api from '@/apis/share'
+import * as share_api from '@/apis/share';
+import * as team_api from '@/apis/team';
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import avatar from '@/assets/pd-logo-svg.svg';
@@ -14,39 +15,176 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
     switch: true
 })
-const { t } = useI18n()
+const { t } = useI18n();
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
     userName: localStorage.getItem('nickname')
+});
+const { circleUrl, userName } = toRefs(state);
+const applynum = ref(0);
+const teamnum = ref(0);
+const projectnum = ref(0);
+const showInForm = ref(false);
+const applyList = ref<any[]>([]);
+const teamApplyList: any = ref([{
+    "user": {
+        "id": "1672502400000",
+        "nickname": "1",
+        "avatar": "https://storage.protodesign.cn/af78d7g98d.png"
+    },
+    "team": {
+        "id": "1672502400000",
+        "name": "团队A",
+        "invited_perm_type": 0,
+        "created_at": "2023-04-25 11:39:21.678000",
+        "avatar": "https://storage.protodesign.cn/files/teams/ab4c48c0-7472-46e1-9ddb-ff44ed4960ae/avatar/9e75b522-277b-4dcf-a209-4d43d4f27d24.png",
+        "description": "团队A介绍"
+    },
+    "request": {
+        "created_at": "2023-04-25 11:39:21.678000",
+        "id": "1672502400000",
+        "first_displayed_at": "2023-04-25 11:39:21.678000",
+        "status": 0,
+        "applicant_notes": "我是xxx，需要看一下这份文档，请通过",
+        "processor_notes": "予以通过",
+        "processed_at": "2023-04-25 11:39:21.678000",
+        "perm_type": 1,
+        "user_id": "1672502400000",
+        "team_id": "1672502400000"
+    }
+},
+{
+    "user": {
+        "id": "1672502400000",
+        "nickname": "1",
+        "avatar": "https://storage.protodesign.cn/af78d7g98d.png"
+    },
+    "team": {
+        "id": "1672502400000",
+        "name": "团队A",
+        "invited_perm_type": 0,
+        "created_at": "2023-04-25 11:39:21.678000",
+        "description": "团队A介绍",
+        "avatar": "https://storage.protodesign.cn/files/teams/ab4c48c0-7472-46e1-9ddb-ff44ed4960ae/avatar/9e75b522-277b-4dcf-a209-4d43d4f27d24.png"
+    },
+    "request": {
+        "created_at": "2023-04-25 11:39:21.678000",
+        "id": "1672502400000",
+        "first_displayed_at": "2023-04-25 11:39:21.678000",
+        "status": 0,
+        "applicant_notes": "我是xxx，需要看一下这份文档，请通过",
+        "processor_notes": "予以通过",
+        "processed_at": "2023-04-25 11:39:21.678000",
+        "perm_type": 1,
+        "user_id": "1672502400000",
+        "team_id": "1672502400000"
+    }
+}, {
+    "user": {
+        "id": "1672502400000",
+        "nickname": "1",
+        "avatar": "https://storage.protodesign.cn/af78d7g98d.png"
+    },
+    "project": {
+        "id": "1672502400000",
+        "name": "项目1",
+        "public_switch": false,
+        "public_perm_type": 1,
+        "team_id": "1672502400000",
+        "description": "项目1介绍"
+    },
+    "request": {
+        "created_at": "2023-04-25 11:39:21.678000",
+        "id": "1672502400000",
+        "first_displayed_at": "2023-04-25 11:39:21.678000",
+        "status": 0,
+        "applicant_notes": "我是xxx，需要看一下这份文档，请通过",
+        "processor_notes": "予以通过",
+        "processed_at": "2023-04-25 11:39:21.678000",
+        "perm_type": 1,
+        "user_id": "1672502400000",
+        "team_id": "1672502400000"
+    }
+},
+{
+    "user": {
+        "id": "1672502400000",
+        "nickname": "1",
+        "avatar": "https://storage.protodesign.cn/af78d7g98d.png"
+    },
+    "project": {
+        "id": "1672502400000",
+        "name": "项目1",
+        "public_switch": false,
+        "public_perm_type": 1,
+        "team_id": "1672502400000",
+        "description": "项目1介绍"
+    },
+    "request": {
+        "created_at": "2023-04-25 11:39:21.678000",
+        "id": "1672502400000",
+        "first_displayed_at": "2023-04-25 11:39:21.678000",
+        "status": 0,
+        "applicant_notes": "我是xxx，需要看一下这份文档，请通过",
+        "processor_notes": "予以通过",
+        "processed_at": "2023-04-25 11:39:21.678000",
+        "perm_type": 1,
+        "user_id": "1672502400000",
+        "team_id": "1672502400000"
+    }
+}]);
+// const teamApplyList = ref<any>([]);
+const projectApplyList = ref<any>([]);
+const search = ref('');
+const SearchList = ref<any[]>([]);
+const showSearchHistory = ref(false);
+const historyList = ref<any[]>([]);
+const menuAbout = ref(false);
+const menuUser = ref(false);
+const isLoading = ref(false);
+const inputRef = ref<HTMLElement>();
+const total = computed(() => {
+    return applynum.value + teamnum.value + projectnum.value
 })
-const { circleUrl, userName } = toRefs(state)
-const num = ref(0)
-const showInForm = ref(false)
-const applyList = ref<any[]>([])
-const search = ref('')
-const SearchList = ref<any[]>([])
-const showSearchHistory = ref(false)
-const historyList = ref<any[]>([])
-const menuAbout = ref(false)
-const menuUser = ref(false)
-const isLoading = ref(false)
-const inputRef = ref<HTMLElement>()
 
-
-const errorHandler = () => true
+const errorHandler = () => true;
 const closeInForm = () => {
-    showInForm.value = false
+    showInForm.value = false;
 }
 
 const getApplyList = async () => {
     try {
-        const { data } = await share_api.getApplyListAPI()
+        const { data } = await share_api.getApplyListAPI();
         if (data) {
-            applyList.value = data
-            num.value = applyList.value.filter(item => item.apply.status === 0).length
+            applyList.value = data;
+            applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
         }
     } catch (err) {
-        console.log(err)
+        console.log(err);
+    }
+}
+
+const getProjectApplyList = async () => {
+    try {
+        const { data } = await team_api.getTeamProjectApplyAPI();
+        if (data) {
+            // projectApplyList.value = data;
+            projectnum.value = projectApplyList.value.filter((item: any) => item.request.status === 0).length;
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const getTeamApply = async () => {
+    try {
+        const { data } = await team_api.getTeamApplyAPI();
+        if (data) {
+            // teamApplyList.value = [...projectApplyList, ...data];
+            teamnum.value = teamApplyList.value.filter((item: any) => item.request.status === 0).length;
+        }
+    } catch (err) {
+        console.log(err);
     }
 }
 
@@ -95,7 +233,9 @@ function loginout() {
 }
 
 const reviewed = () => {
-    getApplyList()
+    getApplyList();
+    getProjectApplyList();
+    getTeamApply();
 }
 
 const toDocument = (row: any, column: any) => {
@@ -137,10 +277,14 @@ const itemClick = (e: MouseEvent) => {
 }
 
 let timer: any = null
-getApplyList()
+getApplyList();
+getTeamApply();
+getProjectApplyList();
 onMounted(() => {
     timer = setInterval(() => {
-        getApplyList()
+        getApplyList();
+        getTeamApply();
+        getProjectApplyList();
     }, 60000)
     document.addEventListener('mousedown', handleClickOutside)
     const searchList = localStorage.getItem('searchlist')
@@ -254,8 +398,8 @@ const textHighLight = (text: string) => {
                     <el-icon size="24">
                         <Bell />
                     </el-icon>
-                    <div class="num" v-if="num > 0" :class="{ after: num > 99 }"
-                        :style="{ paddingRight: num > 99 ? 9 + 'px' : 4 + 'px' }">{{ num > 99 ? 99 : num }}</div>
+                    <div class="num" v-if="total > 0" :class="{ after: total > 99 }"
+                        :style="{ paddingRight: total > 99 ? 9 + 'px' : 4 + 'px' }">{{ total > 99 ? 99 : total }}</div>
                 </div>
             </div>
             <div class="menu" :class="{ 'menu-select': menuAbout, 'menu-hover': !menuAbout }"
@@ -288,7 +432,8 @@ const textHighLight = (text: string) => {
                 </div>
             </div>
         </div>
-        <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" @reviewed="reviewed"></Inform>
+        <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="teamApplyList"
+            @reviewed="reviewed"></Inform>
     </div>
 </template>
 <style lang="scss" scoped>
