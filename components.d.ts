@@ -121,6 +121,7 @@ declare module '@vue/runtime-core' {
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
     Privacypolicy: typeof import('./src/components/Login/Privacypolicy.vue')['default']
     ProjectList: typeof import('./src/components/TeamProject/ProjectList.vue')['default']
+    ProjectPage: typeof import('./src/components/TeamProject/ProjectPage.vue')['default']
     Radius: typeof import('./src/components/Document/Attribute/Radius.vue')['default']
     RadiusForIos: typeof import('./src/components/Document/Attribute/PopoverMenu/RadiusForIos.vue')['default']
     Readonly: typeof import('./src/components/Document/Selection/Controller/Readonly.vue')['default']

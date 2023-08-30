@@ -15,9 +15,10 @@ const per_center = () => import('@/components/Userinfo/per_center.vue')
 const Privacypolicy = () => import("@/components/Login/Privacypolicy.vue");
 const Serviceagreement = () => import("@/components/Login/Serviceagreement.vue");
 const KChome = () => import("@/components/Home/KChome.vue");
-const HomeContent = () => import("@/components/Home/HomeContent.vue")
-const TeamPage=()=>import("@/components/TeamProject/TeamPage.vue")
-const joinTeam=()=>import("@/components/TeamProject/jionTeam.vue")
+const HomeContent = () => import("@/components/Home/HomeContent.vue");
+const TeamPage=()=>import("@/components/TeamProject/TeamPage.vue");
+const joinTeam=()=>import("@/components/TeamProject/jionTeam.vue");
+const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue")
 const routes = [
     {
         path: '/',
@@ -98,6 +99,11 @@ const routes = [
                 path: 'teams/:id',
                 name: 'TeamPage',
                 component: TeamPage
+            },
+            {
+                path: 'project/:id',
+                name: 'ProjectPage',
+                component: ProjectPage
             },
         ]
     },

@@ -6,13 +6,15 @@
             </div>
             <div class="main">
                 <div class="project-item" :class="{ 'selected': selectid === id }"
-                    v-for="{ project: { name, id, description }, creator: { nickname }, self_perm_type } in searchvalue === '' ? teamprojectlist : SearchList"
+                    v-for="{ project: { name, id, description }, creator: { nickname } } in searchvalue === '' ? teamprojectlist : SearchList"
                     :key="id" @click.stop="selectid = id">
                     <div class="project-name">{{ name }}</div>
                     <div class="project-description">{{ description }}</div>
                     <div class="project-creator">{{ nickname }}</div>
                     <div class="other">
-                        {{ self_perm_type }}
+                       <div><svg-icon icon-class="frame"></svg-icon></div>
+                       <div><svg-icon icon-class="drag"></svg-icon></div>
+                       <div><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
                     </div>
                 </div>
             </div>
@@ -147,7 +149,14 @@ onMounted(() => {
         .project-creator,
         .other {
             flex: 1;
-
+            display: flex;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+            >div {
+                margin-right: 10px;
+            }
         }
     }
 }

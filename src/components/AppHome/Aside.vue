@@ -18,7 +18,7 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch, computed } from 'vue';
 import * as user_api from '@/apis/users'
 import addTeam from '../TeamProject/addTeam.vue'
 import addProject from '../TeamProject/addProject.vue';
@@ -35,6 +35,8 @@ const showoverlay = ref(false)
 const teamcard = ref(false)
 const projectcard = ref(false)
 const teamid = ref('')
+const activeNames = ref([0])
+const teamList = ref<any>([])
 
 const { teamData, updatestate, updateShareData, upDateTeamData, state } = inject('shareData') as {
     teamData: Ref<[{
@@ -47,9 +49,38 @@ const { teamData, updatestate, updateShareData, upDateTeamData, state } = inject
         self_perm_type: number
     }]>;
     updatestate: Ref<boolean>;
-    updateShareData: (id: string, name: string, avatar: string, description: string,self_perm_type:number) => void;
+    updateShareData: (id: string, name: string, avatar: string, description: string, self_perm_type: number) => void;
     upDateTeamData: (data: any[]) => void;
     state: (b: boolean) => void;
+}
+
+function addChildToParent(parent: { children: any[]; }, child: any) {
+    if (!parent.children) {
+        parent.children = [];
+    }
+    parent.children.push(child);
+}
+
+function mergeArrays(parentArray: any[], childArray: any[]) {
+    const mergedArray: any[] = [];
+    parentArray.forEach(parentItem => {
+        const parentClone = { ...parentItem };
+        mergedArray.push(parentClone);
+        const children = childArray.filter(childItem => childItem.project.team_id === parentItem.team.id);
+        children.forEach(child => addChildToParent(parentClone, child));
+    });
+    return mergedArray;
+}
+
+// 使用合并函数将两个数组合并成一个数组
+
+const GetprojectLists = async () => {
+    try {
+        const { data } = await user_api.GetprojectLists()
+        teamList.value = mergeArrays(teamData.value, data);
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const picker = new FilePicker((file) => {
@@ -104,6 +135,10 @@ const showprojectcard = (id: string) => {
     })
 }
 
+const newProjectFile = (id: string) => {
+    console.log(id, 'id');
+}
+
 const GetteamList = async () => {
     try {
         const { code, data, message } = await user_api.GetteamList()
@@ -127,18 +162,26 @@ watch(updatestate, (newvalue) => {
 })
 
 const torouter = (id: string) => {
-    router.push({ path: '/apphome/teams/' + id })
+    router.push({ path: '/apphome/teams/' + id });
 }
 
-const isActive = (id: string, name: string, avatar: string, description: string,self_perm_type:number) => {
+const skipProject = (id: string) => {
+    router.push({ path: '/apphome/project/' + id });
+}
+
+const isActive = (id: string, name: string, avatar: string, description: string, self_perm_type: number) => {
     if (route.params.id === id) {
-        updateShareData(id, name, avatar, description != '' ? description : '你还没有填写团队描述，快去填写吧。',self_perm_type)
+        updateShareData(id, name, avatar, description != '' ? description : '你还没有填写团队描述，快去填写吧。', self_perm_type)
     }
+    return route.params.id === id
+}
+const isProjectActive = (id: string) => {
     return route.params.id === id
 }
 
 onMounted(() => {
     GetteamList()
+    GetprojectLists()
 })
 
 onUnmounted(() => {
@@ -193,23 +236,48 @@ onUnmounted(() => {
                     </el-menu-item></router-link>
             </el-menu>
             <div class="teamlists">
-                <div class="teamitem" :class="{ 'is-active': isActive(id, name, avatar, description,self_perm_type) }"
-                    v-for="{ team: { name, id, avatar, description }, self_perm_type } in teamData" :key="id"
-                    @click.stop="torouter(id)">
-                    <div class="left">
-                        <div class="team-avatar">
-                            <div v-if="avatar.includes('http')" class="img">
-                                <img :src="avatar" alt="team avatar">
-                            </div>
-                            <div v-else class="text">
-                                <span>{{ name.slice(0, 1) }}</span>
-                            </div>
+                <div class="demo-collapse">
+                    <el-collapse v-model="activeNames">
+                        <div v-for="({ team: { name, id, avatar, description }, self_perm_type, children }, index) in teamList"
+                            :key="id" @click.stop="torouter(id)">
+                            <el-collapse-item :name="index">
+                                <template #title>
+                                    <div class="team-title"
+                                        :class="{ 'is_active': isActive(id, name, avatar, description, self_perm_type) }">
+                                        <div class="left">
+                                            <div class="down"
+                                                :style="{ transform: activeNames.includes(index) ? 'rotate(0deg)' : 'rotate(-90deg)' }">
+                                                <svg-icon icon-class="down" />
+                                            </div>
+                                            <div class="team-avatar">
+                                                <div v-if="avatar.includes('http')" class="img">
+                                                    <img :src="avatar" alt="team avatar">
+                                                </div>
+                                                <div v-else class="text">
+                                                    <span>{{ name.slice(0, 1) }}</span>
+                                                </div>
+                                            </div>
+                                            <span class="name">{{ name }}</span>
+                                        </div>
+                                        <div class="right" @click.stop="showprojectcard(id)">
+                                            <svg-icon icon-class="close" />
+                                        </div>
+                                    </div>
+                                </template>
+                                <div class="project" v-for="(item, i) in children" :key="i"
+                                    @click.stop="skipProject(item.project.id)"
+                                    :class="{ 'is_active': isProjectActive(item.project.id) }">
+                                    <div>
+                                        <div>{{ item.project.name }}</div>
+                                        <div class="right" @click.stop="newProjectFile(item.project.id)">
+                                            <svg-icon icon-class="close" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </el-collapse-item>
                         </div>
-                        <span>{{ name }}</span>
-                    </div>
-                    <div class="right" @click.stop="showprojectcard(id)">
-                        <svg-icon icon-class="close" />
-                    </div>
+                    </el-collapse>
                 </div>
             </div>
             <div class="team-container">
@@ -234,6 +302,34 @@ a {
     text-decoration: none;
 }
 
+:deep(.el-collapse) {
+    border: none;
+    margin: 0 10px;
+}
+
+:deep(.el-collapse-item__header) {
+    border: none;
+    height: 40px;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+:deep(.el-collapse .el-collapse-item__arrow) {
+    display: none;
+}
+
+:deep(.el-collapse-item__header:hover) {
+    background-color: transparent;
+    cursor: pointer;
+
+    .right {
+        visibility: visible;
+    }
+}
+
+:deep(.el-collapse-item__wrap) {
+    border: none;
+}
 
 .nested-enter-active,
 .nested-leave-active {
@@ -444,95 +540,164 @@ a {
                 align-items: center;
                 justify-content: space-between;
 
-                .left {
-                    display: flex;
-                    align-items: center;
-                    width: calc(100% - 16px);
-
-                    .team-avatar {
-                        width: 24px;
-                        height: 24px;
-                        min-width: 24px;
-                        background-color: #9775fa;
-                        text-align: center;
-                        border-radius: 50%;
-                        overflow: hidden;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin-right: 6px;
-
-                        .img {
-                            width: 100%;
-                            height: 100%;
-                            line-height: 0;
-
-                            img {
-                                width: 100%;
-                                height: 100%;
-                                object-fit: cover;
-
-                            }
-                        }
-
-                        .text {
-                            line-height: 0;
-
-                            span {
-                                width: 100%;
-                                height: 100%;
-                                font-size: 12px;
-                                font-weight: 600;
-                                color: white;
-                            }
-                        }
-
-                    }
-
-                    span {
-                        overflow-x: hidden;
-                        text-overflow: ellipsis;
-                    }
-                }
-
-                .right {
-                    display: none;
-
-
-                    svg {
-                        width: 16px;
-                        min-width: 16px;
-                        height: 16px;
-                        fill: #9775fa;
-                        transform: rotate(45deg);
-                    }
-
-                    &:hover {
-                        transform: scale(1.1);
-
-                    }
-                }
-
-                &:hover {
-                    cursor: pointer;
-                    background-color: #f3f0ff;
-                    color: #9775fa;
-
-                    .right {
-                        display: flex;
-                    }
-                }
-
-                &.is-active {
-                    font-weight: 600;
-                    color: #9775fa;
-                    background-color: #e5dbff;
-                }
             }
 
 
         }
     }
+}
+
+.team-title {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 4px;
+    margin-bottom: 5px;
+
+    &:hover {
+        background-color: #f3f0ff;
+    }
+
+    .left {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        height: 40px;
+
+        .down {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 100%;
+            margin-right: 3px;
+            margin-left: 2px;
+            transition: .3s;
+
+            svg {
+                width: 8px;
+                height: 8px;
+            }
+        }
+
+        .team-avatar {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            background-color: #9775fa;
+            text-align: center;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+
+            .img {
+                width: 100%;
+                height: 100%;
+                line-height: 0;
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+
+                }
+            }
+
+            .text {
+                height: 100%;
+
+                span {
+                    width: 100%;
+                    height: 100%;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: white;
+                }
+            }
+        }
+
+        .name {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    .right {
+        visibility: hidden;
+        height: 40px;
+        margin-right: 10px;
+
+        svg {
+            width: 16px;
+            min-width: 16px;
+            height: 16px;
+            fill: #9775fa;
+            transform: rotate(45deg);
+        }
+    }
+}
+
+.project {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #f3f0ff;
+
+        .right {
+            visibility: visible;
+        }
+    }
+
+    >div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        height: 35px;
+        border-radius: 4px;
+        padding-left: 50px;
+
+
+        .right {
+            display: flex;
+            align-items: center;
+            visibility: hidden;
+            height: 100%;
+            padding-right: 10px;
+
+            svg {
+                width: 16px;
+                min-width: 16px;
+                height: 16px;
+                fill: #9775fa;
+                transform: rotate(45deg);
+            }
+        }
+    }
+}
+
+:deep(.el-collapse-item__content) {
+    padding: 0;
+}
+
+.is_active {
+    font-weight: 600;
+    color: #9775fa;
+    background-color: #e5dbff !important;
 }
 
 
@@ -560,5 +725,4 @@ a {
         font-size: 32px;
     }
 
-}
-</style>
+}</style>
