@@ -24,6 +24,10 @@ export const share = {
 
 }
 
+export const permission = {
+    no_authority_to_rename: '当前没有重命名的权限'
+}
+
 export const apply = {
     file_access_request: "File access request",
     applicant: "Applicant",
