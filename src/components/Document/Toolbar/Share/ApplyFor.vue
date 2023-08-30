@@ -134,7 +134,7 @@ const getProjectApplyList = async (time?: number) => {
   projectApplyList.value = [...projectApplyList.value, ...data]
 }
 
-const getTeamApplyAPI = async (time?: number) => {
+const getTeamApply = async (time?: number) => {
   const { data } = await team_api.getTeamApplyAPI({ start_time: time })
   teamApplyList.value = [...teamApplyList.value, ...data]
 }
@@ -188,12 +188,12 @@ let timer: any = null
 // 
 getApplyList(timestamp);
 getProjectApplyList(timestamp);
-getTeamApplyAPI(timestamp);
+getTeamApply(timestamp);
 onMounted(() => {
   timer = setInterval(() => {
     getApplyList(timestamp);
     getProjectApplyList(timestamp);
-    getTeamApplyAPI(timestamp);
+    getTeamApply(timestamp);
   }, 10000)
 })
 onUnmounted(() => {
