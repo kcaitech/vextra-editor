@@ -32,12 +32,14 @@ let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 let move: any, up: any;
+let offest = -0.5;
 const transform = ref<string>('');
 const transform2 = ref<string>('');
 const hidden = ref<boolean>(false);
 const dragActiveDis = 3;
 function update() {
     matrix.reset(props.matrix);
+    offest = matrix.m00 * -0.5;
     update_transform();
 }
 function update_transform() {
@@ -51,9 +53,9 @@ function update_transform() {
     if (shape.isFlippedVertical) mt += 'rotateX(180deg) ';
     if (shape.rotation) mt += `rotate(${shape.rotation}deg)`;
     let t1 = `translate(${lt.x}px, ${lt.y}px) `;
-    t1 += mt, t1 += `translate(-20px, -20px) `;
+    t1 += mt, t1 += `translate(${offest - 18}px, ${offest - 18}px) `;
     let t2 = `translate(${rb.x}px, ${rb.y}px) `;
-    t2 += mt, t2 += `translate(2px, 2px) `;
+    t2 += mt, t2 += `translate(${offest + 2}px, ${offest + 2}px) `;
     transform.value = t1, transform2.value = t2;
     const root = props.context.workspace.root;
     props.context.selection.setArea([
@@ -126,7 +128,6 @@ let t_e: MouseEvent | undefined;
 let speed: number = 0;
 let shapes: Shape[] = [];
 let need_update_comment = false;
-let start_position_p: PageXY = { x: 0, y: 0 };
 let submatrix2 = new Matrix();
 function down(e: MouseEvent) {
     const context = props.context;
