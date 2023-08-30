@@ -179,17 +179,19 @@ function createController() { // 计算控件点位以及类型判定
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
     const action = props.context.tool.action;
+    const selection = props.context.selection;
     if (action === Action.AutoV || action === Action.AutoK) {
         if (e.button === 0) {
             e.stopPropagation();
             if (props.context.menu.isMenuMount) props.context.menu.menuMount();
-            const hoveredShape = props.context.selection.hoveredShape;
-            if (e.shiftKey && hoveredShape) {
-                const selected = props.context.selection.selectedShapes;
-                props.context.selection.rangeSelectShape(selected.concat(hoveredShape));
-            } else {
-                props.context.selection.selectShape(hoveredShape);
-                props.context.workspace.preToTranslating(e);
+            const hoveredShape = selection.hoveredShape;
+            if (hoveredShape) {
+                if (e.shiftKey) {
+                    selection.rangeSelectShape(selection.selectedShapes.concat(hoveredShape));
+                } else {
+                    selection.selectShape(hoveredShape);
+                    props.context.workspace.preToTranslating(e);
+                }
             }
         }
     }
