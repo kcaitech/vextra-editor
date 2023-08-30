@@ -55,13 +55,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         root = context.workspace.root;
         area = context.selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
         console.log('click-area', area);
-        if (area === 'move') {
-            matrix.reset(workspace.value.matrix.inverse);
-            set_position(e);
-            pre2trans(e);
-            table_selection.setEditingCell();
-            table_selection.resetSelection();
-        } else if (area === 'body') {
+        if (area === 'body') {
             workspace.value.setCtrl('controller');
             down4body(e);
         } else if (area === 'content' || area === 'hover') {

@@ -40,7 +40,7 @@ export interface ShapeXY { // 图形自身坐标系的xy
 }
 type TextShapeLike = Shape & { text: Text }
 export type ActionType = 'translate' | 'scale' | 'rotate';
-export type TableArea = 'invalid' | 'move' | 'body' | 'content' | 'hover';
+export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;

@@ -1,12 +1,19 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape, TableShape } from '@kcdesign/data';
+import { AsyncBaseAction, AsyncTransfer, CtrlElementType, GroupShape, Matrix, Shape, ShapeType, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
-import { PointType } from '@/context/assist';
+import { Asssit, PointType } from '@/context/assist';
 import { WorkSpace } from '@/context/workspace';
+import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
+import { get_speed } from '@/utils/controllerFn';
+import { debounce } from 'lodash';
+import { distance2apex, update_pg_2 } from '@/utils/assist';
+import { Comment } from '@/context/comment';
+import { permIsEdit } from '@/utils/content';
+import { Menu } from '@/context/menu';
 interface Props {
     matrix: number[]
     context: Context
@@ -24,9 +31,9 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
+let move: any, up: any;
 const transform = ref<string>('');
 const transform2 = ref<string>('');
-
 const hidden = ref<boolean>(false);
 const dragActiveDis = 3;
 function update() {
@@ -50,7 +57,6 @@ function update_transform() {
     transform.value = t1, transform2.value = t2;
     const root = props.context.workspace.root;
     props.context.selection.setArea([
-        { id: 'move', area: `M${lt.x - 20} ${lt.y - 20} h18 v18 h-18 z` },
         { id: 'body', area: `M${lt.x} ${lt.y} L${rt.x} ${rt.y} L${rb.x} ${rb.y} L${lb.x} ${lb.y} z` },
         { id: 'content', area: `M0 0 h${root.width} v${root.height} h${-root.width} z` }
     ])
@@ -69,6 +75,7 @@ function point_mousedown(event: MouseEvent) {
     startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
+    move = point_mousemove, up = point_mouseup;
 }
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace, root = workspace.root;;
@@ -94,6 +101,189 @@ function point_mousemove(event: MouseEvent) {
         }
     }
 }
+function point_mouseup(event: MouseEvent) {
+    if (event.button !== 0) return;
+    if (isDragging) {
+        props.context.assist.reset();
+        isDragging = false;
+    }
+    if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+    const workspace = props.context.workspace;
+    workspace.scaling(false);
+    workspace.rotating(false);
+    workspace.setCtrl('page');
+    props.context.cursor.reset();
+}
+
+let root: ClientXY = { x: 0, y: 0 };
+let wheel: Wheel | undefined = undefined;
+let asyncTransfer: AsyncTransfer | undefined = undefined;
+let stickedX2: boolean = false;
+let stickedY2: boolean = false;
+let t_e: MouseEvent | undefined;
+let speed: number = 0;
+let shapes: Shape[] = [];
+let need_update_comment = false;
+let start_position_p: PageXY = { x: 0, y: 0 };
+let submatrix2 = new Matrix();
+function down(e: MouseEvent) {
+    const context = props.context;
+    const action = context.tool.action;
+    if (!permIsEdit(context) || action === Action.AddComment) return;
+    if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        context.cursor.cursor_freeze(true);
+        context.menu.menuMount(); // 取消右键事件
+        context.menu.notify(Menu.SHUTDOWN_POPOVER);
+        if (action == Action.AutoV || action == Action.AutoK) {
+            context.workspace.setCtrl('controller');
+            const table_selection = props.context.tableSelection;
+            table_selection.setEditingCell();
+            table_selection.resetSelection();
+            startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
+
+            wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));
+            document.addEventListener('mousemove', mousemove4trans);
+            document.addEventListener('mouseup', mouseup4trans);
+            move = mousemove4trans, up = mouseup4trans;
+        }
+    }
+}
+function mousemove4trans(e: MouseEvent) {
+    if (e.buttons !== 1) return;
+    const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
+    const workspace = props.context.workspace, selection = props.context.selection;
+    if (isDragging && wheel && asyncTransfer) {
+        speed = get_speed(t_e || e, e), t_e = e;
+        let update_type = 0;
+        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+        if (!isOut) update_type = transform_f(startPosition, mousePosition);
+        if (update_type === 3) startPosition = { ...mousePosition };
+        else if (update_type === 2) startPosition.y = mousePosition.y;
+        else if (update_type === 1) startPosition.x = mousePosition.x;
+    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
+        shapes = selection.selectedShapes;
+        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
+        selection.unHoverShape();
+        workspace.setSelectionViewUpdater(false);
+        workspace.translating(true);
+        props.context.assist.setTransTarget(shapes);
+        submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
+        isDragging = true;
+    }
+}
+function _migrate(start: ClientXY, end: ClientXY) {
+    if (!shapes.length) return;
+    const ps: PageXY = matrix.computeCoord(start.x, start.y);
+    const pe: PageXY = matrix.computeCoord(end.x, end.y);
+    const selection = props.context.selection;
+    const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes);
+    const targetParent = (artboardOnStart && artboardOnStart.type !== ShapeType.Page) ? selection.getClosetArtboard(pe, artboardOnStart) : selection.getClosetArtboard(pe);
+    const m = getCloesetContainer(props.shape).id !== targetParent.id;
+    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
+}
+const migrate: (start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
+function getCloesetContainer(shape: Shape): Shape {
+    let result = props.context.selection.selectedPage!
+    let p = shape.parent;
+    while (p) {
+        if (p.type == ShapeType.Artboard) {
+            result = p as any;
+            return result;
+        }
+        p = p.parent;
+    }
+    return result
+}
+function transform_f(start: ClientXY, end: ClientXY) {
+    const ps: PageXY = submatrix2.computeCoord2(start.x, start.y);
+    const pe: PageXY = submatrix2.computeCoord2(end.x, end.y);
+    let update_type = 0;
+    if (asyncTransfer) {
+        update_type = trans(asyncTransfer, ps, pe);
+        migrate(start, end);
+    }
+    return update_type;
+}
+function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
+    const assist = props.context.assist;
+    if (speed > 5) {
+        asyncTransfer.trans(ps, pe);
+        assist.notify(Asssit.CLEAR);
+        return 3;
+    }
+    const table = shapes[0];
+    if (!table) return 3;
+    let need_multi = 0;
+    let update_type = 3;
+    const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
+    const stickness = assist.stickness + 1;
+    const target = assist.trans_match(table);
+    if (!target) return update_type;
+    if (stickedX2) {
+        if (Math.abs(pe.x - ps.x) > stickness) stickedX2 = false;
+        else {
+            pe.x = ps.x, update_type -= 1, need_multi += 1;
+        }
+    } else if (target.sticked_by_x) {
+        const distance = distance2apex(table, target.alignX);
+        const trans_x = target.x - distance;
+        stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y, pe.x = ps.x + trans_x;
+        const t = submatrix2.inverseCoord(pe);
+        startPosition.x = t.x, update_type -= 1, stickedX2 = true, need_multi += 1;
+    }
+    if (stickedY2) {
+        if (Math.abs(pe.y - ps.y) > stickness) stickedY2 = false;
+        else {
+            pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
+        }
+    } else if (target.sticked_by_y) {
+        const distance = distance2apex(table, target.alignY);
+        const trans_y = target.y - distance;
+        stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;
+        if (!stick.sticked_x) stick.dx = pe.x - ps.x;
+        const t = submatrix2.inverseCoord(pe);
+        startPosition.y = t.y, update_type -= 2, stickedY2 = true, need_multi += 2;
+    }
+    if (stick.sticked_x || stick.sticked_y) {
+        asyncTransfer.stick(stick.dx, stick.dy);
+    } else {
+        asyncTransfer.trans(ps, pe);
+    }
+    if (need_multi) {
+        assist.setCPG(update_pg_2(table, true));
+        assist.notify(Asssit.UPDATE_ASSIST, need_multi);
+        assist.notify(Asssit.UPDATE_MAIN_LINE);
+    }
+    return update_type;
+}
+function mouseup4trans(e: MouseEvent) {
+    const workspace = props.context.workspace;
+    if (e.button === 0) {
+        if (isDragging) {
+            if (asyncTransfer) {
+                const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
+                _migrate(startPosition, mousePosition);
+                asyncTransfer = asyncTransfer.close();
+            }
+            workspace.translating(false);
+            workspace.setSelectionViewUpdater(true);
+            workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+            props.context.assist.reset();
+            isDragging = false;
+        }
+        if (wheel) wheel = wheel.remove();
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+    }
+    if (need_update_comment) {
+        props.context.comment.notify(Comment.UPDATE_COMMENT_POS);
+        need_update_comment = false;
+    }
+    props.context.cursor.cursor_freeze(false);
+    workspace.setCtrl('page');
+}
 function get_t(p1: PageXY, p2: PageXY): PageXY {
     const m = props.shape.matrix2Root();
     p1 = m.inverseCoord(p1.x, p1.y), p2 = m.inverseCoord(p2.x, p2.y);
@@ -104,40 +294,26 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
     const target = props.context.assist.point_match(props.shape, pointType);
     if (target) {
-        if (stickedX) {
-            if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX = false;
+        if (stickedX2) {
+            if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX2 = false;
             else p2.x = sticked_x_v;
         } else if (target.sticked_by_x) {
             p2.x = target.x;
             sticked_x_v = p2.x;
-            stickedX = true;
+            stickedX2 = true;
         }
-        if (stickedY) {
-            if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY = false;
+        if (stickedY2) {
+            if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY2 = false;
             else p2.y = sticked_y_v;
         } else if (target.sticked_by_y) {
             p2.y = target.y;
             sticked_y_v = p2.y;
-            stickedY = true;
+            stickedY2 = true;
         }
     }
     asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
 }
-function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) return;
-    if (isDragging) {
-        props.context.assist.reset();
-        isDragging = false;
-    }
-    if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
-    document.removeEventListener('mousemove', point_mousemove);
-    document.removeEventListener('mouseup', point_mouseup);
-    const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.rotating(false);
-    workspace.setCtrl('page');
-    props.context.cursor.reset();
-}
+
 function window_blur() {
     const workspace = props.context.workspace;
     if (isDragging) {
@@ -145,12 +321,13 @@ function window_blur() {
         isDragging = false;
     }
     if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
+    if (asyncTransfer) { asyncTransfer.close(); asyncTransfer = undefined };
     workspace.scaling(false);
     workspace.rotating(false);
     workspace.setCtrl('page');
     props.context.cursor.reset();
-    document.removeEventListener('mousemove', point_mousemove);
-    document.removeEventListener('mouseup', point_mouseup);
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
@@ -177,7 +354,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g :style="{ transform }">
+    <g :style="{ transform }" @mousedown.stop="(e) => down(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
         </rect>
         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3px"
