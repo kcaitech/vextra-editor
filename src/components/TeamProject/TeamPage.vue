@@ -58,6 +58,7 @@ import TeamMember from './TeamMember.vue'
 import InviteMember from './InviteMember.vue'
 import TeamSetting from './TeamSetting.vue'
 import { router } from '@/router'
+import * as user_api from '@/apis/users'
 
 const showoverlay = ref(false)
 const itemid = ref(0)
@@ -109,7 +110,7 @@ watch(teamData, (newvalue) => {
     if (a) {
         console.log('在');
     } else {
-        router.push({ path: '/join', query: { key: 2, name: 'ahsj' } })
+        router.push({ path: '/apphome' })
     }
 })
 
@@ -121,6 +122,7 @@ onMounted(() => {
 })
 </script>
 <style lang="scss" scoped>
+
 .nested-enter-active,
 .nested-leave-active {
     transition: all 0.3s ease-in-out;

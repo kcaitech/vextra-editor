@@ -43,10 +43,11 @@ const { teamData, updatestate, updateShareData, upDateTeamData, state } = inject
             name: string,
             avatar: string,
             description: string
-        }
+        },
+        self_perm_type: number
     }]>;
     updatestate: Ref<boolean>;
-    updateShareData: (id: string, name: string, avatar: string, description: string) => void;
+    updateShareData: (id: string, name: string, avatar: string, description: string,self_perm_type:number) => void;
     upDateTeamData: (data: any[]) => void;
     state: (b: boolean) => void;
 }
@@ -129,9 +130,9 @@ const torouter = (id: string) => {
     router.push({ path: '/apphome/teams/' + id })
 }
 
-const isActive = (id: string, name: string, avatar: string, description: string) => {
+const isActive = (id: string, name: string, avatar: string, description: string,self_perm_type:number) => {
     if (route.params.id === id) {
-        updateShareData(id, name, avatar, description != '' ? description : '你还没有填写团队描述，快去填写吧。')
+        updateShareData(id, name, avatar, description != '' ? description : '你还没有填写团队描述，快去填写吧。',self_perm_type)
     }
     return route.params.id === id
 }
@@ -192,8 +193,9 @@ onUnmounted(() => {
                     </el-menu-item></router-link>
             </el-menu>
             <div class="teamlists">
-                <div class="teamitem" :class="{ 'is-active': isActive(id, name, avatar, description) }"
-                    v-for="{ team: { name, id, avatar, description } } in teamData" :key="id" @click.stop="torouter(id)">
+                <div class="teamitem" :class="{ 'is-active': isActive(id, name, avatar, description,self_perm_type) }"
+                    v-for="{ team: { name, id, avatar, description }, self_perm_type } in teamData" :key="id"
+                    @click.stop="torouter(id)">
                     <div class="left">
                         <div class="team-avatar">
                             <div v-if="avatar.includes('http')" class="img">
