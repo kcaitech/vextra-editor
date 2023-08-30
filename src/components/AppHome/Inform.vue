@@ -15,6 +15,7 @@ const emit = defineEmits<{
 const props = defineProps<{
   applyList: any
 }>()
+const activeName = ref('fill')
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 enum Audit {
   unPass,
@@ -56,6 +57,11 @@ const promissionApplyAudit = async (id: string, type: number) => {
 const close = () => {
   emit('close')
 }
+
+const handleInform = () => {
+  console.log(11);
+}
+
 </script>
 
 <template>
@@ -69,36 +75,94 @@ const close = () => {
         </el-button>
       </div>
     </template>
-    <div class="contain">
-      <el-scrollbar height="400px" style="padding-right: 10px;">
-        <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
-          <div class="avatar"><img :src="item.user.avatar" alt=""></div>
-          <div class="item-container">
-            <div class="item-title">
-              <span class="name">{{ item.user.nickname }}</span>
-              <span class="date">{{ formatDate(item.apply.created_at) }}</span>
+    <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleInform">
+      <el-tab-pane name="fill">
+        <template #label>
+          <span class="custom-tabs-label">
+            <div></div>
+            <span>{{ t('apply.fill') }}</span>
+          </span>
+        </template>
+        <div class="contain">
+          <el-scrollbar height="400px" style="padding-right: 10px;">
+            <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
+              <div class="avatar"><img :src="item.user.avatar" alt=""></div>
+              <div class="item-container">
+                <div class="item-title">
+                  <span class="name">{{ item.user.nickname }}</span>
+                  <span class="date">{{ formatDate(item.apply.created_at) }}</span>
+                </div>
+                <el-tooltip class="box-item" effect="light" placement="bottom-end">
+                  <template #content>
+                    <div class="custom-tooltip">
+                      {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
+                        permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}
+                    </div>
+                  </template>
+                  <div class="item-text">
+                    {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
+                      permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
+                </el-tooltip>
+              </div>
+              <div class="botton" v-if="item.apply.status === 0">
+                <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, i)">{{ t('apply.agree')
+                }}</el-button>
+                <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.apply.id, i)">{{
+                  t('apply.refuse') }}</el-button>
+              </div>
+              <div class="botton" v-else>
+                <p v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</p>
+                <p v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
+              </div>
             </div>
-            <el-tooltip class="box-item" effect="light" placement="bottom-end">
-              <template #content>
-                <div class="custom-tooltip">
-                  {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{ permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
-              </template>
-              <div class="item-text">
-                {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{ permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
-            </el-tooltip>
-          </div>
-          <div class="botton" v-if="item.apply.status === 0">
-            <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, i)">{{ t('apply.agree') }}</el-button>
-            <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.apply.id, i)">{{ t('apply.refuse') }}</el-button>
-          </div>
-          <div class="botton" v-else>
-            <p v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</p>
-            <p v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
-          </div>
+            <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
+          </el-scrollbar>
         </div>
-        <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
-      </el-scrollbar>
-    </div>
+      </el-tab-pane>
+      <el-tab-pane name="team">
+        <template #label>
+          <span class="custom-tabs-label">
+            <div></div>
+            <span>{{ t('apply.team') }}</span>
+          </span>
+        </template>
+        <div class="contain">
+          <el-scrollbar height="400px" style="padding-right: 10px;">
+            <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
+              <div class="avatar"><img :src="item.user.avatar" alt=""></div>
+              <div class="item-container">
+                <div class="item-title">
+                  <span class="name">{{ item.user.nickname }}</span>
+                  <span class="date">{{ formatDate(item.apply.created_at) }}</span>
+                </div>
+                <el-tooltip class="box-item" effect="light" placement="bottom-end">
+                  <template #content>
+                    <div class="custom-tooltip">
+                      {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
+                        permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}
+                    </div>
+                  </template>
+                  <div class="item-text">
+                    {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
+                      permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
+                </el-tooltip>
+              </div>
+              <div class="botton" v-if="item.apply.status === 0">
+                <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, i)">{{ t('apply.agree')
+                }}</el-button>
+                <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.apply.id, i)">{{
+                  t('apply.refuse') }}</el-button>
+              </div>
+              <div class="botton" v-else>
+                <p v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</p>
+                <p v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
+              </div>
+            </div>
+            <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
+          </el-scrollbar>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
   </el-card>
 </template>
 
@@ -110,16 +174,46 @@ const close = () => {
 }
 
 :deep(.el-card__body) {
-  padding: var(--default-padding-half) var(--default-padding-quarter) var(--default-padding-half) var(--default-padding);
+  padding: 0 var(--default-padding-quarter) var(--default-padding-half) var(--default-padding);
 }
 
 :deep(.el-button+.el-button) {
   margin-left: 0;
 }
 
-.el-button.is-text:not(.is-disabled):hover {
-    background-color: #f3f0ff;
+:deep(.el-tabs__nav-wrap::after) {
+  width: auto;
+  right: 12px;
 }
+
+:deep(.el-tabs__item.is-active) {
+  color: #000;
+  font-weight: bold;
+}
+
+:deep(.el-tabs__item) {
+  padding: 0 11px;
+}
+:deep(.el-tabs__item.is-top:last-child) {
+  padding-right: 8px;
+}
+
+.el-button.is-text:not(.is-disabled):hover {
+  background-color: #f3f0ff;
+}
+
+.custom-tabs-label {
+  div {
+    position: absolute;
+    top: 10px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    background-color: red;
+    border-radius: 50%;
+  }
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -214,9 +308,11 @@ const close = () => {
   .item-title {
     display: flex;
     justify-content: space-between;
+
     .date {
       width: auto;
     }
+
     .name {
       width: calc(100% - 90px);
       overflow: hidden;
@@ -243,4 +339,5 @@ const close = () => {
   position: absolute;
   top: 56px;
   right: 130px;
-}</style>
+}
+</style>

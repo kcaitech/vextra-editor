@@ -1,10 +1,10 @@
 
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
-        @r-removefile="Deletefile" @ropen="openDocument"/>
+        @r-removefile="Deletefile" @ropen="openDocument" />
 
     <div v-if="showFileShare" class="overlay"></div>
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo" :docUserId="docUserId"

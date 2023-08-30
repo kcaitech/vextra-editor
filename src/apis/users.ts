@@ -176,3 +176,76 @@ export function CreateTeam(data = {}, ops = {}) {
         ...ops
     })
 }
+
+//获取团队列表
+export function GetteamList(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/list',
+        method: 'get',
+        params:params,
+        ...ops
+    })
+}
+
+//获取团队成员
+export function GetteamMember(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/member/list',
+        method: 'get',
+        params:params,
+        ...ops
+    })
+}
+
+//设置团队信息
+export function Setteaminfo(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/info',
+        method: 'put',
+        data:data,
+        ...ops
+    })
+}
+
+//设置团队邀请选项
+export function Setteaminviteinfo(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/invited',
+        method: 'put',
+        data:data,
+        ...ops
+    })
+}
+
+//解散团队
+export function Disband(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team',
+        method: 'delete',
+        params:params,
+        ...ops
+    })
+}
+
+//获取项目列表
+export function GetprojectLists(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/list',
+        method: 'get',
+        params:params,
+        ...ops
+    })
+}
+
+//创建项目
+export function CreateProject(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project',
+        method: 'post',
+        data:data,
+        ...ops
+    })
+}
+
+
+

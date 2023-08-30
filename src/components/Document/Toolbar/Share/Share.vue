@@ -33,6 +33,7 @@ const onShare = () => {
     }
   })
 }
+
 const closeShare = () => {
   showFileShare.value = false
 }

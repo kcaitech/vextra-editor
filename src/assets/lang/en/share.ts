@@ -47,5 +47,10 @@ export const apply = {
     rejected: 'Rejected',
     no_message_received: 'No message received',
     link_not: 'Link does not exist',
-    not_passed: 'The application failed, please modify the information or contact the creator and re-apply'
+    not_passed: 'The application failed, please modify the information or contact the creator and re-apply',
+    project_apply: 'Application to join project',
+    project: 'project',
+    team: 'team',
+    team_apply: 'Join team application',
+    fill: 'Fill'
 }
