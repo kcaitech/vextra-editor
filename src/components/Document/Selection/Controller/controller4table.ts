@@ -35,6 +35,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let down_type: number = 1; //针对主键 1 单击 2 双击 3 三次点击
     let down_timer: any = null;
     let shapes: Shape[] = [];
+    let is_diposed: boolean = false;
 
     function mousedown(e: MouseEvent) {
         if (context.workspace.isPageDragging) return;
@@ -46,6 +47,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
             workspace.value.setCtrl('controller');
             down4body(e);
         } else if (area === 'content' || area === 'hover') {
+            if (is_diposed) return;
             const selection = context.selection;
             const selected = selection.selectedShapes;
             const h = selection.hoveredShape;
@@ -276,6 +278,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         table.unwatch(get_matrix4table);
+        is_diposed = true;
         console.log('dispose');
     }
     function m4table() {
