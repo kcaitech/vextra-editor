@@ -129,7 +129,7 @@ let speed: number = 0;
 let shapes: Shape[] = [];
 let need_update_comment = false;
 let submatrix2 = new Matrix();
-function down(e: MouseEvent) {
+function down(e: MouseEvent) {    
     const context = props.context;
     const action = context.tool.action;
     if (!permIsEdit(context) || action === Action.AddComment) return;

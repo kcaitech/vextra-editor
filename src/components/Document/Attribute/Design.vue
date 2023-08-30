@@ -85,11 +85,11 @@ const baseAttrVisible = () => {
 }
 
 const change = throttle(_change, 100);
-function tool_watcher(t: number) { 
-    if(t === Tool.CHANGE_ACTION) {
+function tool_watcher(t: number) {
+    if (t === Tool.CHANGE_ACTION) {
         getShapeType()
     }
- }
+}
 function selection_watcher(t: number) { change(t) }
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_TABLE_CELL) baseAttrVisible();
@@ -114,7 +114,7 @@ onUnmounted(() => {
                 :page="props.context.selection.selectedPage"></PageBackgorund>
         </div>
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
-        <div v-if="len" :reflush="reflush">
+        <div v-if="len" :reflush="reflush" @mousedown.stop>
             <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>

@@ -250,8 +250,8 @@ onUnmounted(() => {
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
-        :height="100" viewBox="0 0 100 100" style="position: absolute">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="4"
+        :height="4" viewBox="0 0 4 4" style="position: absolute">
         <g id="node">
             <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;"></path>
             <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;"></path>
