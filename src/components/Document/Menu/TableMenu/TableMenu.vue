@@ -79,11 +79,13 @@ const spliceRow = () => {
   const shape = props.context.selection.selectedShapes[0];
   const table = props.context.tableSelection;
   const editor = props.context.editor4Table(shape as TableShape);
+  let result: any = 0;
   if (table.editingCell) {
-    editor.removeRow(table.editingCell.index.row);
+    result = editor.removeRow(table.editingCell.index.row);
   } else {
-    editor.removeRow(table.tableRowStart, table.tableRowEnd);
+    result = editor.removeRow(table.tableRowStart, table.tableRowEnd);
   }
+  if (result === 1) props.context.selection.resetSelectShapes();
   reset(table, props.context);
   emit('close');
 }
@@ -92,11 +94,13 @@ const spliceCol = () => {
   const shape = props.context.selection.selectedShapes[0];
   const table = props.context.tableSelection;
   const editor = props.context.editor4Table(shape as TableShape);
+  let result: any = 0;
   if (table.editingCell) {
-    editor.removeCol(table.editingCell.index.col);
+    result = editor.removeCol(table.editingCell.index.col);
   } else {
-    editor.removeCol(table.tableColStart, table.tableColEnd);
+    result = editor.removeCol(table.tableColStart, table.tableColEnd);
   }
+  if (result === 1) props.context.selection.resetSelectShapes();
   reset(table, props.context);
   emit('close');
 }
@@ -212,17 +216,20 @@ function closeLayerSubMenu() {
   }
 
 }
+
 .layer-icon {
-    svg {
-      width: 12px;
-      height: 12px;
-    }
-    transform: rotate(270deg);
+  svg {
+    width: 12px;
+    height: 12px;
   }
-  .layer-select {
-    display: flex;
-    justify-content: space-between;
-  }
+
+  transform: rotate(270deg);
+}
+
+.layer-select {
+  display: flex;
+  justify-content: space-between;
+}
 
 .invalid {
   position: relative;

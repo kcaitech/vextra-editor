@@ -127,10 +127,14 @@ const deleteColumn = () => {
     const table = props.context.tableSelection
     const editor = props.context.editor4Table(shape as TableShape);
     if (!table) return;
+    let result: any = 0;
     if (props.cellMenu === CellMenu.SelectRow) {
-        editor.removeRow(table.tableRowStart, table.tableRowEnd);
+        result = editor.removeRow(table.tableRowStart, table.tableRowEnd);
     } else {
-        editor.removeCol(table.tableColStart, table.tableColEnd);
+        result = editor.removeCol(table.tableColStart, table.tableColEnd);
+    }
+    if (result === 1) {
+        props.context.selection.resetSelectShapes();
     }
     emit('close');
 }
