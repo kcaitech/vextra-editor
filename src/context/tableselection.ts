@@ -63,7 +63,6 @@ export class TableSelection extends Watchable(Object) {
         } else return []
 
     }
-    // table
     /**
      * @param gen_menu_posi 默认产生小菜单位置
      */

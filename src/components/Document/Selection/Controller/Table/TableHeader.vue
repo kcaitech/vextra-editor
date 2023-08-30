@@ -47,8 +47,6 @@ function update_position() {
         xbars = [], ybars = [], xs = [], ys = [];
         const m = new Matrix(props.matrix), lt = m.computeCoord2(0, 0), mw = new Matrix(props.context.workspace.matrix);
         offset = mw.m00 * 0.5;
-        console.log('offset', offset);
-
         const table: TableShape = props.shape as TableShape;
         layout = table.getLayout();
         frame_params = { x: lt.x, y: lt.y, width: layout.width * mw.m00, height: layout.height * mw.m00 };

@@ -103,8 +103,14 @@ function select_cell_by_triangle(e: MouseEvent) {
     }
 }
 function _get_menu_position(points: ClientXY[]) {
-    const b = XYsBounding(points);
-    emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
+    const tableSelection = props.context.tableSelection, rows = tableSelection.tableRowStart, rowe = tableSelection.tableRowEnd;
+    const pl = points.length, p1 = points[0], p2 = points[(pl / (rowe - rows + 1)) - 3];
+    if (p1 && p2) {
+        emits("get-menu", (p1.x + p2.x) / 2, (p1.y + p2.y) / 2, CellMenu.MultiSelect, true);
+    } else {
+        const b = XYsBounding(points);
+        emits("get-menu", (b.right + b.left) / 2, b.top, CellMenu.MultiSelect, true);
+    }
 }
 
 let watchCells: Map<string, TableCell> = new Map();
