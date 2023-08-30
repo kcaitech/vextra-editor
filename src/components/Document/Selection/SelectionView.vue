@@ -184,12 +184,12 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
             e.stopPropagation();
             if (props.context.menu.isMenuMount) props.context.menu.menuMount();
             const hoveredShape = props.context.selection.hoveredShape;
-            props.context.workspace.preToTranslating(e);
             if (e.shiftKey && hoveredShape) {
                 const selected = props.context.selection.selectedShapes;
                 props.context.selection.rangeSelectShape(selected.concat(hoveredShape));
             } else {
                 props.context.selection.selectShape(hoveredShape);
+                props.context.workspace.preToTranslating(e);
             }
         }
     }

@@ -316,6 +316,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
+            const selected = context.selection.selectedShapes;
+            if (selected.length === 1 && selected[0].type === ShapeType.Table) return dispose();
             initController();
             editing = false;
             context.workspace.contentEdit(false);

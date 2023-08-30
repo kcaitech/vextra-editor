@@ -1,5 +1,5 @@
 import { Shape, ShapeType, GroupShape, TableShape, TableGridItem, TableCellType, TextShape, TableCell } from '@kcdesign/data';
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
@@ -221,9 +221,10 @@ function useControllerCustom(context: Context, i18nT: Function) {
             if (!start) return;
             matrix.reset(workspace.value.matrix.inverse);
             set_position(start);
-            pre2trans(start);
-            workspace.value.preToTranslating(false);
-            need_update_comment = true;
+            nextTick(() => {
+                mousedown(start);
+                workspace.value.preToTranslating(false);
+            })
         }
     }
     // #endregion
