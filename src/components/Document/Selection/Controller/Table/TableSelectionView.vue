@@ -21,7 +21,6 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const selection_path = ref<string>('');
 const triangle = ref<boolean>(false);
-let triangle_position: ClientXY = { x: 0, y: 0 };
 let transform: string;
 function update_cell_selection(gen_menu_posi?: boolean) {
     selection_path.value = '';

@@ -69,7 +69,7 @@ export class Context extends Watchable(Object) {
         this.m_coopRepo = repo;
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
-        this.m_selection = new Selection(data);
+        this.m_selection = new Selection(data, this);
         this.m_workspace = new WorkSpace(this);
         this.m_comment = new Comment();
         this.m_menu = new Menu();

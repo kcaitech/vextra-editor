@@ -64,7 +64,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         } else if (area === 'body') {
             workspace.value.setCtrl('controller');
             down4body(e);
-        } else if (area === 'content') {
+        } else if (area === 'content' || area === 'hover') {
             const selection = context.selection;
             const selected = selection.selectedShapes;
             const h = selection.hoveredShape;

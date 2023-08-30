@@ -1,4 +1,4 @@
-import { ISave4Restore, TableShape, Watchable } from "@kcdesign/data";
+import { ISave4Restore, Matrix, TableShape, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
@@ -40,7 +40,7 @@ export interface ShapeXY { // 图形自身坐标系的xy
 }
 type TextShapeLike = Shape & { text: Text }
 export type ActionType = 'translate' | 'scale' | 'rotate';
-export type TableArea = 'invalid' | 'move' | 'body' | 'content';
+export type TableArea = 'invalid' | 'move' | 'body' | 'content' | 'hover';
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -71,11 +71,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_comment_page_sort: boolean = false;
     private m_comment_about_me: boolean = false;
     private m_table_area: { id: TableArea, area: string }[] = [];
+    private m_context: Context;
 
 
-    constructor(document: Document) {
+    constructor(document: Document, context: Context) {
         super();
         this.m_document = document;
+        this.m_context = context;
     }
     get scout(): Scout | undefined {
         return this.m_scout;
@@ -291,6 +293,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
     getArea(p: ClientXY): TableArea {
         let area: TableArea = 'invalid';
+        if (this.hoveredShape) {
+            let m = this.hoveredShape.matrix2Root(), wm = this.m_context.workspace.matrix;
+            m.multiAtLeft(wm);
+            let path = this.hoveredShape.getPath();
+            path.transform(m);
+            if (this.m_scout!.isPointInPath(path.toString(), p)) return 'hover';
+        }
         for (let i = 0, len = this.m_table_area.length; i < len; i++) {
             const a = this.m_table_area[i];
             if (this.m_scout!.isPointInPath(a.area, p)) {
