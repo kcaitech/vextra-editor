@@ -95,7 +95,15 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (!scout) return;
             const target = groupPassthrough(scout, scope, startPositionOnPage);
             if (target) context.selection.selectShape(target);
-        } else editing = !editing;
+        } else {
+            editing = !editing;
+            context.workspace.contentEdit(editing);
+            if (editing) {
+                console.log('进入编辑状态！');
+            } else {
+                console.log('取消编辑状态！');
+            }
+        }
     }
     function isMouseOnContent(e: MouseEvent): boolean {
         return (e.target as Element)?.closest(`#content`) ? true : false;
@@ -116,9 +124,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                         editor.delete();
                         context.selection.resetSelectShapes();
                     }
+                    return;
                 }
             }
-            return;
         }
         if (context.workspace.isPageDragging) return;
         if (isElement(e)) {

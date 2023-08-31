@@ -83,6 +83,7 @@ export class WorkSpace extends Watchable(Object) {
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
     static CHANGE_NAVI = 33;
+    static PRE_EDIT = 34;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -228,6 +229,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     contentEdit(v: boolean) {
         this.m_content_editing = v;
+        this.notify(WorkSpace.PRE_EDIT);
     }
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
