@@ -308,6 +308,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             if (r) context.selection.selectShape(r);
         } else if (is_shape) { // 内部图层
             const source = JSON.parse(text_html.split(identity)[1]);
+            if (!source) throw new Error('invalid source');
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
             const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
@@ -317,8 +318,6 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                     if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
                     if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
                 }
-            }
-            if (xy) {
                 for (let i = 0, len = shapes.length; i < len; i++) { // 以新的起点为基准，计算每个图形位置
                     const shape = shapes[i];
                     shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
