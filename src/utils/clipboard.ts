@@ -56,7 +56,7 @@ export class Clipboard {
             const content = this.clipboard_write_shapes(shapes);
             if (!content) return false;
             for (let i = 0, len = content.length; i < len; i++) {
-                const shape = content[i].content;
+                const shape = content[i];
                 const root_frame = position_map.get(shape.id);
                 if (!root_frame) continue;
                 shape.frame.x = root_frame.x, shape.frame.y = root_frame.y;
@@ -278,7 +278,7 @@ function decode_html(html: string): string {
 /**
  * @description 从剪切板拿出图形数据并插入文档
  * @param data 剪切板拿出的数据
- * @param xy 插入位置
+ * @param xy 插入位置, 没有插入位置时将分配一个位置
  */
 async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     try {
@@ -319,7 +319,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                     if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
                 }
                 for (let i = 0, len = shapes.length; i < len; i++) { // 以新的起点为基准，计算每个图形位置
-                    const shape = shapes[i];
+                    let shape = shapes[i];
                     shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
                 }
             }
