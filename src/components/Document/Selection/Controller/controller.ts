@@ -11,7 +11,7 @@ import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
-import { paster_short } from '@/utils/clipaboard';
+import { paster_short } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';

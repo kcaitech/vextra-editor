@@ -310,7 +310,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
         } else if (is_shape) { // 内部图层
             const source = JSON.parse(text_html.split(identity)[1]);
             const shapes = import_shape(context.data, source);
-            const result: Shape[] = [];
+
             if (!shapes.length) throw new Error('invalid source');
             const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
             if (xy) {
@@ -333,15 +333,14 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                     shape.frame.x = xy.x + deltas[i].x;
                     shape.frame.y = xy.y + deltas[i].y;
                 }
-                const page = context.selection.selectedPage;
-                if (page) {
-                    const editor = context.editor.editor4Page(page);
-                    const r = editor.insert(page, page.childs.length, shape);
-                    if (r) result.push(r);
-                }
             }
-            if (result.length) {
-                context.selection.rangeSelectShape(result);
+            const page = context.selection.selectedPage;
+            if (page) {
+                const result: Shape[] = [];
+                const editor = context.editor.editor4Page(page);
+                const r = editor.insertShapes1(page, shapes, true);
+                r && result.concat(r);
+                result.length && context.selection.rangeSelectShape(result);
             }
         } else {
             message('info', context.workspace.t('clipboard.invalid_data'));

@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { message } from "./message";
-import { replace } from "./clipaboard";
+import { replace } from "./clipboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { permIsEdit } from "./content";
 import { Action } from "@/context/tool";

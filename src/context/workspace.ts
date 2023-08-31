@@ -2,7 +2,7 @@ import { ShapeType, TableShape, Watchable } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
-import { Clipboard } from "@/utils/clipaboard";
+import { Clipboard } from "@/utils/clipboard";
 import { adapt_page } from "@/utils/content";
 interface Point {
     x: number

@@ -129,7 +129,7 @@ let speed: number = 0;
 let shapes: Shape[] = [];
 let need_update_comment = false;
 let submatrix2 = new Matrix();
-function down(e: MouseEvent) {    
+function down(e: MouseEvent) {
     const context = props.context;
     const action = context.tool.action;
     if (!permIsEdit(context) || action === Action.AddComment) return;
@@ -143,7 +143,6 @@ function down(e: MouseEvent) {
             table_selection.setEditingCell();
             table_selection.resetSelection();
             startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
-
             wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));
             document.addEventListener('mousemove', mousemove4trans);
             document.addEventListener('mouseup', mouseup4trans);

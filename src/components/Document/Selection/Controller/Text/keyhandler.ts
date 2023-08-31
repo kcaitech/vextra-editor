@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Text, Shape } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
-import { paster_inner_shape } from "@/utils/clipaboard";
+import { paster_inner_shape } from "@/utils/clipboard";
 
 type TextShape = Shape & { text: Text };
 

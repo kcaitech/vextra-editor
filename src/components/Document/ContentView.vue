@@ -19,7 +19,7 @@ import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
 import { _updateRoot, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table, init_insert_shape2 } from '@/utils/content';
-import { paster } from '@/utils/clipaboard';
+import { paster } from '@/utils/clipboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';

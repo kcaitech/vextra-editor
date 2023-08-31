@@ -6,7 +6,7 @@ import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
-import { paster_image } from "./clipaboard";
+import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 export interface Media {
   name: string
