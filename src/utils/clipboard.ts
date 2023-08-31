@@ -498,12 +498,25 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 }
 // 不经过剪切板，直接复制(Shape[])
 export function paster_short(context: Context, shapes: Shape[]): Shape[] {
-    const source = export_shape(shapes);
-    const new_source = import_shape(context.data, source);
+    const pre_shapes: Shape[] = [], actions: { parent: GroupShape, index: number }[] = [];
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const s = shapes[i], p = s.parent;
+        if (!p) continue;
+        const childs = (p as GroupShape).childs;
+        for (let j = 0, len2 = childs.length; j < len2; j++) {
+            if (s.id === childs[j].id) {
+                pre_shapes.push(s);
+                actions.push({ parent: p as GroupShape, index: j + 1 });
+                break;
+            }
+        }
+    }
+    const source = export_shape(pre_shapes), new_source = import_shape(context.data, source);
     const page = context.selection.selectedPage;
     let result: Shape[] = [];
     if (page) {
-        const editor = context.editor4Page(page), _r = editor.insertShapes1(page, new_source);
+        const editor = context.editor4Page(page);
+        const _r = editor.insertShapes2(new_source, actions);
         _r && _r.length && (result = _r);
     }
     result.length && context.selection.rangeSelectShape(result);

@@ -75,6 +75,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             context.menu.menuMount(); // 取消右键事件
             context.menu.notify(Menu.SHUTDOWN_POPOVER);
             root = context.workspace.root;
+            shapes = context.selection.selectedShapes;
             if (!shapes.length) return;
             if (action == Action.AutoV || action == Action.AutoK) {
                 workspace.value.setCtrl('controller');
