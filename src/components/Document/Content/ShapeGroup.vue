@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { h } from 'vue';
 import comsMap from './comsmap'
-import { GroupShape } from "@kcdesign/data";
+import { GroupShape, OverridesGetter } from "@kcdesign/data";
 import { renderGroup as r } from "@kcdesign/data";
 import { makeReflush } from "./common";
 
-const props = defineProps<{ data: GroupShape }>();
+const props = defineProps<{ data: GroupShape, overrides: OverridesGetter | undefined }>();
 const reflush = makeReflush(props);
 
 function render() {
-    const ret = r(h, props.data, comsMap, reflush.value ? reflush.value : undefined);
+    const ret = r(h, props.data, comsMap, props.overrides, reflush.value ? reflush.value : undefined);
     return ret;
 }
 
