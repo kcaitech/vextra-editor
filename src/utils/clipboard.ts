@@ -311,8 +311,8 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             if (!source) throw new Error('invalid source');
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
-            const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
             if (xy) {
+                const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
                 for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
                     const frame = shapes[i].frame;
                     if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
