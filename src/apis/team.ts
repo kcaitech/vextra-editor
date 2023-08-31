@@ -50,3 +50,33 @@ export function getDoucmentListAPI(params = {}, opts = {}) {
         ...opts
     })
 }
+
+//获取项目回收站列表
+export function GetrecycleList(params = {}, ops = {}) {
+    return httpRequest({
+        url: 'documents/recycle_bin',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+//获取项目收藏列表
+export function getProjectFavoriteListsAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/favorite/list',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+//是否收藏
+export function setProjectIsFavoriteAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/favorite',
+        method: 'put',
+        data: params,
+        ...ops
+    })
+}

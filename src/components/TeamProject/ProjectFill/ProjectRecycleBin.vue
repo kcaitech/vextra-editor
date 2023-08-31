@@ -19,6 +19,7 @@
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
+import * as team_api from '@/apis/team'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -36,7 +37,7 @@ let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
 const emits = defineEmits(['data-update']);
 const props = defineProps<{
-    currentProject: Object
+    currentProject: any
 }>();
 
 interface data {
@@ -52,13 +53,11 @@ interface data {
 
 //获取回收站文件列表
 async function GetrecycleLists() {
-    // loading
     isLoading.value = true
     try {
-        const { data } = await user_api.GetrecycleList()
+        const { data } = await team_api.GetrecycleList({project_id: props.currentProject.project.id})
         if (data == null) {
             noNetwork.value = true
-            ElMessage.error(t('home.failed_list_tips'))
         } else {
             noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
@@ -70,10 +69,7 @@ async function GetrecycleLists() {
         lists.value = Object.values(data)
     } catch (error) {
         noNetwork.value = true
-        ElMessage.error(t('home.failed_list_tips'))
     }
-
-    // unloading  
     isLoading.value = false;
 }
 

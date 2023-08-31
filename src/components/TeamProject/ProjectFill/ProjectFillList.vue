@@ -14,7 +14,6 @@
 </template>
 
 <script setup lang="ts">
-import * as share_api from "@/apis/share"
 import * as user_api from '@/apis/users'
 import * as team_api from '@/apis/team'
 import { ElMessage } from 'element-plus'
@@ -41,7 +40,7 @@ interface data {
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'deletefile']
 const emits = defineEmits(['data-update']);
 const props = defineProps<{
-    currentProject: Object
+    currentProject: any
 }>()
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -61,11 +60,9 @@ const iconlists = ref(['star', 'share', 'delete'])
 async function getDoucment() {
     isLoading.value = true
     try {
-        const { data } = await team_api.getDoucmentListAPI() as any
+        const { data } = await team_api.getDoucmentListAPI({project_id: props.currentProject.project.id})
         if (data == null) {
             noNetwork.value = true
-            ElMessage.closeAll('error')
-            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
         } else {
             noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
@@ -77,8 +74,6 @@ async function getDoucment() {
         lists.value = Object.values(data)
     } catch (error) {
         noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
     isLoading.value = false
 }

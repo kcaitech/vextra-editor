@@ -40,6 +40,8 @@ const teamData = ref<any[]>([]) //储存团队列表
 const updatestate = ref(false) //控制aside组件中的团队列表请求
 const updateprojectlist = ref(false)  //控制projectlist组件中的项目列表请求
 const projectList =  ref<any[]>([]);
+const favoriteList =  ref<any[]>([]);
+const is_favor = ref<boolean>();
 
 const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {
   teamID.value = id
@@ -54,6 +56,10 @@ const state = (b: boolean) => {
   updatestate.value = b
 }
 
+const updateFavor = (s: boolean) => {
+  is_favor.value = s
+}
+
 //将获取的团队列表保存在到teamData
 const upDateTeamData = (data: any[]) => {
   teamData.value = data
@@ -63,11 +69,14 @@ const saveProjectData = (data: any[]) => {
   projectList.value = data
 }
 
+const favoriteListsData = (data: any[]) => {
+  favoriteList.value = data
+}
+
 //用于改变updateprojectlist的值
 const updateprojectliststate = (b: boolean) => {
   updateprojectlist.value = b
 }
-
 
 provide('shareData', {
   teamID,
@@ -78,12 +87,16 @@ provide('shareData', {
   updatestate,
   updateShareData,
   state,
-  teamData,
   updateprojectlist,
   upDateTeamData,
   updateprojectliststate,
   saveProjectData,
-  projectList
+  favoriteListsData,
+  projectList,
+  teamData,
+  favoriteList,
+  updateFavor,
+  is_favor,
 })
 
 function setTitle(t: string) {

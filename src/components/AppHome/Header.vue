@@ -26,114 +26,7 @@ const teamnum = ref(0);
 const projectnum = ref(0);
 const showInForm = ref(false);
 const applyList = ref<any[]>([]);
-const teamApplyList: any = ref([{
-    "user": {
-        "id": "1672502400000",
-        "nickname": "1",
-        "avatar": "https://storage.protodesign.cn/af78d7g98d.png"
-    },
-    "team": {
-        "id": "1672502400000",
-        "name": "团队A",
-        "invited_perm_type": 0,
-        "created_at": "2023-04-25 11:39:21.678000",
-        "avatar": "https://storage.protodesign.cn/files/teams/ab4c48c0-7472-46e1-9ddb-ff44ed4960ae/avatar/9e75b522-277b-4dcf-a209-4d43d4f27d24.png",
-        "description": "团队A介绍"
-    },
-    "request": {
-        "created_at": "2023-04-25 11:39:21.678000",
-        "id": "1672502400000",
-        "first_displayed_at": "2023-04-25 11:39:21.678000",
-        "status": 0,
-        "applicant_notes": "我是xxx，需要看一下这份文档，请通过",
-        "processor_notes": "予以通过",
-        "processed_at": "2023-04-25 11:39:21.678000",
-        "perm_type": 1,
-        "user_id": "1672502400000",
-        "team_id": "1672502400000"
-    }
-},
-{
-    "user": {
-        "id": "1672502400000",
-        "nickname": "1",
-        "avatar": "https://storage.protodesign.cn/af78d7g98d.png"
-    },
-    "team": {
-        "id": "1672502400000",
-        "name": "团队A",
-        "invited_perm_type": 0,
-        "created_at": "2023-04-25 11:39:21.678000",
-        "description": "团队A介绍",
-        "avatar": "https://storage.protodesign.cn/files/teams/ab4c48c0-7472-46e1-9ddb-ff44ed4960ae/avatar/9e75b522-277b-4dcf-a209-4d43d4f27d24.png"
-    },
-    "request": {
-        "created_at": "2023-04-25 11:39:21.678000",
-        "id": "1672502400000",
-        "first_displayed_at": "2023-04-25 11:39:21.678000",
-        "status": 0,
-        "applicant_notes": "我是xxx，需要看一下这份文档，请通过",
-        "processor_notes": "予以通过",
-        "processed_at": "2023-04-25 11:39:21.678000",
-        "perm_type": 1,
-        "user_id": "1672502400000",
-        "team_id": "1672502400000"
-    }
-}, {
-    "user": {
-        "id": "1672502400000",
-        "nickname": "1",
-        "avatar": "https://storage.protodesign.cn/af78d7g98d.png"
-    },
-    "project": {
-        "id": "1672502400000",
-        "name": "项目1",
-        "public_switch": false,
-        "public_perm_type": 1,
-        "team_id": "1672502400000",
-        "description": "项目1介绍"
-    },
-    "request": {
-        "created_at": "2023-04-25 11:39:21.678000",
-        "id": "1672502400000",
-        "first_displayed_at": "2023-04-25 11:39:21.678000",
-        "status": 0,
-        "applicant_notes": "我是xxx，需要看一下这份文档，请通过",
-        "processor_notes": "予以通过",
-        "processed_at": "2023-04-25 11:39:21.678000",
-        "perm_type": 1,
-        "user_id": "1672502400000",
-        "team_id": "1672502400000"
-    }
-},
-{
-    "user": {
-        "id": "1672502400000",
-        "nickname": "1",
-        "avatar": "https://storage.protodesign.cn/af78d7g98d.png"
-    },
-    "project": {
-        "id": "1672502400000",
-        "name": "项目1",
-        "public_switch": false,
-        "public_perm_type": 1,
-        "team_id": "1672502400000",
-        "description": "项目1介绍"
-    },
-    "request": {
-        "created_at": "2023-04-25 11:39:21.678000",
-        "id": "1672502400000",
-        "first_displayed_at": "2023-04-25 11:39:21.678000",
-        "status": 0,
-        "applicant_notes": "我是xxx，需要看一下这份文档，请通过",
-        "processor_notes": "予以通过",
-        "processed_at": "2023-04-25 11:39:21.678000",
-        "perm_type": 1,
-        "user_id": "1672502400000",
-        "team_id": "1672502400000"
-    }
-}]);
-// const teamApplyList = ref<any>([]);
+const teamApplyList = ref<any>([]);
 const projectApplyList = ref<any>([]);
 const search = ref('');
 const SearchList = ref<any[]>([]);
@@ -168,7 +61,7 @@ const getProjectApplyList = async () => {
     try {
         const { data } = await team_api.getTeamProjectApplyAPI();
         if (data) {
-            // projectApplyList.value = data;
+            projectApplyList.value = data;
             projectnum.value = projectApplyList.value.filter((item: any) => item.request.status === 0).length;
         }
     } catch (err) {
@@ -180,7 +73,7 @@ const getTeamApply = async () => {
     try {
         const { data } = await team_api.getTeamApplyAPI();
         if (data) {
-            // teamApplyList.value = [...projectApplyList, ...data];
+            teamApplyList.value = [...projectApplyList, ...data];
             teamnum.value = teamApplyList.value.filter((item: any) => item.request.status === 0).length;
         }
     } catch (err) {

@@ -7,6 +7,7 @@ import {
     Plus,
     Folder,
     FolderOpened,
+    Operation
 } from '@element-plus/icons-vue'
 import { router } from '@/router'
 import { useRoute } from 'vue-router'
@@ -20,6 +21,7 @@ import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
 import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch, computed } from 'vue';
 import * as user_api from '@/apis/users'
+import * as team_api from '@/apis/team'
 import addTeam from '../TeamProject/addTeam.vue'
 import addProject from '../TeamProject/addProject.vue';
 import { ElMessage } from 'element-plus';
@@ -37,22 +39,20 @@ const projectcard = ref(false);
 const teamid = ref('');
 const activeNames = ref([0]);
 const teamList = ref<any>([]);
+const teamDataList = ref<any[]>([]);
+const projectDataList = ref<any[]>([]);
+const reflush = ref(0);
 
-const { teamData, updatestate, updateShareData, upDateTeamData, state, saveProjectData } = inject('shareData') as {
-    teamData: Ref<[{
-        team: {
-            id: string,
-            name: string,
-            avatar: string,
-            description: string
-        },
-        self_perm_type: number
-    }]>;
+const { updatestate, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, is_favor, projectList } = inject('shareData') as {
     updatestate: Ref<boolean>;
+    is_favor: Ref<boolean>;
     updateShareData: (id: string, name: string, avatar: string, description: string, self_perm_type: number) => void;
     upDateTeamData: (data: any[]) => void;
     state: (b: boolean) => void;
+    updateFavor: (b: boolean) => void;
     saveProjectData: (data: any[]) => void;
+    favoriteListsData: (data: any[]) => void;
+    projectList: Ref<any[]>;
 }
 
 function addChildToParent(parent: { children: any[]; }, child: any) {
@@ -74,12 +74,22 @@ function mergeArrays(parentArray: any[], childArray: any[]) {
 }
 
 // 使用合并函数将两个数组合并成一个数组
-
-const GetprojectLists = async () => {
+const favoriteProjectList = (arr1: any[], arr2: any[]) => {
+    const projectList = arr1.map(item => {
+        item.is_favor = arr2.some(value => value.project.id === item.project.id)
+        return item;
+    })
+    return projectList;
+}
+const getProjectFavoriteLists = async () => {
     try {
-        const { data } = await user_api.GetprojectLists()
-        saveProjectData(data);
-        teamList.value = mergeArrays(teamData.value, data);
+        const { data } = await team_api.getProjectFavoriteListsAPI()
+        favoriteListsData(data);
+        const project = favoriteProjectList(projectList.value, data)
+        saveProjectData(project)
+        projectDataList.value = data;
+        teamList.value = mergeArrays(teamDataList.value, data);
+        reflush.value++
     } catch (error) {
         console.log(error);
     }
@@ -146,14 +156,17 @@ const GetteamList = async () => {
         const { code, data, message } = await user_api.GetteamList()
         if (code === 0) {
             upDateTeamData(data)
+            teamDataList.value = data
+            teamList.value = mergeArrays(data, projectDataList.value);
+            reflush.value++
             ElMessage({ type: 'success', message: '成功获取团队列表' })
         } else {
             ElMessage({ type: 'error', message: message })
         }
     } catch (error) {
+        console.log(error);
 
     }
-
 }
 
 watch(updatestate, (newvalue) => {
@@ -162,6 +175,13 @@ watch(updatestate, (newvalue) => {
         state(false)
     }
 })
+watch(is_favor, () => {
+    const timer = setTimeout(() => {
+        getProjectFavoriteLists();
+        clearTimeout(timer)
+    }, 200)
+})
+
 
 const torouter = (id: string) => {
     router.push({ path: '/apphome/teams/' + id });
@@ -181,9 +201,24 @@ const isProjectActive = (id: string) => {
     return route.params.id === id
 }
 
+const setProjectIsFavorite = async (id: string, state: boolean) => {
+    try {
+        await team_api.setProjectIsFavoriteAPI({ project_id: id, is_favor: state });
+        getProjectFavoriteLists()
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const cancelFixed = (index: number, i: number, id: string) => {
+    teamList.value[index].children.splice(i, 1)
+    setProjectIsFavorite(id, false);
+    updateFavor(!is_favor.value);
+}
+
 onMounted(() => {
-    GetteamList()
-    GetprojectLists()
+    GetteamList();
+    getProjectFavoriteLists();
 })
 
 onUnmounted(() => {
@@ -237,7 +272,7 @@ onUnmounted(() => {
                         <span>{{ t('home.recycling_station') }}</span>
                     </el-menu-item></router-link>
             </el-menu>
-            <div class="teamlists">
+            <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
                 <div class="demo-collapse">
                     <el-collapse v-model="activeNames">
                         <div v-for="({ team: { name, id, avatar, description }, self_perm_type, children }, index) in teamList"
@@ -266,22 +301,40 @@ onUnmounted(() => {
                                         </div>
                                     </div>
                                 </template>
-                                <div class="project" v-for="(item, i) in children" :key="i"
-                                    @click.stop="skipProject(item.project.id)"
-                                    :class="{ 'is_active': isProjectActive(item.project.id) }">
-                                    <div>
-                                        <div>{{ item.project.name }}</div>
-                                        <div class="right" @click.stop="newProjectFile(item.project.id)">
-                                            <svg-icon icon-class="close" />
+                                <template v-for="(item, i) in children" :key="i">
+                                    <div class="project" @click.stop="skipProject(item.project.id)"
+                                        :class="{ 'is_active': isProjectActive(item.project.id) }">
+                                        <div>
+                                            <div>{{ item.project.name }}</div>
+                                            <div class="right" @click.stop="newProjectFile(item.project.id)">
+                                                <div @click="cancelFixed(index, i, item.project.id)">
+                                                    <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
+                                                        version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
+                                                        width="20" height="20">
+                                                        <path
+                                                            d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
+                                                            fill="#9775fa" p-id="15756"
+                                                            data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
+                                                            class=""></path>
+                                                        <path
+                                                            d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
+                                                            fill="#FFFFFF" p-id="15757"
+                                                            data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
+                                                            class=""></path>
+                                                    </svg>
+                                                </div>
+                                                <svg-icon icon-class="close"
+                                                    style="transform: rotate(45deg); margin-left: 5px;" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </template>
                             </el-collapse-item>
                         </div>
                     </el-collapse>
                 </div>
             </div>
-            <div class="team-container">
+            <div class=" team-container">
                 <button class="newteam" @click.stop="showteamcard">
                     <svg-icon icon-class="close" />
                     <span>{{ t('Createteam.add_team') }}</span>
@@ -674,6 +727,11 @@ a {
 
 
         .right {
+            >div {
+                display: flex;
+                align-items: center;
+            }
+
             display: flex;
             align-items: center;
             visibility: hidden;
@@ -681,11 +739,10 @@ a {
             padding-right: 10px;
 
             svg {
-                width: 16px;
+                width: 18px;
                 min-width: 16px;
-                height: 16px;
+                height: 18px;
                 fill: #9775fa;
-                transform: rotate(45deg);
             }
         }
     }
@@ -726,4 +783,5 @@ a {
         font-size: 32px;
     }
 
-}</style>
+}
+</style>

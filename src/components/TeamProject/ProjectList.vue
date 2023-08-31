@@ -6,15 +6,29 @@
             </div>
             <div class="main">
                 <div class="project-item" :class="{ 'selected': selectid === id }"
-                    v-for="{ project: { name, id, description }, creator: { nickname } } in searchvalue === '' ? teamprojectlist : SearchList"
-                    :key="id" @click.stop="selectid = id">
+                    v-for="({ project: { name, id, description }, creator: { nickname }, is_favor }, index) in searchvalue === '' ? teamprojectlist : SearchList"
+                    :key="id" @click.stop="selectid = id" @dblclick.stop="skipProject(id)">
                     <div class="project-name">{{ name }}</div>
                     <div class="project-description">{{ description }}</div>
                     <div class="project-creator">{{ nickname }}</div>
                     <div class="other">
-                       <div><svg-icon icon-class="frame"></svg-icon></div>
-                       <div><svg-icon icon-class="drag"></svg-icon></div>
-                       <div><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
+                        <div @click="cancelFixed(id, is_favor, index)">
+                            <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                                xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
+                                <path
+                                    d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
+                                    :fill="is_favor ? '#9775fa' : '#999'" p-id="15756"
+                                    data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
+                                </path>
+                                <path
+                                    d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
+                                    fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
+                                    class="">
+                                </path>
+                            </svg>
+                        </div>
+                        <div @click.stop="skipProject(id)"><svg-icon icon-class="drag"></svg-icon></div>
+                        <div><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
                     </div>
                 </div>
             </div>
@@ -27,23 +41,27 @@
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, nextTick, onMounted, ref, watch } from 'vue';
+import { Ref, computed, inject, watchEffect, onMounted, ref, watch } from 'vue';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
+import { useRoute } from 'vue-router'
+import { router } from '@/router'
+import { Operation } from '@element-plus/icons-vue'
+import * as team_api from '@/apis/team'
 
 interface Props {
     searchvalue?: string
 }
-
+const route = useRoute();
 const showbutton = ref(false)
 const noNetwork = ref(false)
 const { t } = useI18n()
 const titles = ['项目名称', '项目描述', '创建者', '操作',]
-const projectdata = ref<any[]>([])
 const selectid = ref(0)
-
+const projectLists = ref<any[]>([])
+const teamprojectlist = ref<any[]>([])
 const emits = defineEmits<{
     (e: 'addproject'): () => void
 }>()
@@ -52,26 +70,39 @@ const props = withDefaults(defineProps<Props>(), {
     searchvalue: ''
 })
 
-const { teamID, updateprojectlist, updateprojectliststate } = inject('shareData') as {
+const { teamID, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor } = inject('shareData') as {
     updateprojectlist: Ref<boolean>;
     updateprojectliststate: (b: boolean) => void;
     teamID: Ref<string>;
+    projectList: Ref<any[]>;
+    favoriteList: Ref<any[]>;
+    saveProjectData: (data: any[]) => void;
+    is_favor: Ref<boolean>;
+    updateFavor: (b: boolean) => void;
 };
+
+const favoriteProjectList = (arr1: any[], arr2: any[]) => {
+    const projectList = arr1.map(item => {
+        item.is_favor = arr2.some(value => value.project.id === item.project.id)
+        return item;
+    })
+    return projectList;
+}
 
 const GetprojectLists = async () => {
     try {
         const { code, data, message } = await user_api.GetprojectLists()
         if (code === 0) {
-            projectdata.value = data
-            ElMessage.success('成功获取项目列表')
+            const project = favoriteProjectList(data, favoriteList.value)
+            saveProjectData(project)
+            projectLists.value = project
+            teamprojectlist.value = project.filter((item) => item.project.team_id === teamID.value)
             if (noNetwork.value) noNetwork.value = false
         } else {
             ElMessage({ type: 'error', message: message })
         }
     } catch (error) {
         noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
 }
 
@@ -84,8 +115,8 @@ watch(updateprojectlist, () => {
 })
 
 //获取当前用户所有项目列表,然后用计算属性筛选出当前团队的项目
-const teamprojectlist = computed(() => {
-    return projectdata.value.filter((item) => item.project.team_id === teamID.value)
+watchEffect(() => {
+    teamprojectlist.value = projectList.value.filter((item) => item.project.team_id === teamID.value)
 })
 
 watch(teamprojectlist, () => {
@@ -98,7 +129,12 @@ watch(teamprojectlist, () => {
     }, 300);
 })
 
-
+watch(is_favor, () => {
+    const timer = setTimeout(() => {
+        teamprojectlist.value = projectList.value.filter((item) => item.project.team_id === teamID.value)
+        clearTimeout(timer)
+    }, 300)
+})
 
 //通过计算属性，筛选出与搜索匹配的项目
 const SearchList = computed(() => {
@@ -108,6 +144,28 @@ const SearchList = computed(() => {
             el.creator.nickname.toLowerCase().includes(props.searchvalue.toLowerCase())
     })
 })
+
+const skipProject = (id: string) => {
+    router.push({ path: '/apphome/project/' + id });
+}
+
+const setProjectIsFavorite = async (id: string, state: boolean) => {
+    try {
+        await team_api.setProjectIsFavoriteAPI({ project_id: id, is_favor: state });
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const cancelFixed = (id: string, state: boolean, index: number) => {
+    if (props.searchvalue === '') {
+        teamprojectlist.value[index].is_favor = !state;
+    } else {
+        SearchList.value[index].is_favor = !state;
+    }
+    setProjectIsFavorite(id, !state);
+    updateFavor(!is_favor.value);
+}
 
 onMounted(() => {
     GetprojectLists()
@@ -150,10 +208,12 @@ onMounted(() => {
         .other {
             flex: 1;
             display: flex;
+
             svg {
                 width: 16px;
                 height: 16px;
             }
+
             >div {
                 margin-right: 10px;
             }
