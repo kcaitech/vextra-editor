@@ -5,6 +5,7 @@ import { renderSymbolRef as r } from "@kcdesign/data"
 import { SymbolRefShape } from '@kcdesign/data';
 
 const props = defineProps<{ data: SymbolRefShape }>();
+props.data.loadSymbol();
 
 const reflush = ref(0);
 function watcher() {
@@ -13,9 +14,9 @@ function watcher() {
 const stopWatch = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
+    value.loadSymbol();
 })
 onMounted(() => {
-    props.data.loadSymbol();
     props.data.watch(watcher);
 })
 onUnmounted(() => {
