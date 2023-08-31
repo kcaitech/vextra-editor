@@ -37,7 +37,7 @@ const showoverlay = ref(false);
 const teamcard = ref(false);
 const projectcard = ref(false);
 const teamid = ref('');
-const activeNames = ref([0]);
+const activeNames = ref([-1]);
 const teamList = ref<any>([]);
 const teamDataList = ref<any[]>([]);
 const projectDataList = ref<any[]>([]);
@@ -275,62 +275,59 @@ onUnmounted(() => {
             <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
                 <div class="demo-collapse">
                     <el-collapse v-model="activeNames">
-                        <div v-for="({ team: { name, id, avatar, description }, self_perm_type, children }, index) in teamList"
-                            :key="id" @click.stop="torouter(id)">
-                            <el-collapse-item :name="index">
-                                <template #title>
-                                    <div class="team-title"
-                                        :class="{ 'is_active': isActive(id, name, avatar, description, self_perm_type) }">
-                                        <div class="left">
-                                            <div class="down"
-                                                :style="{ transform: activeNames.includes(index) ? 'rotate(0deg)' : 'rotate(-90deg)' }">
-                                                <svg-icon icon-class="down" />
-                                            </div>
-                                            <div class="team-avatar">
-                                                <div v-if="avatar.includes('http')" class="img">
-                                                    <img :src="avatar" alt="team avatar">
-                                                </div>
-                                                <div v-else class="text">
-                                                    <span>{{ name.slice(0, 1) }}</span>
-                                                </div>
-                                            </div>
-                                            <span class="name">{{ name }}</span>
+                        <el-collapse-item v-for="(data, index) in teamList" :key="data.team.id" :name="index"
+                            @click.stop="torouter(data.team.id)">
+                            <template #title>
+                                <div class="team-title"
+                                    :class="{ 'is_active': isActive(data.team.id, data.team.name, data.team.avatar, data.team.description, data.self_perm_type) }">
+                                    <div class="left">
+                                        <div class="down"
+                                            :style="{ transform: activeNames.includes(index) ? 'rotate(0deg)' : 'rotate(-90deg)' }">
+                                            <svg-icon icon-class="down" />
                                         </div>
-                                        <div class="right" @click.stop="showprojectcard(id)">
-                                            <svg-icon icon-class="close" />
+                                        <div class="team-avatar">
+                                            <div v-if="data.team.avatar.includes('http')" class="img">
+                                                <img :src="data.team.avatar" alt="team avatar">
+                                            </div>
+                                            <div v-else class="text">
+                                                <span>{{ data.team.name.slice(0, 1) }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="name">{{ data.team.name }}</div>
+                                    </div>
+                                    <div class="right" @click.stop="showprojectcard(data.team.id)">
+                                        <svg-icon icon-class="close" />
+                                    </div>
+                                </div>
+                            </template>
+                            <template v-for="(item, i) in data.children" :key="i">
+                                <div class="project" @click.stop="skipProject(item.project.id)"
+                                    :class="{ 'is_active': isProjectActive(item.project.id) }">
+                                    <div>
+                                        <div>{{ item.project.name }}</div>
+                                        <div class="right" @click.stop="newProjectFile(item.project.id)">
+                                            <div @click="cancelFixed(index, i, item.project.id)">
+                                                <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                                                    xmlns="http://www.w3.org/2000/svg" p-id="15755" width="20" height="20">
+                                                    <path
+                                                        d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
+                                                        fill="#9775fa" p-id="15756"
+                                                        data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
+                                                        class=""></path>
+                                                    <path
+                                                        d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
+                                                        fill="#FFFFFF" p-id="15757"
+                                                        data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
+                                                        class=""></path>
+                                                </svg>
+                                            </div>
+                                            <svg-icon icon-class="close"
+                                                style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;"/>
                                         </div>
                                     </div>
-                                </template>
-                                <template v-for="(item, i) in children" :key="i">
-                                    <div class="project" @click.stop="skipProject(item.project.id)"
-                                        :class="{ 'is_active': isProjectActive(item.project.id) }">
-                                        <div>
-                                            <div>{{ item.project.name }}</div>
-                                            <div class="right" @click.stop="newProjectFile(item.project.id)">
-                                                <div @click="cancelFixed(index, i, item.project.id)">
-                                                    <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
-                                                        version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
-                                                        width="20" height="20">
-                                                        <path
-                                                            d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                                            fill="#9775fa" p-id="15756"
-                                                            data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
-                                                            class=""></path>
-                                                        <path
-                                                            d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                                            fill="#FFFFFF" p-id="15757"
-                                                            data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                                            class=""></path>
-                                                    </svg>
-                                                </div>
-                                                <svg-icon icon-class="close"
-                                                    style="transform: rotate(45deg); margin-left: 5px;" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </template>
-                            </el-collapse-item>
-                        </div>
+                                </div>
+                            </template>
+                        </el-collapse-item>
                     </el-collapse>
                 </div>
             </div>
@@ -580,6 +577,151 @@ a {
                 width: 0;
             }
 
+            .demo-collapse {
+                .team-title {
+                    width: 100%;
+                    height: 40px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-radius: 4px;
+                    margin-bottom: 5px;
+
+                    &:hover {
+                        background-color: #f3f0ff;
+
+                        .right {
+                            visibility: visible;
+                        }
+                    }
+
+                    .left {
+                        display: flex;
+                        align-items: center;
+                        width: 200px;
+                        margin-left: 8px;
+
+                        .down {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            height: 100%;
+                            margin-right: 4px;
+                            margin-left: 2px;
+                            transition: .3s;
+
+                            svg {
+                                width: 10px;
+                                height: 10px;
+                            }
+                        }
+
+                        .team-avatar {
+                            width: 24px;
+                            height: 24px;
+                            min-width: 24px;
+                            background-color: #9775fa;
+                            text-align: center;
+                            border-radius: 50%;
+                            overflow: hidden;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin-right: 6px;
+
+                            .img {
+                                width: 100%;
+                                height: 100%;
+                                line-height: 0;
+
+                                img {
+                                    width: 100%;
+                                    height: 100%;
+                                    object-fit: cover;
+                                }
+                            }
+
+                            .text {
+                                display: flex;
+
+                                span {
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                    color: white;
+                                }
+                            }
+                        }
+
+                        .name {
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+                    }
+
+                    .right {
+                        visibility: hidden;
+                        margin-right: 8px;
+                        height: 100%;
+
+                        svg {
+                            width: 16px;
+                            min-width: 16px;
+                            height: 16px;
+                            fill: #9775fa;
+                            transform: rotate(45deg);
+                        }
+                    }
+                }
+
+                .project {
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    border-radius: 4px;
+                    cursor: pointer;
+
+                    &:hover {
+                        background-color: #f3f0ff;
+
+                        .right {
+                            visibility: visible;
+                        }
+                    }
+
+                    >div {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        width: 100%;
+                        height: 35px;
+                        border-radius: 4px;
+                        padding-left: 50px;
+
+
+                        .right {
+                            >div {
+                                display: flex;
+                                align-items: center;
+                            }
+
+                            display: flex;
+                            align-items: center;
+                            visibility: hidden;
+                            height: 100%;
+                            padding-right: 10px;
+
+                            svg {
+                                width: 18px;
+                                min-width: 16px;
+                                height: 18px;
+                                fill: #9775fa;
+                            }
+                        }
+                    }
+                }
+            }
 
             .teamitem {
                 border-radius: 4px;
@@ -601,152 +743,7 @@ a {
     }
 }
 
-.team-title {
-    width: 100%;
-    height: 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 4px;
-    margin-bottom: 5px;
 
-    &:hover {
-        background-color: #f3f0ff;
-    }
-
-    .left {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        height: 40px;
-
-        .down {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 100%;
-            margin-right: 3px;
-            margin-left: 2px;
-            transition: .3s;
-
-            svg {
-                width: 8px;
-                height: 8px;
-            }
-        }
-
-        .team-avatar {
-            width: 24px;
-            height: 24px;
-            min-width: 24px;
-            background-color: #9775fa;
-            text-align: center;
-            border-radius: 50%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 6px;
-
-            .img {
-                width: 100%;
-                height: 100%;
-                line-height: 0;
-
-                img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-
-                }
-            }
-
-            .text {
-                height: 100%;
-
-                span {
-                    width: 100%;
-                    height: 100%;
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: white;
-                }
-            }
-        }
-
-        .name {
-            display: flex;
-            align-items: center;
-            height: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-    }
-
-    .right {
-        visibility: hidden;
-        height: 40px;
-        margin-right: 10px;
-
-        svg {
-            width: 16px;
-            min-width: 16px;
-            height: 16px;
-            fill: #9775fa;
-            transform: rotate(45deg);
-        }
-    }
-}
-
-.project {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: 4px;
-    cursor: pointer;
-
-    &:hover {
-        background-color: #f3f0ff;
-
-        .right {
-            visibility: visible;
-        }
-    }
-
-    >div {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        height: 35px;
-        border-radius: 4px;
-        padding-left: 50px;
-
-
-        .right {
-            >div {
-                display: flex;
-                align-items: center;
-            }
-
-            display: flex;
-            align-items: center;
-            visibility: hidden;
-            height: 100%;
-            padding-right: 10px;
-
-            svg {
-                width: 18px;
-                min-width: 16px;
-                height: 18px;
-                fill: #9775fa;
-            }
-        }
-    }
-}
 
 :deep(.el-collapse-item__content) {
     padding: 0;

@@ -33,9 +33,10 @@
                         </div>
                         <transition name="el-zoom-in-top">
                             <ul class="filterlist" v-if="userid === id && folds" ref="menu">
-                                <li class="item" v-for="(item, index) in  typeitems " :key="index"
-                                    @click.stop="filterEvent(index)">
-                                    <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
+                                <li class="item" v-for="(item, index) in  typeitems(usertype()) " :key="index"
+                                    @click.stop="itemEvent(item,teamID)">
+                                    <div class="choose"
+                                        :style="{ visibility: item == membertype(perm_type) ? 'visible' : 'hidden' }">
                                     </div>
                                     {{ item }}
                                 </li>
@@ -50,10 +51,14 @@
                         </div>
                         <transition name="el-zoom-in-top">
                             <ul class="filterlist" v-if="userid === id && folds" ref="menu">
-                                <li class="item" v-for="(item, index) in  filteritems " :key="index"
+                                <li class="item" v-for="(item, index) in typeitems(usertype()) " :key="index"
                                     @click.stop="filterEvent(index)">
+                                    <div class="choose"
+                                        :style="{ visibility: item == membertype(perm_type) ? 'visible' : 'hidden' }">
+                                    </div>
                                     {{ item }}
                                 </li>
+
                             </ul>
                         </transition>
                     </div>
@@ -65,8 +70,11 @@
                         </div>
                         <transition name="el-zoom-in-top">
                             <ul class="filterlist" v-if="userid === id && folds" ref="menu">
-                                <li class="item" v-for="(item, index) in  filteritems " :key="index"
+                                <li class="item" v-for="(item, index) in  typeitems(usertype()) " :key="index"
                                     @click.stop="filterEvent(index)">
+                                    <div class="choose"
+                                        :style="{ visibility: item == membertype(perm_type) ? 'visible' : 'hidden' }">
+                                    </div>
                                     {{ item }}
                                 </li>
                             </ul>
@@ -84,6 +92,7 @@ import NetworkError from '@/components/NetworkError.vue'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { el } from 'element-plus/es/locale';
 
 interface Props {
     searchvalue?: string
@@ -98,7 +107,6 @@ const userid = ref()
 const { t } = useI18n()
 const titles = ['姓名', '团队权限']
 const filteritems = ['仅阅读', '可编辑', '管理员', '创建者', '全部']
-const typeitems = ['管理员', '可编辑', '仅阅读', '转移创建者', '移出团队']
 
 const noNetwork = ref(false)
 const teammemberdata = ref<any[]>([])
@@ -116,8 +124,21 @@ const usertype = () => {
     if (text) {
         return text.perm_type
     }
+}
 
-
+const typeitems = (num: number) => {
+    switch (num) {
+        case 0:
+            return ['离开团队']
+        case 1:
+            return ['离开团队']
+        case 2:
+            return ['可编辑', '仅阅读', '移出团队']
+        case 3:
+            return ['管理员', '可编辑', '仅阅读', '转移创建者', '移出团队']
+        default:
+            return null
+    }
 }
 
 const GetteamMember = async () => {
@@ -143,7 +164,7 @@ const GetteamMember = async () => {
 const membertype = (num: number) => {
     switch (num) {
         case 0:
-            return '只读'
+            return '仅阅读'
         case 1:
             return '可编辑'
         case 2:
@@ -177,6 +198,56 @@ const filterEvent = (index: number = 4) => {
     fontName.value = index
     fold.value = false
     folds.value = false
+}
+
+const setPerm = async (T: string, U: string, P: number) => {
+    try {
+        const { code,message } = await user_api.Setteammemberperm({ team_id: T, user_id: U, perm_type: P })
+        if(code===0){
+            ElMessage.success(message)
+        }else{
+            ElMessage.error(message)
+        }
+    } catch (error) {
+
+    }
+}
+
+const itemEvent = (item: string,teamid:string,userid:string,perm_type:'') => {
+    switch (item) {
+        case '管理员':
+            return (() => {
+                setPerm('1111');
+
+            })()
+        case '可编辑':
+            return (() => {
+                console.log('1111');
+
+            })()
+        case '仅阅读':
+            return (() => {
+                console.log('1111');
+
+            })()
+        case '转移创建者':
+            return (() => {
+                console.log('1111');
+
+            })()
+        case '移出团队':
+            return (() => {
+                console.log('1111');
+
+            })()
+        case '离开团队':
+            return (() => {
+                console.log('1111');
+
+            })()
+        default:
+            break
+    }
 }
 
 watch(teamID, () => {
@@ -299,6 +370,8 @@ onUnmounted(() => {
                 z-index: 2;
 
                 .item {
+                    display: flex;
+                    align-items: center;
                     cursor: pointer;
                     line-height: 32px;
 
