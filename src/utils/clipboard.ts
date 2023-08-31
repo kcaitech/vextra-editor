@@ -501,17 +501,11 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
     const source = export_shape(shapes);
     const new_source = import_shape(context.data, source);
     const page = context.selection.selectedPage;
-    const result: Shape[] = [];
+    let result: Shape[] = [];
     if (page) {
-        for (let i = 0; i < new_source.length; i++) {
-            const _s = new_source[i];
-            const editor = context.editor4Page(page);
-            const r = editor.insert(page, source[i].index + 1, _s, true);
-            if (r) { result.push(r) }
-        }
+        const editor = context.editor4Page(page), _r = editor.insertShapes1(page, new_source);
+        _r && _r.length && (result = _r);
     }
-    if (result.length) {
-        context.selection.rangeSelectShape(result);
-    }
+    result.length && context.selection.rangeSelectShape(result);
     return result;
 }
