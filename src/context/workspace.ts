@@ -4,6 +4,7 @@ import { Context } from "./index";
 import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipboard";
 import { adapt_page } from "@/utils/content";
+import { PageXY } from "./selection";
 interface Point {
     x: number
     y: number
@@ -140,6 +141,10 @@ export class WorkSpace extends Watchable(Object) {
             }
             return root;
         }
+    }
+    get center_on_page(): PageXY {
+        const { x, right, y, bottom } = this.root;
+        return this.matrix.inverseCoord({ x: (right - x) / 2, y: (bottom - y) / 2 });
     }
     get pageView() {//return pageView HTMLElement
         const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);

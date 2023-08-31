@@ -8,6 +8,7 @@ import { PageXY } from '@/context/selection';
 import { Media, getName } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
+import { XYsBounding2, is_box_outer_view, is_box_outer_view2 } from './common';
 interface SystemClipboardItem {
     type: ShapeType
     contentType: string
@@ -311,23 +312,23 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             if (!source) throw new Error('invalid source');
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
-            if (xy) {
-                const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
-                for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
-                    const frame = shapes[i].frame;
-                    if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
-                    if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
-                }
-                for (let i = 0, len = shapes.length; i < len; i++) { // 以新的起点为基准，计算每个图形位置
-                    let shape = shapes[i];
-                    shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
+            if (xy) { // 指定复制位置
+                modify_frame_by_xy(xy, shapes);
+            } else { // 未指定复制位置
+                if (is_box_outer_view2(shapes, context)) { // 图形将脱离视野，需要重新寻找新的定位
+                    modify_frame_by_xy(context.workspace.center_on_page, shapes);
+                } else { // 图形不会脱离视野，原为偏移后粘贴
+                    for (let i = 0, len = shapes.length; i < len; i++) {
+                        const frame = shapes[i].frame;
+                        frame.x += 10, frame.y += 10;
+                    }
                 }
             }
             const page = context.selection.selectedPage;
             if (page) {
                 const editor = context.editor.editor4Page(page);
                 const r = editor.insertShapes1(page, shapes);
-                r && r.length && context.selection.rangeSelectShape(r);
+                if (r && r.length) context.selection.rangeSelectShape(r);
             }
         } else {
             message('info', context.workspace.t('clipboard.invalid_data'));
@@ -335,6 +336,18 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     } catch (error) {
         console.log(error);
         message('info', context.workspace.t('clipboard.invalid_data'));
+    }
+}
+function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
+    const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
+    for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
+        const frame = shapes[i].frame;
+        if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
+        if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
+    }
+    for (let i = 0, len = shapes.length; i < len; i++) { // 以新的起点为基准，计算每个图形位置
+        let shape = shapes[i];
+        shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
     }
 }
 /**
@@ -426,12 +439,9 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
  * @returns { {x: number,y: number} } 位置
  */
 function adjust_content_xy(context: Context, m: { width: number, height: number }) {
-    const workspace = context.workspace;
-    const root = workspace.root;
-    const matrix = workspace.matrix;
+    const workspace = context.workspace, root = workspace.root, matrix = workspace.matrix;
     const ratio_wh = m.width / m.height;
-    const page_height = root.height / matrix.m00;
-    const page_width = root.width / matrix.m00;
+    const page_height = root.height / matrix.m00, page_width = root.width / matrix.m00;;
     if (m.height >= m.width) {
         if (m.height > page_height * 0.95) {
             m.height = page_height * 0.95;
