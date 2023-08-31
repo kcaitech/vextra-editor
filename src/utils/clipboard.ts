@@ -313,11 +313,11 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
             if (xy) { // 指定复制位置
-                modify_frame_by_xy(xy, shapes);
+                modify_frame_by_xy(xy, shapes); // 以新的起点为基准，重新计算每个图形位置
             } else { // 未指定复制位置
                 if (is_box_outer_view2(shapes, context)) { // 图形将脱离视野，需要重新寻找新的定位
                     modify_frame_by_xy(context.workspace.center_on_page, shapes);
-                } else { // 图形不会脱离视野，原为偏移后粘贴
+                } else { // 图形不会脱离视野，原位偏移后粘贴
                     for (let i = 0, len = shapes.length; i < len; i++) {
                         const frame = shapes[i].frame;
                         frame.x += 10, frame.y += 10;
@@ -345,7 +345,7 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
         if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
         if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
     }
-    for (let i = 0, len = shapes.length; i < len; i++) { // 以新的起点为基准，计算每个图形位置
+    for (let i = 0, len = shapes.length; i < len; i++) {
         let shape = shapes[i];
         shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
     }
