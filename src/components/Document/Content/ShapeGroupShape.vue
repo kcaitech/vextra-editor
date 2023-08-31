@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Shape, GroupShape } from "@kcdesign/data";
+import { Shape, GroupShape, OverridesGetter } from "@kcdesign/data";
 import { renderBoolOpShape as opr } from "@kcdesign/data";
 import { renderGroup as normalR } from "@kcdesign/data";
 import comsMap from './comsmap';
 
-const props = defineProps<{ data: GroupShape }>();
+const props = defineProps<{ data: GroupShape, overrides: OverridesGetter | undefined  }>();
 const reflush = ref(0);
 const consumed: Array<Shape> = [];
 
@@ -38,7 +38,7 @@ function render() {
 
     const ret = isBoolOpShape ?
         opr(h, props.data, reflush.value !== 0 ? reflush.value : undefined, consumed0) :
-        normalR(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined);
+        normalR(h, props.data, comsMap, props.overrides, reflush.value !== 0 ? reflush.value : undefined);
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
