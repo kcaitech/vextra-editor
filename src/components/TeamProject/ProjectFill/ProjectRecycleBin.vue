@@ -36,7 +36,7 @@ let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
 const emits = defineEmits(['data-update']);
 const props = defineProps<{
-    projectList: any[]
+    currentProject: Object
 }>();
 
 interface data {

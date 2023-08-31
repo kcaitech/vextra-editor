@@ -41,7 +41,7 @@ interface data {
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'deletefile']
 const emits = defineEmits(['data-update']);
 const props = defineProps<{
-    projectList: any[]
+    currentProject: Object
 }>()
 const { t } = useI18n()
 const isLoading = ref(false)

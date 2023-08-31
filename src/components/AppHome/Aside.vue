@@ -276,7 +276,6 @@ onUnmounted(() => {
                                         </div>
                                     </div>
                                 </div>
-
                             </el-collapse-item>
                         </div>
                     </el-collapse>
