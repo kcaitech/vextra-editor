@@ -30,15 +30,15 @@ interface Emits {
 
 const emits = defineEmits<Emits>();
 const { t } = useI18n();
-const route = useRoute()
-const showoverlay = ref(false)
-const teamcard = ref(false)
-const projectcard = ref(false)
-const teamid = ref('')
-const activeNames = ref([0])
-const teamList = ref<any>([])
+const route = useRoute();
+const showoverlay = ref(false);
+const teamcard = ref(false);
+const projectcard = ref(false);
+const teamid = ref('');
+const activeNames = ref([0]);
+const teamList = ref<any>([]);
 
-const { teamData, updatestate, updateShareData, upDateTeamData, state } = inject('shareData') as {
+const { teamData, updatestate, updateShareData, upDateTeamData, state, saveProjectData } = inject('shareData') as {
     teamData: Ref<[{
         team: {
             id: string,
@@ -52,6 +52,7 @@ const { teamData, updatestate, updateShareData, upDateTeamData, state } = inject
     updateShareData: (id: string, name: string, avatar: string, description: string, self_perm_type: number) => void;
     upDateTeamData: (data: any[]) => void;
     state: (b: boolean) => void;
+    saveProjectData: (data: any[]) => void;
 }
 
 function addChildToParent(parent: { children: any[]; }, child: any) {
@@ -77,6 +78,7 @@ function mergeArrays(parentArray: any[], childArray: any[]) {
 const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
+        saveProjectData(data);
         teamList.value = mergeArrays(teamData.value, data);
     } catch (error) {
         console.log(error);

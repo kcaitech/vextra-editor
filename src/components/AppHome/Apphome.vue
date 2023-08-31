@@ -39,6 +39,7 @@ const teamSelfPermType = ref<number>()
 const teamData = ref<any[]>([]) //储存团队列表
 const updatestate = ref(false) //控制aside组件中的团队列表请求
 const updateprojectlist = ref(false)  //控制projectlist组件中的项目列表请求
+const projectList =  ref<any[]>([]);
 
 const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {
   teamID.value = id
@@ -56,6 +57,10 @@ const state = (b: boolean) => {
 //将获取的团队列表保存在到teamData
 const upDateTeamData = (data: any[]) => {
   teamData.value = data
+}
+
+const saveProjectData = (data: any[]) => {
+  projectList.value = data
 }
 
 //用于改变updateprojectlist的值
@@ -76,7 +81,9 @@ provide('shareData', {
   teamData,
   updateprojectlist,
   upDateTeamData,
-  updateprojectliststate
+  updateprojectliststate,
+  saveProjectData,
+  projectList
 })
 
 function setTitle(t: string) {

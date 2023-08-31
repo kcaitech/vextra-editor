@@ -40,3 +40,13 @@ export function postTeamAuditAPI(params = {}, opts = {}) {
         ...opts
     })
 }
+
+//获取项目文件列表
+export function getDoucmentListAPI(params = {}, opts = {}) {
+    return httpRequest({
+        url: '/documents/',
+        method: 'get',
+        params: params,
+        ...opts
+    })
+}
