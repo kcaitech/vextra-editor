@@ -48,23 +48,23 @@ export class Clipboard {
             const shapes = this.context.selection.selectedShapes;
             if (!shapes.length) return false;
             // 记录相对root位置
-            const position_map: Map<string, ShapeFrame> = new Map();
-            for (let i = 0; i < shapes.length; i++) {
-                position_map.set(shapes[i].id, shapes[i].frame2Root());
+            const position_map: Map<string, PageXY> = new Map();
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shapes[i];
+                position_map.set(shape.id, shape.matrix2Root().computeCoord2(0, 0));
             }
             const content = this.clipboard_write_shapes(shapes);
             if (!content) return false;
-            for (let i = 0; i < content.length; i++) {
+            for (let i = 0, len = content.length; i < len; i++) {
                 const shape = content[i].content;
                 const root_frame = position_map.get(shape.id);
-                if (root_frame) shape.frame = root_frame;
+                if (!root_frame) continue;
+                shape.frame.x = root_frame.x, shape.frame.y = root_frame.y;
             }
             if (navigator.clipboard && ClipboardItem) {
                 const h = encode_html(identity, content);
                 const blob = new Blob([h || ''], { type: 'text/html' });
-                const item: any = {
-                    'text/html': blob
-                }
+                const item: any = { 'text/html': blob };
                 if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
                     // todo 直接复制图层里面的文本
                 }
@@ -275,7 +275,6 @@ function decode_html(html: string): string {
     document.body.removeChild(d);
     return result;
 }
-function get_content_from_beta() { }
 /**
  * @description 从剪切板拿出图形数据并插入文档
  * @param data 剪切板拿出的数据
@@ -310,37 +309,26 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
         } else if (is_shape) { // 内部图层
             const source = JSON.parse(text_html.split(identity)[1]);
             const shapes = import_shape(context.data, source);
-
             if (!shapes.length) throw new Error('invalid source');
             const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
             if (xy) {
-                for (let i = 0; i < shapes.length; i++) {
+                for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
                     const frame = shapes[i].frame;
                     if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
                     if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
                 }
             }
-            const deltas = [];
             if (xy) {
-                for (let i = 0; i < shapes.length; i++) {
-                    const frame = shapes[i].frame;
-                    deltas.push({ x: frame.x - lt_shape_xy.x, y: frame.y - lt_shape_xy.y });
-                }
-            }
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                if (xy) {
-                    shape.frame.x = xy.x + deltas[i].x;
-                    shape.frame.y = xy.y + deltas[i].y;
+                for (let i = 0, len = shapes.length; i < len; i++) { // 以新的起点为基准，计算每个图形位置
+                    const shape = shapes[i];
+                    shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
                 }
             }
             const page = context.selection.selectedPage;
             if (page) {
-                const result: Shape[] = [];
                 const editor = context.editor.editor4Page(page);
-                const r = editor.insertShapes1(page, shapes, true);
-                r && result.concat(r);
-                result.length && context.selection.rangeSelectShape(result);
+                const r = editor.insertShapes1(page, shapes);
+                r && r.length && context.selection.rangeSelectShape(r);
             }
         } else {
             message('info', context.workspace.t('clipboard.invalid_data'));
