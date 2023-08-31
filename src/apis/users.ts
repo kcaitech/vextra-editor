@@ -197,6 +197,7 @@ export function GetteamMember(params = {}, ops = {}) {
     })
 }
 
+
 //设置团队信息
 export function Setteaminfo(data = {}, ops = {}) {
     return httpRequest({
@@ -211,6 +212,16 @@ export function Setteaminfo(data = {}, ops = {}) {
 export function Setteaminviteinfo(data = {}, ops = {}) {
     return httpRequest({
         url: '/documents/team/invited',
+        method: 'put',
+        data: data,
+        ...ops
+    })
+}
+
+//设置团队成员权限
+export function Setteammemberperm(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/member/perm',
         method: 'put',
         data: data,
         ...ops
