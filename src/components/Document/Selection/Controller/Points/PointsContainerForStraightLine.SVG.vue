@@ -116,19 +116,16 @@ function get_t(cct: CtrlElementType, p2: PageXY): PageXY {
         else if (type_d === 45) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 90) {
-            p2.x = rb.x;
-        } else if (type_d === 135) {
+        } else if (type_d === 90) p2.x = rb.x;
+        else if (type_d === 135) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 180) {
-            p2.y = rb.y;
-        } else if (type_d === 225) {
+        } else if (type_d === 180) p2.y = rb.y;
+        else if (type_d === 225) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 270) {
-            p2.x = rb.x;
-        } else if (type_d === 315) {
+        } else if (type_d === 270) p2.x = rb.x;
+        else if (type_d === 315) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
         }
@@ -140,19 +137,16 @@ function get_t(cct: CtrlElementType, p2: PageXY): PageXY {
         else if (type_d === 45) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 90) {
-            p2.x = lt.x;
-        } else if (type_d === 135) {
+        } else if (type_d === 90) p2.x = lt.x;
+        else if (type_d === 135) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 180) {
-            p2.y = lt.y;
-        } else if (type_d === 225) {
+        } else if (type_d === 180) p2.y = lt.y;
+        else if (type_d === 225) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 270) {
-            p2.x = lt.x;
-        } else if (type_d === 315) {
+        } else if (type_d === 270) p2.x = lt.x;
+        else if (type_d === 315) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
         }
