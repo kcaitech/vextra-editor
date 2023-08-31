@@ -51,7 +51,7 @@ export function textState(props: {
         if (!editing.value) return;
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
-        const selection = props.context.selection.getTextSelection(props.shape as any);
+        const selection = props.context.textSelection;
         const workspace = props.context.workspace;
         const { clientX, clientY } = e;
         const root = workspace.root;
@@ -72,7 +72,7 @@ export function textState(props: {
         e.stopPropagation();
         if (!editing.value) return;
         const workspace = props.context.workspace;
-        const selection = props.context.selection.getTextSelection(props.shape as any);
+        const selection = props.context.textSelection;
         const { clientX, clientY } = e;
         const root = workspace.root;
         matrix.reset(props.matrix);

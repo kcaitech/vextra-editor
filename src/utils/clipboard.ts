@@ -107,7 +107,7 @@ export async function paster_inner_shape(context: Context, editor: TextShapeEdit
                 const val = await _d.getType('text/plain');
                 const text = await val.text();
                 if (!(text && typeof text === 'string')) throw new Error('invalid text');
-                const selection = context.selection.getTextSelection(editor.shape);
+                const selection = context.textSelection;
                 const start = selection.cursorStart;
                 const end = selection.cursorEnd;
                 const s = Math.min(start, end);
@@ -142,7 +142,7 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
             paster_plain_inner_shape(_d, context, editor, only_text);
             return false;
         }
-        const selection = context.selection.getTextSelection(editor.shape);
+        const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
@@ -154,7 +154,7 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
     return true;
 }
 async function paster_plain_inner_shape(_d: any, context: Context, editor: TextShapeEditor, only_text?: boolean) {
-    const selection = context.selection.getTextSelection(editor.shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const s = Math.min(start, end);
@@ -441,7 +441,7 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
 function adjust_content_xy(context: Context, m: { width: number, height: number }) {
     const workspace = context.workspace, root = workspace.root, matrix = workspace.matrix;
     const ratio_wh = m.width / m.height;
-    const page_height = root.height / matrix.m00, page_width = root.width / matrix.m00;;
+    const page_height = root.height / matrix.m00, page_width = root.width / matrix.m00;
     if (m.height >= m.width) {
         if (m.height > page_height * 0.95) {
             m.height = page_height * 0.95;

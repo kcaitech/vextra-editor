@@ -312,13 +312,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_table_area = table_area;
     }
     // text
-    private m_textSelection?: TextSelection;
-    getTextSelection(shape: TextShapeLike) {
-        if (!this.m_textSelection || this.m_textSelection.shape.id !== shape.id) {
-            this.m_textSelection = new TextSelection(shape, this);
-        }
-        return this.m_textSelection;
-    }
+    // private m_textSelection?: TextSelection;
+    // getTextSelection(shape: TextShapeLike) {
+    //     if (!this.m_textSelection || this.m_textSelection.shape.id !== shape.id) {
+    //         this.m_textSelection = new TextSelection(shape, this);
+    //     }
+    //     return this.m_textSelection;
+    // }
 
     save() {
         throw new Error("Method not implemented.");

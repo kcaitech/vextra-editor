@@ -49,7 +49,7 @@ function _update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
-    const text_selection = selection.getTextSelection(props.shape);
+    const text_selection = props.context.textSelection;
     if (text_selection.cursorStart !== text_selection.cursorEnd) {
         isCursor.value = false;
         // selected range
@@ -76,8 +76,7 @@ function selectionWatcher(t: number) {
         update();
         cursor_tracking(cursor_points);
     } else if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
-        const selection = props.context.selection;
-        const text_selection = selection.getTextSelection(props.shape);
+        const text_selection = props.context.textSelection;
         text_selection.reset();
         cursorPath.value = "";
         selectPath.value = "";

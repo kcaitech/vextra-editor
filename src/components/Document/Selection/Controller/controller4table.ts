@@ -156,7 +156,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const text = down_item.cell.text;
                     if (!text) return;
                     down_index = text.locateText(xy.x, xy.y);
-                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
+                    text_selection = context.textSelection;
                     text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
                     // console.log('点到imagecell');
@@ -165,7 +165,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 } else {
                     // console.log('unexcept');
                     init_text_cell(down_item);
-                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
+                    text_selection = context.textSelection;
                     text_selection.setCursor(0, false);
                     table_selection.setEditingCell(down_item);
                 }
@@ -177,7 +177,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 // @ts-ignore
                 down_index = down_item.cell.text!.locateText(0, 0);
                 // @ts-ignore
-                text_selection = context.selection.getTextSelection(down_item.cell);
+                text_selection = context.textSelection;
                 text_selection.setCursor(down_index.index, down_index.before);
             }
         }

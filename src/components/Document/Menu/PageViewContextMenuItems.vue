@@ -46,7 +46,7 @@ function is_inner_textshape() {
 function copy() {
   if (is_inner_textshape()) {
     const shape = props.context.selection.selectedShapes[0] as TextShape;
-    const selection = props.context.selection.getTextSelection(shape);
+    const selection = props.context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const s = Math.min(start, end);
@@ -62,7 +62,7 @@ function copy() {
 async function cut() {
   if (is_inner_textshape()) {
     const shape = props.context.selection.selectedShapes[0] as TextShape;
-    const selection = props.context.selection.getTextSelection(shape);
+    const selection = props.context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) return emit('close');

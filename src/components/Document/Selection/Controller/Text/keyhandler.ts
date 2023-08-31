@@ -19,7 +19,7 @@ function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): 
 
 const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     let index = selection.cursorStart;
     let end = selection.cursorEnd;
     if (index > end) {
@@ -36,7 +36,7 @@ const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextS
 
 const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
     if (e.shiftKey) {
@@ -58,7 +58,7 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
 }, keydelays);
 const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
     if (e.shiftKey) {
@@ -78,7 +78,7 @@ const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: Te
 const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
     const text = shape.text;
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const cursorAtBefore = start === end && selection.cursorAtBefore;
@@ -98,7 +98,7 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
 const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
     const text = shape.text;
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const cursorAtBefore = start === end && selection.cursorAtBefore;
@@ -118,7 +118,7 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: Tex
 
 const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) {
@@ -148,7 +148,7 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: Tex
 }, keydelays);
 const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) {
@@ -165,7 +165,7 @@ const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextSh
 
 const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     if (selection.cursorStart > -1) {
         context.selection.resetSelectShapes();
         const timer = setTimeout(() => {
@@ -180,7 +180,7 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
 function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const selection = context.selection.getTextSelection(shape);
+        const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
@@ -193,7 +193,7 @@ function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
 async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const selection = context.selection.getTextSelection(shape);
+        const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         if (start === end) return;
@@ -217,7 +217,7 @@ function paster(e: KeyboardEvent, context: Context, shape: TextShape, editor: Te
 function select_all(e: KeyboardEvent, context: Context, shape: TextShape) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const selection = context.selection.getTextSelection(shape);
+        const selection = context.textSelection;
         const end = shape.text.length;
         selection.selectText(0, end);
         context.menu.menuMount();
@@ -233,7 +233,7 @@ function undo_redo(e: KeyboardEvent, context: Context, shape: TextShape) {
         } else {
             repo.canUndo() && repo.undo();
         }
-        const selection = context.selection.getTextSelection(shape);
+        const selection = context.textSelection;
         const len = shape.text.length;
         if (selection.cursorEnd >= len) {
             selection.setCursor(len - 1, false);
@@ -242,7 +242,7 @@ function undo_redo(e: KeyboardEvent, context: Context, shape: TextShape) {
 }
 
 const enterTab = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = Math.min(selection.cursorStart, selection.cursorEnd);
     const end = Math.max(selection.cursorStart, selection.cursorEnd);
     const offset = e.shiftKey ? -1 : 1;

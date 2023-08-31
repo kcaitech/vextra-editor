@@ -96,7 +96,7 @@ function onMouseDown(e: MouseEvent) {
             props.context.cursor.setType('scan-0');
         }
         if (!editing.value) return;
-        const selection = props.context.selection.getTextSelection(props.shape);
+        const selection = props.context.textSelection;
         workspace.setCtrl('controller');
         const root = workspace.root
         matrix.reset(props.matrix);
@@ -113,7 +113,7 @@ function onMouseDown(e: MouseEvent) {
 }
 function be_editor(index?: number) {
     const workspace = props.context.workspace;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
     props.context.cursor.setType('scan-0');
@@ -127,7 +127,7 @@ function onMouseUp(e: MouseEvent) {
     if (!editing.value) return;
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     const workspace = props.context.workspace;
     const { clientX, clientY } = e;
     const root = workspace.root;
@@ -148,7 +148,7 @@ function onMouseMove(e: MouseEvent) {
     e.stopPropagation();
     if (!editing.value) return;
     const workspace = props.context.workspace;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     const { clientX, clientY } = e;
     const root = workspace.root;
     matrix.reset(props.matrix);

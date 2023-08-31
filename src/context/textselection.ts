@@ -1,7 +1,6 @@
-import { Shape, Text, Notifiable, SpanAttr } from "@kcdesign/data";
+import { Text, SpanAttr, Watchable } from "@kcdesign/data";
 import { Selection } from "./selection"
 
-type TextShape = Shape & { text: Text }
 export interface TextLocate {
     index: number
     before: boolean
@@ -9,24 +8,19 @@ export interface TextLocate {
     attr: SpanAttr | undefined
 }
 
-export class TextSelection implements Notifiable {
-    private m_shape: TextShape;
-    private m_notify: Notifiable;
+export class TextSelection extends Watchable(Object) {
     // text
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;
+    private selection: Selection;
 
-    constructor(shape: TextShape, notify: Notifiable) {
-        this.m_shape = shape;
-        this.m_notify = notify;
+    constructor(selection: Selection) {
+        super();
+        this.selection = selection;
     }
     notify(...args: any[]): void {
-        this.m_notify.notify(...args);
-    }
-
-    get shape() {
-        return this.m_shape;
+        this.selection.notify(...args);
     }
 
     reset() {
@@ -46,26 +40,23 @@ export class TextSelection implements Notifiable {
     }
 
     /**
-     *
      * @param x page坐标系
      * @param y
      */
     locateText(x: number, y: number): TextLocate {
-
-        const shape = this.m_shape;
+        const shape = this.selection.selectedShapes[0];
         // translate x,y
         const matrix = shape.matrix2Root();
         const xy = matrix.inverseCoord(x, y);
         x = xy.x;
         y = xy.y;
-
         return ((shape as any).text as Text).locateText(x, y);
     }
 
     setCursor(index: number, before: boolean) {
 
         if (index < 0) index = 0;
-        const shape = this.m_shape;
+        const shape = this.selection.selectedShapes[0];
         const text = ((shape as any).text as Text);
 
         const span = text.spanAt(index);
@@ -86,7 +77,7 @@ export class TextSelection implements Notifiable {
 
     selectText(start: number, end: number, before?: boolean) {
         // 不只选择'\n'
-        const shape = this.m_shape;
+        const shape = this.selection.selectedShapes[0];
         const text = ((shape as any).text as Text);
         if (Math.abs(start - end) === 1 && text.charAt(Math.min(start, end)) === '\n') {
             // this.setCursor(end, !!before);

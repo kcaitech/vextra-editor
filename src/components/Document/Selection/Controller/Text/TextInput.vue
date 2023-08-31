@@ -35,7 +35,7 @@ const updateInputPos = throttle(_updateInputPos, 5);
 function _updateInputPos() {
     if (!inputel.value || !props.shape.text) return;
     // inputel.value.hidden = false;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     // const m2p = props.shape.matrix2Root();
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
@@ -96,7 +96,7 @@ function committext() {
     const text = inputel.value.value;
     if (text.length === 0) return;
 
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
 
     if (editor.isInComposingInput()) {
         if (editor.composingInputEnd(text)) {
@@ -125,7 +125,7 @@ function oninput(e: Event) {
         if (!inputel.value) return;
         const text = inputel.value.value;
         if (editor.composingInputUpdate(text)) {
-            const selection = props.context.selection.getTextSelection(props.shape);
+            const selection = props.context.textSelection;
             selection.setCursor(composingStartIndex + text.length, true);             
         }
     } else {
@@ -136,7 +136,7 @@ function oninput(e: Event) {
 let composingStartIndex = 0;
 function compositionstart(e: Event) {
     if (!inputel.value) return;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     let index = selection.cursorStart;
     let end = selection.cursorEnd;
     if (index > end) {
@@ -152,7 +152,7 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        const selection = props.context.selection.getTextSelection(props.shape);
+        const selection = props.context.textSelection;
         selection.setCursor(composingStartIndex + text.length, true);
     }
     inputel.value.value = ''
