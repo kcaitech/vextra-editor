@@ -40,7 +40,6 @@ let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 const dragActiveDis = 3;
-const t = ref<boolean>(false), tx = ref<number>(0), ty = ref<number>(0);
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 function update() {
     matrix.reset(props.matrix);
@@ -90,12 +89,11 @@ function point_mousemove(event: MouseEvent) {
             asyncBaseAction.executeRotate(deg);
         } else {
             const action = props.context.tool.action;
-            const p1: PageXY = submatrix.computeCoord2(startPosition.x, startPosition.y);
             let p2: PageXY = submatrix.computeCoord2(mouseOnClient.x, mouseOnClient.y);
             if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
-                p2 = get_t(cur_ctrl_type, p1, p2);
-                asyncBaseAction.executeScale(cur_ctrl_type, p2);
-            } else scale(asyncBaseAction, p2);
+                p2 = get_t(cur_ctrl_type, p2);
+            }
+            scale(asyncBaseAction, p2)
         }
         startPosition = { ...mouseOnClient };
         setCursor(cur_ctrl_type, true);
@@ -109,30 +107,55 @@ function point_mousemove(event: MouseEvent) {
         }
     }
 }
-function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
-    t.value = true;
+function get_t(cct: CtrlElementType, p2: PageXY): PageXY {
     if (cct === CtrlElementType.RectLT) {
         const m = props.shape.matrix2Root(), f = props.shape.frame
         const rb = m.computeCoord2(f.width, f.height);
-        const _r = getHorizontalAngle(rb, p2);
-        const tpye_d = get_direction(Math.floor(_r));
-        const mt = new Matrix();
+        const type_d = get_direction(Math.floor(getHorizontalAngle(rb, p2)));
+        if (type_d === 0) p2.y = rb.y;
+        else if (type_d === 45) {
+            const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
+            p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 90) {
+            p2.x = rb.x;
+        } else if (type_d === 135) {
+            const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
+            p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 180) {
+            p2.y = rb.y;
+        } else if (type_d === 225) {
+            const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
+            p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 270) {
+            p2.x = rb.x;
+        } else if (type_d === 315) {
+            const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
+            p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
+        }
         return p2;
     } else if (cct === CtrlElementType.RectRB) {
-        const m = props.shape.matrix2Root();
-        let lt = m.computeCoord2(0, 0);
-        const _r = getHorizontalAngle(lt, p2);
-        let type_d = get_direction(Math.floor(_r));
-        let type_d_0 = _r / 180;
-        type_d = type_d / 180;
-
-        const mt = new Matrix();
-        mt.trans(lt.x, lt.y);
-        const _dx = p2.x - lt.x, _dy = p2.y - lt.y;
-        const d2 = mt.computeCoord2(_dx, _dy);
-        const wm = props.context.workspace.matrix;
-        lt = wm.computeCoord2(d2.x, d2.y);
-        tx.value = lt.x, ty.value = lt.y;
+        const m = props.shape.matrix2Root(), lt = m.computeCoord2(0, 0);
+        const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
+        if (type_d === 0) p2.y = lt.y;
+        else if (type_d === 45) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 90) {
+            p2.x = lt.x;
+        } else if (type_d === 135) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 180) {
+            p2.y = lt.y;
+        } else if (type_d === 225) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 270) {
+            p2.x = lt.x;
+        } else if (type_d === 315) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
+        }
         return p2;
     } else return p2
 }
@@ -226,7 +249,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <rect v-if="t" :transform="`translate(${tx - 5}, ${ty - 5})`" width="10" height="10" fill="red"></rect>
     <g :reflush="reflush">
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
             <path :d="p.r.p" fill="none" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
