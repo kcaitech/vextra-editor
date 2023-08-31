@@ -228,6 +228,16 @@ export function Setteammemberperm(data = {}, ops = {}) {
     })
 }
 
+//转移团队创建者
+export function Setteamcreator(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/creator',
+        method: 'put',
+        data: data,
+        ...ops
+    })
+}
+
 //获取团队信息
 export function Getteaminfo(params = {}, ops = {}) {
     return httpRequest({
@@ -264,6 +274,16 @@ export function Leaveteam(data = {}, ops = {}) {
         url: '/documents/team/exit',
         method: 'post',
         data: data,
+        ...ops
+    })
+}
+
+//移除团队成员
+export function Deletteamemember(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/member',
+        method: 'delete',
+        params: params,
         ...ops
     })
 }
