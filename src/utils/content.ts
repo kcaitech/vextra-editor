@@ -545,7 +545,12 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else if (area === 'text-selection') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+      const selection = context.textSelection;
+      if (selection.cursorStart === selection.cursorEnd) {
+        contextMenuItems = ['all', 'paste', 'only_text'];
+      } else {
+        contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+      }
     } else {
       contextMenuItems = ['all', 'copy'];
     }

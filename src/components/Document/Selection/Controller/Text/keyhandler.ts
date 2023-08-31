@@ -183,6 +183,7 @@ function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
         const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
+        if (start === end) return;
         const s = Math.min(start, end);
         const len = Math.abs(start - end)
         const text = shape.text.getTextWithFormat(s, len);
