@@ -171,3 +171,23 @@ export function get_range(index1: { row: number, col: number }, index2: { row: n
         cole: t2 ? index1.col : index2.col,
     }
 }
+/**
+ *          7
+ *      6        8
+ *  5       .        1 
+ *      4        2
+ *          3
+ */
+export type ActionDirection = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export function get_direction(rotation: number) {
+    if (rotation >= 0 && rotation < 22) return 0;
+    else if (rotation >= 22 && rotation < 77) return 45;
+    else if (rotation >= 77 && rotation < 113) return 90;
+    else if (rotation >= 113 && rotation < 157) return 135;
+    else if (rotation >= 157 && rotation < 200) return 180;
+    else if (rotation >= 200 && rotation < 245) return 225;
+    else if (rotation >= 245 && rotation < 293) return 270;
+    else if (rotation >= 293 && rotation < 338) return 315;
+    else if (rotation >= 338 && rotation <= 360) return 0;
+    else return 0;
+}

@@ -8,6 +8,7 @@ import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { PointType } from '@/context/assist';
+import { get_direction } from '@/utils/controllerFn';
 
 interface Props {
     matrix: number[]
@@ -39,6 +40,7 @@ let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 const dragActiveDis = 3;
+const t = ref<boolean>(false), tx = ref<number>(0), ty = ref<number>(0);
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 function update() {
     matrix.reset(props.matrix);
@@ -108,38 +110,30 @@ function point_mousemove(event: MouseEvent) {
     }
 }
 function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
+    t.value = true;
     if (cct === CtrlElementType.RectLT) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord2(pre_delta.x, pre_delta.x * (1 / r));
-    } else if (cct === CtrlElementType.RectRT) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord2(f.width + pre_delta.x, -pre_delta.x * (1 / r));
+        const m = props.shape.matrix2Root(), f = props.shape.frame
+        const rb = m.computeCoord2(f.width, f.height);
+        const _r = getHorizontalAngle(rb, p2);
+        const tpye_d = get_direction(Math.floor(_r));
+        const mt = new Matrix();
+        return p2;
     } else if (cct === CtrlElementType.RectRB) {
         const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord2(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
-    } else if (cct === CtrlElementType.RectLB) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord2(pre_delta.x, f.height - pre_delta.x * (1 / r));
+        let lt = m.computeCoord2(0, 0);
+        const _r = getHorizontalAngle(lt, p2);
+        let type_d = get_direction(Math.floor(_r));
+        let type_d_0 = _r / 180;
+        type_d = type_d / 180;
+
+        const mt = new Matrix();
+        mt.trans(lt.x, lt.y);
+        const _dx = p2.x - lt.x, _dy = p2.y - lt.y;
+        const d2 = mt.computeCoord2(_dx, _dy);
+        const wm = props.context.workspace.matrix;
+        lt = wm.computeCoord2(d2.x, d2.y);
+        tx.value = lt.x, ty.value = lt.y;
+        return p2;
     } else return p2
 }
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
@@ -232,6 +226,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
+    <rect v-if="t" :transform="`translate(${tx - 5}, ${ty - 5})`" width="10" height="10" fill="red"></rect>
     <g :reflush="reflush">
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
             <path :d="p.r.p" fill="none" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
