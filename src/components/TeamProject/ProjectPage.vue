@@ -14,8 +14,8 @@
             </li>
         </ul>
     </div>
-    <ProjectFillList v-if="itemid === 0" :projectList="projectList"></ProjectFillList>
-    <ProjectRecycleBin v-if="itemid === 1" :projectList="projectList"></ProjectRecycleBin>
+    <ProjectFillList v-if="itemid === 0" :currentProject="currentProject"></ProjectFillList>
+    <ProjectRecycleBin v-if="itemid === 1" :currentProject="currentProject"></ProjectRecycleBin>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, watchEffect } from 'vue'
@@ -60,8 +60,8 @@ const clickEvent = (index: number) => {
 }
 
 watchEffect(() => {
-    currentProject.value = {}
     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id)
+    console.log(currentProject.value);
 })
 
 onMounted(() => {
