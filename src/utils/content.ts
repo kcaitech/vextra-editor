@@ -556,7 +556,13 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else if (area === 'table') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+      const selection = context.textSelection;
+      if (selection.cursorStart === selection.cursorEnd) {
+        contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+
+      } else {
+        contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+      }
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -568,11 +574,11 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else {
     if (permIsEdit(context)) {
-      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
-      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
+      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
+      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     } else {
-      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
-      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
+      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
+      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     }
   }
   return contextMenuItems;
