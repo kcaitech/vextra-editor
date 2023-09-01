@@ -14,6 +14,7 @@ import { distance2apex, update_pg_2 } from '@/utils/assist';
 import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { Menu } from '@/context/menu';
+import { paster_short } from '@/utils/clipboard';
 interface Props {
     matrix: number[]
     context: Context
@@ -164,6 +165,7 @@ function mousemove4trans(e: MouseEvent) {
         else if (update_type === 1) startPosition.x = mousePosition.x;
     } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
         shapes = selection.selectedShapes;
+        if (e.altKey) shapes = paster_short(props.context, shapes);
         asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
         selection.unHoverShape();
         workspace.setSelectionViewUpdater(false);
