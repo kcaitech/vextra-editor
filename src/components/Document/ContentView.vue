@@ -202,27 +202,7 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
                 if (e.shiftKey) {
                     er_frame(asyncCreator, x, y);
                 } else {
-                    const stickness = props.context.assist.stickness + 1;
-                    const target = props.context.assist.create_match({ x, y });
-                    if (target) {
-                        if (stickedX) {
-                            if (Math.abs(x - sticked_x_v) > stickness) stickedX = false;
-                            else x = sticked_x_v;
-                        } else if (target.sticked_by_x) {
-                            x = target.x;
-                            sticked_x_v = x;
-                            stickedX = true;
-                        }
-                        if (stickedY) {
-                            if (Math.abs(y - sticked_y_v) > stickness) stickedY = false;
-                            else y = sticked_y_v;
-                        } else if (target.sticked_by_y) {
-                            y = target.y;
-                            sticked_y_v = y;
-                            stickedY = true;
-                        }
-                    }
-                    asyncCreator.setFrame({ x, y });
+                    asyncCreator.setFrame(correct_xy(x, y));
                 }
             }
         }
@@ -239,6 +219,29 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
             }
         }
     }
+}
+function correct_xy(x: number, y: number) {
+    const stickness = props.context.assist.stickness + 1;
+    const target = props.context.assist.create_match({ x, y });
+    if (target) {
+        if (stickedX) {
+            if (Math.abs(x - sticked_x_v) > stickness) stickedX = false;
+            else x = sticked_x_v;
+        } else if (target.sticked_by_x) {
+            x = target.x;
+            sticked_x_v = x;
+            stickedX = true;
+        }
+        if (stickedY) {
+            if (Math.abs(y - sticked_y_v) > stickness) stickedY = false;
+            else y = sticked_y_v;
+        } else if (target.sticked_by_y) {
+            y = target.y;
+            sticked_y_v = y;
+            stickedY = true;
+        }
+    }
+    return { x, y };
 }
 function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
     if (newShape && newShape.type === ShapeType.Line) {
@@ -262,11 +265,11 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
         }
-        asyncCreator.setFrame({ x: p2.x, y: p2.y });
+        asyncCreator.setFrame(correct_xy(p2.x, p2.y));
     } else {
         const del = x - mousedownOnPageXY.x;
         y = mousedownOnPageXY.y + del;
-        asyncCreator.setFrame({ x, y });
+        asyncCreator.setFrame(correct_xy(x, y));
     }
 
 }
