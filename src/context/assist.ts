@@ -147,14 +147,19 @@ export class Asssit extends Watchable(Object) {
         }
     }
     init() { this.m_context.selection.watch(this.selection_watcher.bind(this)) }
+    set_collect_target(groups: GroupShape[], collect?: boolean) {
+        this.m_collect_target = groups;
+        if (collect) this.collect();
+    }
     collect() {
         // const s = Date.now();
         const page = this.m_context.selection.selectedPage;
-        if (!page) return;
-        this.clear();
-        let target: GroupShape = page;
-        if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
-        this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        if (page) {
+            this.clear();
+            let target: GroupShape = page;
+            if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
+            this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        }
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
     }
