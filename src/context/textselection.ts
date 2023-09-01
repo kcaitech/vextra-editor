@@ -53,19 +53,17 @@ export class TextSelection extends Watchable(Object) {
         return ((shape as any).text as Text).locateText(x, y);
     }
 
-    setCursor(index: number, before: boolean) {
+    setCursor(index: number, before: boolean, text?: Text) {
 
         if (index < 0) index = 0;
-        const shape = this.selection.selectedShapes[0];
-        const text = ((shape as any).text as Text);
-
-        const span = text.spanAt(index);
-        if (span?.placeholder && span.length === 1) index++;
-
-        const length = text.length;
-        if (index >= length) {
-            index = length - 1;
-            before = false;
+        if (text) {
+            const span = text.spanAt(index);
+            if (span?.placeholder && span.length === 1) index++;
+            const length = text.length;
+            if (index >= length) {
+                index = length - 1;
+                before = false;
+            }
         }
         if (index !== this.m_cursorStart || index !== this.m_cursorEnd || before !== this.m_cursorAtBefore) {
             this.m_cursorStart = index;

@@ -72,7 +72,7 @@ async function cut() {
     if (copy_result) {
       const editor = props.context.editor4TextShape(shape as TextShape);
       if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-        selection.setCursor(Math.min(start, end), false);
+        selection.setCursor(Math.min(start, end), false, shape.text);
       }
     }
   }
@@ -168,7 +168,7 @@ function canvas() {
   adapt_page(props.context);
   emit('close');
 }
-function cursor() { 
+function cursor() {
   const status = props.context.menu.isUserCursorVisible;
   isCursor.value = !status;
   props.context.menu.setVisibleCursor(isCursor.value);

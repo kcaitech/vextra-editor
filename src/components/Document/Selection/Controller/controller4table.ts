@@ -157,7 +157,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     if (!text) return;
                     down_index = text.locateText(xy.x, xy.y);
                     text_selection = context.textSelection;
-                    text_selection.setCursor(down_index.index, down_index.before);
+                    text_selection.setCursor(down_index.index, down_index.before, text);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
                     // console.log('点到imagecell');
                     table_selection.setEditingCell();
@@ -178,7 +178,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 down_index = down_item.cell.text!.locateText(0, 0);
                 // @ts-ignore
                 text_selection = context.textSelection;
-                text_selection.setCursor(down_index.index, down_index.before);
+                // @ts-ignore
+                text_selection.setCursor(down_index.index, down_index.before, down_item.cell.text);
             }
         }
         document.addEventListener('mousemove', mousemove4body);

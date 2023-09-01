@@ -135,8 +135,8 @@ function onMouseUp(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+        else selection.setCursor(locate.index, locate.before, props.shape.text);
     }
     else {
         selection.selectText(downIndex.index, locate.index, locate.before);
@@ -155,8 +155,8 @@ function onMouseMove(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+        else selection.setCursor(locate.index, locate.before, props.shape.text);
     }
     else {
         selection.selectText(downIndex.index, locate.index, locate.before);
