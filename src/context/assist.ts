@@ -164,6 +164,7 @@ export class Asssit extends Watchable(Object) {
         // console.log('点位收集用时(ms):', e - s);
     }
     setTransTarget(shapes: Shape[]) {
+        this.collect();
         this.m_except.clear();
         if (shapes.length === 1) {
             get_tree(shapes[0], this.m_except);

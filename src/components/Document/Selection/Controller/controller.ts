@@ -51,6 +51,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (m && asyncTransfer) {
                 shapes = sort_by_layer(context, shapes);
                 asyncTransfer.migrate(targetParent as GroupShape);
+                context.assist.set_collect_target([targetParent as GroupShape], true);
             }
         }
     }
