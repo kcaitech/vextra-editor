@@ -116,7 +116,7 @@ function selectAll() {
   if (is_inner_textshape()) {
     const selection = props.context.selection;
     const end = selection.selectedShapes[0].text.length;
-    selection.selectText(0, end);
+    props.context.textSelection.selectText(0, end);
   } else {
     props.context.workspace.keydown_a(true, true);
   }
