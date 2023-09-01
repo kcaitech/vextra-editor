@@ -80,3 +80,13 @@ export function setProjectIsFavoriteAPI(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//设置项目信息
+export function setProjectInfoAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/info',
+        method: 'put',
+        data: params,
+        ...ops
+    })
+}

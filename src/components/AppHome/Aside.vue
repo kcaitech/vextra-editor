@@ -43,17 +43,20 @@ const teamDataList = ref<any[]>([]);
 const projectDataList = ref<any[]>([]);
 const reflush = ref(0);
 
-const { updatestate, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, is_favor, projectList } = inject('shareData') as {
-    updatestate: Ref<boolean>;
-    is_favor: Ref<boolean>;
-    updateShareData: (id: string, name: string, avatar: string, description: string, self_perm_type: number) => void;
-    upDateTeamData: (data: any[]) => void;
-    state: (b: boolean) => void;
-    updateFavor: (b: boolean) => void;
-    saveProjectData: (data: any[]) => void;
-    favoriteListsData: (data: any[]) => void;
-    projectList: Ref<any[]>;
-}
+const { updatestate, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, is_favor,
+    projectList, is_team_upodate } = inject('shareData') as {
+        updatestate: Ref<boolean>;
+        is_favor: Ref<boolean>;
+        is_team_upodate: Ref<boolean>;
+        updateShareData: (id: string, name: string, avatar: string, description: string, self_perm_type: number) => void;
+        upDateTeamData: (data: any[]) => void;
+        state: (b: boolean) => void;
+        teamUpdate: (b: boolean) => void;
+        updateFavor: (b: boolean) => void;
+        saveProjectData: (data: any[]) => void;
+        favoriteListsData: (data: any[]) => void;
+        projectList: Ref<any[]>;
+    }
 
 function addChildToParent(parent: { children: any[]; }, child: any) {
     if (!parent.children) {
@@ -122,7 +125,6 @@ function newFile() {
 }
 
 function Setindex(a: any, b: any) {
-    emits('settitle', b)
     sessionStorage.setItem('index', a)
 }
 
@@ -181,7 +183,9 @@ watch(is_favor, () => {
         clearTimeout(timer)
     }, 200)
 })
-
+watch(is_team_upodate, () => {
+    teamList.value = mergeArrays(teamDataList.value, projectDataList.value);
+})
 
 const torouter = (id: string) => {
     router.push({ path: '/apphome/teams/' + id });
@@ -322,7 +326,7 @@ onUnmounted(() => {
                                                 </svg>
                                             </div>
                                             <svg-icon icon-class="close"
-                                                style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;"/>
+                                                style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                         </div>
                                     </div>
                                 </div>
