@@ -6,17 +6,17 @@
                     <div v-if="index === 1" class="shrink" @click="fold = !fold">
                         <svg-icon icon-class="down"
                             :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
+                        <transition name="el-zoom-in-top">
+                            <ul class="filterlist" v-if="fold" ref="menu">
+                                <li class="item" v-for="(item, index) in  filteritems " :key="index"
+                                    @click.stop="filterEvent(index)">
+                                    <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
+                                    </div>
+                                    {{ item }}
+                                </li>
+                            </ul>
+                        </transition>
                     </div>
-                    <transition name="el-zoom-in-top">
-                        <ul class="filterlist" v-if="index === 1 && fold" ref="menu">
-                            <li class="item" v-for="(item, index) in  filteritems " :key="index"
-                                @click.stop="filterEvent(index)">
-                                <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
-                                </div>
-                                {{ item }}
-                            </li>
-                        </ul>
-                    </transition>
                 </div>
             </div>
         </div>
@@ -30,18 +30,18 @@
                         <div v-if="perm_type !== 3" class="shrink" @click="folds = !folds, userid = id">
                             <svg-icon icon-class="down"
                                 :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
+                            <transition name="el-zoom-in-top">
+                                <ul class="filterlist" v-if="userid === id && folds" ref="menu">
+                                    <li class="item" v-for="(item, index) in  typeitems(usertype()) " :key="index"
+                                        @click.stop="itemEvent(item, teamID, id, perm_type)">
+                                        <div v-if="true" class="choose"
+                                            :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
+                                        </div>
+                                        {{ item }}
+                                    </li>
+                                </ul>
+                            </transition>
                         </div>
-                        <transition name="el-zoom-in-top">
-                            <ul class="filterlist" v-if="userid === id && folds" ref="menu">
-                                <li class="item" v-for="(item, index) in  typeitems(usertype()) " :key="index"
-                                    @click.stop="itemEvent(item,teamID)">
-                                    <div class="choose"
-                                        :style="{ visibility: item == membertype(perm_type) ? 'visible' : 'hidden' }">
-                                    </div>
-                                    {{ item }}
-                                </li>
-                            </ul>
-                        </transition>
                     </div>
                     <div v-if="usertype() === 2" class="member-jurisdiction-container">
                         {{ membertype(perm_type) }}
@@ -92,7 +92,6 @@ import NetworkError from '@/components/NetworkError.vue'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { el } from 'element-plus/es/locale';
 
 interface Props {
     searchvalue?: string
@@ -200,12 +199,21 @@ const filterEvent = (index: number = 4) => {
     folds.value = false
 }
 
+function multiplyArrayElement(item: any, P: number, U: string) {
+    if (item.user.id === U) {
+        item.perm_type = P
+    }
+    return item
+}
+
+//设置成员权限
 const setPerm = async (T: string, U: string, P: number) => {
     try {
-        const { code,message } = await user_api.Setteammemberperm({ team_id: T, user_id: U, perm_type: P })
-        if(code===0){
+        const { code, message } = await user_api.Setteammemberperm({ team_id: T, user_id: U, perm_type: P })
+        if (code === 0) {
             ElMessage.success(message)
-        }else{
+            teammemberdata.value.map(item => multiplyArrayElement(item, P, U))
+        } else {
             ElMessage.error(message)
         }
     } catch (error) {
@@ -213,37 +221,76 @@ const setPerm = async (T: string, U: string, P: number) => {
     }
 }
 
-const itemEvent = (item: string,teamid:string,userid:string,perm_type:'') => {
+//转移团队创建者
+const setcreator = async (T: string, U: string) => {
+    try {
+        const { code, message } = await user_api.Setteamcreator({ team_id: T, user_id: U })
+        if (code === 0) {
+            ElMessage.success(message)
+        } else {
+            ElMessage.error(message)
+        }
+
+    } catch (error) {
+
+    }
+}
+
+//转移团队成员
+const deletemember = async (T: string, U: string) => {
+    try {
+        const { code, message } = await user_api.Deletteamemember({ team_id: T, user_id: U })
+        if (code === 0) {
+            ElMessage.success(message)
+        } else {
+            ElMessage.error(message)
+        }
+
+    } catch (error) {
+
+    }
+}
+
+//离开团队
+const outteam = async (T: string) => {
+    try {
+        const { code, message } = await user_api.Leaveteam({ team_id: T })
+        if (code === 0) {
+            ElMessage.success(message)
+        } else {
+            ElMessage.error(message)
+        }
+    } catch (error) {
+
+    }
+}
+
+const itemEvent = (item: string, teamid: string, userid: string, perm_type: number) => {
+    folds.value = false
     switch (item) {
         case '管理员':
             return (() => {
-                setPerm('1111');
-
+                if (perm_type != 2) setPerm(teamid, userid, 2);
             })()
         case '可编辑':
             return (() => {
-                console.log('1111');
-
+                if (perm_type != 1) setPerm(teamid, userid, 1);
             })()
         case '仅阅读':
             return (() => {
-                console.log('1111');
-
+                if (perm_type != 0) setPerm(teamid, userid, 0);
             })()
         case '转移创建者':
             return (() => {
-                console.log('1111');
-
+                setcreator(teamid, userid)
             })()
         case '移出团队':
             return (() => {
-                console.log('1111');
-
+                deletemember(teamid, userid)
             })()
         case '离开团队':
             return (() => {
-                console.log('1111');
-
+                outteam(teamid)
             })()
         default:
             break
@@ -292,46 +339,43 @@ onUnmounted(() => {
                         height: 100%;
                         margin-left: 4px;
                     }
+
+                    .filterlist {
+                        position: relative;
+                        list-style-type: none;
+                        font-size: 14px;
+                        font-weight: 500;
+                        min-width: 72px;
+                        margin: 0;
+                        padding: 0 8px;
+                        right: 72px;
+                        border-radius: 4px;
+                        background-color: white;
+                        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+                        z-index: 3;
+
+                        .choose {
+                            box-sizing: border-box;
+                            width: 10px;
+                            height: 6px;
+                            margin-right: 4px;
+                            margin-left: 2px;
+                            border-width: 0 0 1px 1px;
+                            border-style: solid;
+                            border-color: rgb(0, 0, 0, .75);
+                            transform: rotate(-45deg) translateY(-30%);
+                        }
+
+                        .item {
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            line-height: 32px;
+                        }
+                    }
                 }
 
-                .filterlist {
-                    position: absolute;
-                    list-style-type: none;
-                    font-size: 14px;
-                    font-weight: 500;
-                    min-width: 72px;
-                    margin: 0;
-                    padding: 0 8px;
-                    margin-top: 24px;
-                    border-radius: 4px;
-                    background-color: white;
-                    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-                    z-index: 3;
-
-                    .choose {
-                        box-sizing: border-box;
-                        width: 10px;
-                        height: 6px;
-                        margin-right: 4px;
-                        margin-left: 2px;
-                        border-width: 0 0 1px 1px;
-                        border-style: solid;
-                        border-color: rgb(0, 0, 0, .75);
-                        transform: rotate(-45deg) translateY(-30%);
-                    }
-
-                    .item {
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        line-height: 32px;
-                    }
-                }
             }
-
-
-
-
         }
     }
 
@@ -353,42 +397,6 @@ onUnmounted(() => {
             display: flex;
             justify-content: center;
 
-            .filterlist {
-                position: absolute;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                list-style-type: none;
-                font-size: 14px;
-                font-weight: 500;
-                margin: 0;
-                padding: 0 8px;
-                margin-top: 24px;
-                border-radius: 4px;
-                background-color: white;
-                box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-                z-index: 2;
-
-                .item {
-                    display: flex;
-                    align-items: center;
-                    cursor: pointer;
-                    line-height: 32px;
-
-                    .choose {
-                        box-sizing: border-box;
-                        width: 10px;
-                        height: 6px;
-                        margin-right: 4px;
-                        margin-left: 2px;
-                        border-width: 0 0 1px 1px;
-                        border-style: solid;
-                        border-color: rgb(0, 0, 0, .75);
-                        transform: rotate(-45deg) translateY(-30%);
-                    }
-                }
-            }
-
             .shrink {
                 width: 16px;
                 height: 16px;
@@ -401,9 +409,48 @@ onUnmounted(() => {
                     height: 100%;
                     margin-left: 4px;
                 }
-            }
 
+                .filterlist {
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    list-style-type: none;
+                    font-size: 14px;
+                    font-weight: 500;
+                    min-width: 88px;
+                    margin: 0;
+                    padding: 0 8px;
+                    right: 64px;
+                    border-radius: 4px;
+                    background-color: white;
+                    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+                    z-index: 2;
+
+                    .item {
+                        display: flex;
+                        align-items: center;
+                        cursor: pointer;
+                        line-height: 32px;
+
+                        .choose {
+                            box-sizing: border-box;
+                            width: 10px;
+                            height: 6px;
+                            margin-right: 4px;
+                            margin-left: 2px;
+                            border-width: 0 0 1px 1px;
+                            border-style: solid;
+                            border-color: rgb(0, 0, 0, .75);
+                            transform: rotate(-45deg) translateY(-30%);
+                        }
+                    }
+                }
+
+            }
         }
+
+
     }
 }
 </style>
