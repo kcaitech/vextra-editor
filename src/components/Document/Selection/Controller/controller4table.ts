@@ -116,7 +116,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const text = editingCell.cell.text;
                     if (!text) return;
                     const m_index = text.locateText(xy.x, xy.y);
-                    text_selection.selectText(down_index.index, m_index.index);
+                    text_selection.selectText(down_index.index, m_index.index, text);
                 }
             } else {
                 if (m_item.cell?.id === down_item.cell?.id) {
@@ -191,7 +191,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
             const text = down_item.cell.text, len: number = text?.length!;
             if (text && len !== 1) {
-                text_selection.selectText(0, len);
+                text_selection.selectText(0, len, text);
             } else {
                 table_selection.setEditingCell();
                 table_selection.selectTableCell(down_item.index.row, down_item.index.col);

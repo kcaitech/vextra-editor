@@ -63,7 +63,7 @@ export function textState(props: {
             else selection.setCursor(locate.index, locate.before, props.shape.text);
         }
         else {
-            selection.selectText(downIndex.index, locate.index, locate.before);
+            selection.selectText(downIndex.index, locate.index, props.shape.text);
         }
         props.context.workspace.setCtrl('page');
     }
@@ -83,7 +83,7 @@ export function textState(props: {
             else selection.setCursor(locate.index, locate.before, props.shape.text);
         }
         else {
-            selection.selectText(downIndex.index, locate.index, locate.before);
+            selection.selectText(downIndex.index, locate.index, props.shape.text);
         }
     }
     function onMouseEnter() {

@@ -45,7 +45,7 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
             if (span?.placeholder && span.length === 1) start--;
             selection.setCursor(start, false, shape.text);
         } else {
-            selection.selectText(start, end - 1);
+            selection.selectText(start, end - 1, shape.text);
         }
     } else {
         const span = shape.text.spanAt(end - 1);
@@ -67,7 +67,7 @@ const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: Te
             if (span?.placeholder && span.length === 1) start++;
             selection.setCursor(start, false, shape.text);
         } else {
-            selection.selectText(start, end + 1);
+            selection.selectText(start, end + 1, shape.text);
         }
     } else {
         const span = shape.text.spanAt(end + 1);
@@ -88,7 +88,7 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
     const y = cursor.preLineY + (cursor.preLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
-        selection.selectText(start, locate.index, locate.before);
+        selection.selectText(start, locate.index, text);
     }
     else {
         if (locate.placeholder) selection.setCursor(locate.index + 1, false, shape.text);
@@ -108,7 +108,7 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const y = cursor.nextLineY + (cursor.nextLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
-        selection.selectText(start, locate.index, locate.before);
+        selection.selectText(start, locate.index, text);
     }
     else {
         if (locate.placeholder) selection.setCursor(locate.index + 1, false, shape.text);
@@ -220,7 +220,7 @@ function select_all(e: KeyboardEvent, context: Context, shape: TextShape) {
         e.preventDefault();
         const selection = context.textSelection;
         const end = shape.text.length;
-        selection.selectText(0, end);
+        selection.selectText(0, end, shape.text);
         context.menu.menuMount();
     }
 }

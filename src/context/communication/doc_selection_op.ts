@@ -91,7 +91,7 @@ export class DocSelectionOp extends Watchable(Object) {
         if (cursorStart === originalCursorStart && cursorEnd === originalCursorEnd) return;
         this.previousTextSelectionAfterTransform = { cursorStart: cursorStart, cursorEnd: cursorEnd, cursorAtBefore: this.context.selection.cursorAtBefore }
         if (cursorStart === cursorEnd) this.context.selection.setCursor(cursorStart, this.context.selection.cursorAtBefore, (shape0 as TextShape).text);
-        else this.context.selection.selectText(cursorStart, cursorEnd, this.context.selection.cursorAtBefore);
+        else this.context.selection.selectText(cursorStart, cursorEnd, (shape0 as TextShape).text);
     }
 
     public async start(token: string, documentId: string, context: Context): Promise<boolean> {

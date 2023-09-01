@@ -220,13 +220,13 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, cont
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
     selection.selectShape(page!.getShape(new_shape.id));
-    context.textSelection.selectText(0, (new_shape as TextShape).text.length);
+    context.textSelection.selectText(0, (new_shape as TextShape).text.length, (new_shape as TextShape).text);
   }
   workspace.creating(false);
   context.tool.setAction(Action.AutoV);
   context.cursor.setType('auto-0');
 }
-// 图片从init到inset一气呵成
+// 图片从init到insert
 function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
   const page = selection.selectedPage;

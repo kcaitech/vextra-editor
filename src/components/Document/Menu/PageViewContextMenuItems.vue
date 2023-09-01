@@ -115,8 +115,9 @@ function _replace() {
 function selectAll() {
   if (is_inner_textshape()) {
     const selection = props.context.selection;
-    const end = selection.selectedShapes[0].text.length;
-    props.context.textSelection.selectText(0, end);
+    const text = selection.selectedShapes[0].text;
+    const end = text.length;
+    props.context.textSelection.selectText(0, end, text);
   } else {
     props.context.workspace.keydown_a(true, true);
   }

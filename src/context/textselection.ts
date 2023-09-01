@@ -73,31 +73,30 @@ export class TextSelection extends Watchable(Object) {
         }
     }
 
-    selectText(start: number, end: number, before?: boolean) {
+    selectText(start: number, end: number, text?: Text) {
         // 不只选择'\n'
-        const shape = this.selection.selectedShapes[0];
-        const text = ((shape as any).text as Text);
-        if (Math.abs(start - end) === 1 && text.charAt(Math.min(start, end)) === '\n') {
-            // this.setCursor(end, !!before);
-            // return;
-            if (end > start) {
-                start++;
-                end++;
+        if (text) {
+            if (Math.abs(start - end) === 1 && text.charAt(Math.min(start, end)) === '\n') {
+                // this.setCursor(end, !!before);
+                // return;
+                if (end > start) {
+                    start++;
+                    end++;
+                }
+                else {
+                    start--;
+                    end--;
+                }
             }
-            else {
-                start--;
-                end--;
+            const length = text.length;
+            if (start < 0) start = 0;
+            else if (start >= length) {
+                start = length - 1;
             }
-        }
-
-        const length = text.length;
-        if (start < 0) start = 0;
-        else if (start >= length) {
-            start = length - 1;
-        }
-        if (end < 0) end = 0;
-        else if (end >= length) {
-            end = length - 1;
+            if (end < 0) end = 0;
+            else if (end >= length) {
+                end = length - 1;
+            }
         }
         if (start !== this.m_cursorStart || end !== this.m_cursorEnd) {
             this.m_cursorStart = start;
