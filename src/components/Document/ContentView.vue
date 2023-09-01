@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard, getHorizontalAngle } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace';
@@ -31,6 +31,7 @@ import { Action, Tool } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
+import { get_direction } from '@/utils/controllerFn';
 // import Overview from './Content/Overview.vue';
 interface Props {
     context: Context
@@ -240,9 +241,34 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
     }
 }
 function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
-    const del = x - mousedownOnPageXY.x;
-    y = mousedownOnPageXY.y + del;
-    asyncCreator.setFrame({ x, y });
+    if (newShape && newShape.type === ShapeType.Line) {
+        const p2 = { x, y };
+        const m = newShape.matrix2Root(), lt = m.computeCoord2(0, 0);
+        const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
+        if (type_d === 0) p2.y = lt.y;
+        else if (type_d === 45) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 90) p2.x = lt.x;
+        else if (type_d === 135) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 180) p2.y = lt.y;
+        else if (type_d === 225) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 270) p2.x = lt.x;
+        else if (type_d === 315) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
+        }
+        asyncCreator.setFrame({ x: p2.x, y: p2.y });
+    } else {
+        const del = x - mousedownOnPageXY.x;
+        y = mousedownOnPageXY.y + del;
+        asyncCreator.setFrame({ x, y });
+    }
+
 }
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) matrix.reset(workspace.value.matrix);
