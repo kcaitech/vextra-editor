@@ -309,12 +309,12 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const shapes = props.context.selection.getShapesByXY(xy, auto);
     selectShapes(props.context, shapes);
 }
-function search(e: MouseEvent) { // 常规图形检索
+function search(e: MouseEvent, stop = false) { // 常规图形检索
     if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
+    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey || stop); // xy: PageXY
     selectShapes(props.context, shapes);
 }
 const search_once = debounce(search, 50) // 连续操作结尾处调用
@@ -484,8 +484,10 @@ function onMouseMove_CV(e: MouseEvent) {
                     select(e); // 选区
                 }
             } else if (e.buttons === 0) {
-                if (action === Action.AutoV || action === Action.AutoK || action === Action.AddContact) {
+                if (action === Action.AutoV || action === Action.AutoK) {
                     search(e); // 图形检索(hover)
+                } else if (action === Action.AddContact) {
+                    search(e, true);
                 }
             }
         }
