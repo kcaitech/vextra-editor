@@ -51,6 +51,7 @@ declare module '@vue/runtime-core' {
     CompsTab: typeof import('./src/components/Document/Navigation/CompsTab.vue')['default']
     ContentView: typeof import('./src/components/Document/ContentView.vue')['default']
     ContextMenu: typeof import('./src/components/common/ContextMenu.vue')['default']
+    CreateContact: typeof import('./src/components/Document/Toolbar/Buttons/CreateContact.vue')['default']
     CreateImage: typeof import('./src/components/Document/Toolbar/Buttons/CreateImage.vue')['default']
     CreateTable: typeof import('./src/components/Document/Toolbar/Buttons/Table/CreateTable.vue')['default']
     CreateText: typeof import('./src/components/Document/Toolbar/Buttons/CreateText.vue')['default']

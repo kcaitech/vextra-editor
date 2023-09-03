@@ -15,10 +15,10 @@ function select(action: Action) {
 }
 </script>
 <template>
-  <Tooltip :content="`${t('attr.text')} &nbsp;&nbsp; T`">
-    <ToolButton ref="button" @click="() => { select(Action.AddText) }" :selected="props.active">
+  <Tooltip :content="`${t('home.contact')} &nbsp;&nbsp; X`">
+    <ToolButton ref="button" @click="() => { select(Action.AddContact) }" :selected="props.active">
       <div class="svg-container">
-        <svg-icon icon-class="text"></svg-icon>
+        <svg-icon icon-class="pattern-contact"></svg-icon>
       </div>
     </ToolButton>
   </Tooltip>

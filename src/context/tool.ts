@@ -13,7 +13,8 @@ export enum Action {
     AddText = 'add-text',
     AddComment = 'add-comment',
     AddImage = 'add-image',
-    AddTable = 'table'
+    AddTable = 'add-table',
+    AddContact = 'add-contact'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -49,7 +50,8 @@ const A2R = new Map([
     [Action.AddText, ShapeType.Text],
     [Action.AddImage, ShapeType.Image],
     [Action.AddArrow, ShapeType.Line],
-    [Action.AddTable, ShapeType.Table]
+    [Action.AddTable, ShapeType.Table],
+    [Action.AddContact, ShapeType.Contact],
 ]);
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
@@ -103,6 +105,9 @@ export class Tool extends Watchable(Object) {
         } else if (code === 'KeyF') {
             e.preventDefault();
             this.keydown_f(ctrlKey, shiftKey, metaKey);
+        } else if (code === 'KeyX') {
+            e.preventDefault();
+            this.keydown_x(ctrlKey, shiftKey, metaKey);
         }
     }
     setAction(action: Action) {
@@ -162,6 +167,10 @@ export class Tool extends Watchable(Object) {
     }
     keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
         // todo
+    }
+    keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
+        if (ctrl || meta || shift) return;
+        this.setAction(Action.AddContact);
     }
     get isShowTitle() {
         return this.m_show_title;
