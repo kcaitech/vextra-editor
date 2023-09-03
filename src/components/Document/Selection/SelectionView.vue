@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, nextTick, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
-import { Selection } from "@/context/selection";
+import { ClientXY, Selection } from "@/context/selection";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType } from "@/context/workspace";
@@ -40,6 +40,8 @@ const traceEle = ref<Element>();
 const altKey = ref<boolean>(false);
 const watchedShapes = new Map();
 const tracingFrame = ref<TracingFrame>({ path: '', viewBox: '', height: 0, width: 0 });
+const contact = ref<boolean>(false);
+const contact_points = ref<{ type: 'top' | 'right' | 'bottom' | 'left', point: ClientXY }[]>([]);
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection;
@@ -101,23 +103,43 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
 }
 function createShapeTracing() { // 描边  
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
+    tracing.value = false;
+    contact.value = false;
     if (hoveredShape) {
-        if (props.context.selection.selectedShapes.includes(hoveredShape)) {
-            tracing.value = false;
-        } else {
-            const m = hoveredShape.matrix2Root();
-            m.multiAtLeft(matrix);
-            const path = hoveredShape.getPath();
-            path.transform(m);
+        if (props.context.tool.action === Action.AddContact) {
+            if (hoveredShape.type === ShapeType.Contact) return;
             const { x, y, right, bottom } = props.context.workspace.root;
             const w = right - x;
             const h = bottom - y;
-            tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
-            tracing.value = true;
-            if (altKey.value) nextTick(() => { if (traceEle.value) traceEle.value.classList.add('cursor-copy') });
+            tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: '' };
+            const m = hoveredShape.matrix2Root(), f = hoveredShape.frame;
+            m.multiAtLeft(matrix);
+            const points: { type: 'top' | 'right' | 'bottom' | 'left', point: ClientXY }[] = [
+                { type: 'top', point: { x: f.width / 2, y: 0 } },
+                { type: 'right', point: { x: f.width, y: f.height / 2 } },
+                { type: 'bottom', point: { x: f.width / 2, y: f.height } },
+                { type: 'left', point: { x: 0, y: f.height / 2 } },
+            ]
+            for (let i = 0; i < 4; i++) {
+                points[i].point = m.computeCoord3(points[i].point);
+            }
+            contact_points.value = points;
+            contact.value = true;
+        } else {
+            if (props.context.selection.selectedShapes.includes(hoveredShape)) {
+                tracing.value = false;
+            } else {
+                const m = hoveredShape.matrix2Root();
+                m.multiAtLeft(matrix);
+                const path = hoveredShape.getPath();
+                path.transform(m);
+                const { x, y, right, bottom } = props.context.workspace.root;
+                const w = right - x;
+                const h = bottom - y;
+                tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
+                tracing.value = true;
+            }
         }
-    } else {
-        tracing.value = false;
     }
 }
 function createController() { // 计算控件点位以及类型判定
@@ -245,6 +267,14 @@ onUnmounted(() => {
         <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
         </path>
     </svg>
+    <!-- 连接 -->
+    <svg v-if="contact" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+        style="transform: translate(0px, 0px); position: absolute;">
+        <rect v-for="(p, idx) in contact_points" @mousemove.stop :key="idx" class="contact-point" rx="8px" ry="8px"
+            :x="p.point.x - 8" :y="p.point.y - 8"></rect>
+    </svg>
     <!-- 控制 -->
     <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
         :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
@@ -253,4 +283,20 @@ onUnmounted(() => {
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
 </template>
-<style lang="scss"></style>
+<style lang="scss">
+.contact-point {
+    width: 16px;
+    height: 16px;
+    fill: #fff;
+    stroke: var(--active-color);
+    stroke-width: 2px;
+}
+
+.contact-point:hover {
+    width: 16px;
+    height: 16px;
+    fill: var(--active-color);
+    stroke: #fff;
+    stroke-width: 2px;
+}
+</style>
