@@ -34,6 +34,7 @@ import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import { get_direction } from '@/utils/controllerFn';
 import ContactInit from './Toolbar/ContactInit.vue';
 // import Overview from './Content/Overview.vue';
+import Creator from './Creator.vue';
 interface Props {
     context: Context
     page: Page
@@ -81,7 +82,8 @@ const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>('rgba(239,239,239,1)');
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
-const cellStatus = ref()
+const cellStatus = ref();
+const creatorMode = ref<boolean>(false);
 // const overview = ref<boolean>(false);
 let apex: ContactForm | undefined;
 let temp: PageXY | undefined;
@@ -305,7 +307,10 @@ function menu_watcher(type?: number, mount?: string) {
     }
 }
 function tool_watcher(type: number) {
-    if (type === Tool.INSERT_FRAME) insertFrame();
+    if (type === Tool.CHANGE_ACTION) {
+        creatorMode.value = props.context.tool.action.startsWith('add');
+    }
+    else if (type === Tool.INSERT_FRAME) insertFrame();
     else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
 }
 function insertFrame() {
@@ -869,5 +874,6 @@ onUnmounted(() => {
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
         <!-- <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview> -->
+        <Creator v-if="creatorMode" :context="props.context" />
     </div>
 </template>
