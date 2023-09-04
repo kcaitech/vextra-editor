@@ -425,8 +425,6 @@ const confirm = () => {
 }
 
 .set-container {
-    margin: 16px 32px;
-
     .name-container,
     .description-container,
     .avatar-container,

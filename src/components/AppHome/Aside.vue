@@ -220,10 +220,10 @@ const cancelFixed = (index: number, i: number, id: string) => {
     updateFavor(!is_favor.value);
 }
 
-const showicon=(data:any)=>{
-    if(data.children){
+const showicon = (data: any) => {
+    if (data.children) {
         return true
-    }else{
+    } else {
         return false
     }
 }
@@ -293,8 +293,8 @@ onUnmounted(() => {
                                 <div class="team-title"
                                     :class="{ 'is_active': isActive(data.team.id, data.team.name, data.team.avatar, data.team.description, data.self_perm_type) }">
                                     <div class="left">
-                                        <div v-if="showicon(data)" class="down"
-                                            :style="{ transform: activeNames.includes(index) ? 'rotate(0deg)' : 'rotate(-90deg)' }">
+                                        <div class="down"
+                                            :style="{ transform: activeNames.includes(index) ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: showicon(data) ? 'visible' : 'hidden' }">
                                             <svg-icon icon-class="down" />
                                         </div>
                                         <div class="team-avatar">
