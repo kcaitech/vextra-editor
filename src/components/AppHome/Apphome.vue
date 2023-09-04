@@ -113,7 +113,7 @@ function setTitle(t: string) {
 //===>接收到最新的lists,props传给Headher组件
 const update = (data: any, title: any) => {
   //main组件传过来的lists和title
-  items.value = data
+  items.value = data || []
   searchtitle.value = title
 }
 

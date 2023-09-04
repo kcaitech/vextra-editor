@@ -43,7 +43,10 @@ interface teaminfotype {
 }
 
 const { t } = useI18n();
-const emits = defineEmits(['close'])
+// const emits = defineEmits(['close']);
+const emits = defineEmits<{
+    (e: 'close'): void
+}>();
 const { teamID } = inject('shareData') as {
     teamID: Ref<string>;
 }

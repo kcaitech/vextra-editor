@@ -37,7 +37,10 @@ interface data {
 }
 
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'deletefile']
-const emits = defineEmits(['data-update'])
+// const emits = defineEmits(['data-update'])
+const emits = defineEmits<{
+    (e: 'data-update', list: any[], title: string): void
+}>();
 const { t } = useI18n()
 const isLoading = ref(false)
 const showFileShare = ref<boolean>(false)
@@ -205,7 +208,7 @@ const onSelectType = (type: number) => {
 
 watch(lists, (Nlist) => {
     emits('data-update', Nlist, t('home.modification_time'))
-}, { deep: true })
+}, { deep: true, immediate: true })
 
 onMounted(() => {
     getDoucment()

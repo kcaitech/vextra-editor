@@ -43,7 +43,9 @@ import { useRoute } from 'vue-router'
 import { router } from '@/router';
 const { t } = useI18n();
 const route = useRoute()
-const emits = defineEmits(['close'])
+const emits = defineEmits<{
+    (e: 'close'): void
+}>()
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')

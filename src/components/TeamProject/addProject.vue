@@ -31,7 +31,9 @@ import { ElMessage } from 'element-plus'
 import { router } from '@/router';
 import { useRoute } from 'vue-router';
 const { t } = useI18n();
-const emits = defineEmits(['close'])
+const emits = defineEmits<{
+    (e: 'close'): void
+}>()
 const props = defineProps<{
     teamid: string
 }>()

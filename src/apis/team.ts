@@ -90,3 +90,33 @@ export function setProjectInfoAPI(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//设置项目邀请信息
+export function setProjectInvitedInfoAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/invited',
+        method: 'put',
+        data: params,
+        ...ops
+    })
+}
+
+// 获取项目邀请信息
+export function getProjectInvitedInfoAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/info/invited',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+//申请加入项目
+export function applyJoinProjectAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/apply',
+        method: 'post',
+        data: params,
+        ...ops
+    })
+}

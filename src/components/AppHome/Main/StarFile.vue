@@ -32,7 +32,10 @@ const mydata = ref()
 const docUserId = ref('')
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
-const emits = defineEmits(['data-update'])
+// const emits = defineEmits(['data-update'])
+const emits = defineEmits<{
+    (e: 'data-update', list: any, title: string): void
+}>();
 
 const userData = ref({
     avatar: localStorage.getItem('avatar') || '',

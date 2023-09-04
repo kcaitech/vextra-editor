@@ -38,7 +38,10 @@ interface data {
 }
 
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'deletefile']
-const emits = defineEmits(['data-update']);
+// const emits = defineEmits(['data-update']);
+const emits = defineEmits<{
+    (e: 'data-update', list: any, title: string): void
+}>();
 const props = defineProps<{
     currentProject: any
 }>()
@@ -203,9 +206,9 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
-watch(lists, (Nlist) => {
-    emits('data-update', Nlist, t('home.modification_time'))
-}, { deep: true })
+// watch(lists, (Nlist) => {
+//     emits('data-update', Nlist, t('home.modification_time'))
+// }, { deep: true })
 
 onMounted(() => {
     getDoucment()
