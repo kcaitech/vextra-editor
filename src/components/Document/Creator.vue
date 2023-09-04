@@ -5,7 +5,7 @@ import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
 import { getHorizontalAngle } from '@/utils/common';
-import { init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
+import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
 import { Artboard, AsyncCreator, ContactForm, Matrix, Shape, ShapeFrame, ShapeType } from '@kcdesign/data';
@@ -15,7 +15,6 @@ import CommentInput from './Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
-
 
 interface Props {
     context: Context
@@ -286,6 +285,21 @@ const commentEsc = (e: KeyboardEvent) => {
         document.removeEventListener('keydown', commentEsc);
         commentInput.value = false;
     }
+}
+//移动shape时保存shape身上的评论坐标
+const saveShapeCommentXY = () => {
+    const comment = props.context.comment;
+    const shapes = comment.commentShape
+    const sleectShapes = flattenShapes(shapes)
+    const commentList = props.context.comment.pageCommentList
+    sleectShapes.forEach((item: any) => {
+        commentList.forEach((comment: any, i: number) => {
+            if (comment.target_shape_id === item.id) {
+                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
+            }
+        })
+    })
+    comment.editShapeComment(false, undefined)
 }
 //移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
