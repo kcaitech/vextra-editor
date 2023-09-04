@@ -4,7 +4,7 @@ import { h, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { renderTextShape as r } from "@kcdesign/data"
 import { renderOverride } from "@kcdesign/data"
 
-const props = defineProps<{ data: TextShape, overrides: OverridesGetter | undefined }>();
+const props = defineProps<{ data: TextShape, overrides?: OverridesGetter }>();
 const reflush = ref(0);
 let override: OverrideShape | undefined = props.overrides?.getOverrid(props.data.id);
 

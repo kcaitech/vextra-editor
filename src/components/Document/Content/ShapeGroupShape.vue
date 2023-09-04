@@ -5,7 +5,7 @@ import { renderBoolOpShape as opr } from "@kcdesign/data";
 import { renderGroup as normalR } from "@kcdesign/data";
 import comsMap from './comsmap';
 
-const props = defineProps<{ data: GroupShape, overrides: OverridesGetter | undefined  }>();
+const props = defineProps<{ data: GroupShape, overrides?: OverridesGetter  }>();
 const reflush = ref(0);
 const consumed: Array<Shape> = [];
 
