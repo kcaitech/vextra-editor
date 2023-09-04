@@ -269,14 +269,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     hoverShape(shape: Shape) {
         if (shape.id !== this.hoveredShape?.id) {
-            this.m_hoverShape = undefined;
             this.m_hoverShape = shape;
             this.notify(Selection.CHANGE_SHAPE_HOVER);
         }
     }
 
     unHoverShape() {
-        const needNotify = this.m_hoverShape ? true : false; // 时机很重要
+        const needNotify = this.m_hoverShape ? true : false;
         this.m_hoverShape = undefined;
         if (needNotify) {
             this.notify(Selection.CHANGE_SHAPE_HOVER);

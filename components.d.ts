@@ -49,6 +49,7 @@ declare module '@vue/runtime-core' {
     CommentTab: typeof import('./src/components/Document/Navigation/Comment/CommentTab.vue')['default']
     CommentView: typeof import('./src/components/Document/Content/CommentView.vue')['default']
     CompsTab: typeof import('./src/components/Document/Navigation/CompsTab.vue')['default']
+    ContactInit: typeof import('./src/components/Document/Toolbar/ContactInit.vue')['default']
     ContentView: typeof import('./src/components/Document/ContentView.vue')['default']
     ContextMenu: typeof import('./src/components/common/ContextMenu.vue')['default']
     CreateContact: typeof import('./src/components/Document/Toolbar/Buttons/CreateContact.vue')['default']

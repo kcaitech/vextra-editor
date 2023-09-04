@@ -2,14 +2,15 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { ClientXY, Selection } from "@/context/selection";
-import { Shape, ShapeType, Matrix } from "@kcdesign/data";
+import { Shape, ShapeType, Matrix, AsyncCreator, ShapeFrame, GroupShape } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType } from "@/context/workspace";
 import { Action } from "@/context/tool";
 import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
-import { permIsEdit } from "@/utils/content";
-import Assist from "@/components/Document/Assist/index.vue"
+import { getName, permIsEdit } from "@/utils/content";
+import Assist from "@/components/Document/Assist/index.vue";
+import { useI18n } from "vue-i18n";
 export interface Point {
     x: number
     y: number
@@ -42,6 +43,9 @@ const watchedShapes = new Map();
 const tracingFrame = ref<TracingFrame>({ path: '', viewBox: '', height: 0, width: 0 });
 const contact = ref<boolean>(false);
 const contact_points = ref<{ type: 'top' | 'right' | 'bottom' | 'left', point: ClientXY }[]>([]);
+let asyncCreator: AsyncCreator;
+let newShape: Shape | undefined;
+const t = useI18n().t;
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection;
@@ -218,6 +222,35 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
         }
     }
 }
+function contact_point_down(type: 'top' | 'right' | 'bottom' | 'left') {
+    const p = get_p(type);
+    if (!p) return false;
+    const page = props.context.selection.selectedPage;
+    const parent = props.context.selection.getClosetArtboard(p);
+    if (!page || !parent) return;
+    const new_frame = new ShapeFrame(p.x, p.y, 10, 10);
+    const name = getName(ShapeType.Contact, parent.childs, t);
+    console.log(parent, new_frame, name);
+    // asyncCreator = props.context.editor.controller().asyncCreator(p);
+    // newShape = asyncCreator.init_contact(page, parent as GroupShape, new_frame, name);
+
+}
+function get_p(type: 'top' | 'right' | 'bottom' | 'left') {
+    const hoveredShape = props.context.selection.hoveredShape;
+    if (!hoveredShape) return false;
+    const m2r = hoveredShape.matrix2Root(), f = hoveredShape.frame;
+    switch (type) {
+        case 'top':
+            return m2r.computeCoord2(f.width / 2, 0);
+        case 'right':
+            return m2r.computeCoord2(f.width, f.height / 2);
+        case 'bottom':
+            return m2r.computeCoord2(f.width / 2, f.height);
+        case 'left':
+            return m2r.computeCoord2(0, f.height / 2);
+        default: return m2r.computeCoord2(f.width / 2, 0);
+    }
+}
 function keyboard_down_watcher(e: KeyboardEvent) {
     if (e.code === 'AltLeft') {
         if (traceEle.value) {
@@ -273,7 +306,7 @@ onUnmounted(() => {
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
         style="transform: translate(0px, 0px); position: absolute;">
         <rect v-for="(p, idx) in contact_points" @mousemove.stop :key="idx" class="contact-point" rx="8px" ry="8px"
-            :x="p.point.x - 8" :y="p.point.y - 8"></rect>
+            @mousedown="() => contact_point_down(p.type)" :x="p.point.x - 8" :y="p.point.y - 8"></rect>
     </svg>
     <!-- 控制 -->
     <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"

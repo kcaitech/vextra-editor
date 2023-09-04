@@ -44,7 +44,9 @@ const WITH_BORDER = [
     ShapeType.Table,
     ShapeType.TableCell,
     ShapeType.Text,
-    ShapeType.Line];
+    ShapeType.Line,
+    ShapeType.Contact
+];
 const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
 const reflush = ref<number>(0);

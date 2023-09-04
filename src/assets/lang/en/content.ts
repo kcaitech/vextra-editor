@@ -10,6 +10,7 @@ export const shape: any = {
     image: 'image',
     input_text: 'Input text',
     table: 'Table',
+    contact: 'Contact'
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 

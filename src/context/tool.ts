@@ -1,4 +1,4 @@
-import { ShapeType, Watchable } from "@kcdesign/data";
+import { Shape, ShapeType, Watchable } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
 export enum Action {
@@ -64,12 +64,14 @@ export class Tool extends Watchable(Object) {
     static TITILE_VISIBLE = 5;
     static INSERT_FRAME = 6;
     static INSERT_TABLE = 7;
+    static CHANGE_CONTACT_APEX = 8;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_frame_name: string = ''; // 容器模版名称
     private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
+    private m_contact_apex: Shape | undefined;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -194,5 +196,21 @@ export class Tool extends Watchable(Object) {
     insertTable(size: { row: number, col: number }) {
         this.m_table_size = size
         this.notify(Tool.INSERT_TABLE);
+    }
+    get contactApex() {
+        return this.m_contact_apex;
+    }
+    setContactApex(shape: Shape) {
+        if (shape.id !== this.m_contact_apex?.id) {
+            this.m_contact_apex = shape;
+            this.notify(Tool.CHANGE_CONTACT_APEX);
+        }
+    }
+    resetContactApex() {
+        const needNotify = this.m_contact_apex ? true : false;
+        this.m_contact_apex = undefined;
+        if (needNotify) {
+            this.notify(Tool.CHANGE_CONTACT_APEX);
+        }
     }
 }

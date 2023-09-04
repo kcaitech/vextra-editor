@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard, getHorizontalAngle } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard, getHorizontalAngle, ContactForm } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace';
@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table, init_insert_shape2 } from '@/utils/content';
+import { _updateRoot, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table, init_insert_shape2, init_contact_shape } from '@/utils/content';
 import { paster } from '@/utils/clipboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
@@ -32,6 +32,7 @@ import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import { get_direction } from '@/utils/controllerFn';
+import ContactInit from './Toolbar/ContactInit.vue';
 // import Overview from './Content/Overview.vue';
 interface Props {
     context: Context
@@ -82,7 +83,8 @@ const avatarVisi = ref(props.context.menu.isUserCursorVisible);
 const cellSetting = ref(false);
 const cellStatus = ref()
 // const overview = ref<boolean>(false);
-
+let apex: ContactForm | undefined;
+let temp: PageXY | undefined;
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -231,11 +233,19 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
         if (isDrag) {
             matrix_inverse = new Matrix(matrix.inverse);
             const shapeFrame = new ShapeFrame(x, y, 1, 1);
-            const result = init_shape(props.context, shapeFrame, mousedownOnPageXY, t);
-            if (result) {
-                asyncCreator = result.asyncCreator;
-                newShape = result.new_shape;
-                props.context.assist.setTransTarget([newShape]);
+            if (props.context.tool.action === Action.AddContact) {
+                const result = init_contact_shape(props.context, shapeFrame, mousedownOnPageXY, t, apex, temp);
+                if (result) {
+                    asyncCreator = result.asyncCreator;
+                    newShape = result.new_shape;
+                }
+            } else {
+                const result = init_shape(props.context, shapeFrame, mousedownOnPageXY, t);
+                if (result) {
+                    asyncCreator = result.asyncCreator;
+                    newShape = result.new_shape;
+                    props.context.assist.setTransTarget([newShape!]);
+                }
             }
         }
     }
@@ -309,14 +319,26 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const shapes = props.context.selection.getShapesByXY(xy, auto);
     selectShapes(props.context, shapes);
 }
-function search(e: MouseEvent, stop = false) { // 常规图形检索
+function search(e: MouseEvent) { // 常规图形检索
     if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
     const { clientX, clientY, metaKey, ctrlKey } = e;
     const { x, y } = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey || stop); // xy: PageXY
+    const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(props.context, shapes);
 }
+function search_apex(e: MouseEvent) {
+    if (props.context.workspace.transforming) return;
+    const { x, y } = workspace.value.root;
+    const xy = matrix_inverse.computeCoord2(e.clientX - x, e.clientY - y);
+    const shapes = props.context.selection.getShapesByXY(xy, true); // xy: PageXY
+    if (shapes.length) {
+        props.context.tool.setContactApex(shapes[0]);
+    } else {
+        props.context.tool.resetContactApex();
+    }
+}
+
 const search_once = debounce(search, 50) // 连续操作结尾处调用
 function pageViewDragStart(e: MouseEvent) {
     state = STATE_CHECKMOVE;
@@ -434,7 +456,7 @@ function updateMouse(e: MouseEvent) {
 // mousedown(target：contentview)
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
-    if (e.button == 0) { // 左键按下
+    if (e.button === 0) { // 左键按下
         const action = props.context.tool.action;
         if (action === Action.AddTable) return;
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
@@ -451,7 +473,7 @@ function onMouseDown(e: MouseEvent) {
         }
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
-    } else if (e.button == 2) { // 右键按下，右键菜单处理
+    } else if (e.button === 2) { // 右键按下，右键菜单处理
         e.stopPropagation();
         const action = props.context.tool.action;
         if (action === Action.AddComment) return;
@@ -487,7 +509,7 @@ function onMouseMove_CV(e: MouseEvent) {
                 if (action === Action.AutoV || action === Action.AutoK) {
                     search(e); // 图形检索(hover)
                 } else if (action === Action.AddContact) {
-                    search(e, true);
+                    search_apex(e);
                 }
             }
         }
@@ -551,6 +573,7 @@ function shapeCreateEnd() { // 造图结束
         removeCreator();
         props.context.assist.reset();
         newShape = undefined;
+        apex = undefined, temp = undefined;
     }
 }
 function removeCreator() { // 移除创造器
@@ -738,6 +761,10 @@ const getDocumentComment = async () => {
 const closeModal = () => {
     cellSetting.value = false
 }
+function init_contact(e: MouseEvent, a?: ContactForm, p?: PageXY) {
+    onMouseDown(e);
+    apex = a, temp = p;
+}
 
 function frame_watcher() {
     if (!root.value) return;
@@ -824,6 +851,7 @@ onUnmounted(() => {
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />
+        <ContactInit :context="props.context" :matrix="matrix" @contact-init="init_contact"></ContactInit>
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
             :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
