@@ -5,19 +5,19 @@
                 <div class="title" v-for="(item, index) in titles" :key="index">{{ item }}</div>
             </div>
             <div class="main">
-                <div class="project-item" :class="{ 'selected': selectid === id }"
-                    v-for="({ project: { name, id, description }, creator: { nickname }, is_favor }, index) in searchvalue === '' ? teamprojectlist : SearchList"
-                    :key="id" @click.stop="selectid = id" @dblclick.stop="skipProject(id)">
-                    <div class="project-name">{{ name }}</div>
-                    <div class="project-description">{{ description }}</div>
-                    <div class="project-creator">{{ nickname }}</div>
+                <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
+                    v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList"
+                    :key="item.project.id" @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)">
+                    <div class="project-name">{{ item.project.name }}</div>
+                    <div class="project-description">{{ item.project.description }}</div>
+                    <div class="project-creator">{{ item.creator.nickname }}</div>
                     <div class="other">
-                        <div @click="cancelFixed(id, is_favor, index)">
+                        <div @click="cancelFixed(item.project.id, item.is_favor, index)">
                             <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                 xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
                                 <path
                                     d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                    :fill="is_favor ? '#9775fa' : '#999'" p-id="15756"
+                                    :fill="item.is_favor ? '#9775fa' : '#999'" p-id="15756"
                                     data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
                                 </path>
                                 <path
@@ -27,7 +27,7 @@
                                 </path>
                             </svg>
                         </div>
-                        <div @click.stop="skipProject(id)"><svg-icon icon-class="drag"></svg-icon></div>
+                        <div @click.stop="skipProject(item.project.id)"><svg-icon icon-class="drag"></svg-icon></div>
                         <div><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
                     </div>
                 </div>
@@ -178,7 +178,6 @@ onMounted(() => {
 }
 
 .container {
-    margin: 0 32px;
 
     .hearder-container {
         display: flex;

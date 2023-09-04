@@ -312,7 +312,7 @@ onUnmounted(() => {
 </script>
 <style lang="scss" scoped>
 .container {
-    margin: 0 32px;
+
 
     .hearder-container {
         display: flex;

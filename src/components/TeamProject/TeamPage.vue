@@ -175,8 +175,8 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 32px 24px 8px 24px;
-    padding: 12px;
+    margin: 0px 0px 8px 0px;
+    padding: 12px 0px;
     border-bottom: 1px solid #c4c4c4cf;
 
     .menu {
@@ -240,7 +240,7 @@ onMounted(() => {
 
 .team {
     display: flex;
-    margin: 16px 24px;
+    margin: 16px 0px;
     align-items: center;
 
     .team-avatar {
