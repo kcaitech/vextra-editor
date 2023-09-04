@@ -35,7 +35,10 @@ const docUserId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share', 'remove'])
-const emits = defineEmits(['data-update'])
+// const emits = defineEmits(['data-update'])
+const emits = defineEmits<{
+    (e: 'data-update', list: any[], title: string): void
+}>()
 
 interface data {
     document: {

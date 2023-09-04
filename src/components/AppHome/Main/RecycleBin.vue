@@ -35,7 +35,10 @@ const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-const emits = defineEmits(['data-update'])
+// const emits = defineEmits(['data-update'])
+const emits = defineEmits<{
+    (e: 'data-update', list: any, title: string): void
+}>();
 
 interface data {
     document: {

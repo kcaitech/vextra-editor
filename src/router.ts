@@ -18,7 +18,8 @@ const KChome = () => import("@/components/Home/KChome.vue");
 const HomeContent = () => import("@/components/Home/HomeContent.vue");
 const TeamPage=()=>import("@/components/TeamProject/TeamPage.vue");
 const joinTeam=()=>import("@/components/TeamProject/jionTeam.vue");
-const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue")
+const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
+const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue")
 const routes = [
     {
         path: '/',
@@ -103,7 +104,10 @@ const routes = [
             {
                 path: 'project/:id',
                 name: 'ProjectPage',
-                component: ProjectPage
+                component: ProjectPage,
+                meta: {
+                    requireAuth: true
+                }
             },
         ]
     },
@@ -124,16 +128,21 @@ const routes = [
         }
     },
     {
+        path: "/projectApply",
+        name: "projectApply",
+        component: projectApply,
+        meta: {
+            requireAuth: true
+        }
+    },
+    {
         path: "/pcenter",
         name: "per_center",
         component: per_center
     },
-
-
     {
         path: '/:catchAll(.*)',
         redirect: '/',
-
     },
 ]
 

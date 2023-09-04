@@ -39,7 +39,10 @@ interface data {
 
 const items = ['open', 'newtabopen', 'share', 'exit_share', 'target_star']
 const iconlists = ref(['star', 'share', 'EXshare'])
-const emits = defineEmits(['data-update'])
+// const emits = defineEmits(['data-update'])
+const emits = defineEmits<{
+    (e: 'data-update', list: any, title: string): void
+}>();
 const { t } = useI18n()
 const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);

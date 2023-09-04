@@ -47,7 +47,7 @@ interface data {
 
 const props = defineProps<{
     items: string[],
-    data: data,
+    data: data | undefined,
 }>()
 
 const emits = defineEmits([
@@ -109,6 +109,7 @@ const itemcontent = (item: string) => {
 }
 
 const EventHandler = (item: string) => {
+    if(!props.data) return;
     const { document: { id, name } } = props.data
     if (item === rightmenuitem.open) {
         emits('ropen', id) //右键打开 
@@ -193,6 +194,7 @@ const rrename = (name: string) => {
 
 //重命名
 const rename1 = async () => {
+    if(!props.data) return;
     const { document: { id, name } } = props.data
     newname.value = renameinput.value?.value
     if (newname.value == '') return

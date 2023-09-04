@@ -35,7 +35,10 @@ const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-const emits = defineEmits(['data-update']);
+// const emits = defineEmits(['data-update']);
+const emits = defineEmits<{
+    (e: 'data-update', list: any, title: string): void
+}>();
 const props = defineProps<{
     currentProject: any
 }>();
@@ -157,9 +160,9 @@ const rightmenu = (e: MouseEvent, data: data) => {
     mydata.value = data
 }
 
-watch(lists, (Nlist) => {
-    emits('data-update', Nlist, t('home.delete_file_time'))
-}, { deep: true })
+// watch(lists, (Nlist) => {
+//     emits('data-update', Nlist, t('home.delete_file_time'))
+// }, { deep: true })
 
 onMounted(() => {
     GetrecycleLists()

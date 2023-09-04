@@ -35,7 +35,7 @@
         </div>
         <div v-else class="datanull">
             <p>未加入任何项目</p>
-            <button type="button" @click.stop="emits('addproject')">新建项目</button>
+            <button type="button" @click.stop="onAddproject">新建项目</button>
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
@@ -63,7 +63,7 @@ const selectid = ref(0)
 const projectLists = ref<any[]>([])
 const teamprojectlist = ref<any[]>([])
 const emits = defineEmits<{
-    (e: 'addproject'): () => void
+    (e: 'addproject'): void
 }>()
 
 const props = withDefaults(defineProps<Props>(), {
@@ -87,6 +87,9 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
         return item;
     })
     return projectList;
+}
+const onAddproject = () => {
+    emits('addproject');
 }
 
 const GetprojectLists = async () => {

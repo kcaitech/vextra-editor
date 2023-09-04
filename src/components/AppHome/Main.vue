@@ -6,8 +6,10 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const emits = defineEmits(['data-update'])
-
+// const emits = defineEmits(['data-update'])
+const emits = defineEmits<{
+    (e: 'data-update', list: any[], title: string): void
+}>();
 //===>Apphome组件接收
 const update = (data: any, searchtitle: string) => {
     //main目录下传过来的lists和title

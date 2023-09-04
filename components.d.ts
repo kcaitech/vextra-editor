@@ -120,6 +120,8 @@ declare module '@vue/runtime-core' {
     Popover: typeof import('./src/components/common/Popover.vue')['default']
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
     Privacypolicy: typeof import('./src/components/Login/Privacypolicy.vue')['default']
+    ProjectAccessSetting: typeof import('./src/components/TeamProject/ProjectFill/ProjectAccessSetting.vue')['default']
+    ProjectApply: typeof import('./src/components/TeamProject/ProjectFill/ProjectApply.vue')['default']
     ProjectFillList: typeof import('./src/components/TeamProject/ProjectFill/ProjectFillList.vue')['default']
     ProjectList: typeof import('./src/components/TeamProject/ProjectList.vue')['default']
     ProjectPage: typeof import('./src/components/TeamProject/ProjectPage.vue')['default']
