@@ -1,8 +1,15 @@
 <template>
     <div class="title" v-if="currentProject[0]">
         <div class="left">
-            <p>项目1</p>
-            <span>项目描述</span>
+            <div class="p">
+                <p v-if="!cusname" @click="input_cusname">{{ currentProject[0].project.name }}</p>
+                <input v-if="cusname" type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
+                    :style="{ width: inputNameLength + 'px' }">
+            </div>
+            <div class="span">
+                <span v-if="!cusdesc" @click="input_cusdesc">{{ currentProject[0].project.description }}</span>
+                <input v-if="cusdesc" type="text" ref="input" @input="updateInputDescWidth" v-model="projectDesc" :style="{ width: inputDescLength + 'px' }">
+            </div>
         </div>
         <div class="right">
             <div @click="cancelFixed">
@@ -36,7 +43,7 @@
     <ProjectRecycleBin v-if="itemid === 1" :currentProject="currentProject[0]"></ProjectRecycleBin>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, ref, onMounted, watch, watchEffect } from 'vue'
+import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
 import * as user_api from '@/apis/users'
@@ -48,7 +55,13 @@ const itemid = ref(0)
 const items = ['文件', '回收站',]
 const route = useRoute();
 const currentProject = ref<any[]>([]);
-
+const cusname = ref<boolean>(false);
+const cusdesc = ref<boolean>(false);
+const input = ref<HTMLInputElement>();
+const projectName = ref('');
+const projectDesc = ref('');
+const inputNameLength = ref(0)
+const inputDescLength = ref(0)
 interface data {
     team: {
         id: string,
@@ -58,12 +71,14 @@ interface data {
     }
 }
 
-const { projectList, saveProjectData, is_favor, favoriteList, updateFavor } = inject('shareData') as {
+const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
     projectList: Ref<any[]>;
     favoriteList: Ref<any[]>;
     saveProjectData: (data: any[]) => void;
     is_favor: Ref<boolean>;
     updateFavor: (b: boolean) => void;
+    is_team_upodate: Ref<boolean>;
+    teamUpdate: (b: boolean) => void;
 };
 
 const clickEvent = (index: number) => {
@@ -79,7 +94,7 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
 }
 watch(is_favor, () => {
     const timer = setTimeout(() => {
-        currentProject.value = projectList.value.filter((item) => item.project.team_id === route.params.id)
+        currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id)
         clearTimeout(timer)
     }, 300)
 })
@@ -115,6 +130,101 @@ const GetprojectLists = async () => {
     } catch (error) {
         console.log(error);
 
+    }
+}
+
+function input_cusname() {
+    projectName.value = currentProject.value[0].project.name;
+    cusname.value = !cusname.value;
+    nextTick(() => {
+        if (input.value) {
+            input.value.select();
+            updateInputNameWidth();
+            input.value.addEventListener('blur', blur);
+            document.addEventListener('keydown', enter)
+        }
+    })
+}
+function input_cusdesc() {
+    projectDesc.value = currentProject.value[0].project.description;
+    cusdesc.value = !cusdesc.value;
+    nextTick(() => {
+        if (input.value) {
+            input.value.select();
+            updateInputDescWidth();
+            input.value.addEventListener('blur', blur_desc);
+            document.addEventListener('keydown', enter_desc)
+        }
+    })
+}
+function enter(e: KeyboardEvent) {
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+        blur();
+    }
+}
+function enter_desc(e: KeyboardEvent) {
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+        blur_desc();
+    }
+}
+function blur() {
+    const project = currentProject.value[0].project
+    const params = {
+        project_id: project.id,
+        name: projectName.value
+    }
+    const favorite = favoriteList.value.findIndex((item) => item.project.id === route.params.id);
+    if (favorite !== -1) {
+        favoriteList.value[favorite].project.name = projectName.value;
+        teamUpdate(!is_team_upodate.value);
+    }
+    project.name = projectName.value;
+    setProjectInfo(params)
+    cusname.value = false;
+    document.removeEventListener('keydown', enter);
+}
+function blur_desc() {
+    const project = currentProject.value[0].project
+    const params = {
+        project_id: project.id,
+        description: projectDesc.value
+    }
+    const favorite = favoriteList.value.findIndex((item) => item.project.id === route.params.id);
+    if (favorite !== -1) {
+        favoriteList.value[favorite].project.description = projectDesc.value;
+        teamUpdate(!is_team_upodate.value);
+    }
+    project.description = projectDesc.value;
+    setProjectInfo(params)
+    cusdesc.value = false;
+    document.removeEventListener('keydown', enter);
+}
+function updateInputNameWidth() {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (context) {
+        if (!input.value) return;
+        context.font = window.getComputedStyle(input.value).font;
+        const metrics = context.measureText(projectName.value);
+        inputNameLength.value = metrics.width + 10; // 添加一些额外宽度作为缓冲
+    }
+}
+function updateInputDescWidth() {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (context) {
+        if (!input.value) return;
+        context.font = window.getComputedStyle(input.value).font;
+        const metrics = context.measureText(projectDesc.value);
+        inputDescLength.value = metrics.width + 10; // 添加一些额外宽度作为缓冲
+    }
+}
+
+const setProjectInfo = async (params: any) => {
+    try {
+        await team_api.setProjectInfoAPI(params)
+    } catch (err) {
+        console.log(err);
     }
 }
 
@@ -242,16 +352,70 @@ onMounted(() => {
     box-sizing: border-box;
 
     .left {
+        flex: 1;
+
+        .p {
+            input {
+                font-size: 18px;
+                font-weight: bold;
+                outline: none;
+                border: none;
+                width: auto;
+                height: 32px;
+                border: 2px solid #9775fa;
+                border-radius: 0%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-bottom: 10px;
+            }
+        }
+
         p {
+            width: fit-content;
             font-size: 18px;
             font-weight: bold;
             margin: 0;
             margin-bottom: 10px;
-        }
+            padding: 5px;
+            border: 2px solid transparent;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
 
+            &:hover {
+                border: 2px solid #9775fa;
+            }
+        }
+        .span {
+            input {
+                font-size: 10px;
+                outline: none;
+                border: none;
+                width: auto;
+                height: 24px;
+                border: 2px solid #9775fa;
+                border-radius: 0%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
         span {
+            display: flex;
+            width: fit-content;
             font-size: 10px;
             color: rgba(0, 0, 0, 0.7);
+            padding: 5px;
+            box-sizing: border-box;
+            border: 2px solid transparent;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            &:hover {
+                border: 2px solid #9775fa;
+            }
         }
     }
 
@@ -259,6 +423,7 @@ onMounted(() => {
         display: flex;
         width: auto;
         height: 30px;
+        margin-left: 50px;
 
         svg {
             width: 16px;
@@ -293,5 +458,4 @@ onMounted(() => {
         }
     }
 }
-
 </style>

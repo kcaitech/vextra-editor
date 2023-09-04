@@ -1,5 +1,5 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />

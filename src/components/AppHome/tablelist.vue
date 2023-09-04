@@ -12,7 +12,11 @@
                         </div>
                     </template>
                     <template #empty>
-                        <div v-if="empty" class="flex items-center justify-center h-100%">
+                        <div v-if="props.type === 'project'" class="datanull">
+                            <p>项目没有任何文件</p>
+                            <button type="button">新建文件</button>
+                        </div>
+                        <div v-else-if="empty" class="flex items-center justify-center h-100%">
                             <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
                         </div>
                         <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-100%">
@@ -42,6 +46,7 @@ const props = defineProps<{
     data: any
     iconlist: any
     noNetwork: boolean
+    type?: string
 }>()
 
 watch(() => props.data, () => {
@@ -49,14 +54,14 @@ watch(() => props.data, () => {
     empty.value = true
 });
 
-watch(() => props.noNetwork,(newV) => {
-    if(newV) {
+watch(() => props.noNetwork, (newV) => {
+    if (newV) {
         nextTick(() => {
-            if(net.value) {
+            if (net.value) {
                 loading.value = false
                 const el = net.value.parentElement
                 nextTick(() => {
-                    if(el) {
+                    if (el) {
                         el.style.top = '50%'
                     }
                 })
@@ -351,6 +356,29 @@ const columns: Column<any>[] = [
 
     100% {
         transform: scale(1.2);
+    }
+}
+
+.datanull {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 240px;
+
+    button {
+        cursor: pointer;
+        border: none;
+        width: 120px;
+        height: 40px;
+        border-radius: 4px;
+        background-color: #9775fa;
+        box-sizing: border-box;
+        transition: all 0.5s ease-out;
+        color: white;
+
+        &:hover {
+            background-color: rgba(150, 117, 250, 0.862745098);
+        }
     }
 }
 </style>
