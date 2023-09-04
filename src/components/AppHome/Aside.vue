@@ -173,6 +173,8 @@ const GetteamList = async () => {
 
 watch(updatestate, (newvalue) => {
     if (newvalue) {
+        console.log(newvalue);
+        
         GetteamList()
         state(false)
     }
