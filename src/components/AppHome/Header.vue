@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed, nextTick } from 'vue'
 import { Search, User, SwitchButton, Close, Bell, Loading } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share';
@@ -26,8 +26,8 @@ const teamnum = ref(0);
 const projectnum = ref(0);
 const showInForm = ref(false);
 const applyList = ref<any[]>([]);
-const teamApplyList = ref<any>([]);
 const projectApplyList = ref<any>([]);
+const teamApplyList = ref<any>([]);
 const search = ref('');
 const SearchList = ref<any[]>([]);
 const showSearchHistory = ref(false);
@@ -73,8 +73,9 @@ const getTeamApply = async () => {
     try {
         const { data } = await team_api.getTeamApplyAPI();
         if (data) {
-            teamApplyList.value = [...projectApplyList, ...data];
+            teamApplyList.value = [...projectApplyList.value, ...data];
             teamnum.value = teamApplyList.value.filter((item: any) => item.request.status === 0).length;
+
         }
     } catch (err) {
         console.log(err);
@@ -127,8 +128,8 @@ function loginout() {
 
 const reviewed = () => {
     getApplyList();
-    getProjectApplyList();
     getTeamApply();
+    getProjectApplyList();
 }
 
 const toDocument = (row: any, column: any) => {

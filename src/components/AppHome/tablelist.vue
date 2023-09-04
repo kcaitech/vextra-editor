@@ -14,7 +14,7 @@
                     <template #empty>
                         <div v-if="props.type === 'project'" class="datanull">
                             <p>项目没有任何文件</p>
-                            <button type="button">新建文件</button>
+                            <button type="button" >新建文件</button>
                         </div>
                         <div v-else-if="empty" class="flex items-center justify-center h-100%">
                             <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />

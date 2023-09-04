@@ -62,7 +62,7 @@ async function GetrecycleLists() {
             for (let i = 0; i < data.length; i++) {
                 let { document: { size, deleted_at } } = data[i]
                 data[i].document.size = sizeTostr(size)
-                data[i].document.deleted_at = deleted_at.slice(0, 19).split('T')[0] + ' ' + deleted_at.slice(0, 19).split('T')[1]
+                data[i].document.deleted_at = deleted_at.slice(0, 19)
             }
         }
         lists.value = Object.values(data)

@@ -58,7 +58,6 @@ import TeamMember from './TeamMember.vue'
 import InviteMember from './InviteMember.vue'
 import TeamSetting from './TeamSetting.vue'
 import { router } from '@/router'
-import * as user_api from '@/apis/users'
 
 const showoverlay = ref(false)
 const itemid = ref(0)
@@ -108,7 +107,7 @@ const isIdInList = (id: any, list: Array<data>) => {
 watch(teamData, (newvalue) => {
     const a = isIdInList(route.params.id, newvalue)
     if (a) {
-        console.log('在');
+        return
     } else {
         router.push({ path: '/apphome' })
     }
@@ -122,7 +121,6 @@ onMounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-
 .nested-enter-active,
 .nested-leave-active {
     transition: all 0.3s ease-in-out;

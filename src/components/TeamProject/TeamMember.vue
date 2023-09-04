@@ -25,14 +25,14 @@
                 v-for=" { user: { nickname, id }, perm_type }  in  searchvalue === '' ? ListData : SearchList " :key="id">
                 <div class="member-name">{{ nickname }}</div>
                 <div class="member-jurisdiction">
-                    <div v-if="usertype() === 3" class="member-jurisdiction-container">
+                    <div class="member-jurisdiction-container">
                         {{ membertype(perm_type) }}
-                        <div v-if="perm_type !== 3" class="shrink" @click="folds = !folds, userid = id">
+                        <div v-if="usertype(perm_type, id)" class="shrink" @click="folds = !folds, userid = id">
                             <svg-icon icon-class="down"
                                 :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                             <transition name="el-zoom-in-top">
                                 <ul class="filterlist" v-if="userid === id && folds" ref="menu">
-                                    <li class="item" v-for="(item, index) in  typeitems(usertype()) " :key="index"
+                                    <li class="item" v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) " :key="index"
                                         @click.stop="itemEvent(item, teamID, id, perm_type)">
                                         <div v-if="true" class="choose"
                                             :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
@@ -43,43 +43,6 @@
                             </transition>
                         </div>
                     </div>
-                    <div v-if="usertype() === 2" class="member-jurisdiction-container">
-                        {{ membertype(perm_type) }}
-                        <div v-if="perm_type !== 3 && 2" class="shrink" @click="folds = !folds, userid = id">
-                            <svg-icon icon-class="down"
-                                :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
-                        </div>
-                        <transition name="el-zoom-in-top">
-                            <ul class="filterlist" v-if="userid === id && folds" ref="menu">
-                                <li class="item" v-for="(item, index) in typeitems(usertype()) " :key="index"
-                                    @click.stop="filterEvent(index)">
-                                    <div class="choose"
-                                        :style="{ visibility: item == membertype(perm_type) ? 'visible' : 'hidden' }">
-                                    </div>
-                                    {{ item }}
-                                </li>
-
-                            </ul>
-                        </transition>
-                    </div>
-                    <div v-if="usertype() === 0 || usertype() === 1" class="member-jurisdiction-container">
-                        {{ membertype(perm_type) }}
-                        <div v-if="userID === id" class="shrink" @click="folds = !folds, userid = id">
-                            <svg-icon icon-class="down"
-                                :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
-                        </div>
-                        <transition name="el-zoom-in-top">
-                            <ul class="filterlist" v-if="userid === id && folds" ref="menu">
-                                <li class="item" v-for="(item, index) in  typeitems(usertype()) " :key="index"
-                                    @click.stop="filterEvent(index)">
-                                    <div class="choose"
-                                        :style="{ visibility: item == membertype(perm_type) ? 'visible' : 'hidden' }">
-                                    </div>
-                                    {{ item }}
-                                </li>
-                            </ul>
-                        </transition>
-                    </div>
                 </div>
             </div>
         </div>
@@ -87,7 +50,7 @@
     <NetworkError v-else @refresh-doc="GetteamMember"></NetworkError>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, inject, Ref, watch, computed, nextTick } from 'vue';
+import { onMounted, onUnmounted, ref, inject, Ref, watch, computed } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
@@ -113,15 +76,33 @@ const fold = ref(false)
 const folds = ref(false)
 const fontName = ref(4)
 const menu = ref<HTMLElement>()
-
 const { teamID } = inject('shareData') as {
     teamID: Ref<string>;
 }
-
-const usertype = () => {
+const userperm=ref()
+const usertype = (p: number, id: string) => {
     const text = teammemberdata.value.find((item) => item.user.id === userID.value)
-    if (text) {
-        return text.perm_type
+    userperm.value=text.perm_type
+    if (text.perm_type === 3) {
+        if (text.perm_type === p) {
+            return false
+        } else {
+            return true
+        }
+    } else if (text.perm_type === 2) {
+        if (text.perm_type === p && userID.value === id) {
+            return true
+        } else if (p === 2 || p === 3) {
+            return false
+        } else {
+            return true
+        }
+    } else if (text.perm_type === 1 || text.perm_type === 0) {
+        if (userID.value === id) {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
