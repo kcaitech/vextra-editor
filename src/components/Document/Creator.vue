@@ -5,17 +5,23 @@ import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
 import { getHorizontalAngle } from '@/utils/common';
-import { init_contact_shape, init_insert_shape, init_shape } from '@/utils/content';
+import { init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
 import { Artboard, AsyncCreator, ContactForm, Matrix, Shape, ShapeFrame, ShapeType } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import CommentInput from './Content/CommentInput.vue';
+import { useRoute } from 'vue-router';
+import { searchCommentShape } from '@/utils/comment';
+import * as comment_api from '@/apis/comment';
+
+
 interface Props {
     context: Context
 }
 const props = defineProps<Props>();
-const commentInput = ref<boolean>(false);
+
 const dragActiveDis = 4; // 拖动 4px 后开始触发移动
 const t = useI18n().t;
 let newShape: Shape | undefined;
@@ -31,6 +37,29 @@ let page_xy_1: PageXY = { x: 0, y: 0 };
 let client_xy_1: ClientXY = { x: 0, y: 0 };
 let matrix1: Matrix = new Matrix(props.context.workspace.matrix.inverse);
 let isDrag: boolean = false;
+
+// comment
+const commentInput = ref<boolean>(false);
+const commentPosition: ClientXY = reactive({ x: 0, y: 0 });
+type CommentInputEl = InstanceType<typeof CommentInput>;
+const commentEl = ref<CommentInputEl>();
+const shapeID = ref('')
+const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
+const documentCommentList = ref<any[]>(props.context.comment.pageCommentList);
+const route = useRoute()
+const posi = ref({ x: 0, y: 0 });
+const rootWidth = ref<number>(props.context.workspace.root.width);
+type commentListMenu = {
+    text: string
+    status_p: boolean
+}
+// 左侧评论列表的菜单
+const commentMenuItems = ref<commentListMenu[]>([
+    { text: `${t('comment.sort')}`, status_p: false },
+    { text: `${t('comment.show_about_me')}`, status_p: false },
+    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false }
+])
+
 function down(e: MouseEvent) {
     if (e.button === 0) {
         const action = props.context.tool.action;
@@ -54,12 +83,14 @@ function move(e: MouseEvent) {
         }
     }
 }
-function up() {
+function up(e: MouseEvent) {
     removeWheel();
     if (commentInput.value) commentInput.value = false;
     if (isDrag && newShape) {
         shapeCreateEnd();
-    }else if (props.context.tool.action.startsWith('add')) {
+    } else if (props.context.tool.action.startsWith('add')) {
+        const action = props.context.tool.action;
+        if (action === Action.AddComment) return addComment(e);
         init_insert_shape(props.context, page_xy_1, t);
     }
     isDrag = false;
@@ -202,6 +233,150 @@ function removeCreator() {
     props.context.tool.setAction(Action.AutoV);
     props.context.cursor.setType("auto-0");
 }
+//添加评论
+const detectionShape = (e: MouseEvent) => {
+    const workspace = props.context.workspace;
+    const { x, y } = workspace.root;
+    const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
+    const shapes = searchCommentShape(props.context, xy);
+    if (shapes.length === 0) { //点击的位置是否有图形
+        shapePosition.x = 0
+        shapePosition.y = 0
+        shapeID.value = props.context.selection.selectedPage!.id
+    } else {
+        const shape = shapes[0]
+        const fp = shape.frame2Root();
+        const farmeXY = { x: fp.x, y: fp.y }
+        shapePosition.x = xy.x - farmeXY.x //评论输入框相对于shape的距离
+        shapePosition.y = xy.y - farmeXY.y
+        shapeID.value = shape.id
+    }
+    return { x, y, xy }
+}
+const addComment = (e: MouseEvent) => {
+    e.stopPropagation()
+    const comment = props.context.comment;
+    if (comment.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {
+        comment.commentOpacity(false)
+        comment.commentInput(false)
+        return
+    } else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
+        return
+    }
+    if (commentInput.value) return
+    const { x, y, xy } = detectionShape(e)
+    commentPosition.x = xy.x; //评论输入框在页面的坐标
+    commentPosition.y = xy.y;
+    posi.value.x = e.clientX - x // 评论弹出框的位置坐标
+    posi.value.y = e.clientY - y
+    commentInput.value = true;
+    document.addEventListener('keydown', commentEsc);
+}
+
+const getCommentInputXY = (e: MouseEvent) => {
+    const { x, y, xy } = detectionShape(e)
+    commentPosition.x = xy.x;
+    commentPosition.y = xy.y;
+    posi.value.x = e.clientX - x
+    posi.value.y = e.clientY - y
+}
+
+const commentEsc = (e: KeyboardEvent) => {
+    if (e.code === 'Escape') {
+        document.removeEventListener('keydown', commentEsc);
+        commentInput.value = false;
+    }
+}
+//移动输入框
+const mouseDownCommentInput = (e: MouseEvent) => {
+    document.addEventListener("mousemove", mouseMoveInput);
+    document.addEventListener("mouseup", mouseUpCommentInput);
+}
+
+const mouseMoveInput = (e: MouseEvent) => {
+    e.stopPropagation()
+    getCommentInputXY(e)
+}
+
+const mouseUpCommentInput = (e: MouseEvent) => {
+    detectionShape(e)
+    document.removeEventListener('mousemove', mouseMoveInput);
+    document.removeEventListener('mouseup', mouseUpCommentInput);
+}
+
+const editShapeComment = (index: number, x: number, y: number) => {
+    const comment = documentCommentList.value[index]
+    const id = comment.id
+    const shapeId = comment.target_shape_id
+    const { x2, y2 } = comment.shape_frame
+    const data = {
+        id: id,
+        target_shape_id: shapeId,
+        shape_frame: {
+            x1: x,
+            y1: y,
+            x2: x2,
+            y2: y2
+        }
+    }
+    editCommentShapePosition(data)
+}
+const editCommentShapePosition = async (data: any) => {
+    try {
+        await comment_api.editCommentAPI(data)
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+// 取消评论输入框
+const closeComment = (e?: MouseEvent) => {
+    if (e && e.target instanceof Element && e.target.closest('#content') && !e.target.closest('.container-popup')) {
+        commentInput.value = false;
+    } else if (!e) {
+        commentInput.value = false;
+    }
+}
+
+// 调用评论API，并通知listTab组件更新评论列表
+const completed = () => {
+    props.context.comment.sendComment()
+    const timer = setTimeout(() => {
+        getDocumentComment()
+        clearTimeout(timer)
+        commentInput.value = false;
+    }, 150);
+}
+
+// 获取评论列表
+const getDocumentComment = async () => {
+    try {
+        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: route.query.id })
+        if (data) {
+            data.forEach((obj: { children: any[]; commentMenu: any; }) => {
+                obj.commentMenu = commentMenuItems.value
+                obj.children = []
+            })
+            const manageData = data.map((item: any) => {
+                item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+                return item
+            })
+            const comment = props.context.comment;
+            const list = list2Tree(manageData, '')
+            comment.setNot2TreeComment(manageData)
+            comment.setPageCommentList(list, props.context.selection.selectedPage!.id)
+            comment.setCommentList(list)
+            documentCommentList.value = comment.pageCommentList
+            if (props.context.selection.isSelectComment) {
+                props.context.selection.selectComment(props.context.selection.commentId)
+                documentCommentList.value = comment.pageCommentList
+                props.context.selection.setCommentSelect(false)
+            }
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
 function windowBlur() {
     shapeCreateEnd();
     removeWheel();
@@ -218,6 +393,10 @@ onUnmounted(() => {
 </script>
 <template>
     <div @mousedown.stop="down" class="creator">
+        <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
+            :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
+            @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" :matrix="props.context.workspace.matrix"
+            :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
     </div>
 </template>
 <style scoped lang="scss">
