@@ -89,3 +89,7 @@
     background-color: var(--active-color-beta) !important;
   }
 }
+.el-dialog__body {
+  padding: 10px; /* 修改内边距 */
+  padding-left: 20px;
+}

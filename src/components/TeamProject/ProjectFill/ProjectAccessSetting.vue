@@ -3,6 +3,7 @@ import { ref } from 'vue'
 const props = defineProps<{
     title: string
     dialogVisible: boolean
+    width: string
 }>()
 const emit = defineEmits<{
     (e: 'clodeDialog'): void;
@@ -14,7 +15,7 @@ const handleClose = () => {
 
 <template>
     <div>
-        <el-dialog v-model="$props.dialogVisible" :title="title" width="500px" align-center :close-on-click-modal="false" :before-close="handleClose">
+        <el-dialog v-model="$props.dialogVisible" :title="title" :width="width" align-center :close-on-click-modal="false" :before-close="handleClose">
             <div class="body"><slot></slot></div>
         </el-dialog>
     </div>
@@ -22,10 +23,13 @@ const handleClose = () => {
 
 <style scoped lang="scss">
 :deep(.el-dialog__body) {
-    padding: 16px;
+    padding: 16px !important;
 }
 :deep(.el-input__inner) {
     font-size: 10px;
+}
+:deep(.el-dialog__title) {
+    font-weight: bold;
 }
 .body { 
     font-size: 10px;

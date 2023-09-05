@@ -27,7 +27,7 @@
                 </svg>
             </div>
             <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
-            <div><el-icon>
+            <div @click="showMembergDialog"><el-icon>
                     <User />
                 </el-icon></div>
         </div>
@@ -42,31 +42,37 @@
     </div>
     <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
     <ProjectRecycleBin v-if="itemid === 1" :currentProject="currentProject[0]"></ProjectRecycleBin>
-    <ProjectAccessSetting title="邀请项目成员" :dialog-visible="projectSettingDialog" @clodeDialog="projectSettingDialog = false">
+    <ProjectAccessSetting title="邀请项目成员" :dialog-visible="projectSettingDialog" width="500px" @clodeDialog="projectSettingDialog = false">
         <div class="project_type">
             <p>项目类型</p>
-            <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large">
+            <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
+                :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
                 <el-option v-for="item in projectOptions" :key="item.value" :label="item.label" :value="item.label" />
             </el-select>
         </div>
         <div class="project_type">
             <p>权限</p>
-            <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large">
+            <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
+                :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
                 <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
             </el-select>
         </div>
         <div v-if="projectType === projectOptions[1].label">
             <div>点击链接或扫描二维码申请加入</div>
-            <div class="share-switch">
+            <div class="share-switch"
+                :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
                 <span>邀请链接开关:</span>
-                <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch" />
+                <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch"
+                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)" />
             </div>
             <div class="link" v-if="linkSwitch">
                 <el-input :value="sharelink" :readonly="true" />
                 <div class="qrcode"><svg-icon icon-class="qrcode"></svg-icon></div>
             </div>
-            <div class="checked" v-if="linkSwitch"><el-checkbox v-model="checked"
-                    @click.stop="handleChecked"></el-checkbox><span>申请后需管理员审批确认</span>
+            <div class="checked" v-if="linkSwitch"
+                :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
+                <el-checkbox v-model="checked"
+                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)"></el-checkbox><span>申请后需管理员审批确认</span>
             </div>
             <div class="button" :style="{ opacity: linkSwitch ? '1' : '.5' }" @click="copyLink"><button>复制链接</button></div>
         </div>
@@ -74,6 +80,8 @@
             <div class="button" @click="projectSettingDialog = false"><button>确定</button></div>
         </div>
     </ProjectAccessSetting>
+    <ProjectMemberg v-if="currentProject[0]" :projectMembergDialog="projectMembergDialog" :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
+
 </template>
 <script setup lang="ts">
 import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
@@ -86,6 +94,7 @@ import ProjectRecycleBin from './ProjectFill/ProjectRecycleBin.vue';
 import { User } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
 import ProjectAccessSetting from './ProjectFill/ProjectAccessSetting.vue';
+import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
 import { ElMessage } from 'element-plus';
 const { t } = useI18n()
 const itemid = ref(0)
@@ -102,6 +111,7 @@ const inputDescLength = ref(0)
 const linkSwitch = ref(false);
 const checked = ref(false);
 const projectSettingDialog = ref(false);
+const projectMembergDialog = ref(false);
 const sharelink = ref(``);
 const projectOptions = [
     {
@@ -167,6 +177,16 @@ const projectSetting = () => {
     sharelink.value = `https://protodesign.cn/#/apphome/project/${project.id}`
     projectSettingDialog.value = true;
 }
+const showMembergDialog = () => {
+    projectMembergDialog.value = true;
+}
+const closeDialog = () => {
+    projectMembergDialog.value = false;
+}
+const exitProject = (id: string) => {
+    projectMembergDialog.value = false;
+    router.push({ path: '/apphome/teams/' + id });
+}
 
 watch(projectType, (v) => {
     const index = projectList.value.findIndex((item) => item.project.id === route.params.id);
@@ -193,12 +213,15 @@ watch(projectPerm, (v) => {
     }
     setProjectInvitedInfo();
 })
-const handleChecked = () => {
+
+watch(checked, (val) => {
     const index = projectList.value.findIndex((item) => item.project.id === route.params.id);
-    params.need_approval = !checked.value;
-    projectList.value[index].project.need_approval = !checked.value;
+    params.need_approval = val;
+    projectList.value[index].project.need_approval = val;
+    console.log(projectList.value[index].project.need_approval);
     setProjectInvitedInfo();
-}
+})
+
 const onLinkSwitch = () => {
     const index = projectList.value.findIndex((item) => item.project.id === route.params.id);
     params.invited_switch = linkSwitch.value;
@@ -270,6 +293,7 @@ const GetprojectLists = async () => {
 }
 
 const copyLink = async () => {
+    if (!linkSwitch.value) return;
     if (navigator.clipboard && window.isSecureContext) {
         return navigator.clipboard.writeText(sharelink.value).then(() => {
             ElMessage({
@@ -746,5 +770,45 @@ onMounted(() => {
 
 :deep(.el-checkbox) {
     height: 16px;
+}
+
+:deep(.el-checkbox.is-disabled) {
+    cursor: pointer;
+}
+
+:deep(.el-checkbox__input.is-disabled .el-checkbox__inner::after) {
+    cursor: pointer;
+}
+
+:deep(.el-checkbox__input.is-disabled .el-checkbox__inner) {
+    cursor: pointer;
+}
+
+:deep(.el-checkbox__original) {
+    cursor: pointer;
+}
+
+:deep(.el-input.is-disabled) {
+    cursor: pointer;
+}
+
+:deep(.el-select .el-input.is-disabled .el-input__wrapper) {
+    cursor: pointer;
+}
+
+:deep(.el-select .el-input.is-disabled .el-input__inner) {
+    cursor: pointer;
+}
+
+:deep(.el-input.is-disabled .el-input__wrapper) {
+    background-color: #fff
+}
+
+:deep(.el-select .el-input.is-disabled .el-select__caret) {
+    cursor: pointer;
+}
+
+:deep(.el-switch.is-disabled .el-switch__core, .el-switch.is-disabled .el-switch__label) {
+    cursor: pointer;
 }
 </style>

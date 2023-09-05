@@ -130,3 +130,23 @@ export function GetprojectLists(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//获取项目成员列表
+export function getProjectMemberListAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/member/list',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+//退出项目
+export function exitProjectAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/exit',
+        method: 'post',
+        data: params,
+        ...ops
+    })
+}

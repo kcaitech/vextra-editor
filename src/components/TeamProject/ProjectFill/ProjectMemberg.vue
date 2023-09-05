@@ -1,0 +1,293 @@
+<script setup lang="ts">
+import ProjectAccessSetting from './ProjectAccessSetting.vue';
+import { ref, nextTick } from 'vue';
+import { ArrowDown, Check } from '@element-plus/icons-vue';
+import * as team_api from '@/apis/team';
+import { useI18n } from 'vue-i18n';
+import { promises } from 'original-fs';
+const { t } = useI18n();
+const props = defineProps<{
+    projectMembergDialog: boolean
+    currentProject: any
+}>();
+const emit = defineEmits<{
+    (e: 'closeDialog'): void;
+    (e: 'exitProject', id: string): void;
+}>()
+const innerVisible = ref(false)
+const memberList = ref<any[]>([]);
+const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`, '管理员', '创建者'])
+const permList = ref(['全部', '创建者', '管理员', `${t('share.editable')}`, `${t('share.reviewable')}`, `${t('share.readOnly')}`])
+const permFilter = ref(0);
+const memberList2 = ref<any[]>([]);
+const getProjectMemberList = async () => {
+    try {
+        const { data } = await team_api.getProjectMemberListAPI({ project_id: props.currentProject.project.id });
+        console.log(data, 'list');
+        memberList.value = data;
+        memberList2.value = data;
+    } catch (err) {
+        console.log(err);
+    }
+}
+getProjectMemberList();
+
+const handleCommand = (command: number) => {
+    permFilter.value = command;
+    switch (command) {
+        case 0:
+            memberList.value = memberList2.value;
+            break;
+        case 1:
+            memberList.value = memberList2.value.filter(item => item.perm_type === 5);
+            break;
+        case 2:
+            memberList.value = memberList2.value.filter(item => item.perm_type === 4);
+            break;
+        case 3:
+            memberList.value = memberList2.value.filter(item => item.perm_type === 3);
+            break;
+        case 4:
+            memberList.value = memberList2.value.filter(item => item.perm_type === 2);
+            break;
+        case 5:
+            memberList.value = memberList2.value.filter(item => item.perm_type === 1);
+            break;
+        default:
+            memberList.value = memberList2.value;
+            break
+    }
+}
+
+const handleCommandPerm = (command: number) => {
+    switch (command) {
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        default:
+            break
+    }
+}
+
+const close = () => {
+    emit('closeDialog');
+    permFilter.value = 0;
+    memberList.value = memberList2.value;
+}
+
+const handleClose = () => {
+    innerVisible.value = false;
+}
+const quitProject = () => {
+    innerVisible.value = false;
+    exitProject();
+    emit('exitProject', props.currentProject.team_id);
+}
+const exitProject = async () => {
+    try {
+        await team_api.exitProjectAPI({ project_id: props.currentProject.project.id })
+    } catch (err) {
+        console.log(err);
+    }
+}
+</script>
+
+<template>
+    <ProjectAccessSetting title="已加入项目成员" width="350px" :dialog-visible="projectMembergDialog" @clodeDialog="close">
+        <div class="perm_title">
+            <div class="name">用户名</div>
+            <el-dropdown trigger="click" :hide-on-click="false" @command="handleCommand">
+                <span class="el-dropdown-link">
+                    权限<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                </span>
+                <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item v-for="(item, index) in permList" :key="item" :command="index">
+                            <el-icon>
+                                <Check v-if="permFilter === index" />
+                            </el-icon>
+                            <div style="padding: 0 16px;">{{ item }}</div>
+                        </el-dropdown-item>
+                    </el-dropdown-menu>
+                </template>
+            </el-dropdown>
+        </div>
+        <div class="body">
+            <el-scrollbar height="250px">
+                <div class="member-item" v-for="(item, index) in memberList" :key="index">
+                    <div class="name">{{ item.user.nickname }}</div>
+                    <el-dropdown trigger="click" :hide-on-click="false" @command="handleCommandPerm"
+                        :disabled="!(props.currentProject.self_perm_type !== 5 || props.currentProject.self_perm_type !== 4) || item.perm_type === 5">
+                        <span class="el-dropdown-link">
+                            {{ permission[item.perm_type] }}<el-icon class="el-icon--right"><arrow-down
+                                    v-if="(props.currentProject.self_perm_type === 5 || props.currentProject.self_perm_type === 4) && item.perm_type !== 5" /></el-icon>
+                        </span>
+                        <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item :command="1" v-if="props.currentProject.self_perm_type === 5">
+                                    <div style="padding: 0 16px;">管理员</div>
+                                </el-dropdown-item>
+                                <el-dropdown-item :command="2">
+                                    <div style="padding: 0 16px;">可编辑</div>
+                                </el-dropdown-item>
+                                <el-dropdown-item :command="3">
+                                    <div style="padding: 0 16px;">可评论</div>
+                                </el-dropdown-item>
+                                <el-dropdown-item :command="4">
+                                    <div style="padding: 0 16px;">仅阅读</div>
+                                </el-dropdown-item>
+                                <el-dropdown-item>
+                                    <div style="width: 120px; height: 1px; background-color: #ccc;"></div>
+                                </el-dropdown-item>
+                                <el-dropdown-item :command="5" v-if="props.currentProject.self_perm_type === 5">
+                                    <div style="padding: 0 16px;">转让创建者</div>
+                                </el-dropdown-item>
+                                <el-dropdown-item :command="6">
+                                    <div style="padding: 0 16px;">移出项目组</div>
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </template>
+                    </el-dropdown>
+                </div>
+            </el-scrollbar>
+        </div>
+        <div class="project_perm">
+            <div v-if="props.currentProject.public_switch">项目权限:公开，所有团队成员均可访问</div>
+            <div v-else>项目权限:非公开，仅通过链接邀请成员可访问</div>
+        </div>
+        <div v-if="props.currentProject.self_perm_type !== 5">
+            <div class="button" @click="innerVisible = true"><button>退出项目组</button></div>
+        </div>
+        <el-dialog v-model="innerVisible" width="250px" title="退出项目" append-to-body align-center
+            :close-on-click-modal="false" :before-close="handleClose">
+            <div class="context">
+                退出项目后，无法再访问项目中的文件，或使用项目中的资源。
+            </div>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button class="quit" @click="quitProject">退出</el-button>
+                    <el-button class="quit" @click="innerVisible = false">
+                        取消
+                    </el-button>
+                </div>
+            </template>
+        </el-dialog>
+    </ProjectAccessSetting>
+</template>
+
+<style scoped lang="scss">
+.perm_title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #000;
+    padding-right: 10px;
+
+    .name {
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .el-dropdown-link {
+        font-size: 14px;
+        font-weight: bold;
+        color: #000;
+    }
+}
+
+.body {
+    margin-top: 10px;
+    font-size: 14px;
+
+    .member-item {
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-right: 10px;
+        height: 25px;
+
+        .name {
+            width: 60%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    }
+}
+
+.project_perm {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.button {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+
+    button {
+        width: 85px;
+        height: 35px;
+        font-size: 12px;
+        border: none;
+        background-color: var(--active-color-beta);
+        color: #fff;
+        border: 1px solid var(--active-color-beta);
+        border-radius: 4px;
+    }
+}
+
+.button2 {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+
+    button {
+        width: 70px;
+        height: 30px;
+        font-size: 12px;
+        border: none;
+        background-color: var(--active-color-beta);
+        color: #fff;
+        border: 1px solid var(--active-color-beta);
+        border-radius: 4px;
+    }
+}
+
+:deep(.el-dropdown-menu__item:not(.is-disabled):focus) {
+    background-color: #f3f0ff;
+}
+
+:deep(.el-button:focus, .el-button:hover) {
+    background-color: #9775fa;
+    border-color: #9775fa;
+    color: #fff;
+}
+
+.dialog-footer {
+    .quit {
+        background-color: #9775fa;
+        color: #fff;
+    }
+}
+
+:deep(.el-dropdown-menu__item) {
+    padding: 5px 0;
+}
+
+:deep(.el-dropdown.is-disabled) {
+    cursor: pointer;
+    color: #000;
+}
+</style>

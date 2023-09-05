@@ -124,6 +124,7 @@ declare module '@vue/runtime-core' {
     ProjectApply: typeof import('./src/components/TeamProject/ProjectFill/ProjectApply.vue')['default']
     ProjectFillList: typeof import('./src/components/TeamProject/ProjectFill/ProjectFillList.vue')['default']
     ProjectList: typeof import('./src/components/TeamProject/ProjectList.vue')['default']
+    ProjectMemberg: typeof import('./src/components/TeamProject/ProjectFill/ProjectMemberg.vue')['default']
     ProjectPage: typeof import('./src/components/TeamProject/ProjectPage.vue')['default']
     ProjectRecycleBin: typeof import('./src/components/TeamProject/ProjectFill/ProjectRecycleBin.vue')['default']
     Radius: typeof import('./src/components/Document/Attribute/Radius.vue')['default']
