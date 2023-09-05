@@ -41,6 +41,8 @@ const getProjectInvitedInfo = async () => {
         if (data.self_perm_type >= data.invited_perm_type) {
             router.push({ path: '/apphome/project/' + route.query.id });
         }
+        console.log(projectInfo.value,'projectInfo.value');
+        
     } catch (error) {
         console.log(error);
     }
@@ -48,7 +50,9 @@ const getProjectInvitedInfo = async () => {
 
 const getProjectApplyList = async () => {
     try {
-        const { data } = await team_api.getTeamProjectApplyAPI();
+        const { data } = await team_api.getTeamProjectApplyAPI({ project_id: route.query.id });
+        console.log(data,'data');
+        
         switchstate.value = data.project.invited_switch;
     } catch (err) {
         console.log(err);
