@@ -170,6 +170,45 @@ function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isC
     }
     return result;
 }
+
+export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selected: Shape, init?: Shape[]): Shape[] {
+    const result = init || [];
+    for (let i = g.length - 1; i > -1; i--) {
+        if (!canBeTarget(g[i]) || g[i].type === ShapeType.Contact) continue;
+        const item = g[i];
+        if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) {
+            const isItemIsTarget = isTarget(scout, item, position);
+            if (!isItemIsTarget) continue;
+            const c = item.childs as Shape[];
+            if (item.type === ShapeType.Artboard) {
+                if (c.length) {
+                    result.push(...finder_contact(scout, c, position, selected, result));
+                    if (result.length) {
+                        return result;
+                    } else {
+                        result.push(item);
+                        return result;
+                    }
+                } else {
+                    result.push(item);
+                    return result;
+                }
+            } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
+                const g = forGroupHover(scout, item.childs, position, selected, true);
+                if (g) {
+                    result.push(g);
+                    return result;
+                }
+            }
+        } else {
+            if (isTarget(scout, item, position)) {
+                result.push(item);
+                return result;
+            }
+        }
+    }
+    return result;
+}
 /**
  * 与finder相比，finder结果通常不会大于1，而这里通常可以大于1，代码上减少了逻辑判断，增大了遍历更多条目的概率
  * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)

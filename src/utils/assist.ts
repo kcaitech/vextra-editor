@@ -165,7 +165,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
         const c = cs[i];
-        if (isShapeOut(context, c)) continue;
+        if (isShapeOut(context, c) || c.type === ShapeType.Contact) continue;
         result.push(c);
         const pg = update_pg_1(c);
         all_pg.set(c.id, pg);

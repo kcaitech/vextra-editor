@@ -251,10 +251,9 @@ let apex1: ContactForm | undefined, apex2: ContactForm | undefined;
 let page_xy2: PageXY | undefined;
 
 function search_apex(e: MouseEvent) {
-    if (props.context.workspace.transforming) return;
     const { x, y } = props.context.workspace.root;
     const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy, true);
+    const shapes = props.context.selection.getContactByXY(xy);
     if (shapes.length) {
         props.context.tool.setContactApex(shapes[0]);
     } else {

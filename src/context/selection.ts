@@ -3,7 +3,7 @@ import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
-import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
+import { scout, Scout, finder, finder_layers, artboardFinder, finder_contact } from "@/utils/scout";
 import { Artboard } from "@kcdesign/data";
 import { Context } from ".";
 import { TextSelection } from "./textselection";
@@ -194,10 +194,19 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape[] {
         const shapes: Shape[] = [];
         if (this.scout) {
-            position = cloneDeep(position);
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
             shapes.push(...finder(this.scout, childs, position, this.selectedShapes[0], isCtrl));
+        }
+        return shapes;
+    }
+
+    getContactByXY(position: PageXY, scope?: Shape[]): Shape[] {
+        const shapes: Shape[] = [];
+        if (this.scout) {
+            const page = this.m_selectPage!;
+            const childs: Shape[] = scope || page.childs;
+            shapes.push(...finder_contact(this.scout, childs, position, this.selectedShapes[0]));
         }
         return shapes;
     }
