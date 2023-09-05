@@ -2,12 +2,11 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Tool } from "@/context/tool";
-import { Matrix, ContactForm, ContactType } from "@kcdesign/data";
+import { ContactForm, ContactType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import { ClientXY, PageXY } from "@/context/selection";
 interface Props {
     context: Context
-    matrix: Matrix
 }
 interface Emits {
     (e: 'contact-init', event: MouseEvent, apex?: ContactForm, p2?: PageXY): void;

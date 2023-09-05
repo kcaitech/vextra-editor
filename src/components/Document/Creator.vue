@@ -15,6 +15,7 @@ import CommentInput from './Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
+import ContactInit from './Toolbar/ContactInit.vue';
 
 interface Props {
     context: Context
@@ -26,8 +27,6 @@ const t = useI18n().t;
 let newShape: Shape | undefined;
 let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
-let apex: ContactForm | undefined;
-let temp: PageXY | undefined;
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -37,7 +36,7 @@ let client_xy_1: ClientXY = { x: 0, y: 0 };
 let matrix1: Matrix = new Matrix(props.context.workspace.matrix.inverse);
 let isDrag: boolean = false;
 
-// comment
+// #region
 const commentInput = ref<boolean>(false);
 const commentPosition: ClientXY = reactive({ x: 0, y: 0 });
 type CommentInputEl = InstanceType<typeof CommentInput>;
@@ -58,6 +57,7 @@ const commentMenuItems = ref<commentListMenu[]>([
     { text: `${t('comment.show_about_me')}`, status_p: false },
     { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false }
 ])
+// #endregion
 
 function down(e: MouseEvent) {
     if (e.button === 0) {
@@ -71,9 +71,7 @@ function down(e: MouseEvent) {
     }
 }
 function move(e: MouseEvent) {
-    if (e.buttons === 0) {
-        search_apex(e);
-    } else if (e.buttons === 1) {
+    if (e.buttons === 1) {
         if (newShape) {
             modify_new_shape_frame(e);
         } else if (Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
@@ -81,6 +79,9 @@ function move(e: MouseEvent) {
             isDrag = true;
         }
     }
+}
+function move2(e: MouseEvent) {
+    if (e.buttons === 0 && props.context.tool.action === Action.AddContact) search_apex(e);
 }
 function up(e: MouseEvent) {
     removeWheel();
@@ -96,6 +97,171 @@ function up(e: MouseEvent) {
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
 }
+// #region 评论
+const detectionShape = (e: MouseEvent) => {
+    const workspace = props.context.workspace;
+    const { x, y } = workspace.root;
+    const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
+    const shapes = searchCommentShape(props.context, xy);
+    if (shapes.length === 0) { //点击的位置是否有图形
+        shapePosition.x = 0
+        shapePosition.y = 0
+        shapeID.value = props.context.selection.selectedPage!.id
+    } else {
+        const shape = shapes[0]
+        const fp = shape.frame2Root();
+        const farmeXY = { x: fp.x, y: fp.y }
+        shapePosition.x = xy.x - farmeXY.x //评论输入框相对于shape的距离
+        shapePosition.y = xy.y - farmeXY.y
+        shapeID.value = shape.id
+    }
+    return { x, y, xy }
+}
+const addComment = (e: MouseEvent) => {
+    e.stopPropagation()
+    const comment = props.context.comment;
+    if (comment.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {
+        comment.commentOpacity(false)
+        comment.commentInput(false)
+        return
+    } else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
+        return
+    }
+    if (commentInput.value) return
+    const { x, y, xy } = detectionShape(e)
+    commentPosition.x = xy.x; //评论输入框在页面的坐标
+    commentPosition.y = xy.y;
+    posi.value.x = e.clientX - x // 评论弹出框的位置坐标
+    posi.value.y = e.clientY - y
+    commentInput.value = true;
+    document.addEventListener('keydown', commentEsc);
+}
+const getCommentInputXY = (e: MouseEvent) => {
+    const { x, y, xy } = detectionShape(e)
+    commentPosition.x = xy.x;
+    commentPosition.y = xy.y;
+    posi.value.x = e.clientX - x
+    posi.value.y = e.clientY - y
+}
+const commentEsc = (e: KeyboardEvent) => {
+    if (e.code === 'Escape') {
+        document.removeEventListener('keydown', commentEsc);
+        commentInput.value = false;
+    }
+}
+//移动shape时保存shape身上的评论坐标
+const saveShapeCommentXY = () => {
+    const comment = props.context.comment;
+    const shapes = comment.commentShape
+    const sleectShapes = flattenShapes(shapes)
+    const commentList = props.context.comment.pageCommentList
+    sleectShapes.forEach((item: any) => {
+        commentList.forEach((comment: any, i: number) => {
+            if (comment.target_shape_id === item.id) {
+                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
+            }
+        })
+    })
+    comment.editShapeComment(false, undefined)
+}
+//移动输入框
+const mouseDownCommentInput = (e: MouseEvent) => {
+    document.addEventListener("mousemove", mouseMoveInput);
+    document.addEventListener("mouseup", mouseUpCommentInput);
+}
+const mouseMoveInput = (e: MouseEvent) => {
+    e.stopPropagation()
+    getCommentInputXY(e)
+}
+const mouseUpCommentInput = (e: MouseEvent) => {
+    detectionShape(e)
+    document.removeEventListener('mousemove', mouseMoveInput);
+    document.removeEventListener('mouseup', mouseUpCommentInput);
+}
+const editShapeComment = (index: number, x: number, y: number) => {
+    const comment = documentCommentList.value[index]
+    const id = comment.id
+    const shapeId = comment.target_shape_id
+    const { x2, y2 } = comment.shape_frame
+    const data = {
+        id: id,
+        target_shape_id: shapeId,
+        shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
+    }
+    editCommentShapePosition(data)
+}
+const editCommentShapePosition = async (data: any) => {
+    try {
+        await comment_api.editCommentAPI(data)
+    } catch (err) {
+        console.log(err);
+    }
+}
+// 取消评论输入框
+const closeComment = (e?: MouseEvent) => {
+    if (e && e.target instanceof Element && e.target.closest('#content') && !e.target.closest('.container-popup')) {
+        commentInput.value = false;
+    } else if (!e) {
+        commentInput.value = false;
+    }
+}
+// 调用评论API，并通知listTab组件更新评论列表
+const completed = () => {
+    props.context.comment.sendComment()
+    const timer = setTimeout(() => {
+        getDocumentComment()
+        clearTimeout(timer)
+        commentInput.value = false;
+    }, 150);
+}
+// 获取评论列表
+const getDocumentComment = async () => {
+    try {
+        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: route.query.id })
+        if (data) {
+            data.forEach((obj: { children: any[]; commentMenu: any; }) => {
+                obj.commentMenu = commentMenuItems.value
+                obj.children = []
+            })
+            const manageData = data.map((item: any) => {
+                item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
+                return item
+            })
+            const comment = props.context.comment;
+            const list = list2Tree(manageData, '')
+            comment.setNot2TreeComment(manageData)
+            comment.setPageCommentList(list, props.context.selection.selectedPage!.id)
+            comment.setCommentList(list)
+            documentCommentList.value = comment.pageCommentList
+            if (props.context.selection.isSelectComment) {
+                props.context.selection.selectComment(props.context.selection.commentId)
+                documentCommentList.value = comment.pageCommentList
+                props.context.selection.setCommentSelect(false)
+            }
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+// #endregion
+
+// #region 连接线
+let apex1: ContactForm | undefined, apex2: ContactForm | undefined;
+let page_xy2: PageXY | undefined;
+
+function search_apex(e: MouseEvent) {
+    if (props.context.workspace.transforming) return;
+    const { x, y } = props.context.workspace.root;
+    const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
+    const shapes = props.context.selection.getShapesByXY(xy, true);
+    if (shapes.length) {
+        props.context.tool.setContactApex(shapes[0]);
+    } else {
+        props.context.tool.resetContactApex();
+    }
+}
+// #endregion
+
 function modify_page_xy_1(e: MouseEvent) {
     const { x, y } = props.context.workspace.root;
     matrix1 = new Matrix(props.context.workspace.matrix.inverse);
@@ -165,23 +331,12 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
 function wheelSetup() {
     wheel = fourWayWheel(props.context, { rolling: undefined }, page_xy_1);
 }
-function search_apex(e: MouseEvent) {
-    if (props.context.workspace.transforming) return;
-    const { x, y } = props.context.workspace.root;
-    const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy, true); // xy: PageXY
-    if (shapes.length) {
-        props.context.tool.setContactApex(shapes[0]);
-    } else {
-        props.context.tool.resetContactApex();
-    }
-}
 function gen_new_shape(e: MouseEvent) {
     const root = props.context.workspace.root;
     const { x, y } = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
     const shapeFrame = new ShapeFrame(x, y, 1, 1);
     if (props.context.tool.action === Action.AddContact) {
-        const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex, temp);
+        const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
         if (result) {
             asyncCreator = result.asyncCreator;
             newShape = result.new_shape;
@@ -223,7 +378,7 @@ function shapeCreateEnd() {
         }
         removeCreator();
         props.context.assist.reset();
-        newShape = undefined, apex = undefined, temp = undefined;
+        newShape = undefined, apex1 = undefined, page_xy2 = undefined;
     }
 }
 function removeCreator() {
@@ -232,160 +387,7 @@ function removeCreator() {
     props.context.tool.setAction(Action.AutoV);
     props.context.cursor.setType("auto-0");
 }
-//添加评论
-const detectionShape = (e: MouseEvent) => {
-    const workspace = props.context.workspace;
-    const { x, y } = workspace.root;
-    const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
-    const shapes = searchCommentShape(props.context, xy);
-    if (shapes.length === 0) { //点击的位置是否有图形
-        shapePosition.x = 0
-        shapePosition.y = 0
-        shapeID.value = props.context.selection.selectedPage!.id
-    } else {
-        const shape = shapes[0]
-        const fp = shape.frame2Root();
-        const farmeXY = { x: fp.x, y: fp.y }
-        shapePosition.x = xy.x - farmeXY.x //评论输入框相对于shape的距离
-        shapePosition.y = xy.y - farmeXY.y
-        shapeID.value = shape.id
-    }
-    return { x, y, xy }
-}
-const addComment = (e: MouseEvent) => {
-    e.stopPropagation()
-    const comment = props.context.comment;
-    if (comment.isCommentInput && e.target instanceof Element && !e.target.closest(`.comment-mark-item`)) {
-        comment.commentOpacity(false)
-        comment.commentInput(false)
-        return
-    } else if (e.target instanceof Element && e.target.closest(`.comment-mark-item`)) {
-        return
-    }
-    if (commentInput.value) return
-    const { x, y, xy } = detectionShape(e)
-    commentPosition.x = xy.x; //评论输入框在页面的坐标
-    commentPosition.y = xy.y;
-    posi.value.x = e.clientX - x // 评论弹出框的位置坐标
-    posi.value.y = e.clientY - y
-    commentInput.value = true;
-    document.addEventListener('keydown', commentEsc);
-}
 
-const getCommentInputXY = (e: MouseEvent) => {
-    const { x, y, xy } = detectionShape(e)
-    commentPosition.x = xy.x;
-    commentPosition.y = xy.y;
-    posi.value.x = e.clientX - x
-    posi.value.y = e.clientY - y
-}
-
-const commentEsc = (e: KeyboardEvent) => {
-    if (e.code === 'Escape') {
-        document.removeEventListener('keydown', commentEsc);
-        commentInput.value = false;
-    }
-}
-//移动shape时保存shape身上的评论坐标
-const saveShapeCommentXY = () => {
-    const comment = props.context.comment;
-    const shapes = comment.commentShape
-    const sleectShapes = flattenShapes(shapes)
-    const commentList = props.context.comment.pageCommentList
-    sleectShapes.forEach((item: any) => {
-        commentList.forEach((comment: any, i: number) => {
-            if (comment.target_shape_id === item.id) {
-                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
-            }
-        })
-    })
-    comment.editShapeComment(false, undefined)
-}
-//移动输入框
-const mouseDownCommentInput = (e: MouseEvent) => {
-    document.addEventListener("mousemove", mouseMoveInput);
-    document.addEventListener("mouseup", mouseUpCommentInput);
-}
-
-const mouseMoveInput = (e: MouseEvent) => {
-    e.stopPropagation()
-    getCommentInputXY(e)
-}
-
-const mouseUpCommentInput = (e: MouseEvent) => {
-    detectionShape(e)
-    document.removeEventListener('mousemove', mouseMoveInput);
-    document.removeEventListener('mouseup', mouseUpCommentInput);
-}
-
-const editShapeComment = (index: number, x: number, y: number) => {
-    const comment = documentCommentList.value[index]
-    const id = comment.id
-    const shapeId = comment.target_shape_id
-    const { x2, y2 } = comment.shape_frame
-    const data = {
-        id: id,
-        target_shape_id: shapeId,
-        shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
-    }
-    editCommentShapePosition(data)
-}
-const editCommentShapePosition = async (data: any) => {
-    try {
-        await comment_api.editCommentAPI(data)
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-// 取消评论输入框
-const closeComment = (e?: MouseEvent) => {
-    if (e && e.target instanceof Element && e.target.closest('#content') && !e.target.closest('.container-popup')) {
-        commentInput.value = false;
-    } else if (!e) {
-        commentInput.value = false;
-    }
-}
-
-// 调用评论API，并通知listTab组件更新评论列表
-const completed = () => {
-    props.context.comment.sendComment()
-    const timer = setTimeout(() => {
-        getDocumentComment()
-        clearTimeout(timer)
-        commentInput.value = false;
-    }, 150);
-}
-
-// 获取评论列表
-const getDocumentComment = async () => {
-    try {
-        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: route.query.id })
-        if (data) {
-            data.forEach((obj: { children: any[]; commentMenu: any; }) => {
-                obj.commentMenu = commentMenuItems.value
-                obj.children = []
-            })
-            const manageData = data.map((item: any) => {
-                item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
-                return item
-            })
-            const comment = props.context.comment;
-            const list = list2Tree(manageData, '')
-            comment.setNot2TreeComment(manageData)
-            comment.setPageCommentList(list, props.context.selection.selectedPage!.id)
-            comment.setCommentList(list)
-            documentCommentList.value = comment.pageCommentList
-            if (props.context.selection.isSelectComment) {
-                props.context.selection.selectComment(props.context.selection.commentId)
-                documentCommentList.value = comment.pageCommentList
-                props.context.selection.setCommentSelect(false)
-            }
-        }
-    } catch (err) {
-        console.log(err);
-    }
-}
 function windowBlur() {
     shapeCreateEnd();
     removeWheel();
@@ -401,18 +403,20 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div @mousedown.stop="down" class="creator">
+    <div @mousedown.stop="down" @mousemove="move2" class="creator">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
             :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
             @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" :matrix="props.context.workspace.matrix"
             :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+        <ContactInit :context="props.context"></ContactInit>
     </div>
 </template>
 <style scoped lang="scss">
 .creator {
-    // background-color: rgba($color: #006600, $alpha: 0.2);
+    background-color: rgba($color: #006600, $alpha: 0.2);
     width: 100%;
     height: 100%;
     position: absolute;
+    z-index: 9;
 }
 </style>

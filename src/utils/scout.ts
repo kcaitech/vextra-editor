@@ -27,7 +27,7 @@ function scout(context: Context): Scout {
         SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         let result: boolean = false;
-        if (shape.type === ShapeType.Line) {
+        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) {
             // 线条元素(不管是否闭合，都当不闭合)额外处理point是否在边框上
             const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14 / context.workspace.matrix.m00);
             path.setAttributeNS(null, 'stroke-width', `${thickness}`);
@@ -73,8 +73,7 @@ function getPathOnPageString(shape: Shape): string { // path坐标系：页面
     const path = shape.getPath();
     const m2page = shape.matrix2Root();
     path.transform(m2page);
-    const d = path.toString();
-    return d;
+    return path.toString();
 }
 
 // 判定点是否在图形内
