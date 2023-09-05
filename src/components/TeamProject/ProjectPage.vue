@@ -137,14 +137,6 @@ const params = {
     need_approval: false
 }
 
-interface data {
-    team: {
-        id: string,
-        name: string,
-        avatar: string,
-        description: string
-    }
-}
 enum permissions {
     noAuthority,
     readOnly,
@@ -246,14 +238,7 @@ const cancelFixed = () => {
 const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
-        const project = favoriteProjectList(data, favoriteList.value)
-        saveProjectData(project)
-        currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
-        projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;
-        handleprem(currentProject.value[0].project.perm_type);
-        linkSwitch.value = currentProject.value[0].project.invited_switch;
-        checked.value = currentProject.value[0].project.need_approval;
-        if(!currentProject.value.length || currentProject.value[0].perm_type === 0) {
+        if (!data.length) {
             router.push({
                 name: 'projectApply',
                 query: {
@@ -261,9 +246,24 @@ const GetprojectLists = async () => {
                 }
             })
         }
+        const pros = data.filter((item: any) => item.project.id === route.params.id);
+        if (pros[0].perm_type === 0) {
+            router.push({
+                name: 'projectApply',
+                query: {
+                    id: route.params.id
+                }
+            })
+        }
+        const project = favoriteProjectList(data, favoriteList.value)
+        saveProjectData(project)
+        currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
+        projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;
+        handleprem(currentProject.value[0].project.perm_type);
+        linkSwitch.value = currentProject.value[0].project.invited_switch;
+        checked.value = currentProject.value[0].project.need_approval;
     } catch (error) {
         console.log(error);
-
     }
 }
 
@@ -681,6 +681,10 @@ onMounted(() => {
     margin-left: 10px;
 
 }
+:deep(.el-input__inner) {
+    height: 30px;
+    font-size: 10px;
+}
 
 .link {
     display: flex;
@@ -697,6 +701,11 @@ onMounted(() => {
             height: 100%;
             color: #9775fa;
         }
+    }
+
+    :deep(.el-input__inner) {
+        height: 30px;
+        font-size: 14px;
     }
 }
 
@@ -725,11 +734,6 @@ onMounted(() => {
         border: 1px solid var(--active-color-beta);
         border-radius: 4px;
     }
-}
-
-:deep(.el-input__inner) {
-    height: 30px;
-    font-size: 14px;
 }
 
 :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {

@@ -10,11 +10,15 @@
                 </p>
                 <p>加入项目后，可访问该项目中的所有文件、资源</p>
                 <button type="button" @click.stop="appluJoinProject" v-if="!isApply">申请加入</button>
-                <p v-else>已发送申请，{{ time }}s即将进入应用首页，待审批通过后，可查看该团队内容</p>
+                <p v-else>已发送申请，{{ time }}s即将进入应用首页，待审批通过后，可查看该项目内容</p>
+            </div>
+            <div class="offtips" v-else-if="projectInfo.self_perm_type === null">
+                <p>您还未加入该项目的团队</p>
             </div>
             <div class="offtips" v-else>
                 <p>项目邀请已关闭，如需加入项目，请联系项目管理员处理。</p>
             </div>
+            <div class="join" v-if="!switchstate"><button type="button" @click.stop="backHome">返回首页</button></div>
         </div>
     </div>
 </template>
@@ -34,12 +38,20 @@ const getProjectInvitedInfo = async () => {
     try {
         const { data } = await team_api.getProjectInvitedInfoAPI({ project_id: route.query.id });
         projectInfo.value = data;
-        switchstate.value = data.invited_switch;
         if (data.self_perm_type >= data.invited_perm_type) {
             router.push({ path: '/apphome/project/' + route.query.id });
         }
     } catch (error) {
         console.log(error);
+    }
+}
+
+const getProjectApplyList = async () => {
+    try {
+        const { data } = await team_api.getTeamProjectApplyAPI();
+        switchstate.value = data.project.invited_switch;
+    } catch (err) {
+        console.log(err);
     }
 }
 
@@ -54,9 +66,13 @@ const tohome = (() => {
     }, 1000)
 })
 
+const backHome = (() => {
+    router.push({ name: "apphome" })
+})
+
 const appluJoinProject = () => {
     isApply.value = true;
-    tohome()
+    tohome();
     postApplyJoinProject();
 }
 
@@ -69,7 +85,8 @@ const postApplyJoinProject = async () => {
 }
 
 onMounted(() => {
-    getProjectInvitedInfo()
+    getProjectInvitedInfo();
+    getProjectApplyList();
 })
 </script>
 <style lang="scss" scoped>
