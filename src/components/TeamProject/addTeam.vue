@@ -11,8 +11,8 @@
         <div class="centent">
             <div class="team-name">
                 <div class="title">{{ t('Createteam.team_name') }}<span>{{ t('Createteam.required') }}</span></div>
-                <input type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue" maxlength="20"
-                    required>
+                <input ref="inputteam" type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue"
+                    maxlength="20" required>
             </div>
             <div class="team-description">
                 <div class="title">{{ t('Createteam.team_description') }}<span>{{ t('Createteam.optional') }}</span></div>
@@ -46,6 +46,7 @@ const route = useRoute()
 const emits = defineEmits<{
     (e: 'close'): void
 }>()
+const inputteam = ref()
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
@@ -67,8 +68,13 @@ const createTeam = async () => {
         if (code === 0) {
             emits('close')
             ElMessage.success('成功添加团队')
-            router.push({ path: `teams/${data.id}` })
             state(true)  //改变updatestate的值为TRUE
+            if (route.params.id) {
+                router.push({ path: `/apphome/teams/${data.id}` })
+            } else {
+                router.push({ path: `teams/${data.id}` })
+            }
+
         } else {
             ElMessage.error(message)
         }
@@ -95,6 +101,10 @@ const selectimg = (e: any) => {
         }
     }
 }
+
+nextTick(() => {
+    inputteam.value.focus()
+})
 
 const close = () => {
     emits('close')

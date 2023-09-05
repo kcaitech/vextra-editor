@@ -31,9 +31,10 @@
                             <svg-icon icon-class="down"
                                 :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                             <transition name="el-zoom-in-top">
-                                <ul class="filterlist" v-if="userid === id && folds" ref="menu">
-                                    <li class="item" v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) " :key="index"
-                                        @click.stop="itemEvent(item, teamID, id, perm_type)">
+                                <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
+                                    <li class="item"
+                                        v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) "
+                                        :key="index" @click.stop="itemEvent(item, teamID, id, perm_type)">
                                         <div v-if="true" class="choose"
                                             :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
                                         </div>
@@ -76,13 +77,14 @@ const fold = ref(false)
 const folds = ref(false)
 const fontName = ref(4)
 const menu = ref<HTMLElement>()
+const listmenu = ref()
 const { teamID } = inject('shareData') as {
     teamID: Ref<string>;
 }
-const userperm=ref()
+const userperm = ref()
 const usertype = (p: number, id: string) => {
     const text = teammemberdata.value.find((item) => item.user.id === userID.value)
-    userperm.value=text.perm_type
+    userperm.value = text.perm_type
     if (text.perm_type === 3) {
         if (text.perm_type === p) {
             return false
@@ -278,13 +280,23 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
     }
 }
 
+
+
 watch(teamID, () => {
     GetteamMember()
 })
 
 onMounted(() => {
     GetteamMember()
+    document.addEventListener("click", (e:any) => {
+        if (listmenu.value){
+            if(e.target!=listmenu.value.target){
+                
+            }
 
+            
+        }
+    })
 })
 
 onUnmounted(() => {
