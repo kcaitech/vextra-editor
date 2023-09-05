@@ -1,5 +1,6 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
+        :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
@@ -35,10 +36,7 @@ const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-// const emits = defineEmits(['data-update'])
-const emits = defineEmits<{
-    (e: 'data-update', list: any, title: string): void
-}>();
+const emits = defineEmits(['data-update'])
 
 interface data {
     document: {
@@ -157,7 +155,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-    
+
     docId.value = id
     mydata.value = data
 }

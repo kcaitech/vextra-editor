@@ -1,3 +1,4 @@
+
 <template>
     <div class="team">
         <div class="team-avatar">
@@ -38,9 +39,15 @@
             </el-input>
         </div>
     </div>
-    <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
-    <TeamMember v-if="itemid === 1" :searchvalue="search" />
-    <TeamSetting v-if="itemid === 2" />
+    <KeepAlive>
+        <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
+    </KeepAlive>
+    <KeepAlive>
+        <TeamMember v-if="itemid === 1" :searchvalue="search" />
+    </KeepAlive>
+    <KeepAlive>
+        <TeamSetting v-if="itemid === 2" />
+    </KeepAlive>
     <transition name="nested" :duration="550">
         <div v-if="showoverlay" class="overlay">
             <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
@@ -49,7 +56,7 @@
     </transition>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, ref, onMounted, watch } from 'vue'
+import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { Search, Close } from '@element-plus/icons-vue'
 import ProjectList from '@/components/TeamProject/ProjectList.vue'
@@ -118,6 +125,10 @@ onMounted(() => {
     if (x) {
         itemid.value = parseInt(x)
     }
+})
+
+onUnmounted(() => {
+    sessionStorage.setItem('activateitem', '0')
 })
 </script>
 <style lang="scss" scoped>

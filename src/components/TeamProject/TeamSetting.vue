@@ -92,13 +92,16 @@ const textareaValue = ref('')
 const textareashow = ref(true)
 const maxvalue = ref(0)
 
-const { teamID, teamName, teamDescription, teamSelfPermType, teamData, state } = inject('shareData') as {
+const { teamID, teamName, teamDescription, teamSelfPermType, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamName: Ref<string>;
     teamDescription: Ref<string>;
     teamSelfPermType: Ref<number>;
     teamData: Ref<any[]>;
-    state: (b: boolean) => void;
+    upDateTeamData: (data: any[]) => void;
+    is_team_upodate: Ref<boolean>;
+    teamUpdate: (b: boolean) => void;
+
 }
 
 interface TeamData {
@@ -147,9 +150,10 @@ const midNameRequest = async () => {
     formData.append('team_id', teamID.value)
     formData.append('name', textareaValue.value)
     try {
-        const { code, data, message } = await user_api.Setteaminfo(formData)
+        const { code, message } = await user_api.Setteaminfo(formData)
         if (code === 0) {
-            teamData.value = midDateTeamData(teamData.value, teamID.value, { name: textareaValue.value })
+            upDateTeamData(midDateTeamData(teamData.value, teamID.value, { name: textareaValue.value }))
+            teamUpdate(!is_team_upodate.value)
             showoverlay.value = false
             ElMessage.success('已修改团队描述')
         } else {
@@ -175,7 +179,8 @@ const midAvatarRequest = async (e: any) => {
             try {
                 const { code, message, data } = await user_api.Setteaminfo(formData)
                 if (code === 0) {
-                    teamData.value = midDateTeamData(teamData.value, teamID.value, { avatar: data.avatar })
+                    upDateTeamData(midDateTeamData(teamData.value, teamID.value, { avatar: data.avatar }))
+                    teamUpdate(!is_team_upodate.value)
                     ElMessage.success('已修改头像')
                 } else {
                     ElMessage.error(message)
@@ -197,9 +202,10 @@ const midDescriptionRequest = async () => {
     formData.append('team_id', teamID.value)
     formData.append('description', textareaValue.value)
     try {
-        const { code, data, message } = await user_api.Setteaminfo(formData)
+        const { code, message } = await user_api.Setteaminfo(formData)
         if (code === 0) {
-            teamData.value = midDateTeamData(teamData.value, teamID.value, { description: textareaValue.value })
+            upDateTeamData(midDateTeamData(teamData.value, teamID.value, { description: textareaValue.value }))
+            teamUpdate(!is_team_upodate.value)
             showoverlay.value = false
             ElMessage.success('已修改团队描述')
         } else {
@@ -215,7 +221,8 @@ const disband = async (id: string) => {
     try {
         const { code, message } = await user_api.Disbandteam({ team_id: id })
         if (code === 0) {
-            state(true)
+            upDateTeamData(teamData.value.filter(item => item.team.id != id))
+            teamUpdate(!is_team_upodate.value)
             router.push({ name: 'recently' })
         } else {
             ElMessage({ type: 'error', message: message })
@@ -230,8 +237,9 @@ const leave = async (id: string) => {
     try {
         const { code, message } = await user_api.Leaveteam({ team_id: id })
         if (code === 0) {
-            state(true)
             router.push({ name: 'recently' })
+            upDateTeamData(teamData.value.filter(item => item.team.id != id))
+            teamUpdate(!is_team_upodate.value)
         } else {
             ElMessage({ type: 'error', message: message })
         }
@@ -425,6 +433,7 @@ const confirm = () => {
 }
 
 .set-container {
+
     .name-container,
     .description-container,
     .avatar-container,

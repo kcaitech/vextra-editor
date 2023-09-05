@@ -3,7 +3,7 @@
         <div class="hearder-container">
             <div class="title" v-for="(item, index) in  titles " :key="index">
                 <div class="content">{{ item }}
-                    <div v-if="index === 1" class="shrink" @click="fold = !fold">
+                    <div v-if="index === 1" class="shrink" @click.stop="handleEvent">
                         <svg-icon icon-class="down"
                             :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                         <transition name="el-zoom-in-top">
@@ -27,14 +27,14 @@
                 <div class="member-jurisdiction">
                     <div class="member-jurisdiction-container">
                         {{ membertype(perm_type) }}
-                        <div v-if="usertype(perm_type, id)" class="shrink" @click="folds = !folds, userid = id">
+                        <div v-if="usertype(perm_type, id)" class="shrink" @click.stop="handleEventitem(id)">
                             <svg-icon icon-class="down"
                                 :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                             <transition name="el-zoom-in-top">
                                 <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
                                     <li class="item"
                                         v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) "
-                                        :key="index" @click.stop="itemEvent(item, teamID, id, perm_type)">
+                                        :key="index" @click.stop="itemEvent(item, teamID, id, perm_type, nickname)">
                                         <div v-if="true" class="choose"
                                             :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
                                         </div>
@@ -56,6 +56,8 @@ import NetworkError from '@/components/NetworkError.vue'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { router } from '@/router';
+import { all } from 'axios';
 
 interface Props {
     searchvalue?: string
@@ -78,8 +80,19 @@ const folds = ref(false)
 const fontName = ref(4)
 const menu = ref<HTMLElement>()
 const listmenu = ref()
-const { teamID } = inject('shareData') as {
+const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
+    teamData: Ref<[{
+        team: {
+            id: string,
+            name: string,
+            avatar: string,
+            description: string
+        }
+    }]>;
+    upDateTeamData: (data: any[]) => void;
+    is_team_upodate: Ref<boolean>;
+    teamUpdate: (b: boolean) => void;
 }
 const userperm = ref()
 const usertype = (p: number, id: string) => {
@@ -129,7 +142,6 @@ const GetteamMember = async () => {
             const { code, data, message } = await user_api.GetteamMember({ team_id: teamID.value })
             if (code === 0) {
                 teammemberdata.value = data
-                ElMessage.success('成功获取团队成员列表')
                 if (noNetwork.value) noNetwork.value = false
             } else {
                 ElMessage({ type: 'error', message: message })
@@ -194,7 +206,8 @@ const setPerm = async (T: string, U: string, P: number) => {
     try {
         const { code, message } = await user_api.Setteammemberperm({ team_id: T, user_id: U, perm_type: P })
         if (code === 0) {
-            ElMessage.success(message)
+            ElMessage.closeAll()
+            ElMessage.success(`已设为：${membertype(P)}`)
             teammemberdata.value.map(item => multiplyArrayElement(item, P, U))
         } else {
             ElMessage.error(message)
@@ -205,11 +218,13 @@ const setPerm = async (T: string, U: string, P: number) => {
 }
 
 //转移团队创建者
-const setcreator = async (T: string, U: string) => {
+const setcreator = async (T: string, U: string, N: string) => {
     try {
         const { code, message } = await user_api.Setteamcreator({ team_id: T, user_id: U })
         if (code === 0) {
-            ElMessage.success(message)
+            ElMessage.closeAll()
+            ElMessage.success(`已转让给：${N}`)
+            GetteamMember()
         } else {
             ElMessage.error(message)
         }
@@ -219,12 +234,13 @@ const setcreator = async (T: string, U: string) => {
     }
 }
 
-//转移团队成员
+//移除团队成员
 const deletemember = async (T: string, U: string) => {
     try {
         const { code, message } = await user_api.Deletteamemember({ team_id: T, user_id: U })
         if (code === 0) {
             ElMessage.success(message)
+            teammemberdata.value = teammemberdata.value.filter(item => item.user.id != U)
         } else {
             ElMessage.error(message)
         }
@@ -240,6 +256,9 @@ const outteam = async (T: string) => {
         const { code, message } = await user_api.Leaveteam({ team_id: T })
         if (code === 0) {
             ElMessage.success(message)
+            router.push({ path: '/apphome' })
+            upDateTeamData(teamData.value.filter(item => item.team.id != T))
+            teamUpdate(!is_team_upodate.value)
         } else {
             ElMessage.error(message)
         }
@@ -248,7 +267,7 @@ const outteam = async (T: string) => {
     }
 }
 
-const itemEvent = (item: string, teamid: string, userid: string, perm_type: number) => {
+const itemEvent = (item: string, teamid: string, userid: string, perm_type: number, name: string) => {
     folds.value = false
     switch (item) {
         case '管理员':
@@ -265,7 +284,7 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
             })()
         case '转移创建者':
             return (() => {
-                setcreator(teamid, userid)
+                setcreator(teamid, userid, name)
             })()
         case '移出团队':
             return (() => {
@@ -280,6 +299,25 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
     }
 }
 
+const handleEvent = () => {
+    if (folds.value) {
+        folds.value = false
+        fold.value = !fold.value
+    } else {
+        fold.value = !fold.value
+    }
+}
+
+const handleEventitem = (id: string) => {
+    if (fold.value) {
+        fold.value = false
+        folds.value = !folds.value
+        userid.value = id
+    } else {
+        folds.value = !folds.value
+        userid.value = id
+    }
+}
 
 
 watch(teamID, () => {
@@ -288,13 +326,22 @@ watch(teamID, () => {
 
 onMounted(() => {
     GetteamMember()
-    document.addEventListener("click", (e:any) => {
-        if (listmenu.value){
-            if(e.target!=listmenu.value.target){
-                
+    document.addEventListener("click", (event: MouseEvent) => {
+        const list1 = document.querySelector('.member-jurisdiction-container .shrink .filterlist')
+        const list2 = document.querySelector('.content .shrink .filterlist')
+        if (list1) {
+            if (event.target instanceof Element && event.target.closest('.filterlist') == null) {
+                if (folds.value) {
+                    folds.value = false
+                }
             }
-
-            
+        }
+        if (list2) {
+            if (event.target instanceof Element && event.target.closest('.filterlist') == null) {
+                if (fold.value) {
+                    fold.value = false
+                }
+            }
         }
     })
 })

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 const props = defineProps<{
-    title: string
-    dialogVisible: boolean
+    title: string,
+    dialogVisible: boolean;
 }>()
 const emit = defineEmits<{
     (e: 'clodeDialog'): void;
@@ -10,12 +10,20 @@ const emit = defineEmits<{
 const handleClose = () => {
     emit('clodeDialog')
 }
+
+const isshow = ref(false)
+watch(() => props.dialogVisible, (newvalue) => {
+    isshow.value = newvalue
+})
 </script>
 
 <template>
     <div>
-        <el-dialog v-model="$props.dialogVisible" :title="title" width="500px" align-center :close-on-click-modal="false" :before-close="handleClose">
-            <div class="body"><slot></slot></div>
+        <el-dialog v-model="isshow" :title="props.title" width="500px" align-center :close-on-click-modal="false"
+            :before-close="handleClose">
+            <div class="body">
+                <slot></slot>
+            </div>
         </el-dialog>
     </div>
 </template>
@@ -24,16 +32,20 @@ const handleClose = () => {
 :deep(.el-dialog__body) {
     padding: 16px;
 }
+
 :deep(.el-input__inner) {
     font-size: 10px;
 }
-.body { 
+
+.body {
     font-size: 10px;
 }
+
 .button {
     display: flex;
     justify-content: center;
     margin-top: 10px;
+
     button {
         width: 80px;
         height: 30px;
