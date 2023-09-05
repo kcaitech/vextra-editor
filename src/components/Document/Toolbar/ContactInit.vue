@@ -38,8 +38,6 @@ function update_contact_apex() {
 function contact_point_down(e: MouseEvent, type: ContactType) {
     const p = get_p(type);
     if (!p) return false;
-    const page = props.context.selection.selectedPage;
-    if (!page) return;
     emits("contact-init", e, new ContactForm(type, props.context.tool.contactApex!.id), p);
     e.stopPropagation();
 }

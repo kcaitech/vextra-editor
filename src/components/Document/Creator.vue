@@ -35,6 +35,7 @@ let page_xy_1: PageXY = { x: 0, y: 0 };
 let client_xy_1: ClientXY = { x: 0, y: 0 };
 let matrix1: Matrix = new Matrix(props.context.workspace.matrix.inverse);
 let isDrag: boolean = false;
+let just_search: boolean = false;
 
 // #region
 const commentInput = ref<boolean>(false);
@@ -81,7 +82,7 @@ function move(e: MouseEvent) {
     }
 }
 function move2(e: MouseEvent) {
-    if (e.buttons === 0 && props.context.tool.action === Action.AddContact) search_apex(e);
+    if (just_search || (e.buttons === 0 && props.context.tool.action === Action.AddContact)) search_apex(e);
 }
 function up(e: MouseEvent) {
     removeWheel();
@@ -93,7 +94,7 @@ function up(e: MouseEvent) {
         if (action === Action.AddComment) return addComment(e);
         init_insert_shape(props.context, page_xy_1, t);
     }
-    isDrag = false;
+    isDrag = false, just_search = false;
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
 }
@@ -260,6 +261,15 @@ function search_apex(e: MouseEvent) {
         props.context.tool.resetContactApex();
     }
 }
+function contact_init(e: MouseEvent, apex?: ContactForm, p2?: PageXY) {
+    down(e);
+    apex1 = apex, page_xy2 = p2, just_search = true;
+}
+function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
+    const root = props.context.workspace.root;
+    const p = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    ac.contact_to(p);
+}
 // #endregion
 
 function modify_page_xy_1(e: MouseEvent) {
@@ -355,12 +365,13 @@ function modify_new_shape_frame(e: MouseEvent) {
     const { x, y } = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
     if (wheel && asyncCreator) {
         const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
-        if (!isOut) {
-            if (e.shiftKey) {
-                er_frame(asyncCreator, x, y);
-            } else {
-                asyncCreator.setFrame(correct_page_xy(x, y));
-            }
+        if (isOut) return;
+        if (newShape && newShape.type === ShapeType.Contact) {
+            modify_contact_to(e, asyncCreator);
+        } else if (e.shiftKey) {
+            er_frame(asyncCreator, x, y); // 等比
+        } else {
+            asyncCreator.setFrame(correct_page_xy(x, y));
         }
     }
 }
@@ -391,7 +402,7 @@ function removeCreator() {
 function windowBlur() {
     shapeCreateEnd();
     removeWheel();
-    isDrag = false;
+    isDrag = false, just_search = false;
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
@@ -408,7 +419,7 @@ onUnmounted(() => {
             :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
             @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" :matrix="props.context.workspace.matrix"
             :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <ContactInit :context="props.context"></ContactInit>
+        <ContactInit :context="props.context" @contact-init="contact_init"></ContactInit>
     </div>
 </template>
 <style scoped lang="scss">
