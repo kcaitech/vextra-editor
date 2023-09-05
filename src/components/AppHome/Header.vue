@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed, nextTick } from 'vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed, nextTick, watch } from 'vue'
 import { Search, User, SwitchButton, Close, Bell, Loading } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share';
@@ -23,10 +23,8 @@ const state = reactive({
 const { circleUrl, userName } = toRefs(state);
 const applynum = ref(0);
 const teamnum = ref(0);
-const projectnum = ref(0);
 const showInForm = ref(false);
 const applyList = ref<any[]>([]);
-const projectApplyList = ref<any>([]);
 const teamApplyList = ref<any>([]);
 const search = ref('');
 const SearchList = ref<any[]>([]);
@@ -36,8 +34,9 @@ const menuAbout = ref(false);
 const menuUser = ref(false);
 const isLoading = ref(false);
 const inputRef = ref<HTMLElement>();
+const totalList = ref<any[]>([])
 const total = computed(() => {
-    return applynum.value + teamnum.value + projectnum.value
+    return applynum.value + teamnum.value;
 })
 
 const errorHandler = () => true;
@@ -61,8 +60,14 @@ const getProjectApplyList = async () => {
     try {
         const { data } = await team_api.getTeamProjectApplyAPI();
         if (data) {
-            projectApplyList.value = data;
-            projectnum.value = projectApplyList.value.filter((item: any) => item.request.status === 0).length;
+            totalList.value = [...data, ...teamApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+            teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
         }
     } catch (err) {
         console.log(err);
@@ -73,14 +78,19 @@ const getTeamApply = async () => {
     try {
         const { data } = await team_api.getTeamApplyAPI();
         if (data) {
-            teamApplyList.value = [...projectApplyList.value, ...data];
-            teamnum.value = teamApplyList.value.filter((item: any) => item.request.status === 0).length;
-
+            teamApplyList.value = data;
+            getProjectApplyList();
         }
     } catch (err) {
         console.log(err);
     }
 }
+watch(totalList, () => {
+    teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
+}, {deep: true})
+watch(applyList, () => {
+    applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
+}, {deep: true})
 
 const handleClickOutside = (event: MouseEvent) => {
     const e = event.target as HTMLElement
@@ -173,12 +183,10 @@ const itemClick = (e: MouseEvent) => {
 let timer: any = null
 getApplyList();
 getTeamApply();
-getProjectApplyList();
 onMounted(() => {
     timer = setInterval(() => {
         getApplyList();
         getTeamApply();
-        getProjectApplyList();
     }, 60000)
     document.addEventListener('mousedown', handleClickOutside)
     const searchList = localStorage.getItem('searchlist')
@@ -326,7 +334,7 @@ const textHighLight = (text: string) => {
                 </div>
             </div>
         </div>
-        <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="teamApplyList"
+        <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="totalList"
             @reviewed="reviewed"></Inform>
     </div>
 </template>

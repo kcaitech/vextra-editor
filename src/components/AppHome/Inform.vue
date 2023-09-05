@@ -19,6 +19,7 @@ const props = defineProps<{
 }>()
 const activeName = ref('fill')
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
+const permissionTeam = ref([`${t('share.readOnly')}`, `${t('share.editable')}`])
 enum Audit {
   unPass,
   Pass
@@ -47,17 +48,17 @@ const filterDate = (time: string) => {
   return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
-const consent = (id: string, index: number) => {
+const consent = (id: string, item: any) => {
   promissionApplyAudit(id, Audit.Pass)
+  item.apply.status = 1
 }
-const refuse = (id: string, index: number) => {
+const refuse = (id: string, item: any) => {
   promissionApplyAudit(id, Audit.unPass)
+  item.apply.status = 2
 }
-const promissionApplyAudit = async (id: string, type: number) => {
+const promissionApplyAudit = async (id: string, type: Audit) => {
   try {
     await share_api.promissionApplyAuditAPI({ apply_id: id, approval_code: type })
-    emit('reviewed')
-
   } catch (error) {
     ElMessage({
       message: `${t('apply.authorization_failure')}`
@@ -68,8 +69,36 @@ const close = () => {
   emit('close')
 }
 
-const handleInform = () => {
-  console.log(11);
+const consentTeam = (id: string, index: number, item: any) => {
+  if(item.team) {
+    postTeamAudit(id, Audit.Pass)
+  }else {
+    postTeamProjectAudit(id, Audit.Pass)
+  }
+  item.request.status = 1
+}
+const refuseTeam = (id: string, index: number, item: any) => {
+  if(item.team) {
+    postTeamAudit(id, Audit.unPass)
+  }else {
+    postTeamProjectAudit(id, Audit.unPass)
+  }
+  item.request.status = 2
+}
+
+const postTeamProjectAudit = async (id: string, type: Audit) => {
+  try {
+    await team_api.postTeamProjectAuditAPI({apply_id: id, approval_code: type});
+  }catch(err) {
+    console.log(err);
+  }
+}
+const postTeamAudit = async (id: string, type: Audit) => {
+  try {
+    await team_api.postTeamAuditAPI({apply_id: id, approval_code: type});
+  }catch(err) {
+    console.log(err);
+  }
 }
 
 const showFillTooltip = (i: number) => {
@@ -97,7 +126,7 @@ const scrollFill = () => {
         </el-button>
       </div>
     </template>
-    <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleInform">
+    <el-tabs v-model="activeName" class="demo-tabs">
       <el-tab-pane name="fill">
         <template #label>
           <span class="custom-tabs-label">
@@ -105,7 +134,7 @@ const scrollFill = () => {
             <span>{{ t('apply.fill') }}</span>
           </span>
         </template>
-        <div class="contain">
+        <div class="contain" v-if="activeName === 'fill'">
           <el-scrollbar height="400px" style="padding-right: 10px;" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
               <div class="avatar"><img :src="item.user.avatar" alt=""></div>
@@ -121,15 +150,15 @@ const scrollFill = () => {
                         permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}
                     </div>
                   </template>
-                  <div class="item-text" @mouseenter="showFillTooltip(i)" @mouseleave="hideFillTooltip">
+                  <div class="item-text" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
                     {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
                       permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
                 </el-tooltip>
               </div>
               <div class="botton" v-if="item.apply.status === 0">
-                <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, i)">{{ t('apply.agree')
+                <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, item)">{{ t('apply.agree')
                 }}</el-button>
-                <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.apply.id, i)">{{
+                <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.apply.id, item)">{{
                   t('apply.refuse') }}</el-button>
               </div>
               <div class="botton" v-else>
@@ -148,7 +177,7 @@ const scrollFill = () => {
             <span>{{ t('apply.team') }}</span>
           </span>
         </template>
-        <div class="contain">
+        <div class="contain" v-if="activeName === 'team'">
           <el-scrollbar height="400px" style="padding-right: 10px;" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.teamApplyList" :key="i">
               <div class="avatar"><img :src="item.user.avatar" alt=""></div>
@@ -161,25 +190,25 @@ const scrollFill = () => {
                   <template #content>
                     <div class="custom-tooltip" v-if="item.team">
                       {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
-                        permission[item.request.perm_type] }}
+                        permissionTeam[item.request.perm_type] }}
                     </div>
                     <div class="custom-tooltip" v-if="item.project">
                       {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
                         permission[item.request.perm_type] }}
                     </div>
                   </template>
-                  <div class="item-text" v-if="item.team" @mouseenter="showFillTooltip(i)" @mouseleave="hideFillTooltip">
+                  <div class="item-text" v-if="item.team" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
                     {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
-                      permission[item.request.perm_type] }}</div>
-                  <div class="item-text" v-if="item.project" @mouseenter="showFillTooltip(i)" @mouseleave="hideFillTooltip">
+                      permissionTeam[item.request.perm_type] }}</div>
+                  <div class="item-text" v-if="item.project" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
                     {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
                       permission[item.request.perm_type] }}</div>
                 </el-tooltip>
               </div>
               <div class="botton" v-if="item.request.status === 0">
-                <el-button color="#0d99ff" size="small" @click="consent(item.request.id, i)">{{ t('apply.agree')
+                <el-button color="#0d99ff" size="small" @click="consentTeam(item.request.id, i, item)">{{ t('apply.agree')
                 }}</el-button>
-                <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.request.id, i)">{{
+                <el-button plain size="small" style="margin-top: 5px;" @click="refuseTeam(item.request.id, i, item)">{{
                   t('apply.refuse') }}</el-button>
               </div>
               <div class="botton" v-else>
