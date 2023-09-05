@@ -72,6 +72,7 @@ export class Tool extends Watchable(Object) {
     private m_frame_name: string = ''; // 容器模版名称
     private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
     private m_contact_apex: Shape | undefined;
+    private m_contact_from: boolean = false;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -212,5 +213,11 @@ export class Tool extends Watchable(Object) {
         if (needNotify) {
             this.notify(Tool.CHANGE_CONTACT_APEX);
         }
+    }
+    get contactFrom() {
+        return this.m_contact_from;
+    }
+    setContactFrom(v: boolean) {
+        this.m_contact_from = v;
     }
 }

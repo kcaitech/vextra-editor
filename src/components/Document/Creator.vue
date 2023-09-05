@@ -374,6 +374,11 @@ function modify_new_shape_frame(e: MouseEvent) {
         }
     }
 }
+function e_contact_to(apex: ContactForm, p2: PageXY) {
+    if (asyncCreator) {
+        asyncCreator.contact_to(p2, apex);
+    }
+}
 function removeWheel() {
     if (wheel) wheel = wheel.remove();
 }
@@ -418,7 +423,7 @@ onUnmounted(() => {
             :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
             @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" :matrix="props.context.workspace.matrix"
             :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
-        <ContactInit :context="props.context" @contact-init="contact_init"></ContactInit>
+        <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
     </div>
 </template>
 <style scoped lang="scss">

@@ -10,6 +10,8 @@ interface Props {
 }
 interface Emits {
     (e: 'contact-init', event: MouseEvent, apex?: ContactForm, p2?: PageXY): void;
+    (e: 'contact-to', apex: ContactForm, p2: PageXY): void;
+    (e: 'contact-reset'): void;
 }
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
@@ -39,7 +41,16 @@ function contact_point_down(e: MouseEvent, type: ContactType) {
     const p = get_p(type);
     if (!p) return false;
     emits("contact-init", e, new ContactForm(type, props.context.tool.contactApex!.id), p);
+    props.context.tool.setContactFrom(true);
     e.stopPropagation();
+}
+function enter(type: ContactType) {
+    const p = get_p(type);
+    if (!p) return false;
+    emits("contact-to", new ContactForm(type, props.context.tool.contactApex!.id), p);
+}
+function leave() {
+    emits("contact-reset");
 }
 function get_p(type: 'top' | 'right' | 'bottom' | 'left') {
     const contactApex = props.context.tool.contactApex;
@@ -78,7 +89,8 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" width="10"
         height="10" viewBox="0 0 10 10" style=" position: absolute;">
         <rect v-for="(p, idx) in contact_points" @mousemove.stop :key="idx" class="contact-point" rx="8px" ry="8px"
-            @mousedown="(e: MouseEvent) => contact_point_down(e, p.type)" :x="p.point.x - 8" :y="p.point.y - 8"></rect>
+            @mousedown="(e: MouseEvent) => contact_point_down(e, p.type)" :x="p.point.x - 8" :y="p.point.y - 8"
+            @mouseenter="() => enter(p.type)" @mouseleave="leave"></rect>
     </svg>
 </template>
 <style lang="scss">
