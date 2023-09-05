@@ -38,21 +38,10 @@ const getProjectInvitedInfo = async () => {
     try {
         const { data } = await team_api.getProjectInvitedInfoAPI({ project_id: route.query.id });
         projectInfo.value = data;
+        switchstate.value = data.invited_switch;
         if (data.self_perm_type >= data.invited_perm_type) {
             router.push({ path: '/apphome/project/' + route.query.id });
         }
-    } catch (error) {
-        console.log(error);
-    }
-}
-
-const GetprojectLists = async () => {
-    try {
-        const { data } = await team_api.GetprojectLists()
-        const project = data.filter((item: any) => item.project.id === route.query.id);
-        switchstate.value = project[0].project.invited_switch;
-        console.log(project,'project');
-        
     } catch (error) {
         console.log(error);
     }
@@ -89,7 +78,6 @@ const postApplyJoinProject = async () => {
 
 onMounted(() => {
     getProjectInvitedInfo();
-    GetprojectLists();
 })
 </script>
 <style lang="scss" scoped>
