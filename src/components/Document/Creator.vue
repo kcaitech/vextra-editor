@@ -326,12 +326,7 @@ const editShapeComment = (index: number, x: number, y: number) => {
     const data = {
         id: id,
         target_shape_id: shapeId,
-        shape_frame: {
-            x1: x,
-            y1: y,
-            x2: x2,
-            y2: y2
-        }
+        shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
     }
     editCommentShapePosition(data)
 }
@@ -415,7 +410,7 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .creator {
-    background-color: rgba($color: #006600, $alpha: 0.2);
+    // background-color: rgba($color: #006600, $alpha: 0.2);
     width: 100%;
     height: 100%;
     position: absolute;
