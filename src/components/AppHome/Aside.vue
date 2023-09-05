@@ -19,7 +19,7 @@ import { Zip } from "@pal/zip";
 import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
-import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch, computed } from 'vue';
+import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch, computed, watchEffect } from 'vue';
 import * as user_api from '@/apis/users'
 import * as team_api from '@/apis/team'
 import addTeam from '../TeamProject/addTeam.vue'
@@ -44,7 +44,7 @@ const projectDataList = ref<any[]>([]);
 const reflush = ref(0);
 
 const { updatestate, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, is_favor,
-    projectList, is_team_upodate } = inject('shareData') as {
+    projectList, is_team_upodate, teamData } = inject('shareData') as {
         updatestate: Ref<boolean>;
         is_favor: Ref<boolean>;
         is_team_upodate: Ref<boolean>;
@@ -56,6 +56,14 @@ const { updatestate, updateShareData, upDateTeamData, state, saveProjectData, fa
         saveProjectData: (data: any[]) => void;
         favoriteListsData: (data: any[]) => void;
         projectList: Ref<any[]>;
+        teamData: Ref<[{
+            team: {
+                id: string,
+                name: string,
+                avatar: string,
+                description: string
+            }
+        }]>;
     }
 
 function addChildToParent(parent: { children: any[]; }, child: any) {
@@ -150,10 +158,9 @@ const GetteamList = async () => {
         const { code, data, message } = await user_api.GetteamList()
         if (code === 0) {
             upDateTeamData(data)
-            teamDataList.value = data
+            teamDataList.value = teamData.value
             teamList.value = mergeArrays(data, projectDataList.value);
             reflush.value++
-            ElMessage({ type: 'success', message: '成功获取团队列表' })
         } else {
             ElMessage({ type: 'error', message: message })
         }
@@ -164,7 +171,7 @@ const GetteamList = async () => {
 }
 
 watch(updatestate, (newvalue) => {
-    if (newvalue) {  
+    if (newvalue) {
         GetteamList()
         state(false)
     }
@@ -178,6 +185,7 @@ watch(is_favor, () => {
 })
 
 watch(is_team_upodate, () => {
+    teamDataList.value = teamData.value
     teamList.value = mergeArrays(teamDataList.value, projectDataList.value);
 })
 

@@ -280,6 +280,7 @@ const GetprojectLists = async () => {
                 }
             })
         }
+        
         const project = favoriteProjectList(data, favoriteList.value)
         saveProjectData(project)
         currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);

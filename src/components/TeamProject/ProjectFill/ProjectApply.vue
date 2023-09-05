@@ -44,6 +44,8 @@ const getProjectInvitedInfo = async () => {
         if (data.self_perm_type >= data.invited_perm_type) {
             router.push({ path: '/apphome/project/' + route.query.id });
         }
+        console.log(projectInfo.value,'projectInfo.value');
+        
     } catch (error) {
         console.log(error);
     }

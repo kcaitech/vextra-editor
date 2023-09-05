@@ -54,7 +54,7 @@ const updateShareData = (id: string, name: string, avatar: string, description: 
 
 //用于改变updatestate的值
 const state = (b: boolean) => {
-  updatestate.value = b
+  updatestate.value = b 
 }
 
 const updateFavor = (s: boolean) => {
