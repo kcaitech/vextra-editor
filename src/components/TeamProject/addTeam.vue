@@ -67,15 +67,8 @@ const createTeam = async () => {
         if (code === 0) {
             emits('close')
             ElMessage.success('成功添加团队')
+            router.push({ path: `teams/${data.id}` })
             state(true)  //改变updatestate的值为TRUE
-            if (route.params.id) {
-                console.log(route.params.id);
-                
-                route.params.id = data.id
-            } else {
-                router.push({ path: `teams/${data.id}` })
-            }
-
         } else {
             ElMessage.error(message)
         }
