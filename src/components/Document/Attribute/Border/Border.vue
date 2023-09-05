@@ -427,7 +427,8 @@ const filterAlpha = (a: number) => {
 function layout() {
     show_apex.value = false;
     if (props.shapes.length === 1) {
-        if (props.shapes[0].type === ShapeType.Line) show_apex.value = true;
+        const type = props.shapes[0].type;
+        if (type === ShapeType.Line || type === ShapeType.Contact) show_apex.value = true;
     }
 }
 function update_by_shapes() {

@@ -43,18 +43,17 @@ function update_dot_path() {
 }
 
 function point_mousedown(event: MouseEvent, type: 'from' | 'to') {
-    return;
-    // if (event.button !== 0) return;
-    // props.context.menu.menuMount();
-    // const workspace = props.context.workspace;
-    // workspace.setCtrl('controller');
-    // const root = workspace.root;
-    // startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
-    // down_index = index;
-    // document.addEventListener('mousemove', point_mousemove);
-    // document.addEventListener('mouseup', point_mouseup);
-    // move = point_mousemove;
-    // event.stopPropagation();
+    if (event.button !== 0) return;
+    props.context.menu.menuMount();
+    const workspace = props.context.workspace;
+    workspace.setCtrl('controller');
+    const root = workspace.root;
+    startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
+    down_index = type === 'from' ? 0 : props.shape.points.length - 1;
+    document.addEventListener('mousemove', point_mousemove);
+    document.addEventListener('mouseup', point_mouseup);
+    move = point_mousemove;
+    event.stopPropagation();
 }
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
