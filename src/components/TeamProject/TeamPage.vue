@@ -132,7 +132,6 @@ onMounted(() => {
 
 .nested-enter-from,
 .nested-leave-to {
-    transform: translateY(400px);
     opacity: 0;
 }
 

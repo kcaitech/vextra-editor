@@ -133,20 +133,12 @@ const x = sessionStorage.getItem('index')
 const showteamcard = () => {
     showoverlay.value = true
     teamcard.value = true
-    nextTick(() => {
-        const input = document.querySelector(".team-name input") as HTMLInputElement
-        input?.focus()
-    })
 }
 
 const showprojectcard = (id: string) => {
     showoverlay.value = true
     projectcard.value = true
     teamid.value = id
-    nextTick(() => {
-        const input = document.querySelector(".project-name input") as HTMLInputElement
-        input?.focus()
-    })
 }
 
 const newProjectFile = (id: string) => {
@@ -172,19 +164,19 @@ const GetteamList = async () => {
 }
 
 watch(updatestate, (newvalue) => {
-    if (newvalue) {
-        console.log(newvalue);
-        
+    if (newvalue) {  
         GetteamList()
         state(false)
     }
 })
+
 watch(is_favor, () => {
     const timer = setTimeout(() => {
         getProjectFavoriteLists();
         clearTimeout(timer)
     }, 200)
 })
+
 watch(is_team_upodate, () => {
     teamList.value = mergeArrays(teamDataList.value, projectDataList.value);
 })
@@ -407,7 +399,6 @@ a {
 
 .nested-enter-from,
 .nested-leave-to {
-    transform: translateY(400px);
     opacity: 0;
 }
 

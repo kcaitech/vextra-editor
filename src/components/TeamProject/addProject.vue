@@ -11,7 +11,7 @@
         <div class="centent">
             <div class="project-name">
                 <div class="title">项目名称<span>{{ t('Createteam.required') }}</span></div>
-                <input type="text" placeholder="输入项目名称" v-model="inputValue" maxlength="20" required>
+                <input ref="projectinput" type="text" placeholder="输入项目名称" v-model="inputValue" maxlength="20" required>
             </div>
             <div class="project-description">
                 <div class="title">项目描述<span>{{ t('Createteam.optional') }}</span></div>
@@ -24,7 +24,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue';
+import { computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
@@ -37,6 +37,8 @@ const emits = defineEmits<{
 const props = defineProps<{
     teamid: string
 }>()
+
+const projectinput=ref()
 const route = useRoute()
 const inputValue = ref('')
 const textareaValue = ref('')
@@ -61,6 +63,10 @@ const createProject = async () => {
         ElMessage.error(t('home.other_tips'))
     }
 }
+
+nextTick(()=>{
+    projectinput.value.focus()
+})
 
 const close = () => {
     emits('close')
