@@ -384,7 +384,11 @@ function onMouseUp(e: MouseEvent) {
         if (spacePressed.value) pageViewDragEnd();
         else {
             isMouseLeftPress = false;
-            saveShapeCommentXY()
+            selectEnd();
+            saveShapeCommentXY();
+            if (selector_mount.value) {
+                selectEnd();
+            }
         }
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
@@ -450,7 +454,7 @@ function frame_watcher() {
     _updateRoot(props.context, root.value);
 }
 function cursor_watcher(t?: number, type?: string) {
-    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type)  cursor.value = type;
+    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type) cursor.value = type;
 }
 function matrix_watcher(nm: Matrix) {
     matrix_inverse = new Matrix(nm.inverse);
