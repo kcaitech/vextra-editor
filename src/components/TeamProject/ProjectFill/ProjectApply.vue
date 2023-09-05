@@ -5,8 +5,8 @@
             <div class="img" style="width: 200px;height: 200px;background-color: #9775fa;border-radius: 4px;"></div>
             <div class="join" v-if="switchstate">
                 <p>
-                    申请加入项目：<strong></strong>
-                    <span>（权限：<strong></strong>）</span>
+                    申请加入项目：<strong>{{ projectInfo.name }}</strong>
+                    <span>（权限：<strong>{{ permission[projectInfo.self_perm_type] }}</strong>）</span>
                 </p>
                 <p>加入项目后，可访问该项目中的所有文件、资源</p>
                 <button type="button" @click.stop="appluJoinProject" v-if="!isApply">申请加入</button>
@@ -33,7 +33,9 @@ const route = useRoute();
 const projectInfo = ref();
 const switchstate = ref<boolean>();
 const isApply = ref(false);
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n()
+const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const getProjectInvitedInfo = async () => {
     try {
         const { data } = await team_api.getProjectInvitedInfoAPI({ project_id: route.query.id });

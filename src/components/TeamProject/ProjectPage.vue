@@ -239,6 +239,8 @@ const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
         const pros = data.filter((item: any) => item.project.id === route.params.id);
+        console.log(pros, 'pros');
+
         if (!pros.length) {
             router.push({
                 name: 'projectApply',
@@ -421,9 +423,7 @@ const handleprem = (prem: number) => {
 }
 watchEffect(() => {
     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
-    if (!currentProject.value.length) {
-        GetprojectLists()
-    } else {
+    if (currentProject.value.length) {
         projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;
         handleprem(currentProject.value[0].project.perm_type);
         linkSwitch.value = currentProject.value[0].project.invited_switch;
@@ -433,6 +433,9 @@ watchEffect(() => {
 
 
 onMounted(() => {
+    if (!currentProject.value.length) {
+        GetprojectLists()
+    }
 })
 </script>
 <style lang="scss" scoped>
@@ -681,6 +684,7 @@ onMounted(() => {
     margin-left: 10px;
 
 }
+
 :deep(.el-input__inner) {
     height: 30px;
     font-size: 10px;
