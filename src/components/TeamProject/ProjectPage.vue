@@ -238,7 +238,8 @@ const cancelFixed = () => {
 const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
-        if (!data.length) {
+        const pros = data.filter((item: any) => item.project.id === route.params.id);
+        if (!pros.length) {
             router.push({
                 name: 'projectApply',
                 query: {
@@ -246,7 +247,6 @@ const GetprojectLists = async () => {
                 }
             })
         }
-        const pros = data.filter((item: any) => item.project.id === route.params.id);
         if (pros[0].perm_type === 0) {
             router.push({
                 name: 'projectApply',

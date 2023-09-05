@@ -46,12 +46,15 @@ const getProjectInvitedInfo = async () => {
     }
 }
 
-const getProjectApplyList = async () => {
+const GetprojectLists = async () => {
     try {
-        const { data } = await team_api.getTeamProjectApplyAPI();
-        switchstate.value = data.project.invited_switch;
-    } catch (err) {
-        console.log(err);
+        const { data } = await team_api.GetprojectLists()
+        const project = data.filter((item: any) => item.project.id === route.query.id);
+        switchstate.value = project[0].project.invited_switch;
+        console.log(project,'project');
+        
+    } catch (error) {
+        console.log(error);
     }
 }
 
@@ -86,7 +89,7 @@ const postApplyJoinProject = async () => {
 
 onMounted(() => {
     getProjectInvitedInfo();
-    getProjectApplyList();
+    GetprojectLists();
 })
 </script>
 <style lang="scss" scoped>

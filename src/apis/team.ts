@@ -120,3 +120,13 @@ export function applyJoinProjectAPI(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//获取项目列表
+export function GetprojectLists(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/list',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
