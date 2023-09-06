@@ -11,7 +11,7 @@
         <div class="centent">
             <div class="permission-setting">
                 <span>权限设置</span>
-                <el-select class="select" v-model="teamInvitePermission" value-key="id" filterable
+                <el-select class="select" v-model="teamInvitePermission" :disabled="disabled" value-key="id"
                     @change="setTeamInvitePermission(teamInvitePermission)" style="width: 120px;">
                     <el-option v-for="{ id, label } in options" :key="id" :value="id" :label="label" />
                 </el-select>
@@ -20,9 +20,9 @@
             <div class="permission-text">
                 <span> 邀请链接开关：</span>
                 <el-switch v-model="teamInviteSwitch" class="ml-2" style="--el-switch-on-color: #9775fa" size="small"
-                    @change="setTeamInviteSwitch(teamInviteSwitch)" />
+                    @change="setTeamInviteSwitch(teamInviteSwitch)" :disabled="disabled" />
             </div>
-            <input class="switch" v-if="teamInviteSwitch" type="text" v-model="teaminviteinfo">
+            <input class="switch" v-if="teamInviteSwitch" type="text" v-model="teaminviteinfo" :disabled="disabled">
             <div class="permission-text" style="color: #666;">同事申请后，需管理员确认后才能加入</div>
         </div>
         <div class="invitemember">
@@ -55,6 +55,10 @@ const teamInvitePermission = ref<any>(1)
 const options = [{ id: 1, label: '可编辑' }, { id: 0, label: '仅阅读' }]
 const teamInviteSwitch = ref(false)
 const teaminfo = ref<teaminfotype>()
+
+const disabled = computed(() => {
+    return (teaminfo.value?.self_perm_type === 0 || teaminfo.value?.self_perm_type === 1) ? true : false
+})
 
 const setTeamInvitePermission = async (value: number) => {
     try {
@@ -106,7 +110,10 @@ const teaminviteinfo = computed(() => {
 async function copyText() {
     try {
         await navigator.clipboard.writeText(teaminviteinfo.value);
+        ElMessage.closeAll();
+        ElMessage.success("复制成功");
     } catch (error) {
+        ElMessage.closeAll();
         ElMessage.error("复制失败");
     }
 }
