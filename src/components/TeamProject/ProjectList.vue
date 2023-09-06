@@ -173,7 +173,9 @@ const cancelFixed = (id: string, state: boolean, index: number) => {
 }
 
 onMounted(() => {
-    GetprojectLists()
+    if(!teamprojectlist.value) {
+        GetprojectLists();
+    }
 })
 
 </script>

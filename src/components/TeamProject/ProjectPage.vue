@@ -32,17 +32,20 @@
                 </el-icon></div>
         </div>
     </div>
-    <div class="team-header">
+    <div class="team-header" v-if="currentProject[0]">
         <ul class="menu">
-            <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
-                @click.stop="clickEvent(index)">
-                {{ item }}
-            </li>
+            <template v-for="(item, index) in items" :key="index">
+                <li class="item" :class="{ 'activate': itemid === index }" @click.stop="clickEvent(index)"
+                    v-if="(index === 0) || (index === 1 && currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 3)">
+                    {{ item }}
+                </li>
+            </template>
         </ul>
     </div>
     <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
-    <ProjectRecycleBin v-if="itemid === 1" :currentProject="currentProject[0]"></ProjectRecycleBin>
-    <ProjectAccessSetting title="邀请项目成员" :dialog-visible="projectSettingDialog" width="500px" @clodeDialog="projectSettingDialog = false">
+    <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
+    <ProjectAccessSetting title="邀请项目成员" :dialog-visible="projectSettingDialog" width="500px"
+        @clodeDialog="projectSettingDialog = false">
         <div class="project_type" v-if="currentProject[0]">
             <p>项目类型</p>
             <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
@@ -80,8 +83,10 @@
             <div class="button" @click="projectSettingDialog = false"><button>确定</button></div>
         </div>
     </ProjectAccessSetting>
-    <ProjectMemberg v-if="currentProject[0]" :projectMembergDialog="projectMembergDialog" :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
-
+    <div :reflush="reflush !== 0 ? reflush : undefined">
+        <ProjectMemberg v-if="currentProject[0]" :projectMembergDialog="projectMembergDialog"
+            :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
+    </div>
 </template>
 <script setup lang="ts">
 import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
@@ -100,6 +105,7 @@ const { t } = useI18n()
 const itemid = ref(0)
 const items = ['文件', '回收站',]
 const route = useRoute();
+const reflush = ref(0);
 const currentProject = ref<any[]>([]);
 const cusname = ref<boolean>(false);
 const cusdesc = ref<boolean>(false);
@@ -183,12 +189,14 @@ const showMembergDialog = () => {
 const closeDialog = () => {
     projectMembergDialog.value = false;
 }
-const closeSetting = () => {
-    projectSettingDialog.value = false;
-}
-const exitProject = (id: string) => {
+
+const exitProject = (id: string, isTeam: boolean) => {
     projectMembergDialog.value = false;
-    router.push({ path: '/apphome/teams/' + id });
+    if (isTeam) {
+        router.push({ path: '/apphome/teams/' + id });
+    } else {
+        router.push({ name: "apphome" })
+    }
 }
 
 watch(projectType, (v) => {
@@ -265,8 +273,6 @@ const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
         const pros = data.filter((item: any) => item.project.id === route.params.id);
-        console.log(pros, 'pros');
-
         if (!pros.length) {
             router.push({
                 name: 'projectApply',
@@ -283,10 +289,11 @@ const GetprojectLists = async () => {
                 }
             })
         }
-        
+
         const project = favoriteProjectList(data, favoriteList.value)
         saveProjectData(project)
         currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
+        reflush.value++
         projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;
         handleprem(currentProject.value[0].project.perm_type);
         linkSwitch.value = currentProject.value[0].project.invited_switch;
@@ -431,6 +438,7 @@ const setProjectInfo = async (params: any) => {
 watch(() => currentProject.value, (n) => {
     currentProject.value = n;
     if (currentProject.value[0]) {
+        reflush.value++;
         projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;
         handleprem(currentProject.value[0].project.perm_type);
         linkSwitch.value = currentProject.value[0].project.invited_switch;
@@ -450,6 +458,7 @@ const handleprem = (prem: number) => {
     }
 }
 watchEffect(() => {
+    route.params.id
     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
     if (currentProject.value.length) {
         projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;

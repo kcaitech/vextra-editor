@@ -19,7 +19,7 @@ const update = (data: any, searchtitle: string) => {
 </script>
 
 <template>
-    <div v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage'" class="title">
+    <div v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'" class="title">
         <span>{{ props.title }}</span>
     </div>
     <el-divider v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage'" />

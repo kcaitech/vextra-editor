@@ -19,7 +19,8 @@ const HomeContent = () => import("@/components/Home/HomeContent.vue");
 const TeamPage=()=>import("@/components/TeamProject/TeamPage.vue");
 const joinTeam=()=>import("@/components/TeamProject/jionTeam.vue");
 const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
-const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue")
+const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
+const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
 const routes = [
     {
         path: '/',
@@ -100,6 +101,11 @@ const routes = [
                 path: 'teams/:id',
                 name: 'TeamPage',
                 component: TeamPage
+            },
+            {
+                path: 'project_share',
+                name: 'ProjectShare',
+                component: ProjectShare
             },
             {
                 path: 'project/:id',

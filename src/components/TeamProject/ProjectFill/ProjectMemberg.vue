@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import ProjectAccessSetting from './ProjectAccessSetting.vue';
-import { ref, nextTick } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router'
 const { t } = useI18n();
 const props = defineProps<{
     projectMembergDialog: boolean
@@ -11,8 +12,9 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
-    (e: 'exitProject', id: string): void;
-}>()
+    (e: 'exitProject', id: string, state: boolean): void;
+}>();
+const route = useRoute();
 const innerVisible = ref(false)
 const memberList = ref<any[]>([]);
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`, '管理员', '创建者'])
@@ -24,14 +26,46 @@ const memberInfo = ref<any>({});
 const getProjectMemberList = async () => {
     try {
         const { data } = await team_api.getProjectMemberListAPI({ project_id: props.currentProject.project.id });
-        console.log(data, 'list');
-        memberList.value = data;
-        memberList2.value = data;
+        memberList.value = data.map((item: { isTeam: boolean; }) => {
+            item.isTeam = false;
+            return item;
+        });
+        memberList2.value = data.map((item: { isTeam: boolean; }) => {
+            item.isTeam = false;
+            return item;
+        });
+        getTeamMemberList();
     } catch (err) {
         console.log(err);
     }
 }
 getProjectMemberList();
+const getTeamMemberList = async () => {
+    try {
+        const { data } = await team_api.getTeamMemberListAPI({ team_id: props.currentProject.project.team_id });
+        for (let i = 0; i < data.length; i++) {
+            const team_member_id = data[i].user.id;
+            memberList.value.forEach(item => {
+                if (item.user.id === team_member_id) {
+                    item.isTeam = true;
+                }
+            })
+            memberList2.value.forEach(item => {
+                if (item.user.id === team_member_id) {
+                    item.isTeam = true;
+                }
+            })
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+watch(() => route.params.id, () => {
+    nextTick(() => {
+        getProjectMemberList();
+    })
+}, { immediate: true })
 
 const handleCommand = (command: number) => {
     permFilter.value = command;
@@ -109,8 +143,6 @@ const delProjectmember = async (params: { project_id: string, user_id: string })
 
 const close = () => {
     emit('closeDialog');
-    permFilter.value = 0;
-    memberList.value = memberList2.value;
 }
 
 const handleClose = () => {
@@ -122,7 +154,15 @@ const transferClose = () => {
 const quitProject = () => {
     innerVisible.value = false;
     exitProject();
-    emit('exitProject', props.currentProject.team_id);
+    const user_id = localStorage.getItem('userId');
+    let state = false;
+    memberList2.value.forEach(item => {
+        if(user_id === item.user.id) {
+            state = item.isTeam;
+            return;
+        }
+    })
+    emit('exitProject', props.currentProject.team_id, state);
 }
 const exitProject = async () => {
     try {
@@ -151,6 +191,31 @@ const transferProjectCreator = async (id: string) => {
         console.log(err);
     }
 }
+watch(() => props.projectMembergDialog, (v) => {
+    if (v) {
+        permFilter.value = 0;
+        memberList.value = memberList2.value;
+    }
+})
+
+const onExitProject = () => {
+    innerVisible.value = true;
+    document.addEventListener('keydown', escClose);
+}
+const escClose = () => {
+    innerVisible.value = false;
+    transferVisible.value = false;
+}
+watch(transferVisible, (v) => {
+    if(!v) {
+        document.removeEventListener('keydown', escClose);
+    }
+})
+watch(innerVisible, (v) => {
+    if(!v) {
+        document.removeEventListener('keydown', escClose);
+    }
+})
 </script>
 
 <template>
@@ -180,10 +245,10 @@ const transferProjectCreator = async (id: string) => {
                 <div class="member-item" v-for="(item, index) in memberList" :key="index">
                     <div class="name">{{ item.user.nickname }}</div>
                     <el-dropdown trigger="click" @command="handleCommandPerm"
-                        :disabled="!(props.currentProject.self_perm_type !== 5 || props.currentProject.self_perm_type !== 4) || item.perm_type === 5">
+                        :disabled="item.perm_type === 5 || item.perm_type === 4">
                         <span class="el-dropdown-link">
                             {{ permission[item.perm_type] }}<el-icon class="el-icon--right"><arrow-down
-                                    v-if="(props.currentProject.self_perm_type === 5 || props.currentProject.self_perm_type === 4) && item.perm_type !== 5" /></el-icon>
+                                    v-if="(props.currentProject.self_perm_type === 5 && item.perm_type !== 5) || (props.currentProject.self_perm_type === 4 && (item.perm_type !== 4 && item.perm_type !== 5))" /></el-icon>
                         </span>
                         <template #dropdown>
                             <el-dropdown-menu>
@@ -202,7 +267,7 @@ const transferProjectCreator = async (id: string) => {
                                 </el-dropdown-item>
                                 <div style="width: 120px; height: 1px; background-color: #ccc; margin: 5px 0;"></div>
                                 <el-dropdown-item :command="{ member: item, perm: 0, command: 2, index }"
-                                    v-if="props.currentProject.self_perm_type === 5">
+                                    v-if="props.currentProject.self_perm_type === 5 && item.isTeam">
                                     <div style="padding: 0 16px;">转让创建者</div>
                                 </el-dropdown-item>
                                 <el-dropdown-item :command="{ member: item, perm: 0, command: 3, index }">
@@ -219,7 +284,7 @@ const transferProjectCreator = async (id: string) => {
             <div v-else>项目权限:非公开，仅通过链接邀请成员可访问</div>
         </div>
         <div v-if="props.currentProject.self_perm_type !== 5">
-            <div class="button" @click="innerVisible = true"><button>退出项目组</button></div>
+            <div class="button"><button @click="onExitProject">退出项目组</button></div>
         </div>
         <el-dialog v-model="innerVisible" width="250px" title="退出项目" append-to-body align-center
             :close-on-click-modal="false" :before-close="handleClose">
@@ -313,6 +378,7 @@ const transferProjectCreator = async (id: string) => {
         color: #fff;
         border: 1px solid var(--active-color-beta);
         border-radius: 4px;
+        outline: none;
     }
 }
 
@@ -330,6 +396,7 @@ const transferProjectCreator = async (id: string) => {
         color: #fff;
         border: 1px solid var(--active-color-beta);
         border-radius: 4px;
+        outline: none;
     }
 }
 
@@ -341,6 +408,7 @@ const transferProjectCreator = async (id: string) => {
     background-color: #9775fa;
     border-color: #9775fa;
     color: #fff;
+    outline: none;
 }
 
 .dialog-footer {

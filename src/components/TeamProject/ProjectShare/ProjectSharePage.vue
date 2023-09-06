@@ -1,0 +1,132 @@
+
+<template>
+    <div class="team">
+        <div class="team-info">
+            <div class="team-name">收到的分享项目</div>
+        </div>
+    </div>
+    <ProjectList :searchvalue="search" />
+</template>
+<script setup lang="ts">
+import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { router } from '@/router'
+import ProjectList from '@/components/TeamProject/ProjectList.vue'
+const showoverlay = ref(false)
+const itemid = ref(0)
+const route = useRoute()
+const search = ref<string>('')
+
+interface data {
+    team: {
+        id: string,
+        name: string,
+        avatar: string,
+        description: string
+    }
+}
+
+const { teamData, teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+    teamData: Ref<[{
+        team: {
+            id: string,
+            name: string,
+            avatar: string,
+            description: string
+        }
+    }]>;
+    teamID: Ref<string>;
+    teamName: Ref<string>;
+    teamAvatar: Ref<string>;
+    teamDescription: Ref<string>;
+}
+
+const avatar = computed(() => {
+    return teamAvatar.value != '' ? teamAvatar.value : teamName.value.slice(0, 1)
+})
+
+const isIdInList = (id: any, list: Array<data>) => {
+    return list.find(item => item.team.id === id) !== undefined;
+}
+
+watch(teamData, (newvalue) => {
+    const a = isIdInList(route.params.id, newvalue)
+    if (a) {
+        return
+    } else {
+        router.push({ path: '/apphome' })
+    }
+})
+
+onMounted(() => {
+})
+
+onUnmounted(() => {
+})
+</script>
+<style lang="scss" scoped>
+.nested-enter-active,
+.nested-leave-active {
+    transition: all 0.3s ease-in-out;
+}
+
+.nested-leave-active {
+    transition-delay: 0.25s;
+}
+
+.nested-enter-from,
+.nested-leave-to {
+    opacity: 0;
+}
+
+.nested-enter-active .inner,
+.nested-leave-active .inner {
+    transition: all 0.3s ease-in-out;
+}
+
+.nested-enter-active .inner {
+    transition-delay: 0.25s;
+}
+
+.nested-enter-from .inner,
+.nested-leave-to .inner {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.001;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.activate {
+    color: black;
+    border-bottom: 2px solid #9775fa;
+}
+
+
+.team {
+    display: flex;
+    margin: 16px 0px;
+    align-items: center;
+
+    .team-info {
+        display: flex;
+        flex-direction: column;
+        margin: 0 12px;
+
+        .team-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+    }
+}
+</style>

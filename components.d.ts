@@ -127,6 +127,7 @@ declare module '@vue/runtime-core' {
     ProjectMemberg: typeof import('./src/components/TeamProject/ProjectFill/ProjectMemberg.vue')['default']
     ProjectPage: typeof import('./src/components/TeamProject/ProjectPage.vue')['default']
     ProjectRecycleBin: typeof import('./src/components/TeamProject/ProjectFill/ProjectRecycleBin.vue')['default']
+    ProjectSharePage: typeof import('./src/components/TeamProject/ProjectShare/ProjectSharePage.vue')['default']
     Radius: typeof import('./src/components/Document/Attribute/Radius.vue')['default']
     RadiusForIos: typeof import('./src/components/Document/Attribute/PopoverMenu/RadiusForIos.vue')['default']
     Readonly: typeof import('./src/components/Document/Selection/Controller/Readonly.vue')['default']

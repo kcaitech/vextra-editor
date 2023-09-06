@@ -60,5 +60,6 @@ watch(() => props.dialogVisible, (newvalue) => {
         color: #fff;
         border: 1px solid var(--active-color-beta);
         border-radius: 4px;
+        outline: none;
     }
 }</style>

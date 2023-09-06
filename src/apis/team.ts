@@ -141,6 +141,16 @@ export function getProjectMemberListAPI(params = {}, ops = {}) {
     })
 }
 
+//获取团队成员列表
+export function getTeamMemberListAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/member/list',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
 //退出项目
 export function exitProjectAPI(params = {}, ops = {}) {
     return httpRequest({

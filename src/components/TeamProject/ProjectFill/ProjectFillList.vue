@@ -1,6 +1,6 @@
 
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument" type="project"
+    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''"
         @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
@@ -57,7 +57,7 @@ const docUserId = ref('')
 const noNetwork = ref(false)
 const lists = ref<any[]>([])
 const userInfo = ref<UserInfo | undefined>()
-const iconlists = ref(['star', 'share', 'delete'])
+const iconlists = ref(['star', 'share', 'delete']);
 
 //获取服务器我的文件列表
 async function getDoucment() {

@@ -25,6 +25,7 @@ import { ref, onUnmounted, provide } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
+import * as user_api from '@/apis/users'
 const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 const searchtitle = ref('')
@@ -39,8 +40,8 @@ const teamSelfPermType = ref<number>()
 const teamData = ref<any[]>([]) //储存团队列表
 const updatestate = ref(false) //控制aside组件中的团队列表请求
 const updateprojectlist = ref(false)  //控制projectlist组件中的项目列表请求
-const projectList =  ref<any[]>([]);
-const favoriteList =  ref<any[]>([]);
+const projectList = ref<any[]>([]);
+const favoriteList = ref<any[]>([]);
 const is_favor = ref<boolean>();
 const is_team_upodate = ref<boolean>(false);
 
@@ -54,7 +55,7 @@ const updateShareData = (id: string, name: string, avatar: string, description: 
 
 //用于改变updatestate的值
 const state = (b: boolean) => {
-  updatestate.value = b 
+  updatestate.value = b
 }
 
 const updateFavor = (s: boolean) => {
@@ -80,6 +81,23 @@ const favoriteListsData = (data: any[]) => {
 //用于改变updateprojectlist的值
 const updateprojectliststate = (b: boolean) => {
   updateprojectlist.value = b
+}
+const GetprojectLists = async () => {
+  try {
+    const { data } = await user_api.GetprojectLists()
+    const project = favoriteProjectList(data, favoriteList.value)
+    saveProjectData(project)
+  } catch (error) {
+    console.log(error);
+  }
+}
+GetprojectLists();
+const favoriteProjectList = (arr1: any[], arr2: any[]) => {
+  const projectList = arr1.map(item => {
+    item.is_favor = arr2.some(value => value.project.id === item.project.id)
+    return item;
+  })
+  return projectList;
 }
 
 provide('shareData', {

@@ -6,14 +6,11 @@
             <div class="join" v-if="switchstate">
                 <p>
                     申请加入项目：<strong>{{ projectInfo.name }}</strong>
-                    <span>（权限：<strong>{{ permission[projectInfo.self_perm_type] }}</strong>）</span>
+                    <span>（权限：<strong>{{ permission[projectInfo.invited_perm_type] }}</strong>）</span>
                 </p>
                 <p>加入项目后，可访问该项目中的所有文件、资源</p>
                 <button type="button" @click.stop="appluJoinProject" v-if="!isApply">申请加入</button>
                 <p v-else>已发送申请，{{ time }}s即将进入应用首页，待审批通过后，可查看该项目内容</p>
-            </div>
-            <div class="offtips" v-else-if="projectInfo.self_perm_type === null">
-                <p>您还未加入该项目的团队</p>
             </div>
             <div class="offtips" v-else>
                 <p>项目邀请已关闭，如需加入项目，请联系项目管理员处理。</p>
@@ -44,8 +41,6 @@ const getProjectInvitedInfo = async () => {
         if (data.self_perm_type >= data.invited_perm_type) {
             router.push({ path: '/apphome/project/' + route.query.id });
         }
-        console.log(projectInfo.value,'projectInfo.value');
-        
     } catch (error) {
         console.log(error);
     }
