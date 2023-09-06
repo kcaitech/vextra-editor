@@ -162,7 +162,7 @@ const skipProject = (id: string) => {
     teamData.value.find((item, index) => {
         if (item.team.id === route.params.id) {
             updateActiveNames(index)
-            addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))        
+            addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
             return
         }
     })
@@ -190,7 +190,7 @@ const cancelFixed = (id: string, state: boolean, index: number) => {
 }
 
 onMounted(() => {
-    if(!teamprojectlist.value) {
+    if (!teamprojectlist.value) {
         GetprojectLists();
     }
 })
