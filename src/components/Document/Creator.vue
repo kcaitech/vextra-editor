@@ -92,7 +92,9 @@ function up(e: MouseEvent) {
     } else if (props.context.tool.action.startsWith('add')) {
         const action = props.context.tool.action;
         if (action === Action.AddComment) return addComment(e);
-        init_insert_shape(props.context, page_xy_1, t);
+        if (action !== Action.AddContact && action !== Action.AddTable) {
+            init_insert_shape(props.context, page_xy_1, t);
+        }
     }
     isDrag = false, just_search = false;
     document.removeEventListener("mousemove", move);
@@ -270,7 +272,6 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     ac.contact_to(p);
 }
 // #endregion
-
 function modify_page_xy_1(e: MouseEvent) {
     const { x, y } = props.context.workspace.root;
     matrix1 = new Matrix(props.context.workspace.matrix.inverse);
@@ -399,8 +400,10 @@ function shapeCreateEnd() {
 function removeCreator() {
     if (asyncCreator) asyncCreator = asyncCreator.close();
     props.context.workspace.creating(false);
-    props.context.tool.setAction(Action.AutoV);
-    props.context.cursor.setType("auto-0");
+    if (props.context.tool.action !== Action.AddContact) {
+        props.context.tool.setAction(Action.AutoV);
+        props.context.cursor.setType("auto-0");
+    }
 }
 
 function windowBlur() {
