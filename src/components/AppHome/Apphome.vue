@@ -44,6 +44,8 @@ const projectList = ref<any[]>([]);
 const favoriteList = ref<any[]>([]);
 const is_favor = ref<boolean>();
 const is_team_upodate = ref<boolean>(false);
+const activeNames = ref<any[]>([-1])
+const targetItem = ref<any[]>([])
 
 const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {
   teamID.value = id
@@ -52,6 +54,17 @@ const updateShareData = (id: string, name: string, avatar: string, description: 
   teamDescription.value = description
   teamSelfPermType.value = selfpermtype
 }
+
+//添加targetitem的值
+const addTargetItem = (data: any[]) => {
+  targetItem.value = data
+}
+
+//用户改变activeNames的值
+const updateActiveNames = (n: number) => {
+  activeNames.value.push(n)
+}
+
 
 //用于改变updatestate的值
 const state = (b: boolean) => {
@@ -106,21 +119,34 @@ provide('shareData', {
   teamAvatar,
   teamDescription,
   teamSelfPermType,
-  updatestate,
   updateShareData,
+  //
+  updatestate,
   state,
-  updateprojectlist,
-  upDateTeamData,
-  updateprojectliststate,
-  saveProjectData,
-  favoriteListsData,
-  projectList,
+  //
   teamData,
+  upDateTeamData,
+  //
+  updateprojectlist,
+  updateprojectliststate,
+  //
+  projectList,
+  saveProjectData,
+  //
   favoriteList,
-  updateFavor,
+  favoriteListsData,
+  //
   is_favor,
+  updateFavor,
+  //
   is_team_upodate,
-  teamUpdate
+  teamUpdate,
+  //
+  activeNames,
+  updateActiveNames,
+  //
+  targetItem,
+  addTargetItem
 })
 
 function setTitle(t: string) {

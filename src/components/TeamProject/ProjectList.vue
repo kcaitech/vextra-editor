@@ -6,8 +6,8 @@
             </div>
             <div class="main">
                 <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
-                    v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList"
-                    :key="item.project.id" @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)">
+                    v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList" :key="item.project.id"
+                    @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)">
                     <div class="project-name">{{ item.project.name }}</div>
                     <div class="project-description">{{ item.project.description }}</div>
                     <div class="project-creator">{{ item.creator.nickname }}</div>
@@ -70,7 +70,7 @@ const props = withDefaults(defineProps<Props>(), {
     searchvalue: ''
 })
 
-const { teamID, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor } = inject('shareData') as {
+const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor, updateActiveNames, addTargetItem } = inject('shareData') as {
     updateprojectlist: Ref<boolean>;
     updateprojectliststate: (b: boolean) => void;
     teamID: Ref<string>;
@@ -79,6 +79,16 @@ const { teamID, updateprojectlist, updateprojectliststate, projectList, saveProj
     saveProjectData: (data: any[]) => void;
     is_favor: Ref<boolean>;
     updateFavor: (b: boolean) => void;
+    updateActiveNames: (n: number) => void;
+    teamData: Ref<[{
+        team: {
+            id: string,
+            name: string,
+            avatar: string,
+            description: string
+        }
+    }]>;
+    addTargetItem: (data: any[]) => void;
 };
 
 const favoriteProjectList = (arr1: any[], arr2: any[]) => {
@@ -149,6 +159,13 @@ const SearchList = computed(() => {
 })
 
 const skipProject = (id: string) => {
+    teamData.value.find((item, index) => {
+        if (item.team.id === route.params.id) {
+            updateActiveNames(index)
+            addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))        
+            return
+        }
+    })
     router.push({ path: '/apphome/project/' + id });
 }
 
