@@ -39,7 +39,7 @@ import { ElMessage } from 'element-plus'
 interface teaminfotype {
     invited_perm_type: number,
     self_perm_type: number,
-    invited_switch: boolean
+    invited_switch: boolean,
 }
 
 const { t } = useI18n();
