@@ -75,7 +75,7 @@ function mousedown(e: MouseEvent) {
     document.addEventListener('mouseup', mouseup);
 }
 function mousemove(e: MouseEvent) {
-    if (isDrag()) visible.value = false;
+    // if (isDrag()) visible.value = false;
 }
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);

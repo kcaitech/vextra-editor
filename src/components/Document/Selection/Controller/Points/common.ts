@@ -1,5 +1,5 @@
 import { getHorizontalAngle } from "@/utils/common"
-import { CtrlElementType, Matrix, Point2D, Shape } from "@kcdesign/data"
+import { ContactShape, CtrlElementType, Matrix, Point2D, Shape } from "@kcdesign/data"
 
 
 interface Dot {
@@ -120,8 +120,8 @@ export function get_conact_by_point(s: Shape, matrix: Matrix) {
     }
     return points;
 }
-export function get_apexs(s: Shape, matrix: Matrix) {
-    const raw_p = s.points, m = new Matrix(matrix);
+export function get_apexs(s: ContactShape, matrix: Matrix) {
+    const raw_p = s.getPoints(), m = new Matrix(matrix);
     if (!raw_p || raw_p.length < 2) return false;
     if (!raw_p[0].point || !raw_p[raw_p.length - 1].point) return false;
     m.preScale(s.frame.width, s.frame.height);

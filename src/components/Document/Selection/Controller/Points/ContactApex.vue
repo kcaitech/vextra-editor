@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncPathEditor, Matrix, Shape } from '@kcdesign/data';
+import { AsyncPathEditor, ContactShape, Matrix, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -37,7 +37,7 @@ function update() {
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     apex.value = false;
-    const result = get_apexs(props.shape, matrix);
+    const result = get_apexs(props.shape as ContactShape, matrix);
     if (!result) return;
     apex.value = true, apex1 = result.apex1, apex2 = result.apex2
 }
