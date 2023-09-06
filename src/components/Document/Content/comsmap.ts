@@ -21,7 +21,7 @@ comsMap.set(ShapeType.Path, ShapePath);
 comsMap.set(ShapeType.Path2, ShapePath);
 comsMap.set(ShapeType.Rectangle, Rectangle);
 comsMap.set(ShapeType.Text, TextView);
-comsMap.set(ShapeType.Symbol, ShapeGroup);
+// comsMap.set(ShapeType.Symbol, ShapeGroup);
 comsMap.set(ShapeType.SymbolRef, SymbolRef);
 comsMap.set(ShapeType.Line, Line);
 comsMap.set(ShapeType.Table, ShapeTable);

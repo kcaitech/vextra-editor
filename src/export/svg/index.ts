@@ -73,9 +73,9 @@ comsMap.set(ShapeType.Text, (data: Shape, overrides?: OverridesGetter) => {
 // comsMap.set(ShapeType.Boolean, (data: Shape, path: string) => { // todo
 //     return bool(h, data, path);
 // });
-comsMap.set(ShapeType.Symbol, (data: Shape, overrides?: OverridesGetter) => {
-    return group(h, data as GroupShape, comsMap, overrides);
-});
+// comsMap.set(ShapeType.Symbol, (data: Shape, overrides?: OverridesGetter) => {
+//     return group(h, data as GroupShape, comsMap, overrides);
+// });
 comsMap.set(ShapeType.SymbolRef, (data: Shape, overrides?: OverridesGetter) => {
     return symref(h, data as SymbolRefShape, comsMap);
 });
