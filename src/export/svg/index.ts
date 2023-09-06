@@ -1,4 +1,4 @@
-import { GroupShape, ImageShape, PathShape, Shape, FlattenShape, SymbolRefShape, TextShape, OverridesGetter } from "@kcdesign/data";
+import { GroupShape, ImageShape, PathShape, Shape, SymbolRefShape, TextShape, OverridesGetter } from "@kcdesign/data";
 import { Artboard } from "@kcdesign/data";
 import { renderArtboard as art } from "@kcdesign/data";
 import { renderGroup as group } from "@kcdesign/data";
@@ -50,9 +50,9 @@ comsMap.set(ShapeType.Artboard, (data: Shape, overrides?: OverridesGetter) => {
 comsMap.set(ShapeType.Group, (data: Shape, overrides?: OverridesGetter) => {
     return group(h, data as GroupShape, comsMap, overrides);
 });
-comsMap.set(ShapeType.FlattenShape, (data: Shape, overrides?: OverridesGetter) => {
-    return shapegroup(h, data as FlattenShape);
-});
+// comsMap.set(ShapeType.FlattenShape, (data: Shape, overrides?: OverridesGetter) => {
+//     return shapegroup(h, data as FlattenShape);
+// });
 comsMap.set(ShapeType.Image, (data: Shape, overrides?: OverridesGetter) => {
     const s = data as ImageShape;
     const url = s.peekImage() || "";

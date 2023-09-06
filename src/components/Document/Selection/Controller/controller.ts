@@ -88,7 +88,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const selected = context.selection.selectedShapes;
         if (selected.length !== 1) return;
         const shape = selected[0];
-        if ([ShapeType.Group, ShapeType.FlattenShape].includes(shape.type)) {
+        if ([ShapeType.Group].includes(shape.type)) {
             const scope = (shape as GroupShape).childs;
             const scout = context.selection.scout;
             if (!scout) return;
