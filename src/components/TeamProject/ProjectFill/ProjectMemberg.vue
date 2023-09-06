@@ -4,7 +4,6 @@ import { ref, nextTick } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
 import { useI18n } from 'vue-i18n';
-import { promises } from 'original-fs';
 const { t } = useI18n();
 const props = defineProps<{
     projectMembergDialog: boolean
@@ -20,6 +19,8 @@ const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, 
 const permList = ref(['全部', '创建者', '管理员', `${t('share.editable')}`, `${t('share.reviewable')}`, `${t('share.readOnly')}`])
 const permFilter = ref(0);
 const memberList2 = ref<any[]>([]);
+const transferVisible = ref(false);
+const memberInfo = ref<any>({});
 const getProjectMemberList = async () => {
     try {
         const { data } = await team_api.getProjectMemberListAPI({ project_id: props.currentProject.project.id });
@@ -59,22 +60,50 @@ const handleCommand = (command: number) => {
     }
 }
 
-const handleCommandPerm = (command: number) => {
+const handleCommandPerm = (data: any) => {
+    const { member, perm, command, index } = data;
+    const params = { project_id: props.currentProject.project.id, user_id: member.user.id, perm_type: perm };
+    const del_params = { project_id: props.currentProject.project.id, user_id: member.user.id };
+    const i = memberList2.value.findIndex(item => item.user.id === member.user.id);
     switch (command) {
         case 1:
+            if (command === 1) {
+                setProjectmemberPerm(params);
+                memberList.value[index].perm_type = perm;
+                memberList2.value[i].perm_type = perm;
+            }
             break;
         case 2:
+            if (command === 2) {
+                transferVisible.value = true;
+                memberInfo.value = data;
+            }
             break;
         case 3:
-            break;
-        case 4:
-            break;
-        case 5:
-            break;
-        case 6:
+            if (command === 3) {
+                delProjectmember(del_params);
+                memberList.value.splice(index, 1);
+                memberList2.value.splice(i, 1);
+            }
             break;
         default:
             break
+    }
+}
+
+const setProjectmemberPerm = async (params: { project_id: string, user_id: string, perm_type: number }) => {
+    try {
+        await team_api.setProjectmemberPermAPI(params)
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const delProjectmember = async (params: { project_id: string, user_id: string }) => {
+    try {
+        await team_api.delProjectmemberAPI(params)
+    } catch (err) {
+        console.log(err);
     }
 }
 
@@ -87,6 +116,9 @@ const close = () => {
 const handleClose = () => {
     innerVisible.value = false;
 }
+const transferClose = () => {
+    transferVisible.value = false;
+}
 const quitProject = () => {
     innerVisible.value = false;
     exitProject();
@@ -95,6 +127,26 @@ const quitProject = () => {
 const exitProject = async () => {
     try {
         await team_api.exitProjectAPI({ project_id: props.currentProject.project.id })
+    } catch (err) {
+        console.log(err);
+    }
+}
+const transferProject = () => {
+    const { member, perm, index } = memberInfo.value;
+    const i = memberList2.value.findIndex(item => item.user.id === member.user.id);
+    const creatori2 = memberList2.value.findIndex(item => item.perm_type === 5);
+    const creatori = memberList.value.findIndex(item => item.perm_type === 5);
+    memberList.value[creatori].perm_type = 4;
+    memberList2.value[creatori2].perm_type = 4;
+    memberList.value[index].perm_type = 5;
+    memberList2.value[i].perm_type = 5;
+    transferProjectCreator(member.user.id);
+    transferVisible.value = false;
+}
+
+const transferProjectCreator = async (id: string) => {
+    try {
+        await team_api.transferProjectCreatorAPI({ project_id: props.currentProject.project.id, user_id: id })
     } catch (err) {
         console.log(err);
     }
@@ -112,10 +164,12 @@ const exitProject = async () => {
                 <template #dropdown>
                     <el-dropdown-menu>
                         <el-dropdown-item v-for="(item, index) in permList" :key="item" :command="index">
-                            <el-icon>
-                                <Check v-if="permFilter === index" />
-                            </el-icon>
-                            <div style="padding: 0 16px;">{{ item }}</div>
+                            <div style="padding: 0 16px;">
+                                <el-icon>
+                                    <Check v-if="permFilter === index" />
+                                </el-icon>
+                                {{ item }}
+                            </div>
                         </el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
@@ -125,7 +179,7 @@ const exitProject = async () => {
             <el-scrollbar height="250px">
                 <div class="member-item" v-for="(item, index) in memberList" :key="index">
                     <div class="name">{{ item.user.nickname }}</div>
-                    <el-dropdown trigger="click" :hide-on-click="false" @command="handleCommandPerm"
+                    <el-dropdown trigger="click" @command="handleCommandPerm"
                         :disabled="!(props.currentProject.self_perm_type !== 5 || props.currentProject.self_perm_type !== 4) || item.perm_type === 5">
                         <span class="el-dropdown-link">
                             {{ permission[item.perm_type] }}<el-icon class="el-icon--right"><arrow-down
@@ -133,25 +187,25 @@ const exitProject = async () => {
                         </span>
                         <template #dropdown>
                             <el-dropdown-menu>
-                                <el-dropdown-item :command="1" v-if="props.currentProject.self_perm_type === 5">
+                                <el-dropdown-item :command="{ member: item, perm: 4, command: 1, index }"
+                                    v-if="props.currentProject.self_perm_type === 5">
                                     <div style="padding: 0 16px;">管理员</div>
                                 </el-dropdown-item>
-                                <el-dropdown-item :command="2">
+                                <el-dropdown-item :command="{ member: item, perm: 3, command: 1, index }">
                                     <div style="padding: 0 16px;">可编辑</div>
                                 </el-dropdown-item>
-                                <el-dropdown-item :command="3">
+                                <el-dropdown-item :command="{ member: item, perm: 2, command: 1, index }">
                                     <div style="padding: 0 16px;">可评论</div>
                                 </el-dropdown-item>
-                                <el-dropdown-item :command="4">
+                                <el-dropdown-item :command="{ member: item, perm: 1, command: 1, index }">
                                     <div style="padding: 0 16px;">仅阅读</div>
                                 </el-dropdown-item>
-                                <el-dropdown-item>
-                                    <div style="width: 120px; height: 1px; background-color: #ccc;"></div>
-                                </el-dropdown-item>
-                                <el-dropdown-item :command="5" v-if="props.currentProject.self_perm_type === 5">
+                                <div style="width: 120px; height: 1px; background-color: #ccc; margin: 5px 0;"></div>
+                                <el-dropdown-item :command="{ member: item, perm: 0, command: 2, index }"
+                                    v-if="props.currentProject.self_perm_type === 5">
                                     <div style="padding: 0 16px;">转让创建者</div>
                                 </el-dropdown-item>
-                                <el-dropdown-item :command="6">
+                                <el-dropdown-item :command="{ member: item, perm: 0, command: 3, index }">
                                     <div style="padding: 0 16px;">移出项目组</div>
                                 </el-dropdown-item>
                             </el-dropdown-menu>
@@ -174,8 +228,22 @@ const exitProject = async () => {
             </div>
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button class="quit" @click="quitProject">退出</el-button>
+                    <el-button class="quit" @click="quitProject">任然退出</el-button>
                     <el-button class="quit" @click="innerVisible = false">
+                        取消
+                    </el-button>
+                </div>
+            </template>
+        </el-dialog>
+        <el-dialog v-model="transferVisible" width="250px" title="退出项目" append-to-body align-center
+            :close-on-click-modal="false" :before-close="transferClose">
+            <div class="context">
+                转让创建者权限后，您将不再拥有该项目，后续作为管理员留在项目中。
+            </div>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button class="quit" @click="transferProject">确定转让</el-button>
+                    <el-button class="quit" @click="transferVisible = false">
                         取消
                     </el-button>
                 </div>

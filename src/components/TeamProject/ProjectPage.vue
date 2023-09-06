@@ -43,21 +43,21 @@
     <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
     <ProjectRecycleBin v-if="itemid === 1" :currentProject="currentProject[0]"></ProjectRecycleBin>
     <ProjectAccessSetting title="邀请项目成员" :dialog-visible="projectSettingDialog" width="500px" @clodeDialog="projectSettingDialog = false">
-        <div class="project_type">
+        <div class="project_type" v-if="currentProject[0]">
             <p>项目类型</p>
             <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
                 :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
                 <el-option v-for="item in projectOptions" :key="item.value" :label="item.label" :value="item.label" />
             </el-select>
         </div>
-        <div class="project_type">
+        <div class="project_type" v-if="currentProject[0]">
             <p>权限</p>
             <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
                 :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
                 <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
             </el-select>
         </div>
-        <div v-if="projectType === projectOptions[1].label">
+        <div v-if="currentProject[0] && projectType === projectOptions[1].label">
             <div>点击链接或扫描二维码申请加入</div>
             <div class="share-switch"
                 :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
@@ -182,6 +182,9 @@ const showMembergDialog = () => {
 }
 const closeDialog = () => {
     projectMembergDialog.value = false;
+}
+const closeSetting = () => {
+    projectSettingDialog.value = false;
 }
 const exitProject = (id: string) => {
     projectMembergDialog.value = false;

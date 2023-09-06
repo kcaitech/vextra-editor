@@ -150,3 +150,33 @@ export function exitProjectAPI(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//设置项目成员权限
+export function setProjectmemberPermAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/member/perm',
+        method: 'put',
+        data: params,
+        ...ops
+    })
+}
+
+//将成员移出项目组
+export function delProjectmemberAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/member',
+        method: 'delete',
+        params: params,
+        ...ops
+    })
+}
+
+//转让项目创建者
+export function transferProjectCreatorAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/creator',
+        method: 'put',
+        data: params,
+        ...ops
+    })
+}
