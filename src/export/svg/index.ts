@@ -65,7 +65,8 @@ comsMap.set(ShapeType.Path, (data: Shape, overrides?: OverridesGetter) => {
     return path(h, data as PathShape);
 });
 comsMap.set(ShapeType.Rectangle, (data: Shape, overrides?: OverridesGetter) => {
-    return rect(h, data);
+    const override = overrides?.getOverrid(data.id);
+    return rect(h, data, override);
 });
 comsMap.set(ShapeType.Text, (data: Shape, overrides?: OverridesGetter) => {
     return text(h, data as TextShape);
