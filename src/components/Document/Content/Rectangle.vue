@@ -2,7 +2,6 @@
 import { OverrideShape, OverridesGetter, Shape } from '@kcdesign/data';
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { renderRecShape as r } from "@kcdesign/data";
-import { asyncLoadFillImages } from './common';
 
 const props = defineProps<{ data: Shape, overrides?: OverridesGetter }>();
 const reflush = ref(0);
@@ -21,17 +20,13 @@ const overridesWatcher = () => {
         override = props.overrides?.getOverrid(props.data.id);
         if (override) {
             override.watch(watcher);
-            stopFillWatch2 = override && asyncLoadFillImages(override, reflush);
         }
     }
 }
 
-let stopFillWatch2 = override && asyncLoadFillImages(override, reflush);
-
 watch(() => props.overrides, (val, old) => {
     if (override) {
         override.unwatch(watcher);
-        if (stopFillWatch2) stopFillWatch2();
     }
     override = undefined;
     if (old) old.unwatch(overridesWatcher);
@@ -40,18 +35,14 @@ watch(() => props.overrides, (val, old) => {
         override = val.getOverrid(props.data.id);
         if (override) {
             override.watch(watcher);
-            stopFillWatch2 = override && asyncLoadFillImages(override, reflush);
         }
     }
 })
 
-let stopFillWatch = asyncLoadFillImages(props.data, reflush);
 const watcher = () => {
     reflush.value++;
 }
 watch(() => props.data, (value, old) => {
-    stopFillWatch();
-    stopFillWatch = asyncLoadFillImages(value, reflush);
     old.unwatch(watcher);
     value.watch(watcher);
 })
@@ -61,8 +52,6 @@ onMounted(() => {
     props.data.watch(watcher);
 })
 onUnmounted(() => {
-    stopFillWatch();
-    if (stopFillWatch2) stopFillWatch2();
     props.data.unwatch(watcher);
     if (override) override.unwatch(watcher);
     if (props.overrides) props.overrides.unwatch(overridesWatcher);
