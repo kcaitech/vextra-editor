@@ -46,7 +46,7 @@ const projectShareList = ref<any[]>([]);
 const activeShare = ref([0]);
 const is_share = ref(false);
 
-const { updatestate, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, is_favor,
+const { updatestate, updateActiveNames, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, addTargetItem, is_favor,
     projectList, is_team_upodate, teamData, activeNames, targetItem, favoriteList } = inject('shareData') as {
         updatestate: Ref<boolean>;
         is_favor: Ref<boolean>;
@@ -247,19 +247,32 @@ const shareFixed = (i: number, id: string) => {
     updateFavor(!is_favor.value);
 }
 
+// const test1 = ref(true)
+
+// watch(targetItem, () => {
+//     if (targetItem.value.length < 1) {
+//         test1.value = false
+//     } else {
+//         test1.value = true
+//     }
+// })
+
 const showicon = (data: any) => {
     if (data.children) {
         return true
-    } else if (targetItem.value.length > 0) {
+     } 
+    else if (targetItem.value.length > 0) {
         if (targetItem.value[0].project.team_id === data.team.id) {
             return true
-        }else{
+        } else {
             return false
         }
-    } else {
+     } 
+     else {
         return false
     }
 }
+
 
 watch(route, (v) => {
     if (v.name === 'ProjectShare') {
@@ -267,7 +280,12 @@ watch(route, (v) => {
     } else {
         is_share.value = false;
     }
-})
+    if (targetItem.value.length > 0) {
+        if (v.params.id != targetItem.value[0].project.id) {
+            addTargetItem([])
+        }
+    }
+}, { deep: true })
 
 const listss = ref<any[]>([])
 
@@ -278,9 +296,22 @@ watchEffect(() => {
     }
 })
 
+watchEffect(() => {
+    if (route.name === 'ProjectPage') {
+        const index = projectList.value.filter(item => {
+            if (item.project.id === route.params.id) {
+                return item.project.team_id
+            }
+        }).map(obj => obj.project.team_id)
+        updateActiveNames(teamData.value.findIndex(item => item.team.id === index[0]))
+        addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
+    }
+})
+
 onMounted(() => {
     GetteamList();
     getProjectFavoriteLists();
+
 })
 
 onUnmounted(() => {
@@ -439,18 +470,21 @@ onUnmounted(() => {
                                 </div>
                             </template>
                             <template v-for="(target, n) in targetItem" :key="n">
-                                <div v-if="(target.project.team_id === data.team.id) && !listss.includes(target.project.id) && isProjectActive(target.project.id)"
-                                    class="project" @click.stop="skipProject(target.project.id)"
-                                    :class="{ 'is_active': isProjectActive(target.project.id) }">
-                                    <div>
-                                        <div>{{ target.project.name }}</div>
-                                        <div class="right" @click.stop="newProjectFile(target.project.id)">
-                                            <svg-icon icon-class="close"
-                                                style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                <transition name="el-zoom-in-top">
+                                    <div v-if="(target.project.team_id === data.team.id) && !listss.includes(target.project.id)"
+                                        class="project" @click.stop="skipProject(target.project.id)"
+                                        :class="{ 'is_active': isProjectActive(target.project.id) }">
+                                        <div>
+                                            <div>{{ target.project.name }}</div>
+                                            <div class="right" @click.stop="newProjectFile(target.project.id)">
+                                                <svg-icon icon-class="close"
+                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </transition>
                             </template>
+
                         </el-collapse-item>
                     </el-collapse>
                 </div>

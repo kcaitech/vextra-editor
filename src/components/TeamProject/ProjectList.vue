@@ -7,7 +7,8 @@
             <div class="main">
                 <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
                     v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList" :key="item.project.id"
-                    @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)">
+                    @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)"
+                    @contextmenu="rightmenu($event, item)">
                     <div class="project-name">{{ item.project.name }}</div>
                     <div class="project-description">{{ item.project.description }}</div>
                     <div class="project-creator">{{ item.creator.nickname }}</div>
@@ -39,21 +40,26 @@
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
+    <listrightmenu :items="updateitems" :data="mydata" />
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, watchEffect, onMounted, ref, watch } from 'vue';
+import { Ref, computed, inject, watchEffect, onMounted, ref, watch, nextTick } from 'vue';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
-import { Operation } from '@element-plus/icons-vue'
 import * as team_api from '@/apis/team'
+import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 
 interface Props {
     searchvalue?: string
 }
+
+const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed', 'deleteproject'])
+const updateitems = ref(items.value)
+const mydata = ref()
 const route = useRoute();
 const showbutton = ref(false)
 const noNetwork = ref(false)
@@ -117,6 +123,48 @@ const GetprojectLists = async () => {
     } catch (error) {
         noNetwork.value = true
     }
+}
+
+function filterItemsByIndexes(sourceArray: any, indexesToDelete: any) {
+    return sourceArray.filter((_: any, index: number) => !indexesToDelete.includes(index));
+}
+
+function updateItemsBasedOnFavor(data: any, sourceItems: any) {
+    let updateItems = [...sourceItems]
+    if (data.is_favor) {
+        updateItems = filterItemsByIndexes(updateItems, [3]);
+    } else {
+        updateItems = filterItemsByIndexes(updateItems, [4]);
+    }
+
+    if (data.self_perm_type < 4) {
+        updateItems = filterItemsByIndexes(updateItems, [0, 1, 2]);
+    }
+
+    return updateItems;
+}
+
+
+//右键菜单入口
+const rightmenu = (e: MouseEvent, data: any) => {
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const rightmenu: any = document.querySelector('.rightmenu')
+    const top = e.pageY
+    const left = e.pageX
+    nextTick(() => {
+        const width = rightmenu.clientWidth
+        const height = rightmenu.clientHeight
+        rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
+        rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
+    })
+
+    if ((e.target as HTMLElement).closest('.project-item')) {
+        rightmenu.style.display = 'block'
+    }
+    updateitems.value = updateItemsBasedOnFavor(data, items.value);
+    mydata.value = data
+    selectid.value = data.project.id
 }
 
 //监听updateprojectlist的值，为true的时候，重新获取列表，然后调用updateprojectliststate重新设为false

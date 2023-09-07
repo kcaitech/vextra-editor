@@ -75,8 +75,12 @@ enum rightmenuitem {
     removefile = 'removefile',
     exit_share = 'exit_share',
     completely_delete = 'completely_delete',
-    restore = 'restore'
-
+    restore = 'restore',
+    projectset = 'projectset',
+    memberset = 'memberset',
+    setfixed = 'setfixed',
+    cancelfixed = 'cancelfixed',
+    deleteproject = 'deleteproject'
 }
 
 const itemcontent = (item: string) => {
@@ -103,13 +107,23 @@ const itemcontent = (item: string) => {
             return t('homerightmenu.restore')
         case rightmenuitem.completely_delete:
             return t('homerightmenu.completely_delete')
+        case rightmenuitem.projectset:
+            return '项目访问设置'
+        case rightmenuitem.memberset:
+            return '成员权限设置'
+        case rightmenuitem.setfixed:
+            return '固定项目'
+        case rightmenuitem.cancelfixed:
+            return '取消固定'
+        case rightmenuitem.deleteproject:
+            return '删除项目'
         default:
             return ''
     }
 }
 
 const EventHandler = (item: string) => {
-    if(!props.data) return;
+    if (!props.data) return;
     const { document: { id, name } } = props.data
     if (item === rightmenuitem.open) {
         emits('ropen', id) //右键打开 
@@ -194,7 +208,7 @@ const rrename = (name: string) => {
 
 //重命名
 const rename1 = async () => {
-    if(!props.data) return;
+    if (!props.data) return;
     const { document: { id, name } } = props.data
     newname.value = renameinput.value?.value
     if (newname.value == '') return
@@ -251,11 +265,11 @@ const rRemovehistory = (data: data) => {
 }
 
 //右键退出共享
-const rExitshare=(data:data)=>{
+const rExitshare = (data: data) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-    emits('rExitshare',data)
+    emits('rExitshare', data)
 }
 
 //右键还原对应文件
@@ -267,7 +281,7 @@ const rRestorefile = (data: data) => {
 }
 
 //右键删除对应文件
-const rDeletefile = (data:data) => {
+const rDeletefile = (data: data) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
