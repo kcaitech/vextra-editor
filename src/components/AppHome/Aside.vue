@@ -46,8 +46,8 @@ const projectShareList = ref<any[]>([]);
 const activeShare = ref([0]);
 const is_share = ref(false);
 
-const { updatestate, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, is_favor,
-    projectList, is_team_upodate, teamData, activeNames, targetItem, addTargetItem, favoriteList } = inject('shareData') as {
+const { updatestate, is_favor, projectList, is_team_upodate, teamData, activeNames, targetItem, favoriteList, updateActiveNames,
+    updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, addTargetItem } = inject('shareData') as {
         updatestate: Ref<boolean>;
         is_favor: Ref<boolean>;
         is_team_upodate: Ref<boolean>;
@@ -187,7 +187,7 @@ watch(updatestate, (newvalue) => {
 })
 
 watch(() => favoriteList.value.length, (n, v) => {
-    if(v > n) {
+    if (v > n) {
         teamList.value = mergeArrays(teamDataList.value, favoriteList.value);
         projectShareList.value = favoriteList.value.filter((item: any) => !item.is_in_team);
     }
@@ -254,39 +254,71 @@ const shareFixed = (i: number, id: string) => {
     updateFavor(!is_favor.value);
 }
 
+// const test1 = ref(true)
+
+// watch(targetItem, () => {
+//     if (targetItem.value.length < 1) {
+//         test1.value = false
+//     } else {
+//         test1.value = true
+//     }
+// })
+
 const showicon = (data: any) => {
     if (data.children) {
         return true
-    } else {
+    }
+    else if (targetItem.value.length > 0) {
+        if (targetItem.value[0].project.team_id === data.team.id) {
+            return true
+        } else {
+            return false
+        }
+    }
+    else {
         return false
     }
 }
 
+
 watch(route, (v) => {
-    if(v.name === 'ProjectShare') {
+    if (v.name === 'ProjectShare') {
         is_share.value = true;
-    }else {
+    } else {
         is_share.value = false;
     }
-})
-const ishowtargetitem = (id: string) => {
-    for (let i = 0; i < teamList.value.length; i++) {
-        if (teamList.value[i].children) {
-            for (let j = 0; j < teamList.value[i].children.length; j++) {
-                if (teamList.value[i].children[j].project.id === id) {
-                    return false
-                } else {
-                    return true
-                }
-            }
+    if (targetItem.value.length > 0) {
+        if (v.params.id != targetItem.value[0].project.id) {
+            addTargetItem([])
         }
     }
-}
+}, { deep: true })
 
+const listss = ref<any[]>([])
+
+watchEffect(() => {
+    listss.value = []
+    for (let i = 0; i < favoriteList.value.length; i++) {
+        listss.value.push(favoriteList.value[i].project.id)
+    }
+})
+
+watchEffect(() => {
+    if (route.name === 'ProjectPage') {
+        const index = projectList.value.filter(item => {
+            if (item.project.id === route.params.id) {
+                return item.project.team_id
+            }
+        }).map(obj => obj.project.team_id)
+        updateActiveNames(teamData.value.findIndex(item => item.team.id === index[0]))
+        addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
+    }
+})
 
 onMounted(() => {
     GetteamList();
     getProjectFavoriteLists();
+
 })
 
 onUnmounted(() => {
@@ -444,34 +476,22 @@ onUnmounted(() => {
                                     </div>
                                 </div>
                             </template>
-                            <template v-for="(target, i) in targetItem" :key="i">
-                                <div v-if="(target.project.team_id === data.team.id) && ishowtargetitem(target.project.id)"
-                                    class="project" @click.stop="skipProject(target.project.id)"
-                                    :class="{ 'is_active': isProjectActive(target.project.id) }">
-                                    <div>
-                                        <div>{{ target.project.name }}</div>
-                                        <div class="right" @click.stop="newProjectFile(target.project.id)">
-                                            <div @click="cancelFixed(index, i, target.project.id)">
-                                                <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                                                    xmlns="http://www.w3.org/2000/svg" p-id="15755" width="20" height="20">
-                                                    <path
-                                                        d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                                        fill="#9775fa" p-id="15756"
-                                                        data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
-                                                        class=""></path>
-                                                    <path
-                                                        d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                                        fill="#FFFFFF" p-id="15757"
-                                                        data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                                        class=""></path>
-                                                </svg>
+                            <template v-for="(target, n) in targetItem" :key="n">
+                                <transition name="el-zoom-in-top">
+                                    <div v-if="(target.project.team_id === data.team.id) && !listss.includes(target.project.id)"
+                                        class="project" @click.stop="skipProject(target.project.id)"
+                                        :class="{ 'is_active': isProjectActive(target.project.id) }">
+                                        <div>
+                                            <div>{{ target.project.name }}</div>
+                                            <div class="right" @click.stop="newProjectFile(target.project.id)">
+                                                <svg-icon icon-class="close"
+                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                             </div>
-                                            <svg-icon icon-class="close"
-                                                style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                         </div>
                                     </div>
-                                </div>
+                                </transition>
                             </template>
+
                         </el-collapse-item>
                     </el-collapse>
                 </div>
