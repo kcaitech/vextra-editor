@@ -26,6 +26,8 @@ import { useI18n } from 'vue-i18n';
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
 import * as user_api from '@/apis/users'
+import * as team_api from '@/apis/users'
+ 
 const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 const searchtitle = ref('')

@@ -13,9 +13,10 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
     (e: 'exitProject', id: string, state: boolean): void;
+    (e: 'memberLength', num: number): void;
 }>();
 const route = useRoute();
-const innerVisible = ref(false)
+const innerVisible = ref(false);
 const memberList = ref<any[]>([]);
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`, '管理员', '创建者'])
 const permList = ref(['全部', '创建者', '管理员', `${t('share.editable')}`, `${t('share.reviewable')}`, `${t('share.readOnly')}`])
@@ -60,6 +61,9 @@ const getTeamMemberList = async () => {
         console.log(err);
     }
 }
+watch(() => memberList2.value.length, (v) => {
+    emit('memberLength', v)
+})
 
 watch(() => route.params.id, () => {
     nextTick(() => {

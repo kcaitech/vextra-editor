@@ -2,12 +2,26 @@
     <div class="title" v-if="currentProject[0]">
         <div class="left">
             <div class="p">
-                <p v-if="!cusname" @click="input_cusname">{{ currentProject[0].project.name }}</p>
+                <div class="title-p" v-if="!cusname">
+                    <p @dblclick="input_cusname">{{ currentProject[0].project.name }}</p>
+                    <div class="setting" @click="(e) => projectMenu(currentProject[0], e)"><el-icon
+                            style="transform: rotate(90deg); margin-right: 5px;">
+                            <MoreFilled />
+                        </el-icon>
+                        <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]" :top="20"
+                            :left="0" @cancelFixed="cancelFixed" @close="closeMenu" @projectSetting="projectSetting"
+                            @reName="input_cusname" @showMembergDialog="showMembergDialog" @delProject="onDelProject" @exitProject="onExitProject">
+                        </TeamProjectMenu>
+                    </div>
+                    <div style="padding-top: 3px;" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
+                        <svg-icon icon-class="back"></svg-icon>
+                    </div>
+                </div>
                 <input v-if="cusname" type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
                     :style="{ width: inputNameLength + 'px' }">
             </div>
             <div class="span">
-                <span v-if="!cusdesc" @click="input_cusdesc">{{ currentProject[0].project.description }}</span>
+                <span v-if="!cusdesc" @dblclick="input_cusdesc">{{ currentProject[0].project.description }}</span>
                 <input v-if="cusdesc" type="text" ref="input" @input="updateInputDescWidth" v-model="projectDesc"
                     :style="{ width: inputDescLength + 'px' }">
             </div>
@@ -85,8 +99,38 @@
     </ProjectAccessSetting>
     <div :reflush="reflush !== 0 ? reflush : undefined">
         <ProjectMemberg v-if="currentProject[0]" :projectMembergDialog="projectMembergDialog"
-            :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
+            :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"
+            @memberLength="memberLength"></ProjectMemberg>
     </div>
+    <el-dialog v-model="delVisible" width="250px" title="删除项目" align-center :close-on-click-modal="false"
+        :before-close="closeDelVisible">
+        <div class="context">
+            删除项目后，将删除项目及项目中所有文件、资料。
+        </div>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button class="quit" @click="DelProject" style="background-color: #9775fa; color: #fff;">任然删除</el-button>
+                <el-button class="quit" @click="delVisible = false">
+                    取消
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
+    <el-dialog v-model="exitVisible" width="250px" title="退出项目" align-center :close-on-click-modal="false"
+        :before-close="closeExitVisible">
+        <div class="context">
+            退出项目后，无法再访问项目中的文件，或使用项目中的资源。
+        </div>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button class="quit" @click="ExitProject"
+                    style="background-color: #9775fa; color: #fff;">任然退出</el-button>
+                <el-button class="quit" @click="exitVisible = false">
+                    取消
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 <script setup lang="ts">
 import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
@@ -96,10 +140,11 @@ import { router } from '@/router'
 import * as user_api from '@/apis/users'
 import ProjectFillList from './ProjectFill/ProjectFillList.vue';
 import ProjectRecycleBin from './ProjectFill/ProjectRecycleBin.vue';
-import { User } from '@element-plus/icons-vue';
+import { User, MoreFilled } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
 import ProjectAccessSetting from './ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
+import TeamProjectMenu from './TeamProjectMenu.vue';
 import { ElMessage } from 'element-plus';
 const { t } = useI18n()
 const itemid = ref(0)
@@ -119,6 +164,11 @@ const checked = ref(false);
 const projectSettingDialog = ref(false);
 const projectMembergDialog = ref(false);
 const sharelink = ref(``);
+const showProjecrMenu = ref(false);
+const delVisible = ref(false);
+const memberLen = ref(0);
+const exitVisible = ref(false);
+let menuItem: string[] = ['del_porject', 'visit'];
 const projectOptions = [
     {
         value: 0,
@@ -169,8 +219,107 @@ const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_te
     teamUpdate: (b: boolean) => void;
 };
 
+const closeMenu = () => {
+    showProjecrMenu.value = false;
+}
+
 const clickEvent = (index: number) => {
     itemid.value = index
+}
+
+const back = (project: any, isTeam: boolean) => {
+    if (isTeam) {
+        router.push({ path: '/apphome/teams/' + project.id });
+    } else {
+        router.push('/apphome/project_share');
+    }
+}
+const closeDelVisible = () => {
+    delVisible.value = false;
+}
+const closeExitVisible = () => {
+    exitVisible.value = false;
+}
+const onExitProject = () => {
+    exitVisible.value = true;
+}
+
+const onDelProject = () => {
+    delVisible.value = true;
+}
+
+const ExitProject = () => {
+    exitVisible.value = false;
+    const project = currentProject.value[0];
+    exitProjectApi(project.project.id);
+    const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
+    favoriteList.value.splice(f_index, 1);
+    const inshare = projectList.value.filter(item => !item.is_in_team).length;
+    if (inshare > 0) {
+        router.push('/apphome/project_share');
+    } else {
+        router.push({ name: "apphome" });
+    }
+}
+
+const exitProjectApi = async (id: string) => {
+    try {
+        await team_api.exitProjectAPI({ project_id: id })
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const DelProject = () => {
+    delVisible.value = false;
+    const project = currentProject.value[0];
+    const index = projectList.value.findIndex(item => item.project.id === project.project.id);
+    const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
+    favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
+    if (project.is_in_team) {
+        router.push({ path: '/apphome/teams/' + project.project.team_id });
+    } else {
+        const inshare = projectList.value.filter(item => !item.is_in_team).length;
+        if (inshare > 0) {
+            router.push('/apphome/project_share');
+        } else {
+            router.push({ name: "apphome" });
+        }
+    }
+    delProject(project.project.id);
+}
+
+const delProject = async (id: string) => {
+    try {
+        await team_api.delProjectAPI({ project_id: id })
+    } catch (err) {
+        console.log(err);
+
+    }
+}
+
+const projectMenu = (project: any, e: MouseEvent) => {
+    menuItem = ['visit'];
+    if (project.self_perm_type === 5 || project.self_perm_type === 4) {
+        menuItem.push('rename', 'del');
+        if (memberLen.value > 1) {
+            menuItem.push('perm');
+        }
+    }
+    if (project.is_favor) {
+        menuItem.push('no_fixed');
+    } else {
+        menuItem.push('fixed');
+    }
+    if (!project.is_in_team) {
+        menuItem.push('exit');
+    }
+    showProjecrMenu.value = true;
+}
+
+const memberLength = (len: number) => {
+    memberLen.value = len;
 }
 
 const projectSetting = () => {
@@ -192,10 +341,18 @@ const closeDialog = () => {
 
 const exitProject = (id: string, isTeam: boolean) => {
     projectMembergDialog.value = false;
+    const project = currentProject.value[0];
+    const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
+    favoriteList.value.splice(f_index, 1);
     if (isTeam) {
         router.push({ path: '/apphome/teams/' + id });
     } else {
-        router.push({ name: "apphome" })
+        const inshare = projectList.value.filter(item => !item.is_in_team).length;
+        if (inshare > 0) {
+            router.push('/apphome/project_share');
+        } else {
+            router.push({ name: "apphome" });
+        }
     }
 }
 
@@ -595,6 +752,22 @@ onMounted(() => {
         flex: 1;
 
         .p {
+            .title-p {
+                width: fit-content;
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+
+                .setting {
+                    position: relative;
+                }
+            }
+
             input {
                 font-size: 18px;
                 font-weight: bold;
@@ -616,7 +789,6 @@ onMounted(() => {
             font-size: 18px;
             font-weight: bold;
             margin: 0;
-            margin-bottom: 10px;
             padding: 5px;
             border: 2px solid transparent;
             overflow: hidden;

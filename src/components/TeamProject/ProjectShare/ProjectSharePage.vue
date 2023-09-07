@@ -5,13 +5,13 @@
             <div class="team-name">收到的分享项目</div>
         </div>
     </div>
-    <ProjectList :searchvalue="search" />
+    <ProjectShareList />
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
-import ProjectList from '@/components/TeamProject/ProjectList.vue'
+import ProjectShareList from './ProjectShareList.vue'
 const showoverlay = ref(false)
 const itemid = ref(0)
 const route = useRoute()
@@ -40,23 +40,6 @@ const { teamData, teamID, teamName, teamAvatar, teamDescription } = inject('shar
     teamAvatar: Ref<string>;
     teamDescription: Ref<string>;
 }
-
-const avatar = computed(() => {
-    return teamAvatar.value != '' ? teamAvatar.value : teamName.value.slice(0, 1)
-})
-
-const isIdInList = (id: any, list: Array<data>) => {
-    return list.find(item => item.team.id === id) !== undefined;
-}
-
-watch(teamData, (newvalue) => {
-    const a = isIdInList(route.params.id, newvalue)
-    if (a) {
-        return
-    } else {
-        router.push({ path: '/apphome' })
-    }
-})
 
 onMounted(() => {
 })

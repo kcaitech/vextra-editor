@@ -190,3 +190,13 @@ export function transferProjectCreatorAPI(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//删除项目
+export function delProjectAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project',
+        method: 'delete',
+        params: params,
+        ...ops
+    })
+}

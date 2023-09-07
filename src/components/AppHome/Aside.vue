@@ -47,7 +47,7 @@ const activeShare = ref([0]);
 const is_share = ref(false);
 
 const { updatestate, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, is_favor,
-    projectList, is_team_upodate, teamData, activeNames, targetItem, addTargetItem } = inject('shareData') as {
+    projectList, is_team_upodate, teamData, activeNames, targetItem, addTargetItem, favoriteList } = inject('shareData') as {
         updatestate: Ref<boolean>;
         is_favor: Ref<boolean>;
         is_team_upodate: Ref<boolean>;
@@ -186,6 +186,13 @@ watch(updatestate, (newvalue) => {
     }
 })
 
+watch(() => favoriteList.value.length, (n, v) => {
+    if(v > n) {
+        teamList.value = mergeArrays(teamDataList.value, favoriteList.value);
+        projectShareList.value = favoriteList.value.filter((item: any) => !item.is_in_team);
+    }
+})
+
 watch(is_favor, () => {
     const timer = setTimeout(() => {
         getProjectFavoriteLists();
@@ -213,7 +220,7 @@ const skipProject = (id: string) => {
 }
 
 const skipProjecrShare = () => {
-    router.push({ path: 'project_share' });
+    router.push('/apphome/project_share');
 }
 
 const isActive = (id: string, name: string, avatar: string, description: string, self_perm_type: number) => {

@@ -22,7 +22,7 @@ const update = (data: any, searchtitle: string) => {
     <div v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'" class="title">
         <span>{{ props.title }}</span>
     </div>
-    <el-divider v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage'" />
+    <el-divider v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'" />
     <div class="main">
         <RouterView @data-update="update" />
     </div>
