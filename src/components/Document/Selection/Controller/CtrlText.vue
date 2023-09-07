@@ -52,7 +52,6 @@ function update() {
     ];
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
     boundrectPath.value = genRectPath(boundrect);
-    props.context.workspace.setCtrlPath(boundrectPath.value);
     const p0 = boundrect[0];
     bounds.left = p0.x;
     bounds.top = p0.y;

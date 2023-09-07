@@ -362,7 +362,7 @@ function adapt() {
 const RADIUS_SETTING = [
     ShapeType.Rectangle, ShapeType.Artboard,
     ShapeType.Image, ShapeType.Group,
-    ShapeType.Path, ShapeType.Path2
+    ShapeType.Path, ShapeType.Path2, ShapeType.Contact
 ];
 const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
 function layout() {

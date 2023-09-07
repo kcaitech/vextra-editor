@@ -42,7 +42,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         shapes = context.selection.selectedShapes;
         root = context.workspace.root;
         area = context.selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        console.log('click-area', area);
+        // console.log('click-area', area);
         if (area === 'body') {
             workspace.value.setCtrl('controller');
             down4body(e);
@@ -143,7 +143,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         editor.initTextCell(cell.index.row, cell.index.col)
     }
     function down(e: MouseEvent) {
-        console.log('单击 cell:', down_item);
+        // console.log('单击 cell:', down_item);
         table_selection.resetSelection();
         set_position(e);
         if (down_item) {
@@ -187,7 +187,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         move = mousemove4body, up = mouseup4body;
     }
     function dbldown() {
-        console.log('双击');
+        // console.log('双击');
         if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
             const text = down_item.cell.text, len: number = text?.length!;
             if (text && len !== 1) {
@@ -202,7 +202,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function multidown() {
         init_down_timer();
-        console.log('三次点击');
+        // console.log('三次点击');
         if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
             table_selection.setEditingCell();
             table_selection.selectTableCell(down_item.index.row, down_item.index.col);
@@ -280,7 +280,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('mousedown', mousedown);
         table.unwatch(get_matrix4table);
         is_diposed = true;
-        console.log('dispose');
+        // console.log('dispose');
     }
     function m4table() {
         return matrix4table;

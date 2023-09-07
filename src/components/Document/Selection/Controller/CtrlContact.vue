@@ -5,10 +5,11 @@ import { Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { Selection } from "@/context/selection";
-import { useController } from "./controller";
+import { useController } from "./controller4contact";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
 import ContactApex from "./Points/ContactApex.vue";
+
 interface Props {
     context: Context
     controllerFrame: Point[]
@@ -45,7 +46,6 @@ function updateControllerView() {
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
     boundrectPath.value = genRectPath(framePoint);
-    props.context.workspace.setCtrlPath(boundrectPath.value);
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -85,6 +85,7 @@ function windowBlur() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
@@ -93,6 +94,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
+
     window.removeEventListener('blur', windowBlur);
     props.context.cursor.reset();
 })

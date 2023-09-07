@@ -52,7 +52,6 @@ function updateControllerView() {
     const path = props.shape.getPath();
     path.transform(matrix);
     line_path.value = path.toString();
-    props.context.workspace.setCtrlPath(line_path.value);
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;

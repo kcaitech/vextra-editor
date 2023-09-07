@@ -190,8 +190,10 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
                 if (e.shiftKey) {
                     selection.rangeSelectShape(selection.selectedShapes.concat(hoveredShape));
                 } else {
+                    const workspace = props.context.workspace;
+                    workspace.setCtrlPath(tracingFrame.value.path);
                     selection.selectShape(hoveredShape);
-                    props.context.workspace.preToTranslating(e);
+                    workspace.preToTranslating(e);
                 }
             }
         }
