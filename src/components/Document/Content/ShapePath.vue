@@ -1,27 +1,15 @@
 
 <script setup lang="ts">
-import { PathShape } from '@kcdesign/data';
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { OverridesGetter, PathShape } from '@kcdesign/data';
+import { h } from 'vue';
 import { renderPathShape as r } from "@kcdesign/data";
+import { initCommonShape } from './common';
 
-const props = defineProps<{ data: PathShape }>();
-const reflush = ref(0);
-const watcher = () => {
-    reflush.value++;
-}
-const stopWatch = watch(() => props.data, (value, old) => {
-    old.unwatch(watcher);
-    value.watch(watcher);
-})
-onMounted(() => {
-    props.data.watch(watcher);
-})
-onUnmounted(() => {
-    props.data.unwatch(watcher);
-    stopWatch();
-})
+const props = defineProps<{ data: PathShape , overrides?: OverridesGetter }>();
+const init = initCommonShape(props);
+
 function render() {
-    return r(h, props.data, reflush.value !== 0 ? reflush.value : undefined);
+    return r(h, props.data, init.reflush);
 }
 </script>
 
