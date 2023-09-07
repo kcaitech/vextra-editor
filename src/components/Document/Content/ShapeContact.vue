@@ -6,12 +6,12 @@ import { Context } from '@/context';
 
 const props = defineProps<{ data: Shape, context: Context }>();
 const reflush = ref(0);
-let path = props.data.getPath().toString();
+let path = props.data.getPath2().toString();
 let stop1: any, stop2: any;
 let from: undefined | Shape, to: undefined | Shape;
 const watcher = () => {
     updateApex()
-    path = props.data.getPath().toString();
+    path = props.data.getPath2().toString();
     reflush.value++;
 }
 const stopWatch = watch(() => props.data, (value, old) => {

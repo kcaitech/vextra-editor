@@ -22,7 +22,6 @@ interface Props {
 }
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
-const workspace = computed(() => props.context.workspace);
 const visible = ref<boolean>(true);
 const editing = ref<boolean>(false);
 const boundrectPath = ref("");
@@ -53,6 +52,7 @@ function updateControllerView() {
   if (!submatrix.equals(matrix)) submatrix.reset(matrix)
   const framePoint = props.controllerFrame;
   boundrectPath.value = genRectPath(framePoint);
+  props.context.workspace.setCtrlPath(boundrectPath.value);
   const p0 = framePoint[0];
   bounds.left = p0.x;
   bounds.top = p0.y;
@@ -72,7 +72,7 @@ function selection_watcher(t: number) {
   if (t == Selection.CHANGE_SHAPE) editing.value = false;
 }
 function workspace_watcher(t: number) {
-  if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
+  if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
   else if (t === WorkSpace.PRE_EDIT) {
     editing.value = props.context.workspace.isEditing;
   }
@@ -111,7 +111,7 @@ watchEffect(updateControllerView);
     :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
     <g v-if="!editing">
-      <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape">
+      <ShapesStrokeContainer :context="props.context" :matrix="props.matrix">
       </ShapesStrokeContainer>
       <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
         :c-frame="props.controllerFrame"></BarsContainer>

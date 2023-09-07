@@ -18,7 +18,6 @@ interface Props {
 }
 const props = defineProps<Props>();
 const { isDblClick, isDrag } = useController(props.context);
-const workspace = computed(() => props.context.workspace);
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const visible = ref<boolean>(true);
 let viewBox = '';
@@ -52,6 +51,7 @@ function updateControllerView() {
     const path = props.shape.getPath();
     path.transform(matrix);
     line_path.value = path.toString();
+    props.context.workspace.setCtrlPath(line_path.value);
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -67,7 +67,7 @@ function updateControllerView() {
     viewBox = genViewBox(bounds);
 }
 function workspace_watcher(t?: number) {
-    if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
+    if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
 }
 function mousedown(e: MouseEvent) {
     const isdblc = isDblClick();
