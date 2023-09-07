@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
+import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 interface Scout {
     path: SVGPathElement
@@ -24,6 +24,23 @@ function scout(context: Context): Scout {
 
     function isPointInShape(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
+        SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        path.setAttributeNS(null, 'd', d);
+        let result: boolean = false;
+        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) {
+            // 线条元素(不管是否闭合，都当不闭合)额外处理point是否在边框上
+            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14 / context.workspace.matrix.m00);
+            path.setAttributeNS(null, 'stroke-width', `${thickness}`);
+            result = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        } else {
+            // 判断point是否在闭合路径的填充中
+            result = (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        }
+        return result;
+    }
+
+    function isPointInShape2(shape: Shape, point: PageXY): boolean {
+        const d = getPathOnPageStringCustomScale(shape, 1/context.workspace.matrix.m00);
         SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         let result: boolean = false;
@@ -75,9 +92,24 @@ function getPathOnPageString(shape: Shape): string { // path坐标系：页面
     path.transform(m2page);
     return path.toString();
 }
+function getPathOnPageStringCustomScale(shape: Shape, s: number): string { // path坐标系：页面
+    const f = shape.frame;
+    const scale = 20 * s;
+    const scalex = (f.width + scale) / f.width, scaley = (f.height + scale) / f.height;
+    const m = new Matrix();
+    m.preScale(scalex, scaley);
+    m.trans(-scale / 2, -scale / 2);
+    m.multiAtLeft(shape.matrix2Root());
+    const path = shape.getPath();
+    path.transform(m);
+    return path.toString();
+}
 
 // 判定点是否在图形内
 function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
+    return scout.isPointInShape(shape, p);
+}
+function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape(shape, p);
 }
 
