@@ -9,7 +9,7 @@ const props = defineProps<{ data: ImageShape, overrides?: OverridesGetter }>();
 const init = initCommonShape(props);
 
 const render = () => {
-    return r(h, props.data, defaut, init.reflush);
+    return r(h, props.data, defaut, init.override, init.reflush);
 }
 
 </script>

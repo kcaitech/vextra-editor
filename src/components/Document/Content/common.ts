@@ -27,6 +27,9 @@ export function initCommonShape(props: { data: Shape, overrides?: OverridesGette
     const ret: any = {
         get reflush() {
             return reflush.value !== 0 ? reflush.value : undefined;
+        },
+        incReflush() {
+            reflush.value++;
         }
     };
     ret.override = props.overrides?.getOverrid(props.data.id);

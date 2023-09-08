@@ -1,44 +1,40 @@
 <script setup lang="ts">
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { h, onUnmounted, watch } from 'vue';
 import { Shape, GroupShape, OverridesGetter } from "@kcdesign/data";
 import { renderBoolOpShape as opr } from "@kcdesign/data";
 import { renderGroup as normalR } from "@kcdesign/data";
 import comsMap from './comsmap';
+import { initCommonShape } from './common';
 
 const props = defineProps<{ data: GroupShape, overrides?: OverridesGetter  }>();
-const reflush = ref(0);
+const init = initCommonShape(props);
 const consumed: Array<Shape> = [];
-
 const watcher = () => {
-    reflush.value++;
+    init.incReflush();
 }
-const stopWatch = watch(() => props.data, (value, old) => {
-    old.unwatch(watcher);
-    value.watch(watcher);
+
+watch(() => props.data, (value, old) => {
     for (let i = 0, len = consumed.length; i < len; i++) {
         consumed[i].unwatch(watcher);
     }
     consumed.length = 0;
 })
-onMounted(() => {
-    props.data.watch(watcher);
-})
+
 onUnmounted(() => {
-    props.data.unwatch(watcher);
     for (let i = 0, len = consumed.length; i < len; i++) {
         consumed[i].unwatch(watcher);
     }
     consumed.length = 0;
-    stopWatch();
 })
+
 function render() {
     const consumed0: Array<Shape> = [];
 
     const isBoolOpShape = props.data.isBoolOpShape;
 
     const ret = isBoolOpShape ?
-        opr(h, props.data, reflush.value !== 0 ? reflush.value : undefined, consumed0) :
-        normalR(h, props.data, comsMap, props.overrides, reflush.value !== 0 ? reflush.value : undefined);
+        opr(h, props.data, init.override, init.reflush, consumed0) :
+        normalR(h, props.data, comsMap, props.overrides, init.override, init.reflush);
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {

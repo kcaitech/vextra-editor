@@ -1,78 +1,56 @@
 <script setup lang="ts">
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Shape, TableCell, TableShape } from "@kcdesign/data";
+import { h, onUnmounted, watch } from 'vue';
+import { OverridesGetter, Shape, TableShape } from "@kcdesign/data";
 import { renderTable as r } from "@kcdesign/data";
+import { initCommonShape } from './common';
 
-const props = defineProps<{ data: TableShape }>();
-const reflush = ref(0);
-const consumed: Array<{ shape: Shape, stopWatch: Function } | undefined> = [];
-
+const props = defineProps<{ data: TableShape, overrides?: OverridesGetter }>();
+const init = initCommonShape(props);
 const watcher = () => {
-    reflush.value++;
+    init.incReflush();
 }
-const stopWatch = watch(() => props.data, (value, old) => {
-    old.unwatch(watcher);
-    value.watch(watcher);
+const consumed: Array<Shape | undefined> = [];
+
+watch(() => props.data, (value, old) => {
     for (let i = 0, len = consumed.length; i < len; i++) {
-        consumed[i]?.stopWatch();
+        const cell = consumed[i];
+        if (cell) cell.unwatch(watcher);
     }
     consumed.length = 0;
-})
-onMounted(() => {
-    props.data.watch(watcher);
-    //
-    props.data.childs.forEach((cell) => {
-        if (cell && cell.isImageCell() && !cell.peekImage()) cell.loadImage().then(() => {
-            reflush.value++;
-        })
-    })
-})
-onUnmounted(() => {
-    props.data.unwatch(watcher);
-    for (let i = 0, len = consumed.length; i < len; i++) {
-        consumed[i]?.stopWatch();
-    }
-    consumed.length = 0;
-    stopWatch();
 })
 
-function cellWatcher(shape: TableCell) {
-    return () => {
-        reflush.value++;
-        if (shape.isImageCell() && !shape.peekImage()) shape.loadImage().then(() => {
-            reflush.value++;
-        })
+onUnmounted(() => {
+    for (let i = 0, len = consumed.length; i < len; i++) {
+        const cell = consumed[i];
+        if (cell) cell.unwatch(watcher);
     }
-}
+    consumed.length = 0;
+})
 
 function render() {
     const consumed0 = props.data.childs;
 
-    const ret = r(h, props.data, reflush.value !== 0 ? reflush.value : undefined)
+    const ret = r(h, props.data, props.overrides, undefined, init.reflush)
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
-            consumed[i]?.stopWatch();
+            const cell = consumed[i];
+        if (cell) cell.unwatch(watcher);
         }
     }
     consumed.length = consumed0.length;
     for (let i = 0, len = consumed.length; i < len; i++) {
         const s0 = consumed0[i];
         const s = consumed[i];
-        if (s0 === s) { // undefined
+        if (s === undefined && s0 === undefined) {
             continue;
         }
-        if (s && s0 && s.shape.id === s0.id) {
+        if (s && s0 && s.id === s0.id) {
             continue;
         }
-        if (s) s.stopWatch();
-        if (s0) {
-            const stopWatch = s0.watch(cellWatcher(s0));
-            consumed[i] = {
-                shape: s0,
-                stopWatch
-            };
-        }
+        if (s) s.unwatch(watcher);
+        if (s0) s0.watch(watcher);
+        consumed[i] = s0;
     }
     return ret;
 }

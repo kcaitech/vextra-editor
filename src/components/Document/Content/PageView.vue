@@ -79,7 +79,7 @@ onUnmounted(() => {
         :height="height + 'px'" :viewBox='"0 0 " + width + " " + height' overflow="visible"
         :reflush="reflush !== 0 ? reflush : undefined" :transform="matrixWithFrame.toString()" :data-area="rootId">
         <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
-            :data="c" :context="props.context" />
+            :data="c"  />
     </svg>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>

@@ -2,7 +2,6 @@ import { GroupShape, ImageShape, PathShape, Shape, SymbolRefShape, TextShape, Ov
 import { Artboard } from "@kcdesign/data";
 import { renderArtboard as art } from "@kcdesign/data";
 import { renderGroup as group } from "@kcdesign/data";
-import { renderBoolOpShape as shapegroup } from "@kcdesign/data";
 import { renderImage as image } from "@kcdesign/data";
 import { renderPathShape as path } from "@kcdesign/data";
 import { renderRecShape as rect } from "@kcdesign/data";
@@ -48,28 +47,32 @@ comsMap.set(ShapeType.Artboard, (data: Shape, overrides?: OverridesGetter) => {
     return art(h, data as Artboard, comsMap);
 });
 comsMap.set(ShapeType.Group, (data: Shape, overrides?: OverridesGetter) => {
-    return group(h, data as GroupShape, comsMap, overrides);
+    const override = overrides?.getOverrid(data.id);
+    return group(h, data as GroupShape, comsMap, overrides, override);
 });
 // comsMap.set(ShapeType.FlattenShape, (data: Shape, overrides?: OverridesGetter) => {
 //     return shapegroup(h, data as FlattenShape);
 // });
 comsMap.set(ShapeType.Image, (data: Shape, overrides?: OverridesGetter) => {
+    const override = overrides?.getOverrid(data.id);
     const s = data as ImageShape;
     const url = s.peekImage() || "";
-    return image(h, s, url);
+    return image(h, s, url, override);
 });
 comsMap.set(ShapeType.Page, (data: Shape, overrides?: OverridesGetter) => {
-    return group(h, data as GroupShape, comsMap, undefined);
+    return group(h, data as GroupShape, comsMap, undefined, undefined);
 });
 comsMap.set(ShapeType.Path, (data: Shape, overrides?: OverridesGetter) => {
-    return path(h, data as PathShape);
+    const override = overrides?.getOverrid(data.id);
+    return path(h, data as PathShape, override);
 });
 comsMap.set(ShapeType.Rectangle, (data: Shape, overrides?: OverridesGetter) => {
     const override = overrides?.getOverrid(data.id);
     return rect(h, data, override);
 });
 comsMap.set(ShapeType.Text, (data: Shape, overrides?: OverridesGetter) => {
-    return text(h, data as TextShape);
+    const override = overrides?.getOverrid(data.id);
+    return text(h, data as TextShape, override);
 });
 // comsMap.set(ShapeType.Boolean, (data: Shape, path: string) => { // todo
 //     return bool(h, data, path);

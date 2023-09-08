@@ -8,7 +8,7 @@ const props = defineProps<{ data: Shape, overrides?: OverridesGetter  }>();
 const init = initCommonShape(props);
 
 function render() {
-    return r(h, props.data, init.reflush);
+    return r(h, props.data, init.override, init.reflush);
 }
 </script>
 
