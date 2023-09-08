@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { Share, Delete, Remove, Loading as LoadingIcon } from '@element-plus/icons-vue'
-import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { watch, nextTick } from 'vue';
-import NetworkError from '@/components/NetworkError.vue'
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -14,18 +10,17 @@ const props = defineProps<{
     left: number
 }>()
 const emit = defineEmits<{
-    (e: 'cancelFixed'): void;
+    (e: 'cancelFixed', data: any): void;
     (e: 'projectSetting', data: any): void;
     (e: 'showMembergDialog', data: any): void;
     (e: 'delProject', data: any): void;
     (e: 'exitProject', data: any): void;
     (e: 'close'): void;
-    (e: 'reName'): void;
+    (e: 'reName', data: any): void;
 }>();
-const delVisible = ref(false);
 
 const cancelFixed = () => {
-    emit('cancelFixed');
+    emit('cancelFixed', props.data);
     close();
 }
 const close = () => {
@@ -40,7 +35,7 @@ const showMembergDialog = () => {
     close();
 }
 const reName = () => {
-    emit('reName');
+    emit('reName', props.data);
     close();
 }
 const delProject = () => {

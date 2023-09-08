@@ -10,7 +10,8 @@
                         </el-icon>
                         <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]" :top="20"
                             :left="0" @cancelFixed="cancelFixed" @close="closeMenu" @projectSetting="projectSetting"
-                            @reName="input_cusname" @showMembergDialog="showMembergDialog" @delProject="onDelProject" @exitProject="onExitProject">
+                            @reName="input_cusname" @showMembergDialog="showMembergDialog" @delProject="onDelProject"
+                            @exitProject="onExitProject">
                         </TeamProjectMenu>
                     </div>
                     <div style="padding-top: 3px;" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
@@ -102,35 +103,11 @@
             :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"
             @memberLength="memberLength"></ProjectMemberg>
     </div>
-    <el-dialog v-model="delVisible" width="250px" title="删除项目" align-center :close-on-click-modal="false"
-        :before-close="closeDelVisible">
-        <div class="context">
-            删除项目后，将删除项目及项目中所有文件、资料。
-        </div>
-        <template #footer>
-            <div class="dialog-footer">
-                <el-button class="quit" @click="DelProject" style="background-color: #9775fa; color: #fff;">任然删除</el-button>
-                <el-button class="quit" @click="delVisible = false">
-                    取消
-                </el-button>
-            </div>
-        </template>
-    </el-dialog>
-    <el-dialog v-model="exitVisible" width="250px" title="退出项目" align-center :close-on-click-modal="false"
-        :before-close="closeExitVisible">
-        <div class="context">
-            退出项目后，无法再访问项目中的文件，或使用项目中的资源。
-        </div>
-        <template #footer>
-            <div class="dialog-footer">
-                <el-button class="quit" @click="ExitProject"
-                    style="background-color: #9775fa; color: #fff;">任然退出</el-button>
-                <el-button class="quit" @click="exitVisible = false">
-                    取消
-                </el-button>
-            </div>
-        </template>
-    </el-dialog>
+    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
+        :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
+    <MoveProjectFill :title="'移动文件位置'" :confirm-btn="'移动'" :projectVisible="moveVisible"></MoveProjectFill>
 </template>
 <script setup lang="ts">
 import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
@@ -146,6 +123,8 @@ import ProjectAccessSetting from './ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
 import TeamProjectMenu from './TeamProjectMenu.vue';
 import { ElMessage } from 'element-plus';
+import ProjectDialog from './ProjectDialog.vue';
+import MoveProjectFill from './MoveProjectFill.vue';
 const { t } = useI18n()
 const itemid = ref(0)
 const items = ['文件', '回收站',]
@@ -168,6 +147,7 @@ const showProjecrMenu = ref(false);
 const delVisible = ref(false);
 const memberLen = ref(0);
 const exitVisible = ref(false);
+const moveVisible = ref(false);
 let menuItem: string[] = ['del_porject', 'visit'];
 const projectOptions = [
     {
@@ -252,8 +232,10 @@ const ExitProject = () => {
     exitVisible.value = false;
     const project = currentProject.value[0];
     exitProjectApi(project.project.id);
+    const index = projectList.value.findIndex(item => item.project.id === project.project.id);
     const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
     favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
     const inshare = projectList.value.filter(item => !item.is_in_team).length;
     if (inshare > 0) {
         router.push('/apphome/project_share');
@@ -342,8 +324,10 @@ const closeDialog = () => {
 const exitProject = (id: string, isTeam: boolean) => {
     projectMembergDialog.value = false;
     const project = currentProject.value[0];
+    const index = projectList.value.findIndex(item => item.project.id === project.project.id);
     const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
     favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
     if (isTeam) {
         router.push({ path: '/apphome/teams/' + id });
     } else {
@@ -532,6 +516,8 @@ function enter_desc(e: KeyboardEvent) {
     }
 }
 function blur() {
+    if (projectName.value.trim().length < 1) return;
+    projectName.value = projectName.value.trim();
     const project = currentProject.value[0].project
     const params = {
         project_id: project.id,
@@ -548,6 +534,8 @@ function blur() {
     document.removeEventListener('keydown', enter);
 }
 function blur_desc() {
+    if (projectDesc.value.trim().length < 1) return;
+    projectDesc.value = projectDesc.value.trim();
     const project = currentProject.value[0].project
     const params = {
         project_id: project.id,

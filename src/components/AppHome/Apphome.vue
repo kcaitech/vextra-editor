@@ -93,6 +93,10 @@ const favoriteListsData = (data: any[]) => {
   favoriteList.value = data
 }
 
+const updateProject = () => {
+  GetprojectLists();
+}
+
 //用于改变updateprojectlist的值
 const updateprojectliststate = (b: boolean) => {
   updateprojectlist.value = b
@@ -148,7 +152,8 @@ provide('shareData', {
   updateActiveNames,
   //
   targetItem,
-  addTargetItem
+  addTargetItem,
+  updateProject
 })
 
 function setTitle(t: string) {

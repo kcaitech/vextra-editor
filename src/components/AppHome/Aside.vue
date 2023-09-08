@@ -25,6 +25,8 @@ import * as team_api from '@/apis/team'
 import addTeam from '../TeamProject/addTeam.vue'
 import addProject from '../TeamProject/addProject.vue';
 import { ElMessage } from 'element-plus';
+import TeamProjectMenu from '../TeamProject/TeamProjectMenu.vue';
+import ProjectDialog from '../TeamProject/ProjectDialog.vue';
 
 interface Emits {
     (e: 'settitle', title: string): void;
@@ -45,6 +47,11 @@ const reflush = ref(0);
 const projectShareList = ref<any[]>([]);
 const activeShare = ref([0]);
 const is_share = ref(false);
+const showProjecrMenu = ref(false);
+let menuItem: string[] = [];
+const projectItem = ref<any>({});
+const proname = ref('');
+const Input = ref<HTMLInputElement>();
 
 const { updatestate, is_favor, projectList, is_team_upodate, teamData, activeNames, targetItem, favoriteList, updateActiveNames,
     updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, addTargetItem } = inject('shareData') as {
@@ -215,8 +222,138 @@ const torouter = (id: string) => {
     router.push({ path: '/apphome/teams/' + id });
 }
 
-const skipProject = (id: string) => {
-    router.push({ path: '/apphome/project/' + id });
+const skipProject = (item: any, e: MouseEvent) => {
+    router.push({ path: '/apphome/project/' + item.project.id });
+}
+const top = ref(0); const left = ref(0);
+const rightMenu = (item: any, e: MouseEvent) => {
+    if (e.button === 2) {
+        top.value = e.clientY;
+        left.value = e.clientX;
+        projectItem.value = item;
+        menuItem = [];
+        if (item.self_perm_type === 5 || item.self_perm_type === 4) {
+            menuItem.push('rename', 'del');
+        }
+        menuItem.push('no_fixed');
+        if (!item.is_in_team) {
+            menuItem.push('exit');
+        }
+        showProjecrMenu.value = true;
+    } else {
+        showProjecrMenu.value = false;
+    }
+}
+const closeMenu = () => {
+    showProjecrMenu.value = false;
+}
+const delVisible = ref(false);
+const project_item = ref<any>({})
+const onDelProject = (data: any) => {
+    delVisible.value = true;
+    project_item.value = data;
+}
+const closeDelVisible = () => {
+    delVisible.value = false;
+}
+
+const DelProject = () => {
+    delVisible.value = false;
+    const project = project_item.value;
+    const index = projectList.value.findIndex(item => item.project.id === project.project.id);
+    const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
+    favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
+    if (project.is_in_team) {
+        router.push({ path: '/apphome/teams/' + project.project.team_id });
+    } else {
+        const inshare = projectList.value.filter(item => !item.is_in_team).length;
+        if (inshare > 0) {
+            router.push('/apphome/project_share');
+        } else {
+            router.push({ name: "apphome" });
+        }
+    }
+    delProject(project.project.id);
+}
+
+const delProject = async (id: string) => {
+    try {
+        await team_api.delProjectAPI({ project_id: id })
+    } catch (err) {
+        console.log(err);
+
+    }
+}
+const exitVisible = ref(false);
+const closeExitVisible = () => {
+    exitVisible.value = false;
+}
+const onExitProject = (data: any) => {
+    exitVisible.value = true;
+    project_item.value = data;
+}
+const ExitProject = () => {
+    exitVisible.value = false;
+    const project = project_item.value;
+    exitProjectApi(project.project.id);
+    const index = projectList.value.findIndex(item => item.project.id === project.project.id);
+    const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
+    favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
+    const inshare = projectList.value.filter(item => !item.is_in_team).length;
+    if (inshare > 0) {
+        router.push('/apphome/project_share');
+    } else {
+        router.push({ name: "apphome" });
+    }
+}
+const exitProjectApi = async (id: string) => {
+    try {
+        await team_api.exitProjectAPI({ project_id: id })
+    } catch (err) {
+        console.log(err);
+    }
+}
+const reName = ref('');
+const inputCusname = (data: any) => {
+    proname.value = data.project.name;
+    reName.value = data.project.id;
+    nextTick(() => {
+        if (Input.value) {
+            project_item.value = data;
+            document.addEventListener('keydown', enter);
+        }
+    })
+}
+function enter(e: KeyboardEvent) {
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+        onblur();
+    }
+}
+const onblur = () => {
+    const project = project_item.value.project;
+    if (proname.value.trim().length < 1 || proname.value.trim() === project.name) return reName.value = '';
+    proname.value = proname.value.trim();
+    const params = {
+        project_id: project.id,
+        name: proname.value
+    }
+    const index = projectList.value.findIndex(item => item.project.id === project.id);
+    const favorite = favoriteList.value.findIndex((item) => item.project.id === route.params.id);
+    projectList.value[index].project.name = proname.value;
+    favoriteList.value[favorite].project.name = proname.value;
+    project.name = proname.value;
+    setProjectInfo(params)
+    reName.value = '';
+    document.removeEventListener('keydown', enter);
+}
+const setProjectInfo = async (params: any) => {
+    try {
+        await team_api.setProjectInfoAPI(params)
+    } catch (err) {
+        console.log(err);
+    }
 }
 
 const skipProjecrShare = () => {
@@ -245,6 +382,12 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
 const cancelFixed = (index: number, i: number, id: string) => {
     teamList.value[index].children.splice(i, 1);
     setProjectIsFavorite(id, false);
+    updateFavor(!is_favor.value);
+}
+const menucancelFixed = (data: any) => {
+    const f_index = favoriteList.value.findIndex(item => item.project.id === data.project.id);
+    favoriteList.value.splice(f_index, 1);
+    setProjectIsFavorite(data.project.id, false);
     updateFavor(!is_favor.value);
 }
 
@@ -395,7 +538,8 @@ onUnmounted(() => {
                                 </div>
                             </template>
                             <template v-for="(item, i) in projectShareList" :key="i">
-                                <div class="project" @click.stop="skipProject(item.project.id)"
+                                <div class="project" @click.stop="(e) => skipProject(item, e)"
+                                    @mousedown.stop="(e) => rightMenu(item, e)"
                                     :class="{ 'is_active': isProjectActive(item.project.id) }">
                                     <div>
                                         <div>{{ item.project.name }}</div>
@@ -450,9 +594,11 @@ onUnmounted(() => {
                                 </div>
                             </template>
                             <template v-for="(item, i) in data.children" :key="i">
-                                <div class="project" @click.stop="skipProject(item.project.id)"
+                                <div class="project" @click.stop="(e) => skipProject(item, e)"
+                                    @mousedown.stop="(e) => rightMenu(item, e)"
                                     :class="{ 'is_active': isProjectActive(item.project.id) }">
-                                    <div>
+                                    <el-input v-if="reName === item.project.id" v-model="proname" ref="Input" autofocus @blur="onblur" />
+                                    <div v-else>
                                         <div>{{ item.project.name }}</div>
                                         <div class="right" @click.stop="newProjectFile(item.project.id)">
                                             <div @click="cancelFixed(index, i, item.project.id)">
@@ -479,7 +625,8 @@ onUnmounted(() => {
                             <template v-for="(target, n) in targetItem" :key="n">
                                 <transition name="el-zoom-in-top">
                                     <div v-if="(target.project.team_id === data.team.id) && !listss.includes(target.project.id)"
-                                        class="project" @click.stop="skipProject(target.project.id)"
+                                        class="project" @click.stop="(e) => skipProject(target, e)"
+                                        @mousedown.stop="(e) => rightMenu(target, e)"
                                         :class="{ 'is_active': isProjectActive(target.project.id) }">
                                         <div>
                                             <div>{{ target.project.name }}</div>
@@ -511,6 +658,13 @@ onUnmounted(() => {
                 @close="showoverlay = false; projectcard = false" />
         </div>
     </transition>
+    <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="projectItem" :top="top" :left="left" @close="closeMenu"
+        @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed" @reName="inputCusname">
+    </TeamProjectMenu>
+    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'"
+        :confirm-btn="'任然删除'" @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
+        :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
 </template>
 
 <style lang="scss" scoped>
@@ -845,6 +999,11 @@ a {
                     justify-content: space-between;
                     border-radius: 4px;
                     cursor: pointer;
+                    .el-input {
+                        height: 35px;
+                        border: none;
+                        outline: none;
+                    }
 
                     &:hover {
                         background-color: #f3f0ff;
@@ -884,6 +1043,14 @@ a {
                             }
                         }
                     }
+
+                    input {
+                        border: none;
+                        outline: none;
+                        background-color: transparent;
+                        color: #000;
+                        font-size: var(--font-default-fontsize);
+                    }
                 }
             }
 
@@ -912,7 +1079,20 @@ a {
 :deep(.el-collapse-item__content) {
     padding: 0;
 }
-
+:deep(.el-input__wrapper) {
+    height: 80%;
+    outline: none;
+    border: none;
+    box-shadow: none;
+    padding: 1px 5px;
+    border-radius: 0;
+    margin-right: 10px;
+    border-bottom: 1px solid #9775fa;
+    background-color: transparent;
+}
+:deep(.el-input__wrapper:hover) {
+    box-shadow: none;
+}
 .is_active {
     font-weight: 600;
     color: #9775fa;

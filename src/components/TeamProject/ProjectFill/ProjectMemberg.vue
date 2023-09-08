@@ -4,7 +4,8 @@ import { ref, watch, nextTick } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router'
+import { useRoute } from 'vue-router';
+import ProjectDialog from '../ProjectDialog.vue';
 const { t } = useI18n();
 const props = defineProps<{
     projectMembergDialog: boolean
@@ -290,34 +291,10 @@ watch(innerVisible, (v) => {
         <div v-if="props.currentProject.self_perm_type !== 5">
             <div class="button"><button @click="onExitProject">退出项目组</button></div>
         </div>
-        <el-dialog v-model="innerVisible" width="250px" title="退出项目" append-to-body align-center
-            :close-on-click-modal="false" :before-close="handleClose">
-            <div class="context">
-                退出项目后，无法再访问项目中的文件，或使用项目中的资源。
-            </div>
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button class="quit" @click="quitProject">任然退出</el-button>
-                    <el-button class="quit" @click="innerVisible = false">
-                        取消
-                    </el-button>
-                </div>
-            </template>
-        </el-dialog>
-        <el-dialog v-model="transferVisible" width="250px" title="退出项目" append-to-body align-center
-            :close-on-click-modal="false" :before-close="transferClose">
-            <div class="context">
-                转让创建者权限后，您将不再拥有该项目，后续作为管理员留在项目中。
-            </div>
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button class="quit" @click="transferProject">确定转让</el-button>
-                    <el-button class="quit" @click="transferVisible = false">
-                        取消
-                    </el-button>
-                </div>
-            </template>
-        </el-dialog>
+        <ProjectDialog :projectVisible="innerVisible" :body="true" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
+        :confirm-btn="'任然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
+        <ProjectDialog :projectVisible="transferVisible" :body="true" context="转让创建者权限后，您将不再拥有该项目，后续作为管理员留在项目中。" :title="'转让项目'"
+        :confirm-btn="'确定转让'" @clode-dialog="transferClose" @confirm="transferProject"></ProjectDialog>
     </ProjectAccessSetting>
 </template>
 

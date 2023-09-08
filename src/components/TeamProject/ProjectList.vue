@@ -29,7 +29,7 @@
                             </svg>
                         </div>
                         <div @click.stop="skipProject(item.project.id)"><svg-icon icon-class="drag"></svg-icon></div>
-                        <div><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
+                        <div @click="onExitProject(item)"><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
                     </div>
                 </div>
             </div>
@@ -41,6 +41,10 @@
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
     <listrightmenu :items="updateitems" :data="mydata" />
+    <ProjectDialog :projectVisible="innerVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
+        :confirm-btn="'任然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
+        <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'"
+        :confirm-btn="'任然删除'" @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, watchEffect, onMounted, ref, watch, nextTick } from 'vue';
@@ -51,7 +55,8 @@ import NetworkError from '@/components/NetworkError.vue'
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
 import * as team_api from '@/apis/team'
-import listrightmenu from "@/components/AppHome/listrightmenu.vue"
+import listrightmenu from "@/components/AppHome/listrightmenu.vue";
+import ProjectDialog from './ProjectDialog.vue';
 
 interface Props {
     searchvalue?: string
@@ -68,6 +73,8 @@ const titles = ['项目名称', '项目描述', '创建者', '操作',]
 const selectid = ref(0)
 const projectLists = ref<any[]>([])
 const teamprojectlist = ref<any[]>([])
+const innerVisible = ref(false);
+const project_item = ref<any>({});
 const emits = defineEmits<{
     (e: 'addproject'): void
 }>()
@@ -142,6 +149,59 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
     }
 
     return updateItems;
+}
+const delVisible = ref(false);
+
+const closeDelVisible = () => {
+    delVisible.value = false;
+}
+
+const DelProject = () => {
+    delVisible.value = false;
+    const project = project_item.value;
+    const index = projectList.value.findIndex(item => item.project.id === project.project.id);
+    const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
+    favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
+    delProject(project.project.id);
+}
+
+const delProject = async (id: string) => {
+    try {
+        await team_api.delProjectAPI({ project_id: id })
+    } catch (err) {
+        console.log(err);
+
+    }
+}
+
+const quitProject = () => {
+    innerVisible.value = false;
+    exitProject(project_item.value.project.id);
+    const index = projectList.value.findIndex(item => item.project.id === project_item.value.project.id);
+    const f_index = favoriteList.value.findIndex(item => item.project.id === project_item.value.project.id);
+    favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
+}
+
+const exitProject = async (id: string) => {
+    try {
+        await team_api.exitProjectAPI({ project_id: id })
+    } catch (err) {
+        console.log(err);
+    }
+}
+const handleClose = () => {
+    innerVisible.value = false;
+}
+
+const onExitProject = (row: any) => {
+    project_item.value = row;
+    if(row.self_perm_type === 5) {
+        delVisible.value = true;
+    }else {
+        innerVisible.value = true;
+    }
 }
 
 

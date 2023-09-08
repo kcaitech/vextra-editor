@@ -200,3 +200,13 @@ export function delProjectAPI(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//移动文档
+export function moveDocumentAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/document/move',
+        method: 'post',
+        data: params,
+        ...ops
+    })
+}

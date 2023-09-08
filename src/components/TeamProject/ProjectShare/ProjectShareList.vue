@@ -5,6 +5,7 @@ const { t } = useI18n();
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
 import * as team_api from '@/apis/team';
+import ProjectDialog from '../ProjectDialog.vue';
 const tableData = computed(() => {
     return projectList.value.filter(item => !item.is_in_team);
 });
@@ -62,8 +63,10 @@ const quitProject = () => {
     innerVisible.value = false;
     exitProject(project_item.value.project.id);
     tableData.value.splice(project_index.value, 1);
+    const index = projectList.value.findIndex(item => item.project.id === project_item.value.project.id);
     const f_index = favoriteList.value.findIndex(item => item.project.id === project_item.value.project.id);
     favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
     if (tableData.value.length > 0) {
         router.push('/apphome/project_share');
     } else {
@@ -122,20 +125,8 @@ const exitProject = async (id: string) => {
             </template>
         </el-table-column>
     </el-table>
-    <el-dialog v-model="innerVisible" width="250px" title="退出项目" align-center :close-on-click-modal="false"
-        :before-close="handleClose">
-        <div class="context">
-            退出项目后，无法再访问项目中的文件，或使用项目中的资源。
-        </div>
-        <template #footer>
-            <div class="dialog-footer">
-                <el-button class="quit" @click="quitProject">任然退出</el-button>
-                <el-button class="quit" @click="innerVisible = false">
-                    取消
-                </el-button>
-            </div>
-        </template>
-    </el-dialog>
+    <ProjectDialog :projectVisible="innerVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
+        :confirm-btn="'任然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
 </template>
 
 <style scoped lang="scss">
@@ -165,10 +156,10 @@ const exitProject = async (id: string) => {
     border-bottom: none;
     /* 去掉表头的底部边框 */
 }
+
 :deep(.el-button:focus, .el-button:hover) {
     background-color: #9775fa;
     border-color: #9775fa;
     color: #fff;
     outline: none;
-}
-</style>
+}</style>

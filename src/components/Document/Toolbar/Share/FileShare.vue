@@ -16,7 +16,8 @@ const props = defineProps<{
   docUserId?: string,
   context?: Context,
   userInfo: UserInfo | undefined,
-  docInfo?: DocInfo
+  docInfo?: DocInfo,
+  project?: boolean
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -363,6 +364,7 @@ onUnmounted(() => {
               </div>
             </div>
           </el-scrollbar>
+          <div class="project" v-if="project">项目中所有成员均可访问</div>
         </div>
       </div>
     </el-card>
@@ -393,9 +395,10 @@ onUnmounted(() => {
           <span>{{ t('share.document_permission') }}:</span>
           <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
         </div>
+        <div class="project" v-if="project">项目中所有成员均可访问</div>
         <!-- 链接按钮 -->
         <div class="button bottom">
-          <el-button color="#0d99ff" size="small" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+          <el-button color="#0d99ff" @click="copyLink">{{ t('share.copy_link') }}</el-button>
         </div>
       </div>
     </el-card>
@@ -403,6 +406,12 @@ onUnmounted(() => {
 </template>
   
 <style scoped lang="scss">
+.project {
+  opacity: .5;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 5px;
+}
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -574,5 +583,8 @@ onUnmounted(() => {
 
 .box-card {
   width: 400px;
+}
+:deep(.el-button) {
+  background-color: #9775fa;
 }
 </style>

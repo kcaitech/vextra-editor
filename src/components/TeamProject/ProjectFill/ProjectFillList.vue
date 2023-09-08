@@ -9,7 +9,7 @@
     <div v-if="showFileShare" class="overlay"></div>
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-        :pageHeight="pageHeight">
+        :pageHeight="pageHeight" :project="true">
     </FileShare>
 </template>
 
@@ -38,10 +38,7 @@ interface data {
 }
 
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'deletefile']
-// const emits = defineEmits(['data-update']);
-const emits = defineEmits<{
-    (e: 'data-update', list: any, title: string): void
-}>();
+
 const props = defineProps<{
     currentProject: any
 }>()
@@ -51,7 +48,7 @@ const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
-const mydata = ref()
+const mydata = ref<data>()
 const selectValue = ref(1)
 const docUserId = ref('')
 const noNetwork = ref(false)
@@ -134,6 +131,8 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
+    console.log(data,'data');
+    
     docUserId.value = data.document.user_id
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
