@@ -46,8 +46,8 @@ const projectShareList = ref<any[]>([]);
 const activeShare = ref([0]);
 const is_share = ref(false);
 
-const { updatestate, updateActiveNames, updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, addTargetItem, is_favor,
-    projectList, is_team_upodate, teamData, activeNames, targetItem, favoriteList } = inject('shareData') as {
+const { updatestate, is_favor, projectList, is_team_upodate, teamData, activeNames, targetItem, favoriteList, updateActiveNames,
+    updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, addTargetItem } = inject('shareData') as {
         updatestate: Ref<boolean>;
         is_favor: Ref<boolean>;
         is_team_upodate: Ref<boolean>;
@@ -186,6 +186,13 @@ watch(updatestate, (newvalue) => {
     }
 })
 
+watch(() => favoriteList.value.length, (n, v) => {
+    if (v > n) {
+        teamList.value = mergeArrays(teamDataList.value, favoriteList.value);
+        projectShareList.value = favoriteList.value.filter((item: any) => !item.is_in_team);
+    }
+})
+
 watch(is_favor, () => {
     const timer = setTimeout(() => {
         getProjectFavoriteLists();
@@ -213,7 +220,7 @@ const skipProject = (id: string) => {
 }
 
 const skipProjecrShare = () => {
-    router.push({ path: 'project_share' });
+    router.push('/apphome/project_share');
 }
 
 const isActive = (id: string, name: string, avatar: string, description: string, self_perm_type: number) => {
@@ -260,15 +267,15 @@ const shareFixed = (i: number, id: string) => {
 const showicon = (data: any) => {
     if (data.children) {
         return true
-     } 
+    }
     else if (targetItem.value.length > 0) {
         if (targetItem.value[0].project.team_id === data.team.id) {
             return true
         } else {
             return false
         }
-     } 
-     else {
+    }
+    else {
         return false
     }
 }

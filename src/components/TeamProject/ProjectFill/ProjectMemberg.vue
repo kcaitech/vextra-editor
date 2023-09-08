@@ -12,6 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
     (e: 'exitProject', id: string, state: boolean): void;
+    (e: 'memberLength', num: number): void;
 }>();
 const route = useRoute();
 const innerVisible = ref(false)
@@ -62,6 +63,9 @@ const getTeamMemberList = async () => {
         console.log(err);
     }
 }
+watch(() => memberList2.value.length, (v) => {
+    emit('memberLength', v)
+})
 
 watch(() => route.params.id, () => {
     nextTick(() => {
