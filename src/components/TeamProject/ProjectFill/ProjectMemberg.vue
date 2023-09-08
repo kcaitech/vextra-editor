@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ProjectAccessSetting from './ProjectAccessSetting.vue';
 import { ref, watch, nextTick } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
@@ -17,7 +16,8 @@ const emit = defineEmits<{
     (e: 'memberLength', num: number): void;
 }>();
 const route = useRoute();
-const innerVisible = ref(false);
+const innerVisible = ref(false)
+const isshow = ref(true)
 const memberList = ref<any[]>([]);
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`, '管理员', '创建者'])
 const permList = ref(['全部', '创建者', '管理员', `${t('share.editable')}`, `${t('share.reviewable')}`, `${t('share.readOnly')}`])
@@ -25,6 +25,7 @@ const permFilter = ref(0);
 const memberList2 = ref<any[]>([]);
 const transferVisible = ref(false);
 const memberInfo = ref<any>({});
+
 const getProjectMemberList = async () => {
     try {
         const { data } = await team_api.getProjectMemberListAPI({ project_id: props.currentProject.project.id });
@@ -42,6 +43,7 @@ const getProjectMemberList = async () => {
     }
 }
 getProjectMemberList();
+
 const getTeamMemberList = async () => {
     try {
         const { data } = await team_api.getTeamMemberListAPI({ team_id: props.currentProject.project.team_id });
@@ -196,6 +198,7 @@ const transferProjectCreator = async (id: string) => {
         console.log(err);
     }
 }
+
 watch(() => props.projectMembergDialog, (v) => {
     if (v) {
         permFilter.value = 0;
@@ -211,11 +214,13 @@ const escClose = () => {
     innerVisible.value = false;
     transferVisible.value = false;
 }
+
 watch(transferVisible, (v) => {
     if(!v) {
         document.removeEventListener('keydown', escClose);
     }
 })
+
 watch(innerVisible, (v) => {
     if(!v) {
         document.removeEventListener('keydown', escClose);
@@ -224,7 +229,8 @@ watch(innerVisible, (v) => {
 </script>
 
 <template>
-    <ProjectAccessSetting title="已加入项目成员" width="350px" :dialog-visible="projectMembergDialog" @clodeDialog="close">
+        <el-dialog v-model="isshow" title="已加入项目成员"  width="350px" align-center :close-on-click-modal="false"
+            :before-close="close">
         <div class="perm_title">
             <div class="name">用户名</div>
             <el-dropdown trigger="click" :hide-on-click="false" @command="handleCommand">
@@ -291,11 +297,35 @@ watch(innerVisible, (v) => {
         <div v-if="props.currentProject.self_perm_type !== 5">
             <div class="button"><button @click="onExitProject">退出项目组</button></div>
         </div>
-        <ProjectDialog :projectVisible="innerVisible" :body="true" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-        :confirm-btn="'任然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
-        <ProjectDialog :projectVisible="transferVisible" :body="true" context="转让创建者权限后，您将不再拥有该项目，后续作为管理员留在项目中。" :title="'转让项目'"
-        :confirm-btn="'确定转让'" @clode-dialog="transferClose" @confirm="transferProject"></ProjectDialog>
-    </ProjectAccessSetting>
+        <el-dialog v-model="innerVisible" width="250px" title="退出项目" append-to-body align-center
+            :close-on-click-modal="false" :before-close="handleClose">
+            <div class="context">
+                退出项目后，无法再访问项目中的文件，或使用项目中的资源。
+            </div>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button class="quit" @click="quitProject">任然退出</el-button>
+                    <el-button class="quit" @click="innerVisible = false">
+                        取消
+                    </el-button>
+                </div>
+            </template>
+        </el-dialog>
+        <el-dialog v-model="transferVisible" width="250px" title="退出项目" append-to-body align-center
+            :close-on-click-modal="false" :before-close="transferClose">
+            <div class="context">
+                转让创建者权限后，您将不再拥有该项目，后续作为管理员留在项目中。
+            </div>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button class="quit" @click="transferProject">确定转让</el-button>
+                    <el-button class="quit" @click="transferVisible = false">
+                        取消
+                    </el-button>
+                </div>
+            </template>
+        </el-dialog>
+    </el-dialog>
 </template>
 
 <style scoped lang="scss">
