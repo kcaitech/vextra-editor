@@ -2,13 +2,13 @@
 import { OverridesGetter, ShapeFrame, TableCell } from '@kcdesign/data';
 import { h } from 'vue';
 import { renderTableCell as r } from "@kcdesign/data";
-import { initCommonShape } from './common';
+import { IMAGE_DEFAULT, initCommonShape } from './common';
 
 const props = defineProps<{ data: TableCell, frame: ShapeFrame, overrides?: OverridesGetter }>();
 const init = initCommonShape(props);
 
 function render() {
-    return r(h, props.data, props.frame, init.override, init.reflush);
+    return r(h, props.data, props.frame, IMAGE_DEFAULT, init.override, init.reflush);
 }
 </script>
 
