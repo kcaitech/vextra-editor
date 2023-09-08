@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
-import { ClientXY, Selection } from "@/context/selection";
-import { Shape, ShapeType, Matrix, ShapeFrame } from "@kcdesign/data";
+import { Selection } from "@/context/selection";
+import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType } from "@/context/workspace";
 import { Action } from "@/context/tool";
