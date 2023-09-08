@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncContactEditor, ContactType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncContactEditor, ContactType, Matrix, Shape, ShapeType } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -11,17 +11,20 @@ interface Props {
     shape: Shape
     cFrame: Point[]
 }
-interface Apex {
-    point: { x: number, y: number }
-   
+interface Slice {
+    type: 'hor' | 'ver'
+    apex1: { x: number, y: number }
+    apex2: { x: number, y: number }
+    bar: { x: number, y: number }
+    sliceIndex: number
 }
-
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
-const apex = ref<boolean>(false);
+const show = ref<boolean>(false);
 const contact = ref<boolean>(false);
-
+const data: { slices: Slice[] } = reactive({ slices: [] });
+let slices = data.slices;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let contactEditor: AsyncContactEditor | undefined;
@@ -31,19 +34,25 @@ let search: boolean = false;
 const dragActiveDis = 3;
 function update() {
     matrix.reset(props.matrix);
-    update_dot_path();
+    update_slice_path();
 }
-function update_dot_path() {
+function update_slice_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
-    apex.value = false;
-
+    show.value = false;
+    if (props.shape.type !== ShapeType.Contact) return;
+    const points = props.shape.getPoints();
+    for (let i = 0, len = points.length; i < len; i++) {
+        
+    }
+    const m = new Matrix(matrix), f = props.shape.frame;
+    m.preScale(f.width, f.height);
 }
 
 function update_contact_bar() {
     contact.value = false;
     const contact_apex = props.context.tool.contactApex;
     if (contact_apex) {
-        
+
         contact.value = true;
     }
 }
@@ -66,7 +75,7 @@ function point_mousemove(event: MouseEvent) {
     if (isDragging && contactEditor) {
         startPosition.x = mouseOnClient.x, startPosition.y = mouseOnClient.y;
         const p = submatrix.computeCoord2(mouseOnClient.x, mouseOnClient.y);
-       
+
     } else {
         const { x: sx, y: sy } = startPosition;
         const { x: mx, y: my } = mouseOnClient;
@@ -140,8 +149,5 @@ onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
 })
 </script>
-<template>
-
-</template>
-<style lang='scss' scoped>
-</style>
+<template></template>
+<style lang='scss' scoped></style>
