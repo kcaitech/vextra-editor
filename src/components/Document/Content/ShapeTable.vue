@@ -3,12 +3,14 @@ import { h, onUnmounted, watch } from 'vue';
 import { OverridesGetter, Shape, TableShape } from "@kcdesign/data";
 import { renderTable as r } from "@kcdesign/data";
 import { initCommonShape } from './common';
+import comsMap from './comsmap';
 
 const props = defineProps<{ data: TableShape, overrides?: OverridesGetter }>();
 const init = initCommonShape(props);
-const watcher = () => {
-    init.incReflush();
+const watcher = (...args: any[]) => {
+    if (args.indexOf('borders') >= 0) init.incReflush();
 }
+
 const consumed: Array<Shape | undefined> = [];
 
 watch(() => props.data, (value, old) => {
@@ -30,7 +32,7 @@ onUnmounted(() => {
 function render() {
     const consumed0 = props.data.childs;
 
-    const ret = r(h, props.data, props.overrides, undefined, init.reflush)
+    const ret = r(h, props.data, comsMap, props.overrides, undefined, init.reflush)
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
