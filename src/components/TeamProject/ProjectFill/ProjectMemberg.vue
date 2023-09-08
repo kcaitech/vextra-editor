@@ -23,6 +23,7 @@ const permFilter = ref(0);
 const memberList2 = ref<any[]>([]);
 const transferVisible = ref(false);
 const memberInfo = ref<any>({});
+
 const getProjectMemberList = async () => {
     try {
         const { data } = await team_api.getProjectMemberListAPI({ project_id: props.currentProject.project.id });
@@ -40,6 +41,7 @@ const getProjectMemberList = async () => {
     }
 }
 getProjectMemberList();
+
 const getTeamMemberList = async () => {
     try {
         const { data } = await team_api.getTeamMemberListAPI({ team_id: props.currentProject.project.team_id });
@@ -191,6 +193,7 @@ const transferProjectCreator = async (id: string) => {
         console.log(err);
     }
 }
+
 watch(() => props.projectMembergDialog, (v) => {
     if (v) {
         permFilter.value = 0;
@@ -206,11 +209,13 @@ const escClose = () => {
     innerVisible.value = false;
     transferVisible.value = false;
 }
+
 watch(transferVisible, (v) => {
     if(!v) {
         document.removeEventListener('keydown', escClose);
     }
 })
+
 watch(innerVisible, (v) => {
     if(!v) {
         document.removeEventListener('keydown', escClose);
