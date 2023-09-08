@@ -8,6 +8,7 @@ interface Scout {
     isPointInShape: (shape: Shape, point: PageXY) => boolean
     isPointInPath: (d: string, point: PageXY) => boolean
     isPointInStroke: (d: string, point: PageXY) => boolean
+    isPointInShape2: (shape: Shape, point: PageXY) => boolean
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
@@ -40,20 +41,10 @@ function scout(context: Context): Scout {
     }
 
     function isPointInShape2(shape: Shape, point: PageXY): boolean {
-        const d = getPathOnPageStringCustomScale(shape, 1/context.workspace.matrix.m00);
+        const d = getPathOnPageStringCustomOffset(shape, 1 / context.workspace.matrix.m00);
         SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
-        let result: boolean = false;
-        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) {
-            // 线条元素(不管是否闭合，都当不闭合)额外处理point是否在边框上
-            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14 / context.workspace.matrix.m00);
-            path.setAttributeNS(null, 'stroke-width', `${thickness}`);
-            result = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
-        } else {
-            // 判断point是否在闭合路径的填充中
-            result = (path as SVGGeometryElement).isPointInFill(SVGPoint);
-        }
-        return result;
+        return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
 
     function isPointInPath(d: string, point: XY): boolean {
@@ -71,7 +62,7 @@ function scout(context: Context): Scout {
         const s = document.querySelector(`[id="${scoutId}"]`);
         if (s) document.body.removeChild(s);
     }
-    return { path, isPointInShape, remove, isPointInPath, isPointInStroke }
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {
@@ -92,25 +83,29 @@ function getPathOnPageString(shape: Shape): string { // path坐标系：页面
     path.transform(m2page);
     return path.toString();
 }
-function getPathOnPageStringCustomScale(shape: Shape, s: number): string { // path坐标系：页面
+function getPathOnPageStringCustomOffset(shape: Shape, s: number): string { // path坐标系：页面
     const f = shape.frame;
-    const scale = 20 * s;
-    const scalex = (f.width + scale) / f.width, scaley = (f.height + scale) / f.height;
+    const offset = 20 * s;
+    const scalex = (f.width + offset) / f.width, scaley = (f.height + offset) / f.height;
     const m = new Matrix();
-    m.preScale(scalex, scaley);
-    m.trans(-scale / 2, -scale / 2);
+    m.preScale(scalex * f.width, scaley * f.height);
+    m.trans(-offset / 2, -offset / 2);
     m.multiAtLeft(shape.matrix2Root());
-    const path = shape.getPath();
-    path.transform(m);
-    return path.toString();
+    return getBoxPath(m);
 }
-
+function getBoxPath(transformMatrix: Matrix) {
+    const p1 = transformMatrix.computeCoord2(0, 0);
+    const p2 = transformMatrix.computeCoord2(1, 0);
+    const p3 = transformMatrix.computeCoord2(1, 1);
+    const p4 = transformMatrix.computeCoord2(0, 1);
+    return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} L ${p4.x} ${p4.y} z`;
+}
 // 判定点是否在图形内
 function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape(shape, p);
 }
 function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
-    return scout.isPointInShape(shape, p);
+    return scout.isPointInShape2(shape, p);
 }
 
 // 扁平化一个编组的树结构
@@ -209,7 +204,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
         if (!canBeTarget(g[i]) || g[i].type === ShapeType.Contact) continue;
         const item = g[i];
         if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) {
-            const isItemIsTarget = isTarget(scout, item, position);
+            const isItemIsTarget = isTarget2(scout, item, position);
             if (!isItemIsTarget) continue;
             const c = item.childs as Shape[];
             if (item.type === ShapeType.Artboard) {
@@ -233,7 +228,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
                 }
             }
         } else {
-            if (isTarget(scout, item, position)) {
+            if (isTarget2(scout, item, position)) {
                 result.push(item);
                 return result;
             }
