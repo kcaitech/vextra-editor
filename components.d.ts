@@ -25,6 +25,7 @@ declare module '@vue/runtime-core' {
     BackToHome: typeof import('./src/components/Document/Toolbar/BackToHome.vue')['default']
     'BarsContainer.SVG': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.vue')['default']
     'BarsContainer.SVG.Multi': typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainer.SVG.Multi.vue')['default']
+    BarsContainerForContact: typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainerForContact.vue')['default']
     BarsContainerForTable: typeof import('./src/components/Document/Selection/Controller/Bars/BarsContainerForTable.vue')['default']
     BaseAttr: typeof import('./src/components/Document/Attribute/BaseAttr.vue')['default']
     BooleanObject: typeof import('./src/components/Document/Toolbar/Buttons/BooleanObject.vue')['default']
