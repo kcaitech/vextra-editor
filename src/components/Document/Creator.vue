@@ -254,7 +254,7 @@ let page_xy2: PageXY | undefined;
 
 function search_apex(e: MouseEvent) {
     const { x, y } = props.context.workspace.root;
-    const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
+    const xy = props.context.workspace.matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const shapes = props.context.selection.getContactByXY(xy);
     if (shapes.length) {
         props.context.tool.setContactApex(shapes[0]);

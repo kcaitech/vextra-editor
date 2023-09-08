@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { Tool } from "@/context/tool";
 import { ContactForm, ContactType } from "@kcdesign/data";
-import { useI18n } from "vue-i18n";
 import { ClientXY, PageXY } from "@/context/selection";
 interface Props {
     context: Context
@@ -15,7 +14,6 @@ interface Emits {
 }
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
-const t = useI18n().t;
 const contact = ref<boolean>(false);
 const contact_points = ref<{ type: ContactType, point: ClientXY }[]>([]);
 function update_contact_apex() {
