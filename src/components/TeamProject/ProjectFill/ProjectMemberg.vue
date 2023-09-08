@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ProjectAccessSetting from './ProjectAccessSetting.vue';
 import { ref, watch, nextTick } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
@@ -16,6 +15,7 @@ const emit = defineEmits<{
 }>();
 const route = useRoute();
 const innerVisible = ref(false)
+const isshow = ref(true)
 const memberList = ref<any[]>([]);
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`, '管理员', '创建者'])
 const permList = ref(['全部', '创建者', '管理员', `${t('share.editable')}`, `${t('share.reviewable')}`, `${t('share.readOnly')}`])
@@ -219,7 +219,8 @@ watch(innerVisible, (v) => {
 </script>
 
 <template>
-    <ProjectAccessSetting title="已加入项目成员" width="350px" :dialog-visible="projectMembergDialog" @clodeDialog="close">
+        <el-dialog v-model="isshow" title="已加入项目成员"  width="350px" align-center :close-on-click-modal="false"
+            :before-close="close">
         <div class="perm_title">
             <div class="name">用户名</div>
             <el-dropdown trigger="click" :hide-on-click="false" @command="handleCommand">
@@ -314,7 +315,7 @@ watch(innerVisible, (v) => {
                 </div>
             </template>
         </el-dialog>
-    </ProjectAccessSetting>
+    </el-dialog>
 </template>
 
 <style scoped lang="scss">

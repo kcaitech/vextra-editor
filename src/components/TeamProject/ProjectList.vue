@@ -40,18 +40,61 @@
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
-    <listrightmenu :items="updateitems" :data="mydata" />
+    <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog" />
+    <!-- <ProjectAccessSetting title="邀请项目成员" :dialog-visible="projectSettingDialog" width="500px"
+        @clodeDialog="projectSettingDialog = false">
+        <div class="project_type" v-if="currentProject[0]">
+            <p>项目类型</p>
+            <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
+                :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
+                <el-option v-for="item in projectOptions" :key="item.value" :label="item.label" :value="item.label" />
+            </el-select>
+        </div>
+        <div class="project_type" v-if="currentProject[0]">
+            <p>权限</p>
+            <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
+                :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
+                <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
+            </el-select>
+        </div>
+        <div v-if="currentProject[0] && projectType === projectOptions[1].label">
+            <div>点击链接或扫描二维码申请加入</div>
+            <div class="share-switch"
+                :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
+                <span>邀请链接开关:</span>
+                <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch"
+                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)" />
+            </div>
+            <div class="link" v-if="linkSwitch">
+                <el-input :value="sharelink" :readonly="true" />
+                <div class="qrcode"><svg-icon icon-class="qrcode"></svg-icon></div>
+            </div>
+            <div class="checked" v-if="linkSwitch"
+                :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
+                <el-checkbox v-model="checked"
+                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)"></el-checkbox><span>申请后需管理员审批确认</span>
+            </div>
+            <div class="button" :style="{ opacity: linkSwitch ? '1' : '.5' }" @click="copyLink"><button>复制链接</button></div>
+        </div>
+        <div v-else>
+            <div class="button" @click="projectSettingDialog = false"><button>确定</button></div>
+        </div>
+    </ProjectAccessSetting> -->
+    <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
+        :currentProject="mydata" @closeDialog="closeDialog" @exitProject="exitProject"/>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, watchEffect, onMounted, ref, watch, nextTick } from 'vue';
 import * as user_api from '@/apis/users'
-import { ElMessage } from 'element-plus';
+import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
 import * as team_api from '@/apis/team'
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
+import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue'
+import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue'
 
 interface Props {
     searchvalue?: string
@@ -60,7 +103,7 @@ interface Props {
 const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed', 'deleteproject'])
 const updateitems = ref(items.value)
 const mydata = ref()
-const route = useRoute();
+const route = useRoute()
 const showbutton = ref(false)
 const noNetwork = ref(false)
 const { t } = useI18n()
@@ -68,6 +111,7 @@ const titles = ['项目名称', '项目描述', '创建者', '操作',]
 const selectid = ref(0)
 const projectLists = ref<any[]>([])
 const teamprojectlist = ref<any[]>([])
+const projectMembergDialog = ref(false)
 const emits = defineEmits<{
     (e: 'addproject'): void
 }>()
@@ -106,6 +150,18 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
 }
 const onAddproject = () => {
     emits('addproject');
+}
+
+const showMembergDialog = () => {
+    projectMembergDialog.value = true
+}
+
+const closeDialog = () => {
+    projectMembergDialog.value = false;
+}
+
+const exitProject = () => {
+    projectMembergDialog.value = false;
 }
 
 const GetprojectLists = async () => {
@@ -164,6 +220,8 @@ const rightmenu = (e: MouseEvent, data: any) => {
     }
     updateitems.value = updateItemsBasedOnFavor(data, items.value);
     mydata.value = data
+    console.log(data);
+    
     selectid.value = data.project.id
 }
 

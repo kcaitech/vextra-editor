@@ -44,63 +44,26 @@
     </div>
     <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
     <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
-    <ProjectAccessSetting title="邀请项目成员" :dialog-visible="projectSettingDialog" width="500px"
-        @clodeDialog="projectSettingDialog = false">
-        <div class="project_type" v-if="currentProject[0]">
-            <p>项目类型</p>
-            <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
-                :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
-                <el-option v-for="item in projectOptions" :key="item.value" :label="item.label" :value="item.label" />
-            </el-select>
-        </div>
-        <div class="project_type" v-if="currentProject[0]">
-            <p>权限</p>
-            <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
-                :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
-                <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
-            </el-select>
-        </div>
-        <div v-if="currentProject[0] && projectType === projectOptions[1].label">
-            <div>点击链接或扫描二维码申请加入</div>
-            <div class="share-switch"
-                :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                <span>邀请链接开关:</span>
-                <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch"
-                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)" />
-            </div>
-            <div class="link" v-if="linkSwitch">
-                <el-input :value="sharelink" :readonly="true" />
-                <div class="qrcode"><svg-icon icon-class="qrcode"></svg-icon></div>
-            </div>
-            <div class="checked" v-if="linkSwitch"
-                :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                <el-checkbox v-model="checked"
-                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)"></el-checkbox><span>申请后需管理员审批确认</span>
-            </div>
-            <div class="button" :style="{ opacity: linkSwitch ? '1' : '.5' }" @click="copyLink"><button>复制链接</button></div>
-        </div>
-        <div v-else>
-            <div class="button" @click="projectSettingDialog = false"><button>确定</button></div>
-        </div>
-    </ProjectAccessSetting>
+    <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="currentProject[0]" width="500px"
+        @clodeDialog="projectSettingDialog = false" />
     <div :reflush="reflush !== 0 ? reflush : undefined">
-        <ProjectMemberg v-if="currentProject[0]" :projectMembergDialog="projectMembergDialog"
+        <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
             :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
     </div>
 </template>
 <script setup lang="ts">
 import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import { useI18n } from 'vue-i18n';
+import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import * as user_api from '@/apis/users'
-import ProjectFillList from './ProjectFill/ProjectFillList.vue';
-import ProjectRecycleBin from './ProjectFill/ProjectRecycleBin.vue';
-import { User } from '@element-plus/icons-vue';
-import * as team_api from '@/apis/team';
-import ProjectAccessSetting from './ProjectFill/ProjectAccessSetting.vue';
-import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
-import { ElMessage } from 'element-plus';
+import ProjectFillList from './ProjectFill/ProjectFillList.vue'
+import ProjectRecycleBin from './ProjectFill/ProjectRecycleBin.vue'
+import { User } from '@element-plus/icons-vue'
+import * as team_api from '@/apis/team'
+import ProjectAccessSetting from './ProjectFill/ProjectAccessSetting.vue'
+import ProjectMemberg from './ProjectFill/ProjectMemberg.vue'
+
 const { t } = useI18n()
 const itemid = ref(0)
 const items = ['文件', '回收站',]
@@ -114,51 +77,10 @@ const projectName = ref('');
 const projectDesc = ref('');
 const inputNameLength = ref(0)
 const inputDescLength = ref(0)
-const linkSwitch = ref(false);
-const checked = ref(false);
 const projectSettingDialog = ref(false);
 const projectMembergDialog = ref(false);
-const sharelink = ref(``);
-const projectOptions = [
-    {
-        value: 0,
-        label: '公开: 团队全部成员可访问',
-    },
-    {
-        value: 1,
-        label: '非公开: 仅通过链接申请访问',
-    }
-]
-const projectType = ref(projectOptions[1].label);
-const projectPerms = [
-    {
-        value: 1,
-        label: '仅阅读',
-    },
-    {
-        value: 2,
-        label: '可评论',
-    },
-    {
-        value: 3,
-        label: '可编辑',
-    }
-]
-const projectPerm = ref(projectPerms[0].label);
-const params = {
-    project_id: '',
-    public_switch: false,
-    perm_type: 0,
-    invited_switch: false,
-    need_approval: false
-}
 
-enum permissions {
-    noAuthority,
-    readOnly,
-    reviewable,
-    editable
-}
+
 const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
     projectList: Ref<any[]>;
     favoriteList: Ref<any[]>;
@@ -174,18 +96,13 @@ const clickEvent = (index: number) => {
 }
 
 const projectSetting = () => {
-    const project = currentProject.value[0].project;
-    params.project_id = project.id;
-    params.public_switch = project.public_switch;
-    params.invited_switch = project.invited_switch;
-    params.need_approval = project.need_approval;
-    params.perm_type = project.perm_type;
-    sharelink.value = `https://protodesign.cn/#/apphome/project/${project.id}`
     projectSettingDialog.value = true;
 }
+
 const showMembergDialog = () => {
     projectMembergDialog.value = true;
 }
+
 const closeDialog = () => {
     projectMembergDialog.value = false;
 }
@@ -199,55 +116,6 @@ const exitProject = (id: string, isTeam: boolean) => {
     }
 }
 
-watch(projectType, (v) => {
-    const index = projectList.value.findIndex((item) => item.project.id === route.params.id);
-    if (v === projectOptions[0].label) {
-        params.public_switch = true;
-        projectList.value[index].project.public_switch = true;
-    } else {
-        params.public_switch = false;
-        projectList.value[index].project.public_switch = false;
-    }
-    setProjectInvitedInfo();
-})
-watch(projectPerm, (v) => {
-    const index = projectList.value.findIndex((item) => item.project.id === route.params.id);
-    if (v === projectPerms[0].label) {
-        params.perm_type = permissions.readOnly;
-        projectList.value[index].project.perm_type = permissions.readOnly;
-    } else if (v === projectPerms[1].label) {
-        params.perm_type = permissions.reviewable;
-        projectList.value[index].project.perm_type = permissions.reviewable;
-    } else {
-        params.perm_type = permissions.editable;
-        projectList.value[index].project.perm_type = permissions.editable;
-    }
-    setProjectInvitedInfo();
-})
-
-watch(checked, (val) => {
-    const index = projectList.value.findIndex((item) => item.project.id === route.params.id);
-    params.need_approval = val;
-    projectList.value[index].project.need_approval = val;
-    console.log(projectList.value[index].project.need_approval);
-    setProjectInvitedInfo();
-})
-
-const onLinkSwitch = () => {
-    const index = projectList.value.findIndex((item) => item.project.id === route.params.id);
-    params.invited_switch = linkSwitch.value;
-    projectList.value[index].project.invited_switch = linkSwitch.value;
-    setProjectInvitedInfo();
-}
-
-const setProjectInvitedInfo = async () => {
-    try {
-        await team_api.setProjectInvitedInfoAPI(params);
-    } catch (err) {
-        console.log(err);
-    }
-}
-
 const setProjectIsFavorite = async (id: string, state: boolean) => {
     try {
         await team_api.setProjectIsFavoriteAPI({ project_id: id, is_favor: state });
@@ -255,6 +123,7 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
         console.log(err);
     }
 }
+
 watch(is_favor, () => {
     const timer = setTimeout(() => {
         currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
@@ -294,41 +163,8 @@ const GetprojectLists = async () => {
         saveProjectData(project)
         currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
         reflush.value++
-        projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;
-        handleprem(currentProject.value[0].project.perm_type);
-        linkSwitch.value = currentProject.value[0].project.invited_switch;
-        checked.value = currentProject.value[0].project.need_approval;
     } catch (error) {
         console.log(error);
-    }
-}
-
-const copyLink = async () => {
-    if (!linkSwitch.value) return;
-    if (navigator.clipboard && window.isSecureContext) {
-        return navigator.clipboard.writeText(sharelink.value).then(() => {
-            ElMessage({
-                message: `${t('share.copy_success')}`,
-                type: 'success',
-            })
-        }, () => {
-            ElMessage({
-                message: `${t('share.copy_failure')}`,
-                type: 'success',
-            })
-        })
-    } else {
-        const textArea = document.createElement('textarea')
-        textArea.value = sharelink.value
-        document.body.appendChild(textArea)
-        textArea.focus()
-        textArea.select()
-        document.execCommand('copy')
-        ElMessage({
-            message: `${t('share.copy_success')}`,
-            type: 'success',
-        })
-        textArea.remove()
     }
 }
 
@@ -352,6 +188,7 @@ function input_cusname() {
         }
     })
 }
+
 function input_cusdesc() {
     projectDesc.value = currentProject.value[0].project.description;
     cusdesc.value = !cusdesc.value;
@@ -364,16 +201,19 @@ function input_cusdesc() {
         }
     })
 }
+
 function enter(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         blur();
     }
 }
+
 function enter_desc(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         blur_desc();
     }
 }
+
 function blur() {
     const project = currentProject.value[0].project
     const params = {
@@ -390,6 +230,7 @@ function blur() {
     cusname.value = false;
     document.removeEventListener('keydown', enter);
 }
+
 function blur_desc() {
     const project = currentProject.value[0].project
     const params = {
@@ -406,6 +247,7 @@ function blur_desc() {
     cusdesc.value = false;
     document.removeEventListener('keydown', enter);
 }
+
 function updateInputNameWidth() {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -416,6 +258,7 @@ function updateInputNameWidth() {
         inputNameLength.value = metrics.width + 10; // 添加一些额外宽度作为缓冲
     }
 }
+
 function updateInputDescWidth() {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -439,41 +282,21 @@ watch(() => currentProject.value, (n) => {
     currentProject.value = n;
     if (currentProject.value[0]) {
         reflush.value++;
-        projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;
-        handleprem(currentProject.value[0].project.perm_type);
-        linkSwitch.value = currentProject.value[0].project.invited_switch;
-        checked.value = currentProject.value[0].project.need_approval;
     }
 }, { deep: true });
-const handleprem = (prem: number) => {
-    switch (prem) {
-        case 1:
-            return projectPerm.value = projectPerms[0].label
-        case 2:
-            return projectPerm.value = projectPerms[1].label
-        case 3:
-            return projectPerm.value = projectPerms[2].label
-        default:
-            return
-    }
-}
+
+
 watchEffect(() => {
     route.params.id
     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
-    if (currentProject.value.length) {
-        projectType.value = currentProject.value[0].project.public_switch ? projectOptions[0].label : projectOptions[1].label;
-        handleprem(currentProject.value[0].project.perm_type);
-        linkSwitch.value = currentProject.value[0].project.invited_switch;
-        checked.value = currentProject.value[0].project.need_approval;
-    }
 })
-
 
 onMounted(() => {
     if (!currentProject.value.length) {
         GetprojectLists()
     }
 })
+
 </script>
 <style lang="scss" scoped>
 .nested-enter-active,

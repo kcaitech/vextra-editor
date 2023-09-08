@@ -34,20 +34,9 @@ const renameinput = ref<HTMLInputElement>()
 const menu = ref<HTMLElement>()
 const { t } = useI18n()
 
-interface data {
-    document: {
-        id: string
-        name: string
-        doc_type: number
-    }
-    document_favorites: {
-        is_favorite: boolean
-    }
-}
-
 const props = defineProps<{
     items: string[],
-    data: data | undefined,
+    data: any,
 }>()
 
 const emits = defineEmits([
@@ -61,7 +50,8 @@ const emits = defineEmits([
     'rDeletefile',
     'getDoucment',
     'getUserdata',
-    'GetrecycleLists'
+    'GetrecycleLists',
+    'showMembergDialog'
 ])
 
 enum rightmenuitem {
@@ -76,6 +66,7 @@ enum rightmenuitem {
     exit_share = 'exit_share',
     completely_delete = 'completely_delete',
     restore = 'restore',
+    projectrename = 'projectrename',
     projectset = 'projectset',
     memberset = 'memberset',
     setfixed = 'setfixed',
@@ -107,6 +98,8 @@ const itemcontent = (item: string) => {
             return t('homerightmenu.restore')
         case rightmenuitem.completely_delete:
             return t('homerightmenu.completely_delete')
+        case rightmenuitem.projectrename:
+            return '重命名'
         case rightmenuitem.projectset:
             return '项目访问设置'
         case rightmenuitem.memberset:
@@ -123,13 +116,11 @@ const itemcontent = (item: string) => {
 }
 
 const EventHandler = (item: string) => {
-    if (!props.data) return;
-    const { document: { id, name } } = props.data
     if (item === rightmenuitem.open) {
-        emits('ropen', id) //右键打开 
+        emits('ropen', props.data.id) //右键打开 
     }
     if (item === rightmenuitem.newtabopen) {
-        openNewWindowDocument(id) //右键新窗口打开
+        openNewWindowDocument(props.data.id) //右键新窗口打开
     }
     if (item === rightmenuitem.share) {
         rSharefile(props.data) //右键分享
@@ -138,10 +129,10 @@ const EventHandler = (item: string) => {
         rStarfile(props.data) //右键标星
     }
     if (item === rightmenuitem.rename) {
-        rrename(name) //右键重命名
+        rrename(props.data.name) //右键重命名
     }
     if (item === rightmenuitem.copyfile) {
-        rcopyfile(id) //右键创建副本
+        rcopyfile(props.data.id) //右键创建副本
     }
     if (item === rightmenuitem.deletefile) {
         rRemovefile(props.data) //右键删除文件
@@ -158,6 +149,12 @@ const EventHandler = (item: string) => {
     if (item === rightmenuitem.completely_delete) {
         rDeletefile(props.data)//右键彻底删除文件
     }
+    if (item === rightmenuitem.memberset) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('showMembergDialog')
+    }
 }
 
 //右键新窗口打开
@@ -172,7 +169,7 @@ const openNewWindowDocument = (id: string) => {
 }
 
 //右键分享
-const rSharefile = (data: data) => {
+const rSharefile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -180,7 +177,7 @@ const rSharefile = (data: data) => {
 }
 
 //右键标星
-const rStarfile = (data: data) => {
+const rStarfile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -249,7 +246,7 @@ const rcopyfile = async (id: string) => {
 }
 
 //右键删除
-const rRemovefile = (data: data) => {
+const rRemovefile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -257,7 +254,7 @@ const rRemovefile = (data: data) => {
 }
 
 //右键移除历史记录
-const rRemovehistory = (data: data) => {
+const rRemovehistory = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -265,7 +262,7 @@ const rRemovehistory = (data: data) => {
 }
 
 //右键退出共享
-const rExitshare = (data: data) => {
+const rExitshare = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -273,7 +270,7 @@ const rExitshare = (data: data) => {
 }
 
 //右键还原对应文件
-const rRestorefile = (data: data) => {
+const rRestorefile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -281,12 +278,13 @@ const rRestorefile = (data: data) => {
 }
 
 //右键删除对应文件
-const rDeletefile = (data: data) => {
+const rDeletefile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
     emits('rDeletefile', data)
 }
+
 
 //监听页面点击事件，
 const handleClickOutside = (event: MouseEvent) => {
