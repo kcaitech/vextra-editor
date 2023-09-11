@@ -152,16 +152,15 @@ function createController() { // 计算控件点位以及类型判定
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             }
         } else {
-            let points: { x: number, y: number }[] = [];
+            const points: { x: number, y: number }[] = [];
             for (let i = 0; i < selection.length; i++) {
-                const s = selection[i], m = s.matrix2Root(), f = s.frame;
+                const s = selection[i];
+                if (s.type === ShapeType.Contact) continue;
+                const m = s.matrix2Root(), f = s.frame;
                 m.multiAtLeft(matrix);
                 const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
-                for (let j = 0; j < 4; j++) {
-                    const p = ps[j];
-                    ps[j] = m.computeCoord2(p.x, p.y);
-                }
-                points = points.concat(ps);
+                for (let j = 0; j < 4; j++) ps[j] = m.computeCoord3(ps[j]);
+                points.push(...ps);
             }
             const b = XYsBounding(points);
             controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
